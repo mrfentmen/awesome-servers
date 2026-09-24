@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/tiingo-mcp",
+  "description": "MCP server for Tiingo: stocks, forex, crypto. Needs a free API token.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-mcps",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "tiingo-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

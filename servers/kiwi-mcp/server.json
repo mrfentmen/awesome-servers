@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/kiwi-mcp",
+  "description": "MCP server for Kiwi.com flights: search, airlines. Needs a free API key.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-mcps",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "kiwi-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

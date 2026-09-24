@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/saintlaurent-mcp",
+  "description": "Saint Laurent resale listings, prices and details. Not affiliated with Saint Laurent.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-mcps",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "saintlaurent-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
