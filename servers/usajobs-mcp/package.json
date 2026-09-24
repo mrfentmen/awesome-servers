@@ -1,12 +1,12 @@
 {
   "name": "usajobs-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for USAJOBS: federal job search. Needs a free API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/usajobs-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/awesome-mcps.git"
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
   },
   "bin": {
     "usajobs-mcp": "./dist/index.js"

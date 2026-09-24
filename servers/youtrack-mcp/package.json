@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/youtrack-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "YouTrack API: issue search, issue details, projects, comments. Needs permanent token.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/youtrack-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/awesome-mcps.git"
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
   },
   "bin": {
     "youtrack-mcp": "./dist/index.js"

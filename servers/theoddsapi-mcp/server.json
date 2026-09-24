@@ -3,15 +3,15 @@
   "name": "io.github.mrfentmen/theoddsapi-mcp",
   "description": "MCP server for The Odds API: sports, events, betting odds. Free key.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-mcps",
+    "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "theoddsapi-mcp",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       }

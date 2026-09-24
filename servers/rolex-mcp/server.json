@@ -3,15 +3,15 @@
   "name": "io.github.mrfentmen/rolex-mcp",
   "description": "Rolex resale listings, prices and details. Not affiliated with Rolex.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-mcps",
+    "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "rolex-mcp",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       }

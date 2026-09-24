@@ -3,15 +3,15 @@
   "name": "io.github.mrfentmen/lever-mcp",
   "description": "Job postings from Lever. No key required.",
   "repository": {
-    "url": "https://github.com/mrfentmen/lever-mcp",
+    "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "lever-mcp",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       }

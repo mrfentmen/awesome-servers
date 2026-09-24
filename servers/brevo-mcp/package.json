@@ -1,12 +1,12 @@
 {
   "name": "brevo-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Brevo: account, contacts, email reports. Needs a free API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/brevo-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/awesome-mcps.git"
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
   },
   "bin": {
     "brevo-mcp": "./dist/index.js"

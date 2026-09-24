@@ -1,9 +1,9 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/jobicy-mcp.git"
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
   },
   "bin": {
     "jobicy-mcp": "./dist/index.js"

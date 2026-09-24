@@ -1,12 +1,12 @@
 {
   "name": "mailjet-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Mailjet: contacts, messages, campaigns. Needs free API keys.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/mailjet-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/awesome-mcps.git"
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
   },
   "bin": {
     "mailjet-mcp": "./dist/index.js"

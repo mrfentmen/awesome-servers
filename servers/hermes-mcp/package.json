@@ -1,12 +1,12 @@
 {
   "name": "hermes-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Herm\u00e8s resale listings from Fashionphile and Rebag. Keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/hermes-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/awesome-mcps.git"
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
   },
   "bin": {
     "hermes-mcp": "./dist/index.js"

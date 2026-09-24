@@ -1,9 +1,9 @@
 {
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/cheapshark-mcp.git"
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
   },
   "bin": {
     "cheapshark-mcp": "./dist/index.js"

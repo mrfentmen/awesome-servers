@@ -3,15 +3,15 @@
   "name": "io.github.mrfentmen/amadeus-mcp",
   "description": "MCP server for Amadeus travel: flights, hotels, airports. Free test key.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-mcps",
+    "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "amadeus-mcp",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       }

@@ -3,15 +3,15 @@
   "name": "io.github.mrfentmen/greenhouse-mcp",
   "description": "Jobs from Greenhouse boards. No key required.",
   "repository": {
-    "url": "https://github.com/mrfentmen/greenhouse-mcp",
+    "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@mrfentmen/greenhouse-mcp",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       }

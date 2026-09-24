@@ -1,12 +1,12 @@
 {
   "name": "cgtrader-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CGTrader 3D marketplace: models, files, profile. Needs token.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/cgtrader-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/awesome-mcps.git"
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
   },
   "bin": {
     "cgtrader-mcp": "./dist/index.js"

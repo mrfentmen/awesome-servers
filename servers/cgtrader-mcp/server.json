@@ -3,15 +3,15 @@
   "name": "io.github.mrfentmen/cgtrader-mcp",
   "description": "CGTrader 3D marketplace models, files and profile.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-mcps",
+    "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "cgtrader-mcp",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       }

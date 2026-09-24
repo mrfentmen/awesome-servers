@@ -3,15 +3,15 @@
   "name": "io.github.mrfentmen/squarespace-mcp",
   "description": "MCP server for Squarespace Commerce: products, orders, inventory. Needs an API key.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-mcps",
+    "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "squarespace-mcp",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       }

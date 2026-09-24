@@ -1,6 +1,6 @@
 {
   "name": "gold-prices-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Gold and metal prices from gold-api.com (merged).",
   "type": "module",
   "main": "dist/index.js",
@@ -20,5 +20,9 @@
   "engines": {
     "node": ">=20"
   },
-  "mcpName": "io.github.mrfentmen/gold-prices-mcp"
+  "mcpName": "io.github.mrfentmen/gold-prices-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
+  }
 }

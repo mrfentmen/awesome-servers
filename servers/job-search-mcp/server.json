@@ -3,15 +3,15 @@
   "name": "io.github.mrfentmen/job-search-mcp",
   "description": "Search remote job listings from the Remotive public feed. No key required.",
   "repository": {
-    "url": "https://github.com/mrfentmen/job-search-mcp",
+    "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@mrfentmen/job-search-mcp",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       }

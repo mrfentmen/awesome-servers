@@ -1,12 +1,12 @@
 {
   "name": "aimeleondore-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Aim\u00e9 Leon Dore catalog: search, products, prices. Keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/aimeleondore-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/awesome-mcps.git"
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
   },
   "bin": {
     "aimeleondore-mcp": "./dist/index.js"

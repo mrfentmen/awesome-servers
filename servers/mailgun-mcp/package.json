@@ -1,12 +1,12 @@
 {
   "name": "mailgun-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Mailgun: domains, stats, bounces, complaints. Needs a free API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/mailgun-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/awesome-mcps.git"
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
   },
   "bin": {
     "mailgun-mcp": "./dist/index.js"

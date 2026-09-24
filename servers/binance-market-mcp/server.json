@@ -3,15 +3,15 @@
   "name": "io.github.mrfentmen/binance-market-mcp",
   "description": "Live crypto prices, tickers, and candlestick charts from Binance public data. No key required.",
   "repository": {
-    "url": "https://github.com/mrfentmen/binance-market-mcp",
+    "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"
   },
-  "version": "1.0.1",
+  "version": "1.0.2",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "binance-market-mcp",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "transport": {
         "type": "stdio"
       }

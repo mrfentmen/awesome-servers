@@ -1,12 +1,12 @@
 {
   "name": "prada-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Prada resale listings from Fashionphile and Rebag. Keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/prada-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/awesome-mcps.git"
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
   },
   "bin": {
     "prada-mcp": "./dist/index.js"
