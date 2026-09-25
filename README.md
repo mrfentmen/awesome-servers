@@ -4,7 +4,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 
 ## Contents
 
-- **115 MCP servers** in [`servers/`](./servers)
+- **119 MCP servers** in [`servers/`](./servers)
 
 ## MCP servers
 - [`aimeleondore-mcp`](./servers/aimeleondore-mcp)
@@ -63,6 +63,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`hibp-mcp`](./servers/hibp-mcp)
 - [`icebox-mcp`](./servers/icebox-mcp)
 - [`ifandco-mcp`](./servers/ifandco-mcp)
+- [`invoice-mcp`](./servers/invoice-mcp)
 - [`isbndb-mcp`](./servers/isbndb-mcp)
 - [`jetbrains-mcp`](./servers/jetbrains-mcp)
 - [`job-search-mcp`](./servers/job-search-mcp)
@@ -82,6 +83,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`omdb-mcp`](./servers/omdb-mcp)
 - [`openlibrary-mcp`](./servers/openlibrary-mcp)
 - [`openpanel-mcp`](./servers/openpanel-mcp)
+- [`osrs-mcp`](./servers/osrs-mcp)
 - [`pinata-mcp`](./servers/pinata-mcp)
 - [`pingdom-mcp`](./servers/pingdom-mcp)
 - [`pinterest-mcp`](./servers/pinterest-mcp)
@@ -116,6 +118,8 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`twilio-mcp`](./servers/twilio-mcp)
 - [`urlhaus-mcp`](./servers/urlhaus-mcp)
 - [`usajobs-mcp`](./servers/usajobs-mcp)
+- [`usps-mcp`](./servers/usps-mcp)
+- [`wayback-mcp`](./servers/wayback-mcp)
 - [`weightsbiases-mcp`](./servers/weightsbiases-mcp)
 - [`whiskyhunter-mcp`](./servers/whiskyhunter-mcp)
 - [`wise-mcp`](./servers/wise-mcp)
