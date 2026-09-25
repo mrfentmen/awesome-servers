@@ -1,5 +1,5 @@
 {
-  "name": "twitch-mcp",
+  "name": "@mrfentmen/twitch-mcp",
   "version": "1.0.0",
   "description": "Twitch games and streams. Free token.",
   "type": "module",

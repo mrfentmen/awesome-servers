@@ -1,5 +1,5 @@
 {
-  "name": "mastodon-mcp",
+  "name": "@mrfentmen/mastodon-mcp",
   "version": "1.0.0",
   "description": "Mastodon trends. Keyless.",
   "type": "module",

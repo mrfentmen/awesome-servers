@@ -10,7 +10,7 @@
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "twitch-mcp",
+      "identifier": "@mrfentmen/twitch-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"
