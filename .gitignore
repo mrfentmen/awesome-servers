@@ -29,3 +29,8 @@ Thumbs.db
 # Temporary files
 *.log
 *.tmp
+
+# Build output and install artifacts (never commit)
+dist/
+package-lock.json
+node_modules/
