@@ -4,7 +4,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 
 ## Contents
 
-- **111 MCP servers** in [`servers/`](./servers)
+- **115 MCP servers** in [`servers/`](./servers)
 
 ## MCP servers
 - [`aimeleondore-mcp`](./servers/aimeleondore-mcp)
@@ -26,6 +26,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`brevo-mcp`](./servers/brevo-mcp)
 - [`brewery-mcp`](./servers/brewery-mcp)
 - [`cartier-mcp`](./servers/cartier-mcp)
+- [`censys-mcp`](./servers/censys-mcp)
 - [`cgtrader-mcp`](./servers/cgtrader-mcp)
 - [`chanel-mcp`](./servers/chanel-mcp)
 - [`cheapshark-mcp`](./servers/cheapshark-mcp)
@@ -56,8 +57,10 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`greenhouse-mcp`](./servers/greenhouse-mcp)
 - [`groq-mcp`](./servers/groq-mcp)
 - [`gucci-mcp`](./servers/gucci-mcp)
+- [`hackertarget-mcp`](./servers/hackertarget-mcp)
 - [`helius-mcp`](./servers/helius-mcp)
 - [`hermes-mcp`](./servers/hermes-mcp)
+- [`hibp-mcp`](./servers/hibp-mcp)
 - [`icebox-mcp`](./servers/icebox-mcp)
 - [`ifandco-mcp`](./servers/ifandco-mcp)
 - [`isbndb-mcp`](./servers/isbndb-mcp)
@@ -111,6 +114,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`turbosquid-mcp`](./servers/turbosquid-mcp)
 - [`twelvedata-mcp`](./servers/twelvedata-mcp)
 - [`twilio-mcp`](./servers/twilio-mcp)
+- [`urlhaus-mcp`](./servers/urlhaus-mcp)
 - [`usajobs-mcp`](./servers/usajobs-mcp)
 - [`weightsbiases-mcp`](./servers/weightsbiases-mcp)
 - [`whiskyhunter-mcp`](./servers/whiskyhunter-mcp)
