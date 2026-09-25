@@ -10,7 +10,7 @@
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "assemblyai-mcp",
+      "identifier": "@mrfentmen/assemblyai-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"

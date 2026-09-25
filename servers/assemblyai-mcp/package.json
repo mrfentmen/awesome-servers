@@ -1,5 +1,5 @@
 {
-  "name": "assemblyai-mcp",
+  "name": "@mrfentmen/assemblyai-mcp",
   "version": "1.0.0",
   "description": "AssemblyAI transcripts: list, details, paragraphs. Needs key.",
   "type": "module",

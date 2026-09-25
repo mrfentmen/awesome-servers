@@ -1,5 +1,5 @@
 {
-  "name": "postmark-mcp",
+  "name": "@mrfentmen/postmark-mcp",
   "version": "1.0.0",
   "description": "Postmark email: server, templates, messages. Needs key.",
   "type": "module",
