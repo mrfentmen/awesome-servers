@@ -41,3 +41,37 @@ export async function price(args: { symbol?: string }): Promise<string> {
   if (d?.code) throw new BinanceError(`Binance: ${String(d.msg ?? "invalid symbol")}`)
   return `${symbol}: ${Number(d.price ?? 0).toLocaleString(undefined, { maximumFractionDigits: 8 })}`
 }
+
+export async function book(args: { symbol?: string }): Promise<string> {
+  const symbol = (args.symbol ?? "").trim().toUpperCase()
+  if (!VALID.test(symbol)) throw new BinanceError("Provide a symbol like BTCUSDT")
+  const d = await get<Record<string, unknown>>(`${BASE}/ticker/bookTicker?symbol=${encodeURIComponent(symbol)}`)
+  if (d?.code) throw new BinanceError(`Binance: ${String(d.msg ?? "invalid symbol")}`)
+  return `${symbol} best bid/ask:\nBid: ${d.bidPrice ?? 'n/a'} x ${d.bidQty ?? 'n/a'}\nAsk: ${d.askPrice ?? 'n/a'} x ${d.askQty ?? 'n/a'}`;
+}
+
+export async function avg(args: { symbol?: string }): Promise<string> {
+  const symbol = (args.symbol ?? "").trim().toUpperCase()
+  if (!VALID.test(symbol)) throw new BinanceError("Provide a symbol like BTCUSDT")
+  const d = await get<Record<string, unknown>>(`${BASE}/avgPrice?symbol=${encodeURIComponent(symbol)}`)
+  if (d?.code) throw new BinanceError(`Binance: ${String(d.msg ?? "invalid symbol")}`)
+  return `${symbol} 5-minute average price: ${Number(d.price ?? 0).toLocaleString(undefined, { maximumFractionDigits: 8 })} (interval ${d.mins ?? 5} min)`;
+}
+
+export async function depth(args: { symbol?: string; limit?: number }): Promise<string> {
+  const symbol = (args.symbol ?? "").trim().toUpperCase()
+  if (!VALID.test(symbol)) throw new BinanceError("Provide a symbol like BTCUSDT")
+  const limit = Math.min(Math.max(args.limit ?? 5, 1), 20)
+  const d = await get<{ bids?: string[][]; asks?: string[][]; code?: number; msg?: string }>(`${BASE}/depth?symbol=${encodeURIComponent(symbol)}&limit=${limit}`)
+  if (d?.code) throw new BinanceError(`Binance: ${String(d.msg ?? "invalid symbol")}`)
+  const fmt = (rows: string[][] | undefined) => (rows ?? []).map((r) => `${r[0]} x ${r[1]}`).join(', ');
+  return `${symbol} order book (top ${limit}):\nBids: ${fmt(d.bids)}\nAsks: ${fmt(d.asks)}`;
+}
+
+export async function markets(): Promise<string> {
+  const d = await get<{ symbols?: { symbol?: string; status?: string }[] }>(`${BASE}/exchangeInfo`)
+  const symbols = d.symbols ?? [];
+  const trading = symbols.filter((s) => s.status === 'TRADING').length;
+  const sample = symbols.slice(0, 12).map((s) => s.symbol).join(', ');
+  return `Binance lists ${symbols.length} symbols (${trading} TRADING). Sample: ${sample}. Full list omitted for size.`;
+}
