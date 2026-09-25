@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/mastodon-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Mastodon trends. Keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/mastodon-mcp",

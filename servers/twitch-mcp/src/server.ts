@@ -4,6 +4,7 @@ import {
   errorMessage,
   topGames,
   topStreams,
+  getUser,
   searchChannels,
 } from "./api.js"
 
@@ -51,6 +52,25 @@ export function createServer(): McpServer {
     async ({ limit, game_id }) => {
       try {
         return text(await topStreams(limit, game_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "get_user",
+    {
+      title: "Get user",
+      description: "User profile by login name.",
+      inputSchema: z.object({
+        login: z.string().describe("Login name, e.g. shroud.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ login }) => {
+      try {
+        return text(await getUser(login));
       } catch (e) {
         return textError(errorMessage(e));
       }

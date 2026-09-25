@@ -1,6 +1,6 @@
 # twitch-mcp
 
-Query the Twitch Helix API (free app token; set TWITCH_CLIENT_ID + TWITCH_TOKEN): top games, live streams, channel search.
+Query the Twitch Helix API (free app token; set TWITCH_CLIENT_ID + TWITCH_CLIENT_SECRET (app access token is minted automatically)): top games, live streams, user profiles, channel search.
 
 ## Tools
 
