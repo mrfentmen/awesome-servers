@@ -16,6 +16,9 @@ Entertainment
 - drivers: Standings
 - constructors: Teams
 - schedule: Calendar
+- last_race: Latest results
+- list_drivers: Drivers
+- race_results: Round results
 
 ## Getting Started
 - "F1 standings?"

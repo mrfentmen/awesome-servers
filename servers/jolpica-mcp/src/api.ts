@@ -44,3 +44,17 @@ export function schedule(season?: string): Promise<string> {
   return get(`/${encodeURIComponent(s)}.json?limit=30`);
 }
 
+export function lastRace(): Promise<string> {
+  return get("/current/last/results.json");
+}
+
+export function listDrivers(season?: string, limit?: string): Promise<string> {
+  const s = season ?? "current";
+  const n = Math.min(Number(limit ?? 20) || 20, 40);
+  return get(`/${encodeURIComponent(s)}/drivers.json?limit=${n}`);
+}
+
+export function raceResults(season: string, round: string): Promise<string> {
+  return get(`/${encodeURIComponent(season)}/${encodeURIComponent(round)}/results.json`);
+}
+

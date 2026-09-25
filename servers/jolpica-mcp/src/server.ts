@@ -5,6 +5,9 @@ import {
   drivers,
   constructors,
   schedule,
+  lastRace,
+  listDrivers,
+  raceResults,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -70,6 +73,63 @@ export function createServer(): McpServer {
     async ({ season }) => {
       try {
         return text(await schedule(season));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "last_race",
+    {
+      title: "Last race",
+      description: "Most recent race results.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await lastRace());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "list_drivers",
+    {
+      title: "List drivers",
+      description: "Drivers for a season.",
+      inputSchema: z.object({
+        season: z.string().describe("Year or current (default current).").optional(),
+        limit: z.string().describe("Max results (default 20, max 40).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ season, limit }) => {
+      try {
+        return text(await listDrivers(season, limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "race_results",
+    {
+      title: "Race results",
+      description: "Results for a season round.",
+      inputSchema: z.object({
+        season: z.string().describe("Year, e.g. 2024."),
+        round: z.string().describe("Round number, e.g. 1.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ season, round }) => {
+      try {
+        return text(await raceResults(season, round));
       } catch (e) {
         return textError(errorMessage(e));
       }
