@@ -100,3 +100,63 @@ export const m0_search = m0.search;
 export const m1_quote = m1.quote;
 export const m1_StockError = m1.StockError;
 export const m1_searchSymbol = m1.searchSymbol;
+
+const m2 = (() => {
+const BASE2 = 'https://query1.finance.yahoo.com';
+const UA2 = 'mrfentmen-yfinance-mcp/1.0';
+
+async function get2<T>(url: string): Promise<T> {
+  const res = await fetch(url, { headers: { 'User-Agent': UA2, Accept: 'application/json' }, signal: AbortSignal.timeout(25000) });
+  if (!res.ok) throw new m1.StockError(`Market data error ${res.status}`);
+  return (await res.json()) as T;
+}
+
+const clamp2 = (value: number | undefined, fallback: number, max = 25) =>
+  Math.min(Math.max(Number(value ?? fallback) || fallback, 1), max);
+
+interface ScreenerQuote {
+  symbol?: string;
+  shortName?: string;
+  regularMarketPrice?: number;
+  regularMarketChangePercent?: number;
+}
+
+async function movers(kind: 'day_gainers' | 'day_losers' | 'most_actives', limit: number): Promise<string> {
+  const scrIds = kind === 'day_gainers' ? 'day_gainers' : kind === 'day_losers' ? 'day_losers' : 'most_actives';
+  const titles: Record<string, string> = { day_gainers: 'Day gainers', day_losers: 'Day losers', most_actives: 'Most actives' };
+  const d = await get2<{ finance?: { result?: { quotes?: ScreenerQuote[] }[] } }>(
+    `${BASE2}/v1/finance/screener/predefined/saved?scrIds=${scrIds}&count=${limit}`);
+  const list = (d.finance?.result?.[0]?.quotes ?? []).slice(0, limit);
+  if (!list.length) return `No ${titles[kind].toLowerCase()} returned.`;
+  return `${titles[kind]} (${list.length} shown):\n` + list.map((q, i) =>
+    `${i + 1}. ${q.symbol ?? '?'} ${q.shortName ?? ''} $${q.regularMarketPrice ?? '?'} (${Number(q.regularMarketChangePercent ?? 0).toFixed(2)}%)`.trim()).join('\n');
+}
+
+async function gainers(args: { limit?: number }): Promise<string> {
+  return movers('day_gainers', clamp2(args.limit, 10));
+}
+
+async function losers(args: { limit?: number }): Promise<string> {
+  return movers('day_losers', clamp2(args.limit, 10));
+}
+
+async function actives(args: { limit?: number }): Promise<string> {
+  return movers('most_actives', clamp2(args.limit, 10));
+}
+
+async function trending(args: { limit?: number }): Promise<string> {
+  const limit = clamp2(args.limit, 10);
+  const d = await get2<{ finance?: { result?: { quotes?: { symbol?: string }[] }[] } }>(
+    'https://query2.finance.yahoo.com/v1/finance/trending/US?count=20');
+  const symbols = (d.finance?.result?.[0]?.quotes ?? []).map((q) => q.symbol).filter(Boolean).slice(0, limit);
+  if (!symbols.length) return 'No trending symbols returned.';
+  return `Trending US tickers (${symbols.length} shown, use quote for prices):\n` + symbols.join(', ');
+}
+
+return { gainers, losers, actives, trending };
+})();
+
+export const gainers = m2.gainers;
+export const losers = m2.losers;
+export const actives = m2.actives;
+export const trending = m2.trending;

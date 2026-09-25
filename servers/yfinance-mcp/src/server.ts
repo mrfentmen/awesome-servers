@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_quote, m0_search, m1_quote, m1_searchSymbol } from './api.js'
+import { m0_quote, m0_search, m1_quote, m1_searchSymbol, gainers, losers, actives, trending } from './api.js'
 
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -44,6 +44,54 @@ server.registerTool(
     },
     async (args) => {
     try { return text(await m1_searchSymbol(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "gainers",
+    {
+      title: "Day gainers",
+      description: "Equities with the greatest gains today with price and percent change.",
+      inputSchema: z.object( { limit: z.number().describe("How many gainers, 1-25. Defaults to 10.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await gainers(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "losers",
+    {
+      title: "Day losers",
+      description: "Equities with the greatest losses today with price and percent change.",
+      inputSchema: z.object( { limit: z.number().describe("How many losers, 1-25. Defaults to 10.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await losers(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "actives",
+    {
+      title: "Most actives",
+      description: "Most actively traded equities with price and percent change.",
+      inputSchema: z.object( { limit: z.number().describe("How many symbols, 1-25. Defaults to 10.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await actives(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "trending",
+    {
+      title: "Trending tickers",
+      description: "Trending US ticker symbols. Use quote for prices.",
+      inputSchema: z.object( { limit: z.number().describe("How many symbols, 1-25. Defaults to 10.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await trending(args)) } catch (e) { return textError(error(e)) }
   }
   )
   return server
