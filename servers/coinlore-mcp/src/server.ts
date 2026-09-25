@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { tickers, coin, globalStats, markets } from './api.js'
+import { tickers, coin, globalStats, markets, movers, searchCoins } from './api.js'
 
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -43,6 +43,30 @@ export function createServer(): McpServer {
     },
     async (args) => {
     try { return text(await globalStats(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    'search_coins',
+    {
+      title: "Search coins",
+      description: 'Find a coin by name or symbol among the top 100 by market cap, with its CoinLore id for the coin tool.',
+      inputSchema: z.object( { query: z.string().describe('Coin name or symbol, e.g. "solana" or "ETH".'), limit: z.number().describe('Max results, 1-30.').optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await searchCoins(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    'movers',
+    {
+      title: "Movers",
+      description: 'Biggest 24-hour gainers and losers among the top 100 coins by market cap.',
+      inputSchema: z.object( { limit: z.number().describe('How many gainers and how many losers to show, 1-20.').optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await movers(args)) } catch (e) { return textError(error(e)) }
   }
   )
   server.registerTool(

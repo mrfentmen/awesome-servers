@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { deals } from "./api.js"
-import { storeList } from "./api.js"
+import { deals, freeGames, gameDetails, searchGames, storeList, topDeals } from "./api.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -14,25 +13,88 @@ export function createServer(): McpServer {
     "deals",
     {
       title: "Deals",
-      description: "Search current game deals.",
-      inputSchema: z.object( { title: z.string().describe("Game title.").optional(), limit: z.number().describe("Max results.").optional() }),
+      description: "Search current game deals under a price cap, optionally filtered by game title or store ID.",
+      inputSchema: z.object({
+        title: z.string().describe("Game title to search, e.g. 'Witcher'.").optional(),
+        maxPrice: z.number().describe("Only show deals at or below this price in USD (default 60).").optional(),
+        storeID: z.string().describe("Only this store, e.g. '1' for Steam. See store_list.").optional(),
+        limit: z.number().describe("Max results (default 8, max 30).").optional(),
+      }),
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await deals(args)) } catch (e) { return textError(error(e)) }
-  }
+      try { return text(await deals(args)) } catch (e) { return textError(error(e)) }
+    }
   )
   server.registerTool(
     "store_list",
     {
       title: "Store list",
-      description: "List stores tracked by CheapShark.",
-      inputSchema: z.object( {  }),
+      description: "List the game stores CheapShark tracks, with the store IDs used by the other tools.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async () => {
+      try { return text(await storeList({})) } catch (e) { return textError(error(e)) }
+    }
+  )
+  server.registerTool(
+    "search_games",
+    {
+      title: "Search games",
+      description: "Find a game by title and get its cheapest current price plus the gameID for game_details.",
+      inputSchema: z.object({
+        title: z.string().describe("Game title, e.g. 'Hollow Knight'."),
+        limit: z.number().describe("Max results (default 8, max 20).").optional(),
+      }),
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await storeList(args)) } catch (e) { return textError(error(e)) }
-  }
+      try { return text(await searchGames(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+  server.registerTool(
+    "game_details",
+    {
+      title: "Game details",
+      description: "Compare one game's price across every store, plus its cheapest price ever.",
+      inputSchema: z.object({
+        gameID: z.string().describe("CheapShark gameID from search_games or deals."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await gameDetails(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+  server.registerTool(
+    "top_deals",
+    {
+      title: "Top deals",
+      description: "The best current game deals ranked by CheapShark's deal rating, all stores or one store.",
+      inputSchema: z.object({
+        storeID: z.string().describe("Only this store, e.g. '1' for Steam.").optional(),
+        limit: z.number().describe("Max results (default 8, max 25).").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await topDeals(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+  server.registerTool(
+    "free_games",
+    {
+      title: "Free games",
+      description: "Games currently free (or 100% off) on any tracked store.",
+      inputSchema: z.object({
+        limit: z.number().describe("Max results (default 10, max 30).").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await freeGames(args)) } catch (e) { return textError(error(e)) }
+    }
   )
   return server
 }

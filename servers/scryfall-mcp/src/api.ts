@@ -37,7 +37,7 @@ export interface Card {
   set?: string
   set_name?: string
   collector_number?: string
-  prices?: { usd?: string | null; usd_foil?: string | null; eur?: string | null }
+  prices?: { usd?: string | null; usd_foil?: string | null; eur?: string | null; tix?: string | null }
   image_uris?: { normal?: string; png?: string }
   rulings_uri?: string
   colors?: string[]
@@ -107,6 +107,20 @@ export async function getSets(): Promise<SetInfo[]> {
     }))
 }
 
+/** A single random card — handy for deck ideas and discovery. */
+export async function getRandomCard(): Promise<Card> {
+  return mapCard(await getJson<any>(`/cards/random`))
+}
+
+/** Cards from one set, e.g. 'dmu'. Scryfall's set: syntax, newest first is not guaranteed. */
+export async function searchSet(setCode: string, pageSize = 20): Promise<{ total: number; cards: Card[] }> {
+  const code = setCode.trim().toLowerCase()
+  const data = await getJson<{ data?: any[]; total_cards?: number }>(
+    `/cards/search?q=set%3A${encodeURIComponent(code)}&order=name&page_size=${Math.min(Math.max(pageSize, 1), 40)}`
+  )
+  return { total: data.total_cards ?? (data.data ?? []).length, cards: (data.data ?? []).map(mapCard) }
+}
+
 // ---------------------------------------------------------------------------
 // Formatting
 // ---------------------------------------------------------------------------
@@ -126,7 +140,7 @@ function mapCard(c: any): Card {
     set_name: c.set_name,
     collector_number: c.collector_number,
     prices: c.prices,
-    image_uris: c.image_uris,
+    image_uris: c.image_uris ?? c.card_faces?.[0]?.image_uris,
     rulings_uri: c.rulings_uri,
     colors: c.colors,
     legalities: c.legalities,
@@ -162,4 +176,20 @@ export function formatCard(c: Card, index?: number): string {
 
 export function formatRuling(r: Ruling, i: number): string {
   return `${i + 1}. (${r.source}${r.published_at ? `, ${r.published_at}` : ""}) ${r.comment}`
+}
+
+/** Price breakdown across every market Scryfall tracks, plus the cheapest printing note. */
+export function formatPrices(c: Card): string {
+  const p = c.prices ?? {}
+  const lines = [
+    `${c.name} — ${c.set_name ?? c.set ?? "?"} (${c.set ?? "?"}) ${c.rarity ?? ""}${c.collector_number ? ` #${c.collector_number}` : ""}`.trim(),
+    `TCGplayer (USD, non-foil): ${fmtPrice(p.usd)}`,
+    `TCGplayer (USD, foil):     ${fmtPrice(p.usd_foil)}`,
+    `Cardmarket (EUR):          ${p.eur ? `€${p.eur}` : "—"}`,
+    `MTGO (tix):                ${p.tix ? `${p.tix} tix` : "—"}`,
+  ]
+  if (!p.usd && !p.usd_foil && !p.eur && !p.tix) {
+    lines.push("No market prices published for this printing yet.")
+  }
+  return lines.join("\n")
 }

@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { boards } from "./api.js"
-import { jobs } from "./api.js"
+import { companies, companyJobs, jobDetail, marketSummary, searchJobs } from "./api.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -11,28 +10,83 @@ const error = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(
 export function createServer(): McpServer {
   const server = new McpServer({ name: "workable-mcp", version: "1.0.0" })
   server.registerTool(
-    "boards",
+    "search_jobs",
     {
-      title: "Boards",
-      description: "List boards.",
-      inputSchema: z.object( {  }),
+      title: "Search jobs",
+      description:
+        "Search live roles on company career sites powered by Workable (roughly 170,000 open jobs). " +
+        "Filter by keyword, location or both.",
+      inputSchema: z.object({
+        query: z.string().describe("Job keyword, e.g. 'data engineer', 'nurse'.").optional(),
+        location: z.string().describe("Location filter, e.g. 'London', 'Berlin', 'remote'.").optional(),
+        limit: z.number().describe("Max roles to show (default 10, max 20).").optional(),
+      }),
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await boards(args)) } catch (e) { return textError(error(e)) }
-  }
+      try { return text(await searchJobs(args)) } catch (e) { return textError(error(e)) }
+    }
   )
   server.registerTool(
-    "jobs",
+    "job_detail",
     {
-      title: "Jobs",
-      description: "List jobs for a board.",
-      inputSchema: z.object( { board: z.string().describe("Board account name.") }),
+      title: "Job detail",
+      description: "Full posting for one job: company, location, contract type, apply link and the description text.",
+      inputSchema: z.object({
+        job_id: z.string().describe("Job id from search_jobs."),
+      }),
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await jobs(args)) } catch (e) { return textError(error(e)) }
-  }
+      try { return text(await jobDetail(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+  server.registerTool(
+    "company_jobs",
+    {
+      title: "Company jobs",
+      description: "Every open role on one company's Workable board, e.g. board 'stealth-it'.",
+      inputSchema: z.object({
+        board: z.string().describe("Workable board slug, e.g. 'stealth-it'."),
+        limit: z.number().describe("Max roles to show (default 20, max 50).").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await companyJobs(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+  server.registerTool(
+    "companies",
+    {
+      title: "Companies hiring",
+      description: "Which companies are hiring for a keyword, ranked by how many roles they have open.",
+      inputSchema: z.object({
+        query: z.string().describe("Job keyword, e.g. 'rust developer'."),
+        location: z.string().describe("Optional location filter.").optional(),
+        limit: z.number().describe("Max companies to show (default 15, max 20).").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await companies(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+  server.registerTool(
+    "market_summary",
+    {
+      title: "Market summary",
+      description:
+        "Rough shape of the job market for a keyword: top employers, locations, contract types and departments.",
+      inputSchema: z.object({
+        query: z.string().describe("Job keyword, e.g. 'product manager'."),
+        location: z.string().describe("Optional location filter.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await marketSummary(args)) } catch (e) { return textError(error(e)) }
+    }
   )
   return server
 }

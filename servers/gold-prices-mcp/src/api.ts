@@ -1,130 +1,234 @@
+const BASE = "https://api.gold-api.com"
+const UA = "mrfentmen-gold-prices-mcp/1.0"
 
-export interface m1_PriceArgs {
-  metal: string;
+export class GoldError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "GoldError"
+  }
 }
 
-const NAMES: Record<string, string> = {
-  XAU: 'Gold',
-  XAG: 'Silver',
-  XPT: 'Platinum',
-  XPD: 'Palladium',
-};
+export function errorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e)
+}
 
-// Yahoo Finance futures tickers, used when the primary spot source is
-// unreachable (api.gold-api.com blocks some datacenter IP ranges).
+/** Precious metals returned by the `all` tool. */
+const PRECIOUS: Record<string, string> = {
+  XAU: "Gold",
+  XAG: "Silver",
+  XPT: "Platinum",
+  XPD: "Palladium",
+}
+
+/** Names a caller might pass instead of a ticker. */
+const ALIASES: Record<string, string> = {
+  gold: "XAU",
+  silver: "XAG",
+  platinum: "XPT",
+  palladium: "XPD",
+  copper: "HG",
+  bitcoin: "BTC",
+  btc: "BTC",
+  ethereum: "ETH",
+  eth: "ETH",
+}
+
+/** Yahoo Finance futures tickers, used when the spot API is unreachable from this host. */
 const YAHOO_SYMBOLS: Record<string, string> = {
-  XAU: 'GC=F',
-  XAG: 'SI=F',
-  XPT: 'PL=F',
-  XPD: 'PA=F',
-};
-
-const UA = 'mrfentmen-gold-prices-mcp/1.0 (https://github.com/mrfentmen)';
-
-export class GoldError extends Error {}
+  XAU: "GC=F",
+  XAG: "SI=F",
+  XPT: "PL=F",
+  XPD: "PA=F",
+}
 
 interface Quote {
-  price: number;
-  source: string;
-  updated: string;
+  symbol: string
+  name: string
+  price: number
+  source: string
+  updated: string
 }
 
-async function fromGoldApi(code: string): Promise<Quote> {
-  const res = await fetch(`https://api.gold-api.com/price/${code}`, {
-    headers: { 'User-Agent': UA, Accept: 'application/json' },
-    signal: AbortSignal.timeout(20000),
-  });
-  if (res.status === 429) throw new GoldError('Gold API rate limit hit, wait and retry');
-  if (!res.ok) throw new GoldError(`Gold API error ${res.status}`);
-  const data = (await res.json()) as { price?: number; updatedAtReadable?: string; updatedAt?: string };
-  if (typeof data.price !== 'number') throw new GoldError(`Gold API returned no price for ${code}`);
-  return { price: data.price, source: 'Gold API spot', updated: data.updatedAtReadable ?? data.updatedAt ?? 'n/a' };
+const usd = (value: number) =>
+  `$${value.toLocaleString("en-US", { maximumFractionDigits: value < 10 ? 4 : 2 })}`
+
+export function normalizeSymbol(input: string): string {
+  const value = input.trim()
+  if (!value) return "XAU"
+  const alias = ALIASES[value.toLowerCase()]
+  return alias ?? value.toUpperCase()
 }
 
-async function fromYahoo(code: string): Promise<Quote> {
-  const symbol = YAHOO_SYMBOLS[code];
-  if (!symbol) throw new GoldError(`No fallback symbol for ${code}`);
-  const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=1d&interval=1d`, {
-    headers: { 'User-Agent': UA, Accept: 'application/json' },
-    signal: AbortSignal.timeout(20000),
-  });
-  if (res.status === 429) throw new GoldError('Yahoo Finance rate limit hit, wait and retry');
-  if (!res.ok) throw new GoldError(`Yahoo Finance error ${res.status}`);
+async function getJson<T>(path: string): Promise<T> {
+  let res: Response
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      headers: { "User-Agent": UA, Accept: "application/json" },
+      signal: AbortSignal.timeout(20000),
+    })
+  } catch (e) {
+    throw new GoldError(`Network error: ${errorMessage(e)}`)
+  }
+  if (res.status === 429) throw new GoldError("Gold API rate limit hit, wait and retry")
+  if (res.status === 404) throw new GoldError(`Gold API does not track that symbol — see the symbols tool`)
+  if (!res.ok) throw new GoldError(`Gold API error ${res.status}`)
+  return (await res.json()) as T
+}
+
+interface SymbolRow {
+  name?: string
+  symbol?: string
+}
+
+async function symbolRows(): Promise<{ symbol: string; name: string }[]> {
+  const rows = await getJson<unknown>("/symbols")
+  if (!Array.isArray(rows)) throw new GoldError("Gold API returned an unexpected symbol list")
+  return (rows as SymbolRow[])
+    .filter((row): row is { symbol: string; name?: string } => typeof row.symbol === "string")
+    .map((row) => ({ symbol: row.symbol, name: row.name ?? row.symbol }))
+}
+
+async function fromSpot(symbol: string): Promise<Quote> {
+  const data = await getJson<{
+    price?: number
+    name?: string
+    symbol?: string
+    updatedAtReadable?: string
+    updatedAt?: string
+  }>(`/price/${encodeURIComponent(symbol)}`)
+  if (typeof data.price !== "number") {
+    throw new GoldError(`Gold API has no price for ${symbol} — see the symbols tool`)
+  }
+  return {
+    symbol: data.symbol ?? symbol,
+    name: data.name ?? symbol,
+    price: data.price,
+    source: "Gold API spot",
+    updated: data.updatedAtReadable ?? data.updatedAt ?? "n/a",
+  }
+}
+
+async function fromYahoo(symbol: string): Promise<Quote> {
+  const ticker = YAHOO_SYMBOLS[symbol]
+  if (!ticker) throw new GoldError(`No fallback quote source for ${symbol}`)
+  let res: Response
+  try {
+    res = await fetch(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=1d&interval=1d`,
+      { headers: { "User-Agent": UA, Accept: "application/json" }, signal: AbortSignal.timeout(20000) }
+    )
+  } catch (e) {
+    throw new GoldError(`Yahoo Finance network error: ${errorMessage(e)}`)
+  }
+  if (res.status === 429) throw new GoldError("Yahoo Finance rate limit hit, wait and retry")
+  if (!res.ok) throw new GoldError(`Yahoo Finance error ${res.status}`)
   const data = (await res.json()) as {
-    chart?: { result?: Array<{ meta?: { regularMarketPrice?: number; regularMarketTime?: number } }> };
-  };
-  const meta = data.chart?.result?.[0]?.meta;
-  if (typeof meta?.regularMarketPrice !== 'number') throw new GoldError(`Yahoo Finance returned no price for ${symbol}`);
-  const updated = meta.regularMarketTime ? new Date(meta.regularMarketTime * 1000).toISOString() : 'n/a';
-  return { price: meta.regularMarketPrice, source: `Yahoo Finance ${symbol} futures`, updated };
+    chart?: { result?: Array<{ meta?: { regularMarketPrice?: number; regularMarketTime?: number } }> }
+  }
+  const meta = data.chart?.result?.[0]?.meta
+  if (typeof meta?.regularMarketPrice !== "number") {
+    throw new GoldError(`Yahoo Finance returned no price for ${ticker}`)
+  }
+  return {
+    symbol,
+    name: PRECIOUS[symbol] ?? symbol,
+    price: meta.regularMarketPrice,
+    source: `Yahoo Finance ${ticker} futures`,
+    updated: meta.regularMarketTime
+      ? new Date(meta.regularMarketTime * 1000).toISOString()
+      : "n/a",
+  }
 }
 
-const SOURCES = [fromGoldApi, fromYahoo];
+const SOURCES = [fromSpot, fromYahoo]
 
-async function fetchQuote(code: string): Promise<Quote & { name: string; code: string }> {
-  if (!NAMES[code]) throw new GoldError('Metal must be XAU, XAG, XPT, or XPD');
-  const failures: string[] = [];
+async function fetchQuote(symbol: string): Promise<Quote> {
+  const failures: string[] = []
   for (const source of SOURCES) {
     try {
-      const quote = await source(code);
-      return { ...quote, name: NAMES[code], code };
+      return await source(symbol)
     } catch (e) {
-      failures.push(e instanceof Error ? e.message : String(e));
+      failures.push(errorMessage(e))
     }
   }
-  throw new GoldError(`All price sources failed for ${code}: ${failures.join('; ')}`);
+  throw new GoldError(`All price sources failed for ${symbol}: ${failures.join("; ")}`)
 }
 
-const m0 = (() => {
-async function price(args: { metal?: string }): Promise<string> {
-  const metal = (args.metal ?? 'XAU').trim().toUpperCase();
-  const q = await fetchQuote(metal);
-  return `${q.name} (${q.code}): $${q.price.toLocaleString(undefined, { maximumFractionDigits: 2 })} USD`
-    + `\nSource: ${q.source}\nUpdated: ${q.updated}`;
-}
-
-return { GoldError, price };
-})();
-
-const m1 = (() => {
-const METAL_MAP: Record<string, string> = {
-  gold: 'XAU',
-  silver: 'XAG',
-  platinum: 'XPT',
-  palladium: 'XPD',
-};
-
-function resolveCode(input: string): string {
-  const v = input.trim().toLowerCase();
-  if (v in METAL_MAP) return METAL_MAP[v];
-  return v.toUpperCase();
-}
-
-async function price(args: m1_PriceArgs): Promise<string> {
-  if (!args.metal) return 'Provide a metal like gold, silver, platinum, or palladium.';
-  const q = await fetchQuote(resolveCode(args.metal));
-  return `${q.name} (${q.code}) spot price: $${q.price.toFixed(2)} (source: ${q.source})`;
-}
-
-async function all(_args: Record<string, never> = {}): Promise<string> {
-  const out: string[] = [];
-  for (const code of Object.keys(NAMES)) {
+async function quoteLines(symbols: string[]): Promise<string[]> {
+  const lines: string[] = []
+  for (const symbol of symbols) {
     try {
-      const q = await fetchQuote(code);
-      out.push(`${q.name} (${code}): $${q.price.toFixed(2)} (source: ${q.source})`);
+      const quote = await fetchQuote(symbol)
+      lines.push(`${quote.name} (${quote.symbol}): ${usd(quote.price)} — ${quote.source}`)
     } catch (e) {
-      out.push(`${NAMES[code]} (${code}): unavailable (${e instanceof Error ? e.message : String(e)})`);
+      lines.push(`${PRECIOUS[symbol] ?? symbol} (${symbol}): unavailable (${errorMessage(e)})`)
     }
   }
-  return `Precious metals spot prices (USD):\n` + out.map((l, i) => `${i + 1}. ${l}`).join('\n');
+  return lines
 }
 
-return { all, price };
-})();
+const numbered = (lines: string[]) => lines.map((line, i) => `${i + 1}. ${line}`).join("\n")
 
-export const all = m1.all;
-export const price = m0.price;
-export const m0_GoldError = m0.GoldError;
-export const m0_price = m0.price;
-export const m1_all = m1.all;
-export const m1_price = m1.price;
+export interface PriceArgs {
+  metal?: string
+}
+
+export async function price(args: PriceArgs = {}): Promise<string> {
+  const symbol = normalizeSymbol(args.metal ?? "XAU")
+  const quote = await fetchQuote(symbol)
+  return `${quote.name} (${quote.symbol}): ${usd(quote.price)} USD\nSource: ${quote.source}\nUpdated: ${quote.updated}`
+}
+
+export async function all(): Promise<string> {
+  const lines = await quoteLines(Object.keys(PRECIOUS))
+  return `Precious metals spot prices (USD):\n${numbered(lines)}`
+}
+
+export async function marketOverview(): Promise<string> {
+  const rows = await symbolRows()
+  const lines = await quoteLines(rows.map((row) => row.symbol))
+  return `Live prices for all ${rows.length} assets gold-api tracks (USD):\n${numbered(lines)}\nUse price or convert for a single asset.`
+}
+
+export async function symbols(): Promise<string> {
+  const rows = await symbolRows()
+  return (
+    `Gold API tracks ${rows.length} symbols:\n` +
+    rows.map((row) => `${row.symbol} = ${row.name}`).join("\n") +
+    "\nUse any symbol with price, convert, or market_overview."
+  )
+}
+
+export interface ConvertArgs {
+  amount: number
+  from: string
+  to?: string
+}
+
+export async function convert(args: ConvertArgs): Promise<string> {
+  const amount = Number(args.amount)
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new GoldError("amount must be a positive number")
+  }
+  const from = normalizeSymbol(args.from)
+  const target = (args.to ?? "USD").trim()
+  const fromQuote = await fetchQuote(from)
+
+  if (target.toUpperCase() === "USD") {
+    return (
+      `${amount} ${fromQuote.symbol} (${fromQuote.name}) = ${usd(amount * fromQuote.price)} USD\n` +
+      `Rate: ${usd(fromQuote.price)} per ${fromQuote.symbol}\n` +
+      `Source: ${fromQuote.source} | Updated: ${fromQuote.updated}`
+    )
+  }
+
+  const toSymbol = normalizeSymbol(target)
+  const toQuote = await fetchQuote(toSymbol)
+  if (toQuote.price <= 0) throw new GoldError(`${toQuote.symbol} has a non-positive price, cannot convert`)
+  const result = (amount * fromQuote.price) / toQuote.price
+  return (
+    `${amount} ${fromQuote.symbol} (${fromQuote.name}) = ${result.toLocaleString("en-US", { maximumFractionDigits: 6 })} ${toQuote.symbol} (${toQuote.name})\n` +
+    `Rates: ${usd(fromQuote.price)} per ${fromQuote.symbol}, ${usd(toQuote.price)} per ${toQuote.symbol}\n` +
+    `Sources: ${fromQuote.source} (${fromQuote.updated}), ${toQuote.source} (${toQuote.updated})`
+  )
+}

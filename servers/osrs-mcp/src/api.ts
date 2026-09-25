@@ -246,3 +246,142 @@ export function formatStats(p: PlayerStats): string {
   }
   return lines.join("\n")
 }
+// ---------------------------------------------------------------------------
+// Item search
+// ---------------------------------------------------------------------------
+
+export interface ItemSummary {
+  id: number
+  name: string
+  members: boolean
+  alch: number
+}
+
+/** Find GE items by partial name, straight off the wiki item mapping. */
+export async function searchItems(query: string, limit = 15): Promise<ItemSummary[]> {
+  const q = query.toLowerCase().trim()
+  if (!q) return []
+  const map = await mapping()
+  const hits = map.filter((m) => m.name.toLowerCase().includes(q))
+  hits.sort((a, b) => {
+    // Exact match first, then prefix matches, then shortest name.
+    const aExact = a.name.toLowerCase() === q ? 0 : a.name.toLowerCase().startsWith(q) ? 1 : 2
+    const bExact = b.name.toLowerCase() === q ? 0 : b.name.toLowerCase().startsWith(q) ? 1 : 2
+    if (aExact !== bExact) return aExact - bExact
+    return a.name.length - b.name.length
+  })
+  return hits.slice(0, Math.min(limit, 40)).map((m) => ({
+    id: m.id,
+    name: m.name,
+    members: m.members,
+    alch: m.highalch ?? 0,
+  }))
+}
+
+// ---------------------------------------------------------------------------
+// Price history
+// ---------------------------------------------------------------------------
+
+export type Timestep = "5m" | "1h" | "6h" | "24h"
+
+export interface PricePoint {
+  timestamp: number
+  avgHigh: number | null
+  avgLow: number | null
+  highVolume: number
+  lowVolume: number
+}
+
+export interface PriceHistory {
+  item: ItemSummary
+  timestep: Timestep
+  points: PricePoint[]
+}
+
+/** Daily/hourly price series for one item (the wiki keeps ~365 points per step). */
+export async function getPriceHistory(
+  name: string,
+  timestep: Timestep = "24h",
+  points = 14
+): Promise<PriceHistory | null> {
+  const q = name.toLowerCase().trim()
+  if (!q) return null
+  const map = await mapping()
+  const entry =
+    map.find((m) => m.name.toLowerCase() === q) ?? map.find((m) => m.name.toLowerCase().includes(q))
+  if (!entry) return null
+
+  const res = await fetchJson<{
+    data?: Array<{ timestamp?: number; avgHighPrice?: number | null; avgLowPrice?: number | null; highPriceVolume?: number; lowPriceVolume?: number }>
+  }>(`${PRICES}/timeseries?timestep=${timestep}&id=${entry.id}`)
+
+  const rows = Array.isArray(res.data) ? res.data : []
+  const slice = rows.slice(-Math.min(Math.max(points, 1), 60))
+  return {
+    item: { id: entry.id, name: entry.name, members: entry.members, alch: entry.highalch ?? 0 },
+    timestep,
+    points: slice.map((r) => ({
+      timestamp: r.timestamp ?? 0,
+      avgHigh: r.avgHighPrice ?? null,
+      avgLow: r.avgLowPrice ?? null,
+      highVolume: r.highPriceVolume ?? 0,
+      lowVolume: r.lowPriceVolume ?? 0,
+    })),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Flip margins
+// ---------------------------------------------------------------------------
+
+export interface Flip {
+  name: string
+  id: number
+  buy: number
+  sell: number
+  margin: number
+  roiPct: number
+  volume: number
+  potential: number
+}
+
+/**
+ * Margin between the instant-buy and instant-sell price, for items that
+ * actually trade. `margin * volume` is a rough "gp per hour" signal, so
+ * illiquid items with a huge spread do not dominate the list.
+ */
+export async function getFlips(limit = 10, minVolume = 100): Promise<Flip[]> {
+  const [map, latest, hourly] = await Promise.all([
+    mapping(),
+    fetchJson<{ data: Record<string, { high?: number | null; low?: number | null }> }>(`${PRICES}/latest`),
+    fetchJson<{
+      data: Record<string, { highPriceVolume?: number; lowPriceVolume?: number }>
+    }>(`${PRICES}/1h`),
+  ])
+  const nameById = new Map(map.map((m) => [m.id, m.name]))
+
+  const flips: Flip[] = []
+  for (const [id, vol] of Object.entries(hourly.data)) {
+    const volume = (vol.highPriceVolume ?? 0) + (vol.lowPriceVolume ?? 0)
+    if (volume < minVolume) continue
+    const price = latest.data[id]
+    const high = price?.high ?? 0
+    const low = price?.low ?? 0
+    if (!high || !low || high <= low) continue
+    const margin = high - low
+    // `low` is the instant-sell price (what you pay to buy), `high` is the
+    // instant-buy price (what you receive when selling), so buy low, sell high.
+    flips.push({
+      id: Number(id),
+      name: nameById.get(Number(id)) ?? `item ${id}`,
+      buy: low,
+      sell: high,
+      margin,
+      roiPct: (margin / low) * 100,
+      volume,
+      potential: margin * volume,
+    })
+  }
+  flips.sort((a, b) => b.potential - a.potential)
+  return flips.slice(0, Math.min(Math.max(limit, 1), 25))
+}

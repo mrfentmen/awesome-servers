@@ -28,7 +28,7 @@ export function createServer(): McpServer {
       title: "Search listings",
       description: "Keyword search across Fashionphile and Rebag. Condition filter is Rebag-data only.",
       inputSchema: z.object({
-        query: z.string().describe("Keyword, e.g. speedy, birkin, submariner."),
+        query: z.string().describe("Keyword, e.g. Baguette, Peekaboo, Mon Tresor."),
         limit: z.string().describe("Max results (default 10, max 25).").optional(),
         max_price: z.string().describe("Max USD price.").optional(),
         condition: z.string().describe("excellent, great, very good, good, fair (Rebag data only).").optional()
@@ -112,7 +112,7 @@ export function createServer(): McpServer {
       title: "Compare prices",
       description: "Group same-model listings across sources with min/max/spread.",
       inputSchema: z.object({
-        query: z.string().describe("Model keyword, e.g. neverfull, daytona."),
+        query: z.string().describe("Model keyword, e.g. Baguette, Peekaboo."),
         limit: z.string().describe("Suggest depth per source (default 30, max 60).").optional()
       }),
       annotations: READ_ONLY,

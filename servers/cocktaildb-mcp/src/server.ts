@@ -6,6 +6,9 @@ import {
   getCocktail,
   randomCocktail,
   listIngredients,
+  filterCocktails,
+  ingredientInfo,
+  listFilters,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -23,17 +26,19 @@ export function createServer(): McpServer {
     "search_cocktails",
     {
       title: "Search cocktails",
-      description: "Search by name.",
+      description:
+        "Find cocktails by name. Returns matching drinks with their category, glass and id — pass an id to get_cocktail for the full recipe.",
       inputSchema: z.object({
-        query: z.string().describe("Cocktail name, e.g. margarita.")
+        query: z.string().describe("Cocktail name, e.g. margarita."),
+        limit: z.number().describe("How many matches to list, 1-25 (default 10).").optional()
       }),
       annotations: READ_ONLY,
     },
-    async ({ query }) => {
+    async ({ query, limit }) => {
       try {
-        return text(await searchCocktails(query));
+        return text(await searchCocktails({ query, limit }))
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(errorMessage(e))
       }
     }
   )
@@ -42,17 +47,18 @@ export function createServer(): McpServer {
     "get_cocktail",
     {
       title: "Get cocktail",
-      description: "Full recipe by drink ID.",
+      description:
+        "Full recipe for one drink: ingredients with measures, instructions, glass, category and image URL. Needs a drink id from search_cocktails or filter_cocktails.",
       inputSchema: z.object({
-        drink_id: z.string().describe("Drink ID, e.g. 11007.")
+        drink_id: z.string().describe("Drink id, e.g. 11007.")
       }),
       annotations: READ_ONLY,
     },
     async ({ drink_id }) => {
       try {
-        return text(await getCocktail(drink_id));
+        return text(await getCocktail(drink_id))
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(errorMessage(e))
       }
     }
   )
@@ -61,15 +67,17 @@ export function createServer(): McpServer {
     "random_cocktail",
     {
       title: "Random cocktail",
-      description: "A random recipe.",
-      inputSchema: z.object({}),
+      description: "One or more random cocktail recipes, useful for suggestions and inspiration.",
+      inputSchema: z.object({
+        count: z.number().describe("How many random recipes, 1-3 (default 1).").optional()
+      }),
       annotations: READ_ONLY,
     },
-    async ({  }) => {
+    async ({ count }) => {
       try {
-        return text(await randomCocktail());
+        return text(await randomCocktail(count))
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(errorMessage(e))
       }
     }
   )
@@ -78,15 +86,81 @@ export function createServer(): McpServer {
     "list_ingredients",
     {
       title: "List ingredients",
-      description: "All known ingredients.",
-      inputSchema: z.object({}),
+      description:
+        "Known ingredients in the cocktail database, optionally filtered by a substring. Use the exact names with filter_cocktails and ingredient_info.",
+      inputSchema: z.object({
+        search: z.string().describe("Substring to filter ingredient names, e.g. vodka.").optional(),
+        limit: z.number().describe("How many names to list, 1-200 (default 40).").optional()
+      }),
       annotations: READ_ONLY,
     },
-    async ({  }) => {
+    async ({ search, limit }) => {
       try {
-        return text(await listIngredients());
+        return text(await listIngredients({ search, limit }))
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "filter_cocktails",
+    {
+      title: "Filter cocktails",
+      description:
+        "Browse cocktails by one attribute: an ingredient they contain, a category, a glass type, or an alcohol option. Returns drink names with ids.",
+      inputSchema: z.object({
+        by: z.string().describe("ingredient, category, glass, or alcohol."),
+        value: z.string().describe("Value to match, e.g. Gin, Cocktail, Cocktail glass, Non alcoholic."),
+        limit: z.number().describe("How many drinks to list, 1-50 (default 20).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ by, value, limit }) => {
+      try {
+        return text(await filterCocktails({ by, value, limit }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "ingredient_info",
+    {
+      title: "Ingredient info",
+      description:
+        "Profile of one ingredient: type, whether it contains alcohol, ABV, and a description of what it is.",
+      inputSchema: z.object({
+        name: z.string().describe("Ingredient name, e.g. Gin.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ name }) => {
+      try {
+        return text(await ingredientInfo(name))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "list_filters",
+    {
+      title: "List filters",
+      description:
+        "The valid values for filter_cocktails: drink categories, glass types and alcohol options.",
+      inputSchema: z.object({
+        kind: z.string().describe("categories, glasses, alcohol, or all (default all).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ kind }) => {
+      try {
+        return text(await listFilters(kind))
+      } catch (e) {
+        return textError(errorMessage(e))
       }
     }
   )

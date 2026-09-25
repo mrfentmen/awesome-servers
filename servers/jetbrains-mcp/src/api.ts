@@ -28,8 +28,12 @@ export interface PluginHit {
   rating?: number
 }
 
-export async function searchPlugins(query: string, limit = 5): Promise<PluginHit[]> {
-  const data = await getJson<Raw>(`/searchPlugins?query=${encodeURIComponent(query)}&orderBy=relevance`)
+/** Sort orders the Marketplace search accepts. */
+export const MARKETPLACE_ORDERS = ['relevance', 'downloads', 'rating', 'name', 'updated'] as const
+
+export async function searchPlugins(query: string, limit = 5, orderBy = 'relevance'): Promise<PluginHit[]> {
+  const order = (MARKETPLACE_ORDERS as readonly string[]).includes(orderBy) ? orderBy : 'relevance'
+  const data = await getJson<Raw>(`/searchPlugins?search=${encodeURIComponent(query)}&orderBy=${order}&max=${limit}`)
   const rows: Raw[] = Array.isArray(data.plugins) ? data.plugins : []
   return rows.slice(0, limit).map((p) => ({
     id: Number(p.id),
@@ -44,6 +48,33 @@ export async function searchPlugins(query: string, limit = 5): Promise<PluginHit
 export interface PluginDetails extends PluginHit {
   vendor?: string
   link?: string
+}
+
+/** Top of the Marketplace charts: an empty search ordered by downloads or rating. */
+export async function topPlugins(orderBy: 'downloads' | 'rating', limit = 10): Promise<PluginHit[]> {
+  return searchPlugins('', limit, orderBy)
+}
+
+export interface PluginVersion {
+  version: string
+  date?: string
+  link?: string
+  downloads?: number
+}
+
+/** Recent releases of one plugin, newest first. */
+export async function pluginVersions(id: string, limit = 5): Promise<PluginVersion[]> {
+  const clean = id.trim()
+  if (!/^\d+$/.test(clean)) throw new JetBrainsError(`Plugin id must be numeric, got "${id}". Search first.`)
+  const size = Math.min(Math.max(limit, 1), 20)
+  const rows = await getJson<Raw[]>(`/plugins/${clean}/updates?size=${size}`)
+  const list: Raw[] = Array.isArray(rows) ? rows : []
+  return list.slice(0, size).map((r) => ({
+    version: String(r.version ?? '?'),
+    date: r.cdate ? new Date(Number(r.cdate)).toISOString().slice(0, 10) : undefined,
+    link: r.link ? `https://plugins.jetbrains.com${r.link}` : undefined,
+    downloads: typeof r.downloads === 'number' ? r.downloads : undefined,
+  }))
 }
 
 export async function getPlugin(id: string): Promise<PluginDetails> {
