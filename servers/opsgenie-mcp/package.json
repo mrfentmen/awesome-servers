@@ -1,5 +1,5 @@
 {
-  "name": "opsgenie-mcp",
+  "name": "@mrfentmen/opsgenie-mcp",
   "version": "1.0.0",
   "description": "Opsgenie alerts: list, details, on-calls. Needs key.",
   "type": "module",
