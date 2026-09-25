@@ -180,3 +180,48 @@ function stripHtml(s: string): string {
     .replace(/\s+/g, " ")
     .trim()
 }
+
+export interface ReviewSummary {
+  total: number;
+  positive: number;
+  negative: number;
+  score_desc: string;
+}
+
+export async function getReviewSummary(appid: number): Promise<ReviewSummary> {
+  const d = await getJson<{ success?: number; query_summary?: { total_reviews?: number; total_positive?: number; total_negative?: number; review_score_desc?: string } }>(
+    `https://store.steampowered.com/appreviews/${appid}?json=1&language=all&purchase_type=all&num_per_page=0`);
+  const q = d.query_summary ?? {};
+  return {
+    total: q.total_reviews ?? 0,
+    positive: q.total_positive ?? 0,
+    negative: q.total_negative ?? 0,
+    score_desc: q.review_score_desc ?? 'unknown',
+  };
+}
+
+export async function getPlayerCount(appid: number): Promise<number> {
+  const d = await getJson<{ response?: { player_count?: number; result?: number } }>(
+    `https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?appid=${appid}`);
+  if (d.response?.result !== 1 || d.response?.player_count == null) {
+    throw new SteamError(`No player count for app ${appid}.`);
+  }
+  return d.response.player_count;
+}
+
+export interface TopSeller {
+  id?: number;
+  name?: string;
+  final_price?: number;
+  currency?: string;
+  discount_percent?: number;
+}
+
+export async function getTopSellers(count: number): Promise<TopSeller[]> {
+  const d = await getJson<{ top_sellers?: { items?: { id?: number; name?: string; final_price?: number; currency?: string; discount_percent?: number }[] } }>(
+    `https://store.steampowered.com/api/featuredcategories/?cc=US&l=en`);
+  return (d.top_sellers?.items ?? []).slice(0, count).map((i) => ({
+    id: i.id, name: i.name, final_price: i.final_price,
+    currency: i.currency, discount_percent: i.discount_percent,
+  }));
+}

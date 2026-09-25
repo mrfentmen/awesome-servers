@@ -2,10 +2,14 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import {
   SteamError,
+  fmtPrice,
   formatAppDetail,
   formatStoreItem,
   getAppDetail,
   getNews,
+  getPlayerCount,
+  getReviewSummary,
+  getTopSellers,
   searchStore,
 } from "./api.js"
 
@@ -98,6 +102,67 @@ export function createServer(): McpServer {
     }
   )
 
+  server.registerTool(
+    "reviews",
+    {
+      title: "Review summary",
+      description: "Review totals for a game: total, positive and negative counts plus the summary label.",
+      inputSchema: z.object(
+    { appid: z.number().describe("Steam app id, e.g. 292030.") }),
+      annotations: READ_ONLY,
+    },
+    async ({ appid }) => {
+      try {
+        const s = await getReviewSummary(appid)
+        return text(
+          `Reviews: ${s.total.toLocaleString()} total, ${s.positive.toLocaleString()} positive, ${s.negative.toLocaleString()} negative — ${s.score_desc}.`
+        )
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+  server.registerTool(
+    "players",
+    {
+      title: "Player count",
+      description: "How many players are in a game right now.",
+      inputSchema: z.object(
+    { appid: z.number().describe("Steam app id, e.g. 292030.") }),
+      annotations: READ_ONLY,
+    },
+    async ({ appid }) => {
+      try {
+        const n = await getPlayerCount(appid)
+        return text(`Current players: ${n.toLocaleString()}.`)
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+  server.registerTool(
+    "topsellers",
+    {
+      title: "Top sellers",
+      description: "Current Steam top sellers with prices and discounts.",
+      inputSchema: z.object(
+    { count: z.number().describe("How many entries, 1-10. Defaults to 10.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async ({ count }) => {
+      try {
+        const items = await getTopSellers(Math.min(Math.max(count ?? 10, 1), 10))
+        if (!items.length) return text('No top sellers returned.')
+        return text(
+          `Steam top sellers:\n` + items.map((g, n) =>
+            `${n + 1}. [${g.id}] ${g.name} — ${g.final_price != null ? fmtPrice(g.final_price, g.currency) : 'price n/a'}${g.discount_percent ? ` (-${g.discount_percent}%)` : ''}`
+          ).join('\n')
+        )
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
   return server
 }
 
