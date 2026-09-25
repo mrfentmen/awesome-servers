@@ -1,5 +1,5 @@
 {
-  "name": "fueleconomy-mcp",
+  "name": "@mrfentmen/fueleconomy-mcp",
   "version": "1.0.0",
   "description": "US fuel economy data. Keyless.",
   "type": "module",

@@ -1,5 +1,5 @@
 {
-  "name": "iss-mcp",
+  "name": "@mrfentmen/iss-mcp",
   "version": "1.0.0",
   "description": "ISS position and crew. Keyless.",
   "type": "module",
