@@ -4,7 +4,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 
 ## Contents
 
-- **174 MCP servers** in [`servers/`](./servers)
+- **178 MCP servers** in [`servers/`](./servers)
 
 ## MCP servers
 - [`adguardhome-mcp`](./servers/adguardhome-mcp)
@@ -64,6 +64,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`flipside-mcp`](./servers/flipside-mcp)
 - [`fmp-mcp`](./servers/fmp-mcp)
 - [`folk-mcp`](./servers/folk-mcp)
+- [`fueleconomy-mcp`](./servers/fueleconomy-mcp)
 - [`gatus-mcp`](./servers/gatus-mcp)
 - [`geckoterminal-mcp`](./servers/geckoterminal-mcp)
 - [`glossier-mcp`](./servers/glossier-mcp)
@@ -84,6 +85,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`ifandco-mcp`](./servers/ifandco-mcp)
 - [`invoice-mcp`](./servers/invoice-mcp)
 - [`isbndb-mcp`](./servers/isbndb-mcp)
+- [`iss-mcp`](./servers/iss-mcp)
 - [`jacquesmariemage-mcp`](./servers/jacquesmariemage-mcp)
 - [`jetbrains-mcp`](./servers/jetbrains-mcp)
 - [`job-search-mcp`](./servers/job-search-mcp)
@@ -117,6 +119,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`ohdear-mcp`](./servers/ohdear-mcp)
 - [`omdb-mcp`](./servers/omdb-mcp)
 - [`onesignal-mcp`](./servers/onesignal-mcp)
+- [`openchargemap-mcp`](./servers/openchargemap-mcp)
 - [`openlibrary-mcp`](./servers/openlibrary-mcp)
 - [`openmoji-mcp`](./servers/openmoji-mcp)
 - [`openpanel-mcp`](./servers/openpanel-mcp)
@@ -151,6 +154,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`shootproof-mcp`](./servers/shootproof-mcp)
 - [`simplecast-mcp`](./servers/simplecast-mcp)
 - [`smartrecruiters-mcp`](./servers/smartrecruiters-mcp)
+- [`spacedevs-mcp`](./servers/spacedevs-mcp)
 - [`sportyandrich-mcp`](./servers/sportyandrich-mcp)
 - [`spreaker-mcp`](./servers/spreaker-mcp)
 - [`squarespace-mcp`](./servers/squarespace-mcp)
