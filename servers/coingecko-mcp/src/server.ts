@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_price, m0_trending } from './api.js'
+import { m0_price, m0_trending, markets, coin, chart, global } from './api.js'
 
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -32,6 +32,54 @@ server.registerTool(
     },
     async (args) => {
     try { return text(await m0_trending(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "markets",
+    {
+      title: "Top markets",
+      description: "Top coins by market cap with rank and price.",
+      inputSchema: z.object( { currency: z.string().describe("Vs currency like usd. Defaults to usd.").optional(), limit: z.number().describe("How many coins, 1-50. Defaults to 10.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await markets(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "coin",
+    {
+      title: "Coin detail",
+      description: "One coin with rank, 24h change, algorithm and categories.",
+      inputSchema: z.object( { coin: z.string().describe("Coin id like bitcoin.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await coin(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "chart",
+    {
+      title: "Price chart",
+      description: "Sampled daily closes for a coin over N days with the period percent change.",
+      inputSchema: z.object( { coin: z.string().describe("Coin id like bitcoin.").optional(), currency: z.string().describe("Vs currency like usd.").optional(), days: z.number().describe("Days of history, 1-365. Defaults to 7.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await chart(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "global",
+    {
+      title: "Global stats",
+      description: "Total coins and markets plus top-5 dominance shares.",
+      inputSchema: z.object( {  }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await global(args)) } catch (e) { return textError(error(e)) }
   }
   )
   return server

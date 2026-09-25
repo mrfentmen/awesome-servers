@@ -90,5 +90,79 @@ export const trending = m0.trending;
 export const m0_trending = m0.trending;
 export const m0_price = m0.price;
 export const m1_trending = m1.trending;
+
+const m2 = (() => {
+const BASE2 = 'https://api.coingecko.com/api/v3';
+const UA2 = 'mrfentmen-coingecko-mcp/1.0';
+
+async function get2<T>(url: string): Promise<T> {
+  const res = await fetch(url, { headers: { 'User-Agent': UA2, Accept: 'application/json' }, signal: AbortSignal.timeout(25000) });
+  if (res.status === 429) throw new m1.CryptoError('CoinGecko rate limit hit, wait and retry');
+  if (!res.ok) throw new m1.CryptoError(`CoinGecko error ${res.status}`);
+  return (await res.json()) as T;
+}
+
+const clamp2 = (value: number | undefined, fallback: number, max = 50) =>
+  Math.min(Math.max(Number(value ?? fallback) || fallback, 1), max);
+
+async function markets(args: { currency?: string; limit?: number }): Promise<string> {
+  const currency = (args.currency ?? 'usd').toLowerCase();
+  const limit = clamp2(args.limit, 10, 50);
+  const d = await get2<{ id?: string; symbol?: string; name?: string; current_price?: number; market_cap_rank?: number }[]>(
+    `${BASE2}/coins/markets?vs_currency=${encodeURIComponent(currency)}&order=market_cap_desc&per_page=${limit}&page=1`);
+  if (!d.length) return 'No market data returned.';
+  return `Top ${d.length} coins by market cap (${currency.toUpperCase()}):\n` + d.map((c) =>
+    `#${c.market_cap_rank ?? '?'} ${c.name ?? '?'} (${(c.symbol ?? '?').toUpperCase()}): ${(c.current_price ?? 0).toLocaleString()} ${currency.toUpperCase()}`).join('\n');
+}
+
+async function coin(args: { coin?: string }): Promise<string> {
+  const coin = (args.coin ?? '').trim().toLowerCase();
+  if (!coin) return 'Provide a coin id like bitcoin or ethereum.';
+  const d = await get2<{ id?: string; symbol?: string; name?: string; hashing_algorithm?: string; categories?: string[]; market_data?: { current_price?: Record<string, number>; market_cap_rank?: number; price_change_percentage_24h?: number } }>(
+    `${BASE2}/coins/${encodeURIComponent(coin)}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false`);
+  const md = d.market_data ?? {};
+  const cats = (d.categories ?? []).slice(0, 5).join(', ');
+  return [
+    `${d.name ?? coin} (${(d.symbol ?? '?').toUpperCase()})`,
+    `Rank: ${md.market_cap_rank ?? '?'} | 24h change: ${md.price_change_percentage_24h?.toFixed(2) ?? '?'}%`,
+    `Algorithm: ${d.hashing_algorithm ?? '?'}`,
+    cats ? `Categories: ${cats}` : null,
+  ].filter(Boolean).join('\n');
+}
+
+async function chart(args: { coin?: string; currency?: string; days?: number }): Promise<string> {
+  const coin = (args.coin ?? '').trim().toLowerCase();
+  if (!coin) return 'Provide a coin id like bitcoin or ethereum.';
+  const currency = (args.currency ?? 'usd').toLowerCase();
+  const days = clamp2(args.days, 7, 365);
+  const d = await get2<{ prices?: number[][] }>(
+    `${BASE2}/coins/${encodeURIComponent(coin)}/market_chart?vs_currency=${encodeURIComponent(currency)}&days=${days}`);
+  const prices = d.prices ?? [];
+  if (!prices.length) return `No chart data for ${coin}.`;
+  const step = Math.max(1, Math.floor(prices.length / 10));
+  const rows = prices.filter((_, i) => i % step === 0).map(([t, p]) =>
+    `${new Date(t).toISOString().slice(0, 10)} ${Number(p).toLocaleString(undefined, { maximumFractionDigits: 2 })}`);
+  const first = prices[0][1];
+  const last = prices[prices.length - 1][1];
+  const change = ((last - first) / first * 100).toFixed(2);
+  return `${coin} ${days}d in ${currency.toUpperCase()} (${change}%):\n` + rows.join('\n');
+}
+
+async function global(args?: unknown): Promise<string> {
+  void args;
+  const d = await get2<{ data?: { active_cryptocurrencies?: number; markets?: number; total_market_cap?: Record<string, number>; market_cap_percentage?: Record<string, number> } }>(`${BASE2}/global`);
+  const g = d.data ?? {};
+  const dom = g.market_cap_percentage ?? {};
+  const top = Object.entries(dom).slice(0, 5).map(([k, v]) => `${k.toUpperCase()} ${Number(v).toFixed(1)}%`).join(', ');
+  return `Crypto market: ${g.active_cryptocurrencies ?? '?'} coins across ${g.markets ?? '?'} markets. Dominance: ${top}.`;
+}
+
+return { markets, coin, chart, global };
+})();
+
+export const markets = m2.markets;
+export const coin = m2.coin;
+export const chart = m2.chart;
+export const global = m2.global;
 export const m1_price = m1.price;
 export const m1_CryptoError = m1.CryptoError;
