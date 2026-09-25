@@ -4,7 +4,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 
 ## Contents
 
-- **179 MCP servers** in [`servers/`](./servers)
+- **180 MCP servers** in [`servers/`](./servers)
 
 ## MCP servers
 - [`adguardhome-mcp`](./servers/adguardhome-mcp)
@@ -60,6 +60,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`ericemanuel-mcp`](./servers/ericemanuel-mcp)
 - [`ethplorer-mcp`](./servers/ethplorer-mcp)
 - [`etsy-mcp`](./servers/etsy-mcp)
+- [`fbi-crime-mcp`](./servers/fbi-crime-mcp)
 - [`fendi-mcp`](./servers/fendi-mcp)
 - [`flipside-mcp`](./servers/flipside-mcp)
 - [`fmp-mcp`](./servers/fmp-mcp)
