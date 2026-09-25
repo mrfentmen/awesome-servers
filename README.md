@@ -4,7 +4,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 
 ## Contents
 
-- **180 MCP servers** in [`servers/`](./servers)
+- **184 MCP servers** in [`servers/`](./servers)
 
 ## MCP servers
 - [`adguardhome-mcp`](./servers/adguardhome-mcp)
@@ -57,6 +57,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`doh-mcp`](./servers/doh-mcp)
 - [`doppler-mcp`](./servers/doppler-mcp)
 - [`email-validator-mcp`](./servers/email-validator-mcp)
+- [`epo-mcp`](./servers/epo-mcp)
 - [`ericemanuel-mcp`](./servers/ericemanuel-mcp)
 - [`ethplorer-mcp`](./servers/ethplorer-mcp)
 - [`etsy-mcp`](./servers/etsy-mcp)
@@ -92,6 +93,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`job-search-mcp`](./servers/job-search-mcp)
 - [`jobicy-mcp`](./servers/jobicy-mcp)
 - [`jokeapi-mcp`](./servers/jokeapi-mcp)
+- [`jolpica-mcp`](./servers/jolpica-mcp)
 - [`k6-mcp`](./servers/k6-mcp)
 - [`kith-mcp`](./servers/kith-mcp)
 - [`kiwi-mcp`](./servers/kiwi-mcp)
@@ -115,6 +117,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`nager-mcp`](./servers/nager-mcp)
 - [`netdata-mcp`](./servers/netdata-mcp)
 - [`noahny-mcp`](./servers/noahny-mcp)
+- [`nonprofit-mcp`](./servers/nonprofit-mcp)
 - [`nylas-mcp`](./servers/nylas-mcp)
 - [`ocrspace-mcp`](./servers/ocrspace-mcp)
 - [`ohdear-mcp`](./servers/ohdear-mcp)
@@ -141,6 +144,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`predictit-mcp`](./servers/predictit-mcp)
 - [`publicwww-mcp`](./servers/publicwww-mcp)
 - [`pusher-mcp`](./servers/pusher-mcp)
+- [`pvgis-mcp`](./servers/pvgis-mcp)
 - [`qbittorrent-mcp`](./servers/qbittorrent-mcp)
 - [`quip-mcp`](./servers/quip-mcp)
 - [`radarr-mcp`](./servers/radarr-mcp)
