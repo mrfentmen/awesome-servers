@@ -4,7 +4,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 
 ## Contents
 
-- **68 MCP servers** in [`servers/`](./servers)
+- **71 MCP servers** in [`servers/`](./servers)
 
 ## MCP servers
 - [`aimeleondore-mcp`](./servers/aimeleondore-mcp)
@@ -18,10 +18,12 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`binance-market-mcp`](./servers/binance-market-mcp)
 - [`bottegaveneta-mcp`](./servers/bottegaveneta-mcp)
 - [`brevo-mcp`](./servers/brevo-mcp)
+- [`brewery-mcp`](./servers/brewery-mcp)
 - [`cartier-mcp`](./servers/cartier-mcp)
 - [`cgtrader-mcp`](./servers/cgtrader-mcp)
 - [`chanel-mcp`](./servers/chanel-mcp)
 - [`cheapshark-mcp`](./servers/cheapshark-mcp)
+- [`cocktaildb-mcp`](./servers/cocktaildb-mcp)
 - [`coinbase-mcp`](./servers/coinbase-mcp)
 - [`coingecko-mcp`](./servers/coingecko-mcp)
 - [`convertkit-mcp`](./servers/convertkit-mcp)
@@ -50,6 +52,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`mailjet-mcp`](./servers/mailjet-mcp)
 - [`marketstack-mcp`](./servers/marketstack-mcp)
 - [`mixpanel-mcp`](./servers/mixpanel-mcp)
+- [`openlibrary-mcp`](./servers/openlibrary-mcp)
 - [`pinterest-mcp`](./servers/pinterest-mcp)
 - [`prada-mcp`](./servers/prada-mcp)
 - [`predictit-mcp`](./servers/predictit-mcp)
