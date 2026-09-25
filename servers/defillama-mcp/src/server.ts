@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_chains, m0_protocol, m1_chainTvl, m1_protocolInfo, m1_topProtocols } from './api.js'
+import { m0_chains, m0_protocol, m1_chainTvl, m1_protocolInfo, m1_topProtocols, topYields, hacks } from './api.js'
 
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -68,6 +68,30 @@ server.registerTool(
     },
     async (args) => {
     try { return text(await m1_protocolInfo(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "topYields",
+    {
+      title: "Top yields",
+      description: "Highest-APY DeFi pools with project, chain, APY and TVL.",
+      inputSchema: z.object( { limit: z.number().describe("How many pools, 1-25. Defaults to 10.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await topYields(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "hacks",
+    {
+      title: "Recent hacks",
+      description: "Largest recent DeFi hacks with date, target, chain, amount and technique.",
+      inputSchema: z.object( { limit: z.number().describe("How many hacks, 1-25. Defaults to 10.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await hacks(args)) } catch (e) { return textError(error(e)) }
   }
   )
   return server

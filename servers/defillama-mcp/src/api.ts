@@ -90,7 +90,31 @@ async function protocolInfo(args: { protocol?: string }): Promise<string> {
   return `Protocol: ${d?.name ?? slug}\nCurrent TVL: ${fmtUsd(d?.tvl)}\nChains: ${(d?.chains ?? []).join(", ") || "n/a"}\nCategory: ${d?.category ?? "n/a"}\nDescription: ${d?.description ?? "n/a"}\nWebsite: ${d?.url ?? "n/a"}`
 }
 
-return { DefiError, chainTvl, protocolInfo, topProtocols };
+async function topYields(args: { limit?: number }): Promise<string> {
+  const limit = Math.min(args.limit ?? 10, 25)
+  const res = await fetch('https://yields.llama.fi/pools', {
+    headers: { "User-Agent": UA, Accept: 'application/json' }, signal: AbortSignal.timeout(30000) });
+  if (!res.ok) throw new DefiError(`DefiLlama error ${res.status}`);
+  const d = (await res.json()) as { data?: { project?: string; symbol?: string; chain?: string; apy?: number; tvlUsd?: number }[] };
+  const rows = (d.data ?? []).filter((p) => (p.apy ?? 0) > 0)
+    .sort((a, b) => (b.apy ?? 0) - (a.apy ?? 0)).slice(0, limit);
+  if (!rows.length) return 'No yield pools returned.';
+  return `Top APY pools (${rows.length} shown):\n` + rows.map((p, i) =>
+    `${i + 1}. ${p.project ?? '?'} ${p.symbol ?? ''} on ${p.chain ?? '?'}: ${(p.apy ?? 0).toFixed(2)}% APY, TVL ${fmtUsd(p.tvlUsd)}`).join('\n');
+}
+
+async function hacks(args: { limit?: number }): Promise<string> {
+  const limit = Math.min(args.limit ?? 10, 25)
+  const d = await get<{ date?: number; name?: string; technique?: string; amount?: number; chain?: string[] }[]>(`${BASE}/hacks`);
+  const rows = [...d].sort((a, b) => (b.date ?? 0) - (a.date ?? 0)).slice(0, limit);
+  if (!rows.length) return 'No hacks returned.';
+  return `Largest recent DeFi hacks (${rows.length} shown):\n` + rows.map((h) => {
+    const date = h.date ? new Date(h.date * 1000).toISOString().slice(0, 10) : '?';
+    return `${date} ${h.name ?? '?'} (${(h.chain ?? []).join('/') || '?'}) $${Number(h.amount ?? 0).toLocaleString()} — ${h.technique ?? '?'}`;
+  }).join('\n');
+}
+
+return { DefiError, chainTvl, protocolInfo, topProtocols, topYields, hacks };
 })();
 
 export const DefiError = m1.DefiError;
@@ -101,6 +125,8 @@ export const protocolInfo = m1.protocolInfo;
 export const topProtocols = m1.topProtocols;
 export const m0_protocol = m0.protocol;
 export const m0_chains = m0.chains;
+export const topYields = m1.topYields;
+export const hacks = m1.hacks;
 export const m1_topProtocols = m1.topProtocols;
 export const m1_chainTvl = m1.chainTvl;
 export const m1_protocolInfo = m1.protocolInfo;
