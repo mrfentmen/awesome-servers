@@ -4,7 +4,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 
 ## Contents
 
-- **178 MCP servers** in [`servers/`](./servers)
+- **179 MCP servers** in [`servers/`](./servers)
 
 ## MCP servers
 - [`adguardhome-mcp`](./servers/adguardhome-mcp)
@@ -123,6 +123,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`openlibrary-mcp`](./servers/openlibrary-mcp)
 - [`openmoji-mcp`](./servers/openmoji-mcp)
 - [`openpanel-mcp`](./servers/openpanel-mcp)
+- [`openrouteservice-mcp`](./servers/openrouteservice-mcp)
 - [`opentdb-mcp`](./servers/opentdb-mcp)
 - [`opnsense-mcp`](./servers/opnsense-mcp)
 - [`opsgenie-mcp`](./servers/opsgenie-mcp)
