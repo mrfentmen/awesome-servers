@@ -1,5 +1,5 @@
 {
-  "name": "openlibrary-mcp",
+  "name": "@mrfentmen/openlibrary-mcp",
   "version": "1.0.0",
   "description": "Open Library books: search, works, authors. Keyless.",
   "type": "module",
