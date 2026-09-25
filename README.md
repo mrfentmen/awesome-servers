@@ -4,7 +4,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 
 ## Contents
 
-- **172 MCP servers** in [`servers/`](./servers)
+- **174 MCP servers** in [`servers/`](./servers)
 
 ## MCP servers
 - [`adguardhome-mcp`](./servers/adguardhome-mcp)
@@ -104,6 +104,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`mailgun-mcp`](./servers/mailgun-mcp)
 - [`mailjet-mcp`](./servers/mailjet-mcp)
 - [`marketstack-mcp`](./servers/marketstack-mcp)
+- [`mastodon-mcp`](./servers/mastodon-mcp)
 - [`mercury-mcp`](./servers/mercury-mcp)
 - [`missoma-mcp`](./servers/missoma-mcp)
 - [`mixpanel-mcp`](./servers/mixpanel-mcp)
@@ -166,6 +167,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`turbosquid-mcp`](./servers/turbosquid-mcp)
 - [`twelvedata-mcp`](./servers/twelvedata-mcp)
 - [`twilio-mcp`](./servers/twilio-mcp)
+- [`twitch-mcp`](./servers/twitch-mcp)
 - [`uptime-kuma-mcp`](./servers/uptime-kuma-mcp)
 - [`uptimerobot-mcp`](./servers/uptimerobot-mcp)
 - [`urlhaus-mcp`](./servers/urlhaus-mcp)
