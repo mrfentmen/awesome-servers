@@ -4,7 +4,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 
 ## Contents
 
-- **107 MCP servers** in [`servers/`](./servers)
+- **111 MCP servers** in [`servers/`](./servers)
 
 ## MCP servers
 - [`aimeleondore-mcp`](./servers/aimeleondore-mcp)
@@ -52,6 +52,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`glossier-mcp`](./servers/glossier-mcp)
 - [`gog-mcp`](./servers/gog-mcp)
 - [`gold-prices-mcp`](./servers/gold-prices-mcp)
+- [`google-books-mcp`](./servers/google-books-mcp)
 - [`greenhouse-mcp`](./servers/greenhouse-mcp)
 - [`groq-mcp`](./servers/groq-mcp)
 - [`gucci-mcp`](./servers/gucci-mcp)
@@ -73,7 +74,9 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`mailjet-mcp`](./servers/mailjet-mcp)
 - [`marketstack-mcp`](./servers/marketstack-mcp)
 - [`mixpanel-mcp`](./servers/mixpanel-mcp)
+- [`mobygames-mcp`](./servers/mobygames-mcp)
 - [`ohdear-mcp`](./servers/ohdear-mcp)
+- [`omdb-mcp`](./servers/omdb-mcp)
 - [`openlibrary-mcp`](./servers/openlibrary-mcp)
 - [`openpanel-mcp`](./servers/openpanel-mcp)
 - [`pinata-mcp`](./servers/pinata-mcp)
@@ -83,6 +86,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`prada-mcp`](./servers/prada-mcp)
 - [`predictit-mcp`](./servers/predictit-mcp)
 - [`quip-mcp`](./servers/quip-mcp)
+- [`rawg-mcp`](./servers/rawg-mcp)
 - [`remoteok-mcp`](./servers/remoteok-mcp)
 - [`rolex-mcp`](./servers/rolex-mcp)
 - [`rybbit-mcp`](./servers/rybbit-mcp)
