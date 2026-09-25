@@ -105,7 +105,7 @@ export async function pool(args: PoolArgs): Promise<string> {
   if (!d.data) return `No pool ${address} on ${network}.`;
   const a = d.data.attributes ?? {};
   return [
-    `Pool ${a.name ?? d.data.id ?? short}:`,
+    `Pool ${a.name ?? d.data.id ?? address}:`,
     `Base price USD: ${a.base_token_price_usd ?? '?'} | Quote USD: ${a.quote_token_price_usd ?? '?'}`,
     `Reserve USD: ${a.reserve_in_usd ?? '?'} | Created: ${a.pool_created_at ?? '?'}`,
   ].join('\n');
