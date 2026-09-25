@@ -4,7 +4,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 
 ## Contents
 
-- **138 MCP servers** in [`servers/`](./servers)
+- **144 MCP servers** in [`servers/`](./servers)
 
 ## MCP servers
 - [`aimeleondore-mcp`](./servers/aimeleondore-mcp)
@@ -55,6 +55,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`fendi-mcp`](./servers/fendi-mcp)
 - [`flipside-mcp`](./servers/flipside-mcp)
 - [`fmp-mcp`](./servers/fmp-mcp)
+- [`folk-mcp`](./servers/folk-mcp)
 - [`geckoterminal-mcp`](./servers/geckoterminal-mcp)
 - [`glossier-mcp`](./servers/glossier-mcp)
 - [`gog-mcp`](./servers/gog-mcp)
@@ -80,6 +81,8 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`kith-mcp`](./servers/kith-mcp)
 - [`kiwi-mcp`](./servers/kiwi-mcp)
 - [`kraken-mcp`](./servers/kraken-mcp)
+- [`lago-mcp`](./servers/lago-mcp)
+- [`lemonsqueezy-mcp`](./servers/lemonsqueezy-mcp)
 - [`lever-mcp`](./servers/lever-mcp)
 - [`loops-mcp`](./servers/loops-mcp)
 - [`louisvuitton-mcp`](./servers/louisvuitton-mcp)
@@ -87,6 +90,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`mailgun-mcp`](./servers/mailgun-mcp)
 - [`mailjet-mcp`](./servers/mailjet-mcp)
 - [`marketstack-mcp`](./servers/marketstack-mcp)
+- [`mercury-mcp`](./servers/mercury-mcp)
 - [`missoma-mcp`](./servers/missoma-mcp)
 - [`mixpanel-mcp`](./servers/mixpanel-mcp)
 - [`mobygames-mcp`](./servers/mobygames-mcp)
@@ -98,10 +102,12 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`openlibrary-mcp`](./servers/openlibrary-mcp)
 - [`openpanel-mcp`](./servers/openpanel-mcp)
 - [`osrs-mcp`](./servers/osrs-mcp)
+- [`paddle-mcp`](./servers/paddle-mcp)
 - [`peakdesign-mcp`](./servers/peakdesign-mcp)
 - [`pinata-mcp`](./servers/pinata-mcp)
 - [`pingdom-mcp`](./servers/pingdom-mcp)
 - [`pinterest-mcp`](./servers/pinterest-mcp)
+- [`plain-mcp`](./servers/plain-mcp)
 - [`playcanvas-mcp`](./servers/playcanvas-mcp)
 - [`postmark-mcp`](./servers/postmark-mcp)
 - [`prada-mcp`](./servers/prada-mcp)
