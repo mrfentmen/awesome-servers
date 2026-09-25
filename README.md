@@ -4,7 +4,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 
 ## Contents
 
-- **170 MCP servers** in [`servers/`](./servers)
+- **172 MCP servers** in [`servers/`](./servers)
 
 ## MCP servers
 - [`adguardhome-mcp`](./servers/adguardhome-mcp)
@@ -54,6 +54,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`dior-mcp`](./servers/dior-mcp)
 - [`directus-mcp`](./servers/directus-mcp)
 - [`disify-mcp`](./servers/disify-mcp)
+- [`doh-mcp`](./servers/doh-mcp)
 - [`doppler-mcp`](./servers/doppler-mcp)
 - [`email-validator-mcp`](./servers/email-validator-mcp)
 - [`ericemanuel-mcp`](./servers/ericemanuel-mcp)
@@ -132,6 +133,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`postmark-mcp`](./servers/postmark-mcp)
 - [`prada-mcp`](./servers/prada-mcp)
 - [`predictit-mcp`](./servers/predictit-mcp)
+- [`publicwww-mcp`](./servers/publicwww-mcp)
 - [`pusher-mcp`](./servers/pusher-mcp)
 - [`qbittorrent-mcp`](./servers/qbittorrent-mcp)
 - [`quip-mcp`](./servers/quip-mcp)
