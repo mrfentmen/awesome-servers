@@ -20,7 +20,7 @@ function headers(): Record<string, string> {
 async function get(path: string): Promise<string> {
   let res: Response;
   try {
-    res = await fetch("https://api.clerk.com/v1" + path, { headers: headers() });
+    res = await fetch("https://api.clerk.com/v1" + path, { signal: AbortSignal.timeout(30000), headers: headers() });
   } catch (e) {
     throw new ClerkError(`Network error: ${(e as Error).message}`);
   }

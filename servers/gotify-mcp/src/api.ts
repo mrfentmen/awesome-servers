@@ -27,7 +27,7 @@ function headers(): Record<string, string> {
 async function req(path: string, init: RequestInit = {}): Promise<Response> {
   let res: Response;
   try {
-    res = await fetch(base() + path, { headers: { ...headers(), ...(init.headers ?? {}) }, ...init });
+    res = await fetch(base() + path, { signal: AbortSignal.timeout(30000), headers: { ...headers(), ...(init.headers ?? {}) }, ...init });
   } catch (e) {
     throw new GotifyError(`Network error: ${(e as Error).message}`);
   }

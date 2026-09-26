@@ -23,6 +23,7 @@ async function get(path: string): Promise<string> {
   try {
     res = await fetch(`https://api.rollbar.com/api/1${path}${sep}access_token=${encodeURIComponent(token())}`, {
       headers: { ...UA, Accept: "application/json" },
+      signal: AbortSignal.timeout(30000),
     });
   } catch (e) {
     throw new RollbarError(`Network error: ${(e as Error).message}`);

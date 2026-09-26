@@ -20,7 +20,7 @@ function headers(): Record<string, string> {
 async function get(path: string): Promise<string> {
   let res: Response;
   try {
-    res = await fetch("https://api.opsgenie.com/v2" + path, { headers: headers() });
+    res = await fetch("https://api.opsgenie.com/v2" + path, { signal: AbortSignal.timeout(30000), headers: headers() });
   } catch (e) {
     throw new OpsgenieError(`Network error: ${(e as Error).message}`);
   }

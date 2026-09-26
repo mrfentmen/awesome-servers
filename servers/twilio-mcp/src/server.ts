@@ -55,10 +55,10 @@ async function twilioRequest(path: string, params: Record<string, string> = {}, 
       searchParams.set(key, value)
     }
     const separator = url.includes("?") ? "&" : "?"
-    return fetch(`${url}${separator}${searchParams.toString()}`, options).then((r) => r.json())
+    return fetch(`${url}${separator}${searchParams.toString()}`, options, { signal: AbortSignal.timeout(30000) }).then((r) => r.json())
   }
 
-  const res = await fetch(url, options)
+  const res = await fetch(url, options, { signal: AbortSignal.timeout(30000) })
   if (!res.ok) {
     const text = await res.text()
     throw new Error(`Twilio API error ${res.status}: ${text}`)

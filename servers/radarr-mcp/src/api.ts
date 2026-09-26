@@ -29,6 +29,7 @@ async function get(path: string): Promise<string> {
   try {
     res = await fetch(`${base()}${path}${sep}apikey=${encodeURIComponent(key())}`, {
       headers: { ...UA, Accept: "application/json" },
+      signal: AbortSignal.timeout(30000),
     });
   } catch (e) {
     throw new RadarrError(`Network error: ${(e as Error).message}`);

@@ -31,7 +31,7 @@ function stripHtml(html: string): string {
 }
 
 async function req(url: string, init: RequestInit = {}): Promise<unknown> {
-  const res = await fetch(url, { headers: { ...UA, ...(await authHeaders()), ...(init.headers ?? {}) }, ...init })
+  const res = await fetch(url, { signal: AbortSignal.timeout(30000), headers: { ...UA, ...(await authHeaders()), ...(init.headers ?? {}) }, ...init })
   const ct = res.headers.get("content-type") ?? ""
   const data = ct.includes("json") ? await res.json() : await res.text()
   if (!res.ok) {

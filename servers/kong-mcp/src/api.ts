@@ -18,7 +18,7 @@ function base(): string {
 async function get(path: string): Promise<string> {
   let res: Response;
   try {
-    res = await fetch(base() + path, { headers: { ...UA, Accept: "application/json" } });
+    res = await fetch(base() + path, { signal: AbortSignal.timeout(30000), headers: { ...UA, Accept: "application/json" } });
   } catch (e) {
     throw new KongError(`Network error: ${(e as Error).message}`);
   }

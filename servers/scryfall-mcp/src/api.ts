@@ -14,6 +14,7 @@ async function getJson<T>(path: string): Promise<T> {
   if (gap > 0) await new Promise((r) => setTimeout(r, gap))
   lastRequest = Date.now()
   const res = await fetch(`${BASE}${path}`, {
+    signal: AbortSignal.timeout(30000),
     headers: { Accept: "application/json", "User-Agent": "scryfall-mcp/1.0" },
   })
   if (!res.ok) throw new ScryfallError(`Scryfall error ${res.status}: ${res.statusText}`)

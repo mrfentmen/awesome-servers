@@ -16,7 +16,7 @@ async function req(path: string, params: Record<string, string | number | undefi
   void params;
   let res: Response;
   try {
-    res = await fetch(BASE + path, { headers: { ...UA, Accept: "application/json" } });
+    res = await fetch(BASE + path, { signal: AbortSignal.timeout(30000), headers: { ...UA, Accept: "application/json" } });
   } catch (e) {
     throw new MobyError(`Network error: ${(e as Error).message}`);
   }

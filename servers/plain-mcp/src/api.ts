@@ -22,6 +22,7 @@ async function gql(query: string, variables: Record<string, unknown> = {}): Prom
   let res: Response;
   try {
     res = await fetch(BASE, {
+      signal: AbortSignal.timeout(30000),
       method: "POST",
       headers: { ...UA, Accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${key()}` },
       body: JSON.stringify({ query, variables }),

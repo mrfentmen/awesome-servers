@@ -27,7 +27,7 @@ function appHeaders(): Record<string, string> {
 async function get(path: string, headers: Record<string, string>): Promise<string> {
   let res: Response;
   try {
-    res = await fetch(BASE + path, { headers });
+    res = await fetch(BASE + path, { signal: AbortSignal.timeout(30000), headers });
   } catch (e) {
     throw new OneSignalError(`Network error: ${(e as Error).message}`);
   }

@@ -16,7 +16,7 @@ async function req(path: string, params: Record<string, string | number | undefi
   void params;
   let res: Response;
   try {
-    res = await fetch(BASE + path, { headers: { ...UA, Accept: text ? "text/plain" : "application/json" } });
+    res = await fetch(BASE + path, { signal: AbortSignal.timeout(30000), headers: { ...UA, Accept: text ? "text/plain" : "application/json" } });
   } catch (e) {
     throw new CensysError(`Network error: ${(e as Error).message}`);
   }
@@ -38,7 +38,7 @@ function headers(): Record<string, string> {
 async function get(path: string): Promise<string> {
   let res: Response;
   try {
-    res = await fetch(BASE + path, { headers: headers() });
+    res = await fetch(BASE + path, { signal: AbortSignal.timeout(30000), headers: headers() });
   } catch (e) {
     throw new CensysError(`Network error: ${(e as Error).message}`);
   }

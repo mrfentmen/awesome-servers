@@ -16,7 +16,7 @@ async function req(path: string, params: Record<string, string | number | undefi
   void params;
   let res: Response;
   try {
-    res = await fetch(BASE + path, { headers: { ...UA, Accept: text ? "text/plain" : "application/json" } });
+    res = await fetch(BASE + path, { signal: AbortSignal.timeout(30000), headers: { ...UA, Accept: text ? "text/plain" : "application/json" } });
   } catch (e) {
     throw new UrlhausError(`Network error: ${(e as Error).message}`);
   }
@@ -37,6 +37,7 @@ async function post(path: string, body: Record<string, string>): Promise<string>
   let res: Response;
   try {
     res = await fetch(BASE + path, {
+      signal: AbortSignal.timeout(30000),
       method: "POST",
       headers: { ...UA, Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded", "Auth-Key": key() },
       body: new URLSearchParams(body).toString(),
@@ -53,7 +54,7 @@ export async function recentUrls(limit?: string): Promise<string> {
   const n = clampNum(limit, 10, 1000);
   let res: Response;
   try {
-    res = await fetch(`${BASE}/urls/recent/limit/${n}/`, { headers: { ...UA, "Auth-Key": key() } });
+    res = await fetch(`${BASE}/urls/recent/limit/${n}/`, { signal: AbortSignal.timeout(30000), headers: { ...UA, "Auth-Key": key() } });
   } catch (e) {
     throw new UrlhausError(`Network error: ${(e as Error).message}`);
   }

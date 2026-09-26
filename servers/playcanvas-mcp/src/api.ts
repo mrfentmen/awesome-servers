@@ -25,6 +25,7 @@ function pretty(data: unknown): string {
 
 async function req(path: string): Promise<string> {
   const res = await fetch(BASE + path, {
+    signal: AbortSignal.timeout(30000),
     headers: { ...UA, Authorization: "Bearer " + envStrict("PLAYCANVAS_ACCESS_TOKEN") },
   })
   const ct = res.headers.get("content-type") ?? ""

@@ -645,7 +645,12 @@ function masked(source: string): string {
       }
       if (c === "$" && chars[k + 1] === "{") {
         paint(textStart, k + 2, "x")
-        k = scanExpression(k + 2)
+        const end = scanExpression(k + 2)
+        // The brace that closes the interpolation is template syntax, not code. Leaving it
+        // in place puts an unmatched } into the masked copy, and anything that counts
+        // brackets afterwards — argument splitting, for one — silently reads it as code.
+        paint(end - 1, end, "x")
+        k = end
         textStart = k
         continue
       }
@@ -754,10 +759,47 @@ export async function lintSource(args: { source: string; label?: string }): Prom
   // The negative lookbehind matters: a method like board.fetch(...) is a caller's own
   // function, not an HTTP call, and flagging it invents a defect that is not there.
   const fetches = [...code.matchAll(/(?<![.\w])fetch\(/g)]
+
+  /** The text between the call's own parentheses. */
+  const argsOf = (open: number): string | null => {
+    let depth = 0
+    for (let i = open; i < code.length; i += 1) {
+      if (code[i] === "(") depth += 1
+      else if (code[i] === ")") {
+        depth -= 1
+        if (depth === 0) return code.slice(open + 1, i)
+      }
+    }
+    return null
+  }
+
+  /** The options argument, i.e. everything after the comma that separates the arguments. */
+  const secondArg = (args: string): string => {
+    let depth = 0
+    for (let i = 0; i < args.length; i += 1) {
+      const c = args[i]
+      if (c === "(" || c === "[" || c === "{") depth += 1
+      else if (c === ")" || c === "]" || c === "}") depth -= 1
+      else if (c === "," && depth === 0) return args.slice(i + 1).trim()
+    }
+    return ""
+  }
+
+  // The signal belongs to the fetch call's own options, so read that argument. A fixed
+  // window of following characters reports a missing signal on a call that carries one a
+  // few lines further down, and a reader cannot act on a finding like that.
   let noTimeout = 0
   for (const match of fetches) {
-    const window = code.slice(match.index ?? 0, (match.index ?? 0) + 700)
-    if (!/signal\s*:/.test(window)) noTimeout += 1
+    const args = argsOf((match.index ?? 0) + match[0].length - 1)
+    if (args === null) continue
+    const options = secondArg(args)
+    if (!options) noTimeout += 1
+    else if (options.startsWith("{")) {
+      if (!/signal\s*:/.test(options)) noTimeout += 1
+    } else if (!/signal\s*:/.test(code)) {
+      // The options are built elsewhere. Only complain when no signal exists anywhere.
+      noTimeout += 1
+    }
   }
   if (noTimeout) findings.push({ severity: "medium", message: `${noTimeout} fetch call(s) pass no signal, so a slow upstream hangs the tool until the client gives up.` })
 

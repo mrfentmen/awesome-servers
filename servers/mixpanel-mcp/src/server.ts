@@ -37,6 +37,7 @@ async function mixpanelFetch(path: string, params: Record<string, string> = {}, 
 
   const auth = Buffer.from(`${creds.serviceAccount}:${creds.serviceSecret}`).toString("base64")
   const res = await fetch(url.toString(), {
+    signal: AbortSignal.timeout(30000),
     headers: {
       Authorization: `Basic ${auth}`,
       Accept: "application/json",
@@ -127,6 +128,7 @@ async function mixpanelExportRequest(columns: any[], filter: Record<string, stri
 
   const auth = Buffer.from(`${creds.serviceAccount}:${creds.serviceSecret}`).toString("base64")
   const res = await fetch(url.toString(), {
+    signal: AbortSignal.timeout(30000),
     method: "POST",
     headers: {
       Authorization: `Basic ${auth}`,
@@ -149,6 +151,7 @@ async function handleJQL(script: string) {
 
   const auth = Buffer.from(`${creds.serviceAccount}:${creds.serviceSecret}`).toString("base64")
   const res = await fetch(url.toString(), {
+    signal: AbortSignal.timeout(30000),
     method: "POST",
     headers: {
       Authorization: `Basic ${auth}`,

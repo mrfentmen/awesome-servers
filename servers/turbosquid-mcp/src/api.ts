@@ -25,7 +25,7 @@ function pretty(data: unknown): string {
 }
 
 async function req(path: string): Promise<string> {
-  const res = await fetch(BASE + path, { headers: { ...UA, Accept: ACCEPT, ...optAuth() } })
+  const res = await fetch(BASE + path, { signal: AbortSignal.timeout(30000), headers: { ...UA, Accept: ACCEPT, ...optAuth() } })
   const ct = res.headers.get("content-type") ?? ""
   const data = ct.includes("json") ? await res.json() : await res.text()
   if (!res.ok) {

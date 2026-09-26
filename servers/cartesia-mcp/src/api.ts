@@ -25,7 +25,7 @@ function hdrs(): Record<string, string> {
 async function get(path: string): Promise<string> {
   let res: Response;
   try {
-    res = await fetch(BASE + path, { headers: hdrs() });
+    res = await fetch(BASE + path, { signal: AbortSignal.timeout(30000), headers: hdrs() });
   } catch (e) {
     throw new CartesiaError(`Network error: ${(e as Error).message}`);
   }
@@ -55,6 +55,7 @@ export function synthesizeSpeech(transcript: string, voiceId: string, modelId?: 
     let res: Response;
     try {
       res = await fetch(BASE + "/tts/bytes", {
+        signal: AbortSignal.timeout(30000),
         method: "POST",
         headers: { ...UA, Accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${key()}`, "Cartesia-Version": "2026-08-14" },
         body: JSON.stringify({ model_id: modelId ?? "sonic-2", transcript, voice: { mode: "id", id: voiceId }, output_format: { container: "mp3", sample_rate: 44100, encoding: "mp3" } }),

@@ -8,6 +8,7 @@ function getAuth(): Record<string, string> {
 
 async function uspsFetch(path: string, init?: RequestInit): Promise<any> {
   const res = await fetch(`${USPS_API_BASE}${path}`, {
+    signal: AbortSignal.timeout(30000),
     ...init,
     headers: { ...getAuth(), "Content-Type": "application/json", ...(init?.headers || {}) },
   })

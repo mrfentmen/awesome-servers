@@ -87,6 +87,7 @@ export async function sendInvoiceViaCarrier(
   if (trackNumber) formData.set("track_number", trackNumber)
 
   const res = await fetch(endpoint, {
+    signal: AbortSignal.timeout(30000),
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}` },
     body: formData,
@@ -111,7 +112,7 @@ async function readFileAsBuffer(path: string): Promise<Buffer> {
 export async function validateAddress(address: string, carrier: Carrier): Promise<boolean> {
   const endpoint = `https://api.${carrier.toLowerCase()}.com/address/validate?address=${encodeURIComponent(address)}`
   try {
-    const res = await fetch(endpoint)
+    const res = await fetch(endpoint, { signal: AbortSignal.timeout(30000) })
     return res.ok
   } catch {
     return false
@@ -127,6 +128,7 @@ export async function createLabel(
   if (!apiKey) throw new Error(`Missing ${carrier} API key`)
 
   const res = await fetch(endpoint, {
+    signal: AbortSignal.timeout(30000),
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -152,7 +154,7 @@ export async function trackShipment(
   if (apiKey) headers.Authorization = `Bearer ${apiKey}`
   if (username && password) headers.Authorization = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`
 
-  const res = await fetch(endpoint, { headers })
+  const res = await fetch(endpoint, { signal: AbortSignal.timeout(30000), headers })
   if (!res.ok) throw new Error(`Tracking failed: ${res.status}`)
   return res.json()
 }

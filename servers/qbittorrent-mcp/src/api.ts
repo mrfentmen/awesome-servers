@@ -27,6 +27,7 @@ async function login(): Promise<string> {
       method: "POST",
       headers: { ...UA, "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({ username: u, password: p }).toString(),
+      signal: AbortSignal.timeout(30000),
     });
   } catch (e) {
     throw new QbitError(`Network error: ${(e as Error).message}`);
@@ -41,7 +42,7 @@ async function get(path: string): Promise<string> {
   const sid = await login();
   let res: Response;
   try {
-    res = await fetch(base() + path, { headers: { ...UA, Accept: "application/json", Cookie: sid } });
+    res = await fetch(base() + path, { signal: AbortSignal.timeout(30000), headers: { ...UA, Accept: "application/json", Cookie: sid } });
   } catch (e) {
     throw new QbitError(`Network error: ${(e as Error).message}`);
   }

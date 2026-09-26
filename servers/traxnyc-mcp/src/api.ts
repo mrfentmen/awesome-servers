@@ -28,7 +28,7 @@ function pretty(data: unknown): string {
 async function getJson(url: string): Promise<any> {
   let res: Response
   try {
-    res = await fetch(url, { headers: { ...UA } })
+    res = await fetch(url, { signal: AbortSignal.timeout(30000), headers: { ...UA } })
   } catch (e) {
     throw new TraxnycError(`Network error: ${(e as Error).message}`)
   }

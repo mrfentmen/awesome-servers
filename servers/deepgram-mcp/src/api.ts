@@ -21,7 +21,7 @@ function headers(): Record<string, string> {
 async function get(path: string): Promise<string> {
   let res: Response;
   try {
-    res = await fetch(BASE + path, { headers: headers() });
+    res = await fetch(BASE + path, { signal: AbortSignal.timeout(30000), headers: headers() });
   } catch (e) {
     throw new DeepgramError(`Network error: ${(e as Error).message}`);
   }

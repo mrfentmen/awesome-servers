@@ -35,7 +35,7 @@ function signedUrl(path: string, extra: Record<string, string> = {}): string {
 async function get(url: string): Promise<string> {
   let res: Response;
   try {
-    res = await fetch(url, { headers: { ...UA, Accept: "application/json" } });
+    res = await fetch(url, { signal: AbortSignal.timeout(30000), headers: { ...UA, Accept: "application/json" } });
   } catch (e) {
     throw new PusherError(`Network error: ${(e as Error).message}`);
   }

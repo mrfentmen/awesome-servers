@@ -26,7 +26,7 @@ function headers(): Record<string, string> {
 async function get(path: string, maxChars: number): Promise<string> {
   let res: Response;
   try {
-    res = await fetch(base() + path, { headers: headers() });
+    res = await fetch(base() + path, { signal: AbortSignal.timeout(30000), headers: headers() });
   } catch (e) {
     throw new NetdataError(`Network error: ${(e as Error).message}`);
   }

@@ -13,6 +13,7 @@ export class SteamError extends Error {}
 
 async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(url, {
+    signal: AbortSignal.timeout(30000),
     headers: { Accept: "application/json", "User-Agent": "steam-mcp/1.0" },
   })
   if (!res.ok) throw new SteamError(`Steam API error ${res.status}: ${res.statusText}`)
