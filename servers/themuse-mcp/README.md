@@ -9,10 +9,10 @@ This file is self contained. It reads public data only and never writes to the m
 
 * `jobs`  Browse the newest The Muse job postings (about 414,000 open roles), 20 per page, with company, location, level and category.
 * `job`  Get one Muse job by id, including the full description text and landing page link.
-* `find_jobs`  Search Muse jobs using the API's own level and location filters — faster and far more precise than scanning the feed.
+* `find_jobs`  Search Muse jobs using the API's own level and location filters — faster and far more precise than scanning the feed. Example: level 'Senior Level' with location 'Remote'.
 * `company_jobs`  Every open Muse role at companies matching a name, found by scanning the newest postings.
-* `search_jobs`  Keyword search across the newest Muse postings (title, company, location, category, level, tags).
-* `job_insights`  Market overview for a level and/or location: the top employers, locations, levels and categories hiring right now.
+* `search_jobs`  Keyword search across the newest Muse postings (title, company, location, category, level, tags). Add a level or location to narrow what gets scanned.
+* `job_insights`  Market overview for a level and/or location: the top employers, locations, levels and categories hiring right now. Supersedes a plain \"who is hiring\" company count.
 
 ## Usage
 

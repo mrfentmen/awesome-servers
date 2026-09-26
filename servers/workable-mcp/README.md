@@ -7,7 +7,7 @@ This file is self contained. It reads public data only and never writes to the m
 ## Tools
 
 
-* `search_jobs` — Search live roles on company career sites powered by Workable (roughly 170,000 open jobs).
+* `search_jobs` — Search live roles on company career sites powered by Workable (roughly 170,000 open jobs). Filter by keyword, location or both.
 * `job_detail` — Full posting for one job: company, location, contract type, apply link and the description text.
 * `company_jobs` — Every open role on one company's Workable board, e.g. board 'stealth-it'.
 * `companies` — Which companies are hiring for a keyword, ranked by how many roles they have open.

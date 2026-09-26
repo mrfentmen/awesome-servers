@@ -7,7 +7,7 @@ This file is self contained. It reads public data only and never writes to the m
 ## Tools
 
 
-* `auctions`  Whisky auction results: mean winning bid, trading volume and lots sold per month.
+* `auctions`  Whisky auction results: mean winning bid, trading volume and lots sold per month. Optionally filter to one auction house by slug, e.g. 'bonhams'.
 * `auction_by_date`  Every auction house's results for one month, ranked by trading volume.
 * `auction_summary`  Aggregate stats for one auction house, or the whole whisky auction market: bids, volumes and lots.
 * `top_auctions`  Rank whisky auction houses by total trading volume, lots sold, or average winning bid.

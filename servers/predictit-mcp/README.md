@@ -7,7 +7,7 @@ This file is self contained. It reads public data only and never writes to the m
 ## Tools
 
 
-* `markets`  List PredictIt prediction markets with their leading contract, ranked by that contract's yes price.
+* `markets`  List PredictIt prediction markets with their leading contract, ranked by that contract's yes price. A yes price is the market's implied probability.
 * `search_markets`  Search PredictIt markets by keyword, e.g. 'election', 'Fed', 'bitcoin', 'oscars'.
 * `market_detail`  Every contract in one market with full buy/sell yes and no prices.
 * `contract_price`  Price and implied probability for one named contract inside a market.

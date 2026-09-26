@@ -16,7 +16,7 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `search_plugins`: Search JetBrains Marketplace plugins: names, descriptions, downloads, ratings.
+- `search_plugins`: Search JetBrains Marketplace plugins: names, descriptions, downloads, ratings. Sort by relevance, downloads, rating, name or recently updated.
 - `get_plugin`: One JetBrains plugin: vendor, downloads, rating, description, page link.
 - `top_plugins`: The Marketplace charts: the most-downloaded or highest-rated plugins overall.
 - `plugin_versions`: Recent releases of one plugin, with version strings and release dates.

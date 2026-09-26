@@ -105,7 +105,7 @@ export function createServer(): McpServer {
     "lint_source",
     {
       title: "Lint source",
-      description: "Lint pasted MCP server TypeScript: tool count, duplicate names, missing annotations, missing try/catch, fetch calls with no timeout, type suppressions, placeholders and dead code.",
+      description: "Lint pasted MCP server TypeScript: tool count, duplicate names, tool and parameter descriptions, annotations, missing try/catch, fetch calls with no timeout, type suppressions, placeholders and dead code.",
       inputSchema: z.object({
         source: z.string().describe("The whole TypeScript file to lint."),
         label: z.string().describe("Name to show in the report, for example weather-mcp/src/server.ts.").optional()
