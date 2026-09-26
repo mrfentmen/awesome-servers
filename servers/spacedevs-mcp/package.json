@@ -1,7 +1,7 @@
 {
   "name": "spacedevs-mcp",
-  "version": "1.0.0",
-  "description": "Rocket launches. Keyless.",
+  "version": "1.1.0",
+  "description": "Rocket launches, satellites and space weather - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/spacedevs-mcp",
   "repository": {
@@ -22,11 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
     "space",
     "launches",
-    "rockets",
-    "keyless"
+    "satellites",
+    "orbits",
+    "news",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {
