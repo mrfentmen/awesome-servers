@@ -1,5 +1,5 @@
 {
-  "name": "etherscan-mcp",
+  "name": "@mrfentmen/etherscan-mcp",
   "version": "1.0.0",
   "description": "EVM balances, transactions, tokens. Free key.",
   "type": "module",

@@ -1,5 +1,5 @@
 {
-  "name": "github-mcp",
+  "name": "@mrfentmen/github-mcp",
   "version": "1.0.0",
   "description": "GitHub repos, issues, search. Free token.",
   "type": "module",

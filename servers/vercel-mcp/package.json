@@ -1,5 +1,5 @@
 {
-  "name": "vercel-mcp",
+  "name": "@mrfentmen/vercel-mcp",
   "version": "1.0.0",
   "description": "Vercel projects + deployments. Token.",
   "type": "module",

@@ -10,7 +10,7 @@
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "etherscan-mcp",
+      "identifier": "@mrfentmen/etherscan-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"

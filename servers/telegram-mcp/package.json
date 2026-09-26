@@ -1,5 +1,5 @@
 {
-  "name": "telegram-mcp",
+  "name": "@mrfentmen/telegram-mcp",
   "version": "1.0.0",
   "description": "Telegram bot: me, send, updates. Free bot.",
   "type": "module",

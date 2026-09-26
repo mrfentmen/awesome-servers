@@ -10,7 +10,7 @@
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "airtable-mcp",
+      "identifier": "@mrfentmen/airtable-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"

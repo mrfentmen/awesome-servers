@@ -10,7 +10,7 @@
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "github-mcp",
+      "identifier": "@mrfentmen/github-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"

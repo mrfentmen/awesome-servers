@@ -1,5 +1,5 @@
 {
-  "name": "ebay-mcp",
+  "name": "@mrfentmen/ebay-mcp",
   "version": "1.0.0",
   "description": "eBay browse search + items. OAuth token.",
   "type": "module",

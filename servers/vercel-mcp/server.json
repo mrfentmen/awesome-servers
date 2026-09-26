@@ -10,7 +10,7 @@
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "vercel-mcp",
+      "identifier": "@mrfentmen/vercel-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"

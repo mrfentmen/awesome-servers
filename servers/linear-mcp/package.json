@@ -1,5 +1,5 @@
 {
-  "name": "linear-mcp",
+  "name": "@mrfentmen/linear-mcp",
   "version": "1.0.0",
   "description": "Linear teams, me, issues. API key.",
   "type": "module",

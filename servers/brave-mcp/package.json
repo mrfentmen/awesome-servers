@@ -1,5 +1,5 @@
 {
-  "name": "brave-mcp",
+  "name": "@mrfentmen/brave-mcp",
   "version": "1.0.0",
   "description": "Brave web + news search. Free key.",
   "type": "module",

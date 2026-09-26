@@ -1,5 +1,5 @@
 {
-  "name": "slack-mcp",
+  "name": "@mrfentmen/slack-mcp",
   "version": "1.0.0",
   "description": "Slack channels, history, post. Bot token.",
   "type": "module",

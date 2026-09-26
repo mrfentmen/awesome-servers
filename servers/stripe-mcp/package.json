@@ -1,5 +1,5 @@
 {
-  "name": "stripe-mcp",
+  "name": "@mrfentmen/stripe-mcp",
   "version": "1.0.0",
   "description": "Stripe test mode: charges, customers, balance.",
   "type": "module",

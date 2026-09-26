@@ -1,5 +1,5 @@
 {
-  "name": "openrouter-mcp",
+  "name": "@mrfentmen/openrouter-mcp",
   "version": "1.0.0",
   "description": "OpenRouter models, key info, credits.",
   "type": "module",

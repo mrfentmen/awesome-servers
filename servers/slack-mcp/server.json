@@ -10,7 +10,7 @@
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "slack-mcp",
+      "identifier": "@mrfentmen/slack-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"

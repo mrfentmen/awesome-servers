@@ -1,5 +1,5 @@
 {
-  "name": "youtube-mcp",
+  "name": "@mrfentmen/youtube-mcp",
   "version": "1.0.0",
   "description": "YouTube search, videos, channels. Free key.",
   "type": "module",

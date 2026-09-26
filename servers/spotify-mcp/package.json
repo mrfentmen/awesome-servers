@@ -1,6 +1,6 @@
 {
-  "name": "spotify-mcp",
-  "version": "1.0.0",
+  "name": "@mrfentmen/spotify-mcp",
+  "version": "1.0.1",
   "description": "Spotify search, artists, albums. Free app.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/spotify-mcp",

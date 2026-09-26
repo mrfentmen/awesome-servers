@@ -1,5 +1,5 @@
 {
-  "name": "supabase-mcp",
+  "name": "@mrfentmen/supabase-mcp",
   "version": "1.0.0",
   "description": "Supabase tables + auth users (docs-verbatim).",
   "type": "module",

@@ -1,5 +1,5 @@
 {
-  "name": "airtable-mcp",
+  "name": "@mrfentmen/airtable-mcp",
   "version": "1.0.0",
   "description": "Airtable bases, tables, records. PAT.",
   "type": "module",
