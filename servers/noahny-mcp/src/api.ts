@@ -101,7 +101,7 @@ export function searchProducts(query: string, limit?: string, maxPrice?: string,
       if (passes(sl, mp, productType)) out.push(sl);
       if (out.length >= n) break;
     }
-    return pretty({ store: "Noah NYC", query, returned: out.length, listings: out });
+    return pretty({ store: "Noah NYC", query, returned: out.length, truncated: out.length >= n, listings: out });
   });
 }
 

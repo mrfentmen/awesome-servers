@@ -93,7 +93,7 @@ export async function searchProducts(query: string, limit?: string, maxPrice?: s
     if (passes(sl, mp, productType)) out.push(sl)
     if (out.length >= n) break
   }
-  return pretty({ store: "Icebox", query, returned: out.length, listings: out })
+  return pretty({ store: "Icebox", query, returned: out.length, truncated: out.length >= n, listings: out })
 }
 
 export async function listNewest(limit?: string, page?: string, productType?: string): Promise<string> {
