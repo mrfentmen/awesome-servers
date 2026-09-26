@@ -182,7 +182,7 @@ export function createServer(): McpServer {
       to_date: z.string().describe("End date in YYYY-MM-DD format"),
       unit: z.enum(["hour", "day", "week", "month"]).optional().describe("Time granularity"),
       interval: z.number().min(1).max(365).optional().describe("Number of time units to return"),
-      limit: z.number().min(1).max(1000).optional().describe("Max results"),
+      limit: z.number().min(1).max(1000).optional().describe("Max results to return, 1-1000"),
     }),
       annotations: READ_ONLY,
     },

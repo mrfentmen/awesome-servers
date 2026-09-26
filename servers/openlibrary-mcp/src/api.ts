@@ -13,12 +13,53 @@ const UA = "mrfentmen-openlibrary-mcp/1.0 (https://github.com/mrfentmen)"
 const BASE = "https://openlibrary.org"
 const COVERS = "https://covers.openlibrary.org/b/id"
 
+interface SearchDoc {
+  title?: string
+  author_name?: string[]
+  first_publish_year?: number
+  key?: string
+  cover_i?: number
+  edition_count?: number
+  language?: string[]
+}
+
+/**
+ * Every record Open Library serves shares these optional fields. Anything the
+ * tools read is declared here; the rest of the payload is ignored.
+ */
+interface OpenLibraryRecord extends SearchDoc {
+  description?: unknown
+  subjects?: string[]
+  covers?: number[]
+  first_publish_date?: string
+  first_sentence?: unknown
+  authors?: { key?: string }[]
+  publish_date?: string
+  publishers?: string[]
+  number_of_pages?: number
+  isbn_13?: string[]
+  isbn_10?: string[]
+  languages?: { key?: string }[]
+  name?: string
+  birth_date?: string
+  death_date?: string
+  alternate_names?: string[]
+  bio?: unknown
+  links?: { title?: string; url?: string }[]
+  docs?: SearchDoc[]
+  numFound?: number
+  entries?: OpenLibraryRecord[]
+  size?: number
+  location?: string
+  type?: { key?: string }
+}
+
 /**
  * Open Library answers some merged/deleted IDs with a 200 redirect record
  * ({"type":{"/type/redirect"},"location":"/works/OL...W"}) instead of a 404,
  * so follow those before giving up.
  */
-async function req(path: string): Promise<any> {
+async function req(path: string): Promise<OpenLibraryRecord> {
   let target = path
   for (let hop = 0; hop < 4; hop++) {
     let res: Response
@@ -35,7 +76,7 @@ async function req(path: string): Promise<any> {
       const body = (await res.text()).slice(0, 300)
       throw new OpenLibraryError(`HTTP ${res.status}: ${body}`)
     }
-    const data = (await res.json()) as any
+    const data: OpenLibraryRecord = await res.json()
     const location = typeof data?.location === "string" ? data.location : ""
     if (data?.type?.key === "/type/redirect" && location) {
       // location is a path like "/works/OL893414W"; strip a trailing .json if present.
@@ -47,9 +88,15 @@ async function req(path: string): Promise<any> {
   throw new OpenLibraryError(`Too many redirects for ${path}`)
 }
 
+function textOf(value: unknown): string {
+  if (typeof value !== "object" || value === null) return ""
+  const row = value as { value?: unknown }
+  return "value" in row ? String(row.value) : ""
+}
+
 /** Open Library returns descriptions/bios as a string or as { value: string }. */
 function asText(value: unknown, max = 800): string {
-  const raw = typeof value === "string" ? value : value && typeof value === "object" && "value" in (value as any) ? String((value as any).value) : ""
+  const raw = typeof value === "string" ? value : textOf(value)
   const clean = raw.replace(/\r/g, "").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").replace(/\n{3,}/g, "\n\n").trim()
   if (!clean) return ""
   return clean.length > max ? `${clean.slice(0, max).trimEnd()}…` : clean
@@ -62,16 +109,6 @@ const keyToString = (key: unknown) => (typeof key === "string" ? key.replace(/^\
 // ---------------------------------------------------------------------------
 // Search
 // ---------------------------------------------------------------------------
-
-interface SearchDoc {
-  title?: string
-  author_name?: string[]
-  first_publish_year?: number
-  key?: string
-  cover_i?: number
-  edition_count?: number
-  language?: string[]
-}
 
 async function search(params: URLSearchParams): Promise<string> {
   const d = await req(`/search.json?${params.toString()}`)

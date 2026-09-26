@@ -44,7 +44,7 @@ export function createServer(): McpServer {
       title: "Channel history",
       description: "Recent messages.",
       inputSchema: z.object({
-        channel: z.string().describe("Channel ID."),
+        channel: z.string().describe("Channel ID, e.g. C0123456789"),
         limit: z.string().describe("Max results (default 10, max 100).").optional()
       }),
       annotations: READ_ONLY,
@@ -64,7 +64,7 @@ export function createServer(): McpServer {
       title: "Post message",
       description: "Post a REAL message.",
       inputSchema: z.object({
-        channel: z.string().describe("Channel ID."),
+        channel: z.string().describe("Channel ID, e.g. C0123456789"),
         message: z.string().describe("Message text.")
       }),
       annotations: MUTATING,

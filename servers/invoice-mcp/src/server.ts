@@ -84,7 +84,7 @@ export function createServer(): McpServer {
       to: z.string().describe("Recipient address"),
       weight: z.number().describe("Package weight"),
       service: z.string().describe("Service level (e.g., ground, express)"),
-      carrier: z.enum(["UPS", "USPS", "FEDEX", "DHL"]).describe("Carrier"),
+      carrier: z.enum(["UPS", "USPS", "FEDEX", "DHL"]).describe("Carrier code, e.g. UPS"),
     },
     async (args: any) => {
       try {
@@ -103,7 +103,7 @@ export function createServer(): McpServer {
     "track_shipment",
     "Track a shipment with carrier API.",
     {
-      carrier: z.enum(["UPS", "USPS", "FEDEX", "DHL"]).describe("Carrier"),
+      carrier: z.enum(["UPS", "USPS", "FEDEX", "DHL"]).describe("Carrier code, e.g. UPS"),
       trackNumber: z.string().describe("Tracking number"),
     },
     async (args: any) => {

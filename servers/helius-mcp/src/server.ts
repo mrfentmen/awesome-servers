@@ -65,7 +65,7 @@ export function createServer(): McpServer {
       description: "NFTs held by a Solana wallet: collections, names, images.",
       inputSchema: z.object({
         address: z.string().describe("Wallet address"),
-        page: z.number().default(1).describe("Page number"),
+        page: z.number().default(1).describe("Page number, 1 or higher"),
       }),
       annotations: READ_ONLY,
     },

@@ -61,7 +61,7 @@ export function createServer(): McpServer {
       title: "Get user",
       description: "User profile.",
       inputSchema: z.object({
-        username: z.string().describe("Username.")
+        username: z.string().describe("Hashnode username, e.g. john")
       }),
       annotations: READ_ONLY,
     },

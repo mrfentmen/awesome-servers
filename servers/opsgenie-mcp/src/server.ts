@@ -43,7 +43,7 @@ export function createServer(): McpServer {
       title: "Get alert",
       description: "Alert details by ID.",
       inputSchema: z.object({
-        alert_id: z.string().describe("Alert UUID.")
+        alert_id: z.string().describe("Alert ID from the Opsgenie URL")
       }),
       annotations: READ_ONLY,
     },

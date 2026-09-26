@@ -61,7 +61,7 @@ export function createServer(): McpServer {
       title: "List secrets",
       description: "Secrets in a Doppler config with raw and computed values plus visibility.",
       inputSchema: z.object({
-        project: z.string().describe("Project"),
+        project: z.string().describe("Project name, e.g. backend"),
         config: z.string().describe("Config, e.g. 'dev'"),
         secrets: z.string().optional().describe("Comma-separated names to include"),
       }),
@@ -82,8 +82,8 @@ export function createServer(): McpServer {
       title: "Download secrets",
       description: "Doppler config secrets as JSON, env file, or dotenv for local use.",
       inputSchema: z.object({
-        project: z.string().describe("Project"),
-        config: z.string().describe("Config"),
+        project: z.string().describe("Project name, e.g. backend"),
+        config: z.string().describe("Config name, e.g. dev"),
         format: z.string().default("json").describe("json, env or dotenv"),
       }),
       annotations: READ_ONLY,

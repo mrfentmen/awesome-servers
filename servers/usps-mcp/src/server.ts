@@ -66,9 +66,9 @@ export function createServer(): McpServer {
     "Validate a USPS address.",
     {
       street: z.string().describe("Street address"),
-      city: z.string().describe("City"),
-      state: z.string().describe("State"),
-      zip: z.string().describe("ZIP code"),
+      city: z.string().describe("City, e.g. San Francisco"),
+      state: z.string().describe("Two-letter state code, e.g. CA"),
+      zip: z.string().describe("ZIP code, e.g. 94107"),
     },
     async (args: any) => {
       try {
@@ -84,7 +84,7 @@ export function createServer(): McpServer {
     "get_zip_code",
     "Look up ZIP code by city and state.",
     {
-      city: z.string().describe("City name"),
+      city: z.string().describe("City name, e.g. San Francisco"),
       state: z.string().describe("State abbreviation"),
     },
     async (args: any) => {
@@ -101,7 +101,7 @@ export function createServer(): McpServer {
     "get_address_info",
     "Get city/state info from ZIP code.",
     {
-      zip: z.string().describe("ZIP code"),
+      zip: z.string().describe("ZIP code, e.g. 94107"),
     },
     async (args: any) => {
       try {
@@ -118,7 +118,7 @@ export function createServer(): McpServer {
     "Schedule a USPS pickup.",
     {
       street: z.string().describe("Pickup street address"),
-      city: z.string().describe("Pickup city"),
+      city: z.string().describe("Pickup city, e.g. San Francisco"),
       state: z.string().describe("Pickup state"),
       zip: z.string().describe("Pickup ZIP code"),
       packageCount: z.number().describe("Number of packages"),

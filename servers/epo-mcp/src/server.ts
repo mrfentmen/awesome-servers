@@ -43,7 +43,7 @@ export function createServer(): McpServer {
       title: "Patent family",
       description: "Family for a publication number.",
       inputSchema: z.object({
-        country: z.string().describe("e.g. EP."),
+        country: z.string().describe("Country code, e.g. EP"),
         number: z.string().describe("Publication number."),
         kind: z.string().describe("Kind code, e.g. A1.")
       }),

@@ -66,8 +66,8 @@ export function createServer(): McpServer {
       title: "Get query results",
       description: "Fetch result rows for a finished Flipside query run, paged.",
       inputSchema: z.object({
-        token: z.string().describe("Query token"),
-        pageNumber: z.number().default(1).describe("Page number"),
+        token: z.string().describe("Token from the previous page"),
+        pageNumber: z.number().default(1).describe("Page number, 1 or higher"),
         pageSize: z.number().default(100).describe("Rows per page, max 100000"),
       }),
       annotations: READ_ONLY,
@@ -87,7 +87,7 @@ export function createServer(): McpServer {
       title: "Cancel query run",
       description: "Cancel a pending or running Flipside query.",
       inputSchema: z.object({
-        token: z.string().describe("Query token"),
+        token: z.string().describe("Token from the previous page"),
       }),
       annotations: NON_READ_ONLY,
     },

@@ -78,7 +78,7 @@ export function createServer(): McpServer {
       title: "Get draft",
       description: "Draft metadata by draft ID (requires TURBOSQUID_API_TOKEN).",
       inputSchema: z.object({
-        draft_id: z.string().describe("Draft ID.")
+        draft_id: z.string().describe("Draft ID from the TurboSquid upload")
       }),
       annotations: READ_ONLY,
     },

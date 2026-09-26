@@ -40,7 +40,7 @@ export function createServer(): McpServer {
       title: "Get project",
       description: "One Swetrix project with settings and stats summary.",
       inputSchema: z.object({
-        projectId: z.string().describe("Project id"),
+        projectId: z.string().describe("Swetrix project ID, e.g. 12345"),
       }),
       annotations: READ_ONLY,
     },

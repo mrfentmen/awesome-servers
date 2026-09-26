@@ -24,7 +24,7 @@ export function createServer(): McpServer {
       title: "Visitors",
       description: "Active visitors.",
       inputSchema: z.object({
-        website_id: z.string().describe("Website ID.")
+        website_id: z.string().describe("Website ID, e.g. 8a1b2c3d-4e5f")
       }),
       annotations: READ_ONLY,
     },
@@ -43,7 +43,7 @@ export function createServer(): McpServer {
       title: "People profile",
       description: "Profile by email.",
       inputSchema: z.object({
-        website_id: z.string().describe("Website ID."),
+        website_id: z.string().describe("Website ID, e.g. 8a1b2c3d-4e5f"),
         email: z.string().describe("Visitor email.")
       }),
       annotations: READ_ONLY,
@@ -63,8 +63,8 @@ export function createServer(): McpServer {
       title: "Conversation",
       description: "Conversation details.",
       inputSchema: z.object({
-        website_id: z.string().describe("Website ID."),
-        session_id: z.string().describe("Session ID.")
+        website_id: z.string().describe("Website ID, e.g. 8a1b2c3d-4e5f"),
+        session_id: z.string().describe("Session ID, e.g. session_9f8c7b2a")
       }),
       annotations: READ_ONLY,
     },

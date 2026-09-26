@@ -42,7 +42,7 @@ export function createServer(): McpServer {
       title: "Send message",
       description: "Send a REAL message to a chat.",
       inputSchema: z.object({
-        chat_id: z.string().describe("Chat ID."),
+        chat_id: z.string().describe("Chat ID, e.g. -1001234567890"),
         message: z.string().describe("Message text.")
       }),
       annotations: MUTATING,

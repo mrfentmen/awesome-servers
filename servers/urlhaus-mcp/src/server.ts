@@ -44,7 +44,7 @@ export function createServer(): McpServer {
       title: "Lookup URL",
       description: "Check one URL against URLhaus.",
       inputSchema: z.object({
-        url: z.string().describe("Full URL.")
+        url: z.string().describe("Full URL, e.g. http://example.com/malware.bin")
       }),
       annotations: READ_ONLY,
     },

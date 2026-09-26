@@ -44,7 +44,7 @@ export function createServer(): McpServer {
       title: "Get voice",
       description: "Voice details by ID.",
       inputSchema: z.object({
-        voice_id: z.string().describe("Voice UUID.")
+        voice_id: z.string().describe("Voice ID from Cartesia, e.g. a0e7d23f")
       }),
       annotations: READ_ONLY,
     },
@@ -64,7 +64,7 @@ export function createServer(): McpServer {
       description: "Text to MP3 (SPENDS credits).",
       inputSchema: z.object({
         transcript: z.string().describe("Text to speak."),
-        voice_id: z.string().describe("Voice UUID."),
+        voice_id: z.string().describe("Voice ID from Cartesia, e.g. a0e7d23f"),
         model_id: z.string().describe("Model (default sonic-2).").optional()
       }),
       annotations: MUTATING,

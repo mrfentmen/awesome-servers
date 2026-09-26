@@ -41,7 +41,7 @@ export function createServer(): McpServer {
       title: "List tables",
       description: "Tables in a base.",
       inputSchema: z.object({
-        base_id: z.string().describe("Base ID.")
+        base_id: z.string().describe("Base ID, e.g. appXXXXXXXXXXXXXX")
       }),
       annotations: READ_ONLY,
     },
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
       title: "List records",
       description: "Records in a table.",
       inputSchema: z.object({
-        base_id: z.string().describe("Base ID."),
+        base_id: z.string().describe("Base ID, e.g. appXXXXXXXXXXXXXX"),
         table: z.string().describe("Table name or ID."),
         max_records: z.string().describe("Max results (default 10, max 100).").optional()
       }),

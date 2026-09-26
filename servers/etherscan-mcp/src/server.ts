@@ -24,7 +24,7 @@ export function createServer(): McpServer {
       title: "ETH balance",
       description: "Native balance for an address.",
       inputSchema: z.object({
-        address: z.string().describe("0x address."),
+        address: z.string().describe("Address, e.g. 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"),
         chain_id: z.string().describe("Chain ID (default 1).").optional()
       }),
       annotations: READ_ONLY,
@@ -44,7 +44,7 @@ export function createServer(): McpServer {
       title: "Transactions",
       description: "Recent normal transactions.",
       inputSchema: z.object({
-        address: z.string().describe("0x address."),
+        address: z.string().describe("Address, e.g. 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"),
         chain_id: z.string().describe("Chain ID (default 1).").optional()
       }),
       annotations: READ_ONLY,
@@ -64,7 +64,7 @@ export function createServer(): McpServer {
       title: "Token transfers",
       description: "Recent ERC-20 transfers.",
       inputSchema: z.object({
-        address: z.string().describe("0x address."),
+        address: z.string().describe("Address, e.g. 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"),
         chain_id: z.string().describe("Chain ID (default 1).").optional()
       }),
       annotations: READ_ONLY,

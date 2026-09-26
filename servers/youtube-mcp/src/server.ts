@@ -44,7 +44,7 @@ export function createServer(): McpServer {
       title: "Video details",
       description: "Title, stats for a video.",
       inputSchema: z.object({
-        video_id: z.string().describe("Video ID.")
+        video_id: z.string().describe("Video ID, e.g. dQw4w9WgXcQ")
       }),
       annotations: READ_ONLY,
     },
@@ -63,7 +63,7 @@ export function createServer(): McpServer {
       title: "Channel details",
       description: "Stats for a channel.",
       inputSchema: z.object({
-        channel_id: z.string().describe("Channel ID.")
+        channel_id: z.string().describe("Channel ID, e.g. UC_x5XG1OV2P6uZZ5FSM9Ttw")
       }),
       annotations: READ_ONLY,
     },

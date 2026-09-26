@@ -58,7 +58,7 @@ export function createServer(): McpServer {
       title: "Stream contents",
       description: "Recent entries.",
       inputSchema: z.object({
-        stream_id: z.string().describe("Stream ID."),
+        stream_id: z.string().describe("Stream ID, e.g. feed/https://example.com/feed"),
         count: z.string().describe("Max results (default 10, max 100).").optional()
       }),
       annotations: READ_ONLY,

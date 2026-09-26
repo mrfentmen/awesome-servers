@@ -43,8 +43,8 @@ export function createServer(): McpServer {
       title: "Search books",
       description: "Search ISBNdb by title, author or subject with pagination.",
       inputSchema: z.object({
-        query: z.string().describe("Search text"),
-        page: z.number().default(1).describe("Page number"),
+        query: z.string().describe("Search text, e.g. the great gatsby"),
+        page: z.number().default(1).describe("Page number, 1 or higher"),
       }),
       annotations: READ_ONLY,
     },

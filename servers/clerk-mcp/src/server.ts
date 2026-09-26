@@ -42,7 +42,7 @@ export function createServer(): McpServer {
       title: "Get user",
       description: "User details by ID.",
       inputSchema: z.object({
-        user_id: z.string().describe("User ID.")
+        user_id: z.string().describe("Clerk user ID, e.g. user_2abc123def")
       }),
       annotations: READ_ONLY,
     },

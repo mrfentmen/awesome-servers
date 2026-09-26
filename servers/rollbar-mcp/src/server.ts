@@ -41,7 +41,7 @@ export function createServer(): McpServer {
       title: "List items",
       description: "Error items in a project.",
       inputSchema: z.object({
-        project_id: z.string().describe("Project ID.")
+        project_id: z.string().describe("Rollbar project ID, e.g. 123456")
       }),
       annotations: READ_ONLY,
     },
@@ -60,8 +60,8 @@ export function createServer(): McpServer {
       title: "Get item",
       description: "Error item details.",
       inputSchema: z.object({
-        project_id: z.string().describe("Project ID."),
-        item_id: z.string().describe("Item ID.")
+        project_id: z.string().describe("Rollbar project ID, e.g. 123456"),
+        item_id: z.string().describe("Rollbar item ID, e.g. 1234567890")
       }),
       annotations: READ_ONLY,
     },

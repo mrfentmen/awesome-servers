@@ -24,7 +24,7 @@ export function createServer(): McpServer {
       title: "Get order",
       description: "Order details.",
       inputSchema: z.object({
-        order_id: z.string().describe("Order ID.")
+        order_id: z.string().describe("PayPal order ID, e.g. 5O190127TN364715T")
       }),
       annotations: READ_ONLY,
     },
@@ -43,7 +43,7 @@ export function createServer(): McpServer {
       title: "Get capture",
       description: "Capture details.",
       inputSchema: z.object({
-        capture_id: z.string().describe("Capture ID.")
+        capture_id: z.string().describe("Capture ID from the order response")
       }),
       annotations: READ_ONLY,
     },

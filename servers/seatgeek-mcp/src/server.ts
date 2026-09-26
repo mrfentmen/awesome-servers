@@ -41,8 +41,8 @@ export function createServer(): McpServer {
       title: "Events near me",
       description: "Recommended events near coordinates.",
       inputSchema: z.object({
-        lat: z.number().min(-90).max(90).describe("Latitude"),
-        lon: z.number().min(-180).max(180).describe("Longitude"),
+        lat: z.number().min(-90).max(90).describe("Latitude, e.g. 40.75"),
+        lon: z.number().min(-180).max(180).describe("Longitude, e.g. -73.98"),
         limit: z.number().int().min(1).max(100).default(5),
       }),
       annotations: READ_ONLY,

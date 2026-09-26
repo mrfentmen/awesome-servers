@@ -41,7 +41,7 @@ export function createServer(): McpServer {
       title: "Get account",
       description: "Account details by ID.",
       inputSchema: z.object({
-        account_id: z.string().describe("Account ID.")
+        account_id: z.string().describe("Mercury account ID, e.g. 123456789")
       }),
       annotations: READ_ONLY,
     },
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
       title: "List transactions",
       description: "Transactions for an account.",
       inputSchema: z.object({
-        account_id: z.string().describe("Account ID."),
+        account_id: z.string().describe("Mercury account ID, e.g. 123456789"),
         limit: z.string().describe("Max results (default 20, max 100).").optional()
       }),
       annotations: READ_ONLY,

@@ -24,7 +24,7 @@ export function createServer(): McpServer {
       title: "Get metrics",
       description: "OpenPanel visitors, sessions, bounce rate and engagement for a project.",
       inputSchema: z.object({
-        projectId: z.string().describe("Project id"),
+        projectId: z.string().describe("OpenPanel project ID, e.g. 12345"),
         startDate: z.string().optional().describe("Start YYYY-MM-DD"),
         endDate: z.string().optional().describe("End YYYY-MM-DD"),
       }),
@@ -45,7 +45,7 @@ export function createServer(): McpServer {
       title: "Get live visitors",
       description: "Current active OpenPanel visitor count for a project.",
       inputSchema: z.object({
-        projectId: z.string().describe("Project id"),
+        projectId: z.string().describe("OpenPanel project ID, e.g. 12345"),
       }),
       annotations: READ_ONLY,
     },
@@ -64,7 +64,7 @@ export function createServer(): McpServer {
       title: "Get top pages",
       description: "Top OpenPanel pages by sessions for a project.",
       inputSchema: z.object({
-        projectId: z.string().describe("Project id"),
+        projectId: z.string().describe("OpenPanel project ID, e.g. 12345"),
       }),
       annotations: READ_ONLY,
     },
@@ -83,7 +83,7 @@ export function createServer(): McpServer {
       title: "Get referrers",
       description: "OpenPanel traffic sources for a project.",
       inputSchema: z.object({
-        projectId: z.string().describe("Project id"),
+        projectId: z.string().describe("OpenPanel project ID, e.g. 12345"),
       }),
       annotations: READ_ONLY,
     },

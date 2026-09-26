@@ -25,7 +25,7 @@ export function createServer(): McpServer {
       title: "Query table",
       description: "Rows from a table.",
       inputSchema: z.object({
-        table: z.string().describe("Table name."),
+        table: z.string().describe("Table name, e.g. customers"),
         select: z.string().describe("Columns (default *).").optional(),
         limit: z.string().describe("Max rows (default 20, max 100).").optional()
       }),

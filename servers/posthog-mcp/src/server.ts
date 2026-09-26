@@ -58,7 +58,7 @@ export function createServer(): McpServer {
       title: "List insights",
       description: "Saved insights.",
       inputSchema: z.object({
-        project_id: z.string().describe("Project ID.")
+        project_id: z.string().describe("PostHog project ID, e.g. 12345")
       }),
       annotations: READ_ONLY,
     },

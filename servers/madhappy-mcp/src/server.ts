@@ -27,7 +27,7 @@ export function createServer(): McpServer {
       title: "Search products",
       description: "Keyword search across the catalog.",
       inputSchema: z.object({
-        query: z.string().describe("Keyword."),
+        query: z.string().describe("Keyword, e.g. hoodie"),
         limit: z.string().describe("Max results (default 10, max 25).").optional(),
         max_price: z.string().describe("Max USD price.").optional(),
         product_type: z.string().describe("Filter by type.").optional()

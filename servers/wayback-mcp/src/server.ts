@@ -102,7 +102,7 @@ export function createServer(): McpServer {
     {
       title: "Get availability",
       description: "Check whether a page is archived and get its closest snapshot.",
-      inputSchema: z.object({ url: z.string().describe("URL") }),
+      inputSchema: z.object({ url: z.string().describe("Page URL, e.g. https://example.com") }),
       annotations: READ_ONLY,
     },
     async ({ url }) => {

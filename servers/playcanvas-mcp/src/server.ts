@@ -46,7 +46,7 @@ export function createServer(): McpServer {
       description: "Single PlayCanvas asset metadata.",
       inputSchema: z.object({
         asset_id: z.string().describe("Numeric asset ID."),
-        branch_id: z.string().describe("Branch ID.")
+        branch_id: z.string().describe("PlayCanvas branch ID, e.g. 12345")
       }),
       annotations: READ_ONLY,
     },

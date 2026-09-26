@@ -41,10 +41,10 @@ export function createServer(): McpServer {
       title: "Enrich person",
       description: "Match by email/name/company.",
       inputSchema: z.object({
-        email: z.string().describe("Email.").optional(),
-        first_name: z.string().describe("First name.").optional(),
-        last_name: z.string().describe("Last name.").optional(),
-        organization: z.string().describe("Company.").optional()
+        email: z.string().describe("Work email, e.g. jane@acme.com").optional(),
+        first_name: z.string().describe("First name, e.g. Jane").optional(),
+        last_name: z.string().describe("Last name, e.g. Doe").optional(),
+        organization: z.string().describe("Employer, e.g. Acme Corp").optional()
       }),
       annotations: READ_ONLY,
     },
@@ -63,7 +63,7 @@ export function createServer(): McpServer {
       title: "Search people",
       description: "Prospect search.",
       inputSchema: z.object({
-        query: z.string().describe("Keywords."),
+        query: z.string().describe("Search keywords, e.g. software engineer"),
         limit: z.string().describe("Max results (default 5, max 25).").optional()
       }),
       annotations: READ_ONLY,

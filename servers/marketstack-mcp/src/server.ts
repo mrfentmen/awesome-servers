@@ -64,7 +64,7 @@ export function createServer(): McpServer {
       title: "Search tickers",
       description: "Search stock tickers by name or symbol: exchange, currency, MIC.",
       inputSchema: z.object({
-        query: z.string().describe("Search text"),
+        query: z.string().describe("Ticker or company, e.g. AAPL"),
         limit: z.number().default(5).describe("How many results"),
       }),
       annotations: READ_ONLY,

@@ -25,7 +25,7 @@ export function createServer(): McpServer {
       title: "Search threads",
       description: "Search Quip docs, spreadsheets and chats by text.",
       inputSchema: z.object({
-        query: z.string().describe("Search text"),
+        query: z.string().describe("Search text, e.g. roadmap"),
       }),
       annotations: READ_ONLY,
     },
@@ -44,7 +44,7 @@ export function createServer(): McpServer {
       title: "Get thread",
       description: "Quip thread with document HTML content.",
       inputSchema: z.object({
-        threadId: z.string().describe("Thread id"),
+        threadId: z.string().describe("Thread ID from the Quip URL"),
       }),
       annotations: READ_ONLY,
     },

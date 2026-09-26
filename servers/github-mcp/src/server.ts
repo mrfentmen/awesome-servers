@@ -62,7 +62,7 @@ export function createServer(): McpServer {
       description: "Repo details.",
       inputSchema: z.object({
         owner: z.string().describe("Owner login."),
-        repo: z.string().describe("Repo name.")
+        repo: z.string().describe("Repo name only, e.g. react")
       }),
       annotations: READ_ONLY,
     },

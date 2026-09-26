@@ -41,7 +41,7 @@ export function createServer(): McpServer {
       title: "Get page",
       description: "Page details.",
       inputSchema: z.object({
-        page_id: z.string().describe("Page ID.")
+        page_id: z.string().describe("Statuspage page ID, e.g. 1a2b3c4d5e6f")
       }),
       annotations: READ_ONLY,
     },
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
       title: "List incidents",
       description: "Recent incidents.",
       inputSchema: z.object({
-        page_id: z.string().describe("Page ID.")
+        page_id: z.string().describe("Statuspage page ID, e.g. 1a2b3c4d5e6f")
       }),
       annotations: READ_ONLY,
     },

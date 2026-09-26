@@ -43,7 +43,7 @@ export function createServer(): McpServer {
       title: "Get ticker",
       description: "Ticker details.",
       inputSchema: z.object({
-        ticker: z.string().describe("e.g. AAPL.")
+        ticker: z.string().describe("Ticker symbol, e.g. AAPL")
       }),
       annotations: READ_ONLY,
     },
@@ -62,7 +62,7 @@ export function createServer(): McpServer {
       title: "Previous close",
       description: "Last daily bar.",
       inputSchema: z.object({
-        ticker: z.string().describe("e.g. AAPL.")
+        ticker: z.string().describe("Ticker symbol, e.g. AAPL")
       }),
       annotations: READ_ONLY,
     },

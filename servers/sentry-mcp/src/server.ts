@@ -41,7 +41,7 @@ export function createServer(): McpServer {
       title: "Org projects",
       description: "Projects in an org.",
       inputSchema: z.object({
-        org: z.string().describe("Org slug.")
+        org: z.string().describe("Org slug from the Sentry URL, e.g. my-org")
       }),
       annotations: READ_ONLY,
     },
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
       title: "Org issues",
       description: "Recent issues (24h).",
       inputSchema: z.object({
-        org: z.string().describe("Org slug.")
+        org: z.string().describe("Org slug from the Sentry URL, e.g. my-org")
       }),
       annotations: READ_ONLY,
     },

@@ -339,7 +339,7 @@ export function createServer(): McpServer {
       inputSchema: z.object(
     {
       area_code: z.string().describe("US area code to search (e.g. 415)"),
-      limit: z.number().min(1).max(50).optional().describe("Max results"),
+      limit: z.number().min(1).max(50).optional().describe("Max numbers to return, 1-50"),
     }),
       annotations: READ_ONLY,
     },

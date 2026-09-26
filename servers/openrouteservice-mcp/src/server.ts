@@ -44,8 +44,8 @@ export function createServer(): McpServer {
       title: "Reverse geocode",
       description: "Place name for coordinates.",
       inputSchema: z.object({
-        lat: z.string().describe("Latitude."),
-        lon: z.string().describe("Longitude.")
+        lat: z.string().describe("Latitude, e.g. 48.86"),
+        lon: z.string().describe("Longitude, e.g. 2.35")
       }),
       annotations: READ_ONLY,
     },

@@ -24,7 +24,7 @@ export function createServer(): McpServer {
       title: "Publish",
       description: "Send a REAL notification to a topic.",
       inputSchema: z.object({
-        topic: z.string().describe("Topic name."),
+        topic: z.string().describe("Topic name, e.g. my-alerts"),
         message: z.string().describe("Message text.")
       }),
       annotations: MUTATING,
@@ -44,7 +44,7 @@ export function createServer(): McpServer {
       title: "Poll messages",
       description: "Cached messages as JSON.",
       inputSchema: z.object({
-        topic: z.string().describe("Topic name.")
+        topic: z.string().describe("Topic name, e.g. my-alerts")
       }),
       annotations: READ_ONLY,
     },

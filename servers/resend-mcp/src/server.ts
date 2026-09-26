@@ -60,7 +60,7 @@ export function createServer(): McpServer {
       title: "Get email",
       description: "Email details.",
       inputSchema: z.object({
-        email_id: z.string().describe("Email UUID.")
+        email_id: z.string().describe("Email ID from the send response")
       }),
       annotations: READ_ONLY,
     },

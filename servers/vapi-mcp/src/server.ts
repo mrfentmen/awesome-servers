@@ -81,7 +81,7 @@ export function createServer(): McpServer {
       title: "Get call",
       description: "Call details and transcript.",
       inputSchema: z.object({
-        call_id: z.string().describe("Call UUID.")
+        call_id: z.string().describe("Call ID from the VAPI dashboard")
       }),
       annotations: READ_ONLY,
     },

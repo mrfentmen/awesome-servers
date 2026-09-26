@@ -60,7 +60,7 @@ export function createServer(): McpServer {
       title: "Get page",
       description: "Page properties.",
       inputSchema: z.object({
-        page_id: z.string().describe("Page UUID.")
+        page_id: z.string().describe("Page ID, e.g. 8a1b2c3d4e5f67890a1b2c3d4e5f6789")
       }),
       annotations: READ_ONLY,
     },

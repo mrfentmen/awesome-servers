@@ -43,7 +43,7 @@ export function createServer(): McpServer {
       title: "Get person",
       description: "Contact details by ID.",
       inputSchema: z.object({
-        person_id: z.string().describe("Person ID.")
+        person_id: z.string().describe("Folk person ID, e.g. p_1234")
       }),
       annotations: READ_ONLY,
     },

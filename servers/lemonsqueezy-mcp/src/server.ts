@@ -60,7 +60,7 @@ export function createServer(): McpServer {
       title: "Get product",
       description: "Product details by ID.",
       inputSchema: z.object({
-        product_id: z.string().describe("Product ID.")
+        product_id: z.string().describe("Lemon Squeezy product ID, e.g. 123456")
       }),
       annotations: READ_ONLY,
     },

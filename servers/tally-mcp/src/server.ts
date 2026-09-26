@@ -41,7 +41,7 @@ export function createServer(): McpServer {
       title: "Get form",
       description: "Form structure.",
       inputSchema: z.object({
-        form_id: z.string().describe("Form ID.")
+        form_id: z.string().describe("Form ID from the Tally URL, e.g. aBcD12")
       }),
       annotations: READ_ONLY,
     },
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
       title: "Submissions",
       description: "Form responses.",
       inputSchema: z.object({
-        form_id: z.string().describe("Form ID."),
+        form_id: z.string().describe("Form ID from the Tally URL, e.g. aBcD12"),
         limit: z.string().describe("Max results (default 10, max 100).").optional()
       }),
       annotations: READ_ONLY,

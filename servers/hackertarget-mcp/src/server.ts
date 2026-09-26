@@ -103,7 +103,7 @@ export function createServer(): McpServer {
       title: "HTTP headers",
       description: "Response headers of a URL.",
       inputSchema: z.object({
-        url: z.string().describe("Full URL.")
+        url: z.string().describe("Full URL, e.g. https://example.com")
       }),
       annotations: READ_ONLY,
     },

@@ -58,7 +58,7 @@ export function createServer(): McpServer {
       title: "List DNS",
       description: "Records in a zone.",
       inputSchema: z.object({
-        zone_id: z.string().describe("Zone ID.")
+        zone_id: z.string().describe("Zone ID, e.g. 023e105f4ecef8ad9ca31a8372d0c353")
       }),
       annotations: READ_ONLY,
     },

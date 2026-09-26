@@ -42,7 +42,7 @@ export function createServer(): McpServer {
       title: "Pin JSON",
       description: "Pin a JSON document to IPFS. Returns the CID and gateway link.",
       inputSchema: z.object({
-        name: z.string().describe("Pin name"),
+        name: z.string().describe("Pin name, e.g. my-file"),
         content: z.string().describe("Valid JSON document as text"),
       }),
       annotations: WRITE,

@@ -707,6 +707,33 @@ function literalsAfter(source: string, maskedSource: string, pattern: RegExp): s
   return out
 }
 
+/**
+ * The same `describe()` literals as literalsAfter, each paired with the parameter
+ * name in front of it, so a finding can be located instead of only counted. The name
+ * is read from the masked copy (the literal is blank there, but the `name:` key that
+ * precedes it is real code) and the text from the original.
+ */
+function describedParams(
+  source: string,
+  maskedSource: string,
+  pattern: RegExp,
+): { name: string; text: string }[] {
+  const out: { name: string; text: string }[] = []
+  let match: RegExpExecArray | null
+  while ((match = pattern.exec(maskedSource)) !== null) {
+    const quote = match[match.length - 1]
+    const start = match.index + match[0].length
+    const end = source.indexOf(quote, start)
+    if (end <= start) continue
+    // Bounded window: `name: z.string().` sits immediately before the call, and
+    // scanning the whole prefix for every match would be quadratic.
+    const window = maskedSource.slice(Math.max(0, match.index - 200), match.index)
+    const name = /([A-Za-z_][A-Za-z0-9_]*)\s*:\s*[^,;{}]*$/.exec(window)?.[1] ?? ""
+    out.push({ name, text: source.slice(start, end) })
+  }
+  return out
+}
+
 export async function lintSource(args: { source: string; label?: string }): Promise<string> {
   const source = args.source ?? ""
   if (!source.trim()) throw new Error("Paste the TypeScript source of an MCP server to lint.")
@@ -846,8 +873,14 @@ export async function lintSource(args: { source: string; label?: string }): Prom
   // Only descriptions that say nothing at all. An earlier version tried to detect a
   // missing example, but stating a limit, an allowed set or a default is just as
   // useful, and judging that needs semantics a linter does not have.
-  const bare = literalsAfter(source, code, /describe\(\s*(["'`])/g).filter((text) => text.trim().length < 12).length
-  if (bare) findings.push({ severity: "low", message: `${bare} parameter description(s) are under 12 characters, which tells a model almost nothing.` })
+  const described = describedParams(source, code, /describe\(\s*(["'`])/g)
+  const bare = described.filter((d) => d.text.trim().length < 12)
+  if (bare.length) {
+    const shown = bare.slice(0, 12)
+    const named = shown.map((d) => `${d.name || "(unnamed)"} ${JSON.stringify(d.text.trim())}`).join(", ")
+    const more = bare.length > shown.length ? `, +${bare.length - shown.length} more` : ""
+    findings.push({ severity: "low", message: `${bare.length} parameter description(s) are under 12 characters, which tells a model almost nothing: ${named}${more}.` })
+  }
 
   const deduped = findings.sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity])
   const counts = { high: 0, medium: 0, low: 0 }

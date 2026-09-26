@@ -41,7 +41,7 @@ export function createServer(): McpServer {
       title: "Get ticket",
       description: "Ticket details.",
       inputSchema: z.object({
-        ticket_id: z.string().describe("Ticket ID.")
+        ticket_id: z.string().describe("Freshdesk ticket ID, e.g. 12345")
       }),
       annotations: READ_ONLY,
     },

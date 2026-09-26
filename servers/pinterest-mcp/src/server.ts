@@ -58,7 +58,7 @@ export function createServer(): McpServer {
       title: "Get board",
       description: "One Pinterest board with its pins.",
       inputSchema: z.object({
-        id: z.string().describe("Board id"),
+        id: z.string().describe("Board ID, e.g. 1234567890"),
         limit: z.number().int().min(1).max(250).default(10),
       }),
       annotations: READ_ONLY,
@@ -80,7 +80,7 @@ export function createServer(): McpServer {
       title: "Get pin",
       description: "One Pinterest pin: title, description, link, image.",
       inputSchema: z.object({
-        id: z.string().describe("Pin id"),
+        id: z.string().describe("Pin ID, e.g. 1234567890"),
       }),
       annotations: READ_ONLY,
     },

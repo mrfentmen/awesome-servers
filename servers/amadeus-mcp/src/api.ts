@@ -10,6 +10,19 @@ export class AmadeusError extends Error {}
 
 let cached: { token: string; exp: number } | null = null
 
+interface TokenResponse { access_token?: string; expires_in?: number }
+
+// The token endpoint's JSON is untyped: read the two fields the cache needs, and
+// only when they carry the expected type.
+function readToken(value: unknown): TokenResponse {
+  if (typeof value !== "object" || value === null) return {}
+  const row = value as { access_token?: unknown; expires_in?: unknown }
+  return {
+    access_token: typeof row.access_token === "string" ? row.access_token : undefined,
+    expires_in: typeof row.expires_in === "number" ? row.expires_in : undefined,
+  }
+}
+
 async function appToken(): Promise<string> {
   const id = process.env.AMADEUS_API_KEY
   const secret = process.env.AMADEUS_API_SECRET
@@ -25,10 +38,9 @@ async function appToken(): Promise<string> {
     signal: AbortSignal.timeout(15000),
   })
   if (!res.ok) throw new AmadeusError(`Amadeus OAuth failed (${res.status}). Check key/secret.`)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data = (await res.json()) as any
-  if (!data.access_token) throw new AmadeusError("Amadeus OAuth returned no token.")
-  cached = { token: data.access_token, exp: Date.now() + (data.expires_in ?? 1799) * 1000 }
+  const { access_token: token, expires_in: ttl } = readToken(await res.json())
+  if (!token) throw new AmadeusError("Amadeus OAuth returned no token.")
+  cached = { token, exp: Date.now() + (ttl ?? 1799) * 1000 }
   return cached.token
 }
 

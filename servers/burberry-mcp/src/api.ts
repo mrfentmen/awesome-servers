@@ -69,7 +69,7 @@ function parseTag(tags: unknown, prefix: string): string | null {
   return null
 }
 
-function slim(source: string, base: string, p: any, cents = false): Slim {
+function slim(source: string, base: string, p: Product, cents = false): Slim {
   const variants = Array.isArray(p.variants) ? p.variants : []
   const varPrices = variants.map((v: any) => Number(v.price)).filter((n: number) => Number.isFinite(n))
   // Suggest-shaped items carry no variants: fall back to top-level price fields.
@@ -110,6 +110,25 @@ function pretty(data: unknown): string {
   return t.length > 12000 ? t.slice(0, 12000) + "\n…(truncated)" : t
 }
 
+// Upstream Shopify catalog row, as far as this server reads it. Every field is
+// read defensively at the call sites; the shape is asserted once, here.
+interface Product {
+  id: number; title: string; handle: string; vendor: string; product_type: string;
+  variants?: { title?: string; price?: string | number; available?: boolean }[];
+  price?: string | number; price_min?: string | number;
+  images?: (string | { src?: string })[];
+  tags?: string[]; available?: boolean; published_at?: string;
+  body_html?: string; description?: string;
+}
+
+// A catalog row is only usable if it carries the handle the product URL is built
+// from and a title to show. Anything else is a malformed upstream row.
+function isProduct(x: unknown): x is Product {
+  if (typeof x !== "object" || x === null) return false
+  const row = x as { handle?: unknown; title?: unknown }
+  return typeof row.handle === "string" && typeof row.title === "string"
+}
+
 async function getJson(url: string): Promise<any> {
   let res: Response
   try {
@@ -121,21 +140,21 @@ async function getJson(url: string): Promise<any> {
   return res.json()
 }
 
-async function catalog(source: Source, page: number): Promise<any[]> {
+async function catalog(source: Source, page: number): Promise<Product[]> {
   const data = await getJson(`${source.catalog}?limit=250&page=${page}`)
-  const products = Array.isArray(data.products) ? data.products : []
-  return products.filter((p: any) => matchesBrand(p.vendor))
+  const products: unknown[] = Array.isArray(data.products) ? data.products : []
+  return products.filter(isProduct).filter((p) => matchesBrand(p.vendor))
 }
 
 // Distilled-pages fetch: several catalog pages in parallel, brand-filtered.
-async function catalogPages(source: Source, pages: number[]): Promise<any[]> {
-  const batches = await Promise.all(pages.map((pg) => catalog(source, pg).catch(() => [] as any[])))
+async function catalogPages(source: Source, pages: number[]): Promise<Product[]> {
+  const batches = await Promise.all(pages.map((pg) => catalog(source, pg).catch(() => [])))
   return batches.flat()
 }
 
 // Round-robin sampling across sources and pages: keeps the brand sample
 // source-balanced (page 1 alone is often 250 Fashionphile items).
-async function sampleCatalog(maxItems: number, pages: number[]): Promise<{ source: Source; p: any }[]> {
+async function sampleCatalog(maxItems: number, pages: number[]): Promise<{ source: Source; p: Product }[]> {
   const out: { source: Source; p: any }[] = []
   for (const pg of pages) {
     for (const s of SOURCES) {

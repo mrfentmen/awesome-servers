@@ -60,7 +60,7 @@ export function createServer(): McpServer {
       title: "Project files",
       description: "Files in a project.",
       inputSchema: z.object({
-        project_id: z.string().describe("Project ID.")
+        project_id: z.string().describe("Project ID from the Figma URL")
       }),
       annotations: READ_ONLY,
     },

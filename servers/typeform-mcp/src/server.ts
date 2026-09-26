@@ -41,7 +41,7 @@ export function createServer(): McpServer {
       title: "Get form",
       description: "Form structure.",
       inputSchema: z.object({
-        form_id: z.string().describe("Form ID.")
+        form_id: z.string().describe("Form ID from the Typeform URL, e.g. abc123XY")
       }),
       annotations: READ_ONLY,
     },
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
       title: "Responses",
       description: "Recent responses.",
       inputSchema: z.object({
-        form_id: z.string().describe("Form ID.")
+        form_id: z.string().describe("Form ID from the Typeform URL, e.g. abc123XY")
       }),
       annotations: READ_ONLY,
     },

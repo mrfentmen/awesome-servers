@@ -86,7 +86,7 @@ export function createServer(): McpServer {
       description: "Search public Spreaker shows. No API key required.",
       inputSchema: z.object({
         query: z.string().describe("Search query."),
-        limit: z.string().describe("Max items.").optional(),
+        limit: z.string().describe("Max items to return, e.g. 20").optional(),
       }),
       annotations: READ_ONLY,
     },

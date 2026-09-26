@@ -11,6 +11,13 @@ async function get<T>(url: string): Promise<T> {
 
 const VALID = /^[A-Z0-9]{4,20}$/
 
+// Error payloads from Binance are untyped JSON, and only `msg` is ever read.
+function readMsg(value: unknown): string | undefined {
+  if (typeof value !== "object" || value === null) return undefined
+  const msg = (value as { msg?: unknown }).msg
+  return msg === undefined ? undefined : String(msg)
+}
+
 export async function ticker(args: { symbol?: string }): Promise<string> {
   const symbol = (args.symbol ?? "").trim().toUpperCase()
   if (!VALID.test(symbol)) throw new BinanceError("Provide a symbol like BTCUSDT")
@@ -26,8 +33,8 @@ export async function klines(args: { symbol?: string; interval?: string; limit?:
   const interval = (args.interval ?? "1d").toLowerCase()
   if (!["1m", "5m", "15m", "1h", "4h", "1d", "1w"].includes(interval)) throw new BinanceError("Interval must be 1m, 5m, 15m, 1h, 4h, 1d, or 1w")
   const limit = Math.min(args.limit ?? 7, 100)
-  const d = await get<any[]>(`${BASE}/klines?symbol=${encodeURIComponent(symbol)}&interval=${interval}&limit=${limit}`)
-  if (!Array.isArray(d)) throw new BinanceError(`Binance: ${(d as any)?.msg ?? "invalid symbol"}`)
+  const d = await get<unknown>(`${BASE}/klines?symbol=${encodeURIComponent(symbol)}&interval=${interval}&limit=${limit}`)
+  if (!Array.isArray(d)) throw new BinanceError(`Binance: ${readMsg(d) ?? "invalid symbol"}`)
   return d.map((k: any) => {
     const date = new Date(k[0]).toISOString().slice(0, 10)
     return `${date} | O ${Number(k[1]).toFixed(2)} H ${Number(k[2]).toFixed(2)} L ${Number(k[3]).toFixed(2)} C ${Number(k[4]).toFixed(2)}`

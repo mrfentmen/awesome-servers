@@ -71,7 +71,7 @@ export function createServer(): McpServer {
       title: "Get rulings",
       description: "Get official Gatherer rulings for a card by fuzzy name.",
       inputSchema: z.object(
-    { name: z.string().describe("Card name") }),
+    { name: z.string().describe("Card name, e.g. Lightning Bolt") }),
       annotations: READ_ONLY,
     },
     async ({ name }) => {

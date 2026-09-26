@@ -62,7 +62,7 @@ export function createServer(): McpServer {
       title: "Get thread",
       description: "Thread details by ID.",
       inputSchema: z.object({
-        thread_id: z.string().describe("Thread ID.")
+        thread_id: z.string().describe("Plain thread ID from the inbox URL")
       }),
       annotations: READ_ONLY,
     },
