@@ -13,11 +13,13 @@ MCP server for Loops: contacts, events. Needs a free API key. Published from a p
 Marketing & Social
 
 ## Features
+
 - Find contact: Find a Loops contact by email.
 - Create contact: Create a Loops contact with optional first/last name.
 - Send event: Send a Loops event to trigger email flows.
 
 ## Getting Started
+
 - "Ask your assistant about loops using this server once installed"
 - Tool: find_contact — Find a Loops contact by email.
 - Tool: create_contact — Create a Loops contact with optional first/last name.

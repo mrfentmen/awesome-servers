@@ -16,12 +16,14 @@ Bitwarden public API: organization members, collections, groups, event logs. Nee
 Business Tools
 
 ## Features
+
 - List org members: Organization members: names, emails, status, collections access.
 - List collections: Organization collections with member and group assignments.
 - List groups: Organization groups with member ids and collection access.
 - Get event logs: Organization event log: logins, item actions, admin changes. Optional date range.
 
 ## Getting Started
+
 - "Ask your assistant about bitwarden using this server once installed"
 - Tool: list_members — Organization members: names, emails, status, collections access.
 - Tool: list_collections — Organization collections with member and group assignments.

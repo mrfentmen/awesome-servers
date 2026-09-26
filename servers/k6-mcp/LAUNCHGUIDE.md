@@ -13,11 +13,15 @@ A running k6 load test. Local (K6_URL, default localhost:6565). Not affiliated w
 Developer Tools
 
 ## Features
-- get_status: Run state, VUs
-- list_metrics: Metrics
+
+- Runtime status: k6 run state, VUs, iterations.
+- List metrics: Metric names a k6 run can report.
 
 ## Getting Started
+
 - "Is my load test running?"
+- Tool: get_status — k6 run state, VUs, iterations.
+- Tool: list_metrics — Metric names a k6 run can report.
 
 ## Tags
 k6, load-testing, performance, metrics

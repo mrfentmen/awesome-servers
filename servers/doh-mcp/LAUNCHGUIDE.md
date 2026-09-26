@@ -13,6 +13,7 @@ No setup. Queries go over DNS-over-HTTPS to public keyless resolvers.
 Developer Tools
 
 ## Features
+
 - Resolve DNS record: Look up DNS records for a hostname over HTTPS (no local resolver needed). Returns the record values with their TTL.
 - Resolve many names: Resolve one record type for up to 15 hostnames in a single call. Handy for checking a list of domains at once.
 - DNS record summary: Every common record for a domain in one call: A, AAAA, CNAME, MX, TXT, NS, SOA and CAA. Good first call when auditing a domain.
@@ -22,6 +23,7 @@ Developer Tools
 - List resolvers: The keyless DoH resolvers this server can query, and the record types it understands.
 
 ## Getting Started
+
 - Ask your assistant about doh using this server once installed
 - Tool: resolve — Look up DNS records for a hostname over HTTPS (no local resolver needed). Returns the record values with their TTL.
 - Tool: resolve_many — Resolve one record type for up to 15 hostnames in a single call. Handy for checking a list of domains at once.

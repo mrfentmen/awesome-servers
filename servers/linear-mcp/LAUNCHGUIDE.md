@@ -13,13 +13,18 @@ Issues and teams. Key (LINEAR_API_KEY). Not affiliated with the vendor.
 Developer Tools
 
 ## Features
-- me: Viewer
-- list_teams: Teams
-- search_issues: Search
+
+- Viewer: The Linear user the API key belongs to.
+- List teams: Teams in the workspace, with key and id.
+- Search issues: Search issues by text, e.g. login bug.
 
 ## Getting Started
+
 - "My issues?"
 - "Bugs mentioning X?"
+- Tool: me — The Linear user the API key belongs to.
+- Tool: list_teams — Teams in the workspace, with key and id.
+- Tool: search_issues — Search issues by text, e.g. login bug.
 
 ## Tags
 linear, issues, project

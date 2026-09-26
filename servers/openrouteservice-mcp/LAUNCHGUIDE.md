@@ -13,13 +13,18 @@ OpenRouteService geocode, reverse geocode and driving directions (free key; OPEN
 Business Tools
 
 ## Features
-- geocode: Place search
-- reverse: Coords to place
-- directions: Car routes
+
+- Geocode: Coordinates for a place name, e.g. Berlin.
+- Reverse geocode: Nearest place name for latitude and longitude.
+- Driving directions: Driving route between two points, with distance and time.
 
 ## Getting Started
+
 - "Where is this address?"
 - "Route from A to B"
+- Tool: geocode — Coordinates for a place name, e.g. Berlin.
+- Tool: reverse — Nearest place name for latitude and longitude.
+- Tool: directions — Driving route between two points, with distance and time.
 
 ## Tags
 maps, geocoding, routing, openstreetmap

@@ -13,12 +13,17 @@ Tables, users, RPC. Project URL + key. Not affiliated with the vendor.
 Developer Tools
 
 ## Features
-- query_table: Rows
-- list_users: Users
-- call_rpc: Functions
+
+- Query table: Rows from one table, with select and limit applied.
+- List users: Auth users in the project, one page at a time.
+- Call RPC: Call a Postgres function by name with JSON parameters.
 
 ## Getting Started
+
 - "Rows in my table?"
+- Tool: query_table — Rows from one table, with select and limit applied.
+- Tool: list_users — Auth users in the project, one page at a time.
+- Tool: call_rpc — Call a Postgres function by name with JSON parameters.
 
 ## Tags
 supabase, postgres, database, backend

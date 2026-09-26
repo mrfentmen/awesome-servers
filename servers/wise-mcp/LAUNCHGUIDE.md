@@ -13,11 +13,13 @@ MCP server for Wise: profiles, balances, exchange rates. Needs a free Wise API t
 Finance
 
 ## Features
+
 - List profiles: Your Wise profiles (personal, business) with ids.
 - Get balances: Balances per currency for one Wise profile.
 - Exchange rate: Current Wise mid-market rate between two currencies.
 
 ## Getting Started
+
 - "Ask your assistant about wise using this server once installed"
 - Tool: list_profiles — Your Wise profiles (personal, business) with ids.
 - Tool: get_balances — Balances per currency for one Wise profile.

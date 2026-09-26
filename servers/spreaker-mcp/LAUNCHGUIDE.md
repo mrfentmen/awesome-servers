@@ -13,6 +13,7 @@ Spreaker shows, episodes and search. Public reads keyless. Published from a priv
 Business Tools
 
 ## Features
+
 - Get show: Retrieve a single Spreaker show by numeric ID.
 - List show episodes: List episodes of a Spreaker show.
 - Get episode: Retrieve a single Spreaker episode by numeric ID.
@@ -20,6 +21,7 @@ Business Tools
 - Create show: Create a new Spreaker show (requires SPREAKER_ACCESS_TOKEN).
 
 ## Getting Started
+
 - "Ask your assistant about spreaker using this server once installed"
 - Tool: get_show — Retrieve a single Spreaker show by numeric ID.
 - Tool: list_show_episodes — List episodes of a Spreaker show.

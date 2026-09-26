@@ -13,10 +13,13 @@ PublicWWW snippet search (paid key; PUBLICWWW_API_KEY). Not affiliated.
 Business Tools
 
 ## Features
-- search_snippets: URLs of sites containing a code snippet
+
+- Snippet search: URLs of sites containing a code snippet.
 
 ## Getting Started
+
 - "Which sites use this tracker?"
+- Tool: search_snippets — URLs of sites containing a code snippet.
 
 ## Tags
 publicwww, osint, search, security

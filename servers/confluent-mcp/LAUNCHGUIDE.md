@@ -14,10 +14,12 @@ MCP server for Confluent Cloud: environments, Kafka clusters. Needs an API key. 
 Business Tools
 
 ## Features
+
 - List environments: Confluent Cloud environments with ids and names.
 - List Kafka clusters: Kafka clusters in one environment: cloud, region, availability, endpoint.
 
 ## Getting Started
+
 - "Ask your assistant about confluent using this server once installed"
 - Tool: list_environments — Confluent Cloud environments with ids and names.
 - Tool: list_clusters — Kafka clusters in one environment: cloud, region, availability, endpoint.

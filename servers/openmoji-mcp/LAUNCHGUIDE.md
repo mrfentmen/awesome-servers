@@ -13,6 +13,7 @@ No setup. The OpenMoji dataset is fetched once and queried locally.
 Design
 
 ## Features
+
 - Search emoji: Search every OpenMoji emoji by annotation, tag, group or subgroup. Returns hexcode and SVG link.
 - Get emoji details: Full record for one emoji: group, subgroup, tags and the official SVG link.
 - List groups: The OpenMoji groups with how many emoji each contains.
@@ -22,6 +23,7 @@ Design
 - Dataset statistics: How big the OpenMoji set is right now: totals, groups, sequences and the largest group.
 
 ## Getting Started
+
 - Ask your assistant about openmoji using this server once installed
 - Tool: search_emoji — Search every OpenMoji emoji by annotation, tag, group or subgroup. Returns hexcode and SVG link.
 - Tool: get_emoji — Full record for one emoji: group, subgroup, tags and the official SVG link.

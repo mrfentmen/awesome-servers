@@ -13,6 +13,7 @@ No setup. Questions come from the public Open Trivia DB API.
 Education
 
 ## Features
+
 - List categories: Every trivia category with the numeric id used by the other tools.
 - Category question counts: How many questions a category holds, split by difficulty. Useful before requesting a quiz.
 - Database totals: How many questions the whole trivia database holds, overall and per category name.
@@ -21,6 +22,7 @@ Education
 - Session token: Get or reset a session token. Pass it to quiz or get_questions so the same question is never served twice.
 
 ## Getting Started
+
 - Ask your assistant about opentdb using this server once installed
 - Tool: list_categories — Every trivia category with the numeric id used by the other tools.
 - Tool: category_counts — How many questions a category holds, split by difficulty. Useful before requesting a quiz.

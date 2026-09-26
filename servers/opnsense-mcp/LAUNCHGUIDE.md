@@ -13,12 +13,16 @@ Your OPNsense firewall. Self-hosted (OPNSENSE_URL + API keys). Not affiliated wi
 Developer Tools
 
 ## Features
-- get_firmware_status: Version/updates
-- get_interfaces: Traffic stats
+
+- Firmware status: Installed version and whether an update is available.
+- Interface stats: Traffic counters per interface.
 
 ## Getting Started
+
 - "Firmware current?"
 - "Interface traffic?"
+- Tool: get_firmware_status — Installed version and whether an update is available.
+- Tool: get_interfaces — Traffic counters per interface.
 
 ## Tags
 opnsense, firewall, network, router, self-hosted

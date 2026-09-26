@@ -13,12 +13,17 @@ Files and projects. Token. Not affiliated with the vendor.
 Developer Tools
 
 ## Features
-- me: Profile
-- get_file: File
-- project_files: Files
+
+- My profile: The Figma user the access token belongs to.
+- Get file: File metadata: name, pages and last modified date.
+- Project files: Figma files inside one project id.
 
 ## Getting Started
+
 - "Files in this project?"
+- Tool: me — The Figma user the access token belongs to.
+- Tool: get_file — File metadata: name, pages and last modified date.
+- Tool: project_files — Figma files inside one project id.
 
 ## Tags
 figma, design

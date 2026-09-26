@@ -13,13 +13,18 @@ Pusher realtime channel queries (HMAC-signed). Needs app id/key/secret. Not affi
 Developer Tools
 
 ## Features
-- list_channels: Active channels
-- get_channel: Channel details
-- get_channel_users: Presence users
+
+- List channels: Active channels with user counts.
+- Channel details: Occupancy details for a channel.
+- Channel users: User IDs subscribed to a presence channel.
 
 ## Getting Started
+
 - "Which channels are active?"
 - "Who is on this channel?"
+- Tool: list_channels — Active channels with user counts.
+- Tool: get_channel — Occupancy details for a channel.
+- Tool: get_channel_users — User IDs subscribed to a presence channel.
 
 ## Tags
 pusher, websockets, realtime, channels

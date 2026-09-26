@@ -13,13 +13,18 @@ AssemblyAI speech-to-text transcripts. Needs a free-tier key (ASSEMBLYAI_API_KEY
 Marketing
 
 ## Features
-- list_transcripts: Recent transcripts
-- get_transcript: Details and status
-- get_paragraphs: Paragraph-grouped text
+
+- List transcripts: Recent transcripts with id, status and duration.
+- Get transcript: Transcript details and status.
+- Get paragraphs: Paragraph-grouped transcript text.
 
 ## Getting Started
+
 - "List my transcripts"
 - "Get that transcript text"
+- Tool: list_transcripts — Recent transcripts with id, status and duration.
+- Tool: get_transcript — Transcript details and status.
+- Tool: get_paragraphs — Paragraph-grouped transcript text.
 
 ## Tags
 assemblyai, transcription, audio, speech-to-text, ai

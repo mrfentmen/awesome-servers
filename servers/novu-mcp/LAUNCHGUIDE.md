@@ -13,12 +13,17 @@ Subscribers and topics. Key. Not affiliated with the vendor.
 Developer Tools
 
 ## Features
-- list_subscribers: Subscribers
-- get_subscriber: Details
-- list_topics: Topics
+
+- Subscribers: Notification subscribers, with email and id.
+- Get subscriber: One subscriber by id, with channels and data.
+- Topics: Notification topics with subscriber counts.
 
 ## Getting Started
+
 - "My subscribers?"
+- Tool: list_subscribers — Notification subscribers, with email and id.
+- Tool: get_subscriber — One subscriber by id, with channels and data.
+- Tool: list_topics — Notification topics with subscriber counts.
 
 ## Tags
 novu, notifications

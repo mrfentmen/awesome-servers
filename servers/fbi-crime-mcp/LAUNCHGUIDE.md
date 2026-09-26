@@ -13,12 +13,17 @@ FBI Crime Data Explorer: arrests, offenses, victims by state (free key; FBI_API_
 Business Tools
 
 ## Features
-- arrests: Arrest estimates
-- offenses: Offense counts
-- victims: Victim demographics
+
+- Arrest data: Arrest estimates by state, offense and year.
+- Offense data: Offense counts by state and offense type.
+- Victim data: Victim demographics by state and offense.
 
 ## Getting Started
+
 - "Crime stats for Texas?"
+- Tool: arrests — Arrest estimates by state, offense and year.
+- Tool: offenses — Offense counts by state and offense type.
+- Tool: victims — Victim demographics by state and offense.
 
 ## Tags
 fbi, crime, statistics, government

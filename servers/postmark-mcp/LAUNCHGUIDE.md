@@ -13,13 +13,18 @@ Postmark server, templates and outbound messages. Needs a server token (POSTMARK
 Business Tools
 
 ## Features
-- get_server: Server details
-- list_templates: Email templates
-- list_outbound: Outbound messages
+
+- Server info: Postmark server details and delivery settings.
+- List templates: Email templates on the server, with ids.
+- Outbound messages: Recent outbound messages with recipient and status.
 
 ## Getting Started
+
 - "Show my templates"
 - "Recent outbound mail?"
+- Tool: get_server — Postmark server details and delivery settings.
+- Tool: list_templates — Email templates on the server, with ids.
+- Tool: list_outbound — Recent outbound messages with recipient and status.
 
 ## Tags
 postmark, email, transactional, smtp

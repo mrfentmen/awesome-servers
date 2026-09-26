@@ -13,6 +13,7 @@ No setup. All timezone and calendar maths uses the IANA database shipped with No
 Productivity
 
 ## Features
+
 - Convert time between timezones: Convert a date and time from one timezone to another, using the live IANA database so daylight saving is handled correctly. No account needed.
 - Timezone and DST info: Show a timezone's current offset, its standard and summer offsets, whether it observes daylight saving and the exact dates its clocks change this year.
 - Count business days: Count the working days between two dates, excluding weekends and any holidays you list, with a configurable weekend.
@@ -22,6 +23,7 @@ Productivity
 - Find overlap across timezones: Work out which UTC hours fall inside everyone's working hours for a distributed team, listing each attendee's local time for every workable hour.
 
 ## Getting Started
+
 - Ask your assistant about savvycal using this server once installed
 - Tool: convert_time — Convert a date and time from one timezone to another, using the live IANA database so daylight saving is handled correctly. No account needed.
 - Tool: timezone_info — Show a timezone's current offset, its standard and summer offsets, whether it observes daylight saving and the exact dates its clocks change this year.

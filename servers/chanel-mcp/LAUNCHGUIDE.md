@@ -13,6 +13,7 @@ Chanel resale listings from Fashionphile and Rebag. Keyless. Published from a pr
 Business Tools
 
 ## Features
+
 - Search listings: Keyword search across Fashionphile and Rebag. Condition filter is Rebag-data only.
 - Newest listings: Newest catalog listings, sorted by publish date.
 - Get listing: Full details: variants, images, parsed condition/color/material, description.
@@ -22,6 +23,7 @@ Business Tools
 - Brand overview: Catalog sample counts by source, type and condition.
 
 ## Getting Started
+
 - "Ask your assistant about chanel using this server once installed"
 - Tool: search_listings — Keyword search across Fashionphile and Rebag. Condition filter is Rebag-data only.
 - Tool: list_newest — Newest catalog listings, sorted by publish date.

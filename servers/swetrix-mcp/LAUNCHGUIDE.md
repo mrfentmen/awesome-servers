@@ -13,10 +13,12 @@ Swetrix analytics: projects and project details. Needs API key. Published from a
 Data & Analytics
 
 ## Features
+
 - List projects: All Swetrix projects with ids and domains.
 - Get project: One Swetrix project with settings and stats summary.
 
 ## Getting Started
+
 - "Ask your assistant about swetrix using this server once installed"
 - Tool: list_projects — All Swetrix projects with ids and domains.
 - Tool: get_project — One Swetrix project with settings and stats summary.

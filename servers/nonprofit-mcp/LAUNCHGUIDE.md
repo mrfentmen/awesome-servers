@@ -13,6 +13,7 @@ No setup. Data comes from public IRS filings via the ProPublica Nonprofit Explor
 Other
 
 ## Features
+
 - Search nonprofits: Search US nonprofits by name. Returns EIN, location and NTEE code for each match.
 - Nonprofits by state: List nonprofits registered in a US state.
 - Nonprofits by NTEE category: Find nonprofits by NTEE category, optionally within one state. Accepts the NTEE letter (A arts, B education, C environment, E health, P human services, S community) or a full code like 'B20'.
@@ -21,6 +22,7 @@ Other
 - Compare nonprofits: Put up to 5 nonprofits side by side: location, category, revenue and expenses.
 
 ## Getting Started
+
 - Ask your assistant about nonprofit using this server once installed
 - Tool: search — Search US nonprofits by name. Returns EIN, location and NTEE code for each match.
 - Tool: search_by_state — List nonprofits registered in a US state.

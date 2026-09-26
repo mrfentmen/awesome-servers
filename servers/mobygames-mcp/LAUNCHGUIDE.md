@@ -13,13 +13,15 @@ MobyGames: game search and details. Needs free key.
 Content & Media
 
 ## Features
-- search_games: Title search
-- get_game: Details by ID
+
+- Search games: Title search incl. retro (needs MOBYGAMES_API_KEY).
+- Get game: One game by id, with platforms, genres and score.
 
 ## Getting Started
+
 - "Doom games"
-- Tool: search_games — Title search
-- Tool: get_game — Details by ID
+- Tool: search_games — Title search incl. retro (needs MOBYGAMES_API_KEY).
+- Tool: get_game — One game by id, with platforms, genres and score.
 
 ## Tags
 games, mobygames, retro, gaming

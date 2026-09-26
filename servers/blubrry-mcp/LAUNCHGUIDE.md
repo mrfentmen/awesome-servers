@@ -13,6 +13,7 @@ Blubrry podcast hosting: shows, media, download stats. Needs token. Published fr
 Business Tools
 
 ## Features
+
 - List shows: List podcast shows on the Blubrry account.
 - List show media: Unpublished and recently published media files for a show.
 - Show stats summary: Overall download summary for a show.
@@ -20,6 +21,7 @@ Business Tools
 - Show stats totals: Lifetime download totals for a show.
 
 ## Getting Started
+
 - "Ask your assistant about blubrry using this server once installed"
 - Tool: list_shows — List podcast shows on the Blubrry account.
 - Tool: list_show_media — Unpublished and recently published media files for a show.

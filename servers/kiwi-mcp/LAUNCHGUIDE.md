@@ -13,10 +13,12 @@ MCP server for Kiwi.com flights: search, airlines. Needs a free API key. Publish
 Business Tools
 
 ## Features
+
 - Find airports: Airport codes by city name for flight search.
 - Search flights: Cheapest flights between airports in a date range, with airlines and links.
 
 ## Getting Started
+
 - "Ask your assistant about kiwi using this server once installed"
 - Tool: find_locations — Airport codes by city name for flight search.
 - Tool: search_flights — Cheapest flights between airports in a date range, with airlines and links.

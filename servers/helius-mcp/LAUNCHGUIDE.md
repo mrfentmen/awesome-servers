@@ -13,6 +13,7 @@ Helius Solana API: balances, transactions, NFTs, token metadata, parsed transact
 Finance
 
 ## Features
+
 - Get wallet balances: Solana wallet balances via Helius: SOL plus every token holding with amounts and decimals.
 - Get transactions: Recent Solana signatures for an address with slot and block time.
 - Get wallet NFTs: NFTs held by a Solana wallet: collections, names, images.
@@ -20,6 +21,7 @@ Finance
 - Parse transactions: Human-readable Helius parse of Solana transactions: type, source, transfers, swaps.
 
 ## Getting Started
+
 - "Ask your assistant about helius using this server once installed"
 - Tool: get_balances — Solana wallet balances via Helius: SOL plus every token holding with amounts and decimals.
 - Tool: get_transactions — Recent Solana signatures for an address with slot and block time.

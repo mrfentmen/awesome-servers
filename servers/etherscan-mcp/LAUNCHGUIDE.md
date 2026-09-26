@@ -13,12 +13,17 @@ EVM balances and transactions. Free key (ETHERSCAN_API_KEY). Not affiliated with
 Finance
 
 ## Features
-- get_balance: Native balance
-- get_transactions: TXs
-- get_token_transfers: ERC-20
+
+- ETH balance: Native balance for an address.
+- Transactions: Recent normal transactions for an address.
+- Token transfers: Recent ERC-20 transfers to or from an address.
 
 ## Getting Started
+
 - "Balance of 0x...?"
+- Tool: get_balance — Native balance for an address.
+- Tool: get_transactions — Recent normal transactions for an address.
+- Tool: get_token_transfers — Recent ERC-20 transfers to or from an address.
 
 ## Tags
 etherscan, ethereum, crypto, evm, defi

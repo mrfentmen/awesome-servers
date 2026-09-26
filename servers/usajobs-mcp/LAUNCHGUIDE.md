@@ -14,9 +14,11 @@ MCP server for USAJOBS: federal job search. Needs a free API key. Published from
 Business Tools
 
 ## Features
+
 - Search federal jobs: US federal jobs by keyword and location, with pay bands and closing dates.
 
 ## Getting Started
+
 - "Ask your assistant about usajobs using this server once installed"
 - Tool: search_jobs — US federal jobs by keyword and location, with pay bands and closing dates.
 

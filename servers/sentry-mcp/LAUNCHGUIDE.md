@@ -13,12 +13,17 @@ Orgs and issues. Token. Not affiliated with the vendor.
 Developer Tools
 
 ## Features
-- list_orgs: Orgs
-- org_projects: Projects
-- org_issues: Issues
+
+- List orgs: Sentry organizations the token can read.
+- Org projects: Projects inside one Sentry org, e.g. my-org.
+- Org issues: Issues first seen in one org in the last 24 hours.
 
 ## Getting Started
+
 - "Recent errors?"
+- Tool: list_orgs — Sentry organizations the token can read.
+- Tool: org_projects — Projects inside one Sentry org, e.g. my-org.
+- Tool: org_issues — Issues first seen in one org in the last 24 hours.
 
 ## Tags
 sentry, errors, monitoring

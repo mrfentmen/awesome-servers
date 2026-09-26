@@ -13,11 +13,23 @@ Jobs from The Muse. No key required. Published from a private commercial monorep
 Business Tools
 
 ## Features
-- Jobs: List job postings.
+
+- Jobs: Browse the newest The Muse job postings (about 414,000 open roles), 20 per page, with company, location, level and category.
+- Job detail: Get one Muse job by id, including the full description text and landing page link.
+- Find jobs: Search Muse jobs using the API's own level and location filters — faster and far more precise than scanning the feed. Example: level 'Senior Level' with location 'Remote'.
+- Company jobs: Every open Muse role at companies matching a name, found by scanning the newest postings.
+- Search jobs: Keyword search across the newest Muse postings (title, company, location, category, level, tags). Add a level or location to narrow what gets scanned.
+- Job insights: Market overview for a level and/or location: the top employers, locations, levels and categories hiring right now. Supersedes a plain \"who is hiring\" company count.
 
 ## Getting Started
+
 - "Ask your assistant about themuse using this server once installed"
-- Tool: jobs — List job postings.
+- Tool: jobs — Browse the newest The Muse job postings (about 414,000 open roles), 20 per page, with company, location, level and category.
+- Tool: job — Get one Muse job by id, including the full description text and landing page link.
+- Tool: find_jobs — Search Muse jobs using the API's own level and location filters — faster and far more precise than scanning the feed. Example: level 'Senior Level' with location 'Remote'.
+- Tool: company_jobs — Every open Muse role at companies matching a name, found by scanning the newest postings.
+- Tool: search_jobs — Keyword search across the newest Muse postings (title, company, location, category, level, tags). Add a level or location to narrow what gets scanned.
+- Tool: job_insights — Market overview for a level and/or location: the top employers, locations, levels and categories hiring right now. Supersedes a plain \"who is hiring\" company count.
 
 ## Tags
 themuse, mcp, data, keyless

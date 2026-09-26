@@ -13,13 +13,15 @@ MCP server for Groq: fast LLM chat, model list. Needs a free API key. Published 
 Business Tools
 
 ## Features
+
 - Chat completion: Ask a Groq-hosted LLM. Fast inference, OpenAI-compatible.
-- List models: Available Groq model ids.
+- List models: Model ids available to the Groq API key.
 
 ## Getting Started
+
 - "Ask your assistant about groq using this server once installed"
 - Tool: chat — Ask a Groq-hosted LLM. Fast inference, OpenAI-compatible.
-- Tool: list_models — Available Groq model ids.
+- Tool: list_models — Model ids available to the Groq API key.
 
 ## Tags
 groq, mcp, data, api

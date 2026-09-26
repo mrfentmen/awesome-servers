@@ -13,6 +13,7 @@ No setup. Timings are measured by the server itself, so there is no key or accou
 Developer Tools
 
 ## Features
+
 - Check URL up or down: Test whether a URL is up right now and report its HTTP status, response time and redirect count. No API key needed.
 - Response time samples: Request a URL several times in a row and report min, median, average, max and jitter, so you can tell whether a site is consistently fast or flaky.
 - Check redirect chain: Follow every redirect for a URL and flag loops, plain-HTTP starts and hops that could be collapsed into one rule.
@@ -21,6 +22,7 @@ Developer Tools
 - Performance report: Break a page load into DNS lookup, connect, TLS, time-to-first-byte and total time, then report payload size, compression, caching and page weight with a list of fixes.
 
 ## Getting Started
+
 - Ask your assistant about pingdom using this server once installed
 - Tool: check_url — Test whether a URL is up right now and report its HTTP status, response time and redirect count. No API key needed.
 - Tool: response_times — Request a URL several times in a row and report min, median, average, max and jitter, so you can tell whether a site is consistently fast or flaky.

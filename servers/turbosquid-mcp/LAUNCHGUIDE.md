@@ -13,12 +13,14 @@ TurboSquid 3D: file formats, products, seller drafts. Published from a private c
 Business Tools
 
 ## Features
+
 - List file formats: 3D file formats with extensions and renderers (requires TURBOSQUID_API_TOKEN).
 - Get product: 3D model product metadata by numeric product ID.
 - List drafts: New product drafts of the authenticated member (requires TURBOSQUID_API_TOKEN).
 - Get draft: Draft metadata by draft ID (requires TURBOSQUID_API_TOKEN).
 
 ## Getting Started
+
 - "Ask your assistant about turbosquid using this server once installed"
 - Tool: list_file_formats — 3D file formats with extensions and renderers (requires TURBOSQUID_API_TOKEN).
 - Tool: get_product — 3D model product metadata by numeric product ID.

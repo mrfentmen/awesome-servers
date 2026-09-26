@@ -13,15 +13,17 @@ Rolex resale listings from Fashionphile and Rebag. Keyless. Published from a pri
 Business Tools
 
 ## Features
+
 - Search listings: Keyword search across Fashionphile and Rebag. Condition filter is Rebag-data only.
 - Newest listings: Newest catalog listings, sorted by publish date.
 - Get listing: Full details: variants, images, parsed condition/color/material, description.
 - Price overview: Ask-price stats overall + by condition.
 - Compare prices: Group same-model listings across sources with min/max/spread.
 - Find deals: Available listings priced below the brand median.
-- Brand overview: Catalog sample counts by source, type and condition.
+- Brand overview: Catalog sample counts by source, type and condition, e.g. how many Bags, Watches and Jewelry are listed.
 
 ## Getting Started
+
 - "Ask your assistant about rolex using this server once installed"
 - Tool: search_listings — Keyword search across Fashionphile and Rebag. Condition filter is Rebag-data only.
 - Tool: list_newest — Newest catalog listings, sorted by publish date.
@@ -29,7 +31,7 @@ Business Tools
 - Tool: price_overview — Ask-price stats overall + by condition.
 - Tool: compare_prices — Group same-model listings across sources with min/max/spread.
 - Tool: find_deals — Available listings priced below the brand median.
-- Tool: brand_overview — Catalog sample counts by source, type and condition.
+- Tool: brand_overview — Catalog sample counts by source, type and condition, e.g. how many Bags, Watches and Jewelry are listed.
 
 ## Tags
 rolex, mcp, shopping, keyless

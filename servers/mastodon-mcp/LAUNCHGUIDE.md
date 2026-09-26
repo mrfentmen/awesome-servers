@@ -13,12 +13,17 @@ Mastodon trends and instance info (keyless; MASTODON_INSTANCE, default mastodon.
 Social
 
 ## Features
-- trending_tags: Hashtags
-- trending_posts: Statuses
-- instance_info: Instance details
+
+- Trending tags: Hashtags trending on the instance right now.
+- Trending posts: Statuses trending on the instance right now.
+- Instance info: Instance description, version and user counts.
 
 ## Getting Started
+
 - "What is trending on Mastodon?"
+- Tool: trending_tags — Hashtags trending on the instance right now.
+- Tool: trending_posts — Statuses trending on the instance right now.
+- Tool: instance_info — Instance description, version and user counts.
 
 ## Tags
 mastodon, fediverse, social, keyless

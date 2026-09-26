@@ -13,12 +13,17 @@ Forms and responses. Token. Not affiliated with the vendor.
 Business Tools
 
 ## Features
-- list_forms: Forms
-- get_form: Structure
-- list_responses: Responses
+
+- List forms: All Typeform forms, with id and title.
+- Get form: One form's structure: fields, logic and settings.
+- Responses: Recent responses to a form, newest first.
 
 ## Getting Started
+
 - "Recent responses?"
+- Tool: list_forms — All Typeform forms, with id and title.
+- Tool: get_form — One form's structure: fields, logic and settings.
+- Tool: list_responses — Recent responses to a form, newest first.
 
 ## Tags
 typeform, forms, surveys

@@ -13,13 +13,18 @@ Mercury accounts and transactions. Needs a sandbox key (MERCURY_API_KEY). Not af
 Finance
 
 ## Features
-- list_accounts: Accounts
-- get_account: Account details
-- list_transactions: Transactions
+
+- List accounts: Mercury accounts with balance and type.
+- Get account: One account by id, with routing details.
+- List transactions: Transactions on an account, newest first.
 
 ## Getting Started
+
 - "List my accounts"
 - "Recent transactions?"
+- Tool: list_accounts — Mercury accounts with balance and type.
+- Tool: get_account — One account by id, with routing details.
+- Tool: list_transactions — Transactions on an account, newest first.
 
 ## Tags
 mercury, banking, fintech, finance, startups

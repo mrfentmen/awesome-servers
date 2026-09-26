@@ -13,12 +13,17 @@ Orders and plans. Sandbox ID + secret. Not affiliated with the vendor.
 Finance
 
 ## Features
-- get_order: Order
-- get_capture: Capture
-- list_plans: Plans
+
+- Get order: One order by id, with status, amount and payer.
+- Get capture: One payment capture by id, with amount and status.
+- List plans: Billing plans on the account, with id and status.
 
 ## Getting Started
+
 - "Sandbox orders?"
+- Tool: get_order — One order by id, with status, amount and payer.
+- Tool: get_capture — One payment capture by id, with amount and status.
+- Tool: list_plans — Billing plans on the account, with id and status.
 
 ## Tags
 paypal, payments, sandbox

@@ -13,15 +13,23 @@ Use this MCP server to Steam, store search, prices and discounts, app details, a
 Business Tools
 
 ## Features
-- Search games: Search the Steam store by title. Returns appids with current prices 
-- Get game details: Get details for a Steam app: price/discount, release date, 
+
+- Search games: Search the Steam store by title. Returns appids with current prices and discounts.
+- Get game details: Get details for a Steam app: price/discount, release date, developers, genres, Metacritic, description.
 - Get game news: Fetch recent Steam news posts for a game.
+- Review summary: Review totals for a game: total, positive and negative counts plus the summary label.
+- Player count: How many players are in a game right now.
+- Top sellers: Current Steam top sellers with prices and discounts.
 
 ## Getting Started
+
 - "Ask your assistant about steam using this server once installed"
-- Tool: search_games — Search the Steam store by title. Returns appids with current prices 
-- Tool: get_game_details — Get details for a Steam app: price/discount, release date, 
+- Tool: search_games — Search the Steam store by title. Returns appids with current prices and discounts.
+- Tool: get_game_details — Get details for a Steam app: price/discount, release date, developers, genres, Metacritic, description.
 - Tool: get_game_news — Fetch recent Steam news posts for a game.
+- Tool: reviews — Review totals for a game: total, positive and negative counts plus the summary label.
+- Tool: players — How many players are in a game right now.
+- Tool: topsellers — Current Steam top sellers with prices and discounts.
 
 ## Tags
 steam, mcp, shopping, keyless

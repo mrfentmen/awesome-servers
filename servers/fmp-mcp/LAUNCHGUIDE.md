@@ -13,11 +13,13 @@ MCP server for Financial Modeling Prep: quotes, profiles, financials. Free key. 
 Finance
 
 ## Features
+
 - Stock quote: Quote with day range and market cap.
 - Company profile: Company: industry, CEO, website, description.
 - Income statement: Recent annual revenue and net income in billions.
 
 ## Getting Started
+
 - "Ask your assistant about fmp using this server once installed"
 - Tool: stock_quote — Quote with day range and market cap.
 - Tool: company_profile — Company: industry, CEO, website, description.

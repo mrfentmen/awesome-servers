@@ -13,12 +13,17 @@ Bot messaging. Free bot (TELEGRAM_BOT_TOKEN). Not affiliated with the vendor.
 Business Tools
 
 ## Features
-- get_me: Bot info
-- send_message: REAL sends
-- get_updates: Inbox
+
+- Bot info: Bot identity: username, id and capabilities.
+- Send message: Send a REAL message to a chat.
+- Get updates: Incoming updates from the last 24 hours.
 
 ## Getting Started
+
 - "Message me on Telegram"
+- Tool: get_me — Bot identity: username, id and capabilities.
+- Tool: send_message — Send a REAL message to a chat.
+- Tool: get_updates — Incoming updates from the last 24 hours.
 
 ## Tags
 telegram, bot, messaging

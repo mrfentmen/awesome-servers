@@ -13,14 +13,20 @@ Repos, profile, search. Free token (GITHUB_TOKEN). Not affiliated with the vendo
 Developer Tools
 
 ## Features
-- me: Profile
-- list_repos: My repos
-- get_repo: Details
-- search_repos: Public search
+
+- My profile: Profile of the GitHub user the token belongs to.
+- List repos: Repositories the token owner updated most recently.
+- Get repo: Repository details for owner/repo, e.g. facebook/react.
+- Search repos: Public repositories matching a query, e.g. mcp server.
 
 ## Getting Started
+
 - "My repos?"
 - "Find this repo"
+- Tool: me — Profile of the GitHub user the token belongs to.
+- Tool: list_repos — Repositories the token owner updated most recently.
+- Tool: get_repo — Repository details for owner/repo, e.g. facebook/react.
+- Tool: search_repos — Public repositories matching a query, e.g. mcp server.
 
 ## Tags
 github, git, repos, dev

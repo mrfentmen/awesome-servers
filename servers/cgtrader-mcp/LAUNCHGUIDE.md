@@ -13,15 +13,17 @@ CGTrader 3D marketplace: models, files, profile. Needs token. Published from a p
 Business Tools
 
 ## Features
+
 - List models: Page through CGTrader 3D models.
-- Get model: CGTrader model details by ID.
+- Get model: One CGTrader model by id, with price and formats.
 - List model files: Files attached to a CGTrader model.
 - Get me: User profile for the access token.
 
 ## Getting Started
+
 - "Ask your assistant about cgtrader using this server once installed"
 - Tool: list_models — Page through CGTrader 3D models.
-- Tool: get_model — CGTrader model details by ID.
+- Tool: get_model — One CGTrader model by id, with price and formats.
 - Tool: list_model_files — Files attached to a CGTrader model.
 - Tool: get_me — User profile for the access token.
 

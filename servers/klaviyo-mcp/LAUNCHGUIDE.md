@@ -13,12 +13,17 @@ Profiles, lists, campaigns. Key. Not affiliated with the vendor.
 Business Tools
 
 ## Features
-- list_profiles: Profiles
-- list_lists: Lists
-- list_campaigns: Campaigns
+
+- List profiles: Customer profiles with email and location.
+- List lists: Marketing lists with subscriber counts.
+- List campaigns: Klaviyo campaigns with status and send time.
 
 ## Getting Started
+
 - "My lists?"
+- Tool: list_profiles — Customer profiles with email and location.
+- Tool: list_lists — Marketing lists with subscriber counts.
+- Tool: list_campaigns — Klaviyo campaigns with status and send time.
 
 ## Tags
 klaviyo, email, marketing

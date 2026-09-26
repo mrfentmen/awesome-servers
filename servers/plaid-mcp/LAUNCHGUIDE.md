@@ -13,12 +13,17 @@ Bank data sandbox. ID + secret. Not affiliated with the vendor.
 Finance
 
 ## Features
-- list_institutions: Banks
-- list_categories: Categories
-- sandbox_token: Test tokens
+
+- List institutions: Sandbox banks available for testing.
+- List categories: Personal finance categories Plaid can return.
+- Sandbox token: Create a test public token (sandbox only).
 
 ## Getting Started
+
 - "Sandbox banks?"
+- Tool: list_institutions — Sandbox banks available for testing.
+- Tool: list_categories — Personal finance categories Plaid can return.
+- Tool: sandbox_token — Create a test public token (sandbox only).
 
 ## Tags
 plaid, banking, fintech, sandbox

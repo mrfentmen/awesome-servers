@@ -14,11 +14,13 @@ MCP server for BigCommerce: products, orders. Needs store API credentials. Publi
 Business Tools
 
 ## Features
+
 - List products: BigCommerce catalog products with prices, SKUs, availability.
 - Get product: One BigCommerce product by id.
 - List orders: Recent BigCommerce orders: status, totals, customers.
 
 ## Getting Started
+
 - "Ask your assistant about bigcommerce using this server once installed"
 - Tool: list_products — BigCommerce catalog products with prices, SKUs, availability.
 - Tool: get_product — One BigCommerce product by id.

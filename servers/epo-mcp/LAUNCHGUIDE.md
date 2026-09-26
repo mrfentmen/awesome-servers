@@ -13,11 +13,15 @@ Patent search. Free registration. Not affiliated.
 Business Tools
 
 ## Features
-- search: Published applications
-- family: Patent family
+
+- Patent search: Published applications by query.
+- Patent family: Family for a publication number.
 
 ## Getting Started
+
 - "Search patents for X"
+- Tool: search — Published applications by query.
+- Tool: family — Family for a publication number.
 
 ## Tags
 patents, epo, ip, search

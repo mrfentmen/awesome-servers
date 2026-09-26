@@ -13,12 +13,17 @@ CRM objects. Token (HUBSPOT_ACCESS_TOKEN). Not affiliated with the vendor.
 Business Tools
 
 ## Features
-- list_contacts: Contacts
-- list_companies: Companies
-- list_deals: Deals
+
+- List contacts: CRM contacts with email, name and owner.
+- List companies: CRM companies with domain and industry.
+- List deals: CRM deals with amount, stage and close date.
 
 ## Getting Started
+
 - "Recent deals?"
+- Tool: list_contacts — CRM contacts with email, name and owner.
+- Tool: list_companies — CRM companies with domain and industry.
+- Tool: list_deals — CRM deals with amount, stage and close date.
 
 ## Tags
 hubspot, crm, sales

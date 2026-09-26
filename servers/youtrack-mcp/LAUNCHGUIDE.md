@@ -13,6 +13,7 @@ No setup for public projects. Setting GITLAB_TOKEN raises the rate limit and unl
 Developer Tools
 
 ## Features
+
 - Search projects: Find public GitLab projects by name and list their stars, open issue count and description. No API key or account needed.
 - List project issues: List issues in a public project filtered by state, labels and free-text search, newest first, with assignees and comment counts.
 - Issue details: Fetch one issue by its project-internal number and return the full description, labels, assignees, dates and comment count.
@@ -22,6 +23,7 @@ Developer Tools
 - Recently updated issues: Show the open issues that changed most recently in a project, so you can see what the team is actually working on.
 
 ## Getting Started
+
 - Ask your assistant about youtrack using this server once installed
 - Tool: search_projects — Find public GitLab projects by name and list their stars, open issue count and description. No API key or account needed.
 - Tool: project_issues — List issues in a public project filtered by state, labels and free-text search, newest first, with assignees and comment counts.

@@ -13,12 +13,17 @@ Charges, customers, balance. Test key (STRIPE_SECRET_KEY). Not affiliated with t
 Finance
 
 ## Features
-- list_charges: Charges
-- list_customers: Customers
-- get_balance: Balance
+
+- List charges: Most recent charges, with amount, currency and status.
+- List customers: Most recent customers, with email and created date.
+- Balance: Available and pending balance by currency.
 
 ## Getting Started
+
 - "Recent charges?"
+- Tool: list_charges — Most recent charges, with amount, currency and status.
+- Tool: list_customers — Most recent customers, with email and created date.
+- Tool: get_balance — Available and pending balance by currency.
 
 ## Tags
 stripe, payments, billing, fintech

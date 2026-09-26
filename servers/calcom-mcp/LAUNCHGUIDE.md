@@ -13,12 +13,17 @@ Scheduling v2. Key (CAL_API_KEY). Not affiliated with the vendor.
 Business Tools
 
 ## Features
-- list_event_types: Links
-- list_bookings: Bookings
-- list_schedules: Schedules
+
+- Event types: Scheduling links people can book, with duration.
+- Bookings: Upcoming bookings with attendee and start time.
+- Schedules: Availability schedules and their timezones.
 
 ## Getting Started
+
 - "My bookings?"
+- Tool: list_event_types — Scheduling links people can book, with duration.
+- Tool: list_bookings — Upcoming bookings with attendee and start time.
+- Tool: list_schedules — Availability schedules and their timezones.
 
 ## Tags
 cal.com, scheduling, calendar

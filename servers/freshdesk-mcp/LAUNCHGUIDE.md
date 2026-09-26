@@ -13,12 +13,17 @@ Tickets and contacts. Domain + key. Not affiliated with the vendor.
 Business Tools
 
 ## Features
-- list_tickets: Tickets
-- get_ticket: Details
-- list_contacts: Contacts
+
+- List tickets: Most recent support tickets, with status and priority.
+- Get ticket: One ticket by id, with requester and full text.
+- List contacts: Support contacts with email and company.
 
 ## Getting Started
+
 - "Open tickets?"
+- Tool: list_tickets — Most recent support tickets, with status and priority.
+- Tool: get_ticket — One ticket by id, with requester and full text.
+- Tool: list_contacts — Support contacts with email and company.
 
 ## Tags
 freshdesk, support, helpdesk

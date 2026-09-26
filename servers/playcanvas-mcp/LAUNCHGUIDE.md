@@ -13,11 +13,13 @@ PlayCanvas projects: assets, rate limits. Needs token. Published from a private 
 Business Tools
 
 ## Features
+
 - List project assets: Assets in a PlayCanvas project branch.
 - Get asset: Single PlayCanvas asset metadata.
 - Rate limits: Current PlayCanvas REST API rate limits.
 
 ## Getting Started
+
 - "Ask your assistant about playcanvas using this server once installed"
 - Tool: list_project_assets — Assets in a PlayCanvas project branch.
 - Tool: get_asset — Single PlayCanvas asset metadata.

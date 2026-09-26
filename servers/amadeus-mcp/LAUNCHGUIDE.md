@@ -14,12 +14,14 @@ MCP server for Amadeus travel: flights, hotels, airports. Free test key. Publish
 Business Tools
 
 ## Features
-- Search airports: Airport codes by city name.
+
+- Search airports: Airport codes for a city name, e.g. London.
 - Search flights: Flight offers with prices and legs (test environment data).
 
 ## Getting Started
+
 - "Ask your assistant about amadeus using this server once installed"
-- Tool: search_airports — Airport codes by city name.
+- Tool: search_airports — Airport codes for a city name, e.g. London.
 - Tool: search_flights — Flight offers with prices and legs (test environment data).
 
 ## Tags

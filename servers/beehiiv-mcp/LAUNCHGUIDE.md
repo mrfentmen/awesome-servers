@@ -13,10 +13,12 @@ MCP server for beehiiv: publications, posts, subscribers. Needs an API key. Publ
 Marketing & Social
 
 ## Features
+
 - List posts: beehiiv publication posts with statuses and links.
 - Find subscriber: Find a beehiiv subscriber by email: status, tier, join date.
 
 ## Getting Started
+
 - "Ask your assistant about beehiiv using this server once installed"
 - Tool: list_posts — beehiiv publication posts with statuses and links.
 - Tool: find_subscriber — Find a beehiiv subscriber by email: status, tier, join date.

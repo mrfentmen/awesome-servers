@@ -13,13 +13,18 @@ Paddle products and prices. Needs a sandbox key (PADDLE_API_KEY). Not affiliated
 Business Tools
 
 ## Features
-- list_products: Products
-- get_product: Product details
-- list_prices: Prices
+
+- List products: Paddle products with price and status.
+- Get product: One Paddle product by id, with price and status.
+- List prices: Prices, optionally for one product.
 
 ## Getting Started
+
 - "List my products"
 - "Prices for this product?"
+- Tool: list_products — Paddle products with price and status.
+- Tool: get_product — One Paddle product by id, with price and status.
+- Tool: list_prices — Prices, optionally for one product.
 
 ## Tags
 paddle, billing, payments, saas, subscriptions

@@ -13,12 +13,17 @@ Stocks data. Free key (POLYGON_API_KEY). Not affiliated with the vendor.
 Finance
 
 ## Features
-- list_tickers: Tickers
-- get_ticker: Details
-- prev_close: Last bar
+
+- List tickers: Reference tickers, with name and market.
+- Get ticker: One ticker's reference details by symbol.
+- Previous close: Previous day's bar: open, high, low, close, volume.
 
 ## Getting Started
+
 - "AAPL previous close?"
+- Tool: list_tickers — Reference tickers, with name and market.
+- Tool: get_ticker — One ticker's reference details by symbol.
+- Tool: prev_close — Previous day's bar: open, high, low, close, volume.
 
 ## Tags
 polygon, stocks, market

@@ -13,12 +13,17 @@ Domains and emails. Key (RESEND_API_KEY). Not affiliated with the vendor.
 Business Tools
 
 ## Features
-- list_domains: Domains
-- get_domain: Details
-- get_email: Email details
+
+- List domains: Domains verified for sending, with DKIM status.
+- Get domain: One sending domain by id, with DNS records.
+- Get email: One sent email by id, with delivery status.
 
 ## Getting Started
+
 - "My sending domains?"
+- Tool: list_domains — Domains verified for sending, with DKIM status.
+- Tool: get_domain — One sending domain by id, with DNS records.
+- Tool: get_email — One sent email by id, with delivery status.
 
 ## Tags
 resend, email, transactional

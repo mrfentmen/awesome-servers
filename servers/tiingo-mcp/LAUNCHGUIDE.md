@@ -13,15 +13,17 @@ MCP server for Tiingo: stocks, forex, crypto. Needs a free API token. Published 
 Finance
 
 ## Features
+
 - Stock metadata: Stock name, exchange, data range.
 - Recent prices: Recent daily OHLCV prices, newest first.
-- Crypto metadata: Crypto name for a ticker.
+- Crypto metadata: Name and base currency behind a crypto ticker, e.g. btcusd.
 
 ## Getting Started
+
 - "Ask your assistant about tiingo using this server once installed"
 - Tool: stock_meta — Stock name, exchange, data range.
 - Tool: stock_prices — Recent daily OHLCV prices, newest first.
-- Tool: crypto_meta — Crypto name for a ticker.
+- Tool: crypto_meta — Name and base currency behind a crypto ticker, e.g. btcusd.
 
 ## Tags
 tiingo, mcp, data, api

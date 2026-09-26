@@ -13,12 +13,17 @@ Books and highlights. Token. Not affiliated with the vendor.
 Business Tools
 
 ## Features
-- auth: Verify
-- list_books: Library
-- list_highlights: Highlights
+
+- Auth check: Check that the Readwise token works.
+- List books: Library sources: books, articles and podcasts.
+- Highlights: Recent highlights across the library.
 
 ## Getting Started
+
 - "My highlights?"
+- Tool: auth — Check that the Readwise token works.
+- Tool: list_books — Library sources: books, articles and podcasts.
+- Tool: list_highlights — Recent highlights across the library.
 
 ## Tags
 readwise, reading

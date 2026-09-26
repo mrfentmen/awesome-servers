@@ -13,13 +13,18 @@ Folk contacts and groups. Needs a key (FOLK_API_KEY). Not affiliated with the ve
 Business Tools
 
 ## Features
-- list_people: Contacts
-- get_person: Contact details
-- list_groups: Groups
+
+- List people: Contacts in the Folk workspace, newest first.
+- Get person: One contact by id, with emails and company.
+- List groups: Contact groups with id and name.
 
 ## Getting Started
+
 - "List my contacts"
 - "Show groups"
+- Tool: list_people — Contacts in the Folk workspace, newest first.
+- Tool: get_person — One contact by id, with emails and company.
+- Tool: list_groups — Contact groups with id and name.
 
 ## Tags
 folk, crm, contacts, sales

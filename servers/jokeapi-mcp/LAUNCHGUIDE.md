@@ -13,6 +13,7 @@ No setup. Jokes come from the public JokeAPI with safe mode always on.
 Other
 
 ## Features
+
 - Get a joke: One safe-mode joke, or several at once, optionally from a category like Programming or Pun.
 - Search jokes: Find jokes that contain a word or phrase, e.g. 'chicken' or 'programmer'.
 - Joke by id: Fetch one specific joke by its numeric id, so you can reuse the same joke.
@@ -22,6 +23,7 @@ Other
 - Programming joke: A quick programming joke - handy when you just want something to say to a developer.
 
 ## Getting Started
+
 - Ask your assistant about jokeapi using this server once installed
 - Tool: get_joke — One safe-mode joke, or several at once, optionally from a category like Programming or Pun.
 - Tool: search_jokes — Find jokes that contain a word or phrase, e.g. 'chicken' or 'programmer'.

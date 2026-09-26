@@ -13,6 +13,7 @@ No setup. Breach lookups use the public k-anonymity API and the rest runs locall
 Security
 
 ## Features
+
 - Check if a password is breached: Check a password against known data breaches using k-anonymity, so only five characters of its SHA-1 hash are sent and the password itself never leaves your machine. No API key needed.
 - Check several passwords: Check up to 10 passwords for known breaches in one call and report how many have already been leaked.
 - Score password strength: Score a password offline: entropy, character classes, common-word, keyboard and sequence patterns, plus an estimated offline crack time and a clear verdict.
@@ -22,6 +23,7 @@ Security
 - Domain email security audit: Audit a domain's anti-spoofing setup: SPF, DMARC, DKIM selectors, MX records and CAA, graded A to F with the exact gaps to fix.
 
 ## Getting Started
+
 - Ask your assistant about cyberark using this server once installed
 - Tool: check_password — Check a password against known data breaches using k-anonymity, so only five characters of its SHA-1 hash are sent and the password itself never leaves your machine. No API key needed.
 - Tool: check_passwords — Check up to 10 passwords for known breaches in one call and report how many have already been leaked.

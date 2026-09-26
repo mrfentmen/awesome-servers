@@ -13,12 +13,17 @@ Bases and records. PAT (AIRTABLE_TOKEN). Not affiliated with the vendor.
 Business Tools
 
 ## Features
-- list_bases: Bases
-- list_tables: Tables
-- list_records: Records
+
+- List bases: Airtable bases the token can access.
+- List tables: Tables in one base, e.g. appXXXXXXXXXXXXXX.
+- List records: Records in one table, with an optional max_records cap.
 
 ## Getting Started
+
 - "Rows in my base?"
+- Tool: list_bases — Airtable bases the token can access.
+- Tool: list_tables — Tables in one base, e.g. appXXXXXXXXXXXXXX.
+- Tool: list_records — Records in one table, with an optional max_records cap.
 
 ## Tags
 airtable, database, nocode

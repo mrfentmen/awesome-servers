@@ -13,12 +13,17 @@ Blogs via GraphQL. Token. Not affiliated with the vendor.
 Developer Tools
 
 ## Features
-- me: Profile
-- publication_posts: Posts
-- get_user: User
+
+- My profile: The Hashnode user the token belongs to.
+- Publication posts: Recent posts in a Hashnode publication.
+- Get user: One Hashnode profile by username.
 
 ## Getting Started
+
 - "Recent posts?"
+- Tool: me — The Hashnode user the token belongs to.
+- Tool: publication_posts — Recent posts in a Hashnode publication.
+- Tool: get_user — One Hashnode profile by username.
 
 ## Tags
 hashnode, blogging, dev

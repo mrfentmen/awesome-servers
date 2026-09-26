@@ -13,11 +13,15 @@ Charging stations. Free key (OPENCHARGEMAP_API_KEY). Not affiliated.
 Business Tools
 
 ## Features
-- nearby: Chargers near you
-- get_poi: Charger details
+
+- Nearby chargers: Charging points near coordinates, with distance.
+- Charger details: One charge point by id, with connectors and operator.
 
 ## Getting Started
+
 - "Chargers near me?"
+- Tool: nearby — Charging points near coordinates, with distance.
+- Tool: get_poi — One charge point by id, with connectors and operator.
 
 ## Tags
 ev, charging, maps, geo

@@ -13,6 +13,7 @@ No setup for public projects. Setting GITLAB_TOKEN or GITHUB_TOKEN raises rate l
 Developer Tools
 
 ## Features
+
 - List CI pipelines: List the most recent GitLab CI pipelines for a project, newest first, with status, branch, trigger, age and duration. No API key needed.
 - Pipeline details: Fetch one CI pipeline by id: status, branch, commit, trigger source, timings and URL.
 - Pipeline jobs by stage: Show every job in a pipeline grouped by stage, with status, duration and the failure reason, plus the first job you should look at when a build is red.
@@ -22,6 +23,7 @@ Developer Tools
 - GitHub Actions jobs and failed steps: Show the jobs of a GitHub Actions run and name the exact step that failed, so you can go straight to the cause.
 
 ## Getting Started
+
 - Ask your assistant about appveyor using this server once installed
 - Tool: project_pipelines — List the most recent GitLab CI pipelines for a project, newest first, with status, branch, trigger, age and duration. No API key needed.
 - Tool: pipeline_detail — Fetch one CI pipeline by id: status, branch, commit, trigger source, timings and URL.

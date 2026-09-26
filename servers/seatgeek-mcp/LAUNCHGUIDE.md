@@ -13,10 +13,12 @@ MCP server for SeatGeek: events, venues, ticket stats. Needs a client ID. Publis
 Business Tools
 
 ## Features
+
 - Search events: Concerts, sports and theater with venues, dates, ticket prices.
 - Events near me: Recommended events near coordinates.
 
 ## Getting Started
+
 - "Ask your assistant about seatgeek using this server once installed"
 - Tool: search_events — Concerts, sports and theater with venues, dates, ticket prices.
 - Tool: recommend_events — Recommended events near coordinates.

@@ -14,12 +14,14 @@ OpenPanel analytics: metrics, live visitors, top pages, referrers. Needs client 
 Data & Analytics
 
 ## Features
+
 - Get metrics: OpenPanel visitors, sessions, bounce rate and engagement for a project.
 - Get live visitors: Current active OpenPanel visitor count for a project.
 - Get top pages: Top OpenPanel pages by sessions for a project.
 - Get referrers: OpenPanel traffic sources for a project.
 
 ## Getting Started
+
 - "Ask your assistant about openpanel using this server once installed"
 - Tool: get_metrics — OpenPanel visitors, sessions, bounce rate and engagement for a project.
 - Tool: get_live — Current active OpenPanel visitor count for a project.

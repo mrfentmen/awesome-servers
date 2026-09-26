@@ -13,19 +13,25 @@ DefiLlama protocols, chains, and TVL (merged). Published from a private commerci
 Business Tools
 
 ## Features
-- Chains: TVL by chain.
-- Protocol: TVL history for a protocol.
+
+- Chains: Total value locked per chain, biggest first.
+- Protocol: TVL history for a protocol slug, e.g. aave.
 - Top protocols: Get the top DeFi protocols by TVL.
-- Chain tvl: Get TVL for all chains.
+- Chain tvl: Total value locked for every chain in one call.
 - Protocol info: Get details for a specific protocol.
+- Top yields: Highest-APY DeFi pools with project, chain, APY and TVL.
+- Recent hacks: Largest recent DeFi hacks with date, target, chain, amount and technique.
 
 ## Getting Started
+
 - "Ask your assistant about defillama using this server once installed"
-- Tool: chains — TVL by chain.
-- Tool: protocol — TVL history for a protocol.
+- Tool: chains — Total value locked per chain, biggest first.
+- Tool: protocol — TVL history for a protocol slug, e.g. aave.
 - Tool: top_protocols — Get the top DeFi protocols by TVL.
-- Tool: chain_tvl — Get TVL for all chains.
+- Tool: chain_tvl — Total value locked for every chain in one call.
 - Tool: protocol_info — Get details for a specific protocol.
+- Tool: topYields — Highest-APY DeFi pools with project, chain, APY and TVL.
+- Tool: hacks — Largest recent DeFi hacks with date, target, chain, amount and technique.
 
 ## Tags
 defillama, mcp, data, keyless

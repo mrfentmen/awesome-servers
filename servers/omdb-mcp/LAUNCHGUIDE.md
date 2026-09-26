@@ -13,13 +13,15 @@ OMDb movies: search, details. Needs free key.
 Content & Media
 
 ## Features
-- search_movies: Title search
-- get_movie: Full details by ID/title
+
+- Search movies: Title search (needs OMDB_API_KEY).
+- Get movie: Full details by IMDb ID or exact title.
 
 ## Getting Started
+
 - "Blade Runner movies"
-- Tool: search_movies — Title search
-- Tool: get_movie — Full details by ID/title
+- Tool: search_movies — Title search (needs OMDB_API_KEY).
+- Tool: get_movie — Full details by IMDb ID or exact title.
 
 ## Tags
 movies, omdb, film, tv

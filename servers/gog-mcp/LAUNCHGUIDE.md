@@ -13,11 +13,23 @@ GOG game store product details. No key required. Published from a private commer
 Business Tools
 
 ## Features
-- Product: Details for one GOG product.
+
+- Browse games: Browse the GOG catalogue of DRM-free PC games, sorted by trending, newest, biggest discount, cheapest or rating.
+- Search games: Search the GOG catalogue by game title and see current prices.
+- Deals: Current GOG discounts, filtered to a minimum percentage off.
+- Top rated: Highest-rated games on GOG, by user review score.
+- Game details: Full details for one GOG product by numeric ID: price, platforms, developer, genres and description.
+- Games by IDs: Look up several GOG products at once from a comma-separated list of product IDs.
 
 ## Getting Started
+
 - "Ask your assistant about gog using this server once installed"
-- Tool: product — Details for one GOG product.
+- Tool: browse_games — Browse the GOG catalogue of DRM-free PC games, sorted by trending, newest, biggest discount, cheapest or rating.
+- Tool: search_games — Search the GOG catalogue by game title and see current prices.
+- Tool: deals — Current GOG discounts, filtered to a minimum percentage off.
+- Tool: top_rated — Highest-rated games on GOG, by user review score.
+- Tool: game_details — Full details for one GOG product by numeric ID: price, platforms, developer, genres and description.
+- Tool: games_by_ids — Look up several GOG products at once from a comma-separated list of product IDs.
 
 ## Tags
 gog, mcp, shopping, keyless

@@ -13,11 +13,13 @@ Stock quotes from Twelve Data. Demo key supported. Published from a private comm
 Finance
 
 ## Features
-- Quote: Get a stock quote.
+
+- Quote: Latest quote for a symbol, e.g. AAPL: price and change.
 
 ## Getting Started
+
 - "Ask your assistant about twelvedata using this server once installed"
-- Tool: quote — Get a stock quote.
+- Tool: quote — Latest quote for a symbol, e.g. AAPL: price and change.
 
 ## Tags
 twelvedata, mcp, data, keyless

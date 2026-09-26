@@ -13,6 +13,7 @@ No setup. Every check runs live from the server itself, so there is no key or ac
 Developer Tools
 
 ## Features
+
 - Check URL: Is a page up right now: HTTP status, response time, server, redirect chain and the first text on the page.
 - Check many endpoints: Up/down sweep of up to 10 URLs in one call, with status code and response time for each.
 - Port monitor: Check whether TCP ports on a host accept connections, with the service usually found on each port.
@@ -21,6 +22,7 @@ Developer Tools
 - Monitor report: One call that runs the whole monitor sweep on a URL: reachability, TLS certificate and DNS, with a verdict.
 
 ## Getting Started
+
 - Ask your assistant about uptimerobot using this server once installed
 - Tool: check_url — Is a page up right now: HTTP status, response time, server, redirect chain and the first text on the page.
 - Tool: check_endpoints — Up/down sweep of up to 10 URLs in one call, with status code and response time for each.

@@ -13,6 +13,7 @@ No setup. Every check runs live from the server itself, so there is no key or ac
 Developer Tools
 
 ## Features
+
 - Status summary: The rollup a status page shows: how many services are up, which are down, the slowest one and the overall state.
 - Check services: Up/down sweep of up to 10 services in one call, with status code and response time for each.
 - Service status: Detail for one service: HTTP status, response time, server, redirect chain and the first text on the page.
@@ -21,6 +22,7 @@ Developer Tools
 - TLS chain: The whole certificate chain from the live handshake: leaf, intermediates, expiry and whether the chain is trusted.
 
 ## Getting Started
+
 - Ask your assistant about statping using this server once installed
 - Tool: status_summary — The rollup a status page shows: how many services are up, which are down, the slowest one and the overall state.
 - Tool: check_services — Up/down sweep of up to 10 services in one call, with status code and response time for each.

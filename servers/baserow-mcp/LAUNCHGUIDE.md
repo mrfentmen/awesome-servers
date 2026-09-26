@@ -13,12 +13,16 @@ Your Baserow database. Self-hosted or cloud. Not affiliated with the vendor.
 Business Tools
 
 ## Features
-- get_dashboard: Dashboard
-- list_tables: Tables
+
+- Dashboard: Applications and databases in the workspace.
+- List tables: Tables inside one database id, with field counts.
 
 ## Getting Started
+
 - "Show my databases"
 - "List tables"
+- Tool: get_dashboard — Applications and databases in the workspace.
+- Tool: list_tables — Tables inside one database id, with field counts.
 
 ## Tags
 baserow, database, nocode, airtable-alt, self-hosted

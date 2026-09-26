@@ -13,13 +13,18 @@ Your Radarr movie library. Self-hosted (RADARR_URL + RADARR_API_KEY). Not affili
 Entertainment
 
 ## Features
-- list_movies: Library
-- get_queue: Downloads
-- get_health: Health
+
+- List movies: Movies in the Radarr library, with status.
+- Download queue: Active downloads and imports in the queue.
+- Health checks: Radarr health warnings and errors.
 
 ## Getting Started
+
 - "List my movies"
 - "What is downloading?"
+- Tool: list_movies — Movies in the Radarr library, with status.
+- Tool: get_queue — Active downloads and imports in the queue.
+- Tool: get_health — Radarr health warnings and errors.
 
 ## Tags
 radarr, movies, media, arr, self-hosted

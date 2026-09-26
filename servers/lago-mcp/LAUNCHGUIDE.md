@@ -13,13 +13,18 @@ Lago plans, customers and invoices. Needs a key (LAGO_API_KEY). Not affiliated w
 Business Tools
 
 ## Features
-- list_plans: Plans
-- list_customers: Customers
-- list_invoices: Invoices
+
+- List plans: Billing plans with interval and amount.
+- List customers: Billing customers with id and currency.
+- List invoices: Invoices with status, amount and billing period.
 
 ## Getting Started
+
 - "List billing plans"
 - "Recent invoices?"
+- Tool: list_plans — Billing plans with interval and amount.
+- Tool: list_customers — Billing customers with id and currency.
+- Tool: list_invoices — Invoices with status, amount and billing period.
 
 ## Tags
 lago, billing, invoicing, saas, open-source

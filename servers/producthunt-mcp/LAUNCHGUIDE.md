@@ -13,11 +13,15 @@ Launches via GraphQL. Token. Not affiliated with the vendor.
 Business Tools
 
 ## Features
-- viewer: Profile
-- list_posts: Top launches
+
+- Viewer: The Product Hunt user the token belongs to.
+- Top posts: Launches ranked by votes, with tagline and maker.
 
 ## Getting Started
+
 - "Top launches today?"
+- Tool: viewer — The Product Hunt user the token belongs to.
+- Tool: list_posts — Launches ranked by votes, with tagline and maker.
 
 ## Tags
 producthunt, startups

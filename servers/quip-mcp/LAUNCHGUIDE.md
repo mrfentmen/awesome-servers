@@ -13,12 +13,14 @@ Quip Automation API: thread search, thread content, folders. Needs token. Publis
 Business Tools
 
 ## Features
+
 - Search threads: Search Quip docs, spreadsheets and chats by text.
 - Get thread: Quip thread with document HTML content.
 - List folders: Quip folders including shared folders.
 - Get current user: Authenticated Quip user profile.
 
 ## Getting Started
+
 - "Ask your assistant about quip using this server once installed"
 - Tool: search_threads — Search Quip docs, spreadsheets and chats by text.
 - Tool: get_thread — Quip thread with document HTML content.

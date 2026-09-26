@@ -13,6 +13,7 @@ No setup. Uses the public Apple Podcasts search and any podcast RSS feed.
 Media
 
 ## Features
+
 - Search podcasts: Search the Apple Podcasts catalogue by name or topic and get each show's episode count, genre, Apple id and RSS feed URL. No API key needed.
 - Search episodes: Search podcast episode titles across the whole Apple Podcasts catalogue and return the show, date and length of each match.
 - Podcast charts: Apple Podcasts top chart for a country, with rank, publisher and genre for every show.
@@ -22,6 +23,7 @@ Media
 - Compare podcasts: Compare two podcast feeds side by side on episode count, latest episode, average length and publishing cadence.
 
 ## Getting Started
+
 - Ask your assistant about simplecast using this server once installed
 - Tool: search_podcasts — Search the Apple Podcasts catalogue by name or topic and get each show's episode count, genre, Apple id and RSS feed URL. No API key needed.
 - Tool: search_episodes — Search podcast episode titles across the whole Apple Podcasts catalogue and return the show, date and length of each match.

@@ -13,12 +13,17 @@ Podcast search. Free key. Not affiliated with the vendor.
 Entertainment
 
 ## Features
-- search: Episodes
-- best_podcasts: Best lists
-- get_episode: Details
+
+- Search episodes: Podcast episodes matching a query, with podcast and date.
+- Best podcasts: Curated best-podcast lists, e.g. tech.
+- Get episode: One episode by id, with audio URL and description.
 
 ## Getting Started
+
 - "Podcasts about X?"
+- Tool: search — Podcast episodes matching a query, with podcast and date.
+- Tool: best_podcasts — Curated best-podcast lists, e.g. tech.
+- Tool: get_episode — One episode by id, with audio URL and description.
 
 ## Tags
 listennotes, podcasts, search

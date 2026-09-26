@@ -13,12 +13,17 @@ Forms and submissions. Key. Not affiliated with the vendor.
 Business Tools
 
 ## Features
-- list_forms: Forms
-- get_form: Structure
-- list_submissions: Responses
+
+- List forms: All Tally forms, with id and title.
+- Get form: One form's structure: blocks, fields and settings.
+- Submissions: Responses submitted through this form, newest first.
 
 ## Getting Started
+
 - "Form responses?"
+- Tool: list_forms — All Tally forms, with id and title.
+- Tool: get_form — One form's structure: blocks, fields and settings.
+- Tool: list_submissions — Responses submitted through this form, newest first.
 
 ## Tags
 tally, forms, surveys

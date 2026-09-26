@@ -13,13 +13,18 @@ Self-hosted Gotify push: send and list messages. Needs GOTIFY_BASE_URL + GOTIFY_
 Developer Tools
 
 ## Features
-- send_message: Push a notification
-- list_messages: Stored messages
-- list_apps: Applications
+
+- Send message: Push a notification via Gotify.
+- List messages: Messages stored on the Gotify server, newest first.
+- List applications: Registered Gotify applications.
 
 ## Getting Started
+
 - "Send me a push"
 - "Recent notifications?"
+- Tool: send_message — Push a notification via Gotify.
+- Tool: list_messages — Messages stored on the Gotify server, newest first.
+- Tool: list_apps — Registered Gotify applications.
 
 ## Tags
 gotify, push, notifications, self-hosted

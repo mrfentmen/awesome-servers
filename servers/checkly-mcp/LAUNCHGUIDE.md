@@ -13,6 +13,7 @@ No setup. Checks run live from the server itself, so there is no key or account.
 Developer Tools
 
 ## Features
+
 - Assert status: Run a synthetic check on a URL: does it answer with the status you expect, inside the time budget, without a redirect loop.
 - Assert headers: Check that required headers are present, forbidden ones are absent, or one header contains a given value.
 - Assert content: Check that a page's HTML contains expected text and does not contain forbidden text — a smoke test for deploys.
@@ -21,6 +22,7 @@ Developer Tools
 - Broken links: Read the links on a page and report which ones answer with an error status, so a deploy cannot ship dead links.
 
 ## Getting Started
+
 - Ask your assistant about checkly using this server once installed
 - Tool: assert_status — Run a synthetic check on a URL: does it answer with the status you expect, inside the time budget, without a redirect loop.
 - Tool: assert_headers — Check that required headers are present, forbidden ones are absent, or one header contains a given value.

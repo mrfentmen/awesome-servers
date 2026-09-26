@@ -13,6 +13,7 @@ Icebox Diamonds jewelry: search, products, prices. Keyless. Published from a pri
 Business Tools
 
 ## Features
+
 - Search products: Keyword search across the catalog.
 - Newest arrivals: Newest catalog products, sorted by publish date.
 - Get product: Full details: variants with parsed options, images, description, tags.
@@ -21,6 +22,7 @@ Business Tools
 - Categories: Product-type counts in the catalog sample.
 
 ## Getting Started
+
 - "Ask your assistant about icebox using this server once installed"
 - Tool: search_products — Keyword search across the catalog.
 - Tool: list_newest — Newest catalog products, sorted by publish date.

@@ -13,13 +13,15 @@ RAWG games: search, details. Needs free key.
 Content & Media
 
 ## Features
-- search_games: Game search
-- get_game: Details by ID/slug
+
+- Search games: Game search (needs RAWG_API_KEY).
+- Get game: One game by id or slug, with platforms and rating.
 
 ## Getting Started
+
 - "Portal game details"
-- Tool: search_games — Game search
-- Tool: get_game — Details by ID/slug
+- Tool: search_games — Game search (needs RAWG_API_KEY).
+- Tool: get_game — One game by id or slug, with platforms and rating.
 
 ## Tags
 games, rawg, videogames, gaming

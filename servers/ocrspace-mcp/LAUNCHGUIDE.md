@@ -13,11 +13,15 @@ Image text extraction. Free key (OCRSPACE_API_KEY). Not affiliated with the vend
 Business Tools
 
 ## Features
-- parse_image_url: OCR via GET
-- parse_image_post: OCR via POST
+
+- OCR via GET: Extract text from an image URL.
+- OCR via POST: Extract text with overlay option.
 
 ## Getting Started
+
 - "Read text from this image"
+- Tool: parse_image_url — Extract text from an image URL.
+- Tool: parse_image_post — Extract text with overlay option.
 
 ## Tags
 ocr, images, text-extraction

@@ -13,11 +13,25 @@ Jobs in Germany from Arbeitnow. No key required. Published from a private commer
 Business Tools
 
 ## Features
-- Jobs: List job postings.
+
+- Jobs: List the newest Arbeitnow job postings, 250 per page, with tags, location and remote flag.
+- Search jobs: Search the 500 newest Arbeitnow jobs by title, company, location, tag or job type.
+- Remote jobs: List only the remote-friendly jobs among the 500 newest Arbeitnow postings.
+- Job detail: Get one Arbeitnow job by its slug, including the full description and apply link.
+- Top tags: Show which skills and categories appear most often in the newest Arbeitnow jobs.
+- Companies hiring: Rank the employers with the most open Arbeitnow postings, with their remote count and newest posting date.
+- Locations and job types: Show where the newest Arbeitnow jobs are, split by city and by job type, with a remote versus on-site count.
 
 ## Getting Started
+
 - "Ask your assistant about arbeitnow using this server once installed"
-- Tool: jobs — List job postings.
+- Tool: jobs — List the newest Arbeitnow job postings, 250 per page, with tags, location and remote flag.
+- Tool: search_jobs — Search the 500 newest Arbeitnow jobs by title, company, location, tag or job type.
+- Tool: remote_jobs — List only the remote-friendly jobs among the 500 newest Arbeitnow postings.
+- Tool: job — Get one Arbeitnow job by its slug, including the full description and apply link.
+- Tool: tags — Show which skills and categories appear most often in the newest Arbeitnow jobs.
+- Tool: companies — Rank the employers with the most open Arbeitnow postings, with their remote count and newest posting date.
+- Tool: locations — Show where the newest Arbeitnow jobs are, split by city and by job type, with a remote versus on-site count.
 
 ## Tags
 arbeitnow, mcp, data, keyless

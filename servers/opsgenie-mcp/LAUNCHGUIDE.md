@@ -13,13 +13,18 @@ Opsgenie alerts and on-calls. Needs a key (OPSGENIE_API_KEY). Not affiliated wit
 Developer Tools
 
 ## Features
-- list_alerts: Alerts
-- get_alert: Alert details
-- list_oncalls: On-call rotations
+
+- List alerts: Open alerts, with priority, owner and created time.
+- Get alert: One alert by id, with description and timeline.
+- List on-calls: Who is on call now, per rotation and schedule.
 
 ## Getting Started
+
 - "Open alerts?"
 - "Who is on call?"
+- Tool: list_alerts — Open alerts, with priority, owner and created time.
+- Tool: get_alert — One alert by id, with description and timeline.
+- Tool: list_oncalls — Who is on call now, per rotation and schedule.
 
 ## Tags
 opsgenie, alerts, oncall, incidents, devops

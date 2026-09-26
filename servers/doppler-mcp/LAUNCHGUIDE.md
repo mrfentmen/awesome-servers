@@ -13,12 +13,14 @@ Doppler API: projects, configs, secrets listing and download. Needs service or p
 Business Tools
 
 ## Features
+
 - List projects: Doppler projects with names and descriptions.
 - List configs: Doppler configs (environments) in a project.
 - List secrets: Secrets in a Doppler config with raw and computed values plus visibility.
 - Download secrets: Doppler config secrets as JSON, env file, or dotenv for local use.
 
 ## Getting Started
+
 - "Ask your assistant about doppler using this server once installed"
 - Tool: list_projects — Doppler projects with names and descriptions.
 - Tool: list_configs — Doppler configs (environments) in a project.

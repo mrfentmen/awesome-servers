@@ -13,11 +13,13 @@ MCP server for Pinata IPFS: pinned files, pin JSON, unpin. Needs a free API key.
 Business Tools
 
 ## Features
+
 - List pins: Pinned IPFS files: CIDs, names, sizes, dates.
 - Pin JSON: Pin a JSON document to IPFS. Returns the CID and gateway link.
 - Unpin CID: Remove a pin by CID. Cannot be undone.
 
 ## Getting Started
+
 - "Ask your assistant about pinata using this server once installed"
 - Tool: list_pins — Pinned IPFS files: CIDs, names, sizes, dates.
 - Tool: pin_json — Pin a JSON document to IPFS. Returns the CID and gateway link.

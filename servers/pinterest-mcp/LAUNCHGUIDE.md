@@ -13,12 +13,14 @@ MCP server for Pinterest: account, boards, pins. Needs a free Pinterest access t
 Marketing & Social
 
 ## Features
+
 - My account: Your Pinterest account: username, profile image, website.
 - List boards: Your Pinterest boards: names, descriptions, pin counts.
 - Get board: One Pinterest board with its pins.
 - Get pin: One Pinterest pin: title, description, link, image.
 
 ## Getting Started
+
 - "Ask your assistant about pinterest using this server once installed"
 - Tool: my_account — Your Pinterest account: username, profile image, website.
 - Tool: list_boards — Your Pinterest boards: names, descriptions, pin counts.

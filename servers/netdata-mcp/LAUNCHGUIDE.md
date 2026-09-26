@@ -13,13 +13,18 @@ Your Netdata agent. Self-hosted (NETDATA_URL). Not affiliated with the vendor.
 Developer Tools
 
 ## Features
-- get_info: Node info
-- list_charts: Charts
-- get_data: Chart data
+
+- Node info: Agent version, OS, collectors.
+- List charts: Charts exposed by the Netdata agent.
+- Chart data: Recent data points for a chart.
 
 ## Getting Started
+
 - "CPU usage?"
 - "List charts"
+- Tool: get_info — Agent version, OS, collectors.
+- Tool: list_charts — Charts exposed by the Netdata agent.
+- Tool: get_data — Recent data points for a chart.
 
 ## Tags
 netdata, metrics, monitoring, self-hosted, observability

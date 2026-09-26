@@ -13,13 +13,19 @@ Audiences and campaigns. Key. Not affiliated with the vendor.
 Business Tools
 
 ## Features
-- ping: Health
-- list_lists: Audiences
-- list_members: Members
-- list_campaigns: Campaigns
+
+- Ping: Check that the Mailchimp API key still works.
+- List audiences: Mailchimp audiences, with member counts.
+- List members: Members of one audience, with status and email.
+- List campaigns: Sent and scheduled campaigns, newest first.
 
 ## Getting Started
+
 - "My audiences?"
+- Tool: ping — Check that the Mailchimp API key still works.
+- Tool: list_lists — Mailchimp audiences, with member counts.
+- Tool: list_members — Members of one audience, with status and email.
+- Tool: list_campaigns — Sent and scheduled campaigns, newest first.
 
 ## Tags
 mailchimp, email, marketing

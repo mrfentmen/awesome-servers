@@ -13,13 +13,18 @@ Nylas grant info, calendars and messages. Needs a free-tier key (NYLAS_API_KEY).
 Business Tools
 
 ## Features
-- get_grant: Grant details
-- list_calendars: Calendars
-- list_messages: Recent messages
+
+- Grant info: Which account the grant connects, and its provider.
+- List calendars: Calendars on the grant, with id and name.
+- List messages: Recent email messages, newest first.
 
 ## Getting Started
+
 - "List my calendars"
 - "Show recent messages"
+- Tool: get_grant — Which account the grant connects, and its provider.
+- Tool: list_calendars — Calendars on the grant, with id and name.
+- Tool: list_messages — Recent email messages, newest first.
 
 ## Tags
 nylas, email, calendar, productivity

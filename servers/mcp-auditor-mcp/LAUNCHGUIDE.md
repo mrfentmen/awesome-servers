@@ -13,6 +13,7 @@ No setup. Every tool works on input from the call itself: a URL to probe, a payl
 Developer Tools
 
 ## Features
+
 - Probe keyless API: Ask an API whether it answers with no credentials, and report its status, response shape and rate-limit headers.
 - Audit MCP endpoint: Handshake with a public MCP endpoint, read its tool list and report tool count, naming, descriptions, annotations and parameter gaps.
 - Audit pasted tool list: Same audit as audit_endpoint, but run on a tools/list payload you paste in. Use it for endpoints behind credentials or a draft before deploy.
@@ -23,6 +24,7 @@ Developer Tools
 - Diff tool schema: Compare two tools/list replies and separate breaking changes from safe additions, so a release cannot silently break callers.
 
 ## Getting Started
+
 - Ask your assistant to audit an MCP endpoint, a pasted tool list or a server source using this server once installed
 - Tool: probe_keyless — Ask an API whether it answers with no credentials, and report its status, response shape and rate-limit headers.
 - Tool: audit_endpoint — Handshake with a public MCP endpoint, read its tool list and report tool count, naming, descriptions, annotations and parameter gaps.

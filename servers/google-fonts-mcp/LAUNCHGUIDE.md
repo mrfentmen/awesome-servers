@@ -13,13 +13,18 @@ Google Fonts catalog. Free Google key (GOOGLE_FONTS_KEY). Not affiliated with th
 Business Tools
 
 ## Features
-- list_fonts: Popular families
-- search_fonts: Name search
-- get_font: Family details
+
+- List fonts: Most popular Google Fonts families, with categories.
+- Search fonts: Families matching a name, e.g. roboto.
+- Get font: One family: variants, subsets and font files.
 
 ## Getting Started
+
 - "Popular fonts?"
 - "Find a serif font"
+- Tool: list_fonts — Most popular Google Fonts families, with categories.
+- Tool: search_fonts — Families matching a name, e.g. roboto.
+- Tool: get_font — One family: variants, subsets and font files.
 
 ## Tags
 google-fonts, fonts, typography, design

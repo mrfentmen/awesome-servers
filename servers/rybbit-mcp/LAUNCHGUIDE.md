@@ -14,11 +14,13 @@ Rybbit analytics: site overview, users, journeys. Cloud or self-hosted. Publishe
 Data & Analytics
 
 ## Features
+
 - Get site overview: Rybbit sessions, pageviews, users, bounce rate for a site and period.
 - List users: Rybbit users for a site with pagination.
 - Get journeys: Common Rybbit navigation paths (journeys) through a site.
 
 ## Getting Started
+
 - "Ask your assistant about rybbit using this server once installed"
 - Tool: get_overview — Rybbit sessions, pageviews, users, bounce rate for a site and period.
 - Tool: list_users — Rybbit users for a site with pagination.

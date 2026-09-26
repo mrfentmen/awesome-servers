@@ -13,12 +13,17 @@ Projects and insights. Key. Not affiliated with the vendor.
 Business Tools
 
 ## Features
-- me: Profile
-- list_projects: Projects
-- list_insights: Insights
+
+- My profile: The PostHog user the API key belongs to.
+- List projects: Analytics projects in the organization.
+- List insights: Saved insights in one project, with names.
 
 ## Getting Started
+
 - "My insights?"
+- Tool: me — The PostHog user the API key belongs to.
+- Tool: list_projects — Analytics projects in the organization.
+- Tool: list_insights — Saved insights in one project, with names.
 
 ## Tags
 posthog, analytics

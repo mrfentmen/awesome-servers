@@ -13,21 +13,23 @@ Stadium Goods sneakers: search, products, prices. Keyless. Published from a priv
 Business Tools
 
 ## Features
+
 - Search products: Keyword search across the catalog.
 - Newest arrivals: Newest catalog products, sorted by publish date.
 - Get product: Full details: variants with parsed options, images, description, tags.
 - Price overview: Ask-price distribution (min/p25/median/p75/max).
 - Find deals: Available products priced below the median.
-- Categories: Product-type counts in the catalog sample.
+- Categories: Product-type counts in the catalog sample, e.g. how many sneakers, hoodies and accessories are listed.
 
 ## Getting Started
+
 - "Ask your assistant about stadiumgoods using this server once installed"
 - Tool: search_products — Keyword search across the catalog.
 - Tool: list_newest — Newest catalog products, sorted by publish date.
 - Tool: get_product — Full details: variants with parsed options, images, description, tags.
 - Tool: price_overview — Ask-price distribution (min/p25/median/p75/max).
 - Tool: find_deals — Available products priced below the median.
-- Tool: list_categories — Product-type counts in the catalog sample.
+- Tool: list_categories — Product-type counts in the catalog sample, e.g. how many sneakers, hoodies and accessories are listed.
 
 ## Tags
 stadiumgoods, mcp, shopping, keyless

@@ -13,6 +13,7 @@ No setup. Requests are measured live from the server itself, so there is no key 
 Developer Tools
 
 ## Features
+
 - Response times: Sample a URL several times and report min, median, average, max and jitter, so you can tell steady from flaky.
 - Latency breakdown: Split one request into DNS, TCP connect, TLS handshake and time-to-headers, and say which stage is slowest.
 - Content check: Audit a page's title, meta description, canonical, lang, viewport, headings, image alt text and word count.
@@ -21,6 +22,7 @@ Developer Tools
 - Endpoint summary: One call for a whole endpoint: reachable or not, latency stages, TLS certificate age and DNS address.
 
 ## Getting Started
+
 - Ask your assistant about betterstack using this server once installed
 - Tool: response_times — Sample a URL several times and report min, median, average, max and jitter, so you can tell steady from flaky.
 - Tool: latency_breakdown — Split one request into DNS, TCP connect, TLS handshake and time-to-headers, and say which stage is slowest.

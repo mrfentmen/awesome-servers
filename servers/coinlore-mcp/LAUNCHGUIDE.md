@@ -14,9 +14,22 @@ Finance
 
 ## Features
 
+- Tickers: Top coins by market cap, with price and 24h change.
+- Coin: One coin by its CoinLore id, e.g. 90 for Bitcoin.
+- Global Stats: Global crypto market stats: total cap, volume, Bitcoin share.
+- Search coins: Find a coin by name or symbol among the top 100 by market cap, with its CoinLore id for the coin tool.
+- Movers: Biggest 24-hour gainers and losers among the top 100 coins by market cap.
+- Markets: Markets for a coin id across exchanges, e.g. 90 for Bitcoin.
 
 ## Getting Started
+
 - "Ask your assistant about coinlore using this server once installed"
+- Tool: tickers — Top coins by market cap, with price and 24h change.
+- Tool: coin — One coin by its CoinLore id, e.g. 90 for Bitcoin.
+- Tool: globalStats — Global crypto market stats: total cap, volume, Bitcoin share.
+- Tool: search_coins — Find a coin by name or symbol among the top 100 by market cap, with its CoinLore id for the coin tool.
+- Tool: movers — Biggest 24-hour gainers and losers among the top 100 coins by market cap.
+- Tool: markets — Markets for a coin id across exchanges, e.g. 90 for Bitcoin.
 
 ## Tags
 coinlore, mcp, data, keyless

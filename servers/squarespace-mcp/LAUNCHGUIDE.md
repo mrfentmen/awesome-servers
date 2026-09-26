@@ -13,10 +13,12 @@ MCP server for Squarespace Commerce: products, orders, inventory. Needs an API k
 Business Tools
 
 ## Features
+
 - List products: Squarespace store products with prices and links.
 - List orders: Recent Squarespace orders with totals and customer emails.
 
 ## Getting Started
+
 - "Ask your assistant about squarespace using this server once installed"
 - Tool: list_products — Squarespace store products with prices and links.
 - Tool: list_orders — Recent Squarespace orders with totals and customer emails.

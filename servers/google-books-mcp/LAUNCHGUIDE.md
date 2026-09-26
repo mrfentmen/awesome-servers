@@ -13,13 +13,15 @@ Google Books: search volumes, details. Key optional.
 Education & Research
 
 ## Features
-- search_books: Volume search
-- get_volume: Details by ID
+
+- Search books: Search Google Books volumes by title or author.
+- Get volume: One volume by id, with description and ISBNs.
 
 ## Getting Started
+
 - "Search Dune books"
-- Tool: search_books — Volume search
-- Tool: get_volume — Details by ID
+- Tool: search_books — Search Google Books volumes by title or author.
+- Tool: get_volume — One volume by id, with description and ISBNs.
 
 ## Tags
 books, google-books, reading, library

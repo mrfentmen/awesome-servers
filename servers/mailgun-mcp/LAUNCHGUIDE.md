@@ -14,11 +14,13 @@ MCP server for Mailgun: domains, stats, bounces, complaints. Needs a free API ke
 Marketing & Social
 
 ## Features
+
 - List domains: Mailgun sending domains with state and creation date. Set MAILGUN_REGION=eu for EU accounts.
 - Domain stats: Totals for a domain: sent, delivered, opened, failed.
 - List bounces: Bounced addresses for a domain with codes and errors.
 
 ## Getting Started
+
 - "Ask your assistant about mailgun using this server once installed"
 - Tool: list_domains — Mailgun sending domains with state and creation date. Set MAILGUN_REGION=eu for EU accounts.
 - Tool: domain_stats — Totals for a domain: sent, delivered, opened, failed.

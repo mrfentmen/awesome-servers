@@ -13,13 +13,18 @@ OneSignal apps and notifications. Needs a v2 org key + app REST key. Not affilia
 Marketing
 
 ## Features
-- list_apps: Apps
-- get_app: App details
-- list_notifications: Recent notifications
+
+- List apps: OneSignal apps the key can send to.
+- Get app: One app by id, with platform and player count.
+- List notifications: Recent notifications for an app.
 
 ## Getting Started
+
 - "List my apps"
 - "Recent push notifications?"
+- Tool: list_apps — OneSignal apps the key can send to.
+- Tool: get_app — One app by id, with platform and player count.
+- Tool: list_notifications — Recent notifications for an app.
 
 ## Tags
 onesignal, push, notifications, mobile

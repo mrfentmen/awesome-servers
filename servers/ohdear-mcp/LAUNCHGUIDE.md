@@ -13,6 +13,7 @@ No setup. Every check runs live from the server itself, so there is no key or ac
 Developer Tools
 
 ## Features
+
 - Check URL up or down: Test whether a URL is up right now: HTTP status, response time and the full redirect chain. No API key needed.
 - Check many URLs: Uptime-check up to 10 URLs in one call and report how many are up, with status and response time for each.
 - SSL certificate check: Read a host's live TLS certificate: issuer, validity dates, days until expiry, covered names and whether the chain is trusted.
@@ -21,6 +22,7 @@ Developer Tools
 - Full site report: One health report for a site: reachability and response time, TLS certificate expiry, DNS address and a clear healthy or needs-attention verdict.
 
 ## Getting Started
+
 - Ask your assistant about ohdear using this server once installed
 - Tool: check_url — Test whether a URL is up right now: HTTP status, response time and the full redirect chain. No API key needed.
 - Tool: check_many — Uptime-check up to 10 URLs in one call and report how many are up, with status and response time for each.

@@ -13,13 +13,18 @@ Last.fm charts and artists. Free key (LASTFM_API_KEY). Not affiliated with the v
 Entertainment
 
 ## Features
-- top_artists: Global chart
-- top_tracks: Top tracks
-- artist_info: Bio and stats
+
+- Top artists: Artists with the most listeners worldwide.
+- Top tracks: Tracks with the most listeners worldwide.
+- Artist info: Bio, stats and similar artists.
 
 ## Getting Started
+
 - "Top artists now?"
 - "Tell me about this band"
+- Tool: top_artists — Artists with the most listeners worldwide.
+- Tool: top_tracks — Tracks with the most listeners worldwide.
+- Tool: artist_info — Bio, stats and similar artists.
 
 ## Tags
 lastfm, music, charts, artists

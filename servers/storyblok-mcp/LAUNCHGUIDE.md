@@ -13,11 +13,13 @@ MCP server for Storyblok: stories, spaces. Needs an API token. Published from a 
 Business Tools
 
 ## Features
+
 - Get space: Storyblok space info: name, domain, plan.
 - List stories: Stories with slugs and publish dates, optionally under a folder.
 - Get story: One story: name, date, content keys.
 
 ## Getting Started
+
 - "Ask your assistant about storyblok using this server once installed"
 - Tool: get_space — Storyblok space info: name, domain, plan.
 - Tool: list_stories — Stories with slugs and publish dates, optionally under a folder.

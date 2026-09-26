@@ -13,12 +13,17 @@ Pages and incidents. Key. Not affiliated with the vendor.
 Developer Tools
 
 ## Features
-- list_pages: Pages
-- get_page: Details
-- list_incidents: Incidents
+
+- List pages: Status pages the key can read, with id and name.
+- Get page: One status page by id, with components and status.
+- List incidents: Recent incidents on a page, newest first.
 
 ## Getting Started
+
 - "Any incidents?"
+- Tool: list_pages — Status pages the key can read, with id and name.
+- Tool: get_page — One status page by id, with components and status.
+- Tool: list_incidents — Recent incidents on a page, newest first.
 
 ## Tags
 statuspage, status, devops

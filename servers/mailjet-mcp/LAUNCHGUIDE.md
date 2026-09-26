@@ -14,10 +14,12 @@ MCP server for Mailjet: contacts, messages, campaigns. Needs free API keys. Publ
 Marketing & Social
 
 ## Features
+
 - List contacts: Mailjet contacts with names and unsubscribe flags.
 - Recent messages: Recent sent emails: recipients, subjects, statuses.
 
 ## Getting Started
+
 - "Ask your assistant about mailjet using this server once installed"
 - Tool: list_contacts — Mailjet contacts with names and unsubscribe flags.
 - Tool: recent_messages — Recent sent emails: recipients, subjects, statuses.

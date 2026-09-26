@@ -13,13 +13,18 @@ Your qBittorrent client. Self-hosted (QBITTORRENT_URL + login). Not affiliated w
 Developer Tools
 
 ## Features
-- list_torrents: Torrents with progress
-- get_transfer_info: Speeds
-- get_app_version: Version
+
+- List torrents: All torrents with progress, size and state.
+- Transfer stats: Global upload and download speeds.
+- App version: qBittorrent version and API version.
 
 ## Getting Started
+
 - "List my torrents"
 - "Current speeds?"
+- Tool: list_torrents — All torrents with progress, size and state.
+- Tool: get_transfer_info — Global upload and download speeds.
+- Tool: get_app_version — qBittorrent version and API version.
 
 ## Tags
 qbittorrent, torrents, downloads, self-hosted

@@ -13,11 +13,15 @@ Your Uptime Kuma instance. Self-hosted (UPTIME_KUMA_URL). Not affiliated with th
 Developer Tools
 
 ## Features
-- get_status: Instance status
-- get_metrics: Prometheus metrics
+
+- Instance status: Up/down counts per monitor in one summary.
+- Prometheus metrics: Raw Prometheus metrics the instance exposes.
 
 ## Getting Started
+
 - "Is my Kuma up?"
+- Tool: get_status — Up/down counts per monitor in one summary.
+- Tool: get_metrics — Raw Prometheus metrics the instance exposes.
 
 ## Tags
 uptime-kuma, uptime, monitoring, self-hosted

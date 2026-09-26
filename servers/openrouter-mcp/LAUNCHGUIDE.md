@@ -13,12 +13,17 @@ LLM models and credits. Free key (OPENROUTER_API_KEY). Not affiliated with the v
 Developer Tools
 
 ## Features
-- list_models: Models
-- key_info: Key details
-- credits: Balance
+
+- List models: Models available on OpenRouter, with context size and price.
+- Key info: What the current key can spend, and how much is left.
+- Credits: Remaining credit balance for the account.
 
 ## Getting Started
+
 - "Cheapest GPT-4-class model?"
+- Tool: list_models — Models available on OpenRouter, with context size and price.
+- Tool: key_info — What the current key can spend, and how much is left.
+- Tool: credits — Remaining credit balance for the account.
 
 ## Tags
 openrouter, llm, ai, models

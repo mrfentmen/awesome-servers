@@ -13,6 +13,7 @@ No setup. The catalogue and the password range API are public, so there is no ke
 Developer Tools
 
 ## Features
+
 - Breach catalogue: Search the Have I Been Pwned catalogue of disclosed breaches, largest first, filtered by domain or year.
 - Breach detail: Full record for one breach by its catalogue name, including the account count, data classes and description.
 - Recent breaches: Breaches most recently added to the catalogue, newest first, optionally limited to the last N days.
@@ -22,6 +23,7 @@ Developer Tools
 - Audit passwords: Check up to 10 passwords at once and report which have already appeared in a breach.
 
 ## Getting Started
+
 - Ask your assistant about hibp using this server once installed
 - Tool: breach_catalog — Search the Have I Been Pwned catalogue of disclosed breaches, largest first, filtered by domain or year.
 - Tool: breach_detail — Full record for one breach by its catalogue name, including the account count, data classes and description.

@@ -13,6 +13,7 @@ No setup. Every launch, orbit and weather figure is fetched live from public key
 Other
 
 ## Features
+
 - Upcoming launches: Upcoming orbital launches worldwide: mission, rocket, provider, pad, T-0 and launch weather. Optionally filter by provider, e.g. 'SpaceX' or 'Rocket Lab'.
 - Next launch countdown: The single soonest launch with a live countdown, its pad, weather, mission summary, how firm the launch time is, and the three launches after it.
 - Search satellites: Search the SatNOGS satellite catalogue by name and see NORAD catalog number, status, operator, country and launch date. Use the NORAD number with satellite_orbit or satellite_frequencies.
@@ -23,6 +24,7 @@ Other
 - Space weather: Current geomagnetic conditions from NOAA: Kp index, solar wind speed, interplanetary magnetic field, NOAA storm scales and the Kp forecast.
 
 ## Getting Started
+
 - Ask your assistant about spacedevs using this server once installed
 - Tool: next_launches — Upcoming orbital launches worldwide: mission, rocket, provider, pad, T-0 and launch weather. Optionally filter by provider, e.g. 'SpaceX' or 'Rocket Lab'.
 - Tool: launch_countdown — The single soonest launch with a live countdown, its pad, weather, mission summary, how firm the launch time is, and the three launches after it.

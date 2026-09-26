@@ -13,6 +13,7 @@ No setup. Positions come from public ISS tracking APIs and the orbit maths runs 
 Science
 
 ## Features
+
 - ISS position now: Where the International Space Station is right now: latitude, longitude, altitude, speed and daylight.
 - Who is in space: Everyone currently in space, grouped by the spacecraft they launched on.
 - Distance to the ISS: How far the ISS is from a point on the ground right now, which way to look, and whether it is overhead.
@@ -22,6 +23,7 @@ Science
 - Orbit summary: ISS orbit at a glance: altitude, orbital speed, period in minutes, orbits per day and ground coverage.
 
 ## Getting Started
+
 - Ask your assistant about iss using this server once installed
 - Tool: iss_position — Where the International Space Station is right now: latitude, longitude, altitude, speed and daylight.
 - Tool: crew — Everyone currently in space, grouped by the spacecraft they launched on.

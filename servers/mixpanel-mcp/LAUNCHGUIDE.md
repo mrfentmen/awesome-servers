@@ -16,6 +16,7 @@ MCP server for Mixpanel product analytics. Query events, funnels, retention, coh
 Data & Analytics
 
 ## Features
+
 - Query events: Query raw event data from Mixpanel. Segment events by time range and properties.
 - Get top events: Get the most frequently tracked events in a time window.
 - Get funnel: Get funnel conversion data. Requires a funnel ID from your Mixpanel project.
@@ -25,6 +26,7 @@ Data & Analytics
 - List events: List all tracked event names in your Mixpanel project.
 
 ## Getting Started
+
 - "Ask your assistant about mixpanel using this server once installed"
 - Tool: query_events — Query raw event data from Mixpanel. Segment events by time range and properties.
 - Tool: get_top_events — Get the most frequently tracked events in a time window.

@@ -13,6 +13,7 @@ No setup. All data comes from the public fueleconomy.gov API.
 Other
 
 ## Features
+
 - List model years: Model years the US fuel economy database covers. Start here when you know nothing else.
 - List makes: Every car make with EPA data for a model year.
 - List models: Models a make sold in a given model year.
@@ -22,6 +23,7 @@ Other
 - Fuel prices: Current US national average prices for regular, midgrade, premium, diesel, E85, CNG, LPG and electricity.
 
 ## Getting Started
+
 - Ask your assistant about fueleconomy using this server once installed
 - Tool: list_years — Model years the US fuel economy database covers. Start here when you know nothing else.
 - Tool: list_makes — Every car make with EPA data for a model year.

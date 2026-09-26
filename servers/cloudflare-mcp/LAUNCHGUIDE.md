@@ -13,12 +13,17 @@ Zones and DNS. Token. Not affiliated with the vendor.
 Developer Tools
 
 ## Features
-- list_zones: Zones
-- list_accounts: Accounts
-- list_dns: Records
+
+- List zones: Cloudflare zones (domains) in the account.
+- List accounts: Cloudflare accounts the token can reach.
+- List DNS: DNS records in one zone id, with type and TTL.
 
 ## Getting Started
+
 - "DNS records?"
+- Tool: list_zones — Cloudflare zones (domains) in the account.
+- Tool: list_accounts — Cloudflare accounts the token can reach.
+- Tool: list_dns — DNS records in one zone id, with type and TTL.
 
 ## Tags
 cloudflare, dns, cdn

@@ -13,12 +13,17 @@ Customers and segments. Site ID + key. Not affiliated with the vendor.
 Business Tools
 
 ## Features
-- list_customers: Customers
-- get_customer: Profile
-- list_segments: Segments
+
+- List customers: Tracked customers with email and attributes.
+- Get customer: One customer profile by id, with its attributes.
+- List segments: Segments with id, name and member counts.
 
 ## Getting Started
+
 - "Find this customer"
+- Tool: list_customers — Tracked customers with email and attributes.
+- Tool: get_customer — One customer profile by id, with its attributes.
+- Tool: list_segments — Segments with id, name and member counts.
 
 ## Tags
 customer.io, messaging, customers

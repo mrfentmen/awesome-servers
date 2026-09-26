@@ -13,12 +13,19 @@ Profile, projects, groups. Token. Not affiliated with the vendor.
 Developer Tools
 
 ## Features
-- me: Profile
-- list_projects: Projects
-- list_groups: Groups
+
+- My profile: The GitLab user the token belongs to.
+- List projects: Projects the token can see, most recent first.
+- List groups: Groups the token can see, with path and id.
+- Search public: Public projects by query (no token needed).
 
 ## Getting Started
+
 - "My projects?"
+- Tool: me — The GitLab user the token belongs to.
+- Tool: list_projects — Projects the token can see, most recent first.
+- Tool: list_groups — Groups the token can see, with path and id.
+- Tool: search_public — Public projects by query (no token needed).
 
 ## Tags
 gitlab, git, devops

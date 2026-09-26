@@ -13,6 +13,7 @@ No setup. Holiday data comes from the public Nager.Date API.
 Productivity
 
 ## Features
+
 - List countries: Every country the public holiday API covers, with its two-letter code.
 - Country info: Official name, region and land borders for a country.
 - Public holidays: All public holidays for a country and year, with local and English names.
@@ -22,6 +23,7 @@ Productivity
 - Is today a holiday: Whether today is a public holiday in a country.
 
 ## Getting Started
+
 - Ask your assistant about nager using this server once installed
 - Tool: list_countries — Every country the public holiday API covers, with its two-letter code.
 - Tool: country_info — Official name, region and land borders for a country.

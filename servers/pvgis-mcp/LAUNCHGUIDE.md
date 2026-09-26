@@ -13,6 +13,7 @@ No setup. Solar data comes from the public PVGIS API of the EU Joint Research Ce
 Other
 
 ## Features
+
 - PV yield: Monthly and yearly solar output for a location. Give kWp and tilt, or leave tilt out to use the optimal angle.
 - Solar irradiation: How much sun a site gets, month by month, on a tilted panel plane - with the year-to-year spread.
 - Hourly series: Hour-by-hour solar data for one year, summarised by month: average irradiance, sun hours and temperature.
@@ -22,6 +23,7 @@ Other
 - Size a system: Work out the system size needed to cover a target annual consumption at a location, with panel count and roof area.
 
 ## Getting Started
+
 - Ask your assistant about pvgis using this server once installed
 - Tool: pv_yield — Monthly and yearly solar output for a location. Give kWp and tilt, or leave tilt out to use the optimal angle.
 - Tool: radiation — How much sun a site gets, month by month, on a tilted panel plane - with the year-to-year spread.

@@ -13,6 +13,7 @@ Marketstack API: end-of-day prices, historical EOD, ticker search, exchanges, di
 Finance
 
 ## Features
+
 - Get latest EOD prices: Latest end-of-day open/high/low/close/volume for stock symbols.
 - Get EOD on date: End-of-day prices for symbols on one trading date.
 - Search tickers: Search stock tickers by name or symbol: exchange, currency, MIC.
@@ -20,6 +21,7 @@ Finance
 - Get dividends: Dividend declarations for symbols: amount, pay date, record date.
 
 ## Getting Started
+
 - "Ask your assistant about marketstack using this server once installed"
 - Tool: get_latest_eod — Latest end-of-day open/high/low/close/volume for stock symbols.
 - Tool: get_eod_on_date — End-of-day prices for symbols on one trading date.

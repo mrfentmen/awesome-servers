@@ -13,13 +13,15 @@ Censys internet scan: host lookup and search. Needs free key.
 Security
 
 ## Features
-- get_host: Host record by IP
-- search_hosts: Censys query search
+
+- Host lookup: Censys record for an IP: services, ports and certificates.
+- Search hosts: Search hosts with Censys query syntax, e.g. services.http.
 
 ## Getting Started
+
 - "What is on 8.8.8.8?"
-- Tool: get_host — Host record by IP
-- Tool: search_hosts — Censys query search
+- Tool: get_host — Censys record for an IP: services, ports and certificates.
+- Tool: search_hosts — Search hosts with Censys query syntax, e.g. services.http.
 
 ## Tags
 censys, scanning, hosts, security

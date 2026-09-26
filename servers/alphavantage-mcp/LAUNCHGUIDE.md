@@ -13,17 +13,19 @@ MCP server for Alpha Vantage: stock quotes, forex, crypto. Needs a free API key.
 Finance
 
 ## Features
+
 - Stock quote: Quote with open/high/low, change, volume. Free tier is 25 calls/day.
 - FX rate: Currency exchange rate between two codes.
 - Crypto price: Crypto price in a market currency.
-- Symbol search: Find tickers by company name.
+- Symbol search: Find ticker symbols by company name, e.g. ibm.
 
 ## Getting Started
+
 - "Ask your assistant about alphavantage using this server once installed"
 - Tool: stock_quote — Quote with open/high/low, change, volume. Free tier is 25 calls/day.
 - Tool: fx_rate — Currency exchange rate between two codes.
 - Tool: crypto_price — Crypto price in a market currency.
-- Tool: symbol_search — Find tickers by company name.
+- Tool: symbol_search — Find ticker symbols by company name, e.g. ibm.
 
 ## Tags
 alphavantage, mcp, data, api

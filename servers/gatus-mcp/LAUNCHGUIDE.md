@@ -13,6 +13,7 @@ No setup. Every condition is evaluated live from the server itself, so there is 
 Developer Tools
 
 ## Features
+
 - Check endpoint: Judge one endpoint against the conditions a health dashboard uses: status it must return, a latency budget and text its body must contain.
 - Health rollup: Check up to 10 endpoints against the same conditions and report the pass rate and median latency across them.
 - Endpoint latency: Sample an endpoint several times and report fastest, median, average, slowest and how much the timings spread.
@@ -21,6 +22,7 @@ Developer Tools
 - Security headers: Grade the response security headers a site sends: HSTS, CSP, frame options, content type options, referrer and permissions policy.
 
 ## Getting Started
+
 - Ask your assistant about gatus using this server once installed
 - Tool: check_endpoint — Judge one endpoint against the conditions a health dashboard uses: status it must return, a latency budget and text its body must contain.
 - Tool: health_rollup — Check up to 10 endpoints against the same conditions and report the pass rate and median latency across them.

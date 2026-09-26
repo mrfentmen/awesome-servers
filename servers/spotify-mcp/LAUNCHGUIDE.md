@@ -13,13 +13,18 @@ Catalog search. Free app (SPOTIFY_CLIENT_ID/SECRET). Not affiliated with the ven
 Entertainment
 
 ## Features
-- search: Tracks/artists/albums
-- get_artist: Profile
-- get_album: Details
+
+- Search catalog: Search the Spotify catalog for tracks, artists or albums.
+- Get artist: Artist profile: genres, popularity and follower count.
+- Get album: Album details plus its track list and release date.
 
 ## Getting Started
+
 - "Find this song"
 - "Artist info?"
+- Tool: search — Search the Spotify catalog for tracks, artists or albums.
+- Tool: get_artist — Artist profile: genres, popularity and follower count.
+- Tool: get_album — Album details plus its track list and release date.
 
 ## Tags
 spotify, music, search

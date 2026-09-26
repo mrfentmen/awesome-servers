@@ -13,11 +13,13 @@ ISBNdb books: lookup by ISBN, search, batch lookup. Needs API key. Published fro
 Business Tools
 
 ## Features
+
 - Get book by ISBN: ISBNdb book detail: title, authors, publisher, pages, cover.
 - Search books: Search ISBNdb by title, author or subject with pagination.
 - Batch lookup: Look up several ISBNdb books in one call.
 
 ## Getting Started
+
 - "Ask your assistant about isbndb using this server once installed"
 - Tool: get_book — ISBNdb book detail: title, authors, publisher, pages, cover.
 - Tool: search_books — Search ISBNdb by title, author or subject with pagination.

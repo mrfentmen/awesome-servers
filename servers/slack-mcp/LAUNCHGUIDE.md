@@ -13,13 +13,18 @@ Channels and messages. Bot token (SLACK_BOT_TOKEN). Not affiliated with the vend
 Business Tools
 
 ## Features
-- list_channels: Channels
-- get_history: History
-- post_message: REAL posts
+
+- List channels: Public channels in the workspace, with id and name.
+- Channel history: Recent messages in one channel, newest last.
+- Post message: Post a message to a channel as the bot, visible to everyone.
 
 ## Getting Started
+
 - "Post to #general"
 - "Recent in #dev?"
+- Tool: list_channels — Public channels in the workspace, with id and name.
+- Tool: get_history — Recent messages in one channel, newest last.
+- Tool: post_message — Post a message to a channel as the bot, visible to everyone.
 
 ## Tags
 slack, chat, workspace

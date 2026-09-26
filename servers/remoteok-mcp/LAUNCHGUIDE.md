@@ -13,13 +13,23 @@ Remote jobs from RemoteOK. No key required. Published from a private commercial 
 Business Tools
 
 ## Features
-- Jobs: List remote jobs.
-- Search: Search remote jobs.
+
+- Jobs: List the newest remote jobs from RemoteOK, with pay range when published.
+- Search: Search RemoteOK jobs by tag or skill, for example python or react.
+- Job detail: Get one RemoteOK job by id, including the full description and apply link.
+- Top salaries: List the remote jobs in the live feed that publish the highest salaries.
+- Companies: List the companies hiring the most on RemoteOK right now, with opening counts.
+- Top tags: Show which skills and tags appear most often in the live RemoteOK feed.
 
 ## Getting Started
+
 - "Ask your assistant about remoteok using this server once installed"
-- Tool: jobs — List remote jobs.
-- Tool: search — Search remote jobs.
+- Tool: jobs — List the newest remote jobs from RemoteOK, with pay range when published.
+- Tool: search — Search RemoteOK jobs by tag or skill, for example python or react.
+- Tool: job — Get one RemoteOK job by id, including the full description and apply link.
+- Tool: top_salaries — List the remote jobs in the live feed that publish the highest salaries.
+- Tool: companies — List the companies hiring the most on RemoteOK right now, with opening counts.
+- Tool: tags — Show which skills and tags appear most often in the live RemoteOK feed.
 
 ## Tags
 remoteok, mcp, data, keyless
