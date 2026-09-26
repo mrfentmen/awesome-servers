@@ -1,0 +1,30 @@
+{
+    "$schema": "https://apify.com/schemas/v1/actor.ide.json",
+    "actorSpecification": 1,
+    "name": "jobicy-jobs-mcp",
+    "title": "Jobicy Remote Jobs MCP Server: search + browse remote jobs",
+    "description": "Let your AI assistant search remote jobs from Jobicy. Keyless MCP server with keyword, category and location filters plus job detail lookup. Works with Claude, ChatGPT, Cursor and any MCP client. Pay per tool call only.",
+    "seoTitle": "Jobicy remote jobs MCP server for AI agents",
+    "seoDescription": "Connect Claude, ChatGPT or Cursor to Jobicy remote job listings. Search by keyword, category and location. No API key required.",
+    "categories": ["JOBS", "MCP_SERVERS", "AI"],
+    "version": "0.0",
+    "buildTag": "latest",
+    "usesStandbyMode": true,
+    "meta": {
+        "templateId": "ts-mcp-proxy"
+    },
+    "inputSchema": {
+        "title": "Jobicy Remote Jobs MCP Server: search + browse remote jobs",
+        "description": "This Actor serves an MCP endpoint over streamable HTTP in standby mode. It has no input.",
+        "type": "object",
+        "schemaVersion": 1,
+        "properties": {},
+        "required": []
+    },
+    "outputSchema": "./output_schema.json",
+    "storages": {
+        "dataset": "./dataset_schema.json"
+    },
+    "dockerfile": "../Dockerfile",
+    "webServerMcpPath": "/mcp"
+}
