@@ -1,5 +1,5 @@
 {
-  "name": "readwise-mcp",
+  "name": "@mrfentmen/readwise-mcp",
   "version": "1.0.0",
   "description": "Readwise books + highlights. Token.",
   "type": "module",

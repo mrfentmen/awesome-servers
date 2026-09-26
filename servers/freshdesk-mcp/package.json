@@ -1,5 +1,5 @@
 {
-  "name": "freshdesk-mcp",
+  "name": "@mrfentmen/freshdesk-mcp",
   "version": "1.0.0",
   "description": "Freshdesk tickets + contacts. Key.",
   "type": "module",

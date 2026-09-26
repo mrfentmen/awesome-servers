@@ -1,5 +1,5 @@
 {
-  "name": "crisp-mcp",
+  "name": "@mrfentmen/crisp-mcp",
   "version": "1.0.0",
   "description": "Crisp visitors, profiles, chats. Keys.",
   "type": "module",

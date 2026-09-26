@@ -10,7 +10,7 @@
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "hashnode-mcp",
+      "identifier": "@mrfentmen/hashnode-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"

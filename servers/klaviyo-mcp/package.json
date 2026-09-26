@@ -1,5 +1,5 @@
 {
-  "name": "klaviyo-mcp",
+  "name": "@mrfentmen/klaviyo-mcp",
   "version": "1.0.0",
   "description": "Klaviyo profiles, lists, campaigns. Key.",
   "type": "module",

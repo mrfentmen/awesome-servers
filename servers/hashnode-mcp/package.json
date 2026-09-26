@@ -1,5 +1,5 @@
 {
-  "name": "hashnode-mcp",
+  "name": "@mrfentmen/hashnode-mcp",
   "version": "1.0.0",
   "description": "Hashnode profile, pubs, users. Token.",
   "type": "module",

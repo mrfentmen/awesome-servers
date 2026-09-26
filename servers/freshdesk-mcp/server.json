@@ -10,7 +10,7 @@
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "freshdesk-mcp",
+      "identifier": "@mrfentmen/freshdesk-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"
