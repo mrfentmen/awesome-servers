@@ -10,8 +10,6 @@ export function errorMessage(e: unknown): string {
 }
 
 const UA = { "User-Agent": "awesome-mcps/1.0" };
-const BASE = "";
-
 function base(): string {
   const b = process.env.GOTIFY_BASE_URL;
   if (!b) throw new GotifyError("Set GOTIFY_BASE_URL (your Gotify server, e.g. https://push.example.com).");

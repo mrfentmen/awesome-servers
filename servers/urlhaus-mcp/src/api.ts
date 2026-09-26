@@ -12,21 +12,6 @@ export function errorMessage(e: unknown): string {
 const UA = { "User-Agent": "awesome-mcps/1.0" };
 const BASE = "https://urlhaus-api.abuse.ch/v1";
 
-async function req(path: string, params: Record<string, string | number | undefined>, text = false): Promise<string> {
-  void params;
-  let res: Response;
-  try {
-    res = await fetch(BASE + path, { signal: AbortSignal.timeout(30000), headers: { ...UA, Accept: text ? "text/plain" : "application/json" } });
-  } catch (e) {
-    throw new UrlhausError(`Network error: ${(e as Error).message}`);
-  }
-  if (!res.ok) {
-    const body = (await res.text()).slice(0, 300);
-    throw new UrlhausError(`HTTP ${res.status}: ${body}`);
-  }
-  return res.text();
-}
-
 function key(): string {
   const k = process.env.URLHAUS_AUTH_KEY;
   if (!k) throw new UrlhausError("Set URLHAUS_AUTH_KEY (free at abuse.ch).");

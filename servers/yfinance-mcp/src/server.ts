@@ -6,8 +6,6 @@ const text = (value: string) => ({ content: [{ type: 'text' as const, text: valu
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
 const error = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
-const errorMessage = error
-
 export function createServer(): McpServer {
   const server = new McpServer({ name: 'yfinance-mcp', version: '1.0.0' })
 server.registerTool(

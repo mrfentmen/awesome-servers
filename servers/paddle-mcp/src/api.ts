@@ -10,8 +10,6 @@ export function errorMessage(e: unknown): string {
 }
 
 const UA = { "User-Agent": "awesome-mcps/1.0" };
-const BASE = "";
-
 function base(): string {
   return (process.env.PADDLE_BASE_URL ?? "https://api.paddle.com").replace(/\/$/, "");
 }

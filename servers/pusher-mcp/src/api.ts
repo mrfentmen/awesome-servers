@@ -10,8 +10,6 @@ export function errorMessage(e: unknown): string {
 }
 
 const UA = { "User-Agent": "awesome-mcps/1.0" };
-const BASE = "";
-
 import crypto from "node:crypto";
 
 function conf(): { appId: string; key: string; secret: string; cluster: string } {

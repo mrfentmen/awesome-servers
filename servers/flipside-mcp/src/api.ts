@@ -22,10 +22,6 @@ function pretty(data: unknown): string {
   return t.length > 12000 ? t.slice(0, 12000) + "\n…(truncated)" : t
 }
 
-function stripHtml(html: string): string {
-  return html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
-}
-
 async function req(url: string, init: RequestInit = {}): Promise<unknown> {
   const res = await fetch(url, { signal: AbortSignal.timeout(30000), headers: { ...UA, ...(init.headers ?? {}) }, ...init })
   const ct = res.headers.get("content-type") ?? ""

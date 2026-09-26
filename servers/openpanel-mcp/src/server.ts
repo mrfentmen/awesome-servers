@@ -12,8 +12,6 @@ const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
-const NON_READ_ONLY = { openWorldHint: true } as const
-
 export function createServer(): McpServer {
   const server = new McpServer({
     name: "openpanel-mcp",

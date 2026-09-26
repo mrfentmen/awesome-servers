@@ -1,7 +1,6 @@
 // @ts-nocheck
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
 const WRITE = { readOnlyHint: false, openWorldHint: true } as const
 
