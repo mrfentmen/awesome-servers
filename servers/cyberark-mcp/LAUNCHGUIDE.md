@@ -10,7 +10,7 @@ Audit secrets and identity hygiene from your AI assistant: check passwords again
 No setup. Breach lookups use the public k-anonymity API and the rest runs locally.
 
 ## Category
-Security
+Developer Tools
 
 ## Features
 

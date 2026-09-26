@@ -10,7 +10,7 @@ Explore podcasts from your AI assistant: search the Apple Podcasts catalogue for
 No setup. Uses the public Apple Podcasts search and any podcast RSS feed.
 
 ## Category
-Media
+AI
 
 ## Features
 

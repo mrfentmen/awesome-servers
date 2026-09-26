@@ -10,7 +10,7 @@ Prediction market contracts and prices from PredictIt. No key required. Publishe
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Data & Analytics
+Other
 
 ## Features
 

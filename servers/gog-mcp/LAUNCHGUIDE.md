@@ -10,7 +10,7 @@ GOG game store product details. No key required. Published from a private commer
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Business Tools
+Games
 
 ## Features
 

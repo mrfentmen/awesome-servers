@@ -10,7 +10,7 @@ Keyless MCP server for Ashby job boards: openings, departments, locations. Publi
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Business Tools
+Jobs
 
 ## Features
 

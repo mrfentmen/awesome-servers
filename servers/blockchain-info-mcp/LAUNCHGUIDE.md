@@ -10,7 +10,7 @@ Bitcoin data from blockchain.info: price ticker, latest block, and address balan
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Finance
+Other
 
 ## Features
 

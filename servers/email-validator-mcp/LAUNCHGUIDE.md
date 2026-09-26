@@ -10,7 +10,7 @@ Validate email addresses by format, MX record, and disposable domain. No key req
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Marketing & Social
+Developer Tools
 
 ## Features
 

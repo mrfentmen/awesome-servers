@@ -10,7 +10,7 @@ Track the International Space Station from your AI assistant: current position, 
 No setup. Positions come from public ISS tracking APIs and the orbit maths runs locally.
 
 ## Category
-Science
+Other
 
 ## Features
 

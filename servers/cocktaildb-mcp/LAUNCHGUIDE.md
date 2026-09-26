@@ -10,7 +10,7 @@ CocktailDB recipes: search, lookup, random, ingredients. Keyless.
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Content & Media
+Other
 
 ## Features
 

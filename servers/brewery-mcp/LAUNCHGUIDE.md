@@ -10,7 +10,7 @@ Open Brewery DB: search breweries, details, random. Keyless.
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Content & Media
+Other
 
 ## Features
 

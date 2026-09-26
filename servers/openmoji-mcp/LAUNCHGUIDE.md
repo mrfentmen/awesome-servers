@@ -10,7 +10,7 @@ Find the right emoji from your AI assistant: search the whole OpenMoji set by na
 No setup. The OpenMoji dataset is fetched once and queried locally.
 
 ## Category
-Design
+Other
 
 ## Features
 

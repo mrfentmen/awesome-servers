@@ -10,7 +10,7 @@ Yahoo Finance quotes and symbol search. Published from a private commercial mono
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Finance
+Other
 
 ## Features
 

@@ -10,7 +10,7 @@ Use this MCP server to Steam, store search, prices and discounts, app details, a
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Business Tools
+Games
 
 ## Features
 

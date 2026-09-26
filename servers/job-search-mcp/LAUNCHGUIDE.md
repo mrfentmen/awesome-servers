@@ -10,7 +10,7 @@ Search remote job listings from the Remotive public feed. No key required. Publi
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Business Tools
+Jobs
 
 ## Features
 

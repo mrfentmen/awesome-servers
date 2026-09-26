@@ -10,7 +10,7 @@ Remote jobs from RemoteOK. No key required. Published from a private commercial 
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Business Tools
+Jobs
 
 ## Features
 

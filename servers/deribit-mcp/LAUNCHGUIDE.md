@@ -10,7 +10,7 @@ Deribit derivatives exchange: index prices, tickers, and supported indexes. No k
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Finance
+Other
 
 ## Features
 

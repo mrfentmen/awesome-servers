@@ -10,7 +10,7 @@ Ethereum token explorer: token info, address holdings, transaction history. No k
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Business Tools
+Other
 
 ## Features
 

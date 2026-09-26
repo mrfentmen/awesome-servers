@@ -10,7 +10,7 @@ Find game deals and price history from CheapShark. No key required. Published fr
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Business Tools
+Games
 
 ## Features
 

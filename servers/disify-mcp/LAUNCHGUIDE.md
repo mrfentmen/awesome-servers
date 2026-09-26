@@ -10,7 +10,7 @@ Email validation from Disify. No key required. Published from a private commerci
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Marketing & Social
+Developer Tools
 
 ## Features
 

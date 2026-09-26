@@ -10,7 +10,7 @@ Gold and metal prices from gold-api.com (merged). Published from a private comme
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Finance
+Other
 
 ## Features
 

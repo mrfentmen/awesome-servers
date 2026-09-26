@@ -10,7 +10,7 @@ MCP server for the Wayback Machine, snapshot history, page availability, and dea
 - API key as documented in README where required (all free tiers/self-serve).
 
 ## Category
-Content & Media
+Other
 
 ## Features
 

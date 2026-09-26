@@ -10,7 +10,7 @@ CoinLore crypto market data: top coins, single coin, global stats, and markets. 
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Finance
+Other
 
 ## Features
 

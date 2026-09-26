@@ -10,7 +10,7 @@ Plan around public holidays from your AI assistant: list countries, get a full h
 No setup. Holiday data comes from the public Nager.Date API.
 
 ## Category
-Productivity
+Other
 
 ## Features
 

@@ -10,7 +10,7 @@ DefiLlama protocols, chains, and TVL (merged). Published from a private commerci
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Business Tools
+Other
 
 ## Features
 

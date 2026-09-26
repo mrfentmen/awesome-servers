@@ -10,7 +10,7 @@ Live crypto prices, tickers, and candlestick charts from Binance public data. No
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Finance
+Other
 
 ## Features
 

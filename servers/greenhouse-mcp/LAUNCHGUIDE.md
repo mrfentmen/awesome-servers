@@ -10,7 +10,7 @@ Jobs from Greenhouse boards. No key required. Published from a private commercia
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Business Tools
+Jobs
 
 ## Features
 

@@ -10,7 +10,7 @@ Dior resale listings from Fashionphile and Rebag. Keyless. Published from a priv
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Business Tools
+Ecommerce
 
 ## Features
 

@@ -10,7 +10,7 @@ Keyless MCP server for JetBrains Marketplace: plugin search, details, ratings, d
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Business Tools
+Developer Tools
 
 ## Features
 

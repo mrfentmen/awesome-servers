@@ -10,7 +10,7 @@ IF & Co. jewelry: search, products, prices. Keyless. Published from a private co
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Business Tools
+Ecommerce
 
 ## Features
 

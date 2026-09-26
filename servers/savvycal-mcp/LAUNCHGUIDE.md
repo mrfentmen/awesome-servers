@@ -10,7 +10,7 @@ Schedule correctly from your AI assistant: convert times between timezones with 
 No setup. All timezone and calendar maths uses the IANA database shipped with Node.
 
 ## Category
-Productivity
+AI
 
 ## Features
 

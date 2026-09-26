@@ -10,7 +10,7 @@ Open Library books: search, works, authors. Keyless.
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Education & Research
+Education
 
 ## Features
 

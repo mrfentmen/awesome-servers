@@ -10,7 +10,7 @@ Use this MCP server to Scryfall, Magic: The Gathering card database with rulings
 - No configuration required. Works out of the box with no API keys.
 
 ## Category
-Business Tools
+Games
 
 ## Features
 

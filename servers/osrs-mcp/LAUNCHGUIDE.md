@@ -10,7 +10,7 @@ MCP server for Old School RuneScape, player hiscores and Grand Exchange prices v
 - API key as documented in README where required (all free tiers/self-serve).
 
 ## Category
-Content & Media
+Games
 
 ## Features
 
