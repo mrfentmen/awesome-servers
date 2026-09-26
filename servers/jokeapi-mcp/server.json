@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/jokeapi-mcp",
-  "description": "JokeAPI jokes and categories.",
+  "description": "Safe-mode jokes by category, search and id - no API key.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

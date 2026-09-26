@@ -1,32 +1,38 @@
 # Cyberark MCP
 
 ## Tagline
-CyberArk PVWA API: logon, safes, accounts. Token cached per process.
+Password breach checks and identity security audits - no API key.
 
 ## Description
-CyberArk PVWA API: logon, safes, accounts. Token cached per process. Published from a private commercial monorepo. Not affiliated with or endorsed by Cyberark.
+Audit secrets and identity hygiene from your AI assistant: check passwords against known breaches with k-anonymity, score password strength offline, generate strong passwords, browse the breach catalogue, and grade a domain SPF, DMARC, DKIM and CAA setup. No account or key. An independent MCP server. Not affiliated with or endorsed by CyberArk.
 
 ## Setup Requirements
-- `CYBERARK_BASE_URL` (required): set in your MCP client config before use.
-- `CYBERARK_PASSWORD` (required): set in your MCP client config before use.
-- `CYBERARK_USERNAME` (required): set in your MCP client config before use.
+No setup. Breach lookups use the public k-anonymity API and the rest runs locally.
 
 ## Category
-Business Tools
+Security
 
 ## Features
-- List safes: CyberArk safes visible to the logon user.
-- List accounts: CyberArk accounts, optionally filtered by safe.
-- Get account: One CyberArk account by id (metadata, not the password value).
+- Check if a password is breached: Check a password against known data breaches using k-anonymity, so only five characters of its SHA-1 hash are sent and the password itself never leaves your machine. No API key needed.
+- Check several passwords: Check up to 10 passwords for known breaches in one call and report how many have already been leaked.
+- Score password strength: Score a password offline: entropy, character classes, common-word, keyboard and sequence patterns, plus an estimated offline crack time and a clear verdict.
+- Generate a strong password: Generate a random password from a cryptographically secure source, with control over length and character classes, and report its estimated crack time.
+- Browse known breaches: List breaches from the Have I Been Pwned catalogue, largest first, filtered by company domain or year, with the number of accounts and the kinds of data exposed.
+- Breach details: Look up one breach by name and get its date, exposed account count, verification status and the classes of data leaked.
+- Domain email security audit: Audit a domain's anti-spoofing setup: SPF, DMARC, DKIM selectors, MX records and CAA, graded A to F with the exact gaps to fix.
 
 ## Getting Started
-- "Ask your assistant about cyberark using this server once installed"
-- Tool: list_safes — CyberArk safes visible to the logon user.
-- Tool: list_accounts — CyberArk accounts, optionally filtered by safe.
-- Tool: get_account — One CyberArk account by id (metadata, not the password value).
+- Ask your assistant about cyberark using this server once installed
+- Tool: check_password — Check a password against known data breaches using k-anonymity, so only five characters of its SHA-1 hash are sent and the password itself never leaves your machine. No API key needed.
+- Tool: check_passwords — Check up to 10 passwords for known breaches in one call and report how many have already been leaked.
+- Tool: password_strength — Score a password offline: entropy, character classes, common-word, keyboard and sequence patterns, plus an estimated offline crack time and a clear verdict.
+- Tool: generate_password — Generate a random password from a cryptographically secure source, with control over length and character classes, and report its estimated crack time.
+- Tool: breach_catalog — List breaches from the Have I Been Pwned catalogue, largest first, filtered by company domain or year, with the number of accounts and the kinds of data exposed.
+- Tool: breach_detail — Look up one breach by name and get its date, exposed account count, verification status and the classes of data leaked.
+- Tool: domain_email_security — Audit a domain's anti-spoofing setup: SPF, DMARC, DKIM selectors, MX records and CAA, graded A to F with the exact gaps to fix.
 
 ## Tags
-cyberark, mcp, data, api
+security, passwords, breach, dns, spf, mcp
 
 ## Documentation URL
 https://github.com/mrfentmen/premium-mcps/tree/main/servers/cyberark-mcp

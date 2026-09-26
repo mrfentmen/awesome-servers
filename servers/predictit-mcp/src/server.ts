@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { biggestMovers, contractPrice, marketDetail, markets, searchMarkets } from "./api.js"
+import { arbitrageCheck, biggestMovers, contractPrice, marketDetail, marketSummary, markets, searchMarkets } from "./api.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -82,6 +82,35 @@ export function createServer(): McpServer {
     },
     async (args) => {
       try { return text(await biggestMovers(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+  server.registerTool(
+    "market_summary",
+    {
+      title: "Exchange summary",
+      description: "Totals across PredictIt right now — how many markets are open, how many contracts trade — plus the most contested open markets.",
+      inputSchema: z.object({
+        limit: z.number().describe("How many contested markets to list, 1-25.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await marketSummary(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+  server.registerTool(
+    "arbitrage_check",
+    {
+      title: "Arbitrage check",
+      description: "Add up every YES price in each open PredictIt market and flag fields whose total is under $1.00, where buying the whole field could cost less than the payout. Only applies to markets whose outcomes are mutually exclusive.",
+      inputSchema: z.object({
+        limit: z.number().describe("How many markets to list per group, 1-25.").optional(),
+        threshold: z.number().describe("Flag markets whose YES total is below this, default 0.97.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await arbitrageCheck(args)) } catch (e) { return textError(error(e)) }
     }
   )
   return server

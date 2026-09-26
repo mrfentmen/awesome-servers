@@ -1,7 +1,7 @@
 {
   "name": "pingdom-mcp",
   "version": "1.0.1",
-  "description": "Pingdom API: uptime checks, results, credits. Needs API token.",
+  "description": "Measure site performance and catch broken links - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/pingdom-mcp",
   "repository": {
@@ -22,11 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
-    "pingdom",
+    "performance",
     "uptime",
     "monitoring",
-    "solarwinds"
+    "links",
+    "devops",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

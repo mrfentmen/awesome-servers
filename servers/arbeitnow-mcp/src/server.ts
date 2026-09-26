@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { job, jobs, remoteJobs, searchJobs, tags } from "./api.js"
+import { companies, job, jobs, locations, remoteJobs, searchJobs, tags } from "./api.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -79,6 +79,34 @@ export function createServer(): McpServer {
     },
     async (args) => {
     try { return text(await tags(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "companies",
+    {
+      title: "Companies hiring",
+      description: "Rank the employers with the most open Arbeitnow postings, with their remote count and newest posting date.",
+      inputSchema: z.object( {
+        limit: z.number().describe("How many companies to show, 1-50.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await companies(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "locations",
+    {
+      title: "Locations and job types",
+      description: "Show where the newest Arbeitnow jobs are, split by city and by job type, with a remote versus on-site count.",
+      inputSchema: z.object( {
+        limit: z.number().describe("How many locations and types to show, 1-50.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await locations(args)) } catch (e) { return textError(error(e)) }
   }
   )
   return server

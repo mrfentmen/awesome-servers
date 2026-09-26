@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/youtrack-mcp",
-  "description": "YouTrack API: issues, projects, comments.",
+  "description": "Issue tracking over the public GitLab API - no API key.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

@@ -133,3 +133,75 @@ export async function tags(args: TagsArgs): Promise<string> {
   return `Top Arbeitnow job tags (from ${list.length} most recent postings):\n` +
     ranked.map(([tag, count], i) => `${i + 1}. ${tag} - ${count} job(s)`).join('\n');
 }
+
+export interface CompaniesArgs {
+  limit?: number;
+}
+
+/** Rank the employers with the most open postings in the newest feed pages. */
+export async function companies(args: CompaniesArgs): Promise<string> {
+  const limit = clamp(args?.limit, 15, 50);
+  const list = await fetchRecent(3);
+  if (!list.length) return 'No Arbeitnow jobs returned.';
+  const counts = new Map<string, { jobs: number; remote: number; latest: string; titles: Set<string> }>();
+  for (const entry of list) {
+    const name = (entry.company_name ?? '').trim();
+    if (!name) continue;
+    const group = counts.get(name) ?? { jobs: 0, remote: 0, latest: '', titles: new Set<string>() };
+    group.jobs += 1;
+    if (entry.remote) group.remote += 1;
+    const posted = postedOn(entry.created_at);
+    if (posted !== '?' && posted > group.latest) group.latest = posted;
+    if (entry.title) group.titles.add(entry.title);
+    counts.set(name, group);
+  }
+  if (!counts.size) return `No Arbeitnow postings in the ${list.length} newest jobs named a company.`;
+  const ranked = [...counts.entries()].sort((a, b) => b[1].jobs - a[1].jobs).slice(0, limit);
+  const lines = ranked.map(([name, group]) => {
+    const remote = group.remote ? `, ${group.remote} remote` : '';
+    return `${name} - ${group.jobs} job(s)${remote}, newest ${group.latest || '?'}`;
+  });
+  return `Companies hiring most on Arbeitnow (from ${list.length} newest postings, ${counts.size} companies):\n` +
+    lines.map((line, i) => `${i + 1}. ${line}`).join('\n');
+}
+
+export interface LocationsArgs {
+  limit?: number;
+}
+
+/** Where the newest Arbeitnow jobs are, split by city and by job type. */
+export async function locations(args: LocationsArgs): Promise<string> {
+  const limit = clamp(args?.limit, 15, 50);
+  const list = await fetchRecent(2);
+  if (!list.length) return 'No Arbeitnow jobs returned.';
+  // Values differ only by casing upstream ("Full Time" vs "Full time"), so count
+  // them together and keep the first spelling seen for display.
+  const tally = (pick: (job: RawJob) => string[]) => {
+    const counts = new Map<string, { label: string; count: number }>();
+    for (const entry of list) {
+      for (const value of pick(entry)) {
+        const label = value.trim();
+        if (!label) continue;
+        const key = label.toLowerCase();
+        const row = counts.get(key) ?? { label, count: 0 };
+        row.count += 1;
+        counts.set(key, row);
+      }
+    }
+    return [...counts.values()]
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit)
+      .map((row) => [row.label, row.count] as [string, number]);
+  };
+  const cities = tally((entry) => [entry.location ?? '']);
+  const types = tally((entry) => entry.job_types ?? []);
+  const remote = list.filter((entry) => entry.remote).length;
+  const block = (title: string, rows: Array<[string, number]>) =>
+    rows.length ? `${title}:\n` + rows.map(([name, n], i) => `  ${i + 1}. ${name} - ${n}`).join('\n') : '';
+  const blocks = [
+    block('Top locations', cities),
+    block('Job types', types),
+  ].filter(Boolean);
+  return `Arbeitnow spread across ${list.length} newest postings ` +
+    `(${remote} remote, ${list.length - remote} on-site):\n` + blocks.join('\n');
+}

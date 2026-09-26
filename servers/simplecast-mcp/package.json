@@ -1,7 +1,7 @@
 {
   "name": "simplecast-mcp",
   "version": "1.0.1",
-  "description": "Simplecast podcast hosting: podcasts, episodes, analytics. Needs API key.",
+  "description": "Search podcasts and analyse any RSS feed - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/simplecast-mcp",
   "repository": {
@@ -22,9 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
-    "simplecast",
-    "podcast"
+    "podcast",
+    "rss",
+    "audio",
+    "apple",
+    "content",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

@@ -1,7 +1,7 @@
 {
   "name": "nonprofit-mcp",
   "version": "1.0.0",
-  "description": "US nonprofit data. Keyless.",
+  "description": "US nonprofit profiles and finances by EIN - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nonprofit-mcp",
   "repository": {
@@ -22,11 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
     "nonprofit",
     "charity",
+    "finance",
     "irs",
-    "keyless"
+    "data",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

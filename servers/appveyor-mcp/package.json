@@ -1,7 +1,7 @@
 {
   "name": "appveyor-mcp",
   "version": "1.0.1",
-  "description": "AppVeyor CI: projects, last builds, history. Needs API token.",
+  "description": "CI pipeline monitoring for GitLab and GitHub - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/appveyor-mcp",
   "repository": {
@@ -22,10 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
-    "appveyor",
     "ci",
-    "builds"
+    "builds",
+    "pipelines",
+    "gitlab",
+    "github",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

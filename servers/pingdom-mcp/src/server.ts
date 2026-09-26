@@ -1,11 +1,13 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import {
+  brokenLinks,
+  certificateExpiry,
+  checkRedirects,
+  checkUrl,
   errorMessage,
-  listChecks,
-  getCheck,
-  getResults,
-  getCredits,
+  performanceReport,
+  responseTimes,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -16,81 +18,121 @@ const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
 export function createServer(): McpServer {
   const server = new McpServer({
     name: "pingdom-mcp",
-    version: "1.0.0",
+    version: "2.0.0",
   })
 
   server.registerTool(
-    "list_checks",
+    "check_url",
     {
-      title: "List checks",
-      description: "All Pingdom uptime checks with current status and response time.",
+      title: "Check URL up or down",
+      description: "Test whether a URL is up right now and report its HTTP status, response time and redirect count. No API key needed.",
       inputSchema: z.object({
+        url: z.string().describe("URL or hostname to test, for example https://example.com."),
       }),
       annotations: READ_ONLY,
     },
-    async ({  }) => {
+    async ({ url }) => {
       try {
-        return text(await listChecks());
+        return text(await checkUrl({ url }))
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(errorMessage(e))
       }
     }
   )
 
   server.registerTool(
-    "get_check",
+    "response_times",
     {
-      title: "Get check detail",
-      description: "One Pingdom check with full configuration.",
+      title: "Response time samples",
+      description: "Request a URL several times in a row and report min, median, average, max and jitter, so you can tell whether a site is consistently fast or flaky.",
       inputSchema: z.object({
-        checkId: z.string().describe("Check id"),
+        url: z.string().describe("URL to time, for example https://example.com."),
+        samples: z.number().describe("How many requests to make, 2 to 10. Defaults to 3.").optional(),
       }),
       annotations: READ_ONLY,
     },
-    async ({ checkId }) => {
+    async ({ url, samples }) => {
       try {
-        return text(await getCheck(checkId));
+        return text(await responseTimes({ url, samples }))
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(errorMessage(e))
       }
     }
   )
 
   server.registerTool(
-    "get_results",
+    "check_redirects",
     {
-      title: "Get check results",
-      description: "Historical results for a check in a time window.",
+      title: "Check redirect chain",
+      description: "Follow every redirect for a URL and flag loops, plain-HTTP starts and hops that could be collapsed into one rule.",
       inputSchema: z.object({
-        checkId: z.string().describe("Check id"),
-        from: z.string().optional().describe("Start unix timestamp"),
-        to: z.string().optional().describe("End unix timestamp"),
+        url: z.string().describe("URL to follow, for example http://example.com."),
       }),
       annotations: READ_ONLY,
     },
-    async ({ checkId, from, to }) => {
+    async ({ url }) => {
       try {
-        return text(await getResults(checkId, from, to));
+        return text(await checkRedirects({ url }))
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(errorMessage(e))
       }
     }
   )
 
   server.registerTool(
-    "get_credits",
+    "certificate_expiry",
     {
-      title: "Get credits",
-      description: "Remaining Pingdom API credits and rate-limit status.",
+      title: "Certificate expiry",
+      description: "Check when a host's TLS certificate expires and whether the chain is trusted, with a CRITICAL/WARNING/OK status.",
       inputSchema: z.object({
+        host: z.string().describe("Hostname to inspect, for example example.com."),
       }),
       annotations: READ_ONLY,
     },
-    async ({  }) => {
+    async ({ host }) => {
       try {
-        return text(await getCredits());
+        return text(await certificateExpiry({ host }))
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "broken_links",
+    {
+      title: "Find broken links",
+      description: "Scan a page for links, request each one and list the ones that return an error status. Great for catching dead links before visitors do.",
+      inputSchema: z.object({
+        url: z.string().describe("Page to scan, for example https://example.com."),
+        limit: z.number().describe("Maximum links to test, 1 to 40. Defaults to 15.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ url, limit }) => {
+      try {
+        return text(await brokenLinks({ url, limit }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "performance_report",
+    {
+      title: "Performance report",
+      description: "Break a page load into DNS lookup, connect, TLS, time-to-first-byte and total time, then report payload size, compression, caching and page weight with a list of fixes.",
+      inputSchema: z.object({
+        url: z.string().describe("URL to profile, for example https://example.com."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ url }) => {
+      try {
+        return text(await performanceReport({ url }))
+      } catch (e) {
+        return textError(errorMessage(e))
       }
     }
   )

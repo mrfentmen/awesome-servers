@@ -232,3 +232,85 @@ export async function convert(args: ConvertArgs): Promise<string> {
     `Sources: ${fromQuote.source} (${fromQuote.updated}), ${toQuote.source} (${toQuote.updated})`
   )
 }
+
+export interface PortfolioArgs {
+  holdings: string
+}
+
+export async function portfolioValue(args: PortfolioArgs): Promise<string> {
+  const raw = String(args?.holdings ?? "").trim()
+  if (!raw) {
+    throw new GoldError('holdings is required, for example "XAU:2, XAG:100, BTC:0.5".')
+  }
+  const entries: { symbol: string; amount: number }[] = []
+  for (const part of raw.split(",").map((piece) => piece.trim()).filter(Boolean)) {
+    const [rawSymbol, rawAmount] = part.split(":")
+    const symbol = normalizeSymbol(rawSymbol ?? "")
+    const amount = Number(rawAmount)
+    if (!rawSymbol || !Number.isFinite(amount) || amount <= 0) {
+      throw new GoldError(`Could not read "${part}" — use SYMBOL:AMOUNT, for example XAU:2.`)
+    }
+    entries.push({ symbol, amount })
+  }
+
+  const priced: { symbol: string; name: string; amount: number; value: number }[] = []
+  const problems: string[] = []
+  for (const entry of entries) {
+    try {
+      const quote = await fetchQuote(entry.symbol)
+      priced.push({
+        symbol: quote.symbol,
+        name: quote.name,
+        amount: entry.amount,
+        value: entry.amount * quote.price,
+      })
+    } catch (e) {
+      problems.push(`${entry.symbol}: ${errorMessage(e)}`)
+    }
+  }
+
+  if (!priced.length) {
+    throw new GoldError(`No holding could be priced. ${problems.join("; ")}`)
+  }
+
+  const total = priced.reduce((sum, row) => sum + row.value, 0)
+  const lines = priced.map((row) => {
+    const share = total > 0 ? ((row.value / total) * 100).toFixed(1) : "0.0"
+    return `${usd(row.value)} — ${row.amount} ${row.symbol} (${row.name}), ${share}% of total`
+  })
+  const footer = problems.length ? `\nSkipped: ${problems.join("; ")}` : ""
+  return (
+    `Portfolio value (${priced.length} holding${priced.length === 1 ? "" : "s"}) in USD:\n` +
+    `${numbered(lines)}\nTotal: ${usd(total)}${footer}`
+  )
+}
+
+/** Live ratios that traders watch between two tracked assets. */
+const RATIO_PAIRS: Array<[string, string, string]> = [
+  ["XAU", "XAG", "Gold/Silver"],
+  ["XAU", "XPT", "Gold/Platinum"],
+  ["XAU", "XPD", "Gold/Palladium"],
+  ["XAU", "HG", "Gold/Copper"],
+  ["BTC", "XAU", "Bitcoin/Gold"],
+]
+
+export async function metalRatios(): Promise<string> {
+  const lines: string[] = []
+  const problems: string[] = []
+  for (const [a, b, label] of RATIO_PAIRS) {
+    try {
+      const [first, second] = [await fetchQuote(a), await fetchQuote(b)]
+      if (second.price <= 0) throw new GoldError(`${second.symbol} has a non-positive price`)
+      const ratio = first.price / second.price
+      lines.push(
+        `${label} ratio: ${ratio.toLocaleString("en-US", { maximumFractionDigits: 4 })}` +
+        ` (${first.symbol} ${usd(first.price)} / ${second.symbol} ${usd(second.price)})`
+      )
+    } catch (e) {
+      problems.push(`${label}: ${errorMessage(e)}`)
+    }
+  }
+  if (!lines.length) throw new GoldError(`No ratio could be computed. ${problems.join("; ")}`)
+  const footer = problems.length ? `\nUnavailable: ${problems.join("; ")}` : ""
+  return `Live asset ratios (both sides quoted at the same moment):\n${numbered(lines)}${footer}`
+}

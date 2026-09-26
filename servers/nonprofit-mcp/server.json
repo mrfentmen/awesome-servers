@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/nonprofit-mcp",
-  "description": "US nonprofit search and filings.",
+  "description": "US nonprofit profiles and finances by EIN - no API key.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/fueleconomy-mcp",
-  "description": "US vehicle fuel economy.",
+  "description": "US EPA car MPG, CO2 and pump prices - no API key.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

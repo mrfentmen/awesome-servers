@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { departments, jobs, posting, searchPostings } from "./api.js"
+import { departments, hiringCompanies, jobs, posting, searchAllJobs, searchPostings } from "./api.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -68,6 +68,39 @@ export function createServer(): McpServer {
     },
     async (args) => {
     try { return text(await departments(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "search_all_jobs",
+    {
+      title: "Search all companies",
+      description: "Search SmartRecruiters job postings across every company at once, with optional country and remote filters.",
+      inputSchema: z.object( {
+        keyword: z.string().describe("Job keywords, for example python developer or nurse."),
+        country: z.string().describe("Keep only jobs in this country, for example United States, Germany or IT.").optional(),
+        remote: z.boolean().describe("When true, keep only jobs flagged as remote.").optional(),
+        limit: z.number().describe("How many jobs to show, 1-40.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await searchAllJobs(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "hiring_companies",
+    {
+      title: "Companies hiring",
+      description: "Rank the companies posting the most SmartRecruiters jobs for a keyword, with a sample role each.",
+      inputSchema: z.object( {
+        keyword: z.string().describe("Job keywords, for example data engineer or sales."),
+        country: z.string().describe("Keep only jobs in this country, for example United Kingdom or FR.").optional(),
+        limit: z.number().describe("How many companies to show, 1-25.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await hiringCompanies(args)) } catch (e) { return textError(error(e)) }
   }
   )
   return server

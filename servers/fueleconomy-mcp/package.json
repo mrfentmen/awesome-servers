@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/fueleconomy-mcp",
   "version": "1.0.0",
-  "description": "US fuel economy data. Keyless.",
+  "description": "US EPA car MPG, CO2 and pump prices - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/fueleconomy-mcp",
   "repository": {
@@ -22,11 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
-    "fueleconomy",
     "cars",
+    "fuel",
+    "epa",
     "mpg",
-    "keyless"
+    "emissions",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

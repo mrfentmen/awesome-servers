@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/iss-mcp",
   "version": "1.0.1",
-  "description": "ISS position and crew. Keyless.",
+  "description": "Live ISS position, passes and crew - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/iss-mcp",
   "repository": {
@@ -22,11 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
     "iss",
     "space",
-    "nasa",
-    "keyless"
+    "satellite",
+    "tracking",
+    "science",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

@@ -1,7 +1,7 @@
 {
   "name": "cyberark-mcp",
   "version": "1.0.1",
-  "description": "CyberArk PVWA API: logon, safes, accounts. Token cached per process.",
+  "description": "Password breach checks and identity security audits - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/cyberark-mcp",
   "repository": {
@@ -22,11 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
-    "cyberark",
-    "secrets",
-    "vault",
-    "security"
+    "security",
+    "passwords",
+    "breach",
+    "dns",
+    "spf",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

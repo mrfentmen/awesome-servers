@@ -1,7 +1,7 @@
 {
   "name": "statuscake-mcp",
   "version": "1.0.1",
-  "description": "StatusCake API: uptime checks, history, alerts, monitoring locations. Needs API key.",
+  "description": "Uptime, TCP port, SSL chain and DNS propagation checks - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/statuscake-mcp",
   "repository": {
@@ -22,10 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
-    "statuscake",
     "uptime",
-    "monitoring"
+    "monitoring",
+    "ssl",
+    "ports",
+    "dns",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

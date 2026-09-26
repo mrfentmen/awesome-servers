@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { auctionByDate, auctionSummary, auctions, marketTrend, topAuctions } from "./api.js"
+import { auctionByDate, auctionCompare, auctionSummary, auctions, marketTrend, seasonality, topAuctions } from "./api.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -82,6 +82,35 @@ export function createServer(): McpServer {
     },
     async (args) => {
       try { return text(await marketTrend(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+  server.registerTool(
+    "seasonality",
+    {
+      title: "Auction seasonality",
+      description: "Show which calendar months historically fetch the highest mean winning bid and volume, averaged across every year in the dataset.",
+      inputSchema: z.object({
+        auction: z.string().describe("Optional auction slug to narrow to one house, e.g. 'whiskyauctioneer'.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await seasonality(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+  server.registerTool(
+    "auction_compare",
+    {
+      title: "Compare auctions",
+      description: "Compare two or more auction houses side by side: record counts, date range, mean and highest winning bid, total volume and their latest months.",
+      inputSchema: z.object({
+        auctions: z.string().describe("Comma separated auction slugs, e.g. 'whiskyauctioneer,scotchwhiskyauctions'."),
+        limit: z.number().describe("How many latest months to show per auction, 2-30.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await auctionCompare(args)) } catch (e) { return textError(error(e)) }
     }
   )
   return server

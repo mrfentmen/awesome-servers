@@ -1,7 +1,7 @@
 {
   "name": "savvycal-mcp",
   "version": "1.0.1",
-  "description": "SavvyCal scheduling links, events, user. Needs token.",
+  "description": "Timezone, business-day and meeting-slot maths - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/savvycal-mcp",
   "repository": {
@@ -22,11 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
-    "savvycal",
     "scheduling",
+    "timezone",
     "meetings",
-    "calendar"
+    "calendar",
+    "productivity",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

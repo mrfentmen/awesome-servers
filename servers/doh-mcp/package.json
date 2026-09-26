@@ -1,7 +1,7 @@
 {
   "name": "doh-mcp",
   "version": "1.0.0",
-  "description": "DNS-over-HTTPS lookup. Keyless.",
+  "description": "DNS lookups, email records and reverse DNS - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/doh-mcp",
   "repository": {
@@ -22,11 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
     "dns",
     "doh",
-    "networking",
-    "keyless"
+    "email",
+    "spf",
+    "dmarc",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

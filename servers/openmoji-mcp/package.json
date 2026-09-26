@@ -1,7 +1,7 @@
 {
   "name": "openmoji-mcp",
   "version": "1.0.0",
-  "description": "OpenMoji emoji search. Keyless.",
+  "description": "Search 4500+ open-source emoji with SVG links - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/openmoji-mcp",
   "repository": {
@@ -22,11 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
-    "openmoji",
     "emoji",
     "icons",
-    "keyless"
+    "search",
+    "openmoji",
+    "assets",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

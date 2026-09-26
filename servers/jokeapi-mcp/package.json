@@ -1,7 +1,7 @@
 {
   "name": "jokeapi-mcp",
   "version": "1.0.0",
-  "description": "JokeAPI jokes. Keyless.",
+  "description": "Safe-mode jokes by category, search and id - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/jokeapi-mcp",
   "repository": {
@@ -22,11 +22,11 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
     "jokes",
-    "humor",
+    "humour",
     "fun",
-    "keyless"
+    "content",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

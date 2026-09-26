@@ -1,7 +1,7 @@
 {
   "name": "pvgis-mcp",
   "version": "1.0.0",
-  "description": "EU solar potential data. Keyless.",
+  "description": "Solar yield, irradiation and system sizing - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/pvgis-mcp",
   "repository": {
@@ -22,12 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
     "solar",
-    "pvgis",
+    "pv",
     "energy",
-    "eu",
-    "keyless"
+    "irradiation",
+    "renewable",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

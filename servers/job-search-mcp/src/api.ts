@@ -85,6 +85,11 @@ export interface Job {
   posted?: string
   type?: string
   salary?: string
+  /** Raw pay figures, kept alongside the label so salary_insights can aggregate. */
+  salaryLow?: number
+  salaryHigh?: number
+  salaryCurrency?: string
+  salaryPeriod?: string
   tags: string[]
 }
 
@@ -112,9 +117,16 @@ const sortNewest = (jobs: Job[]): Job[] =>
     return (Number.isNaN(right) ? 0 : right) - (Number.isNaN(left) ? 0 : left)
   })
 
+// Some boards (RemoteOK) send 0 rather than omitting pay they do not know, so a
+// zero must be read as "not disclosed" instead of a salary.
+const pay = (value: unknown): number | undefined => {
+  const parsed = num(value)
+  return parsed !== undefined && parsed > 0 ? parsed : undefined
+}
+
 const salaryLabel = (min: unknown, max: unknown, currency: unknown, period: unknown): string | undefined => {
-  const low = num(min)
-  const high = num(max)
+  const low = pay(min)
+  const high = pay(max)
   if (low === undefined && high === undefined) return undefined
   const symbol = str(currency) || "USD"
   const every = str(period)
@@ -138,6 +150,10 @@ async function fromJobicy(opts: Query): Promise<Job[]> {
     posted: str(j.pubDate),
     type: Array.isArray(j.jobType) ? (j.jobType as unknown[]).map(str).filter(Boolean).join("/") : str(j.jobType),
     salary: salaryLabel(j.salaryMin, j.salaryMax, j.salaryCurrency, j.salaryPeriod),
+    salaryLow: pay(j.salaryMin),
+    salaryHigh: pay(j.salaryMax),
+    salaryCurrency: str(j.salaryCurrency) || undefined,
+    salaryPeriod: str(j.salaryPeriod) || undefined,
     tags: [str(j.jobIndustry), ...arr(j.jobType).map(String)].filter(Boolean),
   }))
 }
@@ -171,6 +187,10 @@ async function fromRemoteOk(opts: Query): Promise<Job[]> {
       source: "RemoteOK",
       posted: str(j.date),
       salary: salaryLabel(j.salary_min, j.salary_max, undefined, "year"),
+      salaryLow: pay(j.salary_min),
+      salaryHigh: pay(j.salary_max),
+      salaryCurrency: pay(j.salary_min) !== undefined || pay(j.salary_max) !== undefined ? "USD" : undefined,
+      salaryPeriod: "year",
       tags: Array.isArray(j.tags) ? (j.tags as unknown[]).map(str).filter(Boolean) : [],
     }))
     .filter((job) => matches(job, opts.query, opts.location))
@@ -420,6 +440,112 @@ export async function jobCategories(): Promise<string> {
       ...lines,
       "",
       "The Muse also accepts a location, and Jobicy accepts a location plus an industry tag.",
+    ].join("\n")
+  )
+}
+
+/** Only USD/year figures can be compared, so everything else is reported separately. */
+const midpoint = (job: Job): number => {
+  const low = job.salaryLow ?? job.salaryHigh ?? 0
+  const high = job.salaryHigh ?? job.salaryLow ?? 0
+  return (low + high) / 2
+}
+
+// RemoteOK occasionally labels an hourly rate as an annual field, which shows up
+// as a three figure "salary". Nothing under this floor is a real annual figure.
+const ANNUAL_FLOOR = 1000
+
+const comparablePay = (job: Job): boolean =>
+  (job.salaryLow !== undefined || job.salaryHigh !== undefined) &&
+  (job.salaryCurrency ?? "USD").toUpperCase() === "USD" &&
+  /year|annual/i.test(job.salaryPeriod ?? "year") &&
+  midpoint(job) >= ANNUAL_FLOOR
+
+const money = (value: number) => `USD ${Math.round(value).toLocaleString("en-US")}`
+
+export interface SalaryArgs {
+  query?: string
+  boards?: string
+  limit?: number
+}
+
+export async function salaryInsights(args: SalaryArgs = {}): Promise<string> {
+  const limit = clamp(args.limit, 10, 50)
+  const harvest = await collect({ query: args.query, location: undefined, limit }, args.boards)
+  const paid = harvest.jobs.filter((job) => job.salaryLow !== undefined || job.salaryHigh !== undefined)
+  const usable = paid.filter(comparablePay)
+  if (!usable.length) {
+    return `${header(harvest, paid.length, limit)}\n` +
+      `Only ${paid.length} job(s) published pay, and none in a comparable USD-per-year form, so no average can be computed. ` +
+      `RemoteOK and Jobicy are the boards that carry salary figures.`
+  }
+
+  const values = usable.map(midpoint).sort((a, b) => a - b)
+  const median = values.length % 2
+    ? values[(values.length - 1) / 2]
+    : (values[values.length / 2 - 1] + values[values.length / 2]) / 2
+  const byBoard = new Map<string, number>()
+  for (const job of usable) byBoard.set(job.source, (byBoard.get(job.source) ?? 0) + 1)
+
+  const top = [...usable].sort((a, b) => midpoint(b) - midpoint(a)).slice(0, Math.min(limit, 10))
+  const lines = top.map((job, i) => {
+    const bits = [job.company, job.location].filter(Boolean).join(" | ")
+    return `${i + 1}. ${job.title}${bits ? ` — ${bits}` : ""}\n   ${job.salary} (${job.source})`
+  })
+
+  const skipped = paid.length - usable.length
+  return truncate(
+    [
+      `Salary insights for ${args.query ? `"${args.query}"` : "all recent postings"} across ${harvest.searched.length} board(s).`,
+      `${harvest.jobs.length} posting(s) scanned; ${paid.length} published pay, ${usable.length} comparable (${skipped} skipped as non-USD or non-annual).`,
+      ``,
+      `Lowest midpoint: ${money(values[0])}`,
+      `Median midpoint: ${money(median)}`,
+      `Highest midpoint: ${money(values[values.length - 1])}`,
+      `Boards contributing pay data: ${[...byBoard.entries()].map(([name, n]) => `${name} (${n})`).join(", ")}`,
+      ``,
+      `Best paying matches:`,
+      ...lines,
+      harvest.failures.length ? `Unreachable: ${harvest.failures.join("; ")}` : "",
+      `Figures are midpoints of each posting's own quoted range, and represent only the jobs that disclosed pay.`,
+    ]
+      .filter(Boolean)
+      .join("\n")
+  )
+}
+
+export interface CoverageArgs {
+  query?: string
+  location?: string
+}
+
+export async function boardCoverage(args: CoverageArgs = {}): Promise<string> {
+  const probe = await Promise.all(
+    BOARDS.map(async (board) => {
+      try {
+        const jobs = await board.fetch({ query: args.query, location: args.location, limit: 50 })
+        return { board, count: jobs.length, ok: true, error: "" }
+      } catch (e) {
+        return { board, count: 0, ok: false, error: errorMessage(e) }
+      }
+    })
+  )
+  const total = probe.reduce((sum, row) => sum + row.count, 0)
+  const live = probe.filter((row) => row.ok).length
+  const lines = probe
+    .sort((a, b) => b.count - a.count)
+    .map((row, i) => {
+      const how = row.board.supportsQuery ? "server-side keyword filter" : "filtered locally over latest postings"
+      const detail = row.ok ? `${row.count} job(s) — ${how}` : `unreachable — ${row.error}`
+      return `  ${i + 1}. ${row.board.name} [${row.board.id}]: ${detail}`
+    })
+  return truncate(
+    [
+      `Board coverage for ${args.query ? `"${args.query}"` : "an unfiltered pull"}${args.location ? ` in "${args.location}"` : ""}:`,
+      `${total} job(s) across ${live} of ${BOARDS.length} reachable board(s).`,
+      ...lines,
+      ``,
+      "Pass these ids to the `boards` argument of search_jobs, jobs_by_board or company_jobs. Counts are board-declared result sizes, so boards with a large feed naturally rank higher.",
     ].join("\n")
   )
 }

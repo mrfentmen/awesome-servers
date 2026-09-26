@@ -1,7 +1,7 @@
 {
   "name": "ohdear-mcp",
   "version": "1.0.1",
-  "description": "Oh Dear API: monitors with checks and statuses, single monitor lookup. Needs token.",
+  "description": "Uptime, TLS and DNS checks for any website - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ohdear-mcp",
   "repository": {
@@ -22,10 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
-    "ohdear",
     "uptime",
-    "monitoring"
+    "monitoring",
+    "ssl",
+    "dns",
+    "devops",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

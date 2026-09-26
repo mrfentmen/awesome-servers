@@ -23,7 +23,12 @@ interface ApiJob {
   url?: string
   description?: string
   company?: { title?: string; website?: string; url?: string }
-  location?: { city?: string | null; country?: string | null; region?: string | null; workplace?: string | null }
+  /** Workable names these fields subregion/countryName, not region/country. */
+  location?: { city?: string | null; subregion?: string | null; countryName?: string | null }
+  /** Pre-formatted place strings, e.g. "Billings, Montana, United States". */
+  locations?: string[]
+  /** on_site | remote | hybrid — this is a job field, not part of location. */
+  workplace?: string | null
 }
 
 interface SearchResponse {
@@ -53,10 +58,20 @@ function plain(html: unknown, max = 1200): string {
   return clean.length > max ? `${clean.slice(0, max).trimEnd()}…` : clean
 }
 
-const where = (l?: ApiJob["location"]): string => {
-  const parts = [l?.city, l?.region, l?.country].filter((p) => typeof p === "string" && p.trim()) as string[]
-  const place = parts.length ? parts.join(", ") : "location n/a"
-  return l?.workplace ? `${place} (${l.workplace})` : place
+const WORKPLACE_LABEL: Record<string, string> = {
+  remote: "Remote",
+  hybrid: "Hybrid",
+  on_site: "On-site",
+}
+
+const where = (j: ApiJob): string => {
+  const listed = (j.locations ?? []).find((entry) => typeof entry === "string" && entry.trim())
+  const parts = [j.location?.city, j.location?.subregion, j.location?.countryName].filter(
+    (p) => typeof p === "string" && p.trim()
+  ) as string[]
+  const place = listed?.trim() ?? (parts.length ? parts.join(", ") : "location n/a")
+  const kind = j.workplace ? WORKPLACE_LABEL[j.workplace] ?? j.workplace : ""
+  return kind ? `${place} (${kind})` : place
 }
 
 const since = (created?: string): string => {
@@ -71,7 +86,7 @@ const since = (created?: string): string => {
 function line(j: ApiJob, i: number): string {
   const meta = [
     j.company?.title,
-    where(j.location),
+    where(j),
     j.employmentType,
     since(j.created),
     j.department ? `dept: ${j.department}` : "",
@@ -87,12 +102,24 @@ async function query(search: URLSearchParams): Promise<SearchResponse> {
   return d
 }
 
-function searchParams(args: { query?: string; location?: string; limit?: number }): URLSearchParams {
+export interface SearchArgs {
+  query?: string
+  location?: string
+  limit?: number
+  /** on_site | remote | hybrid. Workable filters this server-side. */
+  workplace?: string
+}
+
+const WORKPLACES = ["remote", "hybrid", "on_site"]
+
+function searchParams(args: SearchArgs): URLSearchParams {
   const p = new URLSearchParams()
   const q = (args.query ?? "").trim()
   const loc = (args.location ?? "").trim()
   if (q) p.set("query", q)
   if (loc) p.set("location", loc)
+  const mode = (args.workplace ?? "").trim().toLowerCase()
+  if (WORKPLACES.includes(mode)) p.set("workplace", mode)
   // The Workable search API rejects limit > 20 with a 400.
   p.set("limit", String(Math.min(Math.max(args.limit ?? 10, 1), 20)))
   return p
@@ -118,7 +145,7 @@ export async function jobDetail(args: { job_id: string }): Promise<string> {
     `${j.title}`,
     [
       j.company?.title,
-      where(j.location),
+      where(j),
       j.employmentType,
       since(j.created),
     ].filter(Boolean).join(" | "),
@@ -196,7 +223,7 @@ export async function marketSummary(args: { query: string; location?: string }):
   }
 
   const types = tally(jobs.map((j) => j.employmentType ?? ""))
-  const places = tally(jobs.map((j) => [j.location?.city, j.location?.country].filter(Boolean).join(", ")))
+  const places = tally(jobs.map((j) => [j.location?.city, j.location?.countryName].filter(Boolean).join(", ")))
   const firms = tally(jobs.map((j) => j.company?.title ?? ""))
   const depts = tally(jobs.map((j) => j.department ?? ""))
 
@@ -213,4 +240,51 @@ export async function marketSummary(args: { query: string; location?: string }):
   ]
     .filter((s) => s !== "")
     .join("\n")
+}
+
+/** Only remote (or hybrid) roles, using Workable's own workplace filter. */
+export async function remoteJobs(args: { query?: string; location?: string; workplace?: string; limit?: number }): Promise<string> {
+  const q = (args.query ?? "").trim()
+  const loc = (args.location ?? "").trim()
+  const mode = (args.workplace ?? "remote").trim().toLowerCase()
+  if (!WORKPLACES.includes(mode)) {
+    return `workplace must be one of: ${WORKPLACES.join(", ")}.`
+  }
+  if (!q && !loc) return "Give a query, a location, or both — e.g. query 'designer', workplace 'remote'."
+  const d = await query(searchParams({ query: q, location: loc, workplace: mode, limit: args.limit }))
+  const jobs = Array.isArray(d.jobs) ? d.jobs : []
+  if (!jobs.length) {
+    return `No Workable ${mode} jobs${q ? ` for "${q}"` : ""}${loc ? ` in ${loc}` : ""}.`
+  }
+  return (
+    `Workable ${mode} jobs${q ? ` for "${q}"` : ""}${loc ? ` in ${loc}` : ""}: ` +
+    `${(d.totalSize ?? jobs.length).toLocaleString()} total, showing ${jobs.length}\n\n` +
+    jobs.map(line).join("\n\n")
+  )
+}
+
+/**
+ * Workable's search results are not ordered by date, so this sorts them. The
+ * search endpoint returns at most 20 rows per call, so this ranks the newest
+ * among the roles the query matched, not the newest on the whole site.
+ */
+export async function recentJobs(args: { query?: string; location?: string; limit?: number }): Promise<string> {
+  const q = (args.query ?? "").trim()
+  const loc = (args.location ?? "").trim()
+  if (!q && !loc) return "Give a query or a location so the sample is relevant — e.g. query 'product manager'."
+  const limit = Math.min(Math.max(args.limit ?? 10, 1), 20)
+  const d = await query(searchParams({ query: q, location: loc, limit: 20 }))
+  const jobs = Array.isArray(d.jobs) ? d.jobs : []
+  if (!jobs.length) return `No Workable jobs match${q ? ` "${q}"` : ""}${loc ? ` in ${loc}` : ""}.`
+  const dated = jobs.filter((job) => job.created && Number.isFinite(Date.parse(job.created)))
+  if (!dated.length) return "Workable returned no posting dates for this query."
+  const ranked = [...dated].sort((a, b) => Date.parse(b.created as string) - Date.parse(a.created as string))
+  const oldest = Date.parse(dated.reduce((a, b) => (Date.parse(a.created as string) <= Date.parse(b.created as string) ? a : b)).created as string)
+  return (
+    `Newest Workable jobs${q ? ` for "${q}"` : ""}${loc ? ` in ${loc}` : ""} — ` +
+    `${ranked.length} dated role(s) of ${jobs.length} sampled, ${(d.totalSize ?? jobs.length).toLocaleString()} total matched:\n\n` +
+    ranked.slice(0, limit).map(line).join("\n\n") +
+    `\nOldest role in this sample was posted ${Math.floor((Date.now() - oldest) / 86400000)} day(s) ago, ` +
+    `because Workable returns only 20 rows per search and not in date order.`
+  )
 }

@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { all, convert, errorMessage, marketOverview, price, symbols } from "./api.js"
+import { all, convert, errorMessage, marketOverview, metalRatios, portfolioValue, price, symbols } from "./api.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -82,6 +82,36 @@ export function createServer(): McpServer {
     },
     async (args) => {
       try { return text(await convert(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "portfolio_value",
+    {
+      title: "Portfolio value",
+      description:
+        "Value a list of metal and crypto holdings in USD at live prices, with each holding's share of the total. Example: XAU:2, XAG:100, BTC:0.5.",
+      inputSchema: z.object({
+        holdings: z.string().describe('Comma separated SYMBOL:AMOUNT pairs, e.g. "XAU:2, XAG:100, BTC:0.5". Accepts names like gold or silver too.')
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await portfolioValue(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "metal_ratios",
+    {
+      title: "Asset ratios",
+      description:
+        "Live ratios traders watch — gold/silver, gold/platinum, gold/palladium, gold/copper and bitcoin/gold — both sides quoted at once.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async () => {
+      try { return text(await metalRatios()) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 

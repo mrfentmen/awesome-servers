@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { check, checkBulk, checkDomain, mxRecords } from "./api.js"
+import { check, checkBulk, checkDomain, dnsLookup, domainSummary, mxRecords } from "./api.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -55,6 +55,35 @@ export function createServer(): McpServer {
     },
     async (args) => {
     try { return text(await mxRecords(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "dns_lookup",
+    {
+      title: "DNS lookup",
+      description: "Resolve live DNS records for a domain — A, AAAA, MX, NS, TXT, CNAME, SOA, CAA, PTR or SRV — via public DNS-over-HTTPS.",
+      inputSchema: z.object( {
+        domain: z.string().describe("Domain to resolve, for example example.com."),
+        type: z.string().describe("Record type: A, AAAA, MX, NS, TXT, CNAME, SOA, CAA, PTR or SRV. Defaults to A.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await dnsLookup(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "domain_summary",
+    {
+      title: "Domain summary",
+      description: "One report on a domain: disposable verdict plus live A, NS and MX records, so you can tell whether signups from it are trustworthy.",
+      inputSchema: z.object( {
+        domain: z.string().describe("Domain to summarise, for example gmail.com.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await domainSummary(args)) } catch (e) { return textError(error(e)) }
   }
   )
   return server

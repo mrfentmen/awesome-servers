@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { companies, companyJobs, jobDetail, marketSummary, searchJobs } from "./api.js"
+import { companies, companyJobs, jobDetail, marketSummary, recentJobs, remoteJobs, searchJobs } from "./api.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -86,6 +86,41 @@ export function createServer(): McpServer {
     },
     async (args) => {
       try { return text(await marketSummary(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
+  server.registerTool(
+    "remote_jobs",
+    {
+      title: "Remote jobs",
+      description: "List only remote, hybrid or on-site roles, using Workable's own workplace filter rather than sorting through mixed results.",
+      inputSchema: z.object({
+        query: z.string().describe("Keywords, e.g. 'customer support'.").optional(),
+        location: z.string().describe("Optional location filter, e.g. 'Berlin'.").optional(),
+        workplace: z.enum(["remote", "hybrid", "on_site"]).describe("Which workplace mode to keep. Defaults to remote.").optional(),
+        limit: z.number().describe("How many roles to show, 1-20.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await remoteJobs(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
+  server.registerTool(
+    "recent_jobs",
+    {
+      title: "Newest jobs",
+      description: "Sort Workable results by posting date, newest first, and report how fresh the sample actually is.",
+      inputSchema: z.object({
+        query: z.string().describe("Keywords, e.g. 'data analyst'.").optional(),
+        location: z.string().describe("Optional location filter, e.g. 'Austin'.").optional(),
+        limit: z.number().describe("How many roles to show, 1-20.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await recentJobs(args)) } catch (e) { return textError(error(e)) }
     }
   )
   return server

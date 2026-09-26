@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/youtrack-mcp",
   "version": "1.0.1",
-  "description": "YouTrack API: issue search, issue details, projects, comments. Needs permanent token.",
+  "description": "Issue tracking over the public GitLab API - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/youtrack-mcp",
   "repository": {
@@ -22,11 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
-    "youtrack",
-    "jetbrains",
     "issues",
-    "agile"
+    "gitlab",
+    "tracker",
+    "agile",
+    "devops",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

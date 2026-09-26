@@ -3,8 +3,12 @@ import { z } from "zod"
 import {
   formatHit,
   formatPlugin,
+  formatRating,
+  formatReview,
   getPlugin,
   JetBrainsError,
+  pluginRatings,
+  pluginReviews,
   pluginVersions,
   searchPlugins,
   topPlugins,
@@ -118,6 +122,54 @@ export function createServer(): McpServer {
               .map((v, i) => `${i + 1}. ${v.version}${v.date ? ` — ${v.date}` : ""}${v.link ? `\n   ${v.link}` : ""}`)
               .join("\n")
         )
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "plugin_reviews",
+    {
+      title: "Plugin reviews",
+      description:
+        "Read the most recent written reviews of a plugin, with each reviewer's star rating and date, so you can judge real user sentiment.",
+      inputSchema: z.object({
+        id: z.string().describe('Numeric plugin id, e.g. "1347". Use search_plugins to find it.'),
+        limit: z.number().int().min(1).max(20).describe("How many reviews to show, 1-20 (default 5).").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ id, limit }) => {
+      try {
+        const reviews = await pluginReviews(id, limit ?? 5)
+        if (!reviews.length) return text(`Plugin ${id} has no written reviews.`)
+        return text(
+          `Recent reviews of plugin ${id} (${reviews.length}):\n\n` +
+            reviews.map((review, i) => formatReview(review, i)).join("\n\n")
+        )
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "plugin_ratings",
+    {
+      title: "Plugin rating breakdown",
+      description:
+        "Show a plugin's review score distribution — how many raters gave each star value and the average — so an agent can tell a strong plugin from a thin one.",
+      inputSchema: z.object({
+        id: z.string().describe('Numeric plugin id, e.g. "1347". Use search_plugins to find it.'),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ id }) => {
+      try {
+        const rating = await pluginRatings(id)
+        if (!rating.total) return text(`Plugin ${id} has no ratings yet.`)
+        return text(`Rating breakdown for plugin ${id}:\n${formatRating(rating)}`)
       } catch (e) {
         return textError(errorMessage(e))
       }

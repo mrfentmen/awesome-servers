@@ -6,6 +6,8 @@ import {
   latestJobs,
   jobsByBoard,
   companyJobs,
+  salaryInsights,
+  boardCoverage,
   jobCategories,
 } from "./api.js"
 
@@ -126,6 +128,49 @@ export function createServer(): McpServer {
     async () => {
       try {
         return text(await jobCategories())
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "salary_insights",
+    {
+      title: "Salary insights",
+      description:
+        "Scan the job boards for a keyword and summarise the pay that postings actually disclosed: lowest, median and highest USD-per-year figure, plus the best paying matches.",
+      inputSchema: z.object({
+        query: z.string().describe('Job keywords to focus on, e.g. "backend engineer" or "data analyst". Omit to scan all recent postings.').optional(),
+        boards: z.string().describe('Comma separated board ids to use, e.g. "jobicy,remoteok". Defaults to all six.').optional(),
+        limit: z.number().describe("How many best paying matches to list, 1-50.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try {
+        return text(await salaryInsights(args))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "board_coverage",
+    {
+      title: "Board coverage",
+      description:
+        "Compare how many jobs each aggregated board returns for a query, and report which boards are unreachable, so an agent knows where a search is actually coming from.",
+      inputSchema: z.object({
+        query: z.string().describe('Optional keywords to compare coverage for, e.g. "devops".').optional(),
+        location: z.string().describe('Optional location to compare coverage for, e.g. "Berlin".').optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try {
+        return text(await boardCoverage(args))
       } catch (e) {
         return textError(errorMessage(e))
       }

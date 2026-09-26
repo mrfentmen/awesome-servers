@@ -1,15 +1,23 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import {
-  errorMessage,
-  search,
+  compare,
   details,
+  errorMessage,
+  financialSummary,
+  formatDetails,
+  formatSearch,
+  search,
+  searchByCategory,
+  searchByState,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
+
+const PAGE = z.number().int().min(0).max(99).default(0).describe("Page of results (0 is the first)")
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -21,17 +29,63 @@ export function createServer(): McpServer {
     "search",
     {
       title: "Search nonprofits",
-      description: "Organizations by name.",
+      description:
+        "Search US nonprofits by name. Returns EIN, location and NTEE code for each match.",
       inputSchema: z.object({
-        query: z.string().describe("Name search.")
+        query: z.string().describe("Organisation name, e.g. 'Red Cross'"),
+        page: PAGE,
       }),
       annotations: READ_ONLY,
     },
-    async ({ query }) => {
+    async ({ query, page }) => {
       try {
-        return text(await search(query));
+        return text(formatSearch(await search(query, page), `Nonprofits matching "${query}"`))
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "search_by_state",
+    {
+      title: "Nonprofits by state",
+      description: "List nonprofits registered in a US state.",
+      inputSchema: z.object({
+        state: z.string().describe("Two-letter state code, e.g. 'CA'"),
+        page: PAGE,
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ state, page }) => {
+      try {
+        return text(formatSearch(await searchByState(state, page), `Nonprofits in ${state.toUpperCase()}`))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "search_by_category",
+    {
+      title: "Nonprofits by NTEE category",
+      description:
+        "Find nonprofits by NTEE category, optionally within one state. Accepts the NTEE letter " +
+        "(A arts, B education, C environment, E health, P human services, S community) or a full code like 'B20'.",
+      inputSchema: z.object({
+        ntee_code: z.string().describe("NTEE letter or code, e.g. 'E', 'B20', or the number 1-26"),
+        state: z.string().describe("Optional two-letter state code").optional(),
+        page: PAGE,
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ ntee_code, state, page }) => {
+      try {
+        const label = `Nonprofits with NTEE ${ntee_code.toUpperCase()}${state ? ` in ${state.toUpperCase()}` : ""}`
+        return text(formatSearch(await searchByCategory(ntee_code, state, page), label))
+      } catch (e) {
+        return textError(errorMessage(e))
       }
     }
   )
@@ -39,18 +93,58 @@ export function createServer(): McpServer {
   server.registerTool(
     "details",
     {
-      title: "Org details",
-      description: "Profile and filings by EIN.",
+      title: "Organisation details",
+      description:
+        "Full profile for one EIN: address, ruling date, latest revenue and expenses, and a link to the newest Form 990.",
       inputSchema: z.object({
-        ein: z.string().describe("9-digit EIN.")
+        ein: z.string().describe("9-digit EIN from a search, e.g. '530196605'"),
       }),
       annotations: READ_ONLY,
     },
     async ({ ein }) => {
       try {
-        return text(await details(ein));
+        return text(formatDetails(await details(ein)))
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "financial_summary",
+    {
+      title: "Financial history",
+      description:
+        "Revenue, expenses and net result year by year for one EIN, with the change over the period.",
+      inputSchema: z.object({
+        ein: z.string().describe("9-digit EIN, e.g. '530196605'"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ ein }) => {
+      try {
+        return text(financialSummary(await details(ein)))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "compare",
+    {
+      title: "Compare nonprofits",
+      description: "Put up to 5 nonprofits side by side: location, category, revenue and expenses.",
+      inputSchema: z.object({
+        eins: z.string().describe("Comma-separated EINs, e.g. '530196605, 131624028'"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ eins }) => {
+      try {
+        return text(await compare(eins.split(",")))
+      } catch (e) {
+        return textError(errorMessage(e))
       }
     }
   )

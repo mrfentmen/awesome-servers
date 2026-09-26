@@ -11,7 +11,7 @@ type Raw = Record<string, any>
 
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
-    headers: { "User-Agent": "jetbrains-mcp/1.0", Accept: "application/json" },
+    headers: { "User-Agent": "mrfentmen-jetbrains-mcp/1.0", Accept: "application/json" },
     signal: AbortSignal.timeout(20000),
   })
   if (res.status === 404) throw new JetBrainsError("Not found on JetBrains Marketplace.")
@@ -100,6 +100,80 @@ export function formatHit(p: PluginHit, index?: number): string {
     p.rating !== undefined ? `${p.rating}★` : "",
   ].filter(Boolean).join(" · ")
   return `${prefix}[${p.id}] ${p.name}${meta ? ` (${meta})` : ""}${p.preview ? `\n   ${p.preview}` : ""}`
+}
+
+export interface PluginReview {
+  id: string
+  rating?: number
+  date?: string
+  comment: string
+}
+
+/** Recent written reviews for one plugin, newest first. */
+export async function pluginReviews(id: string, limit = 5): Promise<PluginReview[]> {
+  const clean = id.trim()
+  if (!/^\d+$/.test(clean)) throw new JetBrainsError(`Plugin id must be numeric, got "${id}". Search first.`)
+  const size = Math.min(Math.max(limit, 1), 20)
+  const rows = await getJson<Raw[]>(`/plugins/${clean}/comments?size=${size}`)
+  const list: Raw[] = Array.isArray(rows) ? rows : []
+  return list.slice(0, size).map((r) => ({
+    id: String(r.id ?? "?"),
+    rating: typeof r.rating === "number" ? r.rating : undefined,
+    date: r.cdate ? new Date(Number(r.cdate)).toISOString().slice(0, 10) : undefined,
+    comment: String(r.comment ?? "")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/p>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&amp;/g, "&")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;|&#x27;/g, "'")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/\n{2,}/g, "\n")
+      .trim()
+      .slice(0, 600),
+  }))
+}
+
+export interface PluginRating {
+  total: number
+  meanRating?: number
+  votes: Array<{ stars: number; count: number; share: number }>
+}
+
+/** Review score distribution: how many people gave each star rating. */
+export async function pluginRatings(id: string): Promise<PluginRating> {
+  const clean = id.trim()
+  if (!/^\d+$/.test(clean)) throw new JetBrainsError(`Plugin id must be numeric, got "${id}". Search first.`)
+  const data = await getJson<Raw>(`/plugins/${clean}/rating`)
+  const rawVotes = (data.votes ?? {}) as Raw
+  const total = Object.values(rawVotes).reduce<number>((sum, value) => sum + (Number(value) || 0), 0)
+  const votes = [5, 4, 3, 2, 1].map((stars) => {
+    const count = Number(rawVotes[stars] ?? rawVotes[String(stars)] ?? 0) || 0
+    return { stars, count, share: total ? Math.round((count / total) * 1000) / 10 : 0 }
+  })
+  return {
+    total,
+    meanRating: typeof data.meanRating === "number" ? Math.round(data.meanRating * 100) / 100 : undefined,
+    votes,
+  }
+}
+
+export function formatReview(review: PluginReview, index?: number): string {
+  const prefix = index !== undefined ? `${index + 1}. ` : ""
+  const stars = review.rating !== undefined ? `${review.rating}★` : "unrated"
+  const when = review.date ? ` | ${review.date}` : ""
+  return `${prefix}${stars}${when}\n   ${review.comment || "(no written comment)"}`
+}
+
+export function formatRating(rating: PluginRating): string {
+  const lines = rating.votes.map(
+    (row) => `  ${row.stars}★: ${row.count} (${row.share}%)`
+  )
+  return [
+    `Reviews: ${rating.total}${rating.meanRating !== undefined ? ` | average ${rating.meanRating}★` : ""}`,
+    ...lines,
+  ].join("\n")
 }
 
 export function formatPlugin(p: PluginDetails): string {

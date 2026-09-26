@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/ohdear-mcp",
-  "description": "Oh Dear API: monitors, checks, statuses.",
+  "description": "Uptime, TLS and DNS checks for any website - no API key.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

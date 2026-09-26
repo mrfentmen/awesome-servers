@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/doh-mcp",
-  "description": "DNS-over-HTTPS lookups via Cloudflare/Google.",
+  "description": "DNS lookups, email records and reverse DNS - no API key.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

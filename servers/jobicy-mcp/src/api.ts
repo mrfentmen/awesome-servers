@@ -141,3 +141,86 @@ export async function topSalaries(args: TopSalariesArgs): Promise<string> {
       `   ${entry.job.url ?? ''}`
     ).join('\n\n');
 }
+
+export interface CompaniesArgs {
+  count?: number;
+  geo?: string;
+  industry?: string;
+  tag?: string;
+}
+
+export async function companies(args: CompaniesArgs): Promise<string> {
+  const limit = clamp(args?.count, 10);
+  const list = await fetchJobs({ count: 50, geo: args?.geo, industry: args?.industry, tag: args?.tag });
+  if (!list.length) return 'No Jobicy jobs matched those filters.';
+  const groups = new Map<string, { jobs: number; latest: string; pays: number; top?: number }>();
+  for (const job of list) {
+    const name = String(job.companyName ?? '').trim();
+    if (!name) continue;
+    const group = groups.get(name) ?? { jobs: 0, latest: '', pays: 0 };
+    group.jobs += 1;
+    const posted = String(job.pubDate ?? '').slice(0, 10);
+    if (posted > group.latest) group.latest = posted;
+    const annual = annualMax(job);
+    if (annual != null) {
+      group.pays += 1;
+      group.top = Math.max(group.top ?? 0, annual);
+    }
+    groups.set(name, group);
+  }
+  if (!groups.size) return 'No Jobicy postings in the most recent feed named a company.';
+  const ranked = [...groups.entries()].sort((a, b) => b[1].jobs - a[1].jobs).slice(0, limit);
+  const scope = [args?.geo, args?.industry, args?.tag].filter(Boolean).join(', ');
+  return `Companies hiring most on Jobicy${scope ? ` (${scope})` : ''} — from the ${list.length} most recent postings, ${groups.size} companies:\n` +
+    ranked
+      .map(([name, group], i) => {
+        const pay = group.top ? `, top published pay ${money(group.top)}/year` : '';
+        const disclosed = group.pays ? `, ${group.pays} disclosed pay` : '';
+        return `${i + 1}. ${name} - ${group.jobs} job(s)${disclosed}${pay}, newest ${group.latest || '?'}`;
+      })
+      .join('\n');
+}
+
+export interface LevelsArgs {
+  geo?: string;
+}
+
+export async function jobLevels(args: LevelsArgs): Promise<string> {
+  const list = await fetchJobs({ count: 50, geo: args?.geo });
+  if (!list.length) return 'No Jobicy jobs matched those filters.';
+  const tally = (pick: (job: RawJob) => string[]) => {
+    const counts = new Map<string, number>();
+    for (const job of list) {
+      for (const value of pick(job)) {
+        const typed = String(value ?? '').trim().toLowerCase();
+        if (typed) counts.set(typed, (counts.get(typed) ?? 0) + 1);
+      }
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  };
+  const levels = tally((job) => [String(job.jobLevel ?? '')]);
+  const types = tally((job) => job.jobType ?? []);
+  const block = (title: string, rows: Array<[string, number]>) =>
+    rows.length ? `${title}:\n` + rows.map(([name, n], i) => `  ${i + 1}. ${name} - ${n} job(s)`).join('\n') : '';
+  // Salary per level is only meaningful for the jobs that published one.
+  const payByLevel = new Map<string, number[]>();
+  for (const job of list) {
+    const annual = annualMax(job);
+    if (annual == null) continue;
+    const level = String(job.jobLevel ?? 'unspecified').trim().toLowerCase();
+    payByLevel.set(level, [...(payByLevel.get(level) ?? []), annual]);
+  }
+  const payLines = [...payByLevel.entries()]
+    .sort((a, b) => b[1].length - a[1].length)
+    .map(([level, values]) => {
+      const top = Math.max(...values);
+      return `  ${level}: ${values.length} job(s) with pay, highest ${money(top)}/year`;
+    });
+  const scope = args?.geo ? ` for ${args.geo}` : '';
+  const blocks = [
+    block('Experience levels', levels),
+    block('Employment types', types),
+    payLines.length ? `Published pay by level:\n${payLines.join('\n')}` : '',
+  ].filter(Boolean);
+  return `Jobicy remote hiring breakdown${scope} (from the ${list.length} most recent postings):\n` + blocks.join('\n');
+}

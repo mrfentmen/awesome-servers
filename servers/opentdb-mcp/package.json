@@ -1,7 +1,7 @@
 {
   "name": "opentdb-mcp",
   "version": "1.0.0",
-  "description": "Open Trivia questions. Keyless.",
+  "description": "Trivia questions, quizzes and categories - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/opentdb-mcp",
   "repository": {
@@ -22,11 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
     "trivia",
     "quiz",
     "questions",
-    "keyless"
+    "education",
+    "games",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

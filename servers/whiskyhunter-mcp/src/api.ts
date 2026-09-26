@@ -161,3 +161,108 @@ export async function marketTrend(args: { auction?: string; points?: number }): 
     months.map(([dt, bids]) => `${dt} | ${money(bids.reduce((s, x) => s + x, 0) / bids.length)} (${bids.length} auction(s))`).join("\n")
   )
 }
+
+/** Mean winning bid and volume for each calendar month, averaged over all years. */
+export async function seasonality(args: { auction?: string }): Promise<string> {
+  const slug = (args.auction ?? "").trim()
+  const all = await allRecords()
+  const list = all.filter((a) => bySlug(a, slug || undefined))
+  if (!list.length) return `No auction data for "${slug}".`
+
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  const bids = new Map<number, number[]>()
+  const volumes = new Map<number, number[]>()
+  const lots = new Map<number, number[]>()
+  let dated = 0
+
+  for (const a of list) {
+    const month = Number(String(a.dt ?? "").slice(5, 7))
+    if (!Number.isInteger(month) || month < 1 || month > 12) continue
+    dated += 1
+    const bid = Number(a.winning_bid_mean)
+    if (Number.isFinite(bid)) bids.set(month, [...(bids.get(month) ?? []), bid])
+    const volume = Number(a.auction_trading_volume)
+    if (Number.isFinite(volume)) volumes.set(month, [...(volumes.get(month) ?? []), volume])
+    const lot = Number(a.auction_lots_count)
+    if (Number.isFinite(lot)) lots.set(month, [...(lots.get(month) ?? []), lot])
+  }
+
+  if (!dated) return "No dated records for that selection."
+
+  const mean = (xs: number[]) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : NaN)
+  const ranked = MONTHS.map((label, i) => ({
+    label,
+    month: i + 1,
+    months: bids.get(i + 1)?.length ?? 0,
+    bid: mean(bids.get(i + 1) ?? []),
+    volume: mean(volumes.get(i + 1) ?? []),
+    lots: mean(lots.get(i + 1) ?? []),
+  })).filter((row) => row.months > 0)
+
+  const byMonth = MONTHS.map((label, i) => {
+    const row = ranked.find((r) => r.month === i + 1)
+    if (!row) return ""
+    return `  ${label}: mean bid ${money(row.bid)} | avg volume ${money(row.volume)} | avg ${num(row.lots)} lot(s) over ${row.months} month(s)`
+  }).filter(Boolean)
+
+  const best = [...ranked].sort((a, b) => b.bid - a.bid)
+  return [
+    `Whisky auction seasonality${slug ? ` — ${slug}` : " — all auctions"} (${dated} dated record(s)):`,
+    ...byMonth,
+    "",
+    `Strongest month by mean winning bid: ${best[0].label} at ${money(best[0].bid)}`,
+    best.length > 1 ? `Weakest month: ${best[best.length - 1].label} at ${money(best[best.length - 1].bid)}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n")
+}
+
+/** Side by side comparison of two or more auctions over the same period. */
+export async function auctionCompare(args: { auctions: string; limit?: number }): Promise<string> {
+  const wanted = String(args.auctions ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+  if (wanted.length < 2) return "Provide at least two comma separated auction slugs, e.g. 'whiskyauctioneer,scotchwhiskyauctions'."
+  const limit = Math.min(Math.max(Number(args.limit) || 12, 2), 30)
+  const all = await allRecords()
+
+  const blocks: string[] = []
+  const missing: string[] = []
+  for (const slug of wanted) {
+    const list = all.filter((a) => bySlug(a, slug))
+    if (!list.length) {
+      missing.push(slug)
+      continue
+    }
+    const bids = list.map((a) => Number(a.winning_bid_mean)).filter(Number.isFinite)
+    const volumes = list.map((a) => Number(a.auction_trading_volume)).filter(Number.isFinite)
+    const lots = list.map((a) => Number(a.auction_lots_count)).filter(Number.isFinite)
+    const dates = list.map((a) => String(a.dt ?? "")).filter(Boolean).sort()
+    const recent = [...list].sort((a, b) => String(b.dt ?? "").localeCompare(String(a.dt ?? ""))).slice(0, limit)
+    const mean = (xs: number[]) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : NaN)
+    blocks.push(
+      `${list[0]?.auction_name ?? slug} (${slug})` +
+        `\n   Records: ${list.length} | Range: ${dates[0] ?? "?"} to ${dates[dates.length - 1] ?? "?"}` +
+        `\n   Mean winning bid: ${money(mean(bids))} | Highest: ${money(Math.max(...bids))}` +
+        `\n   Total volume: ${money(volumes.reduce((s, x) => s + x, 0))} | Avg volume/month: ${money(mean(volumes))}` +
+        `\n   Lots sold: ${num(lots.reduce((s, x) => s + x, 0))}` +
+        `\n   Latest months:\n` +
+        recent.map((r) => `      ${r.dt ?? "?"} | ${money(r.winning_bid_mean)} mean bid | ${money(r.auction_trading_volume)} volume`).join("\n")
+    )
+  }
+
+  if (!blocks.length) {
+    const slugs = [...new Set(all.map((a) => a.auction_slug))].filter(Boolean).slice(0, 12)
+    return `No auction data for any of those slugs. Known slugs include: ${slugs.join(", ")}`
+  }
+
+  return [
+    `Comparing ${blocks.length} whisky auction(s):`,
+    "",
+    blocks.join("\n\n"),
+    missing.length ? `\nNo data for: ${missing.join(", ")}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n")
+}
