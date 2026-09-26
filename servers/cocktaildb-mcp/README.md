@@ -4,10 +4,13 @@ Query TheCocktailDB (keyless): cocktail search, full recipes with ingredients/me
 
 ## Tools
 
-- `search_cocktails` — Search by name.
-- `get_cocktail` — Full recipe by drink ID.
-- `random_cocktail` — A random recipe.
-- `list_ingredients` — All known ingredients.
+- `search_cocktails` — Find cocktails by name. Returns matching drinks with their category, glass and id — pass an id to get_cocktail for the full recipe.
+- `get_cocktail` — Full recipe for one drink: ingredients with measures, instructions, glass, category and image URL. Needs a drink id from search_cocktails or filter_cocktails.
+- `random_cocktail` — One or more random cocktail recipes, useful for suggestions and inspiration.
+- `list_ingredients` — Known ingredients in the cocktail database, optionally filtered by a substring. Use the exact names with filter_cocktails and ingredient_info.
+- `filter_cocktails` — Browse cocktails by one attribute: an ingredient they contain, a category, a glass type, or an alcohol option. Returns drink names with ids.
+- `ingredient_info` — Profile of one ingredient: type, whether it contains alcohol, ABV, and a description of what it is.
+- `list_filters` — The valid values for filter_cocktails: drink categories, glass types and alcohol options.
 
 ## Source
 

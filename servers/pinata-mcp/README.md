@@ -17,9 +17,9 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `list_pins`: CIDs, names, sizes, dates.
-- `pin_json`: Pin a JSON document (returns CID + gateway link).
-- `unpin`: Remove a pin (cannot be undone).
+- `list_pins`: Pinned IPFS files: CIDs, names, sizes, dates.
+- `pin_json`: Pin a JSON document to IPFS. Returns the CID and gateway link.
+- `unpin`: Remove a pin by CID. Cannot be undone.
 
 ## Limits and privacy
 

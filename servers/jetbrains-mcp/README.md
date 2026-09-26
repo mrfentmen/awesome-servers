@@ -16,8 +16,12 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `search_plugins`: Names, descriptions, downloads, ratings.
-- `get_plugin`: Vendor, rating, page link.
+- `search_plugins`: Search JetBrains Marketplace plugins: names, descriptions, downloads, ratings.
+- `get_plugin`: One JetBrains plugin: vendor, downloads, rating, description, page link.
+- `top_plugins`: The Marketplace charts: the most-downloaded or highest-rated plugins overall.
+- `plugin_versions`: Recent releases of one plugin, with version strings and release dates.
+- `plugin_reviews`: Read the most recent written reviews of a plugin, with each reviewer's star rating and date, so you can judge real user sentiment.
+- `plugin_ratings`: Show a plugin's review score distribution — how many raters gave each star value and the average — so an agent can tell a strong plugin from a thin one.
 
 ## Limits and privacy
 

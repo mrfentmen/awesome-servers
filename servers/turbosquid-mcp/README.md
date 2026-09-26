@@ -4,7 +4,7 @@ Query the TurboSquid 3D marketplace API v1 (JSON API): list file formats, produc
 
 ## Tools
 
-- `list_file_formats` — 3D file formats with extensions and renderers. Public, no key needed.
+- `list_file_formats` — 3D file formats with extensions and renderers (requires TURBOSQUID_API_TOKEN).
 - `get_product` — 3D model product metadata by numeric product ID.
 - `list_drafts` — New product drafts of the authenticated member (requires TURBOSQUID_API_TOKEN).
 - `get_draft` — Draft metadata by draft ID (requires TURBOSQUID_API_TOKEN).

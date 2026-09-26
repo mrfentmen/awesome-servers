@@ -18,9 +18,9 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `list_domains`: Sending domains, states, dates.
-- `domain_stats`: Sent, delivered, opened, failed.
-- `list_bounces`: Bounced addresses with errors.
+- `list_domains`: Mailgun sending domains with state and creation date. Set MAILGUN_REGION=eu for EU accounts.
+- `domain_stats`: Totals for a domain: sent, delivered, opened, failed.
+- `list_bounces`: Bounced addresses for a domain with codes and errors.
 
 ## Limits and privacy
 

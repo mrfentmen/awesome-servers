@@ -8,13 +8,13 @@ Connect your Mixpanel analytics to any MCP client. Ask questions like "What are 
 
 ## Tools
 
-- query_events. Raw event data with time ranges and filters.
-- get_top_events. Most frequently tracked events.
-- get_funnel. Multi-step funnel conversion rates.
-- get_retention. Cohort retention over days, weeks, or months.
-- query_profiles. Search and filter user profiles.
-- run_jql. Execute raw JavaScript Query Language for custom analysis.
-- list_events. All tracked event names in your project.
+- `query_events` — Query raw event data from Mixpanel. Segment events by time range and properties.
+- `get_top_events` — Get the most frequently tracked events in a time window.
+- `get_funnel` — Get funnel conversion data. Requires a funnel ID from your Mixpanel project.
+- `get_retention` — Get cohort retention data. See how many users come back over time.
+- `query_profiles` — Search and query user profiles in Mixpanel.
+- `run_jql` — Execute a raw JavaScript Query Language (JQL) script against Mixpanel. For advanced custom queries.
+- `list_events` — List all tracked event names in your Mixpanel project.
 
 ## Authentication
 

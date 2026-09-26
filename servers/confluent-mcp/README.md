@@ -18,8 +18,8 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `list_environments`: Environments with ids.
-- `list_clusters`: Kafka clusters with cloud, region, endpoints.
+- `list_environments`: Confluent Cloud environments with ids and names.
+- `list_clusters`: Kafka clusters in one environment: cloud, region, availability, endpoint.
 
 ## Limits and privacy
 

@@ -19,8 +19,8 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `list_sports`: Leagues with API keys.
-- `game_odds`: Upcoming games with bookmaker lines.
+- `list_sports`: Sports and leagues with API keys (soccer_epl, americanfootball_nfl...).
+- `game_odds`: Upcoming games with bookmaker moneyline odds.
 
 ## Limits and privacy
 

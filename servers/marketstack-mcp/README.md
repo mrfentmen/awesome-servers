@@ -15,5 +15,3 @@ export MARKETSTACK_API_KEY=...
 - `search_tickers` — Search stock tickers by name or symbol: exchange, currency, MIC.
 - `list_exchanges` — Stock exchanges covered by Marketstack with MIC codes and countries.
 - `get_dividends` — Dividend declarations for symbols: amount, pay date, record date.
-
-Part of [awesome-mcps](https://github.com/mrfentmen/awesome-mcps).

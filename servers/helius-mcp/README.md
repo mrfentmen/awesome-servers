@@ -15,5 +15,3 @@ export HELIUS_API_KEY=YOUR_KEY
 - `get_nfts` — NFTs held by a Solana wallet: collections, names, images.
 - `get_token_metadata` — Fungible token metadata for Solana mints: decimals, supply, name, symbol.
 - `parse_transactions` — Human-readable Helius parse of Solana transactions: type, source, transfers, swaps.
-
-Part of [awesome-mcps](https://github.com/mrfentmen/awesome-mcps).

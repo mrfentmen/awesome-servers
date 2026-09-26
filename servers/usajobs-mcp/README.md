@@ -18,7 +18,7 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `search_jobs`: Keyword + location with pay bands and closing dates.
+- `search_jobs`: US federal jobs by keyword and location, with pay bands and closing dates.
 
 ## Limits and privacy
 

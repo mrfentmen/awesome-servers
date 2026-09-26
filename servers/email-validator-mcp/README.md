@@ -7,8 +7,12 @@ This file is self contained. It reads public data only and never writes to the m
 ## Tools
 
 
-* `validate_email`  Validate a single email address.
-* `validate_batch`  Validate multiple addresses.
+* `validate_email`  Check one email address: format, live MX records, disposable-domain status, role account (info@, support@)
+* `validate_batch`  Validate up to 25 addresses at once and get a count of well-formed, malformed and risky ones.
+* `check_domain`  Domain-level mail check: MX records, A records, and whether the domain is a disposable or free provider.
+* `normalize_email`  Canonical form of an address: lowercase the domain, drop the +tag, and remove Gmail dots,
+* `extract_emails`  Pull every unique email address out of a block of text, flagging any disposable domains.
+* `disposable_domains`  List the known disposable email domains this server checks against.
 
 ## Usage
 

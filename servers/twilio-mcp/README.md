@@ -8,15 +8,15 @@ Connect your Twilio account to any MCP client. Send text messages, share images,
 
 ## Tools
 
-- send_sms. Send an SMS text message.
-- send_mms. Send an MMS message with an image or media file.
-- send_whatsapp. Send a WhatsApp message.
-- get_message_status. Check delivery status of a sent message.
-- list_messages. View recent message history with filters.
-- make_call. Initiate a voice call with TwiML control.
-- list_calls. View recent call history.
-- list_numbers. List your Twilio phone numbers.
-- search_numbers. Search available phone numbers by area code.
+- `send_sms` — Send an SMS text message to a phone number.
+- `send_mms` — Send an MMS message with an image or media attachment.
+- `send_whatsapp` — Send a WhatsApp message using Twilio.
+- `get_message_status` — Check the delivery status of a sent message.
+- `list_messages` — List recent messages with optional filters.
+- `make_call` — Initiate a voice call. Requires a TwiML URL for call handling.
+- `list_calls` — Recent voice calls, with from, to, duration and status.
+- `list_numbers` — List your Twilio phone numbers.
+- `search_numbers` — Search available phone numbers for purchase by area code.
 
 ## Authentication
 

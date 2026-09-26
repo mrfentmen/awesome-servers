@@ -16,5 +16,3 @@ Needs a Bitwarden API key (client id + secret) from Account Settings, plus org a
 - `list_collections` — Organization collections with member and group assignments.
 - `list_groups` — Organization groups with member ids and collection access.
 - `get_events` — Organization event log: logins, item actions, admin changes. Optional date range.
-
-Part of [awesome-mcps](https://github.com/mrfentmen/awesome-mcps).

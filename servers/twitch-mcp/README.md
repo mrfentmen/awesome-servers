@@ -6,6 +6,7 @@ Query the Twitch Helix API (free app token; set TWITCH_CLIENT_ID + TWITCH_CLIENT
 
 - `top_games` — Games with the biggest live viewer count right now.
 - `top_streams` — Live streams, optionally for a game.
+- `get_user` — Twitch profile for one login name, e.g. shroud.
 - `search_channels` — Channels matching a query, with live status.
 
 ## Source

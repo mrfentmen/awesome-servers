@@ -15,5 +15,3 @@ Needs RYBBIT_API_KEY (rb_...). Optional RYBBIT_BASE_URL for self-hosted (default
 - `get_overview` — Rybbit sessions, pageviews, users, bounce rate for a site and period.
 - `list_users` — Rybbit users for a site with pagination.
 - `get_journeys` — Common Rybbit navigation paths (journeys) through a site.
-
-Part of [awesome-mcps](https://github.com/mrfentmen/awesome-mcps).

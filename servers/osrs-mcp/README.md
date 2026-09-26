@@ -5,10 +5,12 @@ the official Jagex hiscores and the runescape.wiki prices API. No key.
 
 ## Tools
 
-- `get_player_stats`, levels, XP, clue scrolls, boss kill counts
-(modes: normal / ironman / ultimate / hardcore / deadman)
-- `get_item_price`, current GE buy/sell for any item
-- `get_hot_items`, what's trading the most right now (volume, last hour)
+- `get_player_stats`, Get an OSRS player's hiscores: levels, XP, clue scrolls and boss kill counts.
+- `get_item_price`, Current Grand Exchange price of an item — what you pay to buy now and what you get selling now.
+- `search_items`, Find Grand Exchange items by partial name and get their item IDs and high-alch values.
+- `get_hot_items`, What's trading the most on the Grand Exchange right now — ranked by trade volume in the last hour, with buy/sell averages.
+- `get_price_history`, Price history for one item: average buy/sell price and trade volume per step.
+- `get_flip_margins`, Grand Exchange flipping opportunities: buy at the instant-sell price, sell at the instant-buy price,
 
 ## Run
 

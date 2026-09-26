@@ -6,9 +6,12 @@ This file is self contained. It reads public data only and never writes to the m
 
 ## Tools
 
-* `ticker`  Bitcoin price across currencies.
-* `latestBlock`  Latest Bitcoin block.
-* `address`  Bitcoin address balance and recent txs.
+* `ticker`  Bitcoin price in USD, EUR, GBP, JPY and BTC, with buy/sell spreads.
+* `latest_block`  The latest Bitcoin block: height, hash, mining time and transaction count.
+* `network_stats`  Bitcoin network health: hash rate, difficulty, block pace, 24h transaction count, miner revenue and total coins mined.
+* `address`  Bitcoin address summary: transaction count, total received/sent, balance and recent transactions.
+* `address_balance`  Check the balance of up to 20 Bitcoin addresses at once, comma or space separated.
+* `transaction`  Look up a Bitcoin transaction by hash: size, fee, inputs, outputs and the largest payments.
 
 ## Usage
 

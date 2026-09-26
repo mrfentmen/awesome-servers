@@ -17,8 +17,8 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `list_posts`: Posts with statuses and links (needs publication id).
-- `find_subscriber`: Subscriber by email.
+- `list_posts`: beehiiv publication posts with statuses and links.
+- `find_subscriber`: Find a beehiiv subscriber by email: status, tier, join date.
 
 ## Limits and privacy
 

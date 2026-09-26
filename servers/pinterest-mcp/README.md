@@ -17,10 +17,10 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `my_account`: Username, profile image, website.
-- `list_boards`: Names, descriptions, pin counts.
-- `get_board`: One board with its pins.
-- `get_pin`: Title, description, link, image.
+- `my_account`: Your Pinterest account: username, profile image, website.
+- `list_boards`: Your Pinterest boards: names, descriptions, pin counts.
+- `get_board`: One Pinterest board with its pins.
+- `get_pin`: One Pinterest pin: title, description, link, image.
 
 ## Limits and privacy
 

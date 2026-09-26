@@ -14,5 +14,3 @@ export FLIPSIDE_API_KEY=YOUR_KEY
 - `get_query_status` — Poll a Flipside query run: pending, running, finished or failed with row count.
 - `get_query_results` — Fetch result rows for a finished Flipside query run, paged.
 - `cancel_query` — Cancel a pending or running Flipside query.
-
-Part of [awesome-mcps](https://github.com/mrfentmen/awesome-mcps).

@@ -17,9 +17,9 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `find_shop`: Shops by name with ratings and listing counts.
-- `shop_listings`: Active listings with prices and links.
-- `get_listing`: One listing with image.
+- `find_shop`: Find Etsy shops by name: rating, listings count, URL.
+- `shop_listings`: Active listings of an Etsy shop: titles, prices, quantities, links.
+- `get_listing`: One Etsy listing: title, price, quantity, link, image.
 
 ## Limits and privacy
 

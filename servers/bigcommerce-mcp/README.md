@@ -18,9 +18,9 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `list_products`: Catalog with prices, SKUs, availability.
-- `get_product`: One product by id.
-- `list_orders`: Recent orders with statuses and totals.
+- `list_products`: BigCommerce catalog products with prices, SKUs, availability.
+- `get_product`: One BigCommerce product by id.
+- `list_orders`: Recent BigCommerce orders: status, totals, customers.
 
 ## Limits and privacy
 

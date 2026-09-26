@@ -7,7 +7,13 @@ This file is self contained. It reads public data only and never writes to the m
 ## Tools
 
 
-* `postings`  List job postings.
+* `postings`  List every open posting on a company Lever job board, with team, location and workplace type.
+* `posting`  Get one Lever posting by id, including the full plain-text description and apply link.
+* `search_postings`  Search a company Lever board by title, team, department, location or commitment.
+* `recent_postings`  A company's Lever postings sorted newest first, with the date each went up.
+* `departments`  A company's Lever postings grouped by department, ranked by how many are open.
+* `teams`  List the teams hiring on a company Lever board, ranked by number of postings.
+* `locations`  List where a company is hiring on Lever, with posting counts per location.
 
 ## Usage
 

@@ -10,7 +10,7 @@ Rolex resale listings aggregated from Fashionphile and Rebag public catalogs (pr
 - `price_overview` — Ask-price stats overall + by condition.
 - `compare_prices` — Group same-model listings across sources with min/max/spread.
 - `find_deals` — Available listings priced below the brand median.
-- `brand_overview` — Catalog sample counts by source, type and condition.
+- `brand_overview` — Catalog sample counts by source, type and condition, e.g. how many Bags, Watches and Jewelry are listed.
 
 ## Source
 

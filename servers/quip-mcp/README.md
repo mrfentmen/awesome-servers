@@ -14,5 +14,3 @@ export QUIP_API_TOKEN=...
 - `get_thread` — Quip thread with document HTML content.
 - `list_folders` — Quip folders including shared folders.
 - `get_user` — Authenticated Quip user profile.
-
-Part of [awesome-mcps](https://github.com/mrfentmen/awesome-mcps).

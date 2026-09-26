@@ -17,8 +17,8 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `list_products`: Products with prices and links.
-- `list_orders`: Orders with totals and customer emails.
+- `list_products`: Squarespace store products with prices and links.
+- `list_orders`: Recent Squarespace orders with totals and customer emails.
 
 ## Limits and privacy
 

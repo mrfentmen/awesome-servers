@@ -16,7 +16,12 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `list_jobs`: Open roles with departments and locations.
+- `list_jobs`: Open roles on an Ashby-powered job board: titles, departments, locations.
+- `search_jobs`: Search every open role on an Ashby job board by title, team or location.
+- `get_job`: Get one Ashby role by id, including the full plain-text description.
+- `list_departments`: List the teams hiring on an Ashby board, ranked by number of open roles.
+- `list_remote_jobs`: List only the remote roles on an Ashby job board.
+- `compensation`: List Ashby roles that publish a pay range, with the salary summary for each role.
 
 ## Limits and privacy
 

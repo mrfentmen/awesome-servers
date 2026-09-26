@@ -11,6 +11,8 @@ A merged MCP server that consolidates duplicate single-purpose servers in this m
 - `top_protocols` — Get the top DeFi protocols by TVL.
 - `chain_tvl` — Total value locked for every chain in one call.
 - `protocol_info` — Get details for a specific protocol.
+- `topYields` — Highest-APY DeFi pools with project, chain, APY and TVL.
+- `hacks` — Largest recent DeFi hacks with date, target, chain, amount and technique.
 
 ## Run
 

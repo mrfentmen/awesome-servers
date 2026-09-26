@@ -16,5 +16,3 @@ Needs OpenPanel client id + secret (OPENPANEL_CLIENT_SECRET) with read access. S
 - `get_live` — Current active OpenPanel visitor count for a project.
 - `get_pages` — Top OpenPanel pages by sessions for a project.
 - `get_referrer` — OpenPanel traffic sources for a project.
-
-Part of [awesome-mcps](https://github.com/mrfentmen/awesome-mcps).

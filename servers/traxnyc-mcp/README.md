@@ -9,7 +9,7 @@ Query the TraxNYC catalog (traxnyc.com, NYC): search jewelry and pre-owned watch
 - `get_product` — Full details: variants with parsed options, images, description, tags.
 - `price_overview` — Ask-price distribution (min/p25/median/p75/max).
 - `find_deals` — Available products priced below the median.
-- `list_categories` — Product-type counts in the catalog sample.
+- `list_categories` — Product-type counts in the catalog sample, e.g. how many chains, pendants and rings are listed.
 
 ## Source
 

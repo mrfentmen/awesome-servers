@@ -8,6 +8,11 @@ A merged MCP server that consolidates duplicate single-purpose servers in this m
 
 - `quote` — Get a stock quote and recent price data.
 - `search` — Search stock symbols by company name, e.g. apple.
+- `search_symbol` — Search for a symbol by company name.
+- `gainers` — Equities with the greatest gains today with price and percent change.
+- `losers` — Equities with the greatest losses today with price and percent change.
+- `actives` — Most actively traded equities with price and percent change.
+- `trending` — Trending US ticker symbols. Use quote for prices.
 
 ## Run
 

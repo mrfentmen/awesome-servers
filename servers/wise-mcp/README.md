@@ -17,9 +17,9 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `list_profiles`: Personal/business profiles with ids.
-- `get_balances`: Balances per currency.
-- `exchange_rate`: Mid-market rate between two currencies.
+- `list_profiles`: Your Wise profiles (personal, business) with ids.
+- `get_balances`: Balances per currency for one Wise profile.
+- `exchange_rate`: Current Wise mid-market rate between two currencies.
 
 ## Limits and privacy
 

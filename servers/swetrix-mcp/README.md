@@ -12,5 +12,3 @@ export SWETRIX_API_KEY=...
 
 - `list_projects` — All Swetrix projects with ids and domains.
 - `get_project` — One Swetrix project with settings and stats summary.
-
-Part of [awesome-mcps](https://github.com/mrfentmen/awesome-mcps).

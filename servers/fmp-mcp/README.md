@@ -17,9 +17,9 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `stock_quote`: Price, range, market cap.
-- `company_profile`: Industry, CEO, description.
-- `income_statement`: Revenue and net income in billions.
+- `stock_quote`: Quote with day range and market cap.
+- `company_profile`: Company: industry, CEO, website, description.
+- `income_statement`: Recent annual revenue and net income in billions.
 
 ## Limits and privacy
 

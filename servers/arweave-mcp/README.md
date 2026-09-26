@@ -16,10 +16,10 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `network_info`: Height, peers, queue (set ARWEAVE_URL for other gateways).
-- `tx_status`: Confirmed or pending, block height.
-- `wallet_balance`: AR balance.
-- `storage_price`: Cost in AR for N bytes.
+- `network_info`: Arweave network: height, peers, queue. Set ARWEAVE_URL for other gateways.
+- `tx_status`: Check if an Arweave transaction is confirmed and in which block.
+- `wallet_balance`: AR balance of a wallet address.
+- `storage_price`: What storing N bytes costs in AR right now.
 
 ## Limits and privacy
 

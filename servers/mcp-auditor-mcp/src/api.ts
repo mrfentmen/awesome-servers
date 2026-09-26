@@ -708,6 +708,61 @@ function literalsAfter(source: string, maskedSource: string, pattern: RegExp): s
 }
 
 /**
+ * Offset just past the closing quote of one literal, skipping escaped quotes. -1 when
+ * the literal never closes on its own line, which means the read is out of bounds and
+ * the caller must not slice anything.
+ */
+function closingQuote(source: string, from: number, quote: string): number {
+  for (let i = from; i < source.length; i += 1) {
+    const c = source[i]
+    if (c === "\\") {
+      i += 1
+      continue
+    }
+    if (c === quote) return i
+    if (c === "\n" && quote !== "`") return -1
+  }
+  return -1
+}
+
+/**
+ * The text of a literal that may be wrapped over several lines with `+`. To a client a
+ * wrapped description is one string, so it has to be one string here too: reading only
+ * the first fragment made this linter report finished descriptions as unfinished (a
+ * description ending "... for a domain, " + "and whether any authority is allowed." is
+ * a complete sentence).
+ *
+ * `runOn` reports a join whose halves both miss the space that belongs between them,
+ * which ships "current prices" and "and discounts" as "current pricesand discounts".
+ */
+function joinedLiteral(
+  source: string,
+  from: number,
+  quote: string,
+): { text: string; runOn: boolean; end: number } {
+  let text = ""
+  let runOn = false
+  let cursor = from
+  let lastEnd = from
+  for (let hop = 0; hop < 40; hop += 1) {
+    const end = closingQuote(source, cursor, quote)
+    if (end === -1) break
+    lastEnd = end
+    const piece = source.slice(cursor, end)
+    if (text && piece && !/\s$/.test(text) && !/^\s/.test(piece)) runOn = true
+    text += piece
+    let next = end + 1
+    while (next < source.length && /\s/.test(source[next])) next += 1
+    if (source[next] !== "+") return { text, runOn, end: lastEnd }
+    next += 1
+    while (next < source.length && /\s/.test(source[next])) next += 1
+    if (source[next] !== quote) return { text, runOn, end: lastEnd }
+    cursor = next + 1
+  }
+  return { text, runOn, end: lastEnd }
+}
+
+/**
  * The same `describe()` literals as literalsAfter, each paired with the parameter
  * name in front of it, so a finding can be located instead of only counted. The name
  * is read from the masked copy (the literal is blank there, but the `name:` key that
@@ -723,13 +778,13 @@ function describedParams(
   while ((match = pattern.exec(maskedSource)) !== null) {
     const quote = match[match.length - 1]
     const start = match.index + match[0].length
-    const end = source.indexOf(quote, start)
-    if (end <= start) continue
+    const read = joinedLiteral(source, start, quote)
+    if (read.end <= start) continue
     // Bounded window: `name: z.string().` sits immediately before the call, and
     // scanning the whole prefix for every match would be quadratic.
     const window = maskedSource.slice(Math.max(0, match.index - 200), match.index)
     const name = /([A-Za-z_][A-Za-z0-9_]*)\s*:\s*[^,;{}]*$/.exec(window)?.[1] ?? ""
-    out.push({ name, text: source.slice(start, end) })
+    out.push({ name, text: read.text })
   }
   return out
 }
@@ -742,12 +797,8 @@ function describedParams(
  * costs calls. Each registration is judged on the text between it and the next one,
  * which is where its `description:` property lives.
  */
-function thinToolDescriptions(
-  source: string,
-  maskedSource: string,
-  min: number,
-): { name: string; text: string }[] {
-  const out: { name: string; text: string }[] = []
+function toolDescriptions(source: string, maskedSource: string): { name: string; text: string; runOn: boolean }[] {
+  const out: { name: string; text: string; runOn: boolean }[] = []
   const pattern = /registerTool\(\s*(["'`])/g
   const starts: { name: string; at: number }[] = []
   let match: RegExpExecArray | null
@@ -765,12 +816,15 @@ function thinToolDescriptions(
     if (!property) return
     const from = entry.at + property.index + property[0].length
     const quote = property[1]
-    const end = source.indexOf(quote, from)
-    if (end <= from) return
-    const text = source.slice(from, end)
-    if (text.trim().length < min) out.push({ name: entry.name, text })
+    const read = joinedLiteral(source, from, quote)
+    if (!read.text) return
+    out.push({ name: entry.name, text: read.text, runOn: read.runOn })
   })
   return out
+}
+
+function thinToolDescriptions(source: string, maskedSource: string, min: number): { name: string; text: string }[] {
+  return toolDescriptions(source, maskedSource).filter((t) => t.text.trim().length < min)
 }
 
 export async function lintSource(args: { source: string; label?: string }): Promise<string> {
@@ -803,6 +857,29 @@ export async function lintSource(args: { source: string; label?: string }): Prom
       const named = shown.map((t) => `${t.name} ${JSON.stringify(t.text.trim())}`).join(", ")
       const more = thinTools.length > shown.length ? `, +${thinTools.length - shown.length} more` : ""
       findings.push({ severity: "medium", message: `${thinTools.length} tool description(s) are under 30 characters, so a model cannot tell them apart: ${named}${more}.` })
+    }
+  }
+
+  if (looksLikeServer) {
+    // A description that stops on "... instant-buy price," reads as unfinished to a model
+    // and to a buyer reading the listing. Fragments joined with `+` are read as the one
+    // sentence the client sees, so a correctly wrapped description is not reported here.
+    const unfinished = toolDescriptions(source, code).filter((t) => t.text.trim() && !/[.!?]$/.test(t.text.trim()))
+    if (unfinished.length) {
+      const shown = unfinished.slice(0, 10)
+      const named = shown.map((t) => `${t.name} ${JSON.stringify(t.text.trim().slice(-30))}`).join(", ")
+      const more = unfinished.length > shown.length ? `, +${unfinished.length - shown.length} more` : ""
+      findings.push({ severity: "medium", message: `${unfinished.length} tool description(s) do not end in a sentence: ${named}${more}.` })
+    }
+
+    // Two halves of a wrapped description that both miss the joining space ship as
+    // "pricesand discounts", which reads as a typo in the listing and in the tool list.
+    const runOn = toolDescriptions(source, code).filter((t) => t.runOn)
+    if (runOn.length) {
+      const shown = runOn.slice(0, 10)
+      const named = shown.map((t) => t.name).join(", ")
+      const more = runOn.length > shown.length ? `, +${runOn.length - shown.length} more` : ""
+      findings.push({ severity: "low", message: `${runOn.length} tool description(s) join wrapped fragments without a space, so the words run together: ${named}${more}.` })
     }
   }
 

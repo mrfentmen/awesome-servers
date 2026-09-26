@@ -17,9 +17,9 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `get_space`: Name, domain, plan.
-- `list_stories`: Slugs and publish dates.
-- `get_story`: Content keys.
+- `get_space`: Storyblok space info: name, domain, plan.
+- `list_stories`: Stories with slugs and publish dates, optionally under a folder.
+- `get_story`: One story: name, date, content keys.
 
 ## Limits and privacy
 

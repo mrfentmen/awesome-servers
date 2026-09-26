@@ -7,6 +7,7 @@ Query GitLab (token; set GITLAB_PRIVATE_TOKEN, PRIVATE-TOKEN header; optional GI
 - `me` — The GitLab user the token belongs to.
 - `list_projects` — Projects the token can see, most recent first.
 - `list_groups` — Groups the token can see, with path and id.
+- `search_public` — Public projects by query (no token needed).
 
 ## Source
 

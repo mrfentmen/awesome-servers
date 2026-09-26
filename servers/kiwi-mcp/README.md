@@ -17,8 +17,8 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `find_locations`: Airport codes by city.
-- `search_flights`: Cheapest flights with airlines and links (dates DD/MM/YYYY).
+- `find_locations`: Airport codes by city name for flight search.
+- `search_flights`: Cheapest flights between airports in a date range, with airlines and links.
 
 ## Limits and privacy
 

@@ -18,8 +18,8 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `list_contacts`: Contacts with unsubscribe flags.
-- `recent_messages`: Recipients, subjects, statuses.
+- `list_contacts`: Mailjet contacts with names and unsubscribe flags.
+- `recent_messages`: Recent sent emails: recipients, subjects, statuses.
 
 ## Limits and privacy
 

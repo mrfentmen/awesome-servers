@@ -7,7 +7,12 @@ This file is self contained. It reads public data only and never writes to the m
 ## Tools
 
 
-* `product`  Product details.
+* `browse_games` — Browse the GOG catalogue of DRM-free PC games, sorted by trending, newest, biggest discount, cheapest or rating.
+* `search_games` — Search the GOG catalogue by game title and see current prices.
+* `deals` — Current GOG discounts, filtered to a minimum percentage off.
+* `top_rated` — Highest-rated games on GOG, by user review score.
+* `game_details` — Full details for one GOG product by numeric ID: price, platforms, developer, genres and description.
+* `games_by_ids` — Look up several GOG products at once from a comma-separated list of product IDs.
 
 ## Usage
 

@@ -17,9 +17,9 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `find_contact`: Contact by email.
-- `create_contact`: New contact with names.
-- `send_event`: Trigger email flows.
+- `find_contact`: Find a Loops contact by email.
+- `create_contact`: Create a Loops contact with optional first/last name.
+- `send_event`: Send a Loops event to trigger email flows.
 
 ## Limits and privacy
 

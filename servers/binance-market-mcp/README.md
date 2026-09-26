@@ -7,9 +7,13 @@ This file is self contained. It reads public data only and never writes to the m
 ## Tools
 
 
-* `ticker`  24 hour ticker for a symbol.
-* `klines`  Candlestick data.
-* `price`  Current price.
+* `ticker`  Get the 24 hour ticker for a symbol.
+* `klines`  Get candlestick data for a symbol.
+* `price`  Get the current price for a symbol.
+* `book`  Best bid and ask with quantities for a symbol.
+* `avg`  5-minute average price for a symbol.
+* `depth`  Top bids and asks with quantities for a symbol.
+* `markets`  How many symbols Binance lists with a TRADING count and a 12-symbol sample. Full list omitted for size.
 
 ## Usage
 

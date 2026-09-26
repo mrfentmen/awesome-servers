@@ -5,9 +5,12 @@ Uses Steam's keyless store + news endpoints.
 
 ## Tools
 
-- `search_games`, store search with current prices / discount percentages
-- `get_game_details`, price, release date, developers, genres, Metacritic, blurb
-- `get_game_news`, recent Steam news posts for a game
+- `search_games`, Search the Steam store by title. Returns appids with current prices
+- `get_game_details`, Get details for a Steam app: price/discount, release date,
+- `get_game_news`, Fetch recent Steam news posts for a game.
+- `reviews`, Review totals for a game: total, positive and negative counts plus the summary label.
+- `players`, How many players are in a game right now.
+- `topsellers`, Current Steam top sellers with prices and discounts.
 
 ## Run
 

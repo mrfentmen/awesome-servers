@@ -17,8 +17,8 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `search_events`: Concerts, sports, theater with prices.
-- `recommend_events`: Near coordinates.
+- `search_events`: Concerts, sports and theater with venues, dates, ticket prices.
+- `recommend_events`: Recommended events near coordinates.
 
 ## Limits and privacy
 

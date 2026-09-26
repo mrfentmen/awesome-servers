@@ -17,9 +17,9 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `account_info`: Account with plan and credits.
-- `list_contacts`: Contacts with blacklist flags.
-- `email_reports`: Sends, deliveries, opens, clicks, bounces.
+- `account_info`: Brevo account with plan and credits.
+- `list_contacts`: Brevo contacts with blacklist flags.
+- `email_reports`: Aggregate sends, deliveries, opens, clicks, bounces.
 
 ## Limits and privacy
 
