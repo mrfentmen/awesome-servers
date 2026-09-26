@@ -12,7 +12,7 @@ server.registerTool(
     "price",
     {
       title: "Price",
-      description: "Price for one coin.",
+      description: "Current price for one coin id, e.g. bitcoin, in a chosen currency.",
       inputSchema: z.object( { coin: z.string().describe("Coin id like bitcoin."), currency: z.string().describe("Currency like usd.").optional() }),
       annotations: READ_ONLY,
     },
@@ -24,7 +24,7 @@ server.registerTool(
     "trending",
     {
       title: "Trending",
-      description: "Trending coins.",
+      description: "Coins trending in CoinGecko search over the last 24 hours.",
       inputSchema: z.object( {  }),
       annotations: READ_ONLY,
     },

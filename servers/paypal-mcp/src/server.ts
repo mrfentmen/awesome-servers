@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "get_order",
     {
       title: "Get order",
-      description: "Order details.",
+      description: "One order by id, with status, amount and payer.",
       inputSchema: z.object({
         order_id: z.string().describe("PayPal order ID, e.g. 5O190127TN364715T")
       }),
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "get_capture",
     {
       title: "Get capture",
-      description: "Capture details.",
+      description: "One payment capture by id, with amount and status.",
       inputSchema: z.object({
         capture_id: z.string().describe("Capture ID from the order response")
       }),
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
     "list_plans",
     {
       title: "List plans",
-      description: "Billing plans.",
+      description: "Billing plans on the account, with id and status.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

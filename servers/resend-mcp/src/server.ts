@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_domains",
     {
       title: "List domains",
-      description: "Sending domains.",
+      description: "Domains verified for sending, with DKIM status.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "get_domain",
     {
       title: "Get domain",
-      description: "Domain details.",
+      description: "One sending domain by id, with DNS records.",
       inputSchema: z.object({
         domain_id: z.string().describe("Domain UUID.")
       }),
@@ -58,7 +58,7 @@ export function createServer(): McpServer {
     "get_email",
     {
       title: "Get email",
-      description: "Email details.",
+      description: "One sent email by id, with delivery status.",
       inputSchema: z.object({
         email_id: z.string().describe("Email ID from the send response")
       }),

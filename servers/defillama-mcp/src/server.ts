@@ -12,7 +12,7 @@ server.registerTool(
     "chains",
     {
       title: "Chains",
-      description: "TVL by chain.",
+      description: "Total value locked per chain, biggest first.",
       inputSchema: z.object( {  }),
       annotations: READ_ONLY,
     },
@@ -24,7 +24,7 @@ server.registerTool(
     "protocol",
     {
       title: "Protocol",
-      description: "TVL history for a protocol.",
+      description: "TVL history for a protocol slug, e.g. aave.",
       inputSchema: z.object( { slug: z.string().describe("Protocol slug.") }),
       annotations: READ_ONLY,
     },
@@ -48,7 +48,7 @@ server.registerTool(
     "chain_tvl",
     {
       title: "Chain tvl",
-      description: "Get TVL for all chains.",
+      description: "Total value locked for every chain in one call.",
       inputSchema: z.object( { limit: z.number().describe("Max results.").optional() }),
       annotations: READ_ONLY,
     },

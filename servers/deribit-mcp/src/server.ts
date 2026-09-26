@@ -13,7 +13,7 @@ export function createServer(): McpServer {
     'indexPrice',
     {
       title: "Index Price",
-      description: 'Deribit index price.',
+      description: 'Deribit index price for one index name, e.g. btc_usd.',
       inputSchema: z.object( { index: z.string().describe('Index name, default btc_usd.').optional() }),
       annotations: READ_ONLY,
     },
@@ -25,7 +25,7 @@ export function createServer(): McpServer {
     'ticker',
     {
       title: "Ticker",
-      description: 'Deribit instrument ticker.',
+      description: 'Ticker for an instrument, e.g. BTC-PERPETUAL.',
       inputSchema: z.object( { instrument: z.string().describe('Instrument, default BTC-PERPETUAL.').optional() }),
       annotations: READ_ONLY,
     },
@@ -37,7 +37,7 @@ export function createServer(): McpServer {
     'supported',
     {
       title: "Supported",
-      description: 'List supported index names.',
+      description: 'Index names Deribit publishes prices for.',
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "search",
     {
       title: "Search catalog",
-      description: "Tracks, artists, albums.",
+      description: "Search the Spotify catalog for tracks, artists or albums.",
       inputSchema: z.object({
         query: z.string().describe("Search text."),
         type: z.string().describe("track,artist,album combo (default all).").optional(),
@@ -43,7 +43,7 @@ export function createServer(): McpServer {
     "get_artist",
     {
       title: "Get artist",
-      description: "Artist profile.",
+      description: "Artist profile: genres, popularity and follower count.",
       inputSchema: z.object({
         artist_id: z.string().describe("Spotify artist ID.")
       }),
@@ -62,7 +62,7 @@ export function createServer(): McpServer {
     "get_album",
     {
       title: "Get album",
-      description: "Album details and tracks.",
+      description: "Album details plus its track list and release date.",
       inputSchema: z.object({
         album_id: z.string().describe("Spotify album ID.")
       }),

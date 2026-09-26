@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_zones",
     {
       title: "List zones",
-      description: "DNS zones.",
+      description: "Cloudflare zones (domains) in the account.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "list_accounts",
     {
       title: "List accounts",
-      description: "Accounts.",
+      description: "Cloudflare accounts the token can reach.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -56,7 +56,7 @@ export function createServer(): McpServer {
     "list_dns",
     {
       title: "List DNS",
-      description: "Records in a zone.",
+      description: "DNS records in one zone id, with type and TTL.",
       inputSchema: z.object({
         zone_id: z.string().describe("Zone ID, e.g. 023e105f4ecef8ad9ca31a8372d0c353")
       }),

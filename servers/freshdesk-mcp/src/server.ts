@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_tickets",
     {
       title: "List tickets",
-      description: "Recent tickets.",
+      description: "Most recent support tickets, with status and priority.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "get_ticket",
     {
       title: "Get ticket",
-      description: "Ticket details.",
+      description: "One ticket by id, with requester and full text.",
       inputSchema: z.object({
         ticket_id: z.string().describe("Freshdesk ticket ID, e.g. 12345")
       }),
@@ -58,7 +58,7 @@ export function createServer(): McpServer {
     "list_contacts",
     {
       title: "List contacts",
-      description: "Contacts.",
+      description: "Support contacts with email and company.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

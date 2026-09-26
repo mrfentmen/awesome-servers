@@ -23,7 +23,7 @@ export function createServer(): McpServer {
     "get_me",
     {
       title: "Bot info",
-      description: "Bot username and ID.",
+      description: "Bot identity: username, id and capabilities.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
     "get_updates",
     {
       title: "Get updates",
-      description: "Recent incoming updates.",
+      description: "Incoming updates from the last 24 hours.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 100).").optional()
       }),

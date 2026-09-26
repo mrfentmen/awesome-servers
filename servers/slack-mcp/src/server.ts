@@ -23,7 +23,7 @@ export function createServer(): McpServer {
     "list_channels",
     {
       title: "List channels",
-      description: "Workspace channels.",
+      description: "Public channels in the workspace, with id and name.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 20, max 200).").optional()
       }),
@@ -42,7 +42,7 @@ export function createServer(): McpServer {
     "get_history",
     {
       title: "Channel history",
-      description: "Recent messages.",
+      description: "Recent messages in one channel, newest last.",
       inputSchema: z.object({
         channel: z.string().describe("Channel ID, e.g. C0123456789"),
         limit: z.string().describe("Max results (default 10, max 100).").optional()
@@ -62,7 +62,7 @@ export function createServer(): McpServer {
     "post_message",
     {
       title: "Post message",
-      description: "Post a REAL message.",
+      description: "Post a message to a channel as the bot, visible to everyone.",
       inputSchema: z.object({
         channel: z.string().describe("Channel ID, e.g. C0123456789"),
         message: z.string().describe("Message text.")

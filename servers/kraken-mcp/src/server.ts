@@ -19,7 +19,7 @@ export function createServer(): McpServer {
     "ticker",
     {
       title: "Ticker",
-      description: "Ticker for a pair.",
+      description: "Ticker for one pair, e.g. XBTUSD.",
       inputSchema: z.object( { pair: z.string().describe("Pair like XBTUSD.") }),
       annotations: READ_ONLY,
     },
@@ -31,7 +31,7 @@ export function createServer(): McpServer {
     "assets",
     {
       title: "Assets",
-      description: "List tradeable assets.",
+      description: "Tradeable assets with decimals and status.",
       inputSchema: z.object( {  }),
       annotations: READ_ONLY,
     },

@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_projects",
     {
       title: "List projects",
-      description: "Vercel projects.",
+      description: "Vercel projects in the account, most recent first.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 100).").optional()
       }),
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "get_project",
     {
       title: "Get project",
-      description: "Project details.",
+      description: "Details for one project, by id or name.",
       inputSchema: z.object({
         project_id: z.string().describe("Project ID or name.")
       }),

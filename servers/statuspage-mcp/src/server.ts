@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_pages",
     {
       title: "List pages",
-      description: "Status pages.",
+      description: "Status pages the key can read, with id and name.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "get_page",
     {
       title: "Get page",
-      description: "Page details.",
+      description: "One status page by id, with components and status.",
       inputSchema: z.object({
         page_id: z.string().describe("Statuspage page ID, e.g. 1a2b3c4d5e6f")
       }),
@@ -58,7 +58,7 @@ export function createServer(): McpServer {
     "list_incidents",
     {
       title: "List incidents",
-      description: "Recent incidents.",
+      description: "Recent incidents on a page, newest first.",
       inputSchema: z.object({
         page_id: z.string().describe("Statuspage page ID, e.g. 1a2b3c4d5e6f")
       }),

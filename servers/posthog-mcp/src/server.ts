@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "me",
     {
       title: "My profile",
-      description: "PostHog user.",
+      description: "The PostHog user the API key belongs to.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "list_projects",
     {
       title: "List projects",
-      description: "Analytics projects.",
+      description: "Analytics projects in the organization.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -56,7 +56,7 @@ export function createServer(): McpServer {
     "list_insights",
     {
       title: "List insights",
-      description: "Saved insights.",
+      description: "Saved insights in one project, with names.",
       inputSchema: z.object({
         project_id: z.string().describe("PostHog project ID, e.g. 12345")
       }),

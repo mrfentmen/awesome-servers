@@ -734,6 +734,45 @@ function describedParams(
   return out
 }
 
+/**
+ * Tools whose own description says too little to choose them by.
+ *
+ * Parameter descriptions are not the only thing a model reads: a tool description is
+ * how it decides to call this tool instead of its neighbour, so "Active visitors."
+ * costs calls. Each registration is judged on the text between it and the next one,
+ * which is where its `description:` property lives.
+ */
+function thinToolDescriptions(
+  source: string,
+  maskedSource: string,
+  min: number,
+): { name: string; text: string }[] {
+  const out: { name: string; text: string }[] = []
+  const pattern = /registerTool\(\s*(["'`])/g
+  const starts: { name: string; at: number }[] = []
+  let match: RegExpExecArray | null
+  while ((match = pattern.exec(maskedSource)) !== null) {
+    const quote = match[match.length - 1]
+    const start = match.index + match[0].length
+    const end = source.indexOf(quote, start)
+    const name = source.slice(start, end)
+    if (name && !name.includes("\n")) starts.push({ name, at: match.index })
+  }
+  starts.forEach((entry, i) => {
+    const to = i + 1 < starts.length ? starts[i + 1].at : maskedSource.length
+    const block = maskedSource.slice(entry.at, to)
+    const property = /description\s*:\s*(["'`])/.exec(block)
+    if (!property) return
+    const from = entry.at + property.index + property[0].length
+    const quote = property[1]
+    const end = source.indexOf(quote, from)
+    if (end <= from) return
+    const text = source.slice(from, end)
+    if (text.trim().length < min) out.push({ name: entry.name, text })
+  })
+  return out
+}
+
 export async function lintSource(args: { source: string; label?: string }): Promise<string> {
   const source = args.source ?? ""
   if (!source.trim()) throw new Error("Paste the TypeScript source of an MCP server to lint.")
@@ -755,6 +794,16 @@ export async function lintSource(args: { source: string; label?: string }): Prom
     skipped.push(`no tool registrations in this file (it looks like an API module, not the server file), so tool count, naming, annotations and handler shape were not judged`)
   } else if (toolCount < 6) {
     findings.push({ severity: "high", message: `Only ${toolCount} tool(s). A paid server wants at least 6.` })
+  }
+
+  if (looksLikeServer) {
+    const thinTools = thinToolDescriptions(source, code, 30)
+    if (thinTools.length) {
+      const shown = thinTools.slice(0, 10)
+      const named = shown.map((t) => `${t.name} ${JSON.stringify(t.text.trim())}`).join(", ")
+      const more = thinTools.length > shown.length ? `, +${thinTools.length - shown.length} more` : ""
+      findings.push({ severity: "medium", message: `${thinTools.length} tool description(s) are under 30 characters, so a model cannot tell them apart: ${named}${more}.` })
+    }
   }
 
   const dupeTools = registrations.filter((name, i) => registrations.indexOf(name) !== i)

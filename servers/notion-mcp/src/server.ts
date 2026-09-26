@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "search",
     {
       title: "Search",
-      description: "Pages and databases.",
+      description: "Pages and databases the integration can reach, by title.",
       inputSchema: z.object({
         query: z.string().describe("Search text.")
       }),
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "list_users",
     {
       title: "List users",
-      description: "Workspace users.",
+      description: "Users in the Notion workspace, with id, name and type.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -58,7 +58,7 @@ export function createServer(): McpServer {
     "get_page",
     {
       title: "Get page",
-      description: "Page properties.",
+      description: "Properties of one page, by the page id.",
       inputSchema: z.object({
         page_id: z.string().describe("Page ID, e.g. 8a1b2c3d4e5f67890a1b2c3d4e5f6789")
       }),

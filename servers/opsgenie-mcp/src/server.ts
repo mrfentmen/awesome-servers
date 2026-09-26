@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_alerts",
     {
       title: "List alerts",
-      description: "Alerts.",
+      description: "Open alerts, with priority, owner and created time.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 20, max 100).").optional()
       }),
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "get_alert",
     {
       title: "Get alert",
-      description: "Alert details by ID.",
+      description: "One alert by id, with description and timeline.",
       inputSchema: z.object({
         alert_id: z.string().describe("Alert ID from the Opsgenie URL")
       }),
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
     "list_oncalls",
     {
       title: "List on-calls",
-      description: "Current on-call rotations.",
+      description: "Who is on call now, per rotation and schedule.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

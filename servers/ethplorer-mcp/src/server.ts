@@ -42,7 +42,7 @@ export function createServer(): McpServer {
     "token_history",
     {
       title: "Token history",
-      description: "Get token transfer history.",
+      description: "Transfer history for a token address, newest first.",
       inputSchema: z.object( { address: z.string().describe("Token address."), limit: z.number().describe("Max records.").optional() }),
       annotations: READ_ONLY,
     },

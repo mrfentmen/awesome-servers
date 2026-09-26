@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "me",
     {
       title: "Viewer",
-      description: "Authenticated user.",
+      description: "The Linear user the API key belongs to.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "list_teams",
     {
       title: "List teams",
-      description: "Workspace teams.",
+      description: "Teams in the workspace, with key and id.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -56,7 +56,7 @@ export function createServer(): McpServer {
     "search_issues",
     {
       title: "Search issues",
-      description: "Issues by text.",
+      description: "Search issues by text, e.g. login bug.",
       inputSchema: z.object({
         term: z.string().describe("Search text."),
         limit: z.string().describe("Max results (default 10, max 50).").optional()

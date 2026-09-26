@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_visitors",
     {
       title: "Visitors",
-      description: "Active visitors.",
+      description: "Visitors on the site right now, with last page seen.",
       inputSchema: z.object({
         website_id: z.string().describe("Website ID, e.g. 8a1b2c3d-4e5f")
       }),
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "get_profile",
     {
       title: "People profile",
-      description: "Profile by email.",
+      description: "Crisp profile for one email, with custom fields.",
       inputSchema: z.object({
         website_id: z.string().describe("Website ID, e.g. 8a1b2c3d-4e5f"),
         email: z.string().describe("Visitor email.")
@@ -61,7 +61,7 @@ export function createServer(): McpServer {
     "get_conversation",
     {
       title: "Conversation",
-      description: "Conversation details.",
+      description: "Messages in one conversation, by session id.",
       inputSchema: z.object({
         website_id: z.string().describe("Website ID, e.g. 8a1b2c3d-4e5f"),
         session_id: z.string().describe("Session ID, e.g. session_9f8c7b2a")

@@ -18,7 +18,7 @@ export function createServer(): McpServer {
     "spot",
     {
       title: "Spot",
-      description: "Spot price for a pair.",
+      description: "Latest spot price for one pair, e.g. BTC-USD.",
       inputSchema: z.object( { pair: z.string().describe("Pair like BTC-USD.") }),
       annotations: READ_ONLY,
     },
@@ -30,7 +30,7 @@ export function createServer(): McpServer {
     "exchange",
     {
       title: "Exchange",
-      description: "Exchange rates.",
+      description: "Crypto-to-fiat exchange rates for one base currency.",
       inputSchema: z.object( { currency: z.string().describe("Base currency like USD.").optional() }),
       annotations: READ_ONLY,
     },

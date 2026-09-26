@@ -297,7 +297,7 @@ export function createServer(): McpServer {
     "list_calls",
     {
       title: "List calls",
-      description: "List recent voice calls.",
+      description: "Recent voice calls, with from, to, duration and status.",
       inputSchema: z.object(
     { limit: z.number().min(1).max(100).optional().describe("Max calls to return") }),
       annotations: READ_ONLY,

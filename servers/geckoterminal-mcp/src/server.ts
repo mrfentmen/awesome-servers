@@ -18,7 +18,7 @@ export function createServer(): McpServer {
     "token",
     {
       title: "Token",
-      description: "Get token info.",
+      description: "Token details by address on one network: price, supply, pool.",
       inputSchema: z.object( { network: z.string().describe("Network id like eth.").optional(), address: z.string().describe("Token address.") }),
       annotations: READ_ONLY,
     },
@@ -30,7 +30,7 @@ export function createServer(): McpServer {
     "trending",
     {
       title: "Trending",
-      description: "Trending pools.",
+      description: "Pools with the most activity on GeckoTerminal right now.",
       inputSchema: z.object( { network: z.string().describe("Network id like eth.").optional() }),
       annotations: READ_ONLY,
     },

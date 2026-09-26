@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "me",
     {
       title: "My profile",
-      description: "Figma user.",
+      description: "The Figma user the access token belongs to.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "get_file",
     {
       title: "Get file",
-      description: "File metadata.",
+      description: "File metadata: name, pages and last modified date.",
       inputSchema: z.object({
         file_key: z.string().describe("File key from URL.")
       }),
@@ -58,7 +58,7 @@ export function createServer(): McpServer {
     "project_files",
     {
       title: "Project files",
-      description: "Files in a project.",
+      description: "Figma files inside one project id.",
       inputSchema: z.object({
         project_id: z.string().describe("Project ID from the Figma URL")
       }),

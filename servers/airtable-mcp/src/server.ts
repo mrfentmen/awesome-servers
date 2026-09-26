@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_bases",
     {
       title: "List bases",
-      description: "Accessible bases.",
+      description: "Airtable bases the token can access.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "list_tables",
     {
       title: "List tables",
-      description: "Tables in a base.",
+      description: "Tables in one base, e.g. appXXXXXXXXXXXXXX.",
       inputSchema: z.object({
         base_id: z.string().describe("Base ID, e.g. appXXXXXXXXXXXXXX")
       }),
@@ -58,7 +58,7 @@ export function createServer(): McpServer {
     "list_records",
     {
       title: "List records",
-      description: "Records in a table.",
+      description: "Records in one table, with an optional max_records cap.",
       inputSchema: z.object({
         base_id: z.string().describe("Base ID, e.g. appXXXXXXXXXXXXXX"),
         table: z.string().describe("Table name or ID."),

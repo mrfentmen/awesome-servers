@@ -21,7 +21,7 @@ export function createServer(): McpServer {
     "list_users",
     {
       title: "List users",
-      description: "Clerk users.",
+      description: "Clerk users, one page at a time, with email and id.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 100).").optional()
       }),
@@ -40,7 +40,7 @@ export function createServer(): McpServer {
     "get_user",
     {
       title: "Get user",
-      description: "User details by ID.",
+      description: "One Clerk user by id, with profile and metadata.",
       inputSchema: z.object({
         user_id: z.string().describe("Clerk user ID, e.g. user_2abc123def")
       }),

@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_contacts",
     {
       title: "List contacts",
-      description: "CRM contacts.",
+      description: "CRM contacts with email, name and owner.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 100).").optional()
       }),
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "list_companies",
     {
       title: "List companies",
-      description: "CRM companies.",
+      description: "CRM companies with domain and industry.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 100).").optional()
       }),
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
     "list_deals",
     {
       title: "List deals",
-      description: "CRM deals.",
+      description: "CRM deals with amount, stage and close date.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 100).").optional()
       }),

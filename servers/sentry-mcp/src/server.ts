@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_orgs",
     {
       title: "List orgs",
-      description: "Organizations.",
+      description: "Sentry organizations the token can read.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "org_projects",
     {
       title: "Org projects",
-      description: "Projects in an org.",
+      description: "Projects inside one Sentry org, e.g. my-org.",
       inputSchema: z.object({
         org: z.string().describe("Org slug from the Sentry URL, e.g. my-org")
       }),
@@ -58,7 +58,7 @@ export function createServer(): McpServer {
     "org_issues",
     {
       title: "Org issues",
-      description: "Recent issues (24h).",
+      description: "Issues first seen in one org in the last 24 hours.",
       inputSchema: z.object({
         org: z.string().describe("Org slug from the Sentry URL, e.g. my-org")
       }),

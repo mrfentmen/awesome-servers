@@ -23,7 +23,7 @@ export function createServer(): McpServer {
     "query_table",
     {
       title: "Query table",
-      description: "Rows from a table.",
+      description: "Rows from one table, with select and limit applied.",
       inputSchema: z.object({
         table: z.string().describe("Table name, e.g. customers"),
         select: z.string().describe("Columns (default *).").optional(),
@@ -44,7 +44,7 @@ export function createServer(): McpServer {
     "list_users",
     {
       title: "List users",
-      description: "Auth users.",
+      description: "Auth users in the project, one page at a time.",
       inputSchema: z.object({
         page: z.string().describe("Page (default 1).").optional()
       }),
@@ -63,7 +63,7 @@ export function createServer(): McpServer {
     "call_rpc",
     {
       title: "Call RPC",
-      description: "Call a Postgres function.",
+      description: "Call a Postgres function by name with JSON parameters.",
       inputSchema: z.object({
         function_name: z.string().describe("Function name."),
         params: z.string().describe("JSON params.").optional()

@@ -13,7 +13,7 @@ export function createServer(): McpServer {
     'tickers',
     {
       title: "Tickers",
-      description: 'Top coins by market cap.',
+      description: 'Top coins by market cap, with price and 24h change.',
       inputSchema: z.object( { limit: z.number().describe('Max results.').optional() }),
       annotations: READ_ONLY,
     },
@@ -25,7 +25,7 @@ export function createServer(): McpServer {
     'coin',
     {
       title: "Coin",
-      description: 'One coin by id.',
+      description: 'One coin by its CoinLore id, e.g. 90 for Bitcoin.',
       inputSchema: z.object( { id: z.number().describe('CoinLore id.').optional() }),
       annotations: READ_ONLY,
     },
@@ -37,7 +37,7 @@ export function createServer(): McpServer {
     'globalStats',
     {
       title: "Global Stats",
-      description: 'Global crypto market stats.',
+      description: 'Global crypto market stats: total cap, volume, Bitcoin share.',
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -73,7 +73,7 @@ export function createServer(): McpServer {
     'markets',
     {
       title: "Markets",
-      description: 'Markets for a coin id.',
+      description: 'Markets for a coin id across exchanges, e.g. 90 for Bitcoin.',
       inputSchema: z.object( { id: z.number().describe('CoinLore id.').optional() }),
       annotations: READ_ONLY,
     },

@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "search",
     {
       title: "Search videos",
-      description: "Videos matching a query.",
+      description: "Videos matching a query, with title, channel and views.",
       inputSchema: z.object({
         query: z.string().describe("Search text."),
         max_results: z.string().describe("Max results (default 10, max 50).").optional()
@@ -42,7 +42,7 @@ export function createServer(): McpServer {
     "video_details",
     {
       title: "Video details",
-      description: "Title, stats for a video.",
+      description: "Title, description, view and like counts for a video.",
       inputSchema: z.object({
         video_id: z.string().describe("Video ID, e.g. dQw4w9WgXcQ")
       }),
@@ -61,7 +61,7 @@ export function createServer(): McpServer {
     "channel_details",
     {
       title: "Channel details",
-      description: "Stats for a channel.",
+      description: "Subscriber and video counts for a channel.",
       inputSchema: z.object({
         channel_id: z.string().describe("Channel ID, e.g. UC_x5XG1OV2P6uZZ5FSM9Ttw")
       }),

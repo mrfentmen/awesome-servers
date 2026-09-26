@@ -23,7 +23,7 @@ export function createServer(): McpServer {
     "me",
     {
       title: "My profile",
-      description: "Authenticated user profile.",
+      description: "Profile of the GitHub user the token belongs to.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -40,7 +40,7 @@ export function createServer(): McpServer {
     "list_repos",
     {
       title: "List repos",
-      description: "My recently updated repos.",
+      description: "Repositories the token owner updated most recently.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 20, max 100).").optional()
       }),
@@ -59,7 +59,7 @@ export function createServer(): McpServer {
     "get_repo",
     {
       title: "Get repo",
-      description: "Repo details.",
+      description: "Repository details for owner/repo, e.g. facebook/react.",
       inputSchema: z.object({
         owner: z.string().describe("Owner login."),
         repo: z.string().describe("Repo name only, e.g. react")
@@ -79,7 +79,7 @@ export function createServer(): McpServer {
     "search_repos",
     {
       title: "Search repos",
-      description: "Public repos by query.",
+      description: "Public repositories matching a query, e.g. mcp server.",
       inputSchema: z.object({
         query: z.string().describe("Search text."),
         limit: z.string().describe("Max results (default 10, max 100).").optional()

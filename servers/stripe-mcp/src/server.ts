@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_charges",
     {
       title: "List charges",
-      description: "Recent charges.",
+      description: "Most recent charges, with amount, currency and status.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 100).").optional()
       }),
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "list_customers",
     {
       title: "List customers",
-      description: "Customers.",
+      description: "Most recent customers, with email and created date.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 100).").optional()
       }),
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
     "get_balance",
     {
       title: "Balance",
-      description: "Account balance.",
+      description: "Available and pending balance by currency.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

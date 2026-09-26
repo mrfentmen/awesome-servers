@@ -24,7 +24,7 @@ server.registerTool(
     "search",
     {
       title: "Search",
-      description: "Search stock symbols.",
+      description: "Search stock symbols by company name, e.g. apple.",
       inputSchema: z.object( { query: z.string().describe("Company name or symbol.") }),
       annotations: READ_ONLY,
     },
