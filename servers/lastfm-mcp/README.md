@@ -4,8 +4,8 @@ Query the Last.fm API (free key; set LASTFM_API_KEY, query param): top artists, 
 
 ## Tools
 
-- `top_artists` — Global top artists.
-- `top_tracks` — Global top tracks.
+- `top_artists` — Artists with the most listeners worldwide.
+- `top_tracks` — Tracks with the most listeners worldwide.
 - `artist_info` — Bio, stats and similar artists.
 
 ## Source

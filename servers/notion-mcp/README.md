@@ -4,9 +4,9 @@ Query Notion (integration token; set NOTION_API_KEY, Bearer + version header): s
 
 ## Tools
 
-- `search` — Pages and databases.
-- `list_users` — Workspace users.
-- `get_page` — Page properties.
+- `search` — Pages and databases the integration can reach, by title.
+- `list_users` — Users in the Notion workspace, with id, name and type.
+- `get_page` — Properties of one page, by the page id.
 
 ## Source
 

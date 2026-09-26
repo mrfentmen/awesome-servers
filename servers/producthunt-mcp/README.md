@@ -4,8 +4,8 @@ Query Product Hunt GraphQL (token; set PRODUCTHUNT_TOKEN, Bearer): viewer, lates
 
 ## Tools
 
-- `viewer` — Authenticated user.
-- `list_posts` — Ranked launches.
+- `viewer` — The Product Hunt user the token belongs to.
+- `list_posts` — Launches ranked by votes, with tagline and maker.
 
 ## Source
 

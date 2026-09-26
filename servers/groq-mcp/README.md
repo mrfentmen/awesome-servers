@@ -17,8 +17,8 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `chat`: Ask a Groq-hosted model (OpenAI-compatible API).
-- `list_models`: Available model ids.
+- `chat`: Ask a Groq-hosted LLM. Fast inference, OpenAI-compatible.
+- `list_models`: Model ids available to the Groq API key.
 
 ## Limits and privacy
 

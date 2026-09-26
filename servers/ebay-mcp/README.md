@@ -4,8 +4,8 @@ Query the eBay Browse API (OAuth user token; set EBAY_OAUTH_TOKEN, Bearer): item
 
 ## Tools
 
-- `search_items` — Listings matching a query.
-- `get_item` — Listing details.
+- `search_items` — eBay listings matching a query, with price and condition.
+- `get_item` — One listing by item id, with price and seller.
 
 ## Source
 

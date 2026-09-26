@@ -4,7 +4,7 @@ Query the AssemblyAI API (free tier key; set ASSEMBLYAI_API_KEY, sent raw as Aut
 
 ## Tools
 
-- `list_transcripts` — Recent transcripts.
+- `list_transcripts` — Recent transcripts with id, status and duration.
 - `get_transcript` — Transcript details and status.
 - `get_paragraphs` — Paragraph-grouped transcript text.
 

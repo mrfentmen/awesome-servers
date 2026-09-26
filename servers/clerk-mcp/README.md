@@ -4,8 +4,8 @@ Query the Clerk Backend API (secret key; set CLERK_SECRET_KEY, Bearer): users, u
 
 ## Tools
 
-- `list_users` — Clerk users.
-- `get_user` — User details by ID.
+- `list_users` — Clerk users, one page at a time, with email and id.
+- `get_user` — One Clerk user by id, with profile and metadata.
 
 ## Source
 

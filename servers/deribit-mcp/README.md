@@ -6,9 +6,9 @@ This file is self contained. It reads public data only and never writes to the m
 
 ## Tools
 
-* `indexPrice`  Deribit index price.
-* `ticker`  Deribit instrument ticker.
-* `supported`  List supported index names.
+* `indexPrice`  Deribit index price for one index name, e.g. btc_usd.
+* `ticker`  Ticker for an instrument, e.g. BTC-PERPETUAL.
+* `supported`  Index names Deribit publishes prices for.
 
 ## Usage
 

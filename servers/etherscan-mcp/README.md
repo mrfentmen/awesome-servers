@@ -5,8 +5,8 @@ Query the Etherscan v2 API (free key; set ETHERSCAN_API_KEY; chainid default 1):
 ## Tools
 
 - `get_balance` — Native balance for an address.
-- `get_transactions` — Recent normal transactions.
-- `get_token_transfers` — Recent ERC-20 transfers.
+- `get_transactions` — Recent normal transactions for an address.
+- `get_token_transfers` — Recent ERC-20 transfers to or from an address.
 
 ## Source
 

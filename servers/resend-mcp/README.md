@@ -4,9 +4,9 @@ Query the Resend API (key; set RESEND_API_KEY, Bearer): domains, domain details,
 
 ## Tools
 
-- `list_domains` — Sending domains.
-- `get_domain` — Domain details.
-- `get_email` — Email details.
+- `list_domains` — Domains verified for sending, with DKIM status.
+- `get_domain` — One sending domain by id, with DNS records.
+- `get_email` — One sent email by id, with delivery status.
 
 ## Source
 

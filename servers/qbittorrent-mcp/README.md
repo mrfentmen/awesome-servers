@@ -4,9 +4,9 @@ Query your qBittorrent WebUI (self-hosted; set QBITTORRENT_URL + QBITTORRENT_USE
 
 ## Tools
 
-- `list_torrents` — All torrents with progress.
-- `get_transfer_info` — Global up/down speeds.
-- `get_app_version` — qBittorrent version.
+- `list_torrents` — All torrents with progress, size and state.
+- `get_transfer_info` — Global upload and download speeds.
+- `get_app_version` — qBittorrent version and API version.
 
 ## Source
 

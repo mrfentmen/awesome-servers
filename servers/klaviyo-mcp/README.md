@@ -4,9 +4,9 @@ Query Klaviyo (private key; set KLAVIYO_API_KEY, Klaviyo-API-Key header + revisi
 
 ## Tools
 
-- `list_profiles` — Customer profiles.
-- `list_lists` — Marketing lists.
-- `list_campaigns` — Campaigns.
+- `list_profiles` — Customer profiles with email and location.
+- `list_lists` — Marketing lists with subscriber counts.
+- `list_campaigns` — Klaviyo campaigns with status and send time.
 
 ## Source
 

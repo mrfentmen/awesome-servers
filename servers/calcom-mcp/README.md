@@ -4,9 +4,9 @@ Query Cal.com API v2 (key; set CAL_API_KEY, Bearer + version header): event type
 
 ## Tools
 
-- `list_event_types` — Scheduling links.
-- `list_bookings` — Upcoming bookings.
-- `list_schedules` — Availability schedules.
+- `list_event_types` — Scheduling links people can book, with duration.
+- `list_bookings` — Upcoming bookings with attendee and start time.
+- `list_schedules` — Availability schedules and their timezones.
 
 ## Source
 

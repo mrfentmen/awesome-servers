@@ -4,9 +4,9 @@ Query the YouTube Data API v3 (free Google key; set YOUTUBE_API_KEY, query param
 
 ## Tools
 
-- `search` — Videos matching a query.
-- `video_details` — Title, stats for a video.
-- `channel_details` — Stats for a channel.
+- `search` — Videos matching a query, with title, channel and views.
+- `video_details` — Title, description, view and like counts for a video.
+- `channel_details` — Subscriber and video counts for a channel.
 
 ## Source
 

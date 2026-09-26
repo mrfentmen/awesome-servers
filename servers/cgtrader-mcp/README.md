@@ -5,7 +5,7 @@ Query the CGTrader 3D marketplace REST API v1: page through models, fetch model 
 ## Tools
 
 - `list_models` — Page through CGTrader 3D models.
-- `get_model` — CGTrader model details by ID.
+- `get_model` — One CGTrader model by id, with price and formats.
 - `list_model_files` — Files attached to a CGTrader model.
 - `get_me` — User profile for the access token.
 

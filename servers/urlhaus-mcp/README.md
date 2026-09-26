@@ -6,8 +6,8 @@ Query URLhaus (abuse.ch, free auth-key from abuse.ch; set URLHAUS_AUTH_KEY, sent
 
 - `recent_urls` — Recently added malicious URLs.
 - `lookup_url` — Check one URL against URLhaus.
-- `lookup_payload` — Malware payload by SHA256.
-- `search_tag` — URLs by malware tag.
+- `lookup_payload` — Malware payload details for one SHA256 hash.
+- `search_tag` — Malicious URLs carrying a malware tag, e.g. emotet.
 
 ## Source
 

@@ -5,7 +5,7 @@ Query any Gotify server (self-hosted; set GOTIFY_BASE_URL + GOTIFY_TOKEN, sent a
 ## Tools
 
 - `send_message` — Push a notification via Gotify.
-- `list_messages` — Stored messages.
+- `list_messages` — Messages stored on the Gotify server, newest first.
 - `list_apps` — Registered Gotify applications.
 
 ## Source

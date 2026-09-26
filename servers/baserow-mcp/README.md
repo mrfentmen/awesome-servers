@@ -4,8 +4,8 @@ Query your Baserow instance (self-hosted or cloud; set BASEROW_URL + BASEROW_TOK
 
 ## Tools
 
-- `get_dashboard` — Applications and databases.
-- `list_tables` — Tables in a database.
+- `get_dashboard` — Applications and databases in the workspace.
+- `list_tables` — Tables inside one database id, with field counts.
 
 ## Source
 

@@ -4,9 +4,9 @@ Query the Lemon Squeezy API (test-mode key; set LEMONSQUEEZY_API_KEY, Bearer): s
 
 ## Tools
 
-- `list_stores` — Lemon Squeezy stores.
+- `list_stores` — Lemon Squeezy stores on the account.
 - `list_products` — Products, optionally for one store.
-- `get_product` — Product details by ID.
+- `get_product` — One product by id, with price and variants.
 
 ## Source
 

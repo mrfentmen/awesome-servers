@@ -5,7 +5,7 @@ Query the MobyGames API (free key; set MOBYGAMES_API_KEY): game search across 30
 ## Tools
 
 - `search_games` — Title search incl. retro (needs MOBYGAMES_API_KEY).
-- `get_game` — Game details by ID.
+- `get_game` — One game by id, with platforms, genres and score.
 
 ## Source
 

@@ -4,8 +4,8 @@ Query your Uptime Kuma instance (self-hosted; set UPTIME_KUMA_URL; optional UPTI
 
 ## Tools
 
-- `get_status` — Uptime Kuma status summary.
-- `get_metrics` — Metrics exposition.
+- `get_status` — Up/down counts per monitor in one summary.
+- `get_metrics` — Raw Prometheus metrics the instance exposes.
 
 ## Source
 

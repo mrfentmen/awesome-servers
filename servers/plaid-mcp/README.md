@@ -4,8 +4,8 @@ Query Plaid sandbox (set PLAID_CLIENT_ID + PLAID_SECRET): institutions, categori
 
 ## Tools
 
-- `list_institutions` — Sandbox banks.
-- `list_categories` — Transaction categories.
+- `list_institutions` — Sandbox banks available for testing.
+- `list_categories` — Personal finance categories Plaid can return.
 - `sandbox_token` — Create a test public token (sandbox only).
 
 ## Source

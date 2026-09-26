@@ -4,9 +4,9 @@ Query Typeform (token; set TYPEFORM_TOKEN, Bearer): forms, form details, respons
 
 ## Tools
 
-- `list_forms` — All forms.
-- `get_form` — Form structure.
-- `list_responses` — Recent responses.
+- `list_forms` — All Typeform forms, with id and title.
+- `get_form` — One form's structure: fields, logic and settings.
+- `list_responses` — Recent responses to a form, newest first.
 
 ## Source
 

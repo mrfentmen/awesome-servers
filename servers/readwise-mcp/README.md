@@ -4,9 +4,9 @@ Query Readwise (token; set READWISE_TOKEN, Token header): auth check, books, hig
 
 ## Tools
 
-- `auth` — Verify the token.
-- `list_books` — Library sources.
-- `list_highlights` — Recent highlights.
+- `auth` — Check that the Readwise token works.
+- `list_books` — Library sources: books, articles and podcasts.
+- `list_highlights` — Recent highlights across the library.
 
 ## Source
 

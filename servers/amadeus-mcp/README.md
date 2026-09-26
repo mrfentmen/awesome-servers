@@ -18,8 +18,8 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `search_airports`: Codes by city.
-- `search_flights`: Offers with prices and legs.
+- `search_airports`: Airport codes for a city name, e.g. London.
+- `search_flights`: Flight offers with prices and legs (test environment data).
 
 ## Limits and privacy
 

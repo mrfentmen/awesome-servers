@@ -4,9 +4,9 @@ Query the Opsgenie API (free tier key; set OPSGENIE_API_KEY, sent as GenieKey): 
 
 ## Tools
 
-- `list_alerts` — Alerts.
-- `get_alert` — Alert details by ID.
-- `list_oncalls` — Current on-call rotations.
+- `list_alerts` — Open alerts, with priority, owner and created time.
+- `get_alert` — One alert by id, with description and timeline.
+- `list_oncalls` — Who is on call now, per rotation and schedule.
 
 ## Source
 

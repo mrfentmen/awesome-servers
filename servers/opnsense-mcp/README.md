@@ -4,7 +4,7 @@ Query your OPNsense (self-hosted; set OPNSENSE_URL + OPNSENSE_KEY + OPNSENSE_SEC
 
 ## Tools
 
-- `get_firmware_status` — Version and update state.
+- `get_firmware_status` — Installed version and whether an update is available.
 - `get_interfaces` — Traffic counters per interface.
 
 ## Source

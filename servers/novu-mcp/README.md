@@ -4,9 +4,9 @@ Query Novu (key; set NOVU_API_KEY, ApiKey header; optional NOVU_BASE_URL for EU)
 
 ## Tools
 
-- `list_subscribers` — Notification subscribers.
-- `get_subscriber` — Subscriber details.
-- `list_topics` — Notification topics.
+- `list_subscribers` — Notification subscribers, with email and id.
+- `get_subscriber` — One subscriber by id, with channels and data.
+- `list_topics` — Notification topics with subscriber counts.
 
 ## Source
 

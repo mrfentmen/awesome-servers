@@ -17,9 +17,9 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `my_profile`: Username and email.
-- `list_projects`: Projects of a user or team.
-- `list_runs`: Recent training runs with states.
+- `my_profile`: The W&B user the API key belongs to.
+- `list_projects`: ML projects of a user or team.
+- `list_runs`: Recent training runs of a project with states.
 
 ## Limits and privacy
 

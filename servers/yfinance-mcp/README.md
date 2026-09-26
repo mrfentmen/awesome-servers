@@ -6,8 +6,8 @@ A merged MCP server that consolidates duplicate single-purpose servers in this m
 
 ## Tools
 
-- `quote` — Stock quote and recent price data.
-- `search` — Search stock symbols.
+- `quote` — Get a stock quote and recent price data.
+- `search` — Search stock symbols by company name, e.g. apple.
 
 ## Run
 

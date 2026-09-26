@@ -4,9 +4,9 @@ Query Apollo.io (free key; set APOLLO_API_KEY, X-Api-Key header): account health
 
 ## Tools
 
-- `health` — Key status.
-- `match_person` — Match by email/name/company.
-- `search_people` — Prospect search.
+- `health` — Check that the Apollo API key still works.
+- `match_person` — Match one person by email, name or company.
+- `search_people` — Prospect search by title, location and company size.
 
 ## Source
 

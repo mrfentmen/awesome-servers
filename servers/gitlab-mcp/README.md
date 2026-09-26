@@ -4,9 +4,9 @@ Query GitLab (token; set GITLAB_PRIVATE_TOKEN, PRIVATE-TOKEN header; optional GI
 
 ## Tools
 
-- `me` — Authenticated user.
-- `list_projects` — My projects.
-- `list_groups` — Groups.
+- `me` — The GitLab user the token belongs to.
+- `list_projects` — Projects the token can see, most recent first.
+- `list_groups` — Groups the token can see, with path and id.
 
 ## Source
 

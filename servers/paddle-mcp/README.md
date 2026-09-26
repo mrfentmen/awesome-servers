@@ -4,8 +4,8 @@ Query the Paddle Billing API (sandbox key; set PADDLE_API_KEY, Bearer; optional 
 
 ## Tools
 
-- `list_products` — Paddle products.
-- `get_product` — Product details by ID.
+- `list_products` — Paddle products with price and status.
+- `get_product` — One Paddle product by id, with price and status.
 - `list_prices` — Prices, optionally for one product.
 
 ## Source

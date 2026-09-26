@@ -4,9 +4,9 @@ Query Hashnode GraphQL (token; set HASHNODE_TOKEN, raw Authorization; uses gql-b
 
 ## Tools
 
-- `me` — Authenticated user.
-- `publication_posts` — Recent posts.
-- `get_user` — User profile.
+- `me` — The Hashnode user the token belongs to.
+- `publication_posts` — Recent posts in a Hashnode publication.
+- `get_user` — One Hashnode profile by username.
 
 ## Source
 

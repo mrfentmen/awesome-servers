@@ -9,7 +9,7 @@ This file is self contained. It reads public data only and never writes to the m
 
 * `token_info`  Get ERC-20 token details by address.
 * `address_info`  Get token holdings for an address.
-* `token_history`  Get token transfer history.
+* `token_history`  Transfer history for a token address, newest first.
 
 ## Usage
 

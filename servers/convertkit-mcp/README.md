@@ -17,9 +17,9 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `find_subscriber`: Subscriber by email.
-- `list_forms`: Signup forms.
-- `list_broadcasts`: Sent newsletters.
+- `find_subscriber`: Find a Kit subscriber by email: name, state, join date.
+- `list_forms`: Kit (ConvertKit) signup forms, with id and name.
+- `list_broadcasts`: Kit email broadcasts (newsletters sent).
 
 ## Limits and privacy
 

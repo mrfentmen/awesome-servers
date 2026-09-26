@@ -7,8 +7,8 @@ This file is self contained. It reads public data only and never writes to the m
 ## Tools
 
 
-* `coins`  List ranked coins.
-* `coin`  Get a coin.
+* `coins`  Ranked coins with market cap and 24h change.
+* `coin`  One coin by its CryptoRank key, e.g. bitcoin.
 
 ## Usage
 

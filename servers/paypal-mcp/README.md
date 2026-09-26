@@ -4,9 +4,9 @@ Query PayPal sandbox (set PAYPAL_SANDBOX_CLIENT_ID + PAYPAL_SANDBOX_SECRET, OAut
 
 ## Tools
 
-- `get_order` — Order details.
-- `get_capture` — Capture details.
-- `list_plans` — Billing plans.
+- `get_order` — One order by id, with status, amount and payer.
+- `get_capture` — One payment capture by id, with amount and status.
+- `list_plans` — Billing plans on the account, with id and status.
 
 ## Source
 

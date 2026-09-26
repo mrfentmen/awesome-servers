@@ -4,9 +4,9 @@ Query the Mercury API (sandbox key; set MERCURY_API_KEY, Bearer): accounts, acco
 
 ## Tools
 
-- `list_accounts` — Mercury accounts.
-- `get_account` — Account details by ID.
-- `list_transactions` — Transactions for an account.
+- `list_accounts` — Mercury accounts with balance and type.
+- `get_account` — One account by id, with routing details.
+- `list_transactions` — Transactions on an account, newest first.
 
 ## Source
 

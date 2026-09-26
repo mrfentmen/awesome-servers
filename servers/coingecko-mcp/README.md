@@ -6,8 +6,8 @@ A merged MCP server that consolidates duplicate single-purpose servers in this m
 
 ## Tools
 
-- `price` — Price for one or more coins.
-- `trending` — Trending coins on CoinGecko.
+- `price` — Current price for one coin id, e.g. bitcoin, in a chosen currency.
+- `trending` — Coins trending in CoinGecko search over the last 24 hours.
 
 ## Run
 

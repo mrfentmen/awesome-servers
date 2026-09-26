@@ -4,8 +4,8 @@ Query your Appwrite instance (self-hosted or cloud; set APPWRITE_ENDPOINT + APPW
 
 ## Tools
 
-- `list_users` — Project users.
-- `list_databases` — Databases.
+- `list_users` — Project users with email and status.
+- `list_databases` — Databases in the project, with id and name.
 
 ## Source
 

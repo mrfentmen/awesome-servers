@@ -7,8 +7,8 @@ This file is self contained. It reads public data only and never writes to the m
 ## Tools
 
 
-* `ticker`  Ticker for a pair.
-* `assets`  Tradeable assets.
+* `ticker`  Ticker for one pair, e.g. XBTUSD.
+* `assets`  Tradeable assets with decimals and status.
 
 ## Usage
 

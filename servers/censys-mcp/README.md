@@ -4,8 +4,8 @@ Query Censys Search (free tier; set CENSYS_API_ID + CENSYS_API_SECRET, HTTP Basi
 
 ## Tools
 
-- `get_host` — Full Censys record for an IP.
-- `search_hosts` — Censys query language search.
+- `get_host` — Censys record for an IP: services, ports and certificates.
+- `search_hosts` — Search hosts with Censys query syntax, e.g. services.http.
 
 ## Source
 

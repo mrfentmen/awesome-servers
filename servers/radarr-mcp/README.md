@@ -4,9 +4,9 @@ Query your Radarr instance (self-hosted; set RADARR_URL + RADARR_API_KEY, query 
 
 ## Tools
 
-- `list_movies` — Movie library.
-- `get_queue` — Active downloads.
-- `get_health` — System health issues.
+- `list_movies` — Movies in the Radarr library, with status.
+- `get_queue` — Active downloads and imports in the queue.
+- `get_health` — Radarr health warnings and errors.
 
 ## Source
 

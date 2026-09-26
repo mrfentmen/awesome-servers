@@ -4,9 +4,9 @@ Query your AdGuard Home (self-hosted; set ADGUARD_URL; optional ADGUARD_USER + A
 
 ## Tools
 
-- `get_status` — DNS protection state.
-- `get_stats` — Query/block counters.
-- `get_query_log` — Recent DNS queries.
+- `get_status` — DNS protection state: enabled, filters and upstreams.
+- `get_stats` — Query and blocked-request counters, total and average.
+- `get_query_log` — Recent DNS queries with client, domain and action.
 
 ## Source
 

@@ -4,8 +4,8 @@ Query Google Books (keyless quota is shared and may 429; set GOOGLE_BOOKS_API_KE
 
 ## Tools
 
-- `search_books` — Google Books volume search.
-- `get_volume` — Volume details by ID.
+- `search_books` — Search Google Books volumes by title or author.
+- `get_volume` — One volume by id, with description and ISBNs.
 
 ## Source
 

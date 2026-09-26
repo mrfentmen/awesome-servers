@@ -4,9 +4,9 @@ Query Feedly (token; set FEEDLY_TOKEN, Bearer): profile, subscriptions, stream c
 
 ## Tools
 
-- `profile` — Feedly profile.
-- `subscriptions` — Followed feeds.
-- `stream_contents` — Recent entries.
+- `profile` — The Feedly account the token belongs to.
+- `subscriptions` — Feeds the account follows, with titles.
+- `stream_contents` — Recent entries in a stream, newest first.
 
 ## Source
 

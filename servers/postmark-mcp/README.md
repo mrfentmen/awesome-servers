@@ -4,9 +4,9 @@ Query the Postmark API (free tier server token; set POSTMARK_SERVER_TOKEN, sent 
 
 ## Tools
 
-- `get_server` — Postmark server details.
-- `list_templates` — Email templates.
-- `list_outbound` — Recent outbound messages.
+- `get_server` — Postmark server details and delivery settings.
+- `list_templates` — Email templates on the server, with ids.
+- `list_outbound` — Recent outbound messages with recipient and status.
 
 ## Source
 

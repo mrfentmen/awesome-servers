@@ -6,10 +6,10 @@ A merged MCP server that consolidates duplicate single-purpose servers in this m
 
 ## Tools
 
-- `chains` — TVL by chain.
-- `protocol` — TVL history for a protocol.
+- `chains` — Total value locked per chain, biggest first.
+- `protocol` — TVL history for a protocol slug, e.g. aave.
 - `top_protocols` — Get the top DeFi protocols by TVL.
-- `chain_tvl` — Get TVL for all chains.
+- `chain_tvl` — Total value locked for every chain in one call.
 - `protocol_info` — Get details for a specific protocol.
 
 ## Run

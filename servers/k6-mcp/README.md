@@ -5,7 +5,7 @@ Query a running k6 (open source; set K6_URL, default http://localhost:6565): run
 ## Tools
 
 - `get_status` — k6 run state, VUs, iterations.
-- `list_metrics` — Built-in and custom metrics.
+- `list_metrics` — Metric names a k6 run can report.
 
 ## Source
 

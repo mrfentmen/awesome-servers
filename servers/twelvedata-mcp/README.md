@@ -7,7 +7,7 @@ This file is self contained. It reads public data only and never writes to the m
 ## Tools
 
 
-* `quote`  Get a stock quote.
+* `quote`  Latest quote for a symbol, e.g. AAPL: price and change.
 
 ## Usage
 

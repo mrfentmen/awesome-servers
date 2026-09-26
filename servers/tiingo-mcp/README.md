@@ -19,9 +19,9 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `stock_meta`: Name, exchange, data range.
-- `stock_prices`: Recent daily OHLCV.
-- `crypto_meta`: Crypto name.
+- `stock_meta`: Stock name, exchange, data range.
+- `stock_prices`: Recent daily OHLCV prices, newest first.
+- `crypto_meta`: Name and base currency behind a crypto ticker, e.g. btcusd.
 
 ## Limits and privacy
 

@@ -4,8 +4,8 @@ Search Open Charge Map (free key; set OPENCHARGEMAP_API_KEY, query param): charg
 
 ## Tools
 
-- `nearby` — Chargers near coordinates.
-- `get_poi` — Details by chargepoint ID.
+- `nearby` — Charging points near coordinates, with distance.
+- `get_poi` — One charge point by id, with connectors and operator.
 
 ## Source
 

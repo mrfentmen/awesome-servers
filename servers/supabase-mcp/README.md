@@ -4,9 +4,9 @@ Query your Supabase project (set SUPABASE_URL + SUPABASE_SERVICE_KEY, apikey hea
 
 ## Tools
 
-- `query_table` — Rows from a table.
-- `list_users` — Auth users.
-- `call_rpc` — Call a Postgres function.
+- `query_table` — Rows from one table, with select and limit applied.
+- `list_users` — Auth users in the project, one page at a time.
+- `call_rpc` — Call a Postgres function by name with JSON parameters.
 
 ## Source
 

@@ -4,9 +4,9 @@ Use the Telegram Bot API (free bot; set TELEGRAM_BOT_TOKEN): bot info, send mess
 
 ## Tools
 
-- `get_me` — Bot username and ID.
+- `get_me` — Bot identity: username, id and capabilities.
 - `send_message` — Send a REAL message to a chat.
-- `get_updates` — Recent incoming updates.
+- `get_updates` — Incoming updates from the last 24 hours.
 
 ## Source
 

@@ -4,9 +4,9 @@ Query Statuspage management API (key; set STATUSPAGE_API_KEY, OAuth header): pag
 
 ## Tools
 
-- `list_pages` — Status pages.
-- `get_page` — Page details.
-- `list_incidents` — Recent incidents.
+- `list_pages` — Status pages the key can read, with id and name.
+- `get_page` — One status page by id, with components and status.
+- `list_incidents` — Recent incidents on a page, newest first.
 
 ## Source
 

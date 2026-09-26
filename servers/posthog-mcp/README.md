@@ -4,9 +4,9 @@ Query PostHog (personal key; set POSTHOG_PERSONAL_API_KEY, Bearer; optional POST
 
 ## Tools
 
-- `me` — PostHog user.
-- `list_projects` — Analytics projects.
-- `list_insights` — Saved insights.
+- `me` — The PostHog user the API key belongs to.
+- `list_projects` — Analytics projects in the organization.
+- `list_insights` — Saved insights in one project, with names.
 
 ## Source
 

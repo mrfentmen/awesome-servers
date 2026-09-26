@@ -4,9 +4,9 @@ Query the Cartesia API (free tier key; set CARTESIA_API_KEY, Bearer): voice list
 
 ## Tools
 
-- `list_voices` — Available voices.
-- `get_voice` — Voice details by ID.
-- `synthesize_speech` — Text to MP3 (SPENDS credits).
+- `list_voices` — Voices available on the account, with language.
+- `get_voice` — One voice by id, with its embedding and settings.
+- `synthesize_speech` — Render text to MP3 with a voice — this spends credits.
 
 ## Source
 

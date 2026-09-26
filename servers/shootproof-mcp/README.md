@@ -8,7 +8,7 @@ Query the ShootProof Studio API: service description, authenticated user, brands
 - `get_me` — Authenticated ShootProof user profile.
 - `list_brands` — Photography brands on the ShootProof account.
 - `list_brand_events` — Galleries (events) of a brand.
-- `list_brand_orders` — Orders of a brand.
+- `list_brand_orders` — Orders of one ShootProof brand, newest first.
 
 ## Source
 

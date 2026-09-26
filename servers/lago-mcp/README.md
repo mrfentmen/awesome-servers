@@ -4,9 +4,9 @@ Query the Lago API (free self-host or cloud key; set LAGO_API_KEY, Bearer; optio
 
 ## Tools
 
-- `list_plans` — Billing plans.
-- `list_customers` — Customers.
-- `list_invoices` — Invoices.
+- `list_plans` — Billing plans with interval and amount.
+- `list_customers` — Billing customers with id and currency.
+- `list_invoices` — Invoices with status, amount and billing period.
 
 ## Source
 

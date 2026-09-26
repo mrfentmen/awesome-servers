@@ -4,9 +4,9 @@ Query the Plain GraphQL API (free tier key; set PLAIN_API_KEY, Bearer): customer
 
 ## Tools
 
-- `list_customers` — Support customers.
-- `list_threads` — Support threads.
-- `get_thread` — Thread details by ID.
+- `list_customers` — Support customers with email and company.
+- `list_threads` — Open support threads, newest first.
+- `get_thread` — One thread by id, with messages and status.
 
 ## Source
 

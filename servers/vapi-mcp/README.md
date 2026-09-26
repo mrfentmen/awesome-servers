@@ -4,10 +4,10 @@ Query the Vapi API (free tier key; set VAPI_API_KEY, Bearer): assistants, single
 
 ## Tools
 
-- `list_assistants` — Voice assistants.
-- `get_assistant` — Assistant config by ID.
-- `list_calls` — Call history.
-- `get_call` — Call details and transcript.
+- `list_assistants` — Voice assistants on the account, with id and model.
+- `get_assistant` — One assistant by id, with its prompt and voice config.
+- `list_calls` — Call history with duration, cost and outcome.
+- `get_call` — One call by id, with transcript and recording URL.
 
 ## Source
 

@@ -7,8 +7,8 @@ This file is self contained. It reads public data only and never writes to the m
 ## Tools
 
 
-* `token`  Get token info.
-* `trending`  Trending pools.
+* `token`  Token details by address on one network: price, supply, pool.
+* `trending`  Pools with the most activity on GeckoTerminal right now.
 
 ## Usage
 

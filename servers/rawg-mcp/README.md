@@ -5,7 +5,7 @@ Query the RAWG video games database (free key from rawg.io/apidocs; set RAWG_API
 ## Tools
 
 - `search_games` — Game search (needs RAWG_API_KEY).
-- `get_game` — Game details by ID or slug.
+- `get_game` — One game by id or slug, with platforms and rating.
 
 ## Source
 

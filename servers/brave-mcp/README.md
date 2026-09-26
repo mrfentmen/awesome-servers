@@ -4,8 +4,8 @@ Search with Brave Search API (free key; set BRAVE_API_KEY, X-Subscription-Token)
 
 ## Tools
 
-- `web_search` — Independent web results.
-- `news_search` — News results.
+- `web_search` — Web results with titles, URLs and snippets.
+- `news_search` — Recent news articles matching a query.
 
 ## Source
 

@@ -4,10 +4,10 @@ Query Mailchimp (key; set MAILCHIMP_API_KEY, datacenter derived from key suffix)
 
 ## Tools
 
-- `ping` — API health.
-- `list_lists` — Mailchimp audiences.
-- `list_members` — Members of an audience.
-- `list_campaigns` — Campaigns.
+- `ping` — Check that the Mailchimp API key still works.
+- `list_lists` — Mailchimp audiences, with member counts.
+- `list_members` — Members of one audience, with status and email.
+- `list_campaigns` — Sent and scheduled campaigns, newest first.
 
 ## Source
 

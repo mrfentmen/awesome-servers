@@ -4,9 +4,9 @@ Query Sentry (auth token; set SENTRY_AUTH_TOKEN, Bearer): organizations, project
 
 ## Tools
 
-- `list_orgs` — Organizations.
-- `org_projects` — Projects in an org.
-- `org_issues` — Recent issues (24h).
+- `list_orgs` — Sentry organizations the token can read.
+- `org_projects` — Projects inside one Sentry org, e.g. my-org.
+- `org_issues` — Issues first seen in one org in the last 24 hours.
 
 ## Source
 

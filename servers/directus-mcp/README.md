@@ -4,8 +4,8 @@ Query your Directus instance (self-hosted or cloud; set DIRECTUS_URL + DIRECTUS_
 
 ## Tools
 
-- `list_collections` — Data collections.
-- `list_users` — Directus users.
+- `list_collections` — Collections (tables) in the Directus instance.
+- `list_users` — Directus users with email, role and status.
 
 ## Source
 

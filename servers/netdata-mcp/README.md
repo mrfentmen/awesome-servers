@@ -5,7 +5,7 @@ Query your Netdata agent (self-hosted; set NETDATA_URL; optional NETDATA_TOKEN):
 ## Tools
 
 - `get_info` — Agent version, OS, collectors.
-- `list_charts` — Available charts.
+- `list_charts` — Charts exposed by the Netdata agent.
 - `get_data` — Recent data points for a chart.
 
 ## Source

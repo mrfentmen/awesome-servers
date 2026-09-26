@@ -4,9 +4,9 @@ Query the Airtable API (PAT; set AIRTABLE_TOKEN, Bearer): bases, tables, records
 
 ## Tools
 
-- `list_bases` — Accessible bases.
-- `list_tables` — Tables in a base.
-- `list_records` — Records in a table.
+- `list_bases` — Airtable bases the token can access.
+- `list_tables` — Tables in one base, e.g. appXXXXXXXXXXXXXX.
+- `list_records` — Records in one table, with an optional max_records cap.
 
 ## Source
 

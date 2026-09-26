@@ -4,9 +4,9 @@ Query your Kong Admin API (self-hosted; set KONG_ADMIN_URL, default http://local
 
 ## Tools
 
-- `get_status` — Kong status counters.
-- `list_services` — Configured services.
-- `list_routes` — Configured routes.
+- `get_status` — Kong status counters: database and connections.
+- `list_services` — Services configured in Kong, with hosts.
+- `list_routes` — Routes configured in Kong, with paths.
 
 ## Source
 

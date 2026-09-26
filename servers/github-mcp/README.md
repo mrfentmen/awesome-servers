@@ -4,10 +4,10 @@ Query the GitHub REST API (free token; set GITHUB_TOKEN, Bearer): profile, repos
 
 ## Tools
 
-- `me` — Authenticated user profile.
-- `list_repos` — My recently updated repos.
-- `get_repo` — Repo details.
-- `search_repos` — Public repos by query.
+- `me` — Profile of the GitHub user the token belongs to.
+- `list_repos` — Repositories the token owner updated most recently.
+- `get_repo` — Repository details for owner/repo, e.g. facebook/react.
+- `search_repos` — Public repositories matching a query, e.g. mcp server.
 
 ## Source
 

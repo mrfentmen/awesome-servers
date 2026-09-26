@@ -4,9 +4,9 @@ Query OpenRouteService (free key; set OPENROUTESERVICE_API_KEY): geocode, revers
 
 ## Tools
 
-- `geocode` — Forward geocode a place name.
-- `reverse` — Place name for coordinates.
-- `directions` — Car route between two points.
+- `geocode` — Coordinates for a place name, e.g. Berlin.
+- `reverse` — Nearest place name for latitude and longitude.
+- `directions` — Driving route between two points, with distance and time.
 
 ## Source
 

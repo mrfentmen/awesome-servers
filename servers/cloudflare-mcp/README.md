@@ -4,9 +4,9 @@ Query Cloudflare v4 (API token; set CLOUDFLARE_API_TOKEN, Bearer): zones, accoun
 
 ## Tools
 
-- `list_zones` — DNS zones.
-- `list_accounts` — Accounts.
-- `list_dns` — Records in a zone.
+- `list_zones` — Cloudflare zones (domains) in the account.
+- `list_accounts` — Cloudflare accounts the token can reach.
+- `list_dns` — DNS records in one zone id, with type and TTL.
 
 ## Source
 

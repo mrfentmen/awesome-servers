@@ -5,7 +5,7 @@ Use ntfy.sh (keyless; optional NTFY_BASE_URL + NTFY_TOKEN): publish notification
 ## Tools
 
 - `publish` — Send a REAL notification to a topic.
-- `poll` — Cached messages as JSON.
+- `poll` — Messages cached on a topic, as JSON, since a given time.
 
 ## Source
 

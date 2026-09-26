@@ -4,9 +4,9 @@ Query Crisp (set CRISP_IDENTIFIER + CRISP_KEY, Basic; website-scoped reads): vis
 
 ## Tools
 
-- `list_visitors` — Active visitors.
-- `get_profile` — Profile by email.
-- `get_conversation` — Conversation details.
+- `list_visitors` — Visitors on the site right now, with last page seen.
+- `get_profile` — Crisp profile for one email, with custom fields.
+- `get_conversation` — Messages in one conversation, by session id.
 
 ## Source
 

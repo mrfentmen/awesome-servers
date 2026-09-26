@@ -4,9 +4,9 @@ Query OpenRouter (free key; set OPENROUTER_API_KEY, Bearer): model list, key inf
 
 ## Tools
 
-- `list_models` — Available LLM models.
-- `key_info` — API key details and limits.
-- `credits` — Credit balance.
+- `list_models` — Models available on OpenRouter, with context size and price.
+- `key_info` — What the current key can spend, and how much is left.
+- `credits` — Remaining credit balance for the account.
 
 ## Source
 

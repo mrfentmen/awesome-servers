@@ -4,9 +4,9 @@ Query the Spotify Web API (free app; set SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECR
 
 ## Tools
 
-- `search` — Tracks, artists, albums.
-- `get_artist` — Artist profile.
-- `get_album` — Album details and tracks.
+- `search` — Search the Spotify catalog for tracks, artists or albums.
+- `get_artist` — Artist profile: genres, popularity and follower count.
+- `get_album` — Album details plus its track list and release date.
 
 ## Source
 

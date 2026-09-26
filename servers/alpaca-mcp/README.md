@@ -4,9 +4,9 @@ Query Alpaca paper trading (set ALPACA_API_KEY_ID + ALPACA_API_SECRET_KEY, heade
 
 ## Tools
 
-- `account` — Buying power, equity.
-- `positions` — Open positions.
-- `orders` — Recent orders.
+- `account` — Buying power, equity and cash for the trading account.
+- `positions` — Open positions with symbol, quantity and unrealized P/L.
+- `orders` — Recent orders with side, quantity, status and fill price.
 
 ## Source
 

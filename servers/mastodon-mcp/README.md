@@ -4,9 +4,9 @@ Read any Mastodon instance (keyless; set MASTODON_INSTANCE, default mastodon.soc
 
 ## Tools
 
-- `trending_tags` — Trending hashtags.
-- `trending_posts` — Trending statuses.
-- `instance_info` — Instance details and stats.
+- `trending_tags` — Hashtags trending on the instance right now.
+- `trending_posts` — Statuses trending on the instance right now.
+- `instance_info` — Instance description, version and user counts.
 
 ## Source
 

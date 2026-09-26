@@ -4,9 +4,9 @@ Query the Twitch Helix API (free app token; set TWITCH_CLIENT_ID + TWITCH_CLIENT
 
 ## Tools
 
-- `top_games` — Most-watched games.
+- `top_games` — Games with the biggest live viewer count right now.
 - `top_streams` — Live streams, optionally for a game.
-- `search_channels` — Channels matching a query.
+- `search_channels` — Channels matching a query, with live status.
 
 ## Source
 

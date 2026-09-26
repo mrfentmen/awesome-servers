@@ -19,10 +19,10 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 
 ## Tools at a glance
 
-- `stock_quote`: OHLC, change, volume.
-- `fx_rate`: Currency pairs.
-- `crypto_price`: Crypto in any market.
-- `symbol_search`: Tickers by company.
+- `stock_quote`: Quote with open/high/low, change, volume. Free tier is 25 calls/day.
+- `fx_rate`: Currency exchange rate between two codes.
+- `crypto_price`: Crypto price in a market currency.
+- `symbol_search`: Find ticker symbols by company name, e.g. ibm.
 
 ## Limits and privacy
 

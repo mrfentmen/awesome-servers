@@ -4,9 +4,9 @@ Query Raindrop.io (token; set RAINDROP_TOKEN, Bearer): user, collections, bookma
 
 ## Tools
 
-- `user` — Raindrop user.
-- `collections` — Bookmark collections.
-- `raindrops` — Links in a collection.
+- `user` — The Raindrop account the token belongs to.
+- `collections` — Bookmark collections with counts and ids.
+- `raindrops` — Bookmarks in one collection, with tags and links.
 
 ## Source
 

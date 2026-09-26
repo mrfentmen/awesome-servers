@@ -4,9 +4,9 @@ Query Customer.io (set CUSTOMERIO_SITE_ID + CUSTOMERIO_API_KEY, Basic): customer
 
 ## Tools
 
-- `list_customers` — Tracked customers.
-- `get_customer` — Customer profile.
-- `list_segments` — Segments.
+- `list_customers` — Tracked customers with email and attributes.
+- `get_customer` — One customer profile by id, with its attributes.
+- `list_segments` — Segments with id, name and member counts.
 
 ## Source
 

@@ -7,8 +7,8 @@ This file is self contained. It reads public data only and never writes to the m
 ## Tools
 
 
-* `spot`  Spot price for a pair.
-* `exchange`  Exchange rates.
+* `spot`  Latest spot price for one pair, e.g. BTC-USD.
+* `exchange`  Crypto-to-fiat exchange rates for one base currency.
 
 ## Usage
 

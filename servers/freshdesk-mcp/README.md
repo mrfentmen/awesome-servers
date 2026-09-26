@@ -4,9 +4,9 @@ Query Freshdesk (set FRESHDESK_DOMAIN + FRESHDESK_API_KEY, key:X Basic): tickets
 
 ## Tools
 
-- `list_tickets` — Recent tickets.
-- `get_ticket` — Ticket details.
-- `list_contacts` — Contacts.
+- `list_tickets` — Most recent support tickets, with status and priority.
+- `get_ticket` — One ticket by id, with requester and full text.
+- `list_contacts` — Support contacts with email and company.
 
 ## Source
 

@@ -4,9 +4,9 @@ Query the Figma API (token; set FIGMA_ACCESS_TOKEN, X-Figma-Token): profile, fil
 
 ## Tools
 
-- `me` — Figma user.
-- `get_file` — File metadata.
-- `project_files` — Files in a project.
+- `me` — The Figma user the access token belongs to.
+- `get_file` — File metadata: name, pages and last modified date.
+- `project_files` — Figma files inside one project id.
 
 ## Source
 

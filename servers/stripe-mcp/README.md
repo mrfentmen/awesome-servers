@@ -4,9 +4,9 @@ Query the Stripe API (test-mode key; set STRIPE_SECRET_KEY, Basic): charges, cus
 
 ## Tools
 
-- `list_charges` — Recent charges.
-- `list_customers` — Customers.
-- `get_balance` — Account balance.
+- `list_charges` — Most recent charges, with amount, currency and status.
+- `list_customers` — Most recent customers, with email and created date.
+- `get_balance` — Available and pending balance by currency.
 
 ## Source
 
