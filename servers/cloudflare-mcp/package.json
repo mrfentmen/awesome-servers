@@ -1,5 +1,5 @@
 {
-  "name": "cloudflare-mcp",
+  "name": "@mrfentmen/cloudflare-mcp",
   "version": "1.0.0",
   "description": "Cloudflare zones, DNS, accounts. Token.",
   "type": "module",

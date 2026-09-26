@@ -1,6 +1,6 @@
 {
-  "name": "gitlab-mcp",
-  "version": "1.0.0",
+  "name": "@mrfentmen/gitlab-mcp",
+  "version": "1.0.1",
   "description": "GitLab user, projects, groups. Token.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/gitlab-mcp",

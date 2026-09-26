@@ -1,5 +1,5 @@
 {
-  "name": "notion-mcp",
+  "name": "@mrfentmen/notion-mcp",
   "version": "1.0.0",
   "description": "Notion search, users, pages. Integration.",
   "type": "module",

@@ -1,5 +1,5 @@
 {
-  "name": "apollo-mcp",
+  "name": "@mrfentmen/apollo-mcp",
   "version": "1.0.0",
   "description": "Apollo people search + enrich. Free key.",
   "type": "module",

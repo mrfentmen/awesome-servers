@@ -1,5 +1,5 @@
 {
-  "name": "alpaca-mcp",
+  "name": "@mrfentmen/alpaca-mcp",
   "version": "1.0.0",
   "description": "Alpaca paper: account, positions, orders.",
   "type": "module",

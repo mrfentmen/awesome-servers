@@ -5,6 +5,7 @@ import {
   me,
   listProjects,
   listGroups,
+  searchPublic,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -67,6 +68,26 @@ export function createServer(): McpServer {
     async ({ limit }) => {
       try {
         return text(await listGroups(limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "search_public",
+    {
+      title: "Search public",
+      description: "Public projects by query (no token needed).",
+      inputSchema: z.object({
+        query: z.string().describe("Search text."),
+        limit: z.string().describe("Max results (default 10, max 50).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, limit }) => {
+      try {
+        return text(await searchPublic(query, limit));
       } catch (e) {
         return textError(errorMessage(e));
       }

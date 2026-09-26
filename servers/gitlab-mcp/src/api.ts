@@ -52,3 +52,21 @@ export function listGroups(limit?: string): Promise<string> {
   return get(`/groups?per_page=${n}`);
 }
 
+export async function searchPublic(query: string, limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 10) || 10, 50);
+  let res: Response;
+  try {
+    res = await fetch(`${base()}/projects?search=${encodeURIComponent(query)}&per_page=${n}&order_by=last_activity_at`, {
+      headers: { ...UA, Accept: "application/json" },
+      signal: AbortSignal.timeout(25000),
+    });
+  } catch (e) {
+    throw new GitlabError(`Network error: ${(e as Error).message}`);
+  }
+  if (!res.ok) {
+    const body = (await res.text()).slice(0, 300);
+    throw new GitlabError(`HTTP ${res.status}: ${body}`);
+  }
+  return (await res.text()).slice(0, 12000);
+}
+

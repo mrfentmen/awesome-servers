@@ -1,5 +1,5 @@
 {
-  "name": "ntfy-mcp",
+  "name": "@mrfentmen/ntfy-mcp",
   "version": "1.0.0",
   "description": "ntfy push: publish + poll. Keyless.",
   "type": "module",

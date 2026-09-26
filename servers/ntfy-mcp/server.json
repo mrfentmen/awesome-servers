@@ -10,7 +10,7 @@
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "ntfy-mcp",
+      "identifier": "@mrfentmen/ntfy-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"

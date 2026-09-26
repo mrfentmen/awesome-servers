@@ -10,7 +10,7 @@
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "mailchimp-mcp",
+      "identifier": "@mrfentmen/mailchimp-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"

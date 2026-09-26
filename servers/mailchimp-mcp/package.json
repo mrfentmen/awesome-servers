@@ -1,5 +1,5 @@
 {
-  "name": "mailchimp-mcp",
+  "name": "@mrfentmen/mailchimp-mcp",
   "version": "1.0.0",
   "description": "Mailchimp lists, members, campaigns. Key.",
   "type": "module",

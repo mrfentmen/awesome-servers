@@ -1,5 +1,5 @@
 {
-  "name": "resend-mcp",
+  "name": "@mrfentmen/resend-mcp",
   "version": "1.0.0",
   "description": "Resend domains + emails. API key.",
   "type": "module",

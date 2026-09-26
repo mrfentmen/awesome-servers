@@ -1,5 +1,5 @@
 {
-  "name": "hubspot-mcp",
+  "name": "@mrfentmen/hubspot-mcp",
   "version": "1.0.0",
   "description": "HubSpot contacts, companies, deals.",
   "type": "module",

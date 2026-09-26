@@ -1,5 +1,5 @@
 {
-  "name": "polygon-mcp",
+  "name": "@mrfentmen/polygon-mcp",
   "version": "1.0.0",
   "description": "Polygon stocks: tickers, aggregates. Free key.",
   "type": "module",

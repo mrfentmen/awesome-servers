@@ -1,5 +1,5 @@
 {
-  "name": "sentry-mcp",
+  "name": "@mrfentmen/sentry-mcp",
   "version": "1.0.0",
   "description": "Sentry orgs, projects, issues. Token.",
   "type": "module",

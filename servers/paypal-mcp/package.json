@@ -1,5 +1,5 @@
 {
-  "name": "paypal-mcp",
+  "name": "@mrfentmen/paypal-mcp",
   "version": "1.0.0",
   "description": "PayPal sandbox: orders, captures, plans.",
   "type": "module",

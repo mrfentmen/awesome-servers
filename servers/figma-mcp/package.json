@@ -1,5 +1,5 @@
 {
-  "name": "figma-mcp",
+  "name": "@mrfentmen/figma-mcp",
   "version": "1.0.0",
   "description": "Figma me, files, projects. Token.",
   "type": "module",
