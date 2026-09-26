@@ -101,7 +101,7 @@ export function searchProducts(query: string, limit?: string, maxPrice?: string,
       if (passes(sl, mp, productType)) out.push(sl);
       if (out.length >= n) break;
     }
-    return pretty({ store: "Missoma", query, count: out.length, listings: out });
+    return pretty({ store: "Missoma", query, returned: out.length, listings: out });
   });
 }
 
@@ -115,7 +115,7 @@ export function listNewest(limit?: string, page?: string, productType?: string):
       if (sl.product_type && (!productType || sl.product_type.toLowerCase().includes(productType.toLowerCase()))) out.push(sl);
     }
     out.sort((a, b) => String(b.published_at ?? "").localeCompare(String(a.published_at ?? "")));
-    return pretty({ store: "Missoma", page: pg, count: out.length, listings: out.slice(0, n) });
+    return pretty({ store: "Missoma", page: pg, matched_on_page: out.length, returned: Math.min(out.length, n), listings: out.slice(0, n) });
   });
 }
 
@@ -144,15 +144,17 @@ export function priceOverview(limit?: string): Promise<string> {
   const n = Math.min(Number(limit ?? 200) || 200, 500);
   return sampleCatalog(n, [1, 2, 3]).then((products) => {
     const prices: number[] = [];
+    let unpriced = 0;
     for (const p of products) {
       const sl = slim(p);
-      if (sl.price_usd !== null) prices.push(sl.price_usd);
+      if (sl.price_usd === null || sl.price_usd <= 0) unpriced += 1;
+      else prices.push(sl.price_usd);
     }
     if (!prices.length) throw new StoreError("No priced products found.");
     const a = [...prices].sort((x, y) => x - y);
     const mid = a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2;
     return pretty({
-      store: "Missoma", currency: "USD", sample: a.length,
+      store: "Missoma", currency: "USD", unpriced, sample: a.length,
       min: a[0], p25: a[Math.floor(a.length * 0.25)], median: mid,
       p75: a[Math.floor(a.length * 0.75)], max: a[a.length - 1],
       note: "Storefront asking prices. Not affiliated with Missoma.",
@@ -167,7 +169,7 @@ export function findDeals(limit?: string, sample?: string): Promise<string> {
     const all: Slim[] = [];
     for (const p of products) {
       const sl = slim(p);
-      if (sl.price_usd !== null && sl.available) all.push(sl);
+      if (sl.price_usd !== null && sl.price_usd > 0 && sl.available) all.push(sl);
     }
     if (!all.length) throw new StoreError("No available priced products found.");
     const ps = all.map((s) => s.price_usd as number).sort((a, b) => a - b);
@@ -178,7 +180,7 @@ export function findDeals(limit?: string, sample?: string): Promise<string> {
       .map((s) => ({ ...s, vs_median_usd: Math.round(((s.price_usd as number) - median) * 100) / 100, vs_median_pct: Math.round((((s.price_usd as number) - median) / median) * 1000) / 10 }))
       .sort((a, b) => a.vs_median_pct - b.vs_median_pct);
     return pretty({
-      store: "Missoma", sample: all.length, median_usd: median, count: Math.min(deals.length, n),
+      store: "Missoma", sample: all.length, median_usd: median, matched: deals.length, returned: Math.min(deals.length, n),
       deals: deals.slice(0, n),
       note: "Below-median asks, not appraisals. Not affiliated with Missoma.",
     });

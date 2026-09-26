@@ -201,7 +201,7 @@ export async function searchListings(query: string, limit?: string, maxPrice?: s
     } catch { /* source down — keep the other */ }
     if (out.length >= n) break
   }
-  return pretty({ brand: "Hermès", query, count: out.length, condition_filter: cond ?? null, listings: out.slice(0, n) })
+  return pretty({ brand: "Hermès", query, returned: out.length, truncated: out.length >= n, condition_filter: cond ?? null, listings: out.slice(0, n) })
 }
 
 export async function listNewest(limit?: string, page?: string, productType?: string, maxPrice?: string, condition?: string): Promise<string> {
@@ -220,7 +220,7 @@ export async function listNewest(limit?: string, page?: string, productType?: st
     } catch { /* source down — keep the other */ }
   }
   out.sort((a, b) => String(b.published_at ?? "").localeCompare(String(a.published_at ?? "")))
-  return pretty({ brand: "Hermès", page: pg, count: out.length, listings: out.slice(0, n) })
+  return pretty({ brand: "Hermès", page: pg, matched_on_page: out.length, returned: Math.min(out.length, n), listings: out.slice(0, n) })
 }
 
 export async function getListing(handle: string, source?: string): Promise<string> {
@@ -251,10 +251,11 @@ export async function getListing(handle: string, source?: string): Promise<strin
 export async function priceOverview(limit?: string): Promise<string> {
   const n = Math.min(Number(limit ?? 200) || 200, 500)
   const prices: number[] = []
+  let unpriced = 0
   const byCondition: Record<string, number[]> = {}
   for (const { source: s, p } of await sampleCatalog(n, [1, 2, 3, 4, 5])) {
     const sl = slim(s.name, s.base, p)
-    if (sl.price_usd === null) continue
+    if (sl.price_usd === null || sl.price_usd <= 0) { unpriced += 1; continue }
     prices.push(sl.price_usd)
     const c = sl.condition ?? "unknown"
     if (!byCondition[c]) byCondition[c] = []
@@ -269,7 +270,7 @@ export async function priceOverview(limit?: string): Promise<string> {
   const condStats: Record<string, unknown> = {}
   for (const [c, arr] of Object.entries(byCondition)) condStats[c] = stats(arr)
   return pretty({
-    brand: "Hermès", currency: "USD", overall: stats(prices), by_condition: condStats,
+    brand: "Hermès", currency: "USD", unpriced, overall: stats(prices), by_condition: condStats,
     note: "Asking prices on resale sources, not appraisals. Not affiliated with Hermès.",
   })
 }
@@ -316,7 +317,7 @@ export async function findDeals(limit?: string, sample?: string): Promise<string
   const all: Slim[] = []
   for (const { source: s, p } of await sampleCatalog(per, [1, 2, 3, 4, 5])) {
     const sl = slim(s.name, s.base, p)
-    if (sl.price_usd !== null && sl.available) all.push(sl)
+    if (sl.price_usd !== null && sl.price_usd > 0 && sl.available) all.push(sl)
   }
   if (!all.length) throw new HermesError("No available priced listings found.")
   const ps = all.map((s) => s.price_usd as number).sort((a, b) => a - b)
@@ -326,7 +327,7 @@ export async function findDeals(limit?: string, sample?: string): Promise<string
     .map((s) => ({ ...s, vs_median_usd: Math.round(((s.price_usd as number) - median) * 100) / 100, vs_median_pct: Math.round((((s.price_usd as number) - median) / median) * 1000) / 10 }))
     .sort((a, b) => a.vs_median_pct - b.vs_median_pct)
   return pretty({
-    brand: "Hermès", sample: all.length, brand_median_usd: median, count: Math.min(deals.length, n),
+    brand: "Hermès", sample: all.length, brand_median_usd: median, matched: deals.length, returned: Math.min(deals.length, n),
     deals: deals.slice(0, n),
     note: "Below-median asks, not appraisals or authenticity guarantees. Not affiliated with Hermès.",
   })
