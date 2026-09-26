@@ -23,7 +23,7 @@ export function createServer(): McpServer {
     "top_games",
     {
       title: "Top games",
-      description: "Most-watched games.",
+      description: "Games with the biggest live viewer count right now.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 100).").optional()
       }),
@@ -62,7 +62,7 @@ export function createServer(): McpServer {
     "get_user",
     {
       title: "Get user",
-      description: "User profile by login name.",
+      description: "Twitch profile for one login name, e.g. shroud.",
       inputSchema: z.object({
         login: z.string().describe("Login name, e.g. shroud.")
       }),
@@ -81,7 +81,7 @@ export function createServer(): McpServer {
     "search_channels",
     {
       title: "Search channels",
-      description: "Channels matching a query.",
+      description: "Channels matching a query, with live status.",
       inputSchema: z.object({
         query: z.string().describe("Search text."),
         limit: z.string().describe("Max results (default 10, max 100).").optional()

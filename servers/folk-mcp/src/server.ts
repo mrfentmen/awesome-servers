@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_people",
     {
       title: "List people",
-      description: "Contacts.",
+      description: "Contacts in the Folk workspace, newest first.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 20, max 100).").optional()
       }),
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "get_person",
     {
       title: "Get person",
-      description: "Contact details by ID.",
+      description: "One contact by id, with emails and company.",
       inputSchema: z.object({
         person_id: z.string().describe("Folk person ID, e.g. p_1234")
       }),
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
     "list_groups",
     {
       title: "List groups",
-      description: "Contact groups.",
+      description: "Contact groups with id and name.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

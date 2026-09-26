@@ -23,7 +23,7 @@ export function createServer(): McpServer {
     "ping",
     {
       title: "Ping",
-      description: "API health.",
+      description: "Check that the Mailchimp API key still works.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -40,7 +40,7 @@ export function createServer(): McpServer {
     "list_lists",
     {
       title: "List audiences",
-      description: "Mailchimp audiences.",
+      description: "Mailchimp audiences, with member counts.",
       inputSchema: z.object({
         count: z.string().describe("Max results (default 10, max 100).").optional()
       }),
@@ -59,7 +59,7 @@ export function createServer(): McpServer {
     "list_members",
     {
       title: "List members",
-      description: "Members of an audience.",
+      description: "Members of one audience, with status and email.",
       inputSchema: z.object({
         list_id: z.string().describe("Audience ID."),
         count: z.string().describe("Max results (default 10, max 100).").optional()
@@ -79,7 +79,7 @@ export function createServer(): McpServer {
     "list_campaigns",
     {
       title: "List campaigns",
-      description: "Campaigns.",
+      description: "Sent and scheduled campaigns, newest first.",
       inputSchema: z.object({
         count: z.string().describe("Max results (default 10, max 100).").optional()
       }),

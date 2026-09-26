@@ -21,7 +21,7 @@ export function createServer(): McpServer {
     "web_search",
     {
       title: "Web search",
-      description: "Independent web results.",
+      description: "Web results with titles, URLs and snippets.",
       inputSchema: z.object({
         query: z.string().describe("Search text."),
         count: z.string().describe("Max results (default 5, max 20).").optional()
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "news_search",
     {
       title: "News search",
-      description: "News results.",
+      description: "Recent news articles matching a query.",
       inputSchema: z.object({
         query: z.string().describe("Search text."),
         count: z.string().describe("Max results (default 5, max 20).").optional()

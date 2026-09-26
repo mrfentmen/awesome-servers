@@ -23,7 +23,7 @@ export function createServer(): McpServer {
     "list_institutions",
     {
       title: "List institutions",
-      description: "Sandbox banks.",
+      description: "Sandbox banks available for testing.",
       inputSchema: z.object({
         count: z.string().describe("Max results (default 10, max 100).").optional()
       }),
@@ -42,7 +42,7 @@ export function createServer(): McpServer {
     "list_categories",
     {
       title: "List categories",
-      description: "Transaction categories.",
+      description: "Personal finance categories Plaid can return.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

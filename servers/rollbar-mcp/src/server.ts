@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_projects",
     {
       title: "List projects",
-      description: "Rollbar projects.",
+      description: "Rollbar projects the token can read.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "list_items",
     {
       title: "List items",
-      description: "Error items in a project.",
+      description: "Error items in one project, most recent first.",
       inputSchema: z.object({
         project_id: z.string().describe("Rollbar project ID, e.g. 123456")
       }),
@@ -58,7 +58,7 @@ export function createServer(): McpServer {
     "get_item",
     {
       title: "Get item",
-      description: "Error item details.",
+      description: "One error item by id, with occurrences and stack.",
       inputSchema: z.object({
         project_id: z.string().describe("Rollbar project ID, e.g. 123456"),
         item_id: z.string().describe("Rollbar item ID, e.g. 1234567890")

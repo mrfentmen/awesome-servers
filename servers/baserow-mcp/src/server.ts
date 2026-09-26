@@ -21,7 +21,7 @@ export function createServer(): McpServer {
     "get_dashboard",
     {
       title: "Dashboard",
-      description: "Applications and databases.",
+      description: "Applications and databases in the workspace.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -38,7 +38,7 @@ export function createServer(): McpServer {
     "list_tables",
     {
       title: "List tables",
-      description: "Tables in a database.",
+      description: "Tables inside one database id, with field counts.",
       inputSchema: z.object({
         database_id: z.string().describe("Database ID.")
       }),

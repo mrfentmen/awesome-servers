@@ -21,7 +21,7 @@ export function createServer(): McpServer {
     "list_collections",
     {
       title: "List collections",
-      description: "Data collections.",
+      description: "Collections (tables) in the Directus instance.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -38,7 +38,7 @@ export function createServer(): McpServer {
     "list_users",
     {
       title: "List users",
-      description: "Directus users.",
+      description: "Directus users with email, role and status.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 20, max 100).").optional()
       }),

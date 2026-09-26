@@ -21,7 +21,7 @@ export function createServer(): McpServer {
     "search_items",
     {
       title: "Search items",
-      description: "Listings matching a query.",
+      description: "eBay listings matching a query, with price and condition.",
       inputSchema: z.object({
         query: z.string().describe("Search text."),
         limit: z.string().describe("Max results (default 10, max 200).").optional()
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "get_item",
     {
       title: "Get item",
-      description: "Listing details.",
+      description: "One listing by item id, with price and seller.",
       inputSchema: z.object({
         item_id: z.string().describe("eBay item ID.")
       }),

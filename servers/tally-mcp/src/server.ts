@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_forms",
     {
       title: "List forms",
-      description: "All forms.",
+      description: "All Tally forms, with id and title.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "get_form",
     {
       title: "Get form",
-      description: "Form structure.",
+      description: "One form's structure: blocks, fields and settings.",
       inputSchema: z.object({
         form_id: z.string().describe("Form ID from the Tally URL, e.g. aBcD12")
       }),
@@ -58,7 +58,7 @@ export function createServer(): McpServer {
     "list_submissions",
     {
       title: "Submissions",
-      description: "Form responses.",
+      description: "Responses submitted through this form, newest first.",
       inputSchema: z.object({
         form_id: z.string().describe("Form ID from the Tally URL, e.g. aBcD12"),
         limit: z.string().describe("Max results (default 10, max 100).").optional()

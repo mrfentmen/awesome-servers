@@ -38,7 +38,7 @@ export function createServer(): McpServer {
     "list_metrics",
     {
       title: "List metrics",
-      description: "Built-in and custom metrics.",
+      description: "Metric names a k6 run can report.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

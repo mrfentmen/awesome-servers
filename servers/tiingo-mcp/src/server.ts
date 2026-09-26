@@ -56,7 +56,7 @@ export function createServer(): McpServer {
     "crypto_meta",
     {
       title: "Crypto metadata",
-      description: "Crypto name for a ticker.",
+      description: "Name and base currency behind a crypto ticker, e.g. btcusd.",
       inputSchema: z.object({
         symbol: z.string().describe("Crypto ticker, e.g. 'btcusd'"),
       }),

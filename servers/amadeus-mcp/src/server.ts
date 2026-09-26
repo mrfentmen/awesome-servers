@@ -17,7 +17,7 @@ export function createServer(): McpServer {
     "search_airports",
     {
       title: "Search airports",
-      description: "Airport codes by city name.",
+      description: "Airport codes for a city name, e.g. London.",
       inputSchema: z.object({
         keyword: z.string().describe("City, e.g. 'Berlin'"),
         limit: z.number().int().min(1).max(50).default(5),

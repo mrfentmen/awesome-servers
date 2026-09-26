@@ -21,7 +21,7 @@ export function createServer(): McpServer {
     "nearby",
     {
       title: "Nearby chargers",
-      description: "Chargers near coordinates.",
+      description: "Charging points near coordinates, with distance.",
       inputSchema: z.object({
         latitude: z.string().describe("e.g. 40.7128."),
         longitude: z.string().describe("e.g. -74.0060."),
@@ -43,7 +43,7 @@ export function createServer(): McpServer {
     "get_poi",
     {
       title: "Charger details",
-      description: "Details by chargepoint ID.",
+      description: "One charge point by id, with connectors and operator.",
       inputSchema: z.object({
         poi_id: z.string().describe("Chargepoint ID.")
       }),

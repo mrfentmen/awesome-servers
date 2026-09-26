@@ -17,7 +17,7 @@ export function createServer(): McpServer {
     "my_profile",
     {
       title: "My profile",
-      description: "Your W&B username and email.",
+      description: "The W&B user the API key belongs to.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

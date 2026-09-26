@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "list_charts",
     {
       title: "List charts",
-      description: "Available charts.",
+      description: "Charts exposed by the Netdata agent.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

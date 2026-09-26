@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_tickers",
     {
       title: "List tickers",
-      description: "Reference tickers.",
+      description: "Reference tickers, with name and market.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 20, max 100).").optional()
       }),
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "get_ticker",
     {
       title: "Get ticker",
-      description: "Ticker details.",
+      description: "One ticker's reference details by symbol.",
       inputSchema: z.object({
         ticker: z.string().describe("Ticker symbol, e.g. AAPL")
       }),
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
     "prev_close",
     {
       title: "Previous close",
-      description: "Last daily bar.",
+      description: "Previous day's bar: open, high, low, close, volume.",
       inputSchema: z.object({
         ticker: z.string().describe("Ticker symbol, e.g. AAPL")
       }),

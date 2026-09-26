@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "search",
     {
       title: "Search episodes",
-      description: "Episodes matching a query.",
+      description: "Podcast episodes matching a query, with podcast and date.",
       inputSchema: z.object({
         query: z.string().describe("Search text.")
       }),
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "best_podcasts",
     {
       title: "Best podcasts",
-      description: "Curated best lists.",
+      description: "Curated best-podcast lists, e.g. tech.",
       inputSchema: z.object({
         page: z.string().describe("Page (default 1).").optional()
       }),
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
     "get_episode",
     {
       title: "Get episode",
-      description: "Episode details.",
+      description: "One episode by id, with audio URL and description.",
       inputSchema: z.object({
         episode_id: z.string().describe("Episode UUID.")
       }),

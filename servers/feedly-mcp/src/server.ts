@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "profile",
     {
       title: "Profile",
-      description: "Feedly profile.",
+      description: "The Feedly account the token belongs to.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "subscriptions",
     {
       title: "Subscriptions",
-      description: "Followed feeds.",
+      description: "Feeds the account follows, with titles.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -56,7 +56,7 @@ export function createServer(): McpServer {
     "stream_contents",
     {
       title: "Stream contents",
-      description: "Recent entries.",
+      description: "Recent entries in a stream, newest first.",
       inputSchema: z.object({
         stream_id: z.string().describe("Stream ID, e.g. feed/https://example.com/feed"),
         count: z.string().describe("Max results (default 10, max 100).").optional()

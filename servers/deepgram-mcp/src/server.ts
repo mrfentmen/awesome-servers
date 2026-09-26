@@ -38,7 +38,7 @@ export function createServer(): McpServer {
     "get_balance",
     {
       title: "Project balance",
-      description: "Credit balances of a project.",
+      description: "Credit balance for one Deepgram project.",
       inputSchema: z.object({
         project_id: z.string().describe("Project UUID.")
       }),
@@ -57,7 +57,7 @@ export function createServer(): McpServer {
     "list_keys",
     {
       title: "List API keys",
-      description: "API keys of a project.",
+      description: "API keys on the project, with scopes and created date.",
       inputSchema: z.object({
         project_id: z.string().describe("Project UUID.")
       }),

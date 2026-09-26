@@ -21,7 +21,7 @@ export function createServer(): McpServer {
     "get_firmware_status",
     {
       title: "Firmware status",
-      description: "Version and update state.",
+      description: "Installed version and whether an update is available.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

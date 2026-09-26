@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "get_status",
     {
       title: "Protection status",
-      description: "DNS protection state.",
+      description: "DNS protection state: enabled, filters and upstreams.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "get_stats",
     {
       title: "Statistics",
-      description: "Query/block counters.",
+      description: "Query and blocked-request counters, total and average.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -56,7 +56,7 @@ export function createServer(): McpServer {
     "get_query_log",
     {
       title: "Query log",
-      description: "Recent DNS queries.",
+      description: "Recent DNS queries with client, domain and action.",
       inputSchema: z.object({
         limit: z.string().describe("Max entries (default 20, max 100).").optional()
       }),

@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_customers",
     {
       title: "List customers",
-      description: "Tracked customers.",
+      description: "Tracked customers with email and attributes.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 100).").optional()
       }),
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "get_customer",
     {
       title: "Get customer",
-      description: "Customer profile.",
+      description: "One customer profile by id, with its attributes.",
       inputSchema: z.object({
         identifier: z.string().describe("ID or email.")
       }),
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
     "list_segments",
     {
       title: "List segments",
-      description: "Segments.",
+      description: "Segments with id, name and member counts.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

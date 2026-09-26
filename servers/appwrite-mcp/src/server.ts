@@ -21,7 +21,7 @@ export function createServer(): McpServer {
     "list_users",
     {
       title: "List users",
-      description: "Project users.",
+      description: "Project users with email and status.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 20, max 100).").optional()
       }),
@@ -40,7 +40,7 @@ export function createServer(): McpServer {
     "list_databases",
     {
       title: "List databases",
-      description: "Databases.",
+      description: "Databases in the project, with id and name.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

@@ -42,7 +42,7 @@ export function createServer(): McpServer {
     "poll",
     {
       title: "Poll messages",
-      description: "Cached messages as JSON.",
+      description: "Messages cached on a topic, as JSON, since a given time.",
       inputSchema: z.object({
         topic: z.string().describe("Topic name, e.g. my-alerts")
       }),

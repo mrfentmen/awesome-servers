@@ -38,7 +38,7 @@ export function createServer(): McpServer {
     "list_models",
     {
       title: "List models",
-      description: "Available Groq model ids.",
+      description: "Model ids available to the Groq API key.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

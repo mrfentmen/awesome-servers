@@ -14,7 +14,7 @@ export function createServer(): McpServer {
     "coins",
     {
       title: "Coins",
-      description: "List ranked coins.",
+      description: "Ranked coins with market cap and 24h change.",
       inputSchema: z.object( { limit: z.number().describe("Max results.").optional() }),
       annotations: READ_ONLY,
     },
@@ -26,7 +26,7 @@ export function createServer(): McpServer {
     "coin",
     {
       title: "Coin",
-      description: "Get a coin by key.",
+      description: "One coin by its CryptoRank key, e.g. bitcoin.",
       inputSchema: z.object( { key: z.string().describe("Coin key like bitcoin.") }),
       annotations: READ_ONLY,
     },

@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_subscribers",
     {
       title: "Subscribers",
-      description: "Notification subscribers.",
+      description: "Notification subscribers, with email and id.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 100).").optional()
       }),
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "get_subscriber",
     {
       title: "Get subscriber",
-      description: "Subscriber details.",
+      description: "One subscriber by id, with channels and data.",
       inputSchema: z.object({
         subscriber_id: z.string().describe("Subscriber ID.")
       }),
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
     "list_topics",
     {
       title: "Topics",
-      description: "Notification topics.",
+      description: "Notification topics with subscriber counts.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

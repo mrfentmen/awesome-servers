@@ -94,7 +94,7 @@ export function createServer(): McpServer {
     "list_brand_orders",
     {
       title: "List brand orders",
-      description: "Orders of a brand.",
+      description: "Orders of one ShootProof brand, newest first.",
       inputSchema: z.object({
         brand_id: z.string().describe("ShootProof brand ID.")
       }),

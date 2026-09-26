@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_models",
     {
       title: "List models",
-      description: "Available LLM models.",
+      description: "Models available on OpenRouter, with context size and price.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "key_info",
     {
       title: "Key info",
-      description: "API key details and limits.",
+      description: "What the current key can spend, and how much is left.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -56,7 +56,7 @@ export function createServer(): McpServer {
     "credits",
     {
       title: "Credits",
-      description: "Credit balance.",
+      description: "Remaining credit balance for the account.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

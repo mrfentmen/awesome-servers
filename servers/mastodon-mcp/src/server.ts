@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "trending_tags",
     {
       title: "Trending tags",
-      description: "Trending hashtags.",
+      description: "Hashtags trending on the instance right now.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 20).").optional()
       }),
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "trending_posts",
     {
       title: "Trending posts",
-      description: "Trending statuses.",
+      description: "Statuses trending on the instance right now.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 20).").optional()
       }),
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
     "instance_info",
     {
       title: "Instance info",
-      description: "Instance details and stats.",
+      description: "Instance description, version and user counts.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

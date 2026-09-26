@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_torrents",
     {
       title: "List torrents",
-      description: "All torrents with progress.",
+      description: "All torrents with progress, size and state.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "get_transfer_info",
     {
       title: "Transfer stats",
-      description: "Global up/down speeds.",
+      description: "Global upload and download speeds.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -56,7 +56,7 @@ export function createServer(): McpServer {
     "get_app_version",
     {
       title: "App version",
-      description: "qBittorrent version.",
+      description: "qBittorrent version and API version.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_fonts",
     {
       title: "List fonts",
-      description: "Most popular families.",
+      description: "Most popular Google Fonts families, with categories.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 20, max 100).").optional()
       }),
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "search_fonts",
     {
       title: "Search fonts",
-      description: "Families matching a name.",
+      description: "Families matching a name, e.g. roboto.",
       inputSchema: z.object({
         query: z.string().describe("Name search."),
         limit: z.string().describe("Max results (default 20, max 100).").optional()
@@ -61,7 +61,7 @@ export function createServer(): McpServer {
     "get_font",
     {
       title: "Get font",
-      description: "Full metadata for a family.",
+      description: "One family: variants, subsets and font files.",
       inputSchema: z.object({
         family: z.string().describe("Family name, e.g. Roboto.")
       }),

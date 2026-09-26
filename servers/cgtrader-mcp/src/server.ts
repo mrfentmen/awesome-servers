@@ -42,7 +42,7 @@ export function createServer(): McpServer {
     "get_model",
     {
       title: "Get model",
-      description: "CGTrader model details by ID.",
+      description: "One CGTrader model by id, with price and formats.",
       inputSchema: z.object({
         model_id: z.string().describe("Numeric model ID.")
       }),

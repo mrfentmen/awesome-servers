@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_profiles",
     {
       title: "List profiles",
-      description: "Customer profiles.",
+      description: "Customer profiles with email and location.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "list_lists",
     {
       title: "List lists",
-      description: "Marketing lists.",
+      description: "Marketing lists with subscriber counts.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -56,7 +56,7 @@ export function createServer(): McpServer {
     "list_campaigns",
     {
       title: "List campaigns",
-      description: "Campaigns.",
+      description: "Klaviyo campaigns with status and send time.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

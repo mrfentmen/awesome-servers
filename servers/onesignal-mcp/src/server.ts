@@ -21,7 +21,7 @@ export function createServer(): McpServer {
     "list_apps",
     {
       title: "List apps",
-      description: "OneSignal apps.",
+      description: "OneSignal apps the key can send to.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -38,7 +38,7 @@ export function createServer(): McpServer {
     "get_app",
     {
       title: "Get app",
-      description: "App details by ID.",
+      description: "One app by id, with platform and player count.",
       inputSchema: z.object({
         app_id: z.string().describe("OneSignal app ID.")
       }),

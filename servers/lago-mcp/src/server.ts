@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_plans",
     {
       title: "List plans",
-      description: "Billing plans.",
+      description: "Billing plans with interval and amount.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 20, max 100).").optional()
       }),
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "list_customers",
     {
       title: "List customers",
-      description: "Customers.",
+      description: "Billing customers with id and currency.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 20, max 100).").optional()
       }),
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
     "list_invoices",
     {
       title: "List invoices",
-      description: "Invoices.",
+      description: "Invoices with status, amount and billing period.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 20, max 100).").optional()
       }),

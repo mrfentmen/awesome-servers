@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "account",
     {
       title: "Account",
-      description: "Buying power, equity.",
+      description: "Buying power, equity and cash for the trading account.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "positions",
     {
       title: "Positions",
-      description: "Open positions.",
+      description: "Open positions with symbol, quantity and unrealized P/L.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -56,7 +56,7 @@ export function createServer(): McpServer {
     "orders",
     {
       title: "Orders",
-      description: "Recent orders.",
+      description: "Recent orders with side, quantity, status and fill price.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 20, max 100).").optional()
       }),

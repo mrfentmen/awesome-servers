@@ -23,7 +23,7 @@ export function createServer(): McpServer {
     "list_voices",
     {
       title: "List voices",
-      description: "Available voices.",
+      description: "Voices available on the account, with language.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 20, max 100).").optional()
       }),
@@ -42,7 +42,7 @@ export function createServer(): McpServer {
     "get_voice",
     {
       title: "Get voice",
-      description: "Voice details by ID.",
+      description: "One voice by id, with its embedding and settings.",
       inputSchema: z.object({
         voice_id: z.string().describe("Voice ID from Cartesia, e.g. a0e7d23f")
       }),
@@ -61,7 +61,7 @@ export function createServer(): McpServer {
     "synthesize_speech",
     {
       title: "Synthesize speech",
-      description: "Text to MP3 (SPENDS credits).",
+      description: "Render text to MP3 with a voice — this spends credits.",
       inputSchema: z.object({
         transcript: z.string().describe("Text to speak."),
         voice_id: z.string().describe("Voice ID from Cartesia, e.g. a0e7d23f"),

@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "get_game",
     {
       title: "Get game",
-      description: "Game details by ID or slug.",
+      description: "One game by id or slug, with platforms and rating.",
       inputSchema: z.object({
         game_id: z.string().describe("Numeric ID or slug, e.g. portal / 13536.")
       }),

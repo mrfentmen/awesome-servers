@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "auth",
     {
       title: "Auth check",
-      description: "Verify the token.",
+      description: "Check that the Readwise token works.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "list_books",
     {
       title: "List books",
-      description: "Library sources.",
+      description: "Library sources: books, articles and podcasts.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -56,7 +56,7 @@ export function createServer(): McpServer {
     "list_highlights",
     {
       title: "Highlights",
-      description: "Recent highlights.",
+      description: "Recent highlights across the library.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

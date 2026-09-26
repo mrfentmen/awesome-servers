@@ -61,7 +61,7 @@ export function createServer(): McpServer {
     "lookup_payload",
     {
       title: "Lookup payload",
-      description: "Malware payload by SHA256.",
+      description: "Malware payload details for one SHA256 hash.",
       inputSchema: z.object({
         sha256: z.string().describe("SHA256 hash.")
       }),
@@ -80,7 +80,7 @@ export function createServer(): McpServer {
     "search_tag",
     {
       title: "Search tag",
-      description: "URLs by malware tag.",
+      description: "Malicious URLs carrying a malware tag, e.g. emotet.",
       inputSchema: z.object({
         tag: z.string().describe("Tag, e.g. emotet."),
         limit: z.string().describe("Max results.").optional()

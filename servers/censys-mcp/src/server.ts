@@ -21,7 +21,7 @@ export function createServer(): McpServer {
     "get_host",
     {
       title: "Host lookup",
-      description: "Full Censys record for an IP.",
+      description: "Censys record for an IP: services, ports and certificates.",
       inputSchema: z.object({
         ip: z.string().describe("IPv4/IPv6 address.")
       }),
@@ -40,7 +40,7 @@ export function createServer(): McpServer {
     "search_hosts",
     {
       title: "Search hosts",
-      description: "Censys query language search.",
+      description: "Search hosts with Censys query syntax, e.g. services.http.",
       inputSchema: z.object({
         query: z.string().describe("e.g. services.service_name: HTTP."),
         per_page: z.string().describe("Max results (default 10, max 100).").optional()

@@ -23,7 +23,7 @@ export function createServer(): McpServer {
     "me",
     {
       title: "My profile",
-      description: "Authenticated user.",
+      description: "The GitLab user the token belongs to.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -40,7 +40,7 @@ export function createServer(): McpServer {
     "list_projects",
     {
       title: "List projects",
-      description: "My projects.",
+      description: "Projects the token can see, most recent first.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 20, max 100).").optional()
       }),
@@ -59,7 +59,7 @@ export function createServer(): McpServer {
     "list_groups",
     {
       title: "List groups",
-      description: "Groups.",
+      description: "Groups the token can see, with path and id.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 20, max 100).").optional()
       }),

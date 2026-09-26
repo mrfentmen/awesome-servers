@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_movies",
     {
       title: "List movies",
-      description: "Movie library.",
+      description: "Movies in the Radarr library, with status.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "get_queue",
     {
       title: "Download queue",
-      description: "Active downloads.",
+      description: "Active downloads and imports in the queue.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -56,7 +56,7 @@ export function createServer(): McpServer {
     "get_health",
     {
       title: "Health checks",
-      description: "System health issues.",
+      description: "Radarr health warnings and errors.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

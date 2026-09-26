@@ -21,7 +21,7 @@ export function createServer(): McpServer {
     "get_server",
     {
       title: "Server info",
-      description: "Postmark server details.",
+      description: "Postmark server details and delivery settings.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -38,7 +38,7 @@ export function createServer(): McpServer {
     "list_templates",
     {
       title: "List templates",
-      description: "Email templates.",
+      description: "Email templates on the server, with ids.",
       inputSchema: z.object({
         count: z.string().describe("Max results (default 10, max 100).").optional()
       }),
@@ -57,7 +57,7 @@ export function createServer(): McpServer {
     "list_outbound",
     {
       title: "Outbound messages",
-      description: "Recent outbound messages.",
+      description: "Recent outbound messages with recipient and status.",
       inputSchema: z.object({
         count: z.string().describe("Max results (default 10, max 100).").optional()
       }),

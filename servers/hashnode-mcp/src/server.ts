@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "me",
     {
       title: "My profile",
-      description: "Authenticated user.",
+      description: "The Hashnode user the token belongs to.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "publication_posts",
     {
       title: "Publication posts",
-      description: "Recent posts.",
+      description: "Recent posts in a Hashnode publication.",
       inputSchema: z.object({
         host: z.string().describe("Publication host."),
         limit: z.string().describe("Max results (default 5, max 20).").optional()
@@ -59,7 +59,7 @@ export function createServer(): McpServer {
     "get_user",
     {
       title: "Get user",
-      description: "User profile.",
+      description: "One Hashnode profile by username.",
       inputSchema: z.object({
         username: z.string().describe("Hashnode username, e.g. john")
       }),

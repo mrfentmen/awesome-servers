@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_assistants",
     {
       title: "List assistants",
-      description: "Voice assistants.",
+      description: "Voice assistants on the account, with id and model.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 100).").optional()
       }),
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "get_assistant",
     {
       title: "Get assistant",
-      description: "Assistant config by ID.",
+      description: "One assistant by id, with its prompt and voice config.",
       inputSchema: z.object({
         assistant_id: z.string().describe("Assistant UUID.")
       }),
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
     "list_calls",
     {
       title: "List calls",
-      description: "Call history.",
+      description: "Call history with duration, cost and outcome.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 100).").optional()
       }),
@@ -79,7 +79,7 @@ export function createServer(): McpServer {
     "get_call",
     {
       title: "Get call",
-      description: "Call details and transcript.",
+      description: "One call by id, with transcript and recording URL.",
       inputSchema: z.object({
         call_id: z.string().describe("Call ID from the VAPI dashboard")
       }),

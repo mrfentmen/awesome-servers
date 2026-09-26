@@ -25,7 +25,7 @@ export function createServer(): McpServer {
     "drivers",
     {
       title: "Driver standings",
-      description: "Championship standings.",
+      description: "Driver championship standings for a season.",
       inputSchema: z.object({
         season: z.string().describe("Year or current (default current).").optional(),
         limit: z.string().describe("Max results (default 10, max 30).").optional()
@@ -45,7 +45,7 @@ export function createServer(): McpServer {
     "constructors",
     {
       title: "Constructor standings",
-      description: "Team standings.",
+      description: "Constructor standings for a season.",
       inputSchema: z.object({
         season: z.string().describe("Year or current (default current).").optional()
       }),
@@ -64,7 +64,7 @@ export function createServer(): McpServer {
     "schedule",
     {
       title: "Season schedule",
-      description: "Races calendar.",
+      description: "Race calendar for a season, with dates.",
       inputSchema: z.object({
         season: z.string().describe("Year or current (default current).").optional()
       }),
@@ -83,7 +83,7 @@ export function createServer(): McpServer {
     "last_race",
     {
       title: "Last race",
-      description: "Most recent race results.",
+      description: "Results of the most recent race.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -100,7 +100,7 @@ export function createServer(): McpServer {
     "list_drivers",
     {
       title: "List drivers",
-      description: "Drivers for a season.",
+      description: "Drivers entered in a season, with codes.",
       inputSchema: z.object({
         season: z.string().describe("Year or current (default current).").optional(),
         limit: z.string().describe("Max results (default 20, max 40).").optional()
@@ -120,7 +120,7 @@ export function createServer(): McpServer {
     "race_results",
     {
       title: "Race results",
-      description: "Results for a season round.",
+      description: "Results for one round of a season.",
       inputSchema: z.object({
         season: z.string().describe("Year, e.g. 2024."),
         round: z.string().describe("Round number, e.g. 1.")

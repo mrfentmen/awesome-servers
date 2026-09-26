@@ -42,7 +42,7 @@ export function createServer(): McpServer {
     "get_transactions",
     {
       title: "Transactions",
-      description: "Recent normal transactions.",
+      description: "Recent normal transactions for an address.",
       inputSchema: z.object({
         address: z.string().describe("Address, e.g. 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"),
         chain_id: z.string().describe("Chain ID (default 1).").optional()
@@ -62,7 +62,7 @@ export function createServer(): McpServer {
     "get_token_transfers",
     {
       title: "Token transfers",
-      description: "Recent ERC-20 transfers.",
+      description: "Recent ERC-20 transfers to or from an address.",
       inputSchema: z.object({
         address: z.string().describe("Address, e.g. 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"),
         chain_id: z.string().describe("Chain ID (default 1).").optional()

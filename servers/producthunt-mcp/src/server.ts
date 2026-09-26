@@ -21,7 +21,7 @@ export function createServer(): McpServer {
     "viewer",
     {
       title: "Viewer",
-      description: "Authenticated user.",
+      description: "The Product Hunt user the token belongs to.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -38,7 +38,7 @@ export function createServer(): McpServer {
     "list_posts",
     {
       title: "Top posts",
-      description: "Ranked launches.",
+      description: "Launches ranked by votes, with tagline and maker.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 50).").optional()
       }),

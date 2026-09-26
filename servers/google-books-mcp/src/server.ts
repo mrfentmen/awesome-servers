@@ -21,7 +21,7 @@ export function createServer(): McpServer {
     "search_books",
     {
       title: "Search books",
-      description: "Google Books volume search.",
+      description: "Search Google Books volumes by title or author.",
       inputSchema: z.object({
         query: z.string().describe("Search text, e.g. Dune Herbert."),
         limit: z.string().describe("Max results (default 10, max 40).").optional()
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "get_volume",
     {
       title: "Get volume",
-      description: "Volume details by ID.",
+      description: "One volume by id, with description and ISBNs.",
       inputSchema: z.object({
         volume_id: z.string().describe("Google Books volume ID.")
       }),

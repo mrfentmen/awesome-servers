@@ -21,7 +21,7 @@ export function createServer(): McpServer {
     "get_grant",
     {
       title: "Grant info",
-      description: "Authenticated grant details.",
+      description: "Which account the grant connects, and its provider.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -38,7 +38,7 @@ export function createServer(): McpServer {
     "list_calendars",
     {
       title: "List calendars",
-      description: "Calendars on the grant.",
+      description: "Calendars on the grant, with id and name.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 100).").optional()
       }),
@@ -57,7 +57,7 @@ export function createServer(): McpServer {
     "list_messages",
     {
       title: "List messages",
-      description: "Recent messages.",
+      description: "Recent email messages, newest first.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 100).").optional()
       }),

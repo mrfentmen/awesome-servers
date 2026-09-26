@@ -44,7 +44,7 @@ export function createServer(): McpServer {
     "list_messages",
     {
       title: "List messages",
-      description: "Stored messages.",
+      description: "Messages stored on the Gotify server, newest first.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 20, max 100).").optional()
       }),

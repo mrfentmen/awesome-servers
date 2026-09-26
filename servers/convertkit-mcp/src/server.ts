@@ -38,7 +38,7 @@ export function createServer(): McpServer {
     "list_forms",
     {
       title: "List forms",
-      description: "Kit signup forms.",
+      description: "Kit (ConvertKit) signup forms, with id and name.",
       inputSchema: z.object({
         limit: z.number().int().min(1).max(100).default(10),
       }),

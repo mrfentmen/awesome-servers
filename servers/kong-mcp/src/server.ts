@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "get_status",
     {
       title: "Gateway status",
-      description: "Kong status counters.",
+      description: "Kong status counters: database and connections.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "list_services",
     {
       title: "List services",
-      description: "Configured services.",
+      description: "Services configured in Kong, with hosts.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -56,7 +56,7 @@ export function createServer(): McpServer {
     "list_routes",
     {
       title: "List routes",
-      description: "Configured routes.",
+      description: "Routes configured in Kong, with paths.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

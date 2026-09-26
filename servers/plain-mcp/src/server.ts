@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_customers",
     {
       title: "List customers",
-      description: "Support customers.",
+      description: "Support customers with email and company.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 50).").optional()
       }),
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "list_threads",
     {
       title: "List threads",
-      description: "Support threads.",
+      description: "Open support threads, newest first.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 50).").optional()
       }),
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
     "get_thread",
     {
       title: "Get thread",
-      description: "Thread details by ID.",
+      description: "One thread by id, with messages and status.",
       inputSchema: z.object({
         thread_id: z.string().describe("Plain thread ID from the inbox URL")
       }),

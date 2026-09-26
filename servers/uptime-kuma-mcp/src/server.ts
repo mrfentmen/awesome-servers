@@ -21,7 +21,7 @@ export function createServer(): McpServer {
     "get_status",
     {
       title: "Instance status",
-      description: "Uptime Kuma status summary.",
+      description: "Up/down counts per monitor in one summary.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -38,7 +38,7 @@ export function createServer(): McpServer {
     "get_metrics",
     {
       title: "Prometheus metrics",
-      description: "Metrics exposition.",
+      description: "Raw Prometheus metrics the instance exposes.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

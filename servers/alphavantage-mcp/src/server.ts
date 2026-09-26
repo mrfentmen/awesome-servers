@@ -76,7 +76,7 @@ export function createServer(): McpServer {
     "symbol_search",
     {
       title: "Symbol search",
-      description: "Find tickers by company name.",
+      description: "Find ticker symbols by company name, e.g. ibm.",
       inputSchema: z.object({
         keywords: z.string().describe("Company name, e.g. 'Apple'"),
       }),

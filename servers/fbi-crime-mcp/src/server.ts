@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "arrests",
     {
       title: "Arrest data",
-      description: "Arrest estimates by state.",
+      description: "Arrest estimates by state, offense and year.",
       inputSchema: z.object({
         state: z.string().describe("Postal code, e.g. AK.")
       }),
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "offenses",
     {
       title: "Offense data",
-      description: "Offense counts by state.",
+      description: "Offense counts by state and offense type.",
       inputSchema: z.object({
         state: z.string().describe("Postal code, e.g. AK.")
       }),
@@ -60,7 +60,7 @@ export function createServer(): McpServer {
     "victims",
     {
       title: "Victim data",
-      description: "Victim demographics by state.",
+      description: "Victim demographics by state and offense.",
       inputSchema: z.object({
         state: z.string().describe("Postal code, e.g. AK.")
       }),

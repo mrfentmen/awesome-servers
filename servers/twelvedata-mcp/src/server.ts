@@ -13,7 +13,7 @@ export function createServer(): McpServer {
     "quote",
     {
       title: "Quote",
-      description: "Get a stock quote.",
+      description: "Latest quote for a symbol, e.g. AAPL: price and change.",
       inputSchema: z.object( { symbol: z.string().describe("Symbol like AAPL.") }),
       annotations: READ_ONLY,
     },

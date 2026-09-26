@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_event_types",
     {
       title: "Event types",
-      description: "Scheduling links.",
+      description: "Scheduling links people can book, with duration.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "list_bookings",
     {
       title: "Bookings",
-      description: "Upcoming bookings.",
+      description: "Upcoming bookings with attendee and start time.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -56,7 +56,7 @@ export function createServer(): McpServer {
     "list_schedules",
     {
       title: "Schedules",
-      description: "Availability schedules.",
+      description: "Availability schedules and their timezones.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

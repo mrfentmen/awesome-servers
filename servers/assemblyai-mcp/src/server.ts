@@ -21,7 +21,7 @@ export function createServer(): McpServer {
     "list_transcripts",
     {
       title: "List transcripts",
-      description: "Recent transcripts.",
+      description: "Recent transcripts with id, status and duration.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 100).").optional()
       }),

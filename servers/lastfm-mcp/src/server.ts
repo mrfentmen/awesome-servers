@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "top_artists",
     {
       title: "Top artists",
-      description: "Global top artists.",
+      description: "Artists with the most listeners worldwide.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 50).").optional()
       }),
@@ -41,7 +41,7 @@ export function createServer(): McpServer {
     "top_tracks",
     {
       title: "Top tracks",
-      description: "Global top tracks.",
+      description: "Tracks with the most listeners worldwide.",
       inputSchema: z.object({
         limit: z.string().describe("Max results (default 10, max 50).").optional()
       }),

@@ -44,7 +44,7 @@ export function createServer(): McpServer {
     "reverse_dns",
     {
       title: "Reverse DNS",
-      description: "PTR records for an IP.",
+      description: "PTR records for an IP address.",
       inputSchema: z.object({
         ip: z.string().describe("IPv4/IPv6 address.")
       }),
@@ -63,7 +63,7 @@ export function createServer(): McpServer {
     "whois_lookup",
     {
       title: "Whois",
-      description: "WHOIS record for domain/IP.",
+      description: "WHOIS record for a domain or IP.",
       inputSchema: z.object({
         query: z.string().describe("Domain or IP.")
       }),
@@ -101,7 +101,7 @@ export function createServer(): McpServer {
     "http_headers",
     {
       title: "HTTP headers",
-      description: "Response headers of a URL.",
+      description: "Response headers for a URL, with status code.",
       inputSchema: z.object({
         url: z.string().describe("Full URL, e.g. https://example.com")
       }),
@@ -120,7 +120,7 @@ export function createServer(): McpServer {
     "reverse_ip",
     {
       title: "Reverse IP",
-      description: "Domains hosted on an IP.",
+      description: "Domains and hostnames hosted on one IP address.",
       inputSchema: z.object({
         ip: z.string().describe("IPv4 address.")
       }),

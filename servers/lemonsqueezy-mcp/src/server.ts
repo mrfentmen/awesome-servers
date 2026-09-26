@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_stores",
     {
       title: "List stores",
-      description: "Lemon Squeezy stores.",
+      description: "Lemon Squeezy stores on the account.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -58,7 +58,7 @@ export function createServer(): McpServer {
     "get_product",
     {
       title: "Get product",
-      description: "Product details by ID.",
+      description: "One product by id, with price and variants.",
       inputSchema: z.object({
         product_id: z.string().describe("Lemon Squeezy product ID, e.g. 123456")
       }),

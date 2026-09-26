@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "health",
     {
       title: "Account health",
-      description: "Key status.",
+      description: "Check that the Apollo API key still works.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "match_person",
     {
       title: "Enrich person",
-      description: "Match by email/name/company.",
+      description: "Match one person by email, name or company.",
       inputSchema: z.object({
         email: z.string().describe("Work email, e.g. jane@acme.com").optional(),
         first_name: z.string().describe("First name, e.g. Jane").optional(),
@@ -61,7 +61,7 @@ export function createServer(): McpServer {
     "search_people",
     {
       title: "Search people",
-      description: "Prospect search.",
+      description: "Prospect search by title, location and company size.",
       inputSchema: z.object({
         query: z.string().describe("Search keywords, e.g. software engineer"),
         limit: z.string().describe("Max results (default 5, max 25).").optional()

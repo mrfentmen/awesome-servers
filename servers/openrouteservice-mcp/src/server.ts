@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "geocode",
     {
       title: "Geocode",
-      description: "Forward geocode a place name.",
+      description: "Coordinates for a place name, e.g. Berlin.",
       inputSchema: z.object({
         query: z.string().describe("Place name, e.g. Berlin."),
         limit: z.string().describe("Max results (default 5, max 20).").optional()
@@ -42,7 +42,7 @@ export function createServer(): McpServer {
     "reverse",
     {
       title: "Reverse geocode",
-      description: "Place name for coordinates.",
+      description: "Nearest place name for latitude and longitude.",
       inputSchema: z.object({
         lat: z.string().describe("Latitude, e.g. 48.86"),
         lon: z.string().describe("Longitude, e.g. 2.35")
@@ -62,7 +62,7 @@ export function createServer(): McpServer {
     "directions",
     {
       title: "Driving directions",
-      description: "Car route between two points.",
+      description: "Driving route between two points, with distance and time.",
       inputSchema: z.object({
         from_lon: z.string().describe("Origin longitude."),
         from_lat: z.string().describe("Origin latitude."),

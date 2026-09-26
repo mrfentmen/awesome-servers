@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "list_products",
     {
       title: "List products",
-      description: "Paddle products.",
+      description: "Paddle products with price and status.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "get_product",
     {
       title: "Get product",
-      description: "Product details by ID.",
+      description: "One Paddle product by id, with price and status.",
       inputSchema: z.object({
         product_id: z.string().describe("Product ID (pro_...).")
       }),

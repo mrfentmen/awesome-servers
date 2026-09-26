@@ -22,7 +22,7 @@ export function createServer(): McpServer {
     "user",
     {
       title: "User",
-      description: "Raindrop user.",
+      description: "The Raindrop account the token belongs to.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -39,7 +39,7 @@ export function createServer(): McpServer {
     "collections",
     {
       title: "Collections",
-      description: "Bookmark collections.",
+      description: "Bookmark collections with counts and ids.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
@@ -56,7 +56,7 @@ export function createServer(): McpServer {
     "raindrops",
     {
       title: "Bookmarks",
-      description: "Links in a collection.",
+      description: "Bookmarks in one collection, with tags and links.",
       inputSchema: z.object({
         collection_id: z.string().describe("Collection ID (0 = all).")
       }),
