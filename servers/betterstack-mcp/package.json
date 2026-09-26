@@ -1,7 +1,7 @@
 {
   "name": "betterstack-mcp",
   "version": "1.0.0",
-  "description": "Better Stack uptime: monitors, incidents. Needs key.",
+  "description": "Latency breakdown, response times and page audits - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/betterstack-mcp",
   "repository": {
@@ -22,11 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
-    "betterstack",
-    "uptime",
-    "monitoring",
-    "incidents"
+    "observability",
+    "latency",
+    "performance",
+    "seo",
+    "headers",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

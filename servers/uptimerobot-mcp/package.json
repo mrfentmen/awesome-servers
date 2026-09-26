@@ -1,7 +1,7 @@
 {
   "name": "uptimerobot-mcp",
   "version": "1.0.0",
-  "description": "UptimeRobot monitors. Free API key.",
+  "description": "Uptime, port, TLS and DNS checks for any site - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/uptimerobot-mcp",
   "repository": {
@@ -22,11 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
-    "uptimerobot",
     "uptime",
     "monitoring",
-    "status"
+    "ports",
+    "ssl",
+    "dns",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

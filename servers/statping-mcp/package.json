@@ -1,7 +1,7 @@
 {
   "name": "statping-mcp",
   "version": "1.0.0",
-  "description": "Statping services (docs-verbatim). Self-hosted.",
+  "description": "Service rollup, ports, DNS propagation and TLS chains - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/statping-mcp",
   "repository": {
@@ -22,11 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
-    "statping",
+    "status page",
     "uptime",
-    "monitoring",
-    "self-hosted"
+    "dns",
+    "ssl",
+    "ports",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

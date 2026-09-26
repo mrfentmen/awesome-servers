@@ -1,7 +1,7 @@
 {
   "name": "gatus-mcp",
   "version": "1.0.0",
-  "description": "Gatus endpoints (docs-verbatim). Self-hosted.",
+  "description": "Endpoint conditions, latency and TLS checks - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/gatus-mcp",
   "repository": {
@@ -22,11 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
-    "gatus",
-    "uptime",
+    "health check",
     "monitoring",
-    "self-hosted"
+    "latency",
+    "conditions",
+    "tls",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

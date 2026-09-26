@@ -1,7 +1,7 @@
 {
   "name": "checkly-mcp",
   "version": "1.0.0",
-  "description": "Checkly checks: list, details, results. Needs key.",
+  "description": "Assertion checks for status, headers and content - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/checkly-mcp",
   "repository": {
@@ -22,11 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
-    "checkly",
     "synthetic",
     "monitoring",
-    "api"
+    "assertions",
+    "smoke test",
+    "links",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {
