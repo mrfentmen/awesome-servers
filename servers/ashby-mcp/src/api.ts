@@ -143,3 +143,56 @@ export async function compensation(org: string, limit = 10): Promise<string> {
   return `Roles with published pay at ${org} (${paid.length} of ${jobs.length}):\n` +
     paid.slice(0, limit).map(brief).join("\n")
 }
+
+// ---- batch-2 tools: extra live-data tools (2026-09-26) ----
+/** Board rows carry the secondary locations next to the headline location. */
+type WithSecondary = BoardJob & { secondaryLocations?: Array<{ location?: string }> }
+
+/** Sub-teams listed on the roles, finer-grained than the department roll-up. */
+export async function listTeams(org: string): Promise<string> {
+  const jobs = await fetchBoard(org)
+  if (!jobs.length) return `No open roles at ${org}.`
+  const counts = new Map<string, number>()
+  for (const job of jobs) {
+    const key = String(job.team ?? "").trim() || "no team listed"
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+  const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  return `Ashby teams at ${org} (${ranked.length} team(s) across ${jobs.length} roles):\n` +
+    ranked.map(([name, count], i) => `${i + 1}. ${name} - ${count} role(s)`).join("\n")
+}
+
+/** Every location a board hires into, including secondary locations. */
+export async function listLocations(org: string): Promise<string> {
+  const jobs = (await fetchBoard(org)) as WithSecondary[]
+  if (!jobs.length) return `No open roles at ${org}.`
+  const counts = new Map<string, number>()
+  let remote = 0
+  for (const job of jobs) {
+    if (job.isRemote) remote += 1
+    const seen = new Set<string>()
+    const places = [job.location ?? job.locationName, ...(job.secondaryLocations ?? []).map((entry) => entry.location)]
+    for (const place of places) {
+      const key = String(place ?? "").trim()
+      if (!key || seen.has(key)) continue
+      seen.add(key)
+      counts.set(key, (counts.get(key) ?? 0) + 1)
+    }
+  }
+  const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  return `Ashby locations at ${org} (${ranked.length} location(s) across ${jobs.length} roles, ${remote} remote):\n` +
+    ranked.map(([name, count], i) => `${i + 1}. ${name} - ${count} role(s)`).join("\n")
+}
+
+/** Open roles sorted by their publish date, newest first. */
+export async function newestJobs(org: string, limit = 10): Promise<string> {
+  const jobs = await fetchBoard(org)
+  if (!jobs.length) return `No open roles at ${org}.`
+  const dated = jobs.filter((job) => job.publishedAt)
+  const sorted = [...(dated.length ? dated : jobs)].sort((a, b) =>
+    String(b.publishedAt ?? "").localeCompare(String(a.publishedAt ?? ""))
+  )
+  const oldest = String(sorted[sorted.length - 1]?.publishedAt ?? "").slice(0, 10)
+  return `Newest roles at ${org} (${jobs.length} open, dated back to ${oldest || "?"}):\n` +
+    sorted.slice(0, limit).map(brief).join("\n")
+}

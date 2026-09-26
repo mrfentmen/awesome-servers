@@ -20,6 +20,9 @@ Jobs
 - Departments: List the teams hiring on a Greenhouse board, ranked by number of open roles.
 - Offices: List the office locations on a Greenhouse board.
 - Board overview: Show a company Greenhouse board: name, open job count and the company intro.
+- Jobs by office: List the open jobs attached to one office on a Greenhouse board, or to a matching location.
+- Newest jobs: List the most recently opened jobs on a Greenhouse board, newest first.
+- Application form: Show the real application questions for one Greenhouse job, with which are required and the deadline.
 
 ## Getting Started
 
@@ -30,6 +33,9 @@ Jobs
 - Tool: departments — List the teams hiring on a Greenhouse board, ranked by number of open roles.
 - Tool: offices — List the office locations on a Greenhouse board.
 - Tool: board — Show a company Greenhouse board: name, open job count and the company intro.
+- Tool: jobs_by_office — List the open jobs attached to one office on a Greenhouse board, or to a matching location.
+- Tool: newest_jobs — List the most recently opened jobs on a Greenhouse board, newest first.
+- Tool: job_questions — Show the real application questions for one Greenhouse job, with which are required and the deadline.
 
 ## Tags
 greenhouse, mcp, data, keyless

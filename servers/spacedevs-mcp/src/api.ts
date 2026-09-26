@@ -543,3 +543,226 @@ export async function spaceWeather(): Promise<string> {
   lines.push("", "Kp 5 or above means aurora is likely at high latitudes; Kp 7 or above can affect satellites and power grids.")
   return lines.join("\n")
 }
+
+// ---- batch-2 tools: extra live-data tools (2026-09-26) ----
+// ------------------------------------------------- Launch Library 2 (reference data)
+//
+// The launch tools above use rocketlaunch.live because Launch Library 2 hands out a
+// small anonymous quota. The reference data below (agencies, astronauts, vehicles,
+// events) only exists there, so it reads the production host first and drops to the
+// development mirror, which serves the same schema without a quota, when production
+// answers 429 or a server error.
+
+const LL2_PRODUCTION = "https://ll.thespacedevs.com/2.2.0"
+const LL2_DEV = "https://lldev.thespacedevs.com/2.2.0"
+
+interface Ll2Page<T> {
+  count?: number
+  results?: T[]
+}
+
+interface Ll2Agency {
+  id?: number
+  name?: string
+  abbrev?: string
+  type?: string
+  country_code?: string
+  featured?: boolean
+  description?: string
+}
+
+interface Ll2Astronaut {
+  id?: number
+  name?: string
+  agency?: string
+  nationality?: string
+  status?: { name?: string }
+  type?: { name?: string }
+  in_space?: boolean
+  time_in_space?: string
+  eva_time?: string
+}
+
+interface Ll2Vehicle {
+  id?: number
+  name?: string
+  family?: string
+  full_name?: string
+  variant?: string
+  description?: string
+  manufacturer?: { name?: string } | string
+  length?: number | null
+  diameter?: number | null
+  launch_mass?: number | null
+  leo_capacity?: number | null
+  gto_capacity?: number | null
+  launch_cost?: string | null
+  reusable?: boolean
+  maiden_flight?: string | null
+  min_stage?: number | null
+  max_stage?: number | null
+  successful_launches?: number
+  failed_launches?: number
+  pending_launches?: number
+  total_launch_count?: number
+}
+
+interface Ll2Event {
+  id?: number
+  name?: string
+  slug?: string
+  type?: { name?: string }
+  date?: string
+  date_precision?: string
+  description?: string
+  location?: string
+  webcast_live?: boolean
+  program?: Array<{ name?: string }>
+}
+
+const retryable = (e: unknown) => /HTTP (429|5\d\d)/.test(errorMessage(e))
+
+async function ll2<T>(path: string, params: Record<string, string | number> = {}): Promise<Ll2Page<T>> {
+  const pairs = Object.entries({ ...params, mode: "list" }).map(([key, value]) => [key, String(value)] as [string, string])
+  const query = new URLSearchParams(pairs).toString()
+  try {
+    return await fetchJson<Ll2Page<T>>(`${LL2_PRODUCTION}${path}?${query}`, 30000)
+  } catch (e) {
+    if (!retryable(e)) throw e
+    return await fetchJson<Ll2Page<T>>(`${LL2_DEV}${path}?${query}`, 30000)
+  }
+}
+
+async function ll2Detail<T>(path: string): Promise<T> {
+  try {
+    return await fetchJson<T>(`${LL2_PRODUCTION}${path}?mode=list`, 30000)
+  } catch (e) {
+    if (!retryable(e)) throw e
+    return await fetchJson<T>(`${LL2_DEV}${path}?mode=list`, 30000)
+  }
+}
+
+/** ISO-8601 durations from Launch Library 2, as a plain day/hour figure. */
+function isoDuration(value: string | undefined): string {
+  if (!value) return "?"
+  const match = /^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$/.exec(value)
+  if (!match) return value
+  const days = Number(match[1] ?? 0) * 365 + Number(match[2] ?? 0) * 30 + Number(match[3] ?? 0)
+  const hours = Number(match[4] ?? 0)
+  if (!days && !hours) {
+    const minutes = Number(match[5] ?? 0)
+    return minutes ? `${minutes} min` : "0"
+  }
+  return `${days} day(s) ${hours} h`.replace(" 0 h", "")
+}
+
+const clip = (value: string | undefined, max = 220) => {
+  const clean = String(value ?? "").replace(/\s+/g, " ").trim()
+  return clean.length > max ? `${clean.slice(0, max - 1)}…` : clean
+}
+
+/** Launch Library 2 quotes launch cost as a raw figure string. */
+const usd = (value: string | null | undefined): string | null => {
+  if (!value) return null
+  const figure = Number(String(value).replace(/[^0-9.]/g, ""))
+  if (!Number.isFinite(figure) || figure <= 0) return String(value)
+  return `$${figure.toLocaleString("en-US")}`
+}
+
+export async function spaceAgencies(query?: string, type?: string, limit = 10): Promise<string> {
+  const search = String(query ?? "").trim()
+  const wanted = String(type ?? "").trim().toLowerCase()
+  const page = await ll2<Ll2Agency>("/agencies/", {
+    limit: wanted ? 50 : Math.min(Math.max(limit, 1), 25),
+    ...(search ? { search } : {}),
+  })
+  const rows = (page.results ?? []).filter(
+    (row) => !wanted || String(row.type ?? "").toLowerCase().includes(wanted)
+  )
+  if (!rows.length) {
+    return `No Launch Library 2 agencies match${search ? ` "${search}"` : ""}${wanted ? ` of type ${type}` : ""}.`
+  }
+  const total = page.count ?? rows.length
+  const scope = [search ? `"${search}"` : "", wanted ? `type ${type}` : ""].filter(Boolean).join(", ")
+  return `Space agencies${scope ? ` (${scope})` : ""} — ${rows.length} shown of ${total} in Launch Library 2:\n` +
+    rows.slice(0, limit).map((row, i) =>
+      `${i + 1}. ${row.name ?? "?"}${row.abbrev ? ` (${row.abbrev})` : ""} | ${row.type ?? "type n/a"} | ${row.country_code ?? "country n/a"}` +
+      `${row.featured ? " | featured" : ""} | agency id ${row.id ?? "?"}` +
+      `${row.description ? `\n   ${clip(row.description)}` : ""}`
+    ).join("\n")
+}
+
+export async function astronauts(query?: string, inSpace?: boolean, limit = 10): Promise<string> {
+  const search = String(query ?? "").trim()
+  const page = await ll2<Ll2Astronaut>("/astronaut/", {
+    limit: inSpace ? 100 : Math.min(Math.max(limit, 1), 25),
+    ...(search ? { search } : {}),
+  })
+  const rows = (page.results ?? []).filter((row) => inSpace !== true || row.in_space === true)
+  if (!rows.length) {
+    return `No Launch Library 2 astronauts match${search ? ` "${search}"` : ""}${inSpace ? " that are currently in space" : ""}.`
+  }
+  const total = page.count ?? rows.length
+  const scope = [search ? `"${search}"` : "", inSpace ? "currently in space" : ""].filter(Boolean).join(", ")
+  return `Astronauts${scope ? ` (${scope})` : ""} — ${rows.length} shown of ${total} in Launch Library 2:\n` +
+    rows.slice(0, limit).map((row, i) =>
+      `${i + 1}. ${row.name ?? "?"} | ${row.agency ?? "agency n/a"} | ${row.nationality ?? "nationality n/a"}` +
+      ` | ${row.status?.name ?? "status n/a"}${row.in_space ? " | IN SPACE now" : ""}` +
+      `\n   time in space ${isoDuration(row.time_in_space)}, spacewalks ${isoDuration(row.eva_time)} | astronaut id ${row.id ?? "?"}`
+    ).join("\n")
+}
+
+export async function launchVehicles(query: string, limit = 5): Promise<string> {
+  const needle = String(query ?? "").trim()
+  if (!needle) throw new SpacedevsError("query is required, e.g. 'Falcon 9' or 'Ariane'.")
+  const page = await ll2<Ll2Vehicle>("/config/launcher/", { search: needle, limit: 10 })
+  const rows = page.results ?? []
+  if (!rows.length) return `No Launch Library 2 launch vehicles match "${query}".`
+  const best = rows[0]
+  // The spec sheet needs a second call; if it fails the match list still answers.
+  let detail: Ll2Vehicle | null = null
+  if (best.id) {
+    try {
+      detail = await ll2Detail<Ll2Vehicle>(`/config/launcher/${best.id}/`)
+    } catch {
+      detail = null
+    }
+  }
+  const vehicle = detail ?? best
+  const maker = typeof vehicle.manufacturer === "string" ? vehicle.manufacturer : vehicle.manufacturer?.name
+  const stages = vehicle.min_stage && vehicle.max_stage ? `${vehicle.min_stage}-${vehicle.max_stage}` : undefined
+  const spec = [
+    `Rocket: ${vehicle.full_name ?? vehicle.name ?? "?"}${vehicle.family ? ` (${vehicle.family} family${vehicle.variant ? `, ${vehicle.variant}` : ""})` : ""}`,
+    `Manufacturer: ${maker ?? "not listed"}${vehicle.reusable == null ? "" : ` | reusable: ${vehicle.reusable ? "yes" : "no"}`}${stages ? ` | stages: ${stages}` : ""}`,
+    `Size: length ${vehicle.length ?? "?"} m, diameter ${vehicle.diameter ?? "?"} m, launch mass ${vehicle.launch_mass ?? "?"} t`,
+    `Payload: LEO ${vehicle.leo_capacity ?? "?"} kg | GTO ${vehicle.gto_capacity ?? "?"} kg${usd(vehicle.launch_cost) ? ` | launch cost ${usd(vehicle.launch_cost)}` : ""}`,
+    `Flights: ${vehicle.successful_launches ?? "?"} successful, ${vehicle.failed_launches ?? "?"} failed, ${vehicle.pending_launches ?? "?"} upcoming` +
+      `${vehicle.maiden_flight ? ` | maiden flight ${String(vehicle.maiden_flight).slice(0, 10)}` : ""}`,
+    vehicle.description ? clip(vehicle.description, 400) : "",
+  ].filter(Boolean)
+  const others = rows.slice(1, limit + 1)
+  return `Launch vehicle matches for "${query}" (${rows.length} of ${page.count ?? rows.length} in Launch Library 2):\n\n` +
+    spec.join("\n") +
+    (others.length
+      ? `\n\nOther matches:\n` +
+        others.map((row, i) => `${i + 1}. ${row.full_name ?? row.name ?? "?"} | id ${row.id ?? "?"}`).join("\n")
+      : "")
+}
+
+export async function upcomingEvents(eventType?: string, limit = 10): Promise<string> {
+  const wanted = String(eventType ?? "").trim().toLowerCase()
+  const page = await ll2<Ll2Event>("/event/upcoming/", { limit: wanted ? 25 : Math.min(Math.max(limit, 1), 25) })
+  const rows = (page.results ?? []).filter(
+    (row) => !wanted || String(row.type?.name ?? "").toLowerCase().includes(wanted)
+  )
+  if (!rows.length) {
+    return `No upcoming Launch Library 2 events${wanted ? ` of type "${eventType}"` : ""} right now.`
+  }
+  const total = page.count ?? rows.length
+  return `Upcoming space events${wanted ? ` (type ${eventType})` : ""} — ${rows.length} shown of ${total} in Launch Library 2:\n` +
+    rows.slice(0, limit).map((row, i) =>
+      `${i + 1}. ${utc(row.date)} | ${row.name ?? "?"} | ${row.type?.name ?? "type n/a"}${row.webcast_live ? " | LIVE webcast" : ""}` +
+      `\n   ${row.location ?? "location n/a"}${row.program?.length ? ` | ${row.program.map((entry) => entry.name).filter(Boolean).join(', ')}` : ""}` +
+      `${row.description ? `\n   ${clip(row.description)}` : ""}`
+    ).join("\n")
+}

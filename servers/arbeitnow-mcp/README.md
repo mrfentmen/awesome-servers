@@ -14,6 +14,9 @@ This file is self contained. It reads public data only and never writes to the m
 * `tags`  Show which skills and categories appear most often in the newest Arbeitnow jobs.
 * `companies`  Rank the employers with the most open Arbeitnow postings, with their remote count and newest posting date.
 * `locations`  Show where the newest Arbeitnow jobs are, split by city and by job type, with a remote versus on-site count.
+* `company_jobs`  List every open posting from one employer across the 300 newest Arbeitnow jobs, newest first.
+* `similar_jobs`  Other Arbeitnow postings that share tags with a job, or come from the same employer, ranked by overlap.
+* `hiring_trends`  New Arbeitnow postings per day, the remote share and the job types, over up to six feed pages.
 
 ## Usage
 

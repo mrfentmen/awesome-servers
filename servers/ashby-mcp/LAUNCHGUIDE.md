@@ -20,6 +20,9 @@ Jobs
 - Departments: List the teams hiring on an Ashby board, ranked by number of open roles.
 - Remote jobs: List only the remote roles on an Ashby job board.
 - Compensation: List Ashby roles that publish a pay range, with the salary summary for each role.
+- Teams: List the sub-teams hiring on an Ashby board, ranked by number of open roles.
+- Locations: List every location an Ashby board hires into, including secondary locations, ranked by open roles.
+- Newest jobs: List the most recently published roles on an Ashby board, newest first.
 
 ## Getting Started
 
@@ -30,6 +33,9 @@ Jobs
 - Tool: list_departments — List the teams hiring on an Ashby board, ranked by number of open roles.
 - Tool: list_remote_jobs — List only the remote roles on an Ashby job board.
 - Tool: compensation — List Ashby roles that publish a pay range, with the salary summary for each role.
+- Tool: list_teams — List the sub-teams hiring on an Ashby board, ranked by number of open roles.
+- Tool: list_locations — List every location an Ashby board hires into, including secondary locations, ranked by open roles.
+- Tool: newest_jobs — List the most recently published roles on an Ashby board, newest first.
 
 ## Tags
 ashby, mcp, data, keyless

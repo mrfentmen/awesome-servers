@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { board, departments, job, jobs, offices, searchJobs } from "./api.js"
+import { board, departments, job, jobQuestions, jobs, jobsByOffice, newestJobs, offices, searchJobs } from "./api.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -97,5 +97,54 @@ export function createServer(): McpServer {
     try { return text(await board(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "jobs_by_office",
+    {
+      title: "Jobs by office",
+      description: "List the open jobs attached to one office on a Greenhouse board, or to a matching location.",
+      inputSchema: z.object( {
+        board: z.string().describe("Board token like stripe."),
+        office: z.string().describe("Office or location name, for example London or Remote."),
+        limit: z.number().describe("How many jobs to show, 1-50.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await jobsByOffice(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "newest_jobs",
+    {
+      title: "Newest jobs",
+      description: "List the most recently opened jobs on a Greenhouse board, newest first.",
+      inputSchema: z.object( {
+        board: z.string().describe("Board token like stripe."),
+        limit: z.number().describe("How many jobs to show, 1-50.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await newestJobs(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "job_questions",
+    {
+      title: "Application form",
+      description: "Show the real application questions for one Greenhouse job, with which are required and the deadline.",
+      inputSchema: z.object( {
+        board: z.string().describe("Board token like stripe."),
+        job_id: z.number().describe("Greenhouse job id, as returned by the jobs tool.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await jobQuestions(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

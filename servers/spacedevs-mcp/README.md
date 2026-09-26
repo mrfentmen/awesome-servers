@@ -12,6 +12,10 @@ Rocket launches, satellites and space weather - no API key.
 - `space_news` — Latest spaceflight news headlines from across the industry, with an optional keyword search.
 - `space_blogs` — Longer spaceflight write-ups and agency blog posts, with an optional keyword search.
 - `space_weather` — Current geomagnetic conditions from NOAA: Kp index, solar wind speed, interplanetary magnetic field, NOAA storm scales and the Kp forecast.
+- `space_agencies` — Space agencies from Launch Library 2 with type, country and description. Optionally search by name or filter by type, e.g. 'Commercial' or 'Government'.
+- `astronauts` — Astronaut and cosmonaut records from Launch Library 2: agency, nationality, status, time in space and spacewalk time. Filter by name or to those currently in space.
+- `launch_vehicles` — Rocket specs from Launch Library 2: size, mass, payload capacity to LEO and GTO, launch history and maiden flight. Search by name, e.g. 'Falcon 9'.
+- `upcoming_events` — Upcoming non-launch space events from Launch Library 2 - dockings, spacewalks, flybys, arrivals - with date, location and webcast flag.
 
 ## Setup
 

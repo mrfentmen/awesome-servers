@@ -205,3 +205,102 @@ export async function locations(args: LocationsArgs): Promise<string> {
   return `Arbeitnow spread across ${list.length} newest postings ` +
     `(${remote} remote, ${list.length - remote} on-site):\n` + blocks.join('\n');
 }
+
+// ---- batch-2 tools: extra live-data tools (2026-09-26) ----
+export interface CompanyJobsArgs {
+  company: string;
+  limit?: number;
+}
+
+/** Every open posting from one employer across the newest Arbeitnow feed pages. */
+export async function companyJobs(args: CompanyJobsArgs): Promise<string> {
+  const needle = String(args?.company ?? '').trim().toLowerCase();
+  if (!needle) throw new Error('company is required.');
+  const limit = clamp(args?.limit, 20, 50);
+  const list = await fetchRecent(3);
+  const hits = list
+    .filter((entry) => String(entry.company_name ?? '').toLowerCase().includes(needle))
+    .sort((a, b) => postedOn(b.created_at).localeCompare(postedOn(a.created_at)));
+  if (!hits.length) {
+    return `No Arbeitnow postings from a company matching "${args.company}" in the ${list.length} newest jobs. Try the companies tool for exact names.`;
+  }
+  const remote = hits.filter((entry) => entry.remote === true).length;
+  return `Arbeitnow jobs at companies matching "${args.company}" (${hits.length} of ${list.length} newest postings, ${remote} remote):\n` +
+    hits.slice(0, limit).map(row).join('\n');
+}
+
+export interface SimilarJobsArgs {
+  slug: string;
+  limit?: number;
+}
+
+/** Other postings that share tags with a job, or come from the same employer. */
+export async function similarJobs(args: SimilarJobsArgs): Promise<string> {
+  const slug = String(args?.slug ?? '').trim();
+  if (!slug) throw new Error('slug is required.');
+  const limit = clamp(args?.limit, 10, 30);
+  const list = await fetchRecent(3);
+  const source = list.find((entry) => entry.slug === slug);
+  if (!source) {
+    return `No job with slug "${slug}" in the ${list.length} newest Arbeitnow postings. Use search_jobs to find the slug first.`;
+  }
+  const sourceTags = new Set((source.tags ?? []).map((tag) => tag.toLowerCase()));
+  const sourceCompany = String(source.company_name ?? '').toLowerCase();
+  const scored = list
+    .filter((entry) => entry.slug && entry.slug !== slug)
+    .map((entry) => {
+      const shared = (entry.tags ?? []).filter((tag) => sourceTags.has(tag.toLowerCase()));
+      const sameEmployer = sourceCompany !== '' && String(entry.company_name ?? '').toLowerCase() === sourceCompany;
+      return { entry, shared, sameEmployer, score: shared.length + (sameEmployer ? 3 : 0) };
+    })
+    .filter((match) => match.score > 0)
+    .sort((a, b) => b.score - a.score || postedOn(b.entry.created_at).localeCompare(postedOn(a.entry.created_at)));
+  if (!scored.length) {
+    return `No similar Arbeitnow jobs for "${source.title ?? slug}" in the ${list.length} newest postings (no shared tags or employer).`;
+  }
+  const lines = scored.slice(0, limit).map(({ entry, shared, sameEmployer, score }, i) => {
+    const why = [sameEmployer ? 'same company' : '', shared.length ? `shares ${shared.slice(0, 3).join(', ')}` : '']
+      .filter(Boolean)
+      .join(', ');
+    return `${i + 1}. ${entry.title ?? '?'} at ${entry.company_name ?? '?'} | ${entry.location ?? '?'}${entry.remote ? ' (remote)' : ''} | score ${score} (${why})\n` +
+      `   slug: ${entry.slug ?? '?'}`;
+  });
+  return `Jobs similar to "${source.title ?? slug}" at ${source.company_name ?? '?'} (${scored.length} of ${list.length} newest postings):\n` +
+    lines.join('\n');
+}
+
+export interface HiringTrendsArgs {
+  pages?: number;
+  days?: number;
+}
+
+/** Posting volume per day over the newest feed pages, plus the remote share. */
+export async function hiringTrends(args: HiringTrendsArgs): Promise<string> {
+  const pages = clamp(args?.pages, 3, 6);
+  const days = clamp(args?.days, 7, 21);
+  const list = await fetchRecent(pages);
+  if (!list.length) return 'No Arbeitnow jobs returned.';
+  const perDay = new Map<string, number>();
+  const types = new Map<string, number>();
+  let remote = 0;
+  for (const entry of list) {
+    if (entry.remote) remote += 1;
+    const day = postedOn(entry.created_at);
+    if (day !== '?') perDay.set(day, (perDay.get(day) ?? 0) + 1);
+    for (const type of entry.job_types ?? []) {
+      const label = String(type).trim();
+      if (label) types.set(label, (types.get(label) ?? 0) + 1);
+    }
+  }
+  const ranked = [...perDay.entries()].sort((a, b) => b[0].localeCompare(a[0])).slice(0, days);
+  if (!ranked.length) return `Arbeitnow did not date any of the ${list.length} newest postings.`;
+  const busiest = [...ranked].sort((a, b) => b[1] - a[1])[0];
+  const typeLines = [...types.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+  return `Arbeitnow hiring trend over ${list.length} postings (${pages} newest feed pages, ${days} days shown):\n` +
+    `Remote: ${remote} of ${list.length} (${Math.round((remote / list.length) * 100)}%)\n` +
+    `Postings per day (newest first, busiest ${busiest[0]} with ${busiest[1]}):\n` +
+    ranked.map(([day, count]) => `  ${day}: ${count}`).join('\n') +
+    (typeLines.length
+      ? `\nJob types:\n` + typeLines.map(([type, count], i) => `  ${i + 1}. ${type} - ${count}`).join('\n')
+      : '');
+}

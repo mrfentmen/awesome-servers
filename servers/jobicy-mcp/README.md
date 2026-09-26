@@ -13,6 +13,9 @@ This file is self contained. It reads public data only and never writes to the m
 * `top_salaries`  List the highest-paying remote jobs that publish a salary, annualized for comparison.
 * `companies`  Rank the companies with the most open remote jobs, including how many disclosed pay and the top published salary.
 * `job_levels`  Break remote hiring down by experience level and employment type, with the highest published salary in each level.
+* `geographies`  Break the most recent remote jobs down by region, with the top published pay in each place.
+* `company_jobs`  List every open remote job from one company in the most recent postings, newest first.
+* `salary_bands`  Show how published remote salaries are distributed, with the median and the share of jobs that disclose pay.
 
 ## Usage
 

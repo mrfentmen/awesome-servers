@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { companies, industries, jobDetails, jobLevels, jobs, topSalaries } from "./api.js"
+import { companies, companyJobs, geographies, industries, jobDetails, jobLevels, jobs, salaryBands, topSalaries } from "./api.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -103,5 +103,58 @@ export function createServer(): McpServer {
     try { return text(await jobLevels(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "geographies",
+    {
+      title: "Where jobs are based",
+      description: "Break the most recent remote jobs down by region, with the top published pay in each place.",
+      inputSchema: z.object( {
+        count: z.number().describe("Unused, kept for symmetry with jobs.").optional(),
+        industry: z.string().describe("Industry filter, for example marketing.").optional(),
+        tag: z.string().describe("Skill tag filter, for example python.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await geographies(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "company_jobs",
+    {
+      title: "Company jobs",
+      description: "List every open remote job from one company in the most recent postings, newest first.",
+      inputSchema: z.object( {
+        company: z.string().describe("Company name or part of it, for example Automattic."),
+        count: z.number().describe("How many jobs to show, 1-50.").optional(),
+        geo: z.string().describe("Region filter, for example usa.").optional(),
+        industry: z.string().describe("Industry filter, for example software.").optional(),
+        tag: z.string().describe("Skill tag filter, for example react.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await companyJobs(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "salary_bands",
+    {
+      title: "Pay bands",
+      description: "Show how published remote salaries are distributed, with the median and the share of jobs that disclose pay.",
+      inputSchema: z.object( {
+        geo: z.string().describe("Region filter, for example europe.").optional(),
+        industry: z.string().describe("Industry filter, for example finance.").optional(),
+        tag: z.string().describe("Skill tag filter, for example python.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await salaryBands(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

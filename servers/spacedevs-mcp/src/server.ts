@@ -1,15 +1,19 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import {
+  astronauts,
   errorMessage,
   launchCountdown,
+  launchVehicles,
   nextLaunches,
   satelliteFrequencies,
   satelliteOrbit,
   satelliteSearch,
+  spaceAgencies,
   spaceBlogs,
   spaceNews,
   spaceWeather,
+  upcomingEvents,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -176,6 +180,92 @@ export function createServer(): McpServer {
     async () => {
       try {
         return text(await spaceWeather())
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "space_agencies",
+    {
+      title: "Space agencies",
+      description:
+        "Space agencies from Launch Library 2 with type, country and description. Optionally search by name or filter by type, e.g. 'Commercial' or 'Government'.",
+      inputSchema: z.object({
+        query: z.string().describe("Agency name or part of it, e.g. 'SpaceX' or 'European'").optional(),
+        type: z.string().describe("Agency type filter: Government, Commercial, Multinational, Private or Educational").optional(),
+        limit: z.number().int().min(1).max(25).default(10).describe("How many agencies to show"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, type, limit }) => {
+      try {
+        return text(await spaceAgencies(query, type, limit))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "astronauts",
+    {
+      title: "Astronauts",
+      description:
+        "Astronaut and cosmonaut records from Launch Library 2: agency, nationality, status, time in space and spacewalk time. Filter by name or to those currently in space.",
+      inputSchema: z.object({
+        query: z.string().describe("Name or part of it, e.g. 'Hadfield' or 'Pesquet'").optional(),
+        in_space: z.boolean().describe("Only astronauts currently in space (true) or everyone (false)").optional(),
+        limit: z.number().int().min(1).max(25).default(10).describe("How many astronauts to show"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, in_space, limit }) => {
+      try {
+        return text(await astronauts(query, in_space, limit))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "launch_vehicles",
+    {
+      title: "Launch vehicles",
+      description:
+        "Rocket specs from Launch Library 2: size, mass, payload capacity to LEO and GTO, launch history and maiden flight. Search by name, e.g. 'Falcon 9'.",
+      inputSchema: z.object({
+        query: z.string().describe("Launch vehicle name or part of it, e.g. 'Falcon 9', 'Ariane' or 'Soyuz'"),
+        limit: z.number().int().min(1).max(10).default(5).describe("How many other matches to list"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, limit }) => {
+      try {
+        return text(await launchVehicles(query, limit))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "upcoming_events",
+    {
+      title: "Upcoming space events",
+      description:
+        "Upcoming non-launch space events from Launch Library 2 - dockings, spacewalks, flybys, arrivals - with date, location and webcast flag.",
+      inputSchema: z.object({
+        type: z.string().describe("Event type filter, e.g. 'Docking', 'EVA' or 'Flyby'").optional(),
+        limit: z.number().int().min(1).max(25).default(10).describe("How many events to show"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ type, limit }) => {
+      try {
+        return text(await upcomingEvents(type, limit))
       } catch (e) {
         return textError(errorMessage(e))
       }

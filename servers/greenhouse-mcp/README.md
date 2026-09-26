@@ -13,6 +13,9 @@ This file is self contained. It reads public data only and never writes to the m
 * `departments`  List the teams hiring on a Greenhouse board, ranked by number of open roles.
 * `offices`  List the office locations on a Greenhouse board.
 * `board`  Show a company Greenhouse board: name, open job count and the company intro.
+* `jobs_by_office`  List the open jobs attached to one office on a Greenhouse board, or to a matching location.
+* `newest_jobs`  List the most recently opened jobs on a Greenhouse board, newest first.
+* `job_questions`  Show the real application questions for one Greenhouse job, with which are required and the deadline.
 
 ## Usage
 

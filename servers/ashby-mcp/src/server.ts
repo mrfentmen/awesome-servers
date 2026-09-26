@@ -7,6 +7,9 @@ import {
   formatJob,
   getJob,
   listJobs,
+  listLocations,
+  listTeams,
+  newestJobs,
   remoteJobs,
   searchJobs,
 } from "./api.js"
@@ -162,6 +165,70 @@ export function createServer(): McpServer {
     async ({ org, limit }) => {
       try {
         return text(await compensation(org, limit))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "list_teams",
+    {
+      title: "Teams",
+      description: "List the sub-teams hiring on an Ashby board, ranked by number of open roles.",
+      inputSchema: z.object({
+        org: z.string().describe("Organization slug, e.g. 'ramp'"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ org }) => {
+      try {
+        return text(await listTeams(org))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "list_locations",
+    {
+      title: "Locations",
+      description: "List every location an Ashby board hires into, including secondary locations, ranked by open roles.",
+      inputSchema: z.object({
+        org: z.string().describe("Organization slug, e.g. 'ramp'"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ org }) => {
+      try {
+        return text(await listLocations(org))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "newest_jobs",
+    {
+      title: "Newest jobs",
+      description: "List the most recently published roles on an Ashby board, newest first.",
+      inputSchema: z.object({
+        org: z.string().describe("Organization slug, e.g. 'ramp'"),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .max(100)
+          .default(10)
+          .describe("How many roles to list, 1-100 (default 10). For example 20."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ org, limit }) => {
+      try {
+        return text(await newestJobs(org, limit))
       } catch (e) {
         return textError(errorMessage(e))
       }

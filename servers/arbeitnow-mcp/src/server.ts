@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { companies, job, jobs, locations, remoteJobs, searchJobs, tags } from "./api.js"
+import { companies, companyJobs, hiringTrends, job, jobs, locations, remoteJobs, searchJobs, similarJobs, tags } from "./api.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -109,5 +109,53 @@ export function createServer(): McpServer {
     try { return text(await locations(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "company_jobs",
+    {
+      title: "Company jobs",
+      description: "List every open posting from one employer across the 300 newest Arbeitnow jobs, newest first.",
+      inputSchema: z.object( {
+        company: z.string().describe("Company name or part of it, for example SAP or Siemens."),
+        limit: z.number().describe("Max results to show, 1-50, e.g. 25.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await companyJobs(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "similar_jobs",
+    {
+      title: "Similar jobs",
+      description: "Other Arbeitnow postings that share tags with a job, or come from the same employer, ranked by overlap.",
+      inputSchema: z.object( {
+        slug: z.string().describe("Job slug, as returned by the jobs or search_jobs tools."),
+        limit: z.number().describe("Max similar jobs to show, 1-30, e.g. 10.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await similarJobs(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "hiring_trends",
+    {
+      title: "Hiring trends",
+      description: "New Arbeitnow postings per day, the remote share and the job types, over up to six feed pages.",
+      inputSchema: z.object( {
+        pages: z.number().describe("How many feed pages to scan, 1-6, e.g. 4 for 400 jobs.").optional(),
+        days: z.number().describe("How many days of the trend to show, 1-21, e.g. 14.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await hiringTrends(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

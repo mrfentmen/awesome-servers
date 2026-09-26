@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { check, checkBulk, checkDomain, dnsLookup, domainSummary, mxRecords } from "./api.js"
+import { check, checkBulk, checkDomain, dnsLookup, dnssecCheck, domainSummary, emailAuth, lookalikeDomains, mxRecords } from "./api.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -86,5 +86,51 @@ export function createServer(): McpServer {
     try { return text(await domainSummary(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "dnssec_check",
+    {
+      title: "DNSSEC check",
+      description: "Check whether a domain is DNSSEC signed: validating-resolver AD flag, DNSKEY records and the parent DS.",
+      inputSchema: z.object( {
+        domain: z.string().describe("Domain to check, for example cloudflare.com.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await dnssecCheck(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "email_auth",
+    {
+      title: "Email authentication",
+      description: "SPF, DMARC, DKIM and MX for a domain, so you can tell whether its mail can be spoofed.",
+      inputSchema: z.object( {
+        domain: z.string().describe("Domain to check, for example stripe.com.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await emailAuth(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "lookalike_domains",
+    {
+      title: "Lookalike domains",
+      description: "Test typo, homoglyph and alternative-TLD variants of a domain and report which ones resolve.",
+      inputSchema: z.object( {
+        domain: z.string().describe("Domain to screen, for example yourbrand.com."),
+        limit: z.number().describe("How many live lookalikes to show, 1-25, e.g. 10.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await lookalikeDomains(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

@@ -22,6 +22,9 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 - `list_departments`: List the teams hiring on an Ashby board, ranked by number of open roles.
 - `list_remote_jobs`: List only the remote roles on an Ashby job board.
 - `compensation`: List Ashby roles that publish a pay range, with the salary summary for each role.
+- `list_teams`: List the sub-teams hiring on an Ashby board, ranked by number of open roles.
+- `list_locations`: List every location an Ashby board hires into, including secondary locations, ranked by open roles.
+- `newest_jobs`: List the most recently published roles on an Ashby board, newest first.
 
 ## Limits and privacy
 

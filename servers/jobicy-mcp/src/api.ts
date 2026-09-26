@@ -224,3 +224,100 @@ export async function jobLevels(args: LevelsArgs): Promise<string> {
   ].filter(Boolean);
   return `Jobicy remote hiring breakdown${scope} (from the ${list.length} most recent postings):\n` + blocks.join('\n');
 }
+
+// ---- batch-2 tools: extra live-data tools (2026-09-26) ----
+export interface GeographiesArgs {
+  count?: number;
+  industry?: string;
+  tag?: string;
+}
+
+/** Live breakdown of where the open remote jobs are based (jobGeo). */
+export async function geographies(args: GeographiesArgs): Promise<string> {
+  const list = await fetchJobs({ count: 50, industry: args?.industry, tag: args?.tag });
+  if (!list.length) return 'No Jobicy jobs matched those filters.';
+  const counts = new Map<string, { jobs: number; top?: number }>();
+  for (const job of list) {
+    // Upstream geo strings sometimes carry double spaces between countries.
+    const key = String(job.jobGeo ?? '').replace(/\s+/g, ' ').trim() || 'not stated';
+    const group = counts.get(key) ?? { jobs: 0 };
+    group.jobs += 1;
+    const annual = annualMax(job);
+    if (annual != null) group.top = Math.max(group.top ?? 0, annual);
+    counts.set(key, group);
+  }
+  const ranked = [...counts.entries()].sort((a, b) => b[1].jobs - a[1].jobs);
+  const scope = [args?.industry, args?.tag].filter(Boolean).join(', ');
+  return `Where Jobicy remote jobs are based${scope ? ` (${scope})` : ''} — from the ${list.length} most recent postings, ${ranked.length} place(s):\n` +
+    ranked.map(([place, group], i) =>
+      `${i + 1}. ${place} - ${group.jobs} job(s)${group.top ? `, top published pay ${money(group.top)}/year` : ''}`
+    ).join('\n');
+}
+
+export interface CompanyJobsArgs {
+  company: string;
+  count?: number;
+  geo?: string;
+  industry?: string;
+  tag?: string;
+}
+
+/** Every open role from one company in the most recent Jobicy postings. */
+export async function companyJobs(args: CompanyJobsArgs): Promise<string> {
+  const needle = String(args?.company ?? '').trim().toLowerCase();
+  if (!needle) throw new Error('company is required.');
+  const limit = clamp(args?.count, 20);
+  const list = await fetchJobs({ count: 50, geo: args?.geo, industry: args?.industry, tag: args?.tag });
+  const hits = list
+    .filter((job) => String(job.companyName ?? '').toLowerCase().includes(needle))
+    .sort((a, b) => String(b.pubDate ?? '').localeCompare(String(a.pubDate ?? '')));
+  if (!hits.length) {
+    return `No Jobicy postings from a company matching "${args.company}" among the ${list.length} most recent jobs. Use the companies tool for exact names.`;
+  }
+  const names = [...new Set(hits.map((job) => String(job.companyName ?? '?')))];
+  return `Jobicy jobs at ${names.join(', ')} (${hits.length} of ${list.length} most recent):\n\n` +
+    hits.slice(0, limit).map((job, i) =>
+      `${row(job, i)}\n   ---\n   ${String(job.jobExcerpt ?? job.jobDescription ?? 'no summary published').replace(/\s+/g, ' ').slice(0, 400)}`
+    ).join('\n\n');
+}
+
+export interface SalaryBandsArgs {
+  geo?: string;
+  industry?: string;
+  tag?: string;
+}
+
+const PAY_BANDS: Array<{ label: string; upTo: number }> = [
+  { label: 'under $50k', upTo: 50000 },
+  { label: '$50k-$80k', upTo: 80000 },
+  { label: '$80k-$120k', upTo: 120000 },
+  { label: '$120k-$200k', upTo: 200000 },
+  { label: '$200k+', upTo: Number.POSITIVE_INFINITY },
+];
+
+/** Published-pay distribution across the most recent Jobicy postings. */
+export async function salaryBands(args: SalaryBandsArgs): Promise<string> {
+  const list = await fetchJobs({ count: 50, geo: args?.geo, industry: args?.industry, tag: args?.tag });
+  const annual = list
+    .map((job) => annualMax(job))
+    .filter((value): value is number => value != null)
+    .sort((a, b) => a - b);
+  if (!annual.length) {
+    return `None of the ${list.length} most recent Jobicy postings publish a salary range.`;
+  }
+  const middle = Math.floor(annual.length / 2);
+  const median = annual.length % 2 ? annual[middle] : (annual[middle - 1] + annual[middle]) / 2;
+  const disclosure = Math.round((annual.length / list.length) * 100);
+  const bands = PAY_BANDS.map((band, index) => {
+    const floor = index === 0 ? 0 : PAY_BANDS[index - 1].upTo;
+    const members = annual.filter((value) => value >= floor && value < band.upTo);
+    const share = Math.round((members.length / annual.length) * 100);
+    return `${band.label}: ${members.length} job(s) (${share}%)`;
+  });
+  const scope = [args?.geo, args?.industry, args?.tag].filter(Boolean).join(', ');
+  return `Published pay on Jobicy${scope ? ` (${scope})` : ''} — ${annual.length} of ${list.length} most recent postings disclose a salary (${disclosure}%):\n` +
+    `Median ${money(median)}/year | lowest ${money(annual[0])} | highest ${money(annual[annual.length - 1])}\n` +
+    `Bands (annualized):\n` +
+    bands.map((line) => `  ${line}`).join('\n') +
+    `\nOnly jobs that published a range are counted; the rest are silent about pay.`;
+}

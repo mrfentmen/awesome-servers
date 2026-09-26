@@ -21,6 +21,9 @@ Jobs
 - Top tags: Show which skills and categories appear most often in the newest Arbeitnow jobs.
 - Companies hiring: Rank the employers with the most open Arbeitnow postings, with their remote count and newest posting date.
 - Locations and job types: Show where the newest Arbeitnow jobs are, split by city and by job type, with a remote versus on-site count.
+- Company jobs: List every open posting from one employer across the 300 newest Arbeitnow jobs, newest first.
+- Similar jobs: Other Arbeitnow postings that share tags with a job, or come from the same employer, ranked by overlap.
+- Hiring trends: New Arbeitnow postings per day, the remote share and the job types, over up to six feed pages.
 
 ## Getting Started
 
@@ -32,6 +35,9 @@ Jobs
 - Tool: tags — Show which skills and categories appear most often in the newest Arbeitnow jobs.
 - Tool: companies — Rank the employers with the most open Arbeitnow postings, with their remote count and newest posting date.
 - Tool: locations — Show where the newest Arbeitnow jobs are, split by city and by job type, with a remote versus on-site count.
+- Tool: company_jobs — List every open posting from one employer across the 300 newest Arbeitnow jobs, newest first.
+- Tool: similar_jobs — Other Arbeitnow postings that share tags with a job, or come from the same employer, ranked by overlap.
+- Tool: hiring_trends — New Arbeitnow postings per day, the remote share and the job types, over up to six feed pages.
 
 ## Tags
 arbeitnow, mcp, data, keyless
