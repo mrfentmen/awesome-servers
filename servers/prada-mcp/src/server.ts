@@ -73,7 +73,7 @@ export function createServer(): McpServer {
       title: "Get listing",
       description: "Full details: variants, images, parsed condition/color/material, description.",
       inputSchema: z.object({
-        handle: z.string().describe("Product handle/slug."),
+        handle: z.string().describe("Product handle/slug, e.g. a handle returned by search_listings."),
         source: z.string().describe("fashionphile or rebag (tries both).").optional()
       }),
       annotations: READ_ONLY,
@@ -93,7 +93,7 @@ export function createServer(): McpServer {
       title: "Price overview",
       description: "Ask-price stats overall + by condition.",
       inputSchema: z.object({
-        limit: z.string().describe("Sample size (default 200, max 500).").optional()
+        limit: z.string().describe("Sample size (default 200, max 500), e.g. 400 for a tighter median.").optional()
       }),
       annotations: READ_ONLY,
     },
@@ -132,8 +132,8 @@ export function createServer(): McpServer {
       title: "Find deals",
       description: "Available listings priced below the brand median.",
       inputSchema: z.object({
-        limit: z.string().describe("Max deals (default 10, max 25).").optional(),
-        sample: z.string().describe("Listings sampled (default 200, max 500).").optional()
+        limit: z.string().describe("Max deals (default 10, max 25), e.g. 25 for the deepest discounts.").optional(),
+        sample: z.string().describe("Listings sampled (default 200, max 500), e.g. 400 to sample more listings.").optional()
       }),
       annotations: READ_ONLY,
     },
@@ -150,7 +150,7 @@ export function createServer(): McpServer {
     "brand_overview",
     {
       title: "Brand overview",
-      description: "Catalog sample counts by source, type and condition.",
+      description: "Catalog sample counts by source, type and condition, e.g. how many Bags, Watches and Jewelry are listed.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

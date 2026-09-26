@@ -64,15 +64,6 @@ export async function emojiCount(): Promise<number> {
   return (await dataset()).length
 }
 
-function slim(e: Emoji): { hexcode: string; emoji: string; annotation: string; group: string; url: string } {
-  return {
-    hexcode: e.hexcode,
-    emoji: e.emoji,
-    annotation: e.annotation,
-    group: e.group,
-    url: `https://openmoji.org/data/color/svg/${e.hexcode}.svg`,
-  }
-}
 
 export async function searchEmoji(query: string, limit: number): Promise<string> {
   const q = query.trim().toLowerCase()

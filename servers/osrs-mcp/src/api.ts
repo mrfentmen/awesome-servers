@@ -20,6 +20,7 @@ export class OsrsError extends Error {}
 async function fetchText(url: string): Promise<string> {
   const res = await fetch(url, {
     headers: { Accept: "text/plain", "User-Agent": UA },
+    signal: AbortSignal.timeout(15000),
   })
   if (!res.ok) {
     if (res.status === 404) throw new OsrsError(`Player not found (404).`)
@@ -31,6 +32,7 @@ async function fetchText(url: string): Promise<string> {
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url, {
     headers: { Accept: "application/json", "User-Agent": UA },
+    signal: AbortSignal.timeout(15000),
   })
   if (!res.ok) throw new OsrsError(`OSRS API error ${res.status}: ${res.statusText}`)
   return (await res.json()) as T

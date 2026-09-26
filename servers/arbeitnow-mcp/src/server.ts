@@ -15,8 +15,8 @@ export function createServer(): McpServer {
       title: "Jobs",
       description: "List the newest Arbeitnow job postings, 250 per page, with tags, location and remote flag.",
       inputSchema: z.object( {
-        limit: z.number().describe("Max results to show, 1-50.").optional(),
-        page: z.number().describe("Page of the live feed, 1-20.").optional()
+        limit: z.number().describe("Max results to show, 1-50, e.g. 25 for a quick scan.").optional(),
+        page: z.number().describe("Page of the live feed, 1-20, e.g. 2 for the next page.").optional()
       }),
       annotations: READ_ONLY,
     },
@@ -45,7 +45,7 @@ export function createServer(): McpServer {
       title: "Remote jobs",
       description: "List only the remote-friendly jobs among the 500 newest Arbeitnow postings.",
       inputSchema: z.object( {
-        limit: z.number().describe("Max results to show, 1-50.").optional()
+        limit: z.number().describe("Max results to show, 1-50, e.g. 30 to see more remote roles.").optional()
       }),
       annotations: READ_ONLY,
     },
@@ -59,7 +59,7 @@ export function createServer(): McpServer {
       title: "Job detail",
       description: "Get one Arbeitnow job by its slug, including the full description and apply link.",
       inputSchema: z.object( {
-        slug: z.string().describe("Job slug, as returned by the jobs or search_jobs tools.")
+        slug: z.string().describe("Job slug, e.g. the slug field returned by list_jobs or search_jobs.")
       }),
       annotations: READ_ONLY,
     },
@@ -73,7 +73,7 @@ export function createServer(): McpServer {
       title: "Top tags",
       description: "Show which skills and categories appear most often in the newest Arbeitnow jobs.",
       inputSchema: z.object( {
-        limit: z.number().describe("How many tags to show, 1-50.").optional()
+        limit: z.number().describe("How many tags to show, 1-50, e.g. 20 for the main skills.").optional()
       }),
       annotations: READ_ONLY,
     },
@@ -87,7 +87,7 @@ export function createServer(): McpServer {
       title: "Companies hiring",
       description: "Rank the employers with the most open Arbeitnow postings, with their remote count and newest posting date.",
       inputSchema: z.object( {
-        limit: z.number().describe("How many companies to show, 1-50.").optional()
+        limit: z.number().describe("How many companies to show, 1-50, e.g. 25 for the busiest employers.").optional()
       }),
       annotations: READ_ONLY,
     },
@@ -101,7 +101,7 @@ export function createServer(): McpServer {
       title: "Locations and job types",
       description: "Show where the newest Arbeitnow jobs are, split by city and by job type, with a remote versus on-site count.",
       inputSchema: z.object( {
-        limit: z.number().describe("How many locations and types to show, 1-50.").optional()
+        limit: z.number().describe("How many locations and types to show, 1-50, e.g. 15 for the top cities.").optional()
       }),
       annotations: READ_ONLY,
     },

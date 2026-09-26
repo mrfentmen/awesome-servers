@@ -166,9 +166,6 @@ const RESOLVERS = [
   { name: "AdGuard", url: "https://dns.adguard-dns.com/resolve" },
 ]
 
-const TYPE_NAMES: Record<number, string> = {
-  1: "A", 2: "NS", 5: "CNAME", 6: "SOA", 15: "MX", 16: "TXT", 28: "AAAA", 257: "CAA",
-}
 
 interface DohAnswer { type?: number; TTL?: number; data?: string }
 interface DohResponse { Status?: number; Answer?: DohAnswer[] }

@@ -70,7 +70,7 @@ export function createServer(): McpServer {
       title: "Get product",
       description: "Full details: variants with parsed options, images, description, tags.",
       inputSchema: z.object({
-        handle: z.string().describe("Product handle/slug.")
+        handle: z.string().describe("Product handle/slug, e.g. a handle returned by search_products.")
       }),
       annotations: READ_ONLY,
     },
@@ -89,7 +89,7 @@ export function createServer(): McpServer {
       title: "Price overview",
       description: "Ask-price distribution (min/p25/median/p75/max).",
       inputSchema: z.object({
-        limit: z.string().describe("Sample size (default 200, max 500).").optional()
+        limit: z.string().describe("Sample size (default 200, max 500), e.g. 400 for a tighter median.").optional()
       }),
       annotations: READ_ONLY,
     },
@@ -108,7 +108,7 @@ export function createServer(): McpServer {
       title: "Find deals",
       description: "Available products priced below the median.",
       inputSchema: z.object({
-        limit: z.string().describe("Max deals (default 10, max 25).").optional(),
+        limit: z.string().describe("Max deals (default 10, max 25), e.g. 25 for the deepest discounts.").optional(),
         sample: z.string().describe("Products sampled (default 200, max 500).").optional()
       }),
       annotations: READ_ONLY,
@@ -126,7 +126,7 @@ export function createServer(): McpServer {
     "list_categories",
     {
       title: "Categories",
-      description: "Product-type counts in the catalog sample.",
+      description: "Product-type counts in the catalog sample, e.g. how many chains, pendants and rings are listed.",
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },

@@ -145,7 +145,10 @@ export function createServer(): McpServer {
         "Steps: 5m / 1h / 6h / 24h.",
       inputSchema: z.object({
         name: z.string().describe("Item name, e.g. 'Abyssal whip'"),
-        timestep: z.enum(["5m", "1h", "6h", "24h"]).default("24h").describe("Bucket size"),
+        timestep: z
+          .enum(["5m", "1h", "6h", "24h"])
+          .default("24h")
+          .describe("Bucket size: 5m, 1h, 6h or 24h. Defaults to 24h."),
         points: z.number().int().min(1).max(60).default(14).describe("How many recent buckets to show"),
       }),
       annotations: READ_ONLY,

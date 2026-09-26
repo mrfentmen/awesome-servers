@@ -29,7 +29,13 @@ export function createServer(): McpServer {
       description: "Open roles on an Ashby-powered job board: titles, departments, locations.",
       inputSchema: z.object({
         org: z.string().describe("Organization slug, e.g. 'ashby'"),
-        limit: z.number().int().min(1).max(100).default(10),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .max(100)
+          .default(10)
+          .describe("How many roles to list, 1-100 (default 10). For example 25."),
       }),
       annotations: READ_ONLY,
     },
@@ -52,7 +58,13 @@ export function createServer(): McpServer {
       inputSchema: z.object({
         org: z.string().describe("Organization slug, e.g. 'ramp'"),
         query: z.string().describe("Words to match, for example security engineer"),
-        limit: z.number().int().min(1).max(100).default(10),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .max(100)
+          .default(10)
+          .describe("How many matches to return, 1-100 (default 10). For example 20."),
       }),
       annotations: READ_ONLY,
     },
@@ -111,7 +123,13 @@ export function createServer(): McpServer {
       description: "List only the remote roles on an Ashby job board.",
       inputSchema: z.object({
         org: z.string().describe("Organization slug, e.g. 'ramp'"),
-        limit: z.number().int().min(1).max(100).default(10),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .max(100)
+          .default(10)
+          .describe("How many remote roles to list, 1-100 (default 10). For example 30."),
       }),
       annotations: READ_ONLY,
     },
@@ -131,7 +149,13 @@ export function createServer(): McpServer {
       description: "List Ashby roles that publish a pay range, with the salary summary for each role.",
       inputSchema: z.object({
         org: z.string().describe("Organization slug, e.g. 'ramp'"),
-        limit: z.number().int().min(1).max(100).default(10),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .max(100)
+          .default(10)
+          .describe("How many roles to include, 1-100 (default 10). For example 15."),
       }),
       annotations: READ_ONLY,
     },
