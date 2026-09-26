@@ -1,7 +1,7 @@
 {
   "name": "hibp-mcp",
-  "version": "1.0.0",
-  "description": "HaveIBeenPwned breaches: account check, all breaches. Needs free key.",
+  "version": "1.1.0",
+  "description": "Data breach catalogue and password leak checks - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/hibp-mcp",
   "repository": {
@@ -22,11 +22,12 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "keywords": [
-    "mcp",
+    "breach",
     "hibp",
-    "breaches",
+    "passwords",
     "security",
-    "leaks"
+    "leaks",
+    "mcp"
   ],
   "license": "MIT",
   "dependencies": {

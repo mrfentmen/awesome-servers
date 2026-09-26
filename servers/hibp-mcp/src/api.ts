@@ -1,62 +1,268 @@
-export class HibpError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = "HibpError"
-  }
-}
+import { createHash } from "node:crypto"
+
+const UA = "mrfentmen-hibp-mcp/1.0"
+const PWNED = "https://api.pwnedpasswords.com"
+const HIBP = "https://haveibeenpwned.com/api/v3"
+// The full catalogue is about 1 MB. A standby Actor serves several calls from one
+// process, so hold it briefly instead of re-downloading it for every tool call.
+const CATALOGUE_TTL_MS = 10 * 60 * 1000
 
 export function errorMessage(e: unknown): string {
   return e instanceof Error ? e.message : String(e)
 }
 
-const UA = { "User-Agent": "awesome-mcps/1.0" };
-const BASE = "https://haveibeenpwned.com/api/v3";
+interface Breach {
+  Name: string
+  Title: string
+  Domain: string
+  BreachDate: string
+  AddedDate: string
+  PwnCount: number
+  Description: string
+  DataClasses: string[]
+  IsVerified: boolean
+  IsFabricated: boolean
+  IsSensitive: boolean
+}
 
-async function req(path: string, params: Record<string, string | number | undefined>, text = false): Promise<string> {
-  void params;
-  let res: Response;
+const n = (value: number) => Number(value ?? 0).toLocaleString("en-US")
+
+async function getJson<T>(url: string): Promise<T | null> {
+  let res: Response
   try {
-    res = await fetch(BASE + path, { headers: { ...UA, Accept: text ? "text/plain" : "application/json" } });
+    res = await fetch(url, {
+      headers: { "User-Agent": UA, Accept: "application/json" },
+      signal: AbortSignal.timeout(25000),
+    })
   } catch (e) {
-    throw new HibpError(`Network error: ${(e as Error).message}`);
+    throw new Error(`Could not reach Have I Been Pwned: ${errorMessage(e)}`)
   }
-  if (!res.ok) {
-    const body = (await res.text()).slice(0, 300);
-    throw new HibpError(`HTTP ${res.status}: ${body}`);
+  if (res.status === 404) return null
+  if (!res.ok) throw new Error(`Have I Been Pwned returned HTTP ${res.status}.`)
+  return (await res.json()) as T
+}
+
+let cache: { at: number; breaches: Breach[] } | null = null
+
+async function catalogue(): Promise<Breach[]> {
+  if (cache && Date.now() - cache.at < CATALOGUE_TTL_MS) return cache.breaches
+  const breaches = (await getJson<Breach[]>(`${HIBP}/breaches`)) ?? []
+  cache = { at: Date.now(), breaches }
+  return breaches
+}
+
+/**
+ * Sensitive entries cover adult or otherwise private services, and fabricated
+ * entries are invented data attributed to a company. Neither belongs in a
+ * default listing, so they are dropped and counted separately instead.
+ */
+function browsable(breaches: Breach[]): Breach[] {
+  return breaches.filter((b) => !b.IsSensitive && !b.IsFabricated)
+}
+
+function describe(b: Breach): string[] {
+  return [
+    `   breached ${b.BreachDate ?? "unknown date"} | ${n(b.PwnCount)} accounts | verified: ${b.IsVerified ? "yes" : "no"}`,
+    `   data exposed: ${(b.DataClasses ?? []).join(", ") || "not disclosed"}`,
+  ]
+}
+
+export async function breachCatalog(args: { domain?: string; year?: number; limit?: number }): Promise<string> {
+  const all = browsable(await catalogue())
+  let breaches = all
+
+  const domain = (args.domain ?? "").trim().toLowerCase()
+  if (domain) breaches = breaches.filter((b) => (b.Domain ?? "").toLowerCase().includes(domain))
+
+  const year = Number(args.year ?? 0)
+  if (year) breaches = breaches.filter((b) => (b.BreachDate ?? "").startsWith(String(year)))
+
+  breaches = [...breaches].sort((a, b) => (b.PwnCount ?? 0) - (a.PwnCount ?? 0))
+  const totalAccounts = breaches.reduce((sum, b) => sum + (b.PwnCount ?? 0), 0)
+  const limit = Math.min(Math.max(Number(args.limit ?? 15) || 15, 1), 100)
+  const shown = breaches.slice(0, limit)
+
+  const lines = [
+    `Breach catalogue${domain ? ` for "${domain}"` : ""}${year ? ` in ${year}` : ""}`,
+    `${n(breaches.length)} matching breach(es) out of ${n(all.length)} live in the catalogue, ${n(totalAccounts)} accounts exposed in total. Largest first.`,
+    "Source: Have I Been Pwned, which aggregates publicly disclosed breaches.",
+    "",
+  ]
+  shown.forEach((b, i) => {
+    lines.push(`${i + 1}. ${b.Title || b.Name} (${b.Domain || "no domain disclosed"})`)
+    lines.push(...describe(b))
+  })
+  if (!shown.length) lines.push("No breach matched those filters. Try a shorter domain or another year.")
+  return lines.join("\n")
+}
+
+export async function breachDetail(args: { name: string }): Promise<string> {
+  const name = (args.name ?? "").trim()
+  if (!name) return "Provide a breach name such as Adobe or LinkedIn."
+  const b = await getJson<Breach>(`${HIBP}/breach/${encodeURIComponent(name)}`)
+  if (!b) return `No breach named "${name}" is in the Have I Been Pwned catalogue. Names are case sensitive, for example Adobe.`
+  const description = (b.Description ?? "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim()
+  return [
+    `Breach: ${b.Title || b.Name}`,
+    `Domain: ${b.Domain || "not disclosed"}`,
+    `Breach date: ${b.BreachDate ?? "unknown"} | added to the catalogue: ${(b.AddedDate ?? "").slice(0, 10) || "unknown"}`,
+    `Accounts exposed: ${n(b.PwnCount)}`,
+    `Verified by the breached site: ${b.IsVerified ? "yes" : "no"}${b.IsFabricated ? " | flagged as fabricated" : ""}${b.IsSensitive ? " | flagged as sensitive" : ""}`,
+    `Data exposed: ${(b.DataClasses ?? []).join(", ") || "not disclosed"}`,
+    "",
+    description ? description.slice(0, 1200) : "No description published.",
+  ].join("\n")
+}
+
+export async function recentBreaches(args: { days?: number; limit?: number }): Promise<string> {
+  const all = browsable(await catalogue())
+  const days = Math.min(Math.max(Number(args.days ?? 0) || 0, 0), 3650)
+  const cutoff = days ? Date.now() - days * 86400000 : 0
+  let breaches = [...all].sort((a, b) => (b.AddedDate ?? "").localeCompare(a.AddedDate ?? ""))
+  if (cutoff) breaches = breaches.filter((b) => Date.parse(b.AddedDate ?? "") >= cutoff)
+
+  const limit = Math.min(Math.max(Number(args.limit ?? 15) || 15, 1), 100)
+  const shown = breaches.slice(0, limit)
+  const lines = [
+    `Newest additions to the breach catalogue${days ? ` in the last ${days} day(s)` : ""}`,
+    `${n(breaches.length)} breach(es) added${days ? " in that window" : " in total"}, newest first.`,
+    "",
+  ]
+  shown.forEach((b, i) => {
+    lines.push(`${i + 1}. ${b.Title || b.Name} (${b.Domain || "no domain disclosed"}) — added ${(b.AddedDate ?? "").slice(0, 10)}`)
+    lines.push(...describe(b))
+  })
+  if (!shown.length) lines.push("Nothing was added in that window. Widen the number of days.")
+  return lines.join("\n")
+}
+
+export async function breachStats(args: { year?: number }): Promise<string> {
+  const raw = await catalogue()
+  let breaches = browsable(raw)
+  const year = Number(args.year ?? 0)
+  if (year) breaches = breaches.filter((b) => (b.BreachDate ?? "").startsWith(String(year)))
+
+  const accounts = breaches.reduce((sum, b) => sum + (b.PwnCount ?? 0), 0)
+  const verified = breaches.filter((b) => b.IsVerified).length
+  const largest = [...breaches].sort((a, b) => (b.PwnCount ?? 0) - (a.PwnCount ?? 0))[0]
+  const newest = [...breaches].sort((a, b) => (b.AddedDate ?? "").localeCompare(a.AddedDate ?? ""))[0]
+  const recentAdds = breaches.filter((b) => Date.parse(b.AddedDate ?? "") >= Date.now() - 90 * 86400000).length
+
+  const byYear = new Map<string, { breaches: number; accounts: number }>()
+  for (const b of breaches) {
+    const key = (b.BreachDate ?? "").slice(0, 4)
+    if (!/^\d{4}$/.test(key)) continue
+    const row = byYear.get(key) ?? { breaches: 0, accounts: 0 }
+    row.breaches += 1
+    row.accounts += b.PwnCount ?? 0
+    byYear.set(key, row)
   }
-  return res.text();
-}
+  const years = [...byYear.entries()].sort((a, b) => b[0].localeCompare(a[0])).slice(0, 10)
 
-function headers(): Record<string, string> {
-  const k = process.env.HIBP_API_KEY;
-  if (!k) throw new HibpError("Set HIBP_API_KEY (free at haveibeenpwned.com/API/v3).");
-  return { ...UA, "hibp-api-key": k };
-}
-
-async function get(path: string): Promise<string> {
-  let res: Response;
-  try {
-    res = await fetch(BASE + path, { headers: headers() });
-  } catch (e) {
-    throw new HibpError(`Network error: ${(e as Error).message}`);
+  const classes = new Map<string, number>()
+  for (const b of breaches) {
+    for (const c of b.DataClasses ?? []) classes.set(c, (classes.get(c) ?? 0) + 1)
   }
-  if (res.status === 404) return "[]";
-  if (!res.ok) {
-    const body = (await res.text()).slice(0, 200);
-    throw new HibpError(`HTTP ${res.status}: ${body}`);
+  const topClasses = [...classes.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10)
+
+  const perBreach = breaches.length ? Math.round(accounts / breaches.length) : 0
+  const headline = [
+    `Have I Been Pwned catalogue overview${year ? ` for breaches dated ${year}` : ""}`,
+    `${n(breaches.length)} breach(es) | ${n(accounts)} accounts exposed`,
+    perBreach ? `Average of ${n(perBreach)} accounts per breach` : "",
+    `Verified by the breached site: ${n(verified)} of ${n(breaches.length)} | added in the last 90 days: ${n(recentAdds)}`,
+    largest ? `Largest: ${largest.Title || largest.Name} with ${n(largest.PwnCount)} accounts (${largest.BreachDate ?? "date unknown"})` : "",
+    newest ? `Newest entry: ${newest.Title || newest.Name}, added ${(newest.AddedDate ?? "").slice(0, 10)}` : "",
+    `Left out of the counts above: ${n(raw.filter((b) => b.IsSensitive).length)} sensitive and ${n(raw.filter((b) => b.IsFabricated).length)} fabricated entr(ies) in the full catalogue.`,
+  ].filter((line) => line !== "")
+
+  return [
+    ...headline,
+    "",
+    "Breaches and accounts by the year the breach happened (last 10 years present):",
+    ...years.map(([y, row]) => `  ${y}  ${n(row.breaches).padStart(6)} breach(es)  ${n(row.accounts).padStart(16)} accounts`),
+    "",
+    "Most exposed kinds of data:",
+    ...topClasses.map(([c, count], i) => `  ${String(i + 1).padStart(2)}. ${c} — in ${n(count)} breach(es)`),
+  ].join("\n")
+}
+
+export async function dataClasses(args: { limit?: number }): Promise<string> {
+  const [declared, breaches] = await Promise.all([
+    getJson<string[]>(`${HIBP}/dataclasses`),
+    catalogue(),
+  ])
+  const live = browsable(breaches)
+  const counts = new Map<string, number>()
+  for (const b of live) {
+    for (const c of b.DataClasses ?? []) counts.set(c, (counts.get(c) ?? 0) + 1)
   }
-  return res.text();
+  const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1])
+  const limit = Math.min(Math.max(Number(args.limit ?? 25) || 25, 1), 165)
+  const shown = ranked.slice(0, limit)
+
+  return [
+    "Data types exposed in breaches",
+    `Have I Been Pwned tracks ${n((declared ?? []).length)} data classes; ${n(ranked.length)} of them appear in the ${n(live.length)} live breaches.`,
+    "",
+    ...shown.map(([c, count], i) => `${String(i + 1).padStart(3)}. ${c} — ${n(count)} breach(es), ${((count / Math.max(live.length, 1)) * 100).toFixed(1)}% of the catalogue`),
+    "",
+    "Email addresses and passwords dominate: those two are what credential-stuffing attacks replay against other sites.",
+  ].join("\n")
 }
 
-export function checkAccount(account: string): Promise<string> {
-  return get(`/breachedaccount/${encodeURIComponent(account)}?truncateResponse=false`);
+/**
+ * Checks a password against the Have I Been Pwned range API using k-anonymity:
+ * only the first five characters of the SHA-1 hash leave this server, so the
+ * password itself is never sent and never logged.
+ */
+async function pwnedCount(password: string): Promise<number> {
+  if (!password) throw new Error("Provide the password to check.")
+  const hash = createHash("sha1").update(password, "utf8").digest("hex").toUpperCase()
+  const prefix = hash.slice(0, 5)
+  const suffix = hash.slice(5)
+  const res = await fetch(`${PWNED}/range/${prefix}`, {
+    headers: { "User-Agent": UA, "Add-Padding": "true" },
+    signal: AbortSignal.timeout(20000),
+  })
+  if (!res.ok) throw new Error(`Have I Been Pwned returned HTTP ${res.status}.`)
+  const body = await res.text()
+  for (const line of body.split(/\r?\n/)) {
+    const [candidate, count] = line.split(":")
+    if (candidate?.trim().toUpperCase() === suffix) return Number(count) || 0
+  }
+  return 0
 }
 
-export function listBreaches(): Promise<string> {
-  return get("/breaches");
+export async function passwordExposure(args: { password: string }): Promise<string> {
+  const count = await pwnedCount(args.password)
+  return [
+    count > 0
+      ? `BREACHED — this password appears in ${n(count)} known breach record(s).`
+      : "Not found in any known breach.",
+    "Only the first 5 characters of the SHA-1 hash were sent (k-anonymity); the password itself never left this server.",
+    "",
+    count > 0
+      ? "Attackers replay leaked passwords against other sites first, so change it everywhere it is used and pick a unique one per account."
+      : "It has not appeared in a public dump. Use a different password for every account so one leak cannot spread.",
+  ].join("\n")
 }
 
-export function checkPastes(email: string): Promise<string> {
-  return get(`/pasteaccount/${encodeURIComponent(email)}`);
+export async function passwordAudit(args: { passwords: string[] }): Promise<string> {
+  const list = (args.passwords ?? []).map((p) => String(p)).filter(Boolean).slice(0, 10)
+  if (!list.length) return "Provide up to 10 passwords to check."
+  const rows: string[] = []
+  let breached = 0
+  // Sequential so a burst of requests does not trip the upstream rate limit.
+  for (let i = 0; i < list.length; i += 1) {
+    const count = await pwnedCount(list[i])
+    if (count > 0) breached += 1
+    rows.push(`#${i + 1}: ${count > 0 ? `BREACHED — ${n(count)} record(s)` : "not in any known breach"}`)
+  }
+  return [
+    `Checked ${n(list.length)} password(s): ${n(breached)} already breached.`,
+    "Each password is hashed locally and only its 5-character hash prefix is sent, so no password is transmitted or stored.",
+    "",
+    ...rows,
+  ].join("\n")
 }
-
