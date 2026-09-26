@@ -1,7 +1,7 @@
 {
   "name": "fbi-crime-mcp",
   "version": "1.0.0",
-  "description": "FBI crime data by state. Free api.data.gov key.",
+  "description": "Query the FBI Crime Data API (free key; set FBI_API_KEY from api.data.gov): arrests, offenses, victims by state.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/fbi-crime-mcp",
   "repository": {

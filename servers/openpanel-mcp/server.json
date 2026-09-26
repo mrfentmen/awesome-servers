@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/openpanel-mcp",
-  "description": "OpenPanel analytics: metrics, live, pages, referrers.",
+  "description": "OpenPanel analytics: metrics, live visitors, top pages, referrers. Needs client credentials.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

@@ -1,7 +1,7 @@
 {
   "name": "radarr-mcp",
   "version": "1.0.0",
-  "description": "Radarr movies (docs-verbatim). Self-hosted.",
+  "description": "Query your Radarr instance (self-hosted; set RADARR_URL + RADARR_API_KEY, query param): movies, queue, health. Endpoints per official docs.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/radarr-mcp",
   "repository": {

@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/cloudflare-mcp",
-  "description": "Cloudflare zones and DNS.",
+  "description": "Query Cloudflare v4 (API token; set CLOUDFLARE_API_TOKEN, Bearer): zones, accounts, DNS records.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

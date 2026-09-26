@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/resend-mcp",
   "version": "1.0.0",
-  "description": "Resend domains + emails. API key.",
+  "description": "Query the Resend API (key; set RESEND_API_KEY, Bearer): domains, domain details, email details.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/resend-mcp",
   "repository": {

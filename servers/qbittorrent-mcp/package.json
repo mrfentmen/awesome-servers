@@ -1,7 +1,7 @@
 {
   "name": "qbittorrent-mcp",
   "version": "1.0.0",
-  "description": "qBittorrent torrents (docs-verbatim). Self-hosted.",
+  "description": "Query your qBittorrent WebUI (self-hosted; set QBITTORRENT_URL + QBITTORRENT_USER + QBITTORRENT_PASS; logs in per official API docs): torrents, transfer stats, app version.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/qbittorrent-mcp",
   "repository": {

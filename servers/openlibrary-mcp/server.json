@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/openlibrary-mcp",
-  "description": "Open Library book search, works and authors.",
+  "description": "Query the Open Library: full-text book search, work details.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

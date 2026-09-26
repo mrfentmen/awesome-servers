@@ -1,7 +1,7 @@
 {
   "name": "missoma-mcp",
   "version": "1.0.0",
-  "description": "Missoma jewelry catalog: search, products, prices. Keyless.",
+  "description": "Query the Missoma catalog (missoma.com): search demi-fine jewelry, newest arrivals, enriched product details, price stats, below-median deals, and category counts.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/missoma-mcp",
   "repository": {

@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/apollo-mcp",
-  "description": "Apollo.io people search and enrichment.",
+  "description": "Query Apollo.io: account health, person match, people search.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

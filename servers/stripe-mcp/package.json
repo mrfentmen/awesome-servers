@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/stripe-mcp",
   "version": "1.0.0",
-  "description": "Stripe test mode: charges, customers, balance.",
+  "description": "Query the Stripe API (test-mode key; set STRIPE_SECRET_KEY, Basic): charges, customers, balance. Use test keys only.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/stripe-mcp",
   "repository": {

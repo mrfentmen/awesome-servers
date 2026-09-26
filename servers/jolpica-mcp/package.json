@@ -1,7 +1,7 @@
 {
   "name": "jolpica-mcp",
   "version": "1.0.1",
-  "description": "Formula 1 data (Ergast API). Keyless.",
+  "description": "Query the Jolpica F1 API (Ergast-compatible, keyless): driver standings, constructor standings, schedule, results.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/jolpica-mcp",
   "repository": {

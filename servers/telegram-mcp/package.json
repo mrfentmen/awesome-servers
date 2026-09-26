@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/telegram-mcp",
   "version": "1.0.0",
-  "description": "Telegram bot: me, send, updates. Free bot.",
+  "description": "Use the Telegram Bot API (free bot; set TELEGRAM_BOT_TOKEN): bot info, send messages, read updates. Sending is real \u2014 verify chat IDs.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/telegram-mcp",
   "repository": {

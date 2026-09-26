@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/supabase-mcp",
   "version": "1.0.0",
-  "description": "Supabase tables + auth users (docs-verbatim).",
+  "description": "Query your Supabase project (set SUPABASE_URL + SUPABASE_SERVICE_KEY, apikey header): table rows, auth users, RPC. Endpoints per official docs.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/supabase-mcp",
   "repository": {

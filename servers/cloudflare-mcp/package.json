@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/cloudflare-mcp",
   "version": "1.0.0",
-  "description": "Cloudflare zones, DNS, accounts. Token.",
+  "description": "Query Cloudflare v4 (API token; set CLOUDFLARE_API_TOKEN, Bearer): zones, accounts, DNS records.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/cloudflare-mcp",
   "repository": {

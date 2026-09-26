@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/postmark-mcp",
   "version": "1.0.0",
-  "description": "Postmark email: server, templates, messages. Needs key.",
+  "description": "Query the Postmark API (free tier server token; set POSTMARK_SERVER_TOKEN, sent as X-Postmark-Server-Token): server info, templates, outbound messages.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/postmark-mcp",
   "repository": {

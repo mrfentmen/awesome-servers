@@ -1,7 +1,7 @@
 {
   "name": "lemonsqueezy-mcp",
   "version": "1.0.0",
-  "description": "Lemon Squeezy: stores, products. Needs key.",
+  "description": "Query the Lemon Squeezy API (test-mode key; set LEMONSQUEEZY_API_KEY, Bearer): stores, products, product details.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/lemonsqueezy-mcp",
   "repository": {

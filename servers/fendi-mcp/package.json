@@ -1,7 +1,7 @@
 {
   "name": "fendi-mcp",
   "version": "1.0.1",
-  "description": "Fendi resale listings from Fashionphile and Rebag. Keyless.",
+  "description": "Fendi resale listings aggregated from Fashionphile and Rebag public catalogs (prices in USD).",
   "type": "module",
   "mcpName": "io.github.mrfentmen/fendi-mcp",
   "repository": {

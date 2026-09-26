@@ -1,7 +1,7 @@
 {
   "name": "mobygames-mcp",
   "version": "1.0.0",
-  "description": "MobyGames: game search and details. Needs free key.",
+  "description": "Query the MobyGames API (free key; set MOBYGAMES_API_KEY): game search across 300k+ titles incl. retro, and details.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/mobygames-mcp",
   "repository": {

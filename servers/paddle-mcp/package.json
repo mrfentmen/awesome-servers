@@ -1,7 +1,7 @@
 {
   "name": "paddle-mcp",
   "version": "1.0.0",
-  "description": "Paddle billing: products, prices. Needs key.",
+  "description": "Query the Paddle Billing API (sandbox key; set PADDLE_API_KEY, Bearer; optional PADDLE_BASE_URL for sandbox-api.paddle.com): products, product details, prices.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/paddle-mcp",
   "repository": {

@@ -1,7 +1,7 @@
 {
   "name": "feedly-mcp",
   "version": "1.0.0",
-  "description": "Feedly profile, subs, streams. Token.",
+  "description": "Query Feedly (token; set FEEDLY_TOKEN, Bearer): profile, subscriptions, stream contents.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/feedly-mcp",
   "repository": {

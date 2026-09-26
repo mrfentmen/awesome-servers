@@ -1,7 +1,7 @@
 {
   "name": "google-fonts-mcp",
   "version": "1.0.0",
-  "description": "Google Fonts catalog. Free key.",
+  "description": "Query the Google Fonts Developer API (free Google key; set GOOGLE_FONTS_KEY, query param): font list, search, family details.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/google-fonts-mcp",
   "repository": {

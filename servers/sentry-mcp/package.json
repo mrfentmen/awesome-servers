@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/sentry-mcp",
   "version": "1.0.0",
-  "description": "Sentry orgs, projects, issues. Token.",
+  "description": "Query Sentry (auth token; set SENTRY_AUTH_TOKEN, Bearer): organizations, projects, issues.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/sentry-mcp",
   "repository": {

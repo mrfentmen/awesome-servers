@@ -1,7 +1,7 @@
 {
   "name": "vapi-mcp",
   "version": "1.0.0",
-  "description": "Vapi voice agents: assistants and calls. Needs key.",
+  "description": "Query the Vapi API (free tier key; set VAPI_API_KEY, Bearer): assistants, single assistant, call history, call details.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/vapi-mcp",
   "repository": {

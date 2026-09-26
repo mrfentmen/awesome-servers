@@ -1,7 +1,7 @@
 {
   "name": "kong-mcp",
   "version": "1.0.0",
-  "description": "Kong gateway (docs-verbatim). Self-hosted.",
+  "description": "Query your Kong Admin API (self-hosted; set KONG_ADMIN_URL, default http://localhost:8001): status, services, routes. Endpoints per official docs.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/kong-mcp",
   "repository": {

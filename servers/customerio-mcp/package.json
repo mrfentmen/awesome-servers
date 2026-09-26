@@ -1,7 +1,7 @@
 {
   "name": "customerio-mcp",
   "version": "1.0.0",
-  "description": "Customer.io customers + segments. Keys.",
+  "description": "Query Customer.io (set CUSTOMERIO_SITE_ID + CUSTOMERIO_API_KEY, Basic): customers, customer details, segments.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/customerio-mcp",
   "repository": {

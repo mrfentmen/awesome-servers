@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/urlhaus-mcp",
-  "description": "URLhaus malware URL lookup and feeds.",
+  "description": "Query URLhaus: recent malicious URLs, URL lookup, payload lookup by SHA256, tag search.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

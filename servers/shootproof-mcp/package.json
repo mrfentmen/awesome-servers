@@ -1,7 +1,7 @@
 {
   "name": "shootproof-mcp",
   "version": "1.0.1",
-  "description": "ShootProof studio: brands, galleries, orders. Needs token.",
+  "description": "Query the ShootProof Studio API: service description, authenticated user, brands, brand galleries (events) and orders.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/shootproof-mcp",
   "repository": {

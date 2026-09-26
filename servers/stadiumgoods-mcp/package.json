@@ -1,7 +1,7 @@
 {
   "name": "stadiumgoods-mcp",
   "version": "1.0.1",
-  "description": "Stadium Goods sneakers: search, products, prices. Keyless.",
+  "description": "Query the Stadium Goods catalog (stadiumgoods.com, NYC): search sneakers and streetwear, newest arrivals, enriched product details (sizes), price stats, below-median deals, and category counts.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/stadiumgoods-mcp",
   "repository": {

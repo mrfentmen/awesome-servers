@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/apollo-mcp",
   "version": "1.0.0",
-  "description": "Apollo people search + enrich. Free key.",
+  "description": "Query Apollo.io (free key; set APOLLO_API_KEY, X-Api-Key header): account health, person match, people search.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/apollo-mcp",
   "repository": {

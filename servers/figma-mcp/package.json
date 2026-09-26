@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/figma-mcp",
   "version": "1.0.0",
-  "description": "Figma me, files, projects. Token.",
+  "description": "Query the Figma API (token; set FIGMA_ACCESS_TOKEN, X-Figma-Token): profile, file details, project files.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/figma-mcp",
   "repository": {

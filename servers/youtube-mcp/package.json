@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/youtube-mcp",
   "version": "1.0.0",
-  "description": "YouTube search, videos, channels. Free key.",
+  "description": "Query the YouTube Data API v3 (free Google key; set YOUTUBE_API_KEY, query param): video search, video details, channel details.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/youtube-mcp",
   "repository": {

@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/rollbar-mcp",
-  "description": "Rollbar projects and error items.",
+  "description": "Query the Rollbar API: projects, project items, item details.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

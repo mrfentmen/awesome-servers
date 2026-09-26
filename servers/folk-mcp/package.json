@@ -1,7 +1,7 @@
 {
   "name": "folk-mcp",
   "version": "1.0.0",
-  "description": "Folk CRM: people, groups. Needs key.",
+  "description": "Query the Folk API (free tier key; set FOLK_API_KEY, Bearer): people, person details, groups.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/folk-mcp",
   "repository": {

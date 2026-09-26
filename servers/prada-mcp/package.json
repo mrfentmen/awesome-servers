@@ -1,7 +1,7 @@
 {
   "name": "prada-mcp",
   "version": "1.0.1",
-  "description": "Prada resale listings from Fashionphile and Rebag. Keyless.",
+  "description": "Prada resale listings aggregated from Fashionphile and Rebag public catalogs (prices in USD).",
   "type": "module",
   "mcpName": "io.github.mrfentmen/prada-mcp",
   "repository": {

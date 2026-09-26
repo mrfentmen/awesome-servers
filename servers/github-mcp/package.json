@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/github-mcp",
   "version": "1.0.0",
-  "description": "GitHub repos, issues, search. Free token.",
+  "description": "Query the GitHub REST API (free token; set GITHUB_TOKEN, Bearer): profile, repos, repo details, code search.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/github-mcp",
   "repository": {

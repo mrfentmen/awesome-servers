@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/readwise-mcp",
   "version": "1.0.0",
-  "description": "Readwise books + highlights. Token.",
+  "description": "Query Readwise (token; set READWISE_TOKEN, Token header): auth check, books, highlights.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/readwise-mcp",
   "repository": {

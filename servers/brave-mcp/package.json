@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/brave-mcp",
   "version": "1.0.0",
-  "description": "Brave web + news search. Free key.",
+  "description": "Search with Brave Search API (free key; set BRAVE_API_KEY, X-Subscription-Token): web results, news results.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/brave-mcp",
   "repository": {

@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/raindrop-mcp",
   "version": "1.0.0",
-  "description": "Raindrop user, collections, links. Token.",
+  "description": "Query Raindrop.io (token; set RAINDROP_TOKEN, Bearer): user, collections, bookmarks.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/raindrop-mcp",
   "repository": {

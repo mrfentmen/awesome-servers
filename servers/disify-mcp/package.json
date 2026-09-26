@@ -29,7 +29,7 @@
     "typescript": "^5.6.0"
   },
   "name": "disify-mcp",
-  "description": "Email validation from Disify. No key required.",
+  "description": "Email validation from the public Disify API. No key required.",
   "mcpName": "io.github.mrfentmen/disify-mcp",
   "keywords": [
     "mcp",

@@ -1,7 +1,7 @@
 {
   "name": "ocrspace-mcp",
   "version": "1.0.0",
-  "description": "OCR.space image text. Free key.",
+  "description": "Run OCR.space (free key; set OCRSPACE_API_KEY, sent as apikey): text extraction from image URLs via GET or POST.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ocrspace-mcp",
   "repository": {

@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/polygon-mcp",
   "version": "1.0.0",
-  "description": "Polygon stocks: tickers, aggregates. Free key.",
+  "description": "Query Polygon.io (free key; set POLYGON_API_KEY, query param): tickers, ticker details, daily aggregates.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/polygon-mcp",
   "repository": {

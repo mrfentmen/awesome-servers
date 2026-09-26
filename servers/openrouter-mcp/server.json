@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/openrouter-mcp",
-  "description": "OpenRouter models and account.",
+  "description": "Query OpenRouter (free key; set OPENROUTER_API_KEY, Bearer): model list, key info, credits.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

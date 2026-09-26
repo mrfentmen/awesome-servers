@@ -1,7 +1,7 @@
 {
   "name": "statuspage-mcp",
   "version": "1.0.0",
-  "description": "Statuspage pages + incidents. Key.",
+  "description": "Query Statuspage management API (key; set STATUSPAGE_API_KEY, OAuth header): pages, page details, incidents. (Public per-page v2 is keyless but page-scoped; this covers management reads.)",
   "type": "module",
   "mcpName": "io.github.mrfentmen/statuspage-mcp",
   "repository": {

@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/mastodon-mcp",
   "version": "1.0.1",
-  "description": "Mastodon trends. Keyless.",
+  "description": "Read any Mastodon instance (keyless; set MASTODON_INSTANCE, default mastodon.social): trending tags, trending posts, instance info.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/mastodon-mcp",
   "repository": {

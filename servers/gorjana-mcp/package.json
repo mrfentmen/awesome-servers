@@ -1,7 +1,7 @@
 {
   "name": "gorjana-mcp",
   "version": "1.0.0",
-  "description": "Gorjana jewelry catalog: search, products, prices. Keyless.",
+  "description": "Query the Gorjana catalog (gorjana.com): search jewelry, newest arrivals, enriched product details, price stats, below-median deals, and category counts.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/gorjana-mcp",
   "repository": {

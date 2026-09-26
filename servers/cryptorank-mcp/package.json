@@ -29,7 +29,7 @@
     "typescript": "^5.6.0"
   },
   "name": "cryptorank-mcp",
-  "description": "Crypto rankings from CryptoRank. No key required.",
+  "description": "Crypto rankings from the public CryptoRank API. No key required.",
   "mcpName": "io.github.mrfentmen/cryptorank-mcp",
   "keywords": [
     "mcp",

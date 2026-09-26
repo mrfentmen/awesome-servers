@@ -29,7 +29,7 @@
     "typescript": "^5.6.0"
   },
   "name": "geckoterminal-mcp",
-  "description": "Token data from GeckoTerminal. No key required.",
+  "description": "Token data from the public GeckoTerminal API. No key required.",
   "mcpName": "io.github.mrfentmen/geckoterminal-mcp",
   "keywords": [
     "mcp",

@@ -1,7 +1,7 @@
 {
   "name": "rawg-mcp",
   "version": "1.0.0",
-  "description": "RAWG games: search, details. Needs free key.",
+  "description": "Query the RAWG video games database (free key from rawg.io/apidocs; set RAWG_API_KEY): game search and details with ratings, platforms, genres.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/rawg-mcp",
   "repository": {

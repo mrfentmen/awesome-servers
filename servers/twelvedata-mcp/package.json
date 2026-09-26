@@ -29,7 +29,7 @@
     "typescript": "^5.6.0"
   },
   "name": "twelvedata-mcp",
-  "description": "Stock quotes from Twelve Data. Demo key supported.",
+  "description": "Stock quotes from the public Twelve Data API. The demo key works for common symbols. No signup required.",
   "keywords": [
     "mcp",
     "twelvedata",

@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/spotify-mcp",
   "version": "1.0.1",
-  "description": "Spotify search, artists, albums. Free app.",
+  "description": "Query the Spotify Web API (free app; set SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET, client-credentials token auto-minted): search, artists, albums.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/spotify-mcp",
   "repository": {

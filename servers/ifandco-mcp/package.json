@@ -1,7 +1,7 @@
 {
   "name": "ifandco-mcp",
   "version": "1.0.1",
-  "description": "IF & Co. jewelry: search, products, prices. Keyless.",
+  "description": "Query the IF & Co. catalog: search custom pendants, chains, rings and bracelets, newest arrivals, enriched product details, price stats, below-median deals.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ifandco-mcp",
   "repository": {

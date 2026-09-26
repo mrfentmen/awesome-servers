@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/notion-mcp",
   "version": "1.0.0",
-  "description": "Notion search, users, pages. Integration.",
+  "description": "Query Notion (integration token; set NOTION_API_KEY, Bearer + version header): search, users, page details.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/notion-mcp",
   "repository": {

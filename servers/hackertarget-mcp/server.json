@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/hackertarget-mcp",
-  "description": "HackerTarget recon: DNS, whois, geoIP, headers.",
+  "description": "Query HackerTarget's free recon APIs: DNS lookup, reverse DNS, whois, geoIP, HTTP headers.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

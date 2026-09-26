@@ -1,7 +1,7 @@
 {
   "name": "opnsense-mcp",
   "version": "1.0.0",
-  "description": "OPNsense status (docs-verbatim). Self-hosted.",
+  "description": "Query your OPNsense (self-hosted; set OPNSENSE_URL + OPNSENSE_KEY + OPNSENSE_SECRET, key/secret basic auth): firmware status, interface stats. Endpoints per official docs.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/opnsense-mcp",
   "repository": {

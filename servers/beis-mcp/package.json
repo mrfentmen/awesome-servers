@@ -1,7 +1,7 @@
 {
   "name": "beis-mcp",
   "version": "1.0.0",
-  "description": "Beis luggage catalog: search, products, prices. Keyless.",
+  "description": "Query the Beis catalog (beistravel.com): search luggage and bags, newest arrivals, enriched product details, price stats, below-median deals, and category counts.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/beis-mcp",
   "repository": {

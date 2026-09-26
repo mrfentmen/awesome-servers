@@ -1,7 +1,7 @@
 {
   "name": "posthog-mcp",
   "version": "1.0.0",
-  "description": "PostHog me, projects, insights. Key.",
+  "description": "Query PostHog (personal key; set POSTHOG_PERSONAL_API_KEY, Bearer; optional POSTHOG_BASE_URL us/eu): profile, projects, insights.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/posthog-mcp",
   "repository": {

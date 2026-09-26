@@ -1,7 +1,7 @@
 {
   "name": "gucci-mcp",
   "version": "1.0.1",
-  "description": "Gucci resale listings from Fashionphile and Rebag. Keyless.",
+  "description": "Gucci resale listings aggregated from Fashionphile and Rebag public catalogs (prices in USD).",
   "type": "module",
   "mcpName": "io.github.mrfentmen/gucci-mcp",
   "repository": {

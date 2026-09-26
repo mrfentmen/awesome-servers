@@ -1,7 +1,7 @@
 {
   "name": "lastfm-mcp",
   "version": "1.0.0",
-  "description": "Last.fm charts and artists. Free key.",
+  "description": "Query the Last.fm API (free key; set LASTFM_API_KEY, query param): top artists, top tracks, artist info.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/lastfm-mcp",
   "repository": {

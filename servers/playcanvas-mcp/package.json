@@ -1,7 +1,7 @@
 {
   "name": "playcanvas-mcp",
   "version": "1.0.1",
-  "description": "PlayCanvas projects: assets, rate limits. Needs token.",
+  "description": "Query the PlayCanvas REST API: list project assets, get asset metadata, and check API rate limits. Access token (`PLAYCANVAS_ACCESS_TOKEN`) from your Organization's Account page required.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/playcanvas-mcp",
   "repository": {

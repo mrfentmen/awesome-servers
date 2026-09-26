@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/openrouter-mcp",
   "version": "1.0.0",
-  "description": "OpenRouter models, key info, credits.",
+  "description": "Query OpenRouter (free key; set OPENROUTER_API_KEY, Bearer): model list, key info, credits.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/openrouter-mcp",
   "repository": {

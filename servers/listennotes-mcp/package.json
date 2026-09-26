@@ -1,7 +1,7 @@
 {
   "name": "listennotes-mcp",
   "version": "1.0.0",
-  "description": "Listen Notes podcast search. Free key.",
+  "description": "Query Listen Notes (free key; set LISTENNOTES_API_KEY, X-ListenAPI-Key): podcast search, best lists, episode details.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/listennotes-mcp",
   "repository": {

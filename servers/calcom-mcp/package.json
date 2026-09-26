@@ -1,7 +1,7 @@
 {
   "name": "calcom-mcp",
   "version": "1.0.0",
-  "description": "Cal.com v2: event types, bookings.",
+  "description": "Query Cal.com API v2 (key; set CAL_API_KEY, Bearer + version header): event types, bookings, schedules. v1 is decommissioned.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/calcom-mcp",
   "repository": {

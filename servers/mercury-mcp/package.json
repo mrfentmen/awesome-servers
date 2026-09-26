@@ -1,7 +1,7 @@
 {
   "name": "mercury-mcp",
   "version": "1.0.0",
-  "description": "Mercury banking: accounts, transactions. Needs key.",
+  "description": "Query the Mercury API (sandbox key; set MERCURY_API_KEY, Bearer): accounts, account details, transactions.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/mercury-mcp",
   "repository": {

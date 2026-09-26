@@ -1,7 +1,7 @@
 {
   "name": "sportyandrich-mcp",
   "version": "1.0.0",
-  "description": "Sporty & Rich catalog: search, products, prices. Keyless.",
+  "description": "Query the Sporty & Rich catalog (sportyandrich.com): search clothing, newest arrivals, enriched product details, price stats, below-median deals, and category counts.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/sportyandrich-mcp",
   "repository": {

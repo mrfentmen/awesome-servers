@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/noahny-mcp",
-  "description": "Noah NYC clothing search, products and prices.",
+  "description": "Query the Noah catalog: search clothing, newest arrivals, enriched product details, price stats.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

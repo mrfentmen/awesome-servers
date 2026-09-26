@@ -1,7 +1,7 @@
 {
   "name": "publicwww-mcp",
   "version": "1.0.0",
-  "description": "PublicWWW source search. Paid key.",
+  "description": "Search PublicWWW (paid API key; set PUBLICWWW_API_KEY): sites containing a snippet, URL export.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/publicwww-mcp",
   "repository": {

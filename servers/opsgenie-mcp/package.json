@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/opsgenie-mcp",
   "version": "1.0.0",
-  "description": "Opsgenie alerts: list, details, on-calls. Needs key.",
+  "description": "Query the Opsgenie API (free tier key; set OPSGENIE_API_KEY, sent as GenieKey): alerts, alert details, on-calls.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/opsgenie-mcp",
   "repository": {

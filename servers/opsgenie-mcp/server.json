@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/opsgenie-mcp",
-  "description": "Opsgenie alerts and on-calls.",
+  "description": "Query the Opsgenie API: alerts, alert details, on-calls.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

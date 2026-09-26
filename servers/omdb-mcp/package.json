@@ -1,7 +1,7 @@
 {
   "name": "omdb-mcp",
   "version": "1.0.0",
-  "description": "OMDb movies: search, details. Needs free key.",
+  "description": "Query the OMDb API (free key from omdbapi.com/apikey.aspx, 1,000/day; set OMDB_API_KEY): movie/series search and full details with ratings.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/omdb-mcp",
   "repository": {

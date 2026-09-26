@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/clerk-mcp",
-  "description": "Clerk users and details.",
+  "description": "Query the Clerk Backend API (secret key; set CLERK_SECRET_KEY, Bearer): users, user details.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

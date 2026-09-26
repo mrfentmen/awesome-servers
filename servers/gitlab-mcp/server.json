@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/gitlab-mcp",
-  "description": "GitLab profile, projects and groups.",
+  "description": "Query GitLab: profile, projects, groups, public search.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

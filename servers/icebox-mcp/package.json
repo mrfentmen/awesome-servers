@@ -1,7 +1,7 @@
 {
   "name": "icebox-mcp",
   "version": "1.0.1",
-  "description": "Icebox Diamonds jewelry: search, products, prices. Keyless.",
+  "description": "Query the Icebox Diamonds & Watches catalog: search diamond jewelry and watches, newest arrivals by type, enriched product details, price stats, below-median deals.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/icebox-mcp",
   "repository": {

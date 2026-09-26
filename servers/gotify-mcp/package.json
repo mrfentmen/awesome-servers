@@ -1,7 +1,7 @@
 {
   "name": "gotify-mcp",
   "version": "1.0.0",
-  "description": "Gotify push: send, messages, apps. Self-hosted.",
+  "description": "Query any Gotify server (self-hosted; set GOTIFY_BASE_URL + GOTIFY_TOKEN, sent as X-Gotify-Key): send messages, list messages, list applications.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/gotify-mcp",
   "repository": {

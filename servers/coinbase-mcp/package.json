@@ -29,7 +29,7 @@
     "typescript": "^5.6.0"
   },
   "name": "@mrfentmen/coinbase-mcp",
-  "description": "Crypto prices from Coinbase. No key required.",
+  "description": "Crypto prices from the public Coinbase API. No key required.",
   "mcpName": "io.github.mrfentmen/coinbase-mcp",
   "keywords": [
     "mcp",

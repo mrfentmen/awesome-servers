@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/twitch-mcp",
-  "description": "Twitch top games, streams and search.",
+  "description": "Query the Twitch Helix API (free app token; set TWITCH_CLIENT_ID + TWITCH_CLIENT_SECRET (app access.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

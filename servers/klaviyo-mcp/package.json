@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/klaviyo-mcp",
   "version": "1.0.0",
-  "description": "Klaviyo profiles, lists, campaigns. Key.",
+  "description": "Query Klaviyo (private key; set KLAVIYO_API_KEY, Klaviyo-API-Key header + revision): profiles, lists, campaigns.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/klaviyo-mcp",
   "repository": {

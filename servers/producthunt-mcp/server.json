@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/producthunt-mcp",
-  "description": "Product Hunt GraphQL reads.",
+  "description": "Query Product Hunt GraphQL: viewer, latest posts, post details.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

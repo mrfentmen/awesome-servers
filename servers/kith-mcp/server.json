@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/kith-mcp",
-  "description": "KITH streetwear catalog search, products and prices.",
+  "description": "Query the KITH catalog: search streetwear and sneakers, newest arrivals by type.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

@@ -1,7 +1,7 @@
 {
   "name": "openchargemap-mcp",
   "version": "1.0.0",
-  "description": "EV chargers. Free key.",
+  "description": "Search Open Charge Map (free key; set OPENCHARGEMAP_API_KEY, query param): chargers near coordinates, details.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/openchargemap-mcp",
   "repository": {

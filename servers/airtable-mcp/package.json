@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/airtable-mcp",
   "version": "1.0.0",
-  "description": "Airtable bases, tables, records. PAT.",
+  "description": "Query the Airtable API (PAT; set AIRTABLE_TOKEN, Bearer): bases, tables, records.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/airtable-mcp",
   "repository": {

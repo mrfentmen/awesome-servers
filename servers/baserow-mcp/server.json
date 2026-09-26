@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/baserow-mcp",
-  "description": "Baserow dashboard and tables.",
+  "description": "Query your Baserow instance: dashboard, database tables. Endpoints per official docs.",
   "repository": {
     "url": "https://github.com/mrfentmen/premium-mcps",
     "source": "github"

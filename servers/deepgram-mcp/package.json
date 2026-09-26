@@ -1,7 +1,7 @@
 {
   "name": "deepgram-mcp",
   "version": "1.0.0",
-  "description": "Deepgram voice AI: projects, balances, keys. Needs key.",
+  "description": "Query the Deepgram API (free tier key; set DEEPGRAM_API_KEY, sent as Token): projects, project balances, and API keys.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/deepgram-mcp",
   "repository": {

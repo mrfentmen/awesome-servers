@@ -1,7 +1,7 @@
 {
   "name": "plain-mcp",
   "version": "1.0.0",
-  "description": "Plain support: customers, threads. GraphQL, needs key.",
+  "description": "Query the Plain GraphQL API (free tier key; set PLAIN_API_KEY, Bearer): customers, threads, thread details.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/plain-mcp",
   "repository": {

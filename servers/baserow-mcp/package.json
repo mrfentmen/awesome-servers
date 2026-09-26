@@ -1,7 +1,7 @@
 {
   "name": "baserow-mcp",
   "version": "1.0.0",
-  "description": "Baserow tables (docs-verbatim). Self-hosted.",
+  "description": "Query your Baserow instance (self-hosted or cloud; set BASEROW_URL + BASEROW_TOKEN, Token auth): dashboard, database tables. Endpoints per official docs.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/baserow-mcp",
   "repository": {

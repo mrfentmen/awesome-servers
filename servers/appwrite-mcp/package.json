@@ -1,7 +1,7 @@
 {
   "name": "appwrite-mcp",
   "version": "1.0.0",
-  "description": "Appwrite users/databases (docs-verbatim). Self-hosted.",
+  "description": "Query your Appwrite instance (self-hosted or cloud; set APPWRITE_ENDPOINT + APPWRITE_PROJECT + APPWRITE_API_KEY): users, databases. Endpoints per official docs.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/appwrite-mcp",
   "repository": {

@@ -1,7 +1,7 @@
 {
   "name": "typeform-mcp",
   "version": "1.0.0",
-  "description": "Typeform forms + responses. Token.",
+  "description": "Query Typeform (token; set TYPEFORM_TOKEN, Bearer): forms, form details, responses.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/typeform-mcp",
   "repository": {
