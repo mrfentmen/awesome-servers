@@ -21,6 +21,9 @@ Ecommerce
 - Compare prices: Group same-model listings across sources with min/max/spread.
 - Find deals: Available listings priced below the brand median.
 - Brand overview: Catalog sample counts by source, type and condition.
+- List collections: Curated store collections with handles for browse_collection, e.g. sale or category collections.
+- Browse collection: Listings inside one collection handle from list_collections, e.g. a sale or category collection.
+- Find by attribute: Listings filtered by color, exterior material or condition, plus the common values in the sample.
 
 ## Getting Started
 
@@ -32,6 +35,9 @@ Ecommerce
 - Tool: compare_prices — Group same-model listings across sources with min/max/spread.
 - Tool: find_deals — Available listings priced below the brand median.
 - Tool: brand_overview — Catalog sample counts by source, type and condition.
+- Tool: list_collections — Curated store collections with handles for browse_collection, e.g. sale or category collections.
+- Tool: browse_collection — Listings inside one collection handle from list_collections, e.g. a sale or category collection.
+- Tool: find_by_attribute — Listings filtered by color, exterior material or condition, plus the common values in the sample.
 
 ## Tags
 hermes, mcp, shopping, keyless

@@ -181,3 +181,86 @@ export async function listCategories(): Promise<string> {
   }
   return pretty({ store: "TraxNYC", sample: Object.values(counts).reduce((a, b) => a + b, 0), categories: counts })
 }
+
+
+// --- catalog tools: collections + attribute/size filters ---
+function collectionsOrigin(): string {
+  return new URL(CATALOG).origin
+}
+
+export async function listCollections(query?: string): Promise<string> {
+  const wanted = query ? query.trim().toLowerCase() : null
+  const rows: { title: string; handle: string; store_products: number | null }[] = []
+  const data = await getJson(`${collectionsOrigin()}/collections.json?limit=250`)
+  const list: unknown[] = Array.isArray(data.collections) ? data.collections : []
+  for (const row of list) {
+    const c = row as { title?: unknown; handle?: unknown; products_count?: unknown }
+    if (typeof c.title !== "string" || typeof c.handle !== "string") continue
+    if (wanted && !c.title.toLowerCase().includes(wanted)) continue
+    rows.push({ title: c.title, handle: c.handle, store_products: typeof c.products_count === "number" ? c.products_count : null })
+  }
+  return pretty({
+    store: "TraxNYC", query: query ?? null, returned: rows.length,
+    note: "Collection handles feed browse_collection.",
+    collections: rows.slice(0, 60),
+  })
+}
+
+export async function browseCollection(handle: string, limit?: string, maxPrice?: string, size?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 10) || 10, 25)
+  const mp = maxPrice !== undefined ? Number(maxPrice) : undefined
+  const wantSize = size ? String(size).trim().toLowerCase() : null
+  const out: Slim[] = []
+  let seen = 0
+  for (const page of [1, 2, 3]) {
+    const data = await getJson(`${collectionsOrigin()}/collections/${encodeURIComponent(handle)}/products.json?limit=250&page=${page}`)
+    const products: any[] = Array.isArray(data.products) ? data.products : []
+    if (!products.length) break
+    for (const p of products) {
+      seen += 1
+      if (wantSize) {
+        const variants: any[] = Array.isArray(p.variants) ? p.variants : []
+        const hit = variants.some((v) => v.available === true && parseParts(v.title).some((part) => part.toLowerCase() === wantSize))
+        if (!hit) continue
+      }
+      const sl = slim(p)
+      if (mp !== undefined && (sl.price_usd === null || sl.price_usd > mp)) continue
+      out.push(sl)
+    }
+  }
+  if (!seen) throw new TraxnycError(`Collection '${handle}' returned no products. Check the handle with list_collections.`)
+  return pretty({
+    store: "TraxNYC", collection: handle, size: wantSize, scanned: seen,
+    returned: Math.min(out.length, n), truncated: out.length > n, listings: out.slice(0, n),
+  })
+}
+
+export async function find_by_size(size: string, limit?: string, maxPrice?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 10) || 10, 25)
+  const mp = maxPrice !== undefined ? Number(maxPrice) : undefined
+  const want = String(size).trim().toLowerCase()
+  const sample = await sampleCatalog(300, [1, 2, 3])
+  const out: any[] = []
+  const sizesSeen = new Set<string>()
+  for (const p of sample) {
+    const variants: any[] = Array.isArray(p.variants) ? p.variants : []
+    for (const v of variants) for (const part of parseParts(v.title)) sizesSeen.add(part)
+    const hit = variants.find((v) => v.available === true && (String(v.title ?? "").trim().toLowerCase() === want || parseParts(v.title).some((part) => part.toLowerCase() === want)))
+    if (!hit) continue
+    const sl: any = slim(p)
+    if (mp !== undefined && (sl.price_usd === null || sl.price_usd > mp)) continue
+    sl.matched_size = String(hit.title)
+    sl.size_price_usd = Number.isFinite(Number(hit.price)) ? Math.round(Number(hit.price) * 100) / 100 : null
+    sl.in_stock_sizes = variants.filter((v) => v.available === true).map((v) => String(v.title))
+    out.push(sl)
+  }
+  if (!out.length) {
+    const seen = [...sizesSeen].slice(0, 40).join(", ")
+    throw new TraxnycError(`No in-stock variant matched size '${size}' in a ${sample.length}-product sample. Sizes seen: ${seen || "none"}.`)
+  }
+  return pretty({
+    store: "TraxNYC", size: want, scanned: sample.length,
+    returned: Math.min(out.length, n), listings: out.slice(0, n),
+    note: "Availability and size come from the store's own variant stock flags.",
+  })
+}

@@ -10,6 +10,9 @@ Query the Icebox Diamonds & Watches catalog (icebox.com, NYC): search diamond je
 - `price_overview` — Ask-price distribution (min/p25/median/p75/max).
 - `find_deals` — Available products priced below the median.
 - `list_categories` — Product-type counts in the catalog sample.
+- `list_collections` — Curated store collections with handles for browse_collection, e.g. sale or category collections.
+- `browse_collection` — Listings inside one collection handle from list_collections, optionally only in-stock sizes.
+- `find_by_size` — In-stock items in a size, with that size's price and the other sizes still in stock.
 
 ## Source
 

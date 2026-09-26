@@ -9,6 +9,9 @@ import {
   comparePrices,
   findDeals,
   brandOverview,
+  listCollections,
+  browseCollection,
+  find_by_attribute,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -157,6 +160,72 @@ export function createServer(): McpServer {
     async ({  }) => {
       try {
         return text(await brandOverview());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "list_collections",
+    {
+      title: "List collections",
+      description: "Curated store collections with handles for browse_collection, e.g. sale or category collections.",
+      inputSchema: z.object({
+        query: z.string().describe("Filter collection titles, e.g. sale, bags, watches.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query }) => {
+      try {
+        return text(await listCollections(query));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "browse_collection",
+    {
+      title: "Browse collection",
+      description: "Listings inside one collection handle from list_collections, e.g. a sale or category collection.",
+      inputSchema: z.object({
+        handle: z.string().describe("Collection handle from list_collections, e.g. discounted-10-off."),
+        source: z.string().describe("fashionphile or rebag (default: both).").optional(),
+        limit: z.string().describe("Max results (default 10, max 25).").optional(),
+        max_price: z.string().describe("Max USD price.").optional(),
+        condition: z.string().describe("excellent, great, very good, good, fair (Rebag data only).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ handle, source, limit, max_price: maxPrice, condition }) => {
+      try {
+        return text(await browseCollection(handle, source, limit, maxPrice, condition));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "find_by_attribute",
+    {
+      title: "Find by attribute",
+      description: "Listings filtered by color, exterior material or condition, plus the common values in the sample.",
+      inputSchema: z.object({
+        color: z.string().describe("Color keyword, e.g. black, gold, blue.").optional(),
+        material: z.string().describe("Exterior material, e.g. leather, canvas, exotic.").optional(),
+        condition: z.string().describe("excellent, great, very good, good, fair.").optional(),
+        max_price: z.string().describe("Max USD price.").optional(),
+        limit: z.string().describe("Max results (default 10, max 25).").optional(),
+        sample: z.string().describe("Listings sampled (default 200, max 500).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ color, material, condition, max_price: maxPrice, limit, sample }) => {
+      try {
+        return text(await find_by_attribute(color, material, condition, maxPrice, limit, sample));
       } catch (e) {
         return textError(errorMessage(e));
       }
