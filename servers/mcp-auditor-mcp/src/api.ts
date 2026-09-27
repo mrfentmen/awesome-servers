@@ -1224,3 +1224,443 @@ export async function diffToolSchema(args: { before: string; after: string }): P
     safe.length ? `Compatible (${safe.length}):\n${safe.map((s) => `  - ${s}`).join("\n")}` : "Compatible: none",
   ].join("\n")
 }
+// ---- batch-4 tools: registry lookup, npm package check, remote tool call, server.json check (2026-09-27) ----
+
+const REGISTRY_URL = "https://registry.modelcontextprotocol.io/v0/servers"
+const NPM_DOC = "https://registry.npmjs.org"
+const NPM_SEARCH = "https://registry.npmjs.org/-/v1/search"
+const OFFICIAL_META = "io.modelcontextprotocol.registry/official"
+
+/** "2026-09-22T09:00:00Z" as "4 days ago", for reports a human reads. */
+function daysAgo(iso: string): string {
+  const time = Date.parse(iso)
+  if (Number.isNaN(time)) return "unknown"
+  const days = Math.floor((Date.now() - time) / 86400000)
+  if (days <= 0) return "today"
+  return days === 1 ? "1 day ago" : `${days} days ago`
+}
+
+interface RegistryRow {
+  server?: {
+    name?: string
+    title?: string
+    description?: string
+    version?: string
+    repository?: { url?: string; source?: string }
+    websiteUrl?: string
+    packages?: { registryType?: string; identifier?: string; version?: string; transport?: { type?: string } }[]
+    remotes?: { type?: string; url?: string }[]
+  }
+  _meta?: Record<string, { status?: string; isLatest?: boolean; publishedAt?: string; updatedAt?: string } | undefined>
+}
+
+/**
+ * Searches the official MCP registry, which is the list a client sees when it
+ * looks a server up by name. Answers the question a builder actually has before
+ * a first release: is this name already taken, and what do the neighbours look
+ * like?
+ */
+export async function registryLookup(args: { query: string; limit?: number }): Promise<string> {
+  const query = (args.query ?? "").trim()
+  if (query.length < 2) throw new Error("Give at least two characters: a server name like io.github.acme/weather-mcp, or a keyword like weather.")
+  const limit = Math.min(Math.max(Math.trunc(args.limit ?? 20), 1), 50)
+
+  const res = await fetch(`${REGISTRY_URL}?search=${encodeURIComponent(query)}&limit=${limit}`, {
+    headers: { "User-Agent": UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(20000),
+  })
+  if (!res.ok) throw new Error(`The official MCP registry answered HTTP ${res.status}. It is a free public service, so retry in a moment.`)
+  const body = (await res.json()) as { servers?: RegistryRow[]; metadata?: { count?: number; nextCursor?: string } }
+  const rows = body.servers ?? []
+  const official = (row: RegistryRow) => row._meta?.[OFFICIAL_META] ?? {}
+
+  const wanted = query.toLowerCase()
+  const exact = rows.filter((row) => (row.server?.name ?? "").toLowerCase() === wanted)
+  const grouped = new Map<string, RegistryRow[]>()
+  for (const row of rows) {
+    const name = row.server?.name ?? "(unnamed)"
+    grouped.set(name, [...(grouped.get(name) ?? []), row])
+  }
+
+  const detail = (versions: RegistryRow[]): string[] => {
+    const latest = versions.find((row) => official(row).isLatest) ?? versions[0]
+    const server = latest.server ?? {}
+    const dates = versions.map((row) => official(row).publishedAt ?? "").filter(Boolean).sort()
+    const transports = [
+      ...(server.packages ?? []).map((p) => `${p.registryType ?? "package"} ${p.identifier ?? "?"} over ${p.transport?.type ?? "unstated transport"}`),
+      ...(server.remotes ?? []).map((r) => `${r.type ?? "remote"} ${r.url ?? ""}`),
+    ]
+    return [
+      `    versions: ${versions.length} row(s), latest ${server.version ?? "?"}, status ${official(latest).status ?? "unknown"}`,
+      dates.length
+        ? `    published: ${dates[0].slice(0, 10)} to ${dates[dates.length - 1].slice(0, 10)} (newest ${daysAgo(dates[dates.length - 1])})`
+        : "    published: the registry reported no date",
+      server.repository?.url ? `    repo: ${server.repository.url}` : "",
+      transports.length ? `    run as: ${transports.slice(0, 3).join("; ")}` : "",
+      server.description ? `    description: ${server.description.slice(0, 140)}` : "",
+    ].filter((line) => line !== "")
+  }
+
+  const names = [...grouped.keys()]
+  const namespaces = [...new Set(names.map((name) => name.split("/")[0]))].filter((ns) => ns && ns !== "unnamed").slice(0, 10)
+  const lines = [
+    `Official MCP registry search for "${query}": ${rows.length} version row(s) across ${grouped.size} name(s)`,
+    exact.length
+      ? `NAME TAKEN — "${wanted}" is already published, in ${exact.length} version row(s).`
+      : "NAME FREE — nothing published carries exactly this name. Search is fuzzy and the registry only lists servers that were published, so this is not a reservation: also check the GitHub account and the npm scope you plan to use.",
+    "",
+  ]
+  if (exact.length) lines.push(`  ${wanted}`, ...detail(exact), "")
+
+  const others = names.filter((name) => name.toLowerCase() !== wanted).slice(0, 8)
+  if (others.length) {
+    lines.push("Nearest existing names:")
+    for (const name of others) lines.push(`  - ${name} (${grouped.get(name)?.length ?? 0} version row(s))`)
+    lines.push("")
+  }
+  if (namespaces.length) lines.push(`Namespaces in these results: ${namespaces.join(", ")}`)
+  if (!rows.length) lines.push("Nothing matched at all, which is what you want to see before a first release.")
+  if (body.metadata?.nextCursor) lines.push("More rows exist than one page shows; raise limit for a wider slice.")
+  return lines.join("\n")
+}
+
+// ---------------------------------------------------------------------------
+// npm_package_check
+// ---------------------------------------------------------------------------
+
+interface NpmSearchObject {
+  package?: {
+    name?: string
+    version?: string
+    date?: string
+    description?: string
+    license?: string
+    keywords?: string[]
+    links?: Record<string, string>
+    publisher?: { username?: string }
+  }
+  downloads?: { monthly?: number; weekly?: number }
+  flags?: { unstable?: boolean; insecure?: number; deprecated?: string }
+}
+
+interface NpmManifest {
+  name?: string
+  version?: string
+  description?: string
+  license?: string
+  keywords?: string[]
+  mcpName?: string
+  bin?: Record<string, string> | string
+  engines?: { node?: string }
+  repository?: { url?: string; type?: string }
+  deprecated?: string
+  dependencies?: Record<string, string>
+}
+
+const groupDigits = (value: number) => value.toLocaleString("en-US")
+
+/**
+ * Audits an npm package the way the registry expects it to look: does it exist,
+ * is it current, and does the manifest carry what a registry submission needs
+ * (mcpName, a runnable bin, keywords, a licence).
+ */
+export async function npmPackageCheck(args: { name: string }): Promise<string> {
+  const raw = (args.name ?? "").trim()
+  if (!raw) throw new Error("Give a package name, for example @acme/weather-mcp or weather-mcp.")
+  if (/\s/.test(raw)) throw new Error("A package name cannot contain spaces.")
+  const name = raw.toLowerCase()
+  const path = encodeURIComponent(name)
+
+  const docRes = await fetch(`${NPM_DOC}/${path}`, {
+    headers: { "User-Agent": UA, Accept: "application/vnd.npm.install-v1+json" },
+    signal: AbortSignal.timeout(20000),
+  })
+  if (docRes.status === 404) {
+    return [
+      `npm package check for "${name}"`,
+      "NAME FREE — the public npm registry has no package with this name.",
+      "",
+      "Before you claim it, decide how you will publish:",
+      "  - the official MCP registry expects a reverse-DNS name such as io.github.you/weather-mcp",
+      "  - the npm manifest must carry mcpName with that same value, or a registry submission is rejected",
+      "  - a scope such as @your-org/weather-mcp costs nothing and rules out a collision later",
+    ].join("\n")
+  }
+  if (!docRes.ok) throw new Error(`npm answered HTTP ${docRes.status} for "${name}".`)
+  const doc = (await docRes.json()) as { "dist-tags"?: Record<string, string>; versions?: Record<string, unknown>; modified?: string }
+  const versions = Object.keys(doc.versions ?? {})
+  const latestVersion = doc["dist-tags"]?.latest ?? versions[versions.length - 1] ?? "unknown"
+
+  const [searchRes, manifestRes] = await Promise.all([
+    fetch(`${NPM_SEARCH}?text=${encodeURIComponent(name)}&size=10`, {
+      headers: { "User-Agent": UA, Accept: "application/json" },
+      signal: AbortSignal.timeout(20000),
+    }),
+    fetch(`${NPM_DOC}/${path}/latest`, {
+      headers: { "User-Agent": UA, Accept: "application/json" },
+      signal: AbortSignal.timeout(20000),
+    }),
+  ])
+  const searchBody = searchRes.ok ? ((await searchRes.json()) as { objects?: NpmSearchObject[] }) : {}
+  const hit = (searchBody.objects ?? []).find((o) => (o.package?.name ?? "").toLowerCase() === name)
+  const meta = hit?.package ?? {}
+  const manifest = manifestRes.ok ? ((await manifestRes.json()) as NpmManifest) : {}
+
+  const findings: string[] = []
+  const deprecation = manifest.deprecated ?? meta.description ?? hit?.flags?.deprecated
+  if (manifest.deprecated || hit?.flags?.deprecated) findings.push(`[HIGH] this package is deprecated${deprecation && typeof deprecation === "string" && deprecation !== meta.description ? `: ${deprecation.slice(0, 120)}` : ""}. A deprecated package cannot be the install path for a new server.`)
+  const published = meta.date ?? ""
+  if (published) {
+    const years = (Date.now() - Date.parse(published)) / 31536000000
+    if (years >= 1) findings.push(`[MEDIUM] last published ${daysAgo(published)} — a year or more old. Registry reviewers read that as unmaintained.`)
+  }
+  if (!manifest.bin) findings.push("[MEDIUM] the manifest declares no bin, so `npx " + name + "` cannot start a stdio server. Clients that launch the server by command need one.")
+  if (!manifest.mcpName) {
+    findings.push("[MEDIUM] no mcpName field. A registry submission checks that mcpName matches the server.json name, so add it before publishing.")
+  } else if (!/^[a-z0-9][a-z0-9.-]*\/[a-z0-9][a-z0-9-]*$/.test(manifest.mcpName)) {
+    findings.push(`[MEDIUM] mcpName is "${manifest.mcpName}", which is not the reverse-DNS shape the registry uses (io.github.you/weather-mcp).`)
+  }
+  const keywords = manifest.keywords ?? meta.keywords ?? []
+  if (!keywords.some((k) => /mcp|model.?context.?protocol/i.test(k))) findings.push("[LOW] no mcp keyword in the manifest, so npm search will not surface the package for MCP queries.")
+  if (!manifest.license && !meta.license) findings.push("[LOW] no license field, which leaves reuse undefined.")
+  if (!manifest.engines?.node) findings.push("[LOW] no engines.node, so clients cannot tell which Node version to install.")
+  const deps = Object.keys(manifest.dependencies ?? {}).length
+  if (deps > 25) findings.push(`[LOW] ${deps} runtime dependencies. Each one is install time and supply-chain surface for a tool server.`)
+
+  const downloads = hit?.downloads ?? {}
+  const lines = [
+    `npm package check for "${name}"`,
+    `TAKEN — ${groupDigits(versions.length)} published version(s), latest ${latestVersion}, last publish ${published ? `${published.slice(0, 10)} (${daysAgo(published)})` : "date not reported"}`,
+    "",
+    `downloads: ${typeof downloads.monthly === "number" ? `${groupDigits(downloads.monthly)} last month` : "monthly figure unavailable"}${typeof downloads.weekly === "number" ? `, ${groupDigits(downloads.weekly)} last week` : ""}`,
+    `license: ${manifest.license ?? meta.license ?? "not declared"} | publisher: ${meta.publisher?.username ?? "not reported"}`,
+    `mcpName: ${manifest.mcpName ?? "absent"} | bin: ${manifest.bin ? Object.keys(manifest.bin).join(", ") || "declared" : "absent"} | dependencies: ${deps}`,
+    `keywords: ${keywords.length ? keywords.slice(0, 10).join(", ") : "none"}`,
+    manifest.description ? `description (${(manifest.description ?? "").length} chars): ${manifest.description.slice(0, 160)}` : "",
+    meta.links?.npm ? `page: ${meta.links.npm}` : "",
+    "",
+    findings.length ? findings.join("\n") : "No packaging problems found: mcpName, bin, keywords, license and recency all look right.",
+  ]
+  return lines.filter((line) => line !== "").join("\n")
+}
+
+// ---------------------------------------------------------------------------
+// call_tool
+// ---------------------------------------------------------------------------
+
+const previewText = (value: string) => value.replace(/\s+/g, " ").trim().slice(0, 400)
+
+/**
+ * Actually calls one tool on a public MCP endpoint. audit_endpoint says whether
+ * a server introduces itself properly; this says whether a tool answers, how
+ * fast, and in what shape — the check a builder runs before shipping.
+ */
+export async function callTool(args: { url: string; tool: string; args?: string }): Promise<string> {
+  const url = normalizeTarget(args.url).toString()
+  const tool = (args.tool ?? "").trim()
+  if (!tool) throw new Error("Give the tool name to call, for example search_items.")
+
+  let payload: Record<string, unknown> = {}
+  const rawArgs = (args.args ?? "").trim()
+  if (rawArgs) {
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(rawArgs)
+    } catch (e) {
+      throw new Error(`args must be a JSON object of tool arguments, for example {"city": "Berlin"}: ${errorMessage(e)}`)
+    }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error('args must be a JSON object, for example {"city": "Berlin"}.')
+    payload = parsed as Record<string, unknown>
+  }
+
+  const init = await rpcPost(url, {
+    jsonrpc: "2.0",
+    id: 1,
+    method: "initialize",
+    params: { protocolVersion: PROTOCOL_VERSION, capabilities: {}, clientInfo: { name: "mcp-auditor", version: "1.0.0" } },
+  }, null)
+  if (init.status !== 200 || !asResult(init)) {
+    throw new Error(`Handshake failed: ${init.error ?? `initialize answered HTTP ${init.status}`}. This auditor only calls endpoints that answer without credentials.`)
+  }
+  await rpcPost(url, { jsonrpc: "2.0", method: "notifications/initialized" }, init.session)
+  const list = await rpcPost(url, { jsonrpc: "2.0", id: 2, method: "tools/list", params: {} }, init.session)
+  const listed = ((asResult(list)?.tools ?? []) as McpTool[]).map((t) => String(t.name))
+
+  const started = Date.now()
+  const call = await rpcPost(url, { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: tool, arguments: payload } }, init.session, 45000)
+  const elapsed = Date.now() - started
+  const result = asResult(call)
+
+  const similar = listed.filter((n) => n !== tool && (n.includes(tool) || tool.includes(n))).slice(0, 5)
+  const lines = [
+    `Tool call: ${tool} on ${url}`,
+    listed.includes(tool)
+      ? `tool found: yes, this server lists ${listed.length} tool(s)`
+      : `tool found: NO. This server lists ${listed.length} tool(s)${similar.length ? `; did you mean ${similar.join(", ")}?` : listed.length ? `: ${listed.slice(0, 12).join(", ")}` : ""}`,
+    `arguments: ${rawArgs || "{}"}`,
+    call.error
+      ? `transport: ${call.error}`
+      : `transport: HTTP ${call.status} in ${elapsed} ms`,
+  ]
+
+  if (!result) {
+    const rpcError = (call.body as { error?: { message?: string } } | null)?.error?.message
+    lines.push("", rpcError ? `The endpoint returned an error instead of a result: ${rpcError}` : "The endpoint returned no result. Nothing was called.")
+    return lines.join("\n")
+  }
+
+  const content = (result.content ?? []) as { type?: string; text?: string; mimeType?: string; data?: string }[]
+  const blocks = content.slice(0, 5).map((part, index) => {
+    const kind = part.type ?? "unknown"
+    if (kind === "text") return `    [${index + 1}] text: ${previewText(part.text ?? "")}`
+    if (kind === "image" || kind === "audio") return `    [${index + 1}] ${kind} (${part.mimeType ?? "mime type unstated"}, ${(part.data ?? "").length} base64 characters)`
+    return `    [${index + 1}] ${kind}`
+  })
+  const structured = result.structuredContent as Record<string, unknown> | undefined
+  const textChars = content.filter((part) => part.type === "text").reduce((sum, part) => sum + (part.text ?? "").length, 0)
+
+  lines.push(
+    "",
+    result.isError ? "CALL RETURNED isError — the server handled the call and reported a tool-level failure, not a transport problem:" : "CALL OK — the tool returned a result.",
+    `content blocks: ${content.length} (${content.map((part) => part.type ?? "unknown").join(", ") || "none"}), ${textChars} character(s) of text`,
+    ...blocks,
+    structured ? `structuredContent keys: ${Object.keys(structured).join(", ") || "none"}` : "",
+    content.length > 5 ? `  ... ${content.length - 5} more block(s) not shown` : "",
+  )
+  return lines.filter((line) => line !== "").join("\n")
+}
+
+// ---------------------------------------------------------------------------
+// server_json_check
+// ---------------------------------------------------------------------------
+
+const SERVER_JSON_KEYS = ["$schema", "name", "title", "description", "version", "repository", "websiteUrl", "icons", "packages", "remotes", "_meta"]
+const REGISTRY_TYPES = ["npm", "pypi", "oci", "nuget", "mcpb"]
+const REMOTE_TYPES = ["sse", "streamable-http"]
+const SECRETISH = /(token|key|secret|password|credential|apikey)/i
+
+interface ServerJsonPackage {
+  registryType?: string
+  identifier?: string
+  version?: string
+  runtimeHint?: string
+  transport?: { type?: string }
+  environmentVariables?: { name?: string; description?: string; isRequired?: boolean; isSecret?: boolean; format?: string }[]
+}
+
+interface ServerJsonDoc {
+  $schema?: string
+  name?: string
+  title?: string
+  description?: string
+  version?: string
+  repository?: { url?: string; source?: string }
+  websiteUrl?: string
+  icons?: unknown
+  packages?: ServerJsonPackage[]
+  remotes?: { type?: string; url?: string }[]
+}
+
+/**
+ * Checks a server.json against the rules the official registry enforces, so a
+ * submission is fixed before it is sent rather than bounced after.
+ */
+export async function serverJsonCheck(args: { serverJson: string }): Promise<string> {
+  const raw = (args.serverJson ?? "").trim()
+  if (!raw) throw new Error("Paste the contents of server.json.")
+  let doc: ServerJsonDoc
+  try {
+    doc = JSON.parse(raw) as ServerJsonDoc
+  } catch (e) {
+    throw new Error(`That is not valid JSON: ${errorMessage(e)}`)
+  }
+  if (!doc || typeof doc !== "object" || Array.isArray(doc)) throw new Error("server.json must be a JSON object.")
+
+  const high: string[] = []
+  const medium: string[] = []
+  const low: string[] = []
+  const passed: string[] = []
+
+  if (!doc.$schema) low.push("no $schema field; the registry serves one at https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json and validators expect it")
+  else if (!/^https:\/\/static\.modelcontextprotocol\.io\//.test(doc.$schema)) low.push(`$schema points at ${doc.$schema.slice(0, 80)}, not a modelcontextprotocol.io schema`)
+  else passed.push("$schema")
+
+  const name = (doc.name ?? "").trim()
+  if (!name) high.push("name is missing; the registry identifies a server by it")
+  else {
+    const [namespace, slug, ...rest] = name.split("/")
+    if (!slug || rest.length) high.push(`name "${name}" must be namespace/slug, for example io.github.you/weather-mcp`)
+    else {
+      if (name !== name.toLowerCase() || /\s/.test(name)) high.push(`name "${name}" must be lower case with no spaces`)
+      if (!/^[a-z0-9][a-z0-9.-]*$/.test(namespace)) high.push(`namespace "${namespace}" may only contain a-z, 0-9, dot and hyphen`)
+      if (!/^[a-z0-9][a-z0-9-]*$/.test(slug)) high.push(`slug "${slug}" may only contain a-z, 0-9 and hyphen`)
+      if (name.length > 200) high.push(`name is ${name.length} characters; keep it under 200`)
+      if (!namespace.includes(".")) low.push(`namespace "${namespace}" carries no domain, which reads as unowned; io.github.<user> or a reversed domain is the accepted form`)
+      passed.push("name shape")
+    }
+  }
+
+  const description = (doc.description ?? "").trim()
+  if (!description) high.push("description is missing")
+  else if (description.length > 100) high.push(`description is ${description.length} characters and the registry limit is 100; ${description.length - 100} over`)
+  else if (description.length > 80) low.push(`description is ${description.length} characters; listings cut off around 80, so front-load what the server does`)
+  else passed.push("description length")
+
+  const version = (doc.version ?? "").trim()
+  if (!version) high.push("version is missing; the registry requires a semver string")
+  else if (!/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(version)) medium.push(`version "${version}" is not semver (expected x.y.z)`)
+  else passed.push("version")
+
+  if (!doc.repository?.url) low.push("no repository.url; a listing without a source link is hard to verify")
+  else {
+    if (!/^https?:\/\//.test(doc.repository.url)) medium.push("repository.url must be an http(s) URL")
+    if (!doc.repository.source) low.push("repository.source is missing, for example \"github\"")
+    passed.push("repository")
+  }
+
+  const packages = doc.packages ?? []
+  const remotes = doc.remotes ?? []
+  if (!packages.length && !remotes.length) high.push("no packages and no remotes: the registry needs at least one way to run the server")
+  else passed.push("run declarations")
+
+  packages.forEach((pkg, index) => {
+    const at = `packages[${index}]`
+    if (!pkg.registryType) high.push(`${at}: registryType is missing (one of ${REGISTRY_TYPES.join(", ")})`)
+    else if (!REGISTRY_TYPES.includes(pkg.registryType)) high.push(`${at}: registryType "${pkg.registryType}" is not one of ${REGISTRY_TYPES.join(", ")}`)
+    if (!pkg.identifier) high.push(`${at}: identifier is missing, for example the npm package name`)
+    if (pkg.version && !/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(pkg.version)) medium.push(`${at}: version "${pkg.version}" is not semver`)
+    if (!pkg.version) low.push(`${at}: no version; the registry will follow the package's latest, which makes releases hard to pin`)
+    const transportType = pkg.transport?.type
+    if (!transportType) high.push(`${at}: transport.type is missing (stdio for a local server, streamable-http for a hosted one)`)
+    else if (!["stdio", "sse", "streamable-http"].includes(transportType)) high.push(`${at}: transport.type "${transportType}" is not a known type`)
+    for (const variable of pkg.environmentVariables ?? []) {
+      const label = variable.name ?? "(unnamed)"
+      if (!variable.name) medium.push(`${at}: an environment variable has no name`)
+      if (!variable.description) low.push(`${at}: environment variable ${label} has no description, so a user cannot tell where to get it`)
+      if (SECRETISH.test(label) && variable.isSecret !== true) medium.push(`${at}: ${label} looks like a secret but is not marked isSecret, so a client may print it`)
+      if (variable.isRequired === undefined) low.push(`${at}: ${label} does not say whether it is required`)
+    }
+  })
+
+  remotes.forEach((remote, index) => {
+    const at = `remotes[${index}]`
+    if (!remote.type) high.push(`${at}: type is missing (${REMOTE_TYPES.join(" or ")})`)
+    else if (!REMOTE_TYPES.includes(remote.type)) high.push(`${at}: type "${remote.type}" is not one of ${REMOTE_TYPES.join(", ")}`)
+    if (!remote.url) high.push(`${at}: url is missing`)
+    else if (!/^https:\/\//.test(remote.url)) high.push(`${at}: url must be https`)
+  })
+
+  const unknown = Object.keys(doc).filter((key) => !SERVER_JSON_KEYS.includes(key))
+  if (unknown.length) medium.push(`unknown top-level key(s) ${unknown.join(", ")}; the registry schema rejects extras`)
+
+  const counts = `${high.length} blocking, ${medium.length} fix-before-publish, ${low.length} advisory`
+  return [
+    `server.json check for ${name || "(no name)"}: ${counts}`,
+    high.length ? "NOT READY — the registry rejects a submission with a blocking issue above it." : "READY — nothing blocking found. Fix what is left before publishing.",
+    "",
+    ...high.map((m) => `[HIGH] ${m}`),
+    ...medium.map((m) => `[MEDIUM] ${m}`),
+    ...low.map((m) => `[LOW] ${m}`),
+    passed.length ? `\nChecks that passed: ${passed.join(", ")}.` : "",
+  ].filter((line) => line !== "").join("\n")
+}

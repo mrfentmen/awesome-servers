@@ -1,17 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  auditEndpoint,
-  auditTools,
-  checkListing,
-  compareServers,
-  diffToolSchema,
-  errorMessage,
-  generateToolRegistration,
-  lintSource,
-  probeKeyless,
-} from "./api.js"
-
+import { auditEndpoint, auditTools, checkListing, compareServers, diffToolSchema, errorMessage, generateToolRegistration, lintSource, probeKeyless, registryLookup, npmPackageCheck, callTool, serverJsonCheck } from "./api.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -156,6 +145,89 @@ export function createServer(): McpServer {
     },
     async (args) => {
       try { return text(await diffToolSchema(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "registry_lookup",
+    {
+      title: "Registry lookup",
+      description:
+        "Search the official MCP registry for a server name or keyword and see whether the name is taken, who published it, which versions exist and what transports they use.",
+      inputSchema: z.object({
+        query: z.string().describe("A server name like io.github.acme/weather-mcp, or a keyword like weather."),
+        limit: z.number().describe("How many registry rows to fetch, 1-50. Defaults to 20.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, limit }) => {
+      try {
+        return text(await registryLookup({ query, limit }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "npm_package_check",
+    {
+      title: "Check npm package",
+      description:
+        "Check an npm package before a registry submission: is the name free, how old is the last release, how many downloads, and does the manifest carry mcpName, a bin, keywords and a license.",
+      inputSchema: z.object({
+        name: z.string().describe("npm package name, for example @acme/weather-mcp or weather-mcp."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ name }) => {
+      try {
+        return text(await npmPackageCheck({ name }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "call_tool",
+    {
+      title: "Call a tool",
+      description:
+        "Handshake with a public MCP endpoint, confirm the tool is in its list, then actually call it and report the latency, the content blocks and whether it returned a tool-level error.",
+      inputSchema: z.object({
+        url: z.string().describe("MCP endpoint URL, for example https://example.com/mcp."),
+        tool: z.string().describe("Tool name to call, exactly as the server lists it."),
+        args: z.string().describe('Tool arguments as a JSON object, for example {"city": "Berlin"}. Omit for a tool that takes none.').optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ url, tool, args }) => {
+      try {
+        return text(await callTool({ url, tool, args }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "server_json_check",
+    {
+      title: "Check server.json",
+      description:
+        "Validate a server.json against the rules the official registry enforces: name shape and namespace, description length, semver, repository, packages or remotes, transports, and secret environment variables.",
+      inputSchema: z.object({
+        serverJson: z.string().describe("The contents of server.json, pasted as text."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ serverJson }) => {
+      try {
+        return text(await serverJsonCheck({ serverJson }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
     }
   )
 
