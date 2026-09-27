@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { arbitrageCheck, biggestMovers, contractPrice, marketDetail, marketSummary, markets, searchMarkets } from "./api.js"
-
+import { arbitrageCheck, biggestMovers, contractPrice, marketDetail, marketSummary, markets, searchMarkets, compareMarkets, searchContracts, longShots } from "./api.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -113,5 +112,67 @@ export function createServer(): McpServer {
       try { return text(await arbitrageCheck(args)) } catch (e) { return textError(error(e)) }
     }
   )
+  server.registerTool(
+    "compare_markets",
+    {
+      title: "Compare markets",
+      description:
+        "Two to five markets side by side, contract by contract, with today's move on each and which market is the most decided and which is the most open.",
+      inputSchema: z.object({
+        markets: z.array(z.string()).describe('Market ids or name fragments, e.g. ["28361", "control of the senate"]'),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ markets }) => {
+      try {
+        return text(await compareMarkets({ markets }))
+      } catch (e) {
+        return textError(error(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "search_contracts",
+    {
+      title: "Search contracts",
+      description:
+        "Search the tradeable contracts across every market by name, with each contract's price, last trade and the market it belongs to.",
+      inputSchema: z.object({
+        query: z.string().describe("Contract name fragment, e.g. 'governor' or 'nominee'"),
+        limit: z.number().describe("How many contracts to list, 1-50. Defaults to 15.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, limit }) => {
+      try {
+        return text(await searchContracts({ query, limit }))
+      } catch (e) {
+        return textError(error(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "long_shots",
+    {
+      title: "Long shots",
+      description:
+        "Open contracts the market prices as unlikely, cheapest first, with the multiple each one returns if it pays out and the market it sits in.",
+      inputSchema: z.object({
+        maxPrice: z.number().describe("Highest yes price to include, e.g. 0.1 for 10 cents. Defaults to 0.1.").optional(),
+        limit: z.number().describe("How many contracts to list, 1-50. Defaults to 15.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ maxPrice, limit }) => {
+      try {
+        return text(await longShots({ maxPrice, limit }))
+      } catch (e) {
+        return textError(error(e))
+      }
+    }
+  )
+
   return server
 }

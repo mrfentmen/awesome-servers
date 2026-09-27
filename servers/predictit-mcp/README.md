@@ -14,6 +14,9 @@ This file is self contained. It reads public data only and never writes to the m
 * `biggest_movers`  Contracts whose last trade price moved most versus the previous close, across all markets.
 * `market_summary`  Totals across PredictIt right now — how many markets are open, how many contracts trade — plus the most contested open markets.
 * `arbitrage_check`  Add up every YES price in each open PredictIt market and flag fields whose total is under $1.00, where buying the whole field could cost less than the payout. Only applies to markets whose outcomes are mutually exclusive.
+* `compare_markets`  Two to five markets side by side, contract by contract, with today's move on each and which market is the most decided and which is the most open.
+* `search_contracts`  Search the tradeable contracts across every market by name, with each contract's price, last trade and the market it belongs to.
+* `long_shots`  Open contracts the market prices as unlikely, cheapest first, with the multiple each one returns if it pays out and the market it sits in.
 
 ## Usage
 

@@ -288,3 +288,130 @@ export async function arbitrageCheck(args: { limit?: number; threshold?: number 
   )
   return lines.join("\n")
 }
+// ---- batch-5 tools: market compare, contract search, long shots (2026-09-27) ----
+
+const money = (value: number | null | undefined) => (typeof value === "number" && Number.isFinite(value) ? cents(value) : "—")
+
+function findMarket(markets: Market[], key: string): Market | null {
+  const wanted = (key ?? "").trim().toLowerCase()
+  if (!wanted) return null
+  return (
+    markets.find((m) => String(m.id) === wanted) ??
+    markets.find((m) => (m.shortName ?? "").toLowerCase() === wanted) ??
+    markets.find((m) => (m.name ?? "").toLowerCase().includes(wanted)) ??
+    null
+  )
+}
+
+/** How far a contract has moved since its last close, which the feed does publish. */
+function change(contract: Contract): number | null {
+  const now = contract.lastTradePrice
+  const close = contract.lastClosePrice
+  if (typeof now !== "number" || typeof close !== "number") return null
+  return now - close
+}
+
+/**
+ * Two or more markets side by side, contract by contract. Comparing one market
+ * in detail is market_detail; the question here is which of several similar
+ * markets is priced further from even.
+ */
+export async function compareMarkets(args: { markets: string[] }): Promise<string> {
+  const keys = (args.markets ?? []).map((m) => String(m).trim()).filter(Boolean)
+  if (keys.length < 2) throw new PredictitError("Give at least two market ids or name fragments to compare.")
+  if (keys.length > 5) throw new PredictitError("Compare at most five markets at a time.")
+  const all = await allMarkets()
+  const chosen = keys.map((key) => ({ key, market: findMarket(all, key) }))
+  const missing = chosen.filter((c) => !c.market).map((c) => c.key)
+  if (missing.length) throw new PredictitError(`No open market matches: ${missing.join(", ")}.`)
+
+  const lines: string[] = [`Comparing ${chosen.length} markets`]
+  const confidence: { name: string; top: number; spread: number }[] = []
+  for (const { market } of chosen) {
+    const contracts = market?.contracts ?? []
+    const yes = contracts.map((c) => c.bestBuyYesCost).filter((v): v is number => typeof v === "number")
+    const top = yes.length ? Math.max(...yes) : 0
+    const spread = yes.length ? Math.max(...yes) - Math.min(...yes) : 0
+    confidence.push({ name: market?.shortName ?? market?.name ?? "?", top, spread })
+    lines.push(
+      "",
+      `${market?.name ?? "?"} (id ${market?.id ?? "?"}, ${contracts.length} contract(s), status ${market?.status ?? "?"})`,
+      ...contracts.slice(0, 12).map((c) => {
+        const delta = change(c)
+        return `  ${(c.name ?? "?").slice(0, 40).padEnd(42)} yes ${money(c.bestBuyYesCost)} | no ${money(c.bestBuyNoCost)} | last ${money(c.lastTradePrice)}${delta !== null && Math.abs(delta) >= 0.005 ? ` (${delta > 0 ? "+" : ""}${Math.round(delta * 100)}¢ today)` : ""}`
+      }),
+      contracts.length > 12 ? `  ... ${contracts.length - 12} more contract(s)` : "",
+      `  most likely outcome priced at ${money(top)}, widest spread between contracts ${Math.round(spread * 100)}¢`
+    )
+  }
+  const deepest = [...confidence].sort((a, b) => b.top - a.top)[0]
+  const widest = [...confidence].sort((a, b) => b.spread - a.spread)[0]
+  lines.push(
+    "",
+    `Most decided: ${deepest.name} (top contract ${money(deepest.top)}). Most open question: ${widest.name} (contracts span ${Math.round(widest.spread * 100)}¢).`,
+    "Prices are the cost to buy the contract, so they read as the market's implied probability in cents."
+  )
+  return lines.filter((line) => line !== "").join("\n")
+}
+
+/**
+ * Search the tradeable contracts themselves, not the market titles, so a
+ * specific outcome can be found across every market that names it.
+ */
+export async function searchContracts(args: { query: string; limit?: number }): Promise<string> {
+  const query = (args.query ?? "").trim().toLowerCase()
+  if (query.length < 2) throw new PredictitError("Give at least two characters to search for.")
+  const limit = Math.min(Math.max(Math.trunc(args.limit ?? 15), 1), 50)
+  const all = await allMarkets()
+  const hits: { contract: Contract; market: Market }[] = []
+  for (const market of all) {
+    for (const contract of market.contracts ?? []) {
+      if ((contract.name ?? "").toLowerCase().includes(query) || (contract.shortName ?? "").toLowerCase().includes(query)) {
+        hits.push({ contract, market })
+      }
+    }
+  }
+  if (!hits.length) return `No contract name contains "${args.query}".`
+  hits.sort((a, b) => (b.contract.bestBuyYesCost ?? 0) - (a.contract.bestBuyYesCost ?? 0))
+  return [
+    `Contracts matching "${args.query}": ${hits.length} across ${new Set(hits.map((h) => h.market.id)).size} market(s)`,
+    "",
+    ...hits.slice(0, limit).map((h) => {
+      const delta = change(h.contract)
+      return `  ${(h.contract.name ?? "?").slice(0, 44).padEnd(46)} yes ${money(h.contract.bestBuyYesCost)} | last ${money(h.contract.lastTradePrice)}${delta !== null && Math.abs(delta) >= 0.005 ? ` (${delta > 0 ? "+" : ""}${Math.round(delta * 100)}¢)` : ""}\n    in: ${h.market.name ?? "?"} (id ${h.market.id ?? "?"})`
+    }),
+    hits.length > limit ? `\nShowing ${limit} of ${hits.length}.` : "",
+  ].filter((line) => line !== "").join("\n")
+}
+
+/**
+ * Contracts the market prices as unlikely, with the return on winning them.
+ * A cheap contract is not a good one, but this is how a long-shot list starts.
+ */
+export async function longShots(args: { maxPrice?: number; limit?: number }): Promise<string> {
+  const maxPrice = Math.min(Math.max(typeof args.maxPrice === "number" ? args.maxPrice : 0.1, 0.01), 0.5)
+  const limit = Math.min(Math.max(Math.trunc(args.limit ?? 15), 1), 50)
+  const all = await allMarkets()
+  const rows: { contract: Contract; market: Market }[] = []
+  for (const market of all) {
+    if ((market.status ?? "").toLowerCase() !== "open") continue
+    for (const contract of market.contracts ?? []) {
+      const yes = contract.bestBuyYesCost
+      if (typeof yes === "number" && yes > 0 && yes <= maxPrice) rows.push({ contract, market })
+    }
+  }
+  if (!rows.length) throw new PredictitError(`No open contract is priced at or below ${Math.round(maxPrice * 100)}¢.`)
+  rows.sort((a, b) => (a.contract.bestBuyYesCost ?? 0) - (b.contract.bestBuyYesCost ?? 0))
+  return [
+    `Long shots: ${rows.length} open contract(s) at ${Math.round(maxPrice * 100)}¢ or less`,
+    "",
+    ...rows.slice(0, limit).map(({ contract, market }) => {
+      const yes = contract.bestBuyYesCost ?? 0
+      const multiple = yes > 0 ? (1 - yes) / yes : 0
+      return `  ${(contract.name ?? "?").slice(0, 40).padEnd(42)} ${money(yes)} — wins ×${multiple.toFixed(1)} ($${(1 / yes).toFixed(2)} back per $1)\n    ${market.name ?? "?"} (id ${market.id ?? "?"})`
+    }),
+    "",
+    `A contract at ${Math.round(maxPrice * 100)}¢ pays $1 if it happens, so the market calls it about a ${Math.round(maxPrice * 100)}% chance; the payout multiple is why they are tempting and the percentage is why most of them lose.`,
+    rows.length > limit ? `Showing ${limit} of ${rows.length} contracts.` : "",
+  ].filter((line) => line !== "").join("\n")
+}

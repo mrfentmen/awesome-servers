@@ -20,6 +20,9 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 - `tx_status`: Check if an Arweave transaction is confirmed and in which block.
 - `wallet_balance`: AR balance of a wallet address.
 - `storage_price`: What storing N bytes costs in AR right now.
+- `search_by_tag`: Find Arweave transactions by a tag pair, which is how permanent apps label their data, for example App-Name=ArDrive or Content-Type=image/png.
+- `address_transactions`: The newest transactions written by one Arweave address, with confirmation height, data size, content type and the tags that identify each upload.
+- `block_detail`: One Arweave block in full: mining reward in AR, transaction count, block and weave size, nonce, difficulty and the previous block hash.
 
 ## Limits and privacy
 

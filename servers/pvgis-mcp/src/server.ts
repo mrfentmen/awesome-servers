@@ -1,18 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  compareLocations,
-  errorMessage,
-  formatPvYield,
-  hourlyOutput,
-  parseLocation,
-  pvYield,
-  radiation,
-  sizeSystem,
-  systemSummary,
-  typicalWeather,
-} from "./api.js"
-
+import { compareLocations, errorMessage, formatPvYield, hourlyOutput, parseLocation, pvYield, radiation, sizeSystem, systemSummary, typicalWeather, horizonProfile, offgridSizing, optimalTilt } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -182,6 +170,74 @@ export function createServer(): McpServer {
     async ({ latitude, longitude, annual_kwh, loss, angle }) => {
       try {
         return text(await sizeSystem(latitude, longitude, annual_kwh, loss, angle))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "horizon_profile",
+    {
+      title: "Horizon profile",
+      description:
+        "What the terrain blocks at a location: obstacle height every 7.5 degrees of azimuth, the steepest obstacle and how much of the southern arc is obstructed.",
+      inputSchema: z.object({
+        lat: z.string().describe("Latitude, e.g. '41.9'"),
+        lon: z.string().describe("Longitude, e.g. '12.5'"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ lat, lon }) => {
+      try {
+        return text(await horizonProfile(lat, lon))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "offgrid_sizing",
+    {
+      title: "Off-grid sizing",
+      description:
+        "Simulate an off-grid array and battery against a real daily load: how often the load is not met, energy thrown away and the month-by-month shortfall.",
+      inputSchema: z.object({
+        lat: z.string().describe("Latitude, e.g. '41.9'"),
+        lon: z.string().describe("Longitude, e.g. '12.5'"),
+        peakPower: z.number().describe("Array peak power in Wp, e.g. 1000. Defaults to 1000.").optional(),
+        batteryWh: z.number().describe("Battery capacity in Wh, e.g. 5000. Defaults to 5000.").optional(),
+        dailyWh: z.number().describe("Daily consumption in Wh, e.g. 3000. Defaults to 3000.").optional(),
+        cutoff: z.number().describe("Battery cutoff percentage, e.g. 40. Defaults to 40.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ lat, lon, peakPower, batteryWh, dailyWh, cutoff }) => {
+      try {
+        return text(await offgridSizing({ lat, lon, peakPower, batteryWh, dailyWh, cutoff }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "optimal_tilt",
+    {
+      title: "Optimal tilt",
+      description:
+        "The tilt and azimuth PVGIS calls optimal here, and what a flat 30 degree south mount costs in kWh per kWp per year against it.",
+      inputSchema: z.object({
+        lat: z.string().describe("Latitude, e.g. '41.9'"),
+        lon: z.string().describe("Longitude, e.g. '12.5'"),
+        loss: z.number().describe("System loss percentage, e.g. 14. Defaults to 14.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ lat, lon, loss }) => {
+      try {
+        return text(await optimalTilt({ lat, lon, loss }))
       } catch (e) {
         return textError(errorMessage(e))
       }

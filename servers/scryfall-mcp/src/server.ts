@@ -1,18 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  ScryfallError,
-  formatCard,
-  formatPrices,
-  formatRuling,
-  getCardByFuzzyName,
-  getCardRulings,
-  getRandomCard,
-  getSets,
-  searchCards,
-  searchSet,
-} from "./api.js"
-
+import { ScryfallError, formatCard, formatPrices, formatRuling, getCardByFuzzyName, getCardRulings, getRandomCard, getSets, searchCards, searchSet, cardsByCollection, cardBySetNumber, manaSymbols, cardAutocomplete } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -171,6 +159,88 @@ export function createServer(): McpServer {
         const card = await getCardByFuzzyName(name)
         if (!card) return text(`No card named "${name}".`)
         return text(formatPrices(card))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "cards_by_collection",
+    {
+      title: "Resolve a list of cards",
+      description:
+        "Resolve up to 75 card names in one request and report the total price plus any name that did not match, so a decklist is checked in one call.",
+      inputSchema: z.object({
+        names: z.array(z.string()).describe('Card names, e.g. ["Black Lotus", "Lightning Bolt"]'),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ names }) => {
+      try {
+        return text(await cardsByCollection({ names }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "card_by_set_number",
+    {
+      title: "Card by set and number",
+      description:
+        "Fetch one exact printing by set code and collector number, e.g. lea 233 - the reliable way to a specific printing rather than a search result.",
+      inputSchema: z.object({
+        set: z.string().describe("Set code, e.g. 'lea' for Alpha or 'mh3'"),
+        number: z.string().describe("Collector number, e.g. '233'"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ set, number }) => {
+      try {
+        return text(await cardBySetNumber({ set, number }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "mana_symbols",
+    {
+      title: "Mana symbols",
+      description:
+        "Scryfall's symbology: every mana and counter symbol with its meaning, mana value and the SVG file, optionally filtered by symbol or wording.",
+      inputSchema: z.object({
+        query: z.string().describe("Filter, e.g. 'phyrexian' or '{W}'. Omit for all symbols.").optional(),
+        limit: z.number().describe("How many to list, 1-200. Defaults to 40.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, limit }) => {
+      try {
+        return text(await manaSymbols({ query, limit }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "card_autocomplete",
+    {
+      title: "Complete a card name",
+      description:
+        "Turn a partial or misspelled card name into the real names Scryfall knows, for use in a search that would otherwise come back empty.",
+      inputSchema: z.object({
+        query: z.string().describe("Start of a card name, e.g. 'thran'"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query }) => {
+      try {
+        return text(await cardAutocomplete({ query }))
       } catch (e) {
         return textError(errorMessage(e))
       }

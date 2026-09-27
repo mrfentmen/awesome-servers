@@ -21,6 +21,9 @@ Other
 - System summary: Plain-language verdict for a PV system: yearly output, yield per kWp, capacity factor, CO2 avoided and roof area.
 - Compare sites: Compare up to 5 sites for the same system size and name the best one, e.g. '45,8; 52.5,13.4'.
 - Size a system: Work out the system size needed to cover a target annual consumption at a location, with panel count and roof area.
+- Horizon profile: What the terrain blocks at a location: obstacle height every 7.5 degrees of azimuth, the steepest obstacle and how much of the southern arc is obstructed.
+- Off-grid sizing: Simulate an off-grid array and battery against a real daily load: how often the load is not met, energy thrown away and the month-by-month shortfall.
+- Optimal tilt: The tilt and azimuth PVGIS calls optimal here, and what a flat 30 degree south mount costs in kWh per kWp per year against it.
 
 ## Getting Started
 
@@ -32,6 +35,9 @@ Other
 - Tool: system_summary — Plain-language verdict for a PV system: yearly output, yield per kWp, capacity factor, CO2 avoided and roof area.
 - Tool: compare_locations — Compare up to 5 sites for the same system size and name the best one, e.g. '45,8; 52.5,13.4'.
 - Tool: size_system — Work out the system size needed to cover a target annual consumption at a location, with panel count and roof area.
+- Tool: horizon_profile — What the terrain blocks at a location: obstacle height every 7.5 degrees of azimuth, the steepest obstacle and how much of the southern arc is obstructed.
+- Tool: offgrid_sizing — Simulate an off-grid array and battery against a real daily load: how often the load is not met, energy thrown away and the month-by-month shortfall.
+- Tool: optimal_tilt — The tilt and azimuth PVGIS calls optimal here, and what a flat 30 degree south mount costs in kWh per kWp per year against it.
 
 ## Tags
 solar, pv, energy, irradiation, renewable, mcp

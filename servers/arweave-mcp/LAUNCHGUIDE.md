@@ -18,6 +18,9 @@ Business Tools
 - Transaction status: Check if an Arweave transaction is confirmed and in which block.
 - Wallet balance: AR balance of a wallet address.
 - Storage price: What storing N bytes costs in AR right now.
+- Search transactions by tag: Find Arweave transactions by a tag pair, which is how permanent apps label their data, for example App-Name=ArDrive or Content-Type=image/png.
+- Address transactions: The newest transactions written by one Arweave address, with confirmation height, data size, content type and the tags that identify each upload.
+- Block detail: One Arweave block in full: mining reward in AR, transaction count, block and weave size, nonce, difficulty and the previous block hash.
 
 ## Getting Started
 
@@ -26,6 +29,9 @@ Business Tools
 - Tool: tx_status — Check if an Arweave transaction is confirmed and in which block.
 - Tool: wallet_balance — AR balance of a wallet address.
 - Tool: storage_price — What storing N bytes costs in AR right now.
+- Tool: search_by_tag — Find Arweave transactions by a tag pair, which is how permanent apps label their data, for example App-Name=ArDrive or Content-Type=image/png.
+- Tool: address_transactions — The newest transactions written by one Arweave address, with confirmation height, data size, content type and the tags that identify each upload.
+- Tool: block_detail — One Arweave block in full: mining reward in AR, transaction count, block and weave size, nonce, difficulty and the previous block hash.
 
 ## Tags
 arweave, mcp, shopping, api
