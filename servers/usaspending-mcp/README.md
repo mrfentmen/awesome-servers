@@ -11,6 +11,10 @@ A merged MCP server that consolidates duplicate single-purpose servers in this m
 - `searchFederalAwards` — Search federal contract awards.
 - `searchNonprofits` — Search nonprofits and filings.
 
+- `agency_details`
+- `category_spending`
+- `recipient_search`
+- `award_details`
 ## Run
 
 ```bash

@@ -111,3 +111,82 @@ export const m0_searchAwards = m0.searchAwards;
 export const m1_nonprofits = m1.nonprofits;
 export const m1_ProcurementError = m1.ProcurementError;
 export const m1_federalAwards = m1.federalAwards;
+
+const m2 = (() => {
+const BASE2 = "https://api.usaspending.gov/api/v2"
+const UA2 = "mrfentmen-usaspending-mcp/1.0 (https://github.com/mrfentmen)"
+class Spending2Error extends Error {}
+
+async function getJson(path: string): Promise<any> {
+  const res = await fetch(`${BASE2}${path}`, {
+    headers: { "User-Agent": UA2, Accept: "application/json" },
+    signal: AbortSignal.timeout(30000),
+  })
+  if (!res.ok) throw new Spending2Error(`USAspending returned HTTP ${res.status}`)
+  return res.json()
+}
+
+async function postJson(path: string, body: unknown): Promise<any> {
+  const res = await fetch(`${BASE2}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "User-Agent": UA2, Accept: "application/json" },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(45000),
+  })
+  if (!res.ok) throw new Spending2Error(`USAspending returned HTTP ${res.status}`)
+  return res.json()
+}
+
+async function agencyDetails(args: { code?: string; year?: string }): Promise<string> {
+  const code = (args.code ?? "").trim()
+  if (!code) throw new Spending2Error("Provide an agency code like 012")
+  const year = (args.year ?? "2024").trim()
+  const d = await getJson(`/agency/${encodeURIComponent(code)}/?fiscal_year=${encodeURIComponent(year)}`)
+  return `${d.name ?? code} (${d.abbreviation ?? ""})\nFY${d.fiscal_year ?? year} outlays $${Math.round(d.total_outlays ?? 0).toLocaleString()} | obligations $${Math.round(d.total_obligations ?? 0).toLocaleString()} | budget $${Math.round(d.total_budgetary_resources ?? 0).toLocaleString()}`
+}
+
+async function categorySpending(args: { category?: string; year?: string; limit?: number }): Promise<string> {
+  const category = (args.category ?? "awarding_agency").trim()
+  const year = (args.year ?? "2024").trim()
+  const fy = Number(year.slice(0, 4)) || 2024
+  const limit = Math.min(args.limit ?? 10, 25)
+  const d = await postJson(`/search/spending_by_category/${encodeURIComponent(category)}/`, {
+    filters: { time_period: [{ start_date: `${fy - 1}-10-01`, end_date: `${fy}-09-30` }] },
+    page: 1,
+    limit,
+  })
+  const rows = (d.results ?? []) as any[]
+  if (!rows.length) return `No ${category} spending found.`
+  return rows.map((r, i) => `${i + 1}. ${r.name ?? "?"} | $${Math.round(r.amount ?? 0).toLocaleString()}`).join("\n")
+}
+
+async function recipientSearch(args: { keyword?: string; limit?: number }): Promise<string> {
+  const kw = (args.keyword ?? "").trim()
+  if (!kw) throw new Spending2Error("Provide a recipient keyword")
+  const limit = Math.min(args.limit ?? 10, 25)
+  const d = await postJson("/recipient/", { filter: { keyword: kw }, page: 1, limit })
+  const rows = (d.results ?? []) as any[]
+  if (!rows.length) return `No recipients found for "${kw}".`
+  return rows.map((r, i) => `${i + 1}. ${r.name ?? "?"} [${r.id ?? ""}]`).join("\n")
+}
+
+async function awardDetails(args: { id?: string }): Promise<string> {
+  const id = (args.id ?? "").trim()
+  if (!id) throw new Spending2Error("Provide a generated award id")
+  const d = await getJson(`/awards/${encodeURIComponent(id)}/`)
+  return `${d.category ?? ""} ${d.type_description ?? ""}\nRecipient: ${d.recipient?.recipient_name ?? "n/a"}\nTotal: $${Math.round(d.total_obligation ?? 0).toLocaleString()}\nAgency: ${d.awarding_agency?.toptier_agency?.name ?? "n/a"}\n${String(d.description ?? "").slice(0, 300)}`
+}
+
+return { Spending2Error, agencyDetails, categorySpending, recipientSearch, awardDetails };
+})();
+
+export const Spending2Error = m2.Spending2Error;
+export const agencyDetails = m2.agencyDetails;
+export const categorySpending = m2.categorySpending;
+export const recipientSearch = m2.recipientSearch;
+export const awardDetails = m2.awardDetails;
+export const m2_Spending2Error = m2.Spending2Error;
+export const m2_agencyDetails = m2.agencyDetails;
+export const m2_categorySpending = m2.categorySpending;
+export const m2_recipientSearch = m2.recipientSearch;
+export const m2_awardDetails = m2.awardDetails;

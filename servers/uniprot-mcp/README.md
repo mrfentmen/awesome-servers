@@ -10,6 +10,11 @@ This file is self contained. It reads public data only and never writes to the m
 * `accession`  Details for an accession.
 * `search`  Search proteins.
 
+* `proteome`
+* `idmap_run`
+* `idmap_status`
+* `idmap_result`
+* `taxonomy`
 ## Usage
 
 ```bash

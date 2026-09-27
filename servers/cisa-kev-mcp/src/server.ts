@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { format, info, KevError, recent, search } from "./api.js"
+import { byCve, byProduct, byVendor, format, info, KevError, ransomware, recent, search, vendors, yearly } from "./api.js"
 const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -31,5 +31,59 @@ export function createServer() { const server = new McpServer({ name: "cisa-kev-
       annotations: READ_ONLY,
     },
     async () => { try { return text(format(await info())) } catch (e) { return textError(`Error: ${e instanceof Error ? e.message : String(e)}`) } }
+  ); server.registerTool(
+    "by_cve",
+    {
+      title: "By CVE",
+      description: "KEV entry for one CVE id.",
+      inputSchema: z.object( { cve: z.string().min(1) }),
+      annotations: READ_ONLY,
+    },
+    async ({ cve }) => { try { return text(format(await byCve(cve))) } catch (e) { return textError(`Error: ${e instanceof Error ? e.message : String(e)}`) } }
+  ); server.registerTool(
+    "by_vendor",
+    {
+      title: "By vendor",
+      description: "KEV entries for a vendor like Microsoft.",
+      inputSchema: z.object( { vendor: z.string().min(1) }),
+      annotations: READ_ONLY,
+    },
+    async ({ vendor }) => { try { return text(format(await byVendor(vendor))) } catch (e) { return textError(`Error: ${e instanceof Error ? e.message : String(e)}`) } }
+  ); server.registerTool(
+    "by_product",
+    {
+      title: "By product",
+      description: "KEV entries for a product.",
+      inputSchema: z.object( { product: z.string().min(1) }),
+      annotations: READ_ONLY,
+    },
+    async ({ product }) => { try { return text(format(await byProduct(product))) } catch (e) { return textError(`Error: ${e instanceof Error ? e.message : String(e)}`) } }
+  ); server.registerTool(
+    "ransomware",
+    {
+      title: "Ransomware",
+      description: "KEV entries used in known ransomware campaigns.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async () => { try { return text(format(await ransomware())) } catch (e) { return textError(`Error: ${e instanceof Error ? e.message : String(e)}`) } }
+  ); server.registerTool(
+    "vendors",
+    {
+      title: "Vendors",
+      description: "Vendor names in the KEV catalog.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async () => { try { return text((await vendors()).join("\n")) } catch (e) { return textError(`Error: ${e instanceof Error ? e.message : String(e)}`) } }
+  ); server.registerTool(
+    "yearly",
+    {
+      title: "Yearly",
+      description: "KEV entries added in one year.",
+      inputSchema: z.object( { year: z.string().min(4) }),
+      annotations: READ_ONLY,
+    },
+    async ({ year }) => { try { return text(format(await yearly(year))) } catch (e) { return textError(`Error: ${e instanceof Error ? e.message : String(e)}`) } }
   ); return server }
 export { KevError }

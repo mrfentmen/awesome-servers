@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_agencies, m0_searchAwards, m1_federalAwards, m1_nonprofits } from './api.js'
+import { m0_agencies, m0_searchAwards, m1_federalAwards, m1_nonprofits, m2_agencyDetails, m2_awardDetails, m2_categorySpending, m2_recipientSearch } from './api.js'
 
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -56,6 +56,54 @@ server.registerTool(
     },
     async (args) => {
     try { return text(await m1_nonprofits(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+server.registerTool(
+    "agency_details",
+    {
+      title: "Agency details",
+      description: "Outlays and obligations for one agency.",
+      inputSchema: z.object( { code: z.string().describe("Agency code like 012."), year: z.string().describe("Fiscal year.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await m2_agencyDetails(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+server.registerTool(
+    "category_spending",
+    {
+      title: "Category spending",
+      description: "Spending by category like awarding_agency.",
+      inputSchema: z.object( { category: z.string().describe("Category like awarding_agency.").optional(), year: z.string().describe("Fiscal year.").optional(), limit: z.number().describe("Max results.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await m2_categorySpending(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+server.registerTool(
+    "recipient_search",
+    {
+      title: "Recipient search",
+      description: "Find award recipients by keyword.",
+      inputSchema: z.object( { keyword: z.string().describe("Recipient keyword."), limit: z.number().describe("Max results.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await m2_recipientSearch(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+server.registerTool(
+    "award_details",
+    {
+      title: "Award details",
+      description: "One award by generated id.",
+      inputSchema: z.object( { id: z.string().describe("Generated award id.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await m2_awardDetails(args)) } catch (e) { return textError(error(e)) }
   }
   )
   return server

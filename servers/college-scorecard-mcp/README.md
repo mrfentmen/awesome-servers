@@ -9,6 +9,11 @@ This file is self contained. It reads public data only and never writes to the m
 
 * `search`  Search colleges.
 
+* `by_state`
+* `by_city`
+* `school_details`
+* `by_ownership`
+* `top_earnings`
 ## Usage
 
 ```bash

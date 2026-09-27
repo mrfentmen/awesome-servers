@@ -91,3 +91,87 @@ export const m0_FdaError = m0.FdaError;
 export const m0_approvedDrugs = m0.approvedDrugs;
 export const m0_drugRecalls = m0.drugRecalls;
 export const m1_events = m1.events;
+
+const m2 = (() => {
+const BASE2 = "https://api.fda.gov"
+class Fda2Error extends Error {}
+
+async function get2(path: string): Promise<any> {
+  const res = await fetch(`${BASE2}${path}`, {
+    headers: { "User-Agent": "mrfentmen-openfda-mcp/1.0", Accept: "application/json" },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (!res.ok) throw new Fda2Error(`openFDA error ${res.status}`)
+  return res.json()
+}
+
+async function deviceRecalls(args: { search?: string; limit?: number }): Promise<string> {
+  const search = args.search ? `&search=${encodeURIComponent(args.search)}` : ""
+  const limit = Math.min(args.limit ?? 10, 50)
+  const d = await get2(`/device/enforcement.json?limit=${limit}${search}`)
+  const rows = d.results ?? []
+  return rows.map((r: any) => `${r.status ?? ""} | ${r.recall_number ?? ""}\n  ${r.product_description ?? ""}\n  Reason: ${r.reason_for_recall ?? ""}`).join("\n\n") || "No device recalls found"
+}
+
+async function deviceEvents(args: { device?: string; limit?: number }): Promise<string> {
+  const device = encodeURIComponent(args.device ?? "")
+  const limit = Math.min(args.limit ?? 10, 50)
+  const d = await get2(`/device/event.json?search=device.generic_name:"${device}"&limit=${limit}`)
+  const rows = d.results ?? []
+  return rows.map((r: any, i: number) => `${i + 1}. ${r.event_type ?? "report"} | ${r.date_received ?? ""}\n   ${(r.event_description ?? "").slice(0, 200)}`).join("\n\n") || "No device events found"
+}
+
+async function foodRecalls(args: { search?: string; limit?: number }): Promise<string> {
+  const search = args.search ? `&search=${encodeURIComponent(args.search)}` : ""
+  const limit = Math.min(args.limit ?? 10, 50)
+  const d = await get2(`/food/enforcement.json?limit=${limit}${search}`)
+  const rows = d.results ?? []
+  return rows.map((r: any) => `${r.status ?? ""} | ${r.recall_number ?? ""}\n  ${r.product_description ?? ""}\n  Reason: ${r.reason_for_recall ?? ""}`).join("\n\n") || "No food recalls found"
+}
+
+async function labelSearch(args: { query?: string; limit?: number }): Promise<string> {
+  const q = encodeURIComponent(args.query ?? "")
+  const limit = Math.min(args.limit ?? 10, 50)
+  const d = await get2(`/drug/label.json?search=openfda.brand_name:"${q}"+OR+openfda.generic_name:"${q}"&limit=${limit}`)
+  const rows = d.results ?? []
+  return rows.map((r: any) => {
+    const o = r.openfda ?? {}
+    return `${o.brand_name?.[0] ?? "unknown"} | ${o.generic_name?.[0] ?? ""}\n  Purpose: ${(r.purpose?.[0] ?? "").slice(0, 160)}`
+  }).join("\n\n") || "No labels found"
+}
+
+async function topReactions(args: { drug?: string }): Promise<string> {
+  const drug = encodeURIComponent(args.drug ?? "")
+  const d = await get2(`/drug/event.json?search=patient.drug.medicinalproduct:"${drug}"&count=patient.reaction.reactionmeddrapt.exact&limit=10`)
+  const rows = d.results ?? []
+  if (!rows.length) return `No reaction counts for "${args.drug ?? ""}".`
+  return rows.map((r: any, i: number) => `${i + 1}. ${r.term ?? "?"} (${r.count ?? 0})`).join("\n")
+}
+
+async function ndcLookup(args: { code?: string }): Promise<string> {
+  const code = encodeURIComponent((args.code ?? "").trim())
+  if (!code) throw new Fda2Error("Provide an NDC code")
+  const d = await get2(`/ndc.json?search=product_ndc:"${code}"&limit=5`)
+  const rows = d.results ?? []
+  if (!rows.length) return `No NDC record for ${args.code}.`
+  const r = rows[0]
+  return `${r.brand_name ?? "?"} | ${r.generic_name ?? ""}\n  NDC: ${r.product_ndc ?? ""} | Manufacturer: ${r.manufacturer_name ?? ""} | Type: ${r.product_type ?? ""}`
+}
+
+return { Fda2Error, deviceRecalls, deviceEvents, foodRecalls, labelSearch, topReactions, ndcLookup };
+})();
+
+export const Fda2Error = m2.Fda2Error;
+export const deviceRecalls = m2.deviceRecalls;
+export const deviceEvents = m2.deviceEvents;
+export const foodRecalls = m2.foodRecalls;
+export const labelSearch = m2.labelSearch;
+export const topReactions = m2.topReactions;
+export const ndcLookup = m2.ndcLookup;
+export const m2_Fda2Error = m2.Fda2Error;
+export const m2_deviceRecalls = m2.deviceRecalls;
+export const m2_deviceEvents = m2.deviceEvents;
+export const m2_foodRecalls = m2.foodRecalls;
+export const m2_labelSearch = m2.labelSearch;
+export const m2_topReactions = m2.topReactions;
+export const m2_ndcLookup = m2.ndcLookup;

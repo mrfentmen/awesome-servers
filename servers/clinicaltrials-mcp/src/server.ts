@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_search, m1_clinicalTrials, m1_pubmed, m1_trial } from './api.js'
+import { byIntervention, byPhase, bySponsor, m0_search, m1_clinicalTrials, m1_pubmed, m1_trial, recruiting, trialLocations } from './api.js'
 
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -56,6 +56,66 @@ server.registerTool(
     },
     async (args) => {
     try { return text(await m1_pubmed(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+server.registerTool(
+    "recruiting",
+    {
+      title: "Recruiting",
+      description: "Currently recruiting trials, optional keyword.",
+      inputSchema: z.object( { query: z.string().describe("Condition or keyword.").optional(), limit: z.number().describe("Max results.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await recruiting(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+server.registerTool(
+    "by_phase",
+    {
+      title: "By phase",
+      description: "Trials by phase 1-4.",
+      inputSchema: z.object( { phase: z.string().describe("1, 2, 3 or 4.").optional(), limit: z.number().describe("Max results.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await byPhase(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+server.registerTool(
+    "by_sponsor",
+    {
+      title: "By sponsor",
+      description: "Trials by sponsor organization.",
+      inputSchema: z.object( { sponsor: z.string().describe("Sponsor name."), limit: z.number().describe("Max results.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await bySponsor(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+server.registerTool(
+    "by_intervention",
+    {
+      title: "By intervention",
+      description: "Trials testing a drug or intervention.",
+      inputSchema: z.object( { intervention: z.string().describe("Drug name."), limit: z.number().describe("Max results.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await byIntervention(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+server.registerTool(
+    "trial_locations",
+    {
+      title: "Trial locations",
+      description: "Sites running one trial.",
+      inputSchema: z.object( { nct_id: z.string().describe("NCT id.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await trialLocations(args)) } catch (e) { return textError(error(e)) }
   }
   )
   return server

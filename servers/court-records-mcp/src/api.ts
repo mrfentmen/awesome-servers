@@ -64,3 +64,45 @@ export async function getCase(args: { case_id?: number }): Promise<string> {
   const text = stripTags(c.plain_text ?? c.text ?? "").slice(0, 3000)
   return `${c.case_name ?? c.id ?? "opinion"}\n${c.date_filed ?? ""}\n\n${text}`
 }
+
+export async function searchDockets(args: { query?: string; page_size?: number }): Promise<string> {
+  const q = encodeURIComponent(args.query ?? "")
+  if (!q) throw new CourtError("Provide a search query")
+  const res = await fetch(`${FEED}?q=${q}&type=r`, {
+    headers: { "User-Agent": UA, Accept: "application/atom+xml" },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (!res.ok) throw new CourtError(`CourtListener error ${res.status}`)
+  const rows = parseFeed(await res.text()).slice(0, args.page_size ?? 10)
+  return (
+    rows.map((c) => `${c.title}\n  ${c.summary}\n  ${c.link}`).join("\n\n") || "No dockets found"
+  )
+}
+
+export async function listCourts(args: { limit?: number }): Promise<string> {
+  const limit = Math.max(1, Math.min(args.limit ?? 10, 50))
+  const res = await fetch(`${API}/courts/?page_size=${limit}`, {
+    headers: { "User-Agent": UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (!res.ok) throw new CourtError(`CourtListener error ${res.status}`)
+  const d = (await res.json()) as { results?: Array<{ id?: string; full_name?: string; short_name?: string }> }
+  const rows = d.results ?? []
+  if (!rows.length) return "No courts returned."
+  return rows.map((c, i) => `${i + 1}. ${c.full_name ?? c.id ?? "?"} (${c.short_name ?? ""})`).join("\n")
+}
+
+export async function searchJudges(args: { query?: string; limit?: number }): Promise<string> {
+  const q = (args.query ?? "").trim()
+  if (!q) throw new CourtError("Provide a judge name")
+  const limit = Math.max(1, Math.min(args.limit ?? 10, 25))
+  const res = await fetch(`${API}/people/?name_first=${encodeURIComponent(q)}&page_size=${limit}`, {
+    headers: { "User-Agent": UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (!res.ok) throw new CourtError(`CourtListener error ${res.status}`)
+  const d = (await res.json()) as { results?: Array<{ id?: number; name_first?: string; name_last?: string }> }
+  const rows = d.results ?? []
+  if (!rows.length) return `No judges found for "${q}".`
+  return rows.map((p, i) => `${i + 1}. ${p.name_first ?? ""} ${p.name_last ?? ""} (id ${p.id ?? "?"})`).join("\n")
+}

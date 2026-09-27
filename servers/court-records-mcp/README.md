@@ -10,6 +10,9 @@ This file is self contained. It reads public data only and never writes to the m
 * `search_cases`  Full text search over court opinions.
 * `get_case`  Fetch one opinion by id.
 
+* `search_dockets`
+* `list_courts`
+* `search_judges`
 ## Usage
 
 ```bash

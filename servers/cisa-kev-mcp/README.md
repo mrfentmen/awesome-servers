@@ -8,6 +8,12 @@ Search CISA's Known Exploited Vulnerabilities catalog. This is a focused compani
 - `recent_known_exploited`: list recently added catalog entries.
 - `catalog_info`: inspect catalog version, release date, and entry count.
 
+- `by_cve`
+- `by_vendor`
+- `by_product`
+- `ransomware`
+- `vendors`
+- `yearly`
 The feed is public and keyless. Catalog inclusion is a prioritization signal, not a complete risk assessment or a guarantee that a system is vulnerable.
 
 ## Run

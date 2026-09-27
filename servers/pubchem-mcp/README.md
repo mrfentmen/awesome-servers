@@ -10,6 +10,12 @@ This file is self contained. It reads public data only and never writes to the m
 * `compound`  Properties for a compound.
 * `search`  Search compound names.
 
+* `cid_lookup`
+* `formula_search`
+* `synonyms`
+* `similar`
+* `substructure`
+* `assay_summary`
 ## Usage
 
 ```bash

@@ -11,6 +11,12 @@ A merged MCP server that consolidates duplicate single-purpose servers in this m
 - `searchApprovedDrugs` — Search approved drug applications.
 - `drugEvents` — Adverse event reports for a drug (daily med).
 
+- `device_recalls`
+- `device_events`
+- `food_recalls`
+- `label_search`
+- `top_reactions`
+- `ndc_lookup`
 ## Run
 
 ```bash

@@ -10,6 +10,11 @@ A merged MCP server that consolidates duplicate single-purpose servers in this m
 - `getTrial` — One clinical trial by NCT id.
 - `searchPubmed` — Search PubMed articles.
 
+- `recruiting`
+- `by_phase`
+- `by_sponsor`
+- `by_intervention`
+- `trial_locations`
 ## Run
 
 ```bash

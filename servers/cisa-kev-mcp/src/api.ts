@@ -7,3 +7,9 @@ export async function search(query: string) { const q = query.toLowerCase(); ret
 export async function recent(limit: number) { return (await all()).vulnerabilities?.slice(-limit).reverse() ?? [] }
 export async function info() { const x = await all(); return { catalogVersion: x.catalogVersion, dateReleased: x.dateReleased, count: x.vulnerabilities?.length ?? 0 } }
 export function format(x: unknown) { return JSON.stringify(x, null, 2).slice(0, 14000) }
+export async function byCve(cve: string) { return (await all()).vulnerabilities?.filter((x) => (x.cveID ?? "").toUpperCase() === cve.trim().toUpperCase()).slice(0, 5) ?? [] }
+export async function byVendor(vendor: string) { const q = vendor.toLowerCase(); return (await all()).vulnerabilities?.filter((x) => (x.vendorProject ?? "").toLowerCase().includes(q)).slice(0, 30) ?? [] }
+export async function byProduct(product: string) { const q = product.toLowerCase(); return (await all()).vulnerabilities?.filter((x) => (x.product ?? "").toLowerCase().includes(q)).slice(0, 30) ?? [] }
+export async function ransomware() { return (await all()).vulnerabilities?.filter((x) => (x.knownRansomwareCampaignUse ?? "").toLowerCase() === "known").slice(0, 30) ?? [] }
+export async function vendors() { const s = new Set((await all()).vulnerabilities?.map((x) => x.vendorProject ?? "").filter(Boolean) ?? []); return [...s].sort().slice(0, 100) }
+export async function yearly(year: string) { return (await all()).vulnerabilities?.filter((x) => (x.dateAdded ?? "").startsWith(year.trim())).slice(0, 50) ?? [] }

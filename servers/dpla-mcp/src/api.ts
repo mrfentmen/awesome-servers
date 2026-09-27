@@ -76,3 +76,44 @@ export async function searchCollections(query: string): Promise<string> {
   const data = await req(url);
   return pretty(data);
 }
+
+export async function getCollection(collectionId: string): Promise<string> {
+  const key = apiKey()
+  const data = await req(`https://api.dp.la/v2/collections/${encodeURIComponent(String(collectionId))}?api_key=${encodeURIComponent(key)}`);
+  return pretty(data);
+}
+
+export async function titleSearch(title: string, pageSize?: number): Promise<string> {
+  const key = apiKey()
+  const qs = new URLSearchParams({ "sourceResource.title": String(title), page_size: String(pageSize ?? 10), api_key: key });
+  const data = await req(`https://api.dp.la/v2/items?${qs.toString()}`);
+  return pretty(data);
+}
+
+export async function dateSearch(after: string, before: string, pageSize?: number): Promise<string> {
+  const key = apiKey()
+  const qs = new URLSearchParams({ "sourceResource.date.after": String(after), "sourceResource.date.before": String(before), page_size: String(pageSize ?? 10), api_key: key });
+  const data = await req(`https://api.dp.la/v2/items?${qs.toString()}`);
+  return pretty(data);
+}
+
+export async function placeSearch(place: string, pageSize?: number): Promise<string> {
+  const key = apiKey()
+  const qs = new URLSearchParams({ "sourceResource.spatial": String(place), page_size: String(pageSize ?? 10), api_key: key });
+  const data = await req(`https://api.dp.la/v2/items?${qs.toString()}`);
+  return pretty(data);
+}
+
+export async function sortedSearch(query: string, sortBy: string, pageSize?: number): Promise<string> {
+  const key = apiKey()
+  const qs = new URLSearchParams({ q: String(query), sort_by: String(sortBy || "sourceResource.title"), page_size: String(pageSize ?? 10), api_key: key });
+  const data = await req(`https://api.dp.la/v2/items?${qs.toString()}`);
+  return pretty(data);
+}
+
+export async function facetSearch(query: string, facet: string): Promise<string> {
+  const key = apiKey()
+  const qs = new URLSearchParams({ q: String(query), facets: String(facet || "sourceResource.type"), page_size: "0", api_key: key });
+  const data = await req(`https://api.dp.la/v2/items?${qs.toString()}`);
+  return pretty(data);
+}

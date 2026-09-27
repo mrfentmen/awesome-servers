@@ -30,3 +30,51 @@ export async function search(args: SearchArgs): Promise<string> {
       })
       .join('\n');
 }
+
+async function sectionSearch(section: string, args: SearchArgs): Promise<string> {
+  const q = (args.query ?? '').trim();
+  if (!q) return 'Provide a search query.';
+  const limit = Math.max(1, Math.min(args.limit ?? 10, 25));
+  const res = await fetch(`https://www.loc.gov/${section}/?q=${encodeURIComponent(q)}&fo=json&c=${limit}`, {
+    headers: { 'User-Agent': 'mrfentmen-loc-mcp/1.0', Accept: 'application/json' },
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!res.ok) throw new Error(`Library of Congress returned ${res.status}`);
+  const data = (await res.json()) as {
+    results?: Array<Record<string, unknown>>;
+    pagination?: { total?: number };
+  };
+  const results = data.results ?? [];
+  if (!results.length) return `No Library of Congress ${section} results for "${q}".`;
+  return `Library of Congress ${section} for "${q}" (${data.pagination?.total ?? results.length} total):\n` +
+    results.map((r, i) => {
+      const title = r.title ?? 'untitled';
+      const date = r.date ?? '';
+      const url = r.url ?? '';
+      return `${i + 1}. ${title}${date ? ` | ${date}` : ''}${url ? `\n   ${url}` : ''}`;
+    }).join('\n');
+}
+
+export async function photos(args: SearchArgs): Promise<string> {
+  return sectionSearch('photos', args);
+}
+
+export async function books(args: SearchArgs): Promise<string> {
+  return sectionSearch('books', args);
+}
+
+export async function maps(args: SearchArgs): Promise<string> {
+  return sectionSearch('maps', args);
+}
+
+export async function audio(args: SearchArgs): Promise<string> {
+  return sectionSearch('audio', args);
+}
+
+export async function newspapers(args: SearchArgs): Promise<string> {
+  return sectionSearch('newspapers', args);
+}
+
+export async function manuscripts(args: SearchArgs): Promise<string> {
+  return sectionSearch('manuscripts', args);
+}

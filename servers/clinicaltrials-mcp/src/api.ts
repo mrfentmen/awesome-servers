@@ -108,3 +108,83 @@ export const m1_clinicalTrials = m1.clinicalTrials;
 export const m1_TrialsError = m1.TrialsError;
 export const m1_pubmed = m1.pubmed;
 export const m1_trial = m1.trial;
+
+const m2 = (() => {
+const BASE2 = 'https://clinicaltrials.gov/api/v2/studies';
+const UA2 = 'mrfentmen-clinicaltrials-mcp/1.0';
+
+async function query(q: string, limit: number, fields: string): Promise<string> {
+  const url = `${BASE2}?${q}&pageSize=${limit}&fields=${fields}`;
+  const res = await fetch(url, {
+    headers: { 'User-Agent': UA2, Accept: 'application/json' },
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!res.ok) throw new Error(`ClinicalTrials.gov returned ${res.status}`);
+  const data = (await res.json()) as { totalCount?: number; studies?: Array<Record<string, unknown>> };
+  const rows = data.studies ?? [];
+  if (!rows.length) return 'No trials found.';
+  return `Clinical trials (${data.totalCount ?? rows.length} total, ${rows.length} shown):\n` +
+    rows.map((s, i) => {
+      const p = (s.protocolSection ?? {}) as Record<string, unknown>;
+      const id = (p.identificationModule ?? {}) as Record<string, unknown>;
+      const st = (p.statusModule ?? {}) as Record<string, unknown>;
+      return `${i + 1}. ${id.briefTitle ?? 'untitled'} | ${st.overallStatus ?? ''} | ${id.nctId ?? ''}`;
+    }).join('\n');
+}
+
+const F = 'NCTId,BriefTitle,OverallStatus,LeadSponsorName,StartDate';
+
+async function recruiting(args: { query?: string; limit?: number }): Promise<string> {
+  const q = (args.query ?? '').trim();
+  const limit = Math.max(1, Math.min(args.limit ?? 10, 30));
+  const term = q ? `query.term=${encodeURIComponent(q)}&` : '';
+  return query(`${term}filter.advanced=AREA%5BOverallStatus%5DRECRUITING`, limit, F);
+}
+
+async function byPhase(args: { phase?: string; limit?: number }): Promise<string> {
+  const phase = (args.phase ?? 'PHASE2').trim().toUpperCase().replace(/^PHASE/, '');
+  const limit = Math.max(1, Math.min(args.limit ?? 10, 30));
+  return query(`filter.advanced=AREA%5BPhase%5DPHASE${phase}`, limit, F);
+}
+
+async function bySponsor(args: { sponsor?: string; limit?: number }): Promise<string> {
+  const sponsor = (args.sponsor ?? '').trim();
+  if (!sponsor) return 'Provide a sponsor name.';
+  const limit = Math.max(1, Math.min(args.limit ?? 10, 30));
+  return query(`query.spons=${encodeURIComponent(sponsor)}`, limit, F);
+}
+
+async function byIntervention(args: { intervention?: string; limit?: number }): Promise<string> {
+  const intr = (args.intervention ?? '').trim();
+  if (!intr) return 'Provide a drug or intervention name.';
+  const limit = Math.max(1, Math.min(args.limit ?? 10, 30));
+  return query(`query.intr=${encodeURIComponent(intr)}`, limit, F);
+}
+
+async function trialLocations(args: { nct_id?: string }): Promise<string> {
+  const id = (args.nct_id ?? '').trim().toUpperCase();
+  if (!id) throw new Error('Provide an NCT id.');
+  const res = await fetch(`${BASE2}/${encodeURIComponent(id)}`, {
+    headers: { 'User-Agent': UA2, Accept: 'application/json' },
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!res.ok) throw new Error(`ClinicalTrials.gov returned ${res.status}`);
+  const d = (await res.json()) as any;
+  const locs = d?.protocolSection?.contactsLocationsModule?.locations ?? [];
+  if (!locs.length) return `No locations listed for ${id}.`;
+  return locs.slice(0, 20).map((l: any, i: number) => `${i + 1}. ${l.facility ?? '?'} | ${l.city ?? ''}, ${l.state ?? ''} ${l.country ?? ''} (${l.status ?? ''})`).join('\n');
+}
+
+return { byIntervention, byPhase, bySponsor, recruiting, trialLocations };
+})();
+
+export const byIntervention = m2.byIntervention;
+export const byPhase = m2.byPhase;
+export const bySponsor = m2.bySponsor;
+export const recruiting = m2.recruiting;
+export const trialLocations = m2.trialLocations;
+export const m2_byIntervention = m2.byIntervention;
+export const m2_byPhase = m2.byPhase;
+export const m2_bySponsor = m2.bySponsor;
+export const m2_recruiting = m2.recruiting;
+export const m2_trialLocations = m2.trialLocations;

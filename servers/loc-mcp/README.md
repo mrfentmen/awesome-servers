@@ -9,6 +9,12 @@ This file is self contained. It reads public data only and never writes to the m
 
 * `search`  Search items.
 
+* `photos`
+* `books`
+* `maps`
+* `audio`
+* `newspapers`
+* `manuscripts`
 ## Usage
 
 ```bash
