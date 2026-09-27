@@ -1,15 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  checkEndpoint,
-  dnsRecords,
-  endpointLatency,
-  errorMessage,
-  healthRollup,
-  securityHeaders,
-  tlsExpiry,
-} from "./api.js"
-
+import { checkEndpoint, dnsRecords, endpointLatency, errorMessage, healthRollup, securityHeaders, tlsExpiry, payloadReport, allowedMethods, healthPathProbe } from "./api.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -111,6 +102,52 @@ export function createServer(): McpServer {
     },
     async (args) => {
       try { return text(await securityHeaders(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "payload_report",
+    {
+      title: "Payload report",
+      description: "How much a page actually transfers: bytes, compression, content type, cache headers, and what to fix for page weight.",
+      inputSchema: z.object({
+        url: z.string().describe("URL to measure, for example https://example.com.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await payloadReport(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "allowed_methods",
+    {
+      title: "Allowed methods",
+      description: "Which HTTP methods an endpoint answers: OPTIONS with its Allow header, plus whether HEAD and GET work.",
+      inputSchema: z.object({
+        url: z.string().describe("Endpoint to probe, for example https://api.example.com/health.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await allowedMethods(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "health_path_probe",
+    {
+      title: "Health path probe",
+      description: "Probe the usual health endpoints (/health, /healthz, /status, /ready, /livez...) and report which one answers.",
+      inputSchema: z.object({
+        host: z.string().describe("Host or URL to probe, for example https://api.example.com."),
+        paths: z.string().describe("Comma-separated paths to try instead of the default eight.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await healthPathProbe(args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 

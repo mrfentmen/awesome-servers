@@ -383,3 +383,99 @@ export async function securityHeaders(args: { url: string }): Promise<string> {
   if (r.headers["x-powered-by"]) lines.push("", `Note: x-powered-by discloses ${r.headers["x-powered-by"]} — consider removing it.`)
   return lines.join("\n")
 }
+// ---- batch-4 tools: payload, methods, health paths (2026-09-27) ----
+export async function payloadReport(args: { url: string }): Promise<string> {
+  const url = normalizeTarget(args.url)
+  const start = Date.now()
+  const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "*/*" }, signal: AbortSignal.timeout(20000) })
+  const body = await res.arrayBuffer()
+  const ms = Date.now() - start
+  const encoding = res.headers.get("content-encoding")
+  const declared = Number(res.headers.get("content-length"))
+  const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`
+  const type = res.headers.get("content-type") ?? "unknown"
+  const isHtml = /text\/html/i.test(type)
+  const notes: string[] = []
+  if (isHtml && !encoding) notes.push("HTML is not compressed - gzip or brotli would cut the transfer")
+  if (Number.isFinite(declared) && declared > 0 && Math.abs(declared - body.byteLength) / declared > 0.1) {
+    notes.push(`content-length says ${kb(declared)} but ${kb(body.byteLength)} arrived`)
+  }
+  if (body.byteLength > 500 * 1024) notes.push(`${kb(body.byteLength)} is large for one request; check the page weight budget`)
+  return [
+    `Payload for ${url.toString()} (HTTP ${res.status} in ${ms} ms)`,
+    `Transferred: ${kb(body.byteLength)}${encoding ? ` compressed as ${encoding}` : " uncompressed"}`,
+    `Content type: ${type}${Number.isFinite(declared) ? ` | declared length ${kb(declared)}` : ""}`,
+    res.headers.get("cache-control") ? `Cache-Control: ${res.headers.get("cache-control")}` : "Cache-Control: not sent",
+    res.headers.get("etag") ? "ETag: present (conditional requests can save bandwidth)" : "ETag: not sent",
+    "",
+    notes.length ? `Worth fixing (${notes.length}):\n${notes.map((n) => `  - ${n}`).join("\n")}` : "No payload problems found in this response.",
+  ].join("\n")
+}
+
+export async function allowedMethods(args: { url: string }): Promise<string> {
+  const url = normalizeTarget(args.url)
+  const call = async (method: string) => {
+    const start = Date.now()
+    try {
+      const res = await fetch(url, { method, redirect: "manual", headers: { "User-Agent": UA }, signal: AbortSignal.timeout(15000) })
+      await res.arrayBuffer()
+      return { method, status: res.status, ms: Date.now() - start, allow: res.headers.get("allow") }
+    } catch (e) {
+      return { method, status: 0, ms: Date.now() - start, allow: null, error: errorMessage(e) }
+    }
+  }
+  const [options, head, get] = await Promise.all([call("OPTIONS"), call("HEAD"), call("GET")])
+  const seen = [
+    `OPTIONS ${options.status || "failed"}${options.allow ? ` | Allow: ${options.allow}` : ""}${options.error ? ` (${options.error})` : ""}`,
+    `HEAD    ${head.status || "failed"}${head.error ? ` (${head.error})` : ""}`,
+    `GET     ${get.status || "failed"}${get.error ? ` (${get.error})` : ""}`,
+  ]
+  return [
+    `Method support for ${url.toString()}`,
+    "",
+    ...seen,
+    "",
+    options.allow
+      ? `The Allow header advertises: ${options.allow}`
+      : "OPTIONS did not advertise an Allow header - many servers only answer OPTIONS on a real API route.",
+    head.status === 0
+      ? "HEAD is refused; some uptime monitors probe with HEAD and will report this endpoint down."
+      : `HEAD answered with ${head.status}, so a HEAD-based monitor works.`,
+  ].join("\n")
+}
+
+const HEALTH_PATHS = ["/health", "/healthz", "/status", "/ready", "/livez", "/-/health", "/api/health", "/health/live"]
+
+export async function healthPathProbe(args: { host: string; paths?: string }): Promise<string> {
+  const url = normalizeTarget(args.host)
+  const candidates = args.paths
+    ? args.paths.split(/[,\s]+/).map((p) => p.trim()).filter(Boolean).map((p) => (p.startsWith("/") ? p : `/${p}`))
+    : HEALTH_PATHS
+  const list = [...new Set(candidates)].slice(0, 12)
+  const rows: string[] = []
+  const responding: string[] = []
+  for (const path of list) {
+    const target = new URL(path, url.origin).toString()
+    const start = Date.now()
+    try {
+      const res = await fetch(target, { headers: { "User-Agent": UA, Accept: "*/*" }, signal: AbortSignal.timeout(12000) })
+      await res.arrayBuffer()
+      const ms = Date.now() - start
+      const ok = res.status >= 200 && res.status < 400
+      if (ok) responding.push(path)
+      rows.push(`${ok ? "FOUND" : "miss "} HTTP ${String(res.status).padStart(3)} ${String(ms).padStart(5)} ms  ${path}`)
+    } catch (e) {
+      rows.push(`miss  ${"---".padStart(3)} ${"-".padStart(5)}    ${path}  (${errorMessage(e)})`)
+    }
+  }
+  return [
+    `Health path probe for ${url.origin} (${list.length} candidate path(s))`,
+    responding.length ? `Responding: ${responding.join(", ")}` : "None of the usual health paths answered.",
+    "",
+    ...rows,
+    "",
+    responding.length
+      ? "Wire the responding path into your uptime monitor."
+      : "No health endpoint found - add one so monitors can judge the app, not just the web server.",
+  ].join("\n")
+}

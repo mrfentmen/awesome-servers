@@ -10,6 +10,9 @@ Endpoint conditions, latency and TLS checks - no API key.
 - `tls_expiry` — Days left on a host's TLS certificate, who issued it and whether the chain is trusted.
 - `dns_records` — A, AAAA, NS, MX, TXT and CAA records for a domain, or just one type if you name it.
 - `security_headers` — Grade the response security headers a site sends: HSTS, CSP, frame options, content type options, referrer and permissions policy.
+- `payload_report` — How much a page actually transfers: bytes, compression, content type, cache headers, and what to fix for page weight.
+- `allowed_methods` — Which HTTP methods an endpoint answers: OPTIONS with its Allow header, plus whether HEAD and GET work.
+- `health_path_probe` — Probe the usual health endpoints (/health, /healthz, /status, /ready, /livez...) and report which one answers.
 
 ## Setup
 

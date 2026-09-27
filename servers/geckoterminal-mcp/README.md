@@ -13,6 +13,9 @@ This file is self contained. It reads public data only and never writes to the m
 * `pool`  One pool by id with base/quote USD prices and reserves. Get ids from search.
 * `newPools`  Recently listed pools on a network with prices and volumes.
 * `search`  Search pools by text across networks, returns ids for the pool tool.
+* `token_pools`  Every pool a token trades in on one network, biggest liquidity first, with price, reserves and 24h volume.
+* `token_prices`  Batch spot prices for up to 30 token addresses on one network in a single call.
+* `dexes`  Decentralised exchanges tracked on a network, with the number of pools each has.
 
 ## Usage
 

@@ -7,6 +7,9 @@ import { pool } from "./api.js"
 import { newPools } from "./api.js"
 import { search } from "./api.js"
 
+import { tokenPools } from "./api.js"
+import { tokenPrices } from "./api.js"
+import { dexes } from "./api.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -86,5 +89,44 @@ export function createServer(): McpServer {
     try { return text(await search(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "token_pools",
+    {
+      title: "Token pools",
+      description: "Every pool a token trades in on one network, biggest liquidity first, with price, reserves and 24h volume.",
+      inputSchema: z.object( { network: z.string().describe("Network id like eth, bsc or solana. Defaults to eth.").optional(), address: z.string().describe("Token contract address."), limit: z.number().describe("How many pools, 1-20. Defaults to 10.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await tokenPools(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "token_prices",
+    {
+      title: "Token prices",
+      description: "Batch spot prices for up to 30 token addresses on one network in a single call.",
+      inputSchema: z.object( { addresses: z.string().describe("Comma-separated token addresses (max 30)."), network: z.string().describe("Network id like eth or bsc. Defaults to eth.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await tokenPrices(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "dexes",
+    {
+      title: "DEX list",
+      description: "Decentralised exchanges tracked on a network, with the number of pools each has.",
+      inputSchema: z.object( { network: z.string().describe("Network id like eth or bsc. Defaults to eth.").optional(), limit: z.number().describe("How many DEXes, 1-50. Defaults to 25.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await dexes(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

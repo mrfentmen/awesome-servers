@@ -20,6 +20,9 @@ Other
 - Pool detail: One pool by id with base/quote USD prices and reserves. Get ids from search.
 - New pools: Recently listed pools on a network with prices and volumes.
 - Pool search: Search pools by text across networks, returns ids for the pool tool.
+- Token pools: Every pool a token trades in on one network, biggest liquidity first, with price, reserves and 24h volume.
+- Token prices: Batch spot prices for up to 30 token addresses on one network in a single call.
+- DEX list: Decentralised exchanges tracked on a network, with the number of pools each has.
 
 ## Getting Started
 
@@ -30,6 +33,9 @@ Other
 - Tool: pool — One pool by id with base/quote USD prices and reserves. Get ids from search.
 - Tool: newPools — Recently listed pools on a network with prices and volumes.
 - Tool: search — Search pools by text across networks, returns ids for the pool tool.
+- Tool: token_pools — Every pool a token trades in on one network, biggest liquidity first, with price, reserves and 24h volume.
+- Tool: token_prices — Batch spot prices for up to 30 token addresses on one network in a single call.
+- Tool: dexes — Decentralised exchanges tracked on a network, with the number of pools each has.
 
 ## Tags
 geckoterminal, mcp, data, keyless
