@@ -1,5 +1,7 @@
 # Premium MCPs (private)
 
+> npm distribution discontinued — all packages deprecated on the public registry. Install from this repo or the private registry. Do not `npm publish`.
+
 Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, betting, finance-data, and pro-tier API servers. Private commercial monorepo.
 
 ## Contents
