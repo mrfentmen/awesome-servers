@@ -9,6 +9,12 @@ A research metadata server for scholarly works and authors using the public Open
 * `search_authors`
 * `get_author`
 
+* `search_sources`
+* `search_institutions`
+* `search_topics`
+* `search_publishers`
+* `search_funders`
+* `autocomplete_works`
 Results include DOI, publication year, citations, open access links, venues, authors, and topics.
 
 ```bash

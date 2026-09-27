@@ -29,3 +29,41 @@ export async function countyPopulation(args: { state?: string }): Promise<string
   const lines = rows.slice(1).sort((a, b) => Number(b[1] ?? 0) - Number(a[1] ?? 0)).slice(0, 25)
   return `Top counties in state ${st}\n${lines.map((r) => `${r[0]}: ${Number(r[1] ?? 0).toLocaleString()}`).join("\n")}`
 }
+
+async function stateVariable(label: string, variable: string, state: string): Promise<string> {
+  const st = (state ?? "").trim()
+  if (!st) throw new CensusError("Provide a state FIPS code like 06")
+  const rows = await request<string[][]>(`/data/2022/acs/acs5?get=NAME,${variable}&for=state:${st}`)
+  return `${label}\n${formatTable(rows)}`
+}
+
+export async function medianIncome(args: { state?: string }): Promise<string> {
+  return stateVariable("Median household income by state", "B19013_001E", args.state ?? "")
+}
+
+export async function povertyCount(args: { state?: string }): Promise<string> {
+  return stateVariable("Population below poverty by state", "B17001_002E", args.state ?? "")
+}
+
+export async function bachelorCount(args: { state?: string }): Promise<string> {
+  return stateVariable("Bachelor's degree holders by state", "B15003_022E", args.state ?? "")
+}
+
+export async function housingUnits(args: { state?: string }): Promise<string> {
+  return stateVariable("Housing units by state", "B25001_001E", args.state ?? "")
+}
+
+export async function unemployedCount(args: { state?: string }): Promise<string> {
+  return stateVariable("Unemployed population by state", "B23025_005E", args.state ?? "")
+}
+
+export async function medianAge(args: { state?: string }): Promise<string> {
+  const st = (args.state ?? "").trim()
+  if (!st) throw new CensusError("Provide a state FIPS code like 06")
+  const rows = await request<string[][]>(`/data/2022/acs/acs5?get=NAME,B01002_001E&for=state:${st}`)
+  return `Median age by state\n${rows.slice(1).map((r) => `${r[0]}: ${r[1] ?? "?"}`).join("\n")}`
+}
+
+export async function hispanicCount(args: { state?: string }): Promise<string> {
+  return stateVariable("Hispanic or Latino population by state", "B03002_012E", args.state ?? "")
+}

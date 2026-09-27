@@ -19,6 +19,8 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 - `search_opinions`: Opinions with court, status, citations, syllabus.
 - `search_dockets`: RECAP federal dockets with docket numbers.
 
+- `search_people`
+- `search_oral_args`
 ## Limits and privacy
 
 This project is intentionally narrow. It should be treated as a practical helper, not a complete certification or security audit. Check the implementation and the returned data before using it with sensitive material. No credentials are required for search; full opinion/docket detail endpoints need a free CourtListener API key and are not included.

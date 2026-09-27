@@ -10,6 +10,11 @@ This file is self contained. It reads public data only and never writes to the m
 * `search_papers`  Search arXiv papers.
 * `paper_info`  Details for a paper by ID.
 
+* `search_title`
+* `search_author`
+* `search_category`
+* `newest_papers`
+* `papers_by_id`
 ## Usage
 
 ```bash

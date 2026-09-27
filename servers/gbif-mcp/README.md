@@ -8,6 +8,13 @@ A niche biodiversity assistant backed by GBIF. Use it to normalize species names
 - `get_species`: fetch taxonomy metadata by GBIF usage key.
 - `search_occurrences`: search public observations by taxon, country, year, or bounding box.
 
+- `search_species`
+- `occurrence_count`
+- `list_countries`
+- `list_organizations`
+- `list_installations`
+- `list_nodes`
+- `get_dataset`
 GBIF is a public aggregation service. Individual records can have different dataset licenses and coordinate precision. Treat occurrence results as research leads, not proof of presence or absence. No API key is required and results are bounded.
 
 ## Run

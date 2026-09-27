@@ -102,3 +102,62 @@ export function formatDocket(d: DocketHit, index?: number): string {
   ].filter(Boolean)
   return lines.join("\n")
 }
+
+export interface PersonHit {
+  name?: string
+  court?: string
+  dateFiled?: string
+  url?: string
+}
+
+export async function searchPeople(query: string, limit = 5): Promise<PersonHit[]> {
+  const rows = await searchApi(query, "p", limit)
+  return rows.map((r) => ({
+    name: typeof r.name === "string" ? r.name : undefined,
+    court: typeof r.court === "string" ? r.court : undefined,
+    dateFiled: typeof r.dateFiled === "string" ? r.dateFiled.slice(0, 10) : undefined,
+    url: fullUrl(r.absolute_url),
+  }))
+}
+
+export function formatPerson(p: PersonHit, index?: number): string {
+  const prefix = index !== undefined ? `${index + 1}. ` : ""
+  const lines = [
+    `${prefix}${p.name ?? "(unnamed person)"}`,
+    p.court ? `Court: ${p.court}` : "",
+    p.dateFiled ? `Filed: ${p.dateFiled}` : "",
+    p.url ? `More: ${p.url}` : "",
+  ].filter(Boolean)
+  return lines.join("\n")
+}
+
+export interface OralArgHit {
+  caseName?: string
+  court?: string
+  dateArgued?: string
+  duration?: string
+  url?: string
+}
+
+export async function searchOralArgs(query: string, limit = 5): Promise<OralArgHit[]> {
+  const rows = await searchApi(query, "oa", limit)
+  return rows.map((r) => ({
+    caseName: typeof r.caseName === "string" ? r.caseName : undefined,
+    court: typeof r.court === "string" ? r.court : undefined,
+    dateArgued: typeof r.dateArgued === "string" ? r.dateArgued.slice(0, 10) : undefined,
+    duration: typeof r.duration === "string" ? r.duration : undefined,
+    url: fullUrl(r.absolute_url),
+  }))
+}
+
+export function formatOralArg(o: OralArgHit, index?: number): string {
+  const prefix = index !== undefined ? `${index + 1}. ` : ""
+  const lines = [
+    `${prefix}${o.caseName ?? "(unnamed argument)"}`,
+    o.court ? `Court: ${o.court}` : "",
+    o.dateArgued ? `Argued: ${o.dateArgued}` : "",
+    o.duration ? `Duration: ${o.duration}` : "",
+    o.url ? `Listen: ${o.url}` : "",
+  ].filter(Boolean)
+  return lines.join("\n")
+}

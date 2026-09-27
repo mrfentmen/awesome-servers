@@ -11,6 +11,13 @@ This file is self contained. It reads public data only and never writes to the m
 * `get_state_population`  Population by state FIPS code.
 * `get_county_population`  County populations within a state.
 
+* `get_median_income`
+* `get_poverty_count`
+* `get_bachelor_count`
+* `get_housing_units`
+* `get_unemployed_count`
+* `get_median_age`
+* `get_hispanic_count`
 ## Usage
 
 ```bash

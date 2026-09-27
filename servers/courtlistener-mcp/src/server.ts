@@ -3,9 +3,13 @@ import { z } from "zod"
 import {
   CourtListenerError,
   formatDocket,
+  formatOralArg,
   formatOpinion,
+  formatPerson,
   searchDockets,
   searchOpinions,
+  searchOralArgs,
+  searchPeople,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -57,6 +61,50 @@ export function createServer(): McpServer {
         const results = await searchDockets(query, limit)
         if (results.length === 0) return text(`No CourtListener dockets match "${query}".`)
         return text(`CourtListener dockets for "${query}":\n\n${results.map((d, i) => formatDocket(d, i)).join("\n\n")}`)
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "search_people",
+    {
+      title: "Search judges and attorneys",
+      description: "Search CourtListener people: judges, attorneys, parties.",
+      inputSchema: z.object({
+        query: z.string().describe("Name, e.g. a judge or attorney"),
+        limit: z.number().int().min(1).max(20).default(5),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, limit }) => {
+      try {
+        const results = await searchPeople(query, limit)
+        if (results.length === 0) return text(`No CourtListener people match "${query}".`)
+        return text(`CourtListener people for "${query}":\n\n${results.map((p, i) => formatPerson(p, i)).join("\n\n")}`)
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "search_oral_args",
+    {
+      title: "Search oral arguments",
+      description: "Search CourtListener oral argument audio: case, court, date argued, duration.",
+      inputSchema: z.object({
+        query: z.string().describe("Search text, e.g. a case name or topic"),
+        limit: z.number().int().min(1).max(20).default(5),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, limit }) => {
+      try {
+        const results = await searchOralArgs(query, limit)
+        if (results.length === 0) return text(`No CourtListener oral arguments match "${query}".`)
+        return text(`CourtListener oral arguments for "${query}":\n\n${results.map((o, i) => formatOralArg(o, i)).join("\n\n")}`)
       } catch (e) {
         return textError(errorMessage(e))
       }

@@ -1,8 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { countyPopulation } from "./api.js"
+import { bachelorCount, countyPopulation } from "./api.js"
+import { hispanicCount } from "./api.js"
+import { housingUnits } from "./api.js"
+import { medianAge } from "./api.js"
+import { medianIncome } from "./api.js"
 import { nationPopulation } from "./api.js"
+import { povertyCount } from "./api.js"
 import { statePopulation } from "./api.js"
+import { unemployedCount } from "./api.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -45,6 +51,90 @@ export function createServer(): McpServer {
     },
     async (args) => {
     try { return text(await countyPopulation(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "get_median_income",
+    {
+      title: "Get median income",
+      description: "Median household income for a state.",
+      inputSchema: z.object( { state: z.string().describe("State FIPS code.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await medianIncome(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "get_poverty_count",
+    {
+      title: "Get poverty count",
+      description: "Population below poverty for a state.",
+      inputSchema: z.object( { state: z.string().describe("State FIPS code.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await povertyCount(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "get_bachelor_count",
+    {
+      title: "Get bachelor count",
+      description: "Bachelor's degree holders for a state.",
+      inputSchema: z.object( { state: z.string().describe("State FIPS code.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await bachelorCount(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "get_housing_units",
+    {
+      title: "Get housing units",
+      description: "Housing units for a state.",
+      inputSchema: z.object( { state: z.string().describe("State FIPS code.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await housingUnits(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "get_unemployed_count",
+    {
+      title: "Get unemployed count",
+      description: "Unemployed population for a state.",
+      inputSchema: z.object( { state: z.string().describe("State FIPS code.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await unemployedCount(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "get_median_age",
+    {
+      title: "Get median age",
+      description: "Median age for a state.",
+      inputSchema: z.object( { state: z.string().describe("State FIPS code.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await medianAge(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "get_hispanic_count",
+    {
+      title: "Get hispanic count",
+      description: "Hispanic or Latino population for a state.",
+      inputSchema: z.object( { state: z.string().describe("State FIPS code.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await hispanicCount(args)) } catch (e) { return textError(error(e)) }
   }
   )
   return server

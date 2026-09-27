@@ -10,6 +10,13 @@ This file is self contained. It reads public data only and never writes to the m
 * `search`  Search token pairs.
 * `tokens`  Top pairs for a token.
 
+* `top_boosts`
+* `latest_boosts`
+* `token_orders`
+* `multi_tokens`
+* `trending`
+* `token_profiles`
+* `pair_details`
 ## Usage
 
 ```bash

@@ -10,6 +10,14 @@ This file is self contained. It reads public data only and never writes to the m
 * `coin`  Details for one coin.
 * `search`  Search coins.
 
+* `ticker`
+* `tickers`
+* `markets`
+* `ohlcv_today`
+* `exchanges`
+* `exchange_markets`
+* `tags`
+* `global_stats`
 ## Usage
 
 ```bash

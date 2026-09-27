@@ -22,6 +22,13 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 - `search_series`: Series by keyword with frequencies and units.
 - `series_observations`: Latest values, newest first.
 
+- `series_info`
+- `series_vintages`
+- `release_tables`
+- `tag_list`
+- `geo_data`
+- `releases_list`
+- `sources_list`
 ## Limits and privacy
 
 This project is intentionally narrow. It should be treated as a practical helper, not a complete certification or security audit. Check the implementation and the returned data before using it with sensitive material. Your key stays local and is only sent to FRED. Read-only.

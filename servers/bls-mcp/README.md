@@ -9,6 +9,10 @@ This file is self contained. It reads public data only and never writes to the m
 
 * `series`  Get a BLS series.
 
+* `latest_value`
+* `series_range`
+* `popular_series`
+* `list_surveys`
 ## Usage
 
 ```bash

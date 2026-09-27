@@ -10,6 +10,10 @@ This file is self contained. It reads public data only and never writes to the m
 * `teams`  List teams for a league.
 * `athletes`  List athletes.
 
+* `scoreboard`
+* `team_roster`
+* `league_news`
+* `standings`
 ## Usage
 
 ```bash
