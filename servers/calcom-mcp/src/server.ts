@@ -5,6 +5,13 @@ import {
   listEventTypes,
   listBookings,
   listSchedules,
+  eventType,
+  booking,
+  schedule,
+  teams,
+  teamDetails,
+  webhooks,
+  me,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -63,6 +70,133 @@ export function createServer(): McpServer {
     async ({  }) => {
       try {
         return text(await listSchedules());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "event_type",
+    {
+      title: "Event type",
+      description: "Single event type.",
+      inputSchema: z.object({
+        type_id: z.string().describe("Event type ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ type_id }) => {
+      try {
+        return text(await eventType(type_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "booking",
+    {
+      title: "Booking",
+      description: "Booking by UID.",
+      inputSchema: z.object({
+        uid: z.string().describe("Booking UID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ uid }) => {
+      try {
+        return text(await booking(uid));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "schedule",
+    {
+      title: "Schedule",
+      description: "Schedule by ID.",
+      inputSchema: z.object({
+        schedule_id: z.string().describe("Schedule ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ schedule_id }) => {
+      try {
+        return text(await schedule(schedule_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "teams",
+    {
+      title: "Teams",
+      description: "All teams.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await teams());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "team_details",
+    {
+      title: "Team details",
+      description: "Single team.",
+      inputSchema: z.object({
+        team_id: z.string().describe("Team ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ team_id }) => {
+      try {
+        return text(await teamDetails(team_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "webhooks",
+    {
+      title: "Webhooks",
+      description: "Registered webhooks.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await webhooks());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "me",
+    {
+      title: "My profile",
+      description: "Authenticated user.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await me());
       } catch (e) {
         return textError(errorMessage(e));
       }

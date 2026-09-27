@@ -13,6 +13,13 @@ Orgs and issues. Token. Not affiliated with the vendor.
 Developer Tools
 
 ## Features
+- issue_details: Single issue.
+- issue_events: Recent events.
+- project_details: Single project.
+- teams: Org teams.
+- members: Org members.
+- releases: Recent releases.
+- event_details: Single event payload.
 
 - List orgs: Sentry organizations the token can read.
 - Org projects: Projects inside one Sentry org, e.g. my-org.

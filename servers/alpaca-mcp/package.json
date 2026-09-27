@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/alpaca-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Query Alpaca paper trading (set ALPACA_API_KEY_ID + ALPACA_API_SECRET_KEY, header auth; optional ALPACA_BASE_URL): account, positions, orders.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/alpaca-mcp",

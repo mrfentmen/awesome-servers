@@ -13,6 +13,13 @@ Scheduling v2. Key (CAL_API_KEY). Not affiliated with the vendor.
 Business Tools
 
 ## Features
+- event_type: Single event type.
+- booking: Booking by UID.
+- schedule: Schedule by ID.
+- teams: All teams.
+- team_details: Single team.
+- webhooks: Registered webhooks.
+- me: Authenticated user.
 
 - Event types: Scheduling links people can book, with duration.
 - Bookings: Upcoming bookings with attendee and start time.

@@ -46,3 +46,32 @@ export function listSchedules(): Promise<string> {
   return get("/v2/schedules");
 }
 
+
+
+export function eventType(typeId: string): Promise<string> {
+  return get(`/v2/event-types/${encodeURIComponent(typeId)}`);
+}
+
+export function booking(uid: string): Promise<string> {
+  return get(`/v2/bookings/${encodeURIComponent(uid)}`);
+}
+
+export function schedule(scheduleId: string): Promise<string> {
+  return get(`/v2/schedules/${encodeURIComponent(scheduleId)}`);
+}
+
+export function teams(): Promise<string> {
+  return get("/v2/teams");
+}
+
+export function teamDetails(teamId: string): Promise<string> {
+  return get(`/v2/teams/${encodeURIComponent(teamId)}`);
+}
+
+export function webhooks(): Promise<string> {
+  return get("/v2/webhooks");
+}
+
+export function me(): Promise<string> {
+  return get("/v2/me");
+}

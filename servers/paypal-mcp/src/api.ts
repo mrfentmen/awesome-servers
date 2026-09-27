@@ -74,3 +74,32 @@ export function listPlans(): Promise<string> {
   return get("/v1/billing/plans?page_size=10");
 }
 
+
+
+export function planDetails(planId: string): Promise<string> {
+  return get(`/v1/billing/plans/${encodeURIComponent(planId)}`);
+}
+
+export function listProducts(): Promise<string> {
+  return get("/v1/catalogs/products?page_size=10");
+}
+
+export function productDetails(productId: string): Promise<string> {
+  return get(`/v1/catalogs/products/${encodeURIComponent(productId)}`);
+}
+
+export function subscriptionDetails(subscriptionId: string): Promise<string> {
+  return get(`/v1/billing/subscriptions/${encodeURIComponent(subscriptionId)}`);
+}
+
+export function payoutDetails(payoutId: string): Promise<string> {
+  return get(`/v1/payments/payouts/${encodeURIComponent(payoutId)}`);
+}
+
+export function listWebhooks(): Promise<string> {
+  return get("/v1/notifications/webhooks");
+}
+
+export function disputeDetails(disputeId: string): Promise<string> {
+  return get(`/v1/customer/disputes/${encodeURIComponent(disputeId)}`);
+}

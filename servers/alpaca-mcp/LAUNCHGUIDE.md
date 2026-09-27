@@ -13,6 +13,13 @@ Paper trading. Key ID + secret. Not affiliated with the vendor.
 Finance
 
 ## Features
+- order_details: Single order.
+- position_details: Position in symbol.
+- market_clock: Open/closed + times.
+- calendar: Open days.
+- list_assets: Tradable US equities.
+- watchlists: Saved watchlists.
+- portfolio_history: Equity curve.
 
 - Account: Buying power, equity and cash for the trading account.
 - Positions: Open positions with symbol, quantity and unrealized P/L.

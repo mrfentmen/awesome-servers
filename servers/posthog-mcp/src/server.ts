@@ -5,6 +5,13 @@ import {
   me,
   listProjects,
   listInsights,
+  insightDetails,
+  dashboards,
+  actions,
+  events,
+  persons,
+  flags,
+  cohorts,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -65,6 +72,141 @@ export function createServer(): McpServer {
     async ({ project_id }) => {
       try {
         return text(await listInsights(project_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "insight_details",
+    {
+      title: "Insight details",
+      description: "Single insight.",
+      inputSchema: z.object({
+        project_id: z.string().describe("Project ID."),
+        insight_id: z.string().describe("Insight ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ project_id, insight_id }) => {
+      try {
+        return text(await insightDetails(project_id, insight_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "dashboards",
+    {
+      title: "Dashboards",
+      description: "Saved dashboards.",
+      inputSchema: z.object({
+        project_id: z.string().describe("Project ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ project_id }) => {
+      try {
+        return text(await dashboards(project_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "actions",
+    {
+      title: "Actions",
+      description: "Custom actions.",
+      inputSchema: z.object({
+        project_id: z.string().describe("Project ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ project_id }) => {
+      try {
+        return text(await actions(project_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "events",
+    {
+      title: "Events",
+      description: "Recent raw events.",
+      inputSchema: z.object({
+        project_id: z.string().describe("Project ID."),
+        limit: z.string().describe("Max results (default 10, max 100).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ project_id, limit }) => {
+      try {
+        return text(await events(project_id, limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "persons",
+    {
+      title: "Persons",
+      description: "Identified users.",
+      inputSchema: z.object({
+        project_id: z.string().describe("Project ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ project_id }) => {
+      try {
+        return text(await persons(project_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "flags",
+    {
+      title: "Feature flags",
+      description: "All flags.",
+      inputSchema: z.object({
+        project_id: z.string().describe("Project ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ project_id }) => {
+      try {
+        return text(await flags(project_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "cohorts",
+    {
+      title: "Cohorts",
+      description: "User cohorts.",
+      inputSchema: z.object({
+        project_id: z.string().describe("Project ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ project_id }) => {
+      try {
+        return text(await cohorts(project_id));
       } catch (e) {
         return textError(errorMessage(e));
       }

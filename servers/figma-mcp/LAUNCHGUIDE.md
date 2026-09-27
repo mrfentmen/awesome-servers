@@ -13,6 +13,13 @@ Files and projects. Token. Not affiliated with the vendor.
 Developer Tools
 
 ## Features
+- team_projects: Projects in a team.
+- file_comments: Comments on a file.
+- file_versions: Version history.
+- file_components: Published components.
+- file_styles: Published styles.
+- file_nodes: Nodes by IDs.
+- file_images: PNG renders.
 
 - My profile: The Figma user the access token belongs to.
 - Get file: File metadata: name, pages and last modified date.

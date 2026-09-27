@@ -50,3 +50,33 @@ export function listInsights(projectId: string): Promise<string> {
   return get(`/api/projects/${encodeURIComponent(projectId)}/insights/?limit=20`);
 }
 
+
+
+export function insightDetails(projectId: string, insightId: string): Promise<string> {
+  return get(`/api/projects/${encodeURIComponent(projectId)}/insights/${encodeURIComponent(insightId)}/`);
+}
+
+export function dashboards(projectId: string): Promise<string> {
+  return get(`/api/projects/${encodeURIComponent(projectId)}/dashboards/`);
+}
+
+export function actions(projectId: string): Promise<string> {
+  return get(`/api/projects/${encodeURIComponent(projectId)}/actions/`);
+}
+
+export function events(projectId: string, limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 10) || 10, 100);
+  return get(`/api/projects/${encodeURIComponent(projectId)}/events/?limit=${n}`);
+}
+
+export function persons(projectId: string): Promise<string> {
+  return get(`/api/projects/${encodeURIComponent(projectId)}/persons/?limit=10`);
+}
+
+export function flags(projectId: string): Promise<string> {
+  return get(`/api/projects/${encodeURIComponent(projectId)}/feature_flags/`);
+}
+
+export function cohorts(projectId: string): Promise<string> {
+  return get(`/api/projects/${encodeURIComponent(projectId)}/cohorts/`);
+}

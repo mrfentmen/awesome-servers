@@ -52,3 +52,33 @@ export function orders(limit?: string): Promise<string> {
   return get(`/v2/orders?limit=${n}&direction=desc`);
 }
 
+
+
+export function orderDetails(orderId: string): Promise<string> {
+  return get(`/v2/orders/${encodeURIComponent(orderId)}`);
+}
+
+export function positionDetails(symbol: string): Promise<string> {
+  return get(`/v2/positions/${encodeURIComponent(symbol.toUpperCase())}`);
+}
+
+export function marketClock(): Promise<string> {
+  return get("/v2/clock");
+}
+
+export function calendar(start?: string, end?: string): Promise<string> {
+  const q = start && end ? `?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}` : "";
+  return get(`/v2/calendar${q}`);
+}
+
+export function listAssets(status?: string): Promise<string> {
+  return get(`/v2/assets?status=${encodeURIComponent(status ?? "active")}&asset_class=us_equity`).then((t) => t.slice(0, 8000));
+}
+
+export function watchlists(): Promise<string> {
+  return get("/v2/watchlists");
+}
+
+export function portfolioHistory(period?: string): Promise<string> {
+  return get(`/v2/account/portfolio/history?period=${encodeURIComponent(period ?? "1M")}&timeframe=1D`);
+}

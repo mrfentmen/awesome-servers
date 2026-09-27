@@ -46,3 +46,32 @@ export function projectFiles(projectId: string): Promise<string> {
   return get(`/projects/${encodeURIComponent(projectId)}/files`);
 }
 
+
+
+export function teamProjects(teamId: string): Promise<string> {
+  return get(`/teams/${encodeURIComponent(teamId)}/projects`);
+}
+
+export function fileComments(fileKey: string): Promise<string> {
+  return get(`/files/${encodeURIComponent(fileKey)}/comments`);
+}
+
+export function fileVersions(fileKey: string): Promise<string> {
+  return get(`/files/${encodeURIComponent(fileKey)}/versions`);
+}
+
+export function fileComponents(fileKey: string): Promise<string> {
+  return get(`/files/${encodeURIComponent(fileKey)}/components`);
+}
+
+export function fileStyles(fileKey: string): Promise<string> {
+  return get(`/files/${encodeURIComponent(fileKey)}/styles`);
+}
+
+export function fileNodes(fileKey: string, nodeIds: string): Promise<string> {
+  return get(`/files/${encodeURIComponent(fileKey)}/nodes?ids=${encodeURIComponent(nodeIds)}`);
+}
+
+export function fileImages(fileKey: string, nodeIds: string): Promise<string> {
+  return get(`/files/${encodeURIComponent(fileKey)}/images?ids=${encodeURIComponent(nodeIds)}&format=png`);
+}

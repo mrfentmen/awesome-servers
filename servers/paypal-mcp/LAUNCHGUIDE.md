@@ -13,6 +13,13 @@ Orders and plans. Sandbox ID + secret. Not affiliated with the vendor.
 Finance
 
 ## Features
+- plan_details: Billing plan.
+- list_products: Catalog products.
+- product_details: Catalog product.
+- subscription_details: Subscription details.
+- payout_details: Payout batch.
+- list_webhooks: Registered webhooks.
+- dispute_details: Customer dispute.
 
 - Get order: One order by id, with status, amount and payer.
 - Get capture: One payment capture by id, with amount and status.

@@ -5,6 +5,13 @@ import {
   account,
   positions,
   orders,
+  orderDetails,
+  positionDetails,
+  marketClock,
+  calendar,
+  listAssets,
+  watchlists,
+  portfolioHistory,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -65,6 +72,136 @@ export function createServer(): McpServer {
     async ({ limit }) => {
       try {
         return text(await orders(limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "order_details",
+    {
+      title: "Order details",
+      description: "Single order.",
+      inputSchema: z.object({
+        order_id: z.string().describe("Order UUID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ order_id }) => {
+      try {
+        return text(await orderDetails(order_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "position_details",
+    {
+      title: "Position details",
+      description: "Position in symbol.",
+      inputSchema: z.object({
+        symbol: z.string().describe("e.g. AAPL.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ symbol }) => {
+      try {
+        return text(await positionDetails(symbol));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "market_clock",
+    {
+      title: "Market clock",
+      description: "Open/closed + times.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await marketClock());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "calendar",
+    {
+      title: "Market calendar",
+      description: "Open days.",
+      inputSchema: z.object({
+        start: z.string().describe("YYYY-MM-DD.").optional(),
+        end: z.string().describe("YYYY-MM-DD.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ start, end }) => {
+      try {
+        return text(await calendar(start, end));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "list_assets",
+    {
+      title: "List assets",
+      description: "Tradable US equities.",
+      inputSchema: z.object({
+        status: z.string().describe("active/inactive (default active).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ status }) => {
+      try {
+        return text(await listAssets(status));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "watchlists",
+    {
+      title: "Watchlists",
+      description: "Saved watchlists.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await watchlists());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "portfolio_history",
+    {
+      title: "Portfolio history",
+      description: "Equity curve.",
+      inputSchema: z.object({
+        period: z.string().describe("e.g. 1M (default 1M).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ period }) => {
+      try {
+        return text(await portfolioHistory(period));
       } catch (e) {
         return textError(errorMessage(e));
       }

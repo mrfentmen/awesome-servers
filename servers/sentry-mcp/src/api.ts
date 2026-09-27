@@ -46,3 +46,32 @@ export function orgIssues(org: string): Promise<string> {
   return get(`/organizations/${encodeURIComponent(org)}/issues/?statsPeriod=24h`);
 }
 
+
+
+export function issueDetails(org: string, issueId: string): Promise<string> {
+  return get(`/organizations/${encodeURIComponent(org)}/issues/${encodeURIComponent(issueId)}/`);
+}
+
+export function issueEvents(org: string, issueId: string): Promise<string> {
+  return get(`/organizations/${encodeURIComponent(org)}/issues/${encodeURIComponent(issueId)}/events/`);
+}
+
+export function projectDetails(org: string, project: string): Promise<string> {
+  return get(`/projects/${encodeURIComponent(org)}/${encodeURIComponent(project)}/`);
+}
+
+export function teams(org: string): Promise<string> {
+  return get(`/organizations/${encodeURIComponent(org)}/teams/`);
+}
+
+export function members(org: string): Promise<string> {
+  return get(`/organizations/${encodeURIComponent(org)}/members/`);
+}
+
+export function releases(org: string): Promise<string> {
+  return get(`/organizations/${encodeURIComponent(org)}/releases/`);
+}
+
+export function eventDetails(org: string, issueId: string, eventId: string): Promise<string> {
+  return get(`/organizations/${encodeURIComponent(org)}/issues/${encodeURIComponent(issueId)}/events/${encodeURIComponent(eventId)}/`);
+}

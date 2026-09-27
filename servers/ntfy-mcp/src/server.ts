@@ -4,6 +4,14 @@ import {
   errorMessage,
   publish,
   poll,
+  health,
+  account,
+  pollSince,
+  sendUrgent,
+  sendScheduled,
+  sendEmail,
+  sendCall,
+  publishTags,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -51,6 +59,164 @@ export function createServer(): McpServer {
     async ({ topic }) => {
       try {
         return text(await poll(topic));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "health",
+    {
+      title: "Server health",
+      description: "ntfy server status.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await health());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "account",
+    {
+      title: "Account info",
+      description: "Tier and limits.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await account());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "poll_since",
+    {
+      title: "Poll since ID",
+      description: "Messages after an ID.",
+      inputSchema: z.object({
+        topic: z.string().describe("Topic name."),
+        since_id: z.string().describe("Message ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ topic, since_id }) => {
+      try {
+        return text(await pollSince(topic, since_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "send_urgent",
+    {
+      title: "Urgent push",
+      description: "Max-priority REAL push.",
+      inputSchema: z.object({
+        topic: z.string().describe("Topic name."),
+        message: z.string().describe("Message text.")
+      }),
+      annotations: MUTATING,
+    },
+    async ({ topic, message }) => {
+      try {
+        return text(await sendUrgent(topic, message));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "send_scheduled",
+    {
+      title: "Scheduled push",
+      description: "Delayed REAL push.",
+      inputSchema: z.object({
+        topic: z.string().describe("Topic name."),
+        message: z.string().describe("Message text."),
+        delay: z.string().describe("e.g. 10m, tomorrow, 9am.")
+      }),
+      annotations: MUTATING,
+    },
+    async ({ topic, message, delay }) => {
+      try {
+        return text(await sendScheduled(topic, message, delay));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "send_email",
+    {
+      title: "Push via email",
+      description: "REAL email + push.",
+      inputSchema: z.object({
+        topic: z.string().describe("Topic name."),
+        message: z.string().describe("Message text."),
+        email: z.string().describe("Recipient email.")
+      }),
+      annotations: MUTATING,
+    },
+    async ({ topic, message, email }) => {
+      try {
+        return text(await sendEmail(topic, message, email));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "send_call",
+    {
+      title: "Voice call",
+      description: "REAL phone call.",
+      inputSchema: z.object({
+        topic: z.string().describe("Topic name."),
+        message: z.string().describe("Spoken text."),
+        phone: z.string().describe("E.164 number.")
+      }),
+      annotations: MUTATING,
+    },
+    async ({ topic, message, phone }) => {
+      try {
+        return text(await sendCall(topic, message, phone));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "publish_tags",
+    {
+      title: "Tagged push",
+      description: "Push with emoji tags.",
+      inputSchema: z.object({
+        topic: z.string().describe("Topic name."),
+        message: z.string().describe("Message text."),
+        tags: z.string().describe("Comma tags, e.g. warning,skull.")
+      }),
+      annotations: MUTATING,
+    },
+    async ({ topic, message, tags }) => {
+      try {
+        return text(await publishTags(topic, message, tags));
       } catch (e) {
         return textError(errorMessage(e));
       }

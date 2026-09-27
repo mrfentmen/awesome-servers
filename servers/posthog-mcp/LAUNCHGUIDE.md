@@ -13,6 +13,13 @@ Projects and insights. Key. Not affiliated with the vendor.
 Business Tools
 
 ## Features
+- insight_details: Single insight.
+- dashboards: Saved dashboards.
+- actions: Custom actions.
+- events: Recent raw events.
+- persons: Identified users.
+- flags: All flags.
+- cohorts: User cohorts.
 
 - My profile: The PostHog user the API key belongs to.
 - List projects: Analytics projects in the organization.
