@@ -52,3 +52,32 @@ export function searchRepos(query: string, limit?: string): Promise<string> {
   return get(`/search/repositories?q=${encodeURIComponent(query)}&per_page=${n}`);
 }
 
+
+
+export function userIssues(): Promise<string> {
+  return get("/user/issues?per_page=20&state=open");
+}
+
+export function repoIssues(owner: string, repo: string): Promise<string> {
+  return get(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues?per_page=20&state=open`);
+}
+
+export function repoPulls(owner: string, repo: string): Promise<string> {
+  return get(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls?per_page=20&state=open`);
+}
+
+export function repoCommits(owner: string, repo: string): Promise<string> {
+  return get(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits?per_page=10`);
+}
+
+export function getUser(username: string): Promise<string> {
+  return get(`/users/${encodeURIComponent(username)}`);
+}
+
+export function searchCode(query: string): Promise<string> {
+  return get(`/search/code?q=${encodeURIComponent(query)}&per_page=10`);
+}
+
+export function listWorkflows(owner: string, repo: string): Promise<string> {
+  return get(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/workflows?per_page=20`);
+}

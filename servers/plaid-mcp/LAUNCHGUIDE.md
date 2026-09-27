@@ -13,6 +13,13 @@ Bank data sandbox. ID + secret. Not affiliated with the vendor.
 Finance
 
 ## Features
+- get_institution: By ID.
+- sandbox_balance: Needs sandbox access token.
+- sandbox_transactions: Needs sandbox access token.
+- sandbox_holdings: Investment holdings.
+- sandbox_liabilities: Loans/credit.
+- sandbox_auth: Account/routing.
+- sandbox_identity: Account holder.
 
 - List institutions: Sandbox banks available for testing.
 - List categories: Personal finance categories Plaid can return.

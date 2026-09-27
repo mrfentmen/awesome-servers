@@ -13,6 +13,13 @@ Issues and teams. Key (LINEAR_API_KEY). Not affiliated with the vendor.
 Developer Tools
 
 ## Features
+- get_issue: Issue details.
+- team_issues: Issues in a team.
+- list_projects: Linear projects.
+- my_issues: Assigned to me.
+- list_labels: Team labels.
+- create_issue: Create a REAL issue.
+- update_issue_title: Rename a REAL issue.
 
 - Viewer: The Linear user the API key belongs to.
 - List teams: Teams in the workspace, with key and id.

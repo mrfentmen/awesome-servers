@@ -48,3 +48,39 @@ export function getBalance(): Promise<string> {
   return get("/balance");
 }
 
+
+
+export function listInvoices(limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 10) || 10, 100);
+  return get(`/invoices?limit=${n}`);
+}
+
+export function listSubscriptions(limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 10) || 10, 100);
+  return get(`/subscriptions?limit=${n}`);
+}
+
+export function listProducts(limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 10) || 10, 100);
+  return get(`/products?limit=${n}`);
+}
+
+export function listPrices(limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 10) || 10, 100);
+  return get(`/prices?limit=${n}`);
+}
+
+export function listRefunds(limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 10) || 10, 100);
+  return get(`/refunds?limit=${n}`);
+}
+
+export function listDisputes(limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 10) || 10, 100);
+  return get(`/disputes?limit=${n}`);
+}
+
+export function listCoupons(limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 10) || 10, 100);
+  return get(`/coupons?limit=${n}`);
+}

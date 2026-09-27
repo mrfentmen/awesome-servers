@@ -5,12 +5,20 @@ import {
   me,
   listTeams,
   searchIssues,
+  getIssue,
+  teamIssues,
+  listProjects,
+  myIssues,
+  listLabels,
+  createIssue,
+  updateIssueTitle,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
+const MUTATING = { readOnlyHint: false, openWorldHint: true } as const
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -66,6 +74,141 @@ export function createServer(): McpServer {
     async ({ term, limit }) => {
       try {
         return text(await searchIssues(term, limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "get_issue",
+    {
+      title: "Get issue",
+      description: "Issue details.",
+      inputSchema: z.object({
+        issue_id: z.string().describe("Issue UUID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ issue_id }) => {
+      try {
+        return text(await getIssue(issue_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "team_issues",
+    {
+      title: "Team issues",
+      description: "Issues in a team.",
+      inputSchema: z.object({
+        team_id: z.string().describe("Team UUID."),
+        limit: z.string().describe("Max results (default 10, max 50).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ team_id, limit }) => {
+      try {
+        return text(await teamIssues(team_id, limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "list_projects",
+    {
+      title: "List projects",
+      description: "Linear projects.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await listProjects());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "my_issues",
+    {
+      title: "My issues",
+      description: "Assigned to me.",
+      inputSchema: z.object({
+        limit: z.string().describe("Max results (default 10, max 50).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ limit }) => {
+      try {
+        return text(await myIssues(limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "list_labels",
+    {
+      title: "List labels",
+      description: "Team labels.",
+      inputSchema: z.object({
+        team_id: z.string().describe("Team UUID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ team_id }) => {
+      try {
+        return text(await listLabels(team_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "create_issue",
+    {
+      title: "Create issue",
+      description: "Create a REAL issue.",
+      inputSchema: z.object({
+        team_id: z.string().describe("Team UUID."),
+        title: z.string().describe("Title."),
+        description: z.string().describe("Description.").optional()
+      }),
+      annotations: MUTATING,
+    },
+    async ({ team_id, title, description }) => {
+      try {
+        return text(await createIssue(team_id, title, description));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "update_issue_title",
+    {
+      title: "Rename issue",
+      description: "Rename a REAL issue.",
+      inputSchema: z.object({
+        issue_id: z.string().describe("Issue UUID."),
+        title: z.string().describe("New title.")
+      }),
+      annotations: MUTATING,
+    },
+    async ({ issue_id, title }) => {
+      try {
+        return text(await updateIssueTitle(issue_id, title));
       } catch (e) {
         return textError(errorMessage(e));
       }

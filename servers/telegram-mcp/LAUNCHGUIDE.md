@@ -13,6 +13,13 @@ Bot messaging. Free bot (TELEGRAM_BOT_TOKEN). Not affiliated with the vendor.
 Business Tools
 
 ## Features
+- chat_info: Chat details.
+- member_count: Chat size.
+- file_info: File path by ID.
+- send_photo: Send a REAL photo message.
+- my_commands: Registered commands.
+- delete_message: Delete a REAL message.
+- edit_message: Edit a REAL message.
 
 - Bot info: Bot identity: username, id and capabilities.
 - Send message: Send a REAL message to a chat.

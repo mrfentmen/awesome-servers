@@ -63,3 +63,67 @@ export function callRpc(fn: string, params?: string): Promise<string> {
   }).then((t) => t.slice(0, 8000));
 }
 
+
+
+export function storageBuckets(): Promise<string> {
+  return req("/storage/v1/bucket");
+}
+
+export function storageObjects(bucket: string, limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 20) || 20, 100);
+  return req(`/storage/v1/object/list/${encodeURIComponent(bucket)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ limit: n }),
+  }).then((t) => t.slice(0, 8000));
+}
+
+export function authUser(userId: string): Promise<string> {
+  return req(`/auth/v1/admin/users/${encodeURIComponent(userId)}`);
+}
+
+export function createUser(email: string, password?: string): Promise<string> {
+  const body: Record<string, string> = { email, email_confirm: "true" };
+  if (password) body.password = password;
+  return req("/auth/v1/admin/users", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).then((t) => t.slice(0, 4000));
+}
+
+export function deleteUser(userId: string): Promise<string> {
+  return req(`/auth/v1/admin/users/${encodeURIComponent(userId)}`, { method: "DELETE" }).then((t) => t.slice(0, 2000));
+}
+
+export function insertRow(table: string, rowJson: string): Promise<string> {
+  let body: unknown;
+  try {
+    body = JSON.parse(rowJson) as unknown;
+  } catch {
+    throw new SupabaseError("row_json must be valid JSON.");
+  }
+  return req(`/rest/v1/${encodeURIComponent(table)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Prefer: "return=representation" },
+    body: JSON.stringify(body),
+  }).then((t) => t.slice(0, 4000));
+}
+
+export function updateRows(table: string, rowId: string, patchJson: string): Promise<string> {
+  let body: unknown;
+  try {
+    body = JSON.parse(patchJson) as unknown;
+  } catch {
+    throw new SupabaseError("patch_json must be valid JSON.");
+  }
+  return req(`/rest/v1/${encodeURIComponent(table)}?id=eq.${encodeURIComponent(rowId)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Prefer: "return=representation" },
+    body: JSON.stringify(body),
+  }).then((t) => t.slice(0, 4000));
+}
+
+export function deleteRows(table: string, rowId: string): Promise<string> {
+  return req(`/rest/v1/${encodeURIComponent(table)}?id=eq.${encodeURIComponent(rowId)}`, { method: "DELETE" }).then((t) => t.slice(0, 2000));
+}

@@ -13,6 +13,13 @@ Charges, customers, balance. Test key (STRIPE_SECRET_KEY). Not affiliated with t
 Finance
 
 ## Features
+- list_invoices: Recent invoices.
+- list_subscriptions: Active subscriptions.
+- list_products: Product catalog.
+- list_prices: Price list.
+- list_refunds: Recent refunds.
+- list_disputes: Charge disputes.
+- list_coupons: Coupons.
 
 - List charges: Most recent charges, with amount, currency and status.
 - List customers: Most recent customers, with email and created date.

@@ -13,6 +13,14 @@ Independent web search. Free key (BRAVE_API_KEY). Not affiliated with the vendor
 Business Tools
 
 ## Features
+- image_search: Image results.
+- video_search: Video results.
+- suggest_queries: Query suggestions.
+- spellcheck: Spelling fixes.
+- list_goggles: Custom search goggles.
+- faq_search: FAQ-style answers.
+- discussion_search: Forum threads.
+- localized_search: Country-scoped results.
 
 - Web search: Web results with titles, URLs and snippets.
 - News search: Recent news articles matching a query.

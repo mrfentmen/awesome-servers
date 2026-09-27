@@ -5,6 +5,14 @@ import {
   queryTable,
   listUsers,
   callRpc,
+  storageBuckets,
+  storageObjects,
+  authUser,
+  createUser,
+  deleteUser,
+  insertRow,
+  updateRows,
+  deleteRows,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -73,6 +81,162 @@ export function createServer(): McpServer {
     async ({ function_name, params }) => {
       try {
         return text(await callRpc(function_name, params));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "storage_buckets",
+    {
+      title: "Storage buckets",
+      description: "All buckets.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await storageBuckets());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "storage_objects",
+    {
+      title: "Bucket objects",
+      description: "Files in a bucket.",
+      inputSchema: z.object({
+        bucket: z.string().describe("Bucket name."),
+        limit: z.string().describe("Max results (default 20, max 100).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ bucket, limit }) => {
+      try {
+        return text(await storageObjects(bucket, limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "auth_user",
+    {
+      title: "Auth user",
+      description: "User by ID.",
+      inputSchema: z.object({
+        user_id: z.string().describe("User UUID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ user_id }) => {
+      try {
+        return text(await authUser(user_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "create_user",
+    {
+      title: "Create user",
+      description: "Create a REAL user.",
+      inputSchema: z.object({
+        email: z.string().describe("Email."),
+        password: z.string().describe("Password.").optional()
+      }),
+      annotations: MUTATING,
+    },
+    async ({ email, password }) => {
+      try {
+        return text(await createUser(email, password));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "delete_user",
+    {
+      title: "Delete user",
+      description: "Delete a REAL user.",
+      inputSchema: z.object({
+        user_id: z.string().describe("User UUID.")
+      }),
+      annotations: MUTATING,
+    },
+    async ({ user_id }) => {
+      try {
+        return text(await deleteUser(user_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "insert_row",
+    {
+      title: "Insert row",
+      description: "Insert a REAL row.",
+      inputSchema: z.object({
+        table: z.string().describe("Table name."),
+        row_json: z.string().describe("Row as JSON.")
+      }),
+      annotations: MUTATING,
+    },
+    async ({ table, row_json }) => {
+      try {
+        return text(await insertRow(table, row_json));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "update_rows",
+    {
+      title: "Update row",
+      description: "Update a REAL row by id.",
+      inputSchema: z.object({
+        table: z.string().describe("Table name."),
+        row_id: z.string().describe("Row id."),
+        patch_json: z.string().describe("Patch as JSON.")
+      }),
+      annotations: MUTATING,
+    },
+    async ({ table, row_id, patch_json }) => {
+      try {
+        return text(await updateRows(table, row_id, patch_json));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "delete_rows",
+    {
+      title: "Delete row",
+      description: "Delete a REAL row by id.",
+      inputSchema: z.object({
+        table: z.string().describe("Table name."),
+        row_id: z.string().describe("Row id.")
+      }),
+      annotations: MUTATING,
+    },
+    async ({ table, row_id }) => {
+      try {
+        return text(await deleteRows(table, row_id));
       } catch (e) {
         return textError(errorMessage(e));
       }

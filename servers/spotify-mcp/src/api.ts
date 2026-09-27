@@ -75,3 +75,34 @@ export function getAlbum(albumId: string): Promise<string> {
   return get(`/albums/${encodeURIComponent(albumId)}`);
 }
 
+
+
+export function getTrack(trackId: string): Promise<string> {
+  return get(`/tracks/${encodeURIComponent(trackId)}`);
+}
+
+export function artistTop(artistId: string): Promise<string> {
+  return get(`/artists/${encodeURIComponent(artistId)}/top-tracks?market=US`);
+}
+
+export function artistAlbums(artistId: string): Promise<string> {
+  return get(`/artists/${encodeURIComponent(artistId)}/albums?limit=10&market=US`);
+}
+
+export function newReleases(limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 10) || 10, 50);
+  return get(`/browse/new-releases?limit=${n}`);
+}
+
+export function getEpisode(episodeId: string): Promise<string> {
+  return get(`/episodes/${encodeURIComponent(episodeId)}?market=US`);
+}
+
+export function getShow(showId: string): Promise<string> {
+  return get(`/shows/${encodeURIComponent(showId)}?market=US`);
+}
+
+export function browseCategories(limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 10) || 10, 50);
+  return get(`/browse/categories?limit=${n}`);
+}

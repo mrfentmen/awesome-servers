@@ -13,6 +13,13 @@ Channels and messages. Bot token (SLACK_BOT_TOKEN). Not affiliated with the vend
 Business Tools
 
 ## Features
+- list_users: Workspace members.
+- user_info: Member profile.
+- channel_info: Channel details.
+- thread_replies: Replies in a thread.
+- emoji_list: Workspace emoji.
+- pin_message: Pin a REAL message.
+- set_topic: Set a REAL channel topic.
 
 - List channels: Public channels in the workspace, with id and name.
 - Channel history: Recent messages in one channel, newest last.

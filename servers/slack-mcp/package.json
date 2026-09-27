@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/slack-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Query the Slack Web API (bot token; set SLACK_BOT_TOKEN, xoxb): channels, history, post messages. Posting is real.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/slack-mcp",

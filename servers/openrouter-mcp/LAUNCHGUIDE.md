@@ -13,6 +13,12 @@ LLM models and credits. Free key (OPENROUTER_API_KEY). Not affiliated with the v
 Developer Tools
 
 ## Features
+- get_model: Model metadata by ID.
+- search_models: Models matching text.
+- free_models: :free tier models.
+- longest_context: Top context windows.
+- model_endpoints: Providers/pricing per model.
+- generation_stats: Cost/usage of a completion.
 
 - List models: Models available on OpenRouter, with context size and price.
 - Key info: What the current key can spend, and how much is left.

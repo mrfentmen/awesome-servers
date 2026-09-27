@@ -48,3 +48,39 @@ export function channelDetails(channelId: string): Promise<string> {
   return get(`/channels?part=snippet,statistics&id=${encodeURIComponent(channelId)}`);
 }
 
+
+
+export function playlistItems(playlistId: string, maxResults?: string): Promise<string> {
+  const n = Math.min(Number(maxResults ?? 10) || 10, 50);
+  return get(`/playlistItems?part=snippet&maxResults=${n}&playlistId=${encodeURIComponent(playlistId)}`);
+}
+
+export function channelPlaylists(channelId: string, maxResults?: string): Promise<string> {
+  const n = Math.min(Number(maxResults ?? 10) || 10, 50);
+  return get(`/playlists?part=snippet&maxResults=${n}&channelId=${encodeURIComponent(channelId)}`);
+}
+
+export function mostPopular(region?: string, maxResults?: string): Promise<string> {
+  const n = Math.min(Number(maxResults ?? 10) || 10, 50);
+  return get(`/videos?part=snippet,statistics&chart=mostPopular&maxResults=${n}&regionCode=${encodeURIComponent(region ?? "US")}`);
+}
+
+export function videoComments(videoId: string, maxResults?: string): Promise<string> {
+  const n = Math.min(Number(maxResults ?? 10) || 10, 50);
+  return get(`/commentThreads?part=snippet&maxResults=${n}&videoId=${encodeURIComponent(videoId)}&order=relevance`);
+}
+
+export function channelVideos(channelId: string, maxResults?: string): Promise<string> {
+  const n = Math.min(Number(maxResults ?? 10) || 10, 50);
+  return get(`/search?part=snippet&type=video&order=date&maxResults=${n}&channelId=${encodeURIComponent(channelId)}`);
+}
+
+export function searchChannels(query: string, maxResults?: string): Promise<string> {
+  const n = Math.min(Number(maxResults ?? 10) || 10, 50);
+  return get(`/search?part=snippet&type=channel&maxResults=${n}&q=${encodeURIComponent(query)}`);
+}
+
+export function liveStreams(query: string, maxResults?: string): Promise<string> {
+  const n = Math.min(Number(maxResults ?? 10) || 10, 50);
+  return get(`/search?part=snippet&type=video&eventType=live&maxResults=${n}&q=${encodeURIComponent(query)}`);
+}

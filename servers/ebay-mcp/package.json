@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ebay-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Query the eBay Browse API (OAuth user token; set EBAY_OAUTH_TOKEN, Bearer): item search, item details. App keys alone cannot call Browse \u2014 a user token is required.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ebay-mcp",

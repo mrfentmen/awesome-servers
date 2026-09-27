@@ -59,3 +59,35 @@ export function sandboxToken(institutionId?: string): Promise<string> {
   });
 }
 
+
+
+export function getInstitution(institutionId: string): Promise<string> {
+  return post("/institutions/get_by_id", { institution_id: institutionId });
+}
+
+export function sandboxBalance(accessToken: string): Promise<string> {
+  return post("/accounts/balance/get", { access_token: accessToken });
+}
+
+export function sandboxTransactions(accessToken: string, days?: string): Promise<string> {
+  const d = Math.min(Number(days ?? 30) || 30, 730);
+  const end = new Date().toISOString().slice(0, 10);
+  const start = new Date(Date.now() - d * 86400000).toISOString().slice(0, 10);
+  return post("/transactions/sync", { access_token: accessToken, count: 20 }).then((t) => t.slice(0, 12000));
+}
+
+export function sandboxHoldings(accessToken: string): Promise<string> {
+  return post("/investments/holdings/get", { access_token: accessToken });
+}
+
+export function sandboxLiabilities(accessToken: string): Promise<string> {
+  return post("/liabilities/get", { access_token: accessToken });
+}
+
+export function sandboxAuth(accessToken: string): Promise<string> {
+  return post("/auth/get", { access_token: accessToken });
+}
+
+export function sandboxIdentity(accessToken: string): Promise<string> {
+  return post("/identity/get", { access_token: accessToken });
+}

@@ -13,6 +13,13 @@ YouTube search and stats. Free key (YOUTUBE_API_KEY). Not affiliated with the ve
 Entertainment
 
 ## Features
+- playlist_items: Videos in a playlist.
+- channel_playlists: Playlists of a channel.
+- most_popular: Trending videos by region.
+- video_comments: Top comments.
+- channel_videos: Latest uploads.
+- search_channels: Channels by query.
+- live_streams: Live streams by query.
 
 - Search videos: Videos matching a query, with title, channel and views.
 - Video details: Title, description, view and like counts for a video.

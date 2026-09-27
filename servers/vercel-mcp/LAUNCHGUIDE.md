@@ -13,6 +13,13 @@ Projects and deploys. Token (VERCEL_TOKEN). Not affiliated with the vendor.
 Developer Tools
 
 ## Features
+- deployment_details: Single deployment.
+- list_aliases: Domain aliases.
+- list_domains: Custom domains.
+- domain_info: Domain details.
+- list_teams: Teams.
+- project_env: Env var names.
+- get_alias: Alias details
 
 - List projects: Vercel projects in the account, most recent first.
 - Get project: Details for one project, by id or name.

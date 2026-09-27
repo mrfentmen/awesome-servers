@@ -49,3 +49,33 @@ export function listDeployments(projectId?: string, limit?: string): Promise<str
   return get(`/v6/deployments?limit=${n}${q}`);
 }
 
+
+
+export function deploymentDetails(deployId: string): Promise<string> {
+  return get(`/v13/deployments/${encodeURIComponent(deployId)}`);
+}
+
+export function listAliases(limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 20) || 20, 100);
+  return get(`/v4/aliases?limit=${n}`);
+}
+
+export function listDomains(): Promise<string> {
+  return get("/v5/domains?limit=50");
+}
+
+export function domainInfo(domain: string): Promise<string> {
+  return get(`/v5/domains/${encodeURIComponent(domain)}`);
+}
+
+export function listTeams(): Promise<string> {
+  return get("/v2/teams?limit=20");
+}
+
+export function projectEnv(projectId: string): Promise<string> {
+  return get(`/v9/projects/${encodeURIComponent(projectId)}/env`);
+}
+
+export function getAlias(alias: string): Promise<string> {
+  return get(`/v4/aliases/${encodeURIComponent(alias)}`);
+}

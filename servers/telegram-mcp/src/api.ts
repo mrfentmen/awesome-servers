@@ -53,3 +53,34 @@ export function getUpdates(limit?: string): Promise<string> {
   return call("getUpdates", { limit: String(n) });
 }
 
+
+
+export function chatInfo(chatId: string): Promise<string> {
+  return call("getChat", { chat_id: chatId });
+}
+
+export function memberCount(chatId: string): Promise<string> {
+  return call("getChatMemberCount", { chat_id: chatId });
+}
+
+export function fileInfo(fileId: string): Promise<string> {
+  return call("getFile", { file_id: fileId });
+}
+
+export function sendPhoto(chatId: string, photoUrl: string, caption?: string): Promise<string> {
+  const p: Record<string, string> = { chat_id: chatId, photo: photoUrl };
+  if (caption) p.caption = caption;
+  return call("sendPhoto", p, "POST");
+}
+
+export function myCommands(): Promise<string> {
+  return call("getMyCommands");
+}
+
+export function deleteMessage(chatId: string, messageId: string): Promise<string> {
+  return call("deleteMessage", { chat_id: chatId, message_id: messageId }, "POST");
+}
+
+export function editMessage(chatId: string, messageId: string, message: string): Promise<string> {
+  return call("editMessageText", { chat_id: chatId, message_id: messageId, text: message }, "POST");
+}

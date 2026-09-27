@@ -5,6 +5,13 @@ import {
   search,
   videoDetails,
   channelDetails,
+  playlistItems,
+  channelPlaylists,
+  mostPopular,
+  videoComments,
+  channelVideos,
+  searchChannels,
+  liveStreams,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -70,6 +77,146 @@ export function createServer(): McpServer {
     async ({ channel_id }) => {
       try {
         return text(await channelDetails(channel_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "playlist_items",
+    {
+      title: "Playlist items",
+      description: "Videos in a playlist.",
+      inputSchema: z.object({
+        playlist_id: z.string().describe("Playlist ID."),
+        max_results: z.string().describe("Max results (default 10, max 50).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ playlist_id, max_results }) => {
+      try {
+        return text(await playlistItems(playlist_id, max_results));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "channel_playlists",
+    {
+      title: "Channel playlists",
+      description: "Playlists of a channel.",
+      inputSchema: z.object({
+        channel_id: z.string().describe("Channel ID."),
+        max_results: z.string().describe("Max results (default 10, max 50).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ channel_id, max_results }) => {
+      try {
+        return text(await channelPlaylists(channel_id, max_results));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "most_popular",
+    {
+      title: "Most popular",
+      description: "Trending videos by region.",
+      inputSchema: z.object({
+        region: z.string().describe("Region code (default US).").optional(),
+        max_results: z.string().describe("Max results (default 10, max 50).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ region, max_results }) => {
+      try {
+        return text(await mostPopular(region, max_results));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "video_comments",
+    {
+      title: "Video comments",
+      description: "Top comments.",
+      inputSchema: z.object({
+        video_id: z.string().describe("Video ID."),
+        max_results: z.string().describe("Max results (default 10, max 50).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ video_id, max_results }) => {
+      try {
+        return text(await videoComments(video_id, max_results));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "channel_videos",
+    {
+      title: "Channel videos",
+      description: "Latest uploads.",
+      inputSchema: z.object({
+        channel_id: z.string().describe("Channel ID."),
+        max_results: z.string().describe("Max results (default 10, max 50).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ channel_id, max_results }) => {
+      try {
+        return text(await channelVideos(channel_id, max_results));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "search_channels",
+    {
+      title: "Search channels",
+      description: "Channels by query.",
+      inputSchema: z.object({
+        query: z.string().describe("Search text."),
+        max_results: z.string().describe("Max results (default 10, max 50).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, max_results }) => {
+      try {
+        return text(await searchChannels(query, max_results));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "live_streams",
+    {
+      title: "Live now",
+      description: "Live streams by query.",
+      inputSchema: z.object({
+        query: z.string().describe("Search text."),
+        max_results: z.string().describe("Max results (default 10, max 50).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, max_results }) => {
+      try {
+        return text(await liveStreams(query, max_results));
       } catch (e) {
         return textError(errorMessage(e));
       }

@@ -13,6 +13,13 @@ EVM balances and transactions. Free key (ETHERSCAN_API_KEY). Not affiliated with
 Finance
 
 ## Features
+- tx_status: Receipt status by hash.
+- contract_abi: Verified ABI.
+- contract_source: Verified source info.
+- token_balance: ERC-20 balance.
+- gas_oracle: Current gas tiers.
+- eth_price: ETH/USD price.
+- block_number: Latest block.
 
 - ETH balance: Native balance for an address.
 - Transactions: Recent normal transactions for an address.

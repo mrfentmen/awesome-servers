@@ -5,6 +5,13 @@ import {
   getMe,
   sendMessage,
   getUpdates,
+  chatInfo,
+  memberCount,
+  fileInfo,
+  sendPhoto,
+  myCommands,
+  deleteMessage,
+  editMessage,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -69,6 +76,142 @@ export function createServer(): McpServer {
     async ({ limit }) => {
       try {
         return text(await getUpdates(limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "chat_info",
+    {
+      title: "Chat info",
+      description: "Chat details.",
+      inputSchema: z.object({
+        chat_id: z.string().describe("Chat ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ chat_id }) => {
+      try {
+        return text(await chatInfo(chat_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "member_count",
+    {
+      title: "Member count",
+      description: "Chat size.",
+      inputSchema: z.object({
+        chat_id: z.string().describe("Chat ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ chat_id }) => {
+      try {
+        return text(await memberCount(chat_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "file_info",
+    {
+      title: "File info",
+      description: "File path by ID.",
+      inputSchema: z.object({
+        file_id: z.string().describe("File ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ file_id }) => {
+      try {
+        return text(await fileInfo(file_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "send_photo",
+    {
+      title: "Send photo",
+      description: "Send a REAL photo message.",
+      inputSchema: z.object({
+        chat_id: z.string().describe("Chat ID."),
+        photo_url: z.string().describe("Image URL."),
+        caption: z.string().describe("Caption.").optional()
+      }),
+      annotations: MUTATING,
+    },
+    async ({ chat_id, photo_url, caption }) => {
+      try {
+        return text(await sendPhoto(chat_id, photo_url, caption));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "my_commands",
+    {
+      title: "Bot commands",
+      description: "Registered commands.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await myCommands());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "delete_message",
+    {
+      title: "Delete message",
+      description: "Delete a REAL message.",
+      inputSchema: z.object({
+        chat_id: z.string().describe("Chat ID."),
+        message_id: z.string().describe("Message ID.")
+      }),
+      annotations: MUTATING,
+    },
+    async ({ chat_id, message_id }) => {
+      try {
+        return text(await deleteMessage(chat_id, message_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "edit_message",
+    {
+      title: "Edit message",
+      description: "Edit a REAL message.",
+      inputSchema: z.object({
+        chat_id: z.string().describe("Chat ID."),
+        message_id: z.string().describe("Message ID."),
+        message: z.string().describe("New text.")
+      }),
+      annotations: MUTATING,
+    },
+    async ({ chat_id, message_id, message }) => {
+      try {
+        return text(await editMessage(chat_id, message_id, message));
       } catch (e) {
         return textError(errorMessage(e));
       }

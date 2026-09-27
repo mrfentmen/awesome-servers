@@ -65,3 +65,33 @@ export function postMessage(channel: string, text: string): Promise<string> {
   return post("chat.postMessage", { channel, text });
 }
 
+
+
+export function listUsers(limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 20) || 20, 200);
+  return get(`/users.list?limit=${n}`);
+}
+
+export function userInfo(user: string): Promise<string> {
+  return get(`/users.info?user=${encodeURIComponent(user)}`);
+}
+
+export function channelInfo(channel: string): Promise<string> {
+  return get(`/conversations.info?channel=${encodeURIComponent(channel)}`);
+}
+
+export function threadReplies(channel: string, ts: string): Promise<string> {
+  return get(`/conversations.replies?channel=${encodeURIComponent(channel)}&ts=${encodeURIComponent(ts)}&limit=20`);
+}
+
+export function emojiList(): Promise<string> {
+  return get("/emoji.list").then((t) => t.slice(0, 4000));
+}
+
+export function pinMessage(channel: string, timestamp: string): Promise<string> {
+  return post("pins.add", { channel, timestamp });
+}
+
+export function setTopic(channel: string, topic: string): Promise<string> {
+  return post("conversations.setTopic", { channel, topic });
+}

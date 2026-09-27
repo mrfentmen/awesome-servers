@@ -5,6 +5,12 @@ import {
   listModels,
   keyInfo,
   credits,
+  getModel,
+  searchModels,
+  freeModels,
+  longestContext,
+  modelEndpoints,
+  generationStats,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -63,6 +69,122 @@ export function createServer(): McpServer {
     async ({  }) => {
       try {
         return text(await credits());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "get_model",
+    {
+      title: "Get model",
+      description: "Model metadata by ID.",
+      inputSchema: z.object({
+        model_id: z.string().describe("e.g. openai/gpt-4o.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ model_id }) => {
+      try {
+        return text(await getModel(model_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "search_models",
+    {
+      title: "Search models",
+      description: "Models matching text.",
+      inputSchema: z.object({
+        query: z.string().describe("Search text."),
+        limit: z.string().describe("Max results (default 10, max 50).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, limit }) => {
+      try {
+        return text(await searchModels(query, limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "free_models",
+    {
+      title: "Free models",
+      description: ":free tier models.",
+      inputSchema: z.object({
+        limit: z.string().describe("Max results (default 20, max 50).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ limit }) => {
+      try {
+        return text(await freeModels(limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "longest_context",
+    {
+      title: "Biggest context",
+      description: "Top context windows.",
+      inputSchema: z.object({
+        limit: z.string().describe("Max results (default 10, max 50).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ limit }) => {
+      try {
+        return text(await longestContext(limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "model_endpoints",
+    {
+      title: "Model endpoints",
+      description: "Providers/pricing per model.",
+      inputSchema: z.object({
+        author: z.string().describe("e.g. openai."),
+        slug: z.string().describe("e.g. gpt-4o.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ author, slug }) => {
+      try {
+        return text(await modelEndpoints(author, slug));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "generation_stats",
+    {
+      title: "Generation stats",
+      description: "Cost/usage of a completion.",
+      inputSchema: z.object({
+        generation_id: z.string().describe("Generation ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ generation_id }) => {
+      try {
+        return text(await generationStats(generation_id));
       } catch (e) {
         return textError(errorMessage(e));
       }

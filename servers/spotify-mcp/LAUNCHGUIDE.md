@@ -13,6 +13,13 @@ Catalog search. Free app (SPOTIFY_CLIENT_ID/SECRET). Not affiliated with the ven
 Entertainment
 
 ## Features
+- get_track: Track details.
+- artist_top: Top tracks (US).
+- artist_albums: Album list.
+- new_releases: Fresh albums.
+- get_episode: Podcast episode.
+- get_show: Podcast show.
+- browse_categories: Browse genres.
 
 - Search catalog: Search the Spotify catalog for tracks, artists or albums.
 - Get artist: Artist profile: genres, popularity and follower count.

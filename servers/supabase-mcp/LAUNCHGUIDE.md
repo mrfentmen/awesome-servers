@@ -13,6 +13,14 @@ Tables, users, RPC. Project URL + key. Not affiliated with the vendor.
 Developer Tools
 
 ## Features
+- storage_buckets: All buckets.
+- storage_objects: Files in a bucket.
+- auth_user: User by ID.
+- create_user: Create a REAL user.
+- delete_user: Delete a REAL user.
+- insert_row: Insert a REAL row.
+- update_rows: Update a REAL row by id.
+- delete_rows: Delete a REAL row by id.
 
 - Query table: Rows from one table, with select and limit applied.
 - List users: Auth users in the project, one page at a time.

@@ -13,6 +13,13 @@ Repos, profile, search. Free token (GITHUB_TOKEN). Not affiliated with the vendo
 Developer Tools
 
 ## Features
+- user_issues: Assigned open issues.
+- repo_issues: Open issues in a repo.
+- repo_pulls: Open pull requests.
+- repo_commits: Recent commits.
+- get_user: Public user profile.
+- search_code: Code search.
+- list_workflows: Actions workflows.
 
 - My profile: Profile of the GitHub user the token belongs to.
 - List repos: Repositories the token owner updated most recently.

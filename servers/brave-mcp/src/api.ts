@@ -44,3 +44,41 @@ export function newsSearch(query: string, count?: string): Promise<string> {
   return get(`/news/search?q=${encodeURIComponent(query)}&count=${n}`);
 }
 
+
+
+export function imageSearch(query: string, count?: string): Promise<string> {
+  const n = Math.min(Number(count ?? 5) || 5, 20);
+  return get(`/images/search?q=${encodeURIComponent(query)}&count=${n}`);
+}
+
+export function videoSearch(query: string, count?: string): Promise<string> {
+  const n = Math.min(Number(count ?? 5) || 5, 20);
+  return get(`/videos/search?q=${encodeURIComponent(query)}&count=${n}`);
+}
+
+export function suggestQueries(query: string): Promise<string> {
+  return get(`/suggest/search?q=${encodeURIComponent(query)}&count=5`);
+}
+
+export function spellcheck(query: string): Promise<string> {
+  return get(`/spellcheck/check?q=${encodeURIComponent(query)}`);
+}
+
+export function listGoggles(): Promise<string> {
+  return get("/goggles/list").then((t) => t.slice(0, 6000));
+}
+
+export function faqSearch(query: string, count?: string): Promise<string> {
+  const n = Math.min(Number(count ?? 5) || 5, 20);
+  return get(`/web/search?q=${encodeURIComponent(query)}&count=${n}&result_filter=faq`);
+}
+
+export function discussionSearch(query: string, count?: string): Promise<string> {
+  const n = Math.min(Number(count ?? 5) || 5, 20);
+  return get(`/web/search?q=${encodeURIComponent(query)}&count=${n}&result_filter=discussions`);
+}
+
+export function localizedSearch(query: string, country: string, count?: string): Promise<string> {
+  const n = Math.min(Number(count ?? 5) || 5, 20);
+  return get(`/web/search?q=${encodeURIComponent(query)}&count=${n}&country=${encodeURIComponent(country)}`);
+}

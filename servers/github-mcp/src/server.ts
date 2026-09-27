@@ -6,6 +6,13 @@ import {
   listRepos,
   getRepo,
   searchRepos,
+  userIssues,
+  repoIssues,
+  repoPulls,
+  repoCommits,
+  getUser,
+  searchCode,
+  listWorkflows,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -89,6 +96,141 @@ export function createServer(): McpServer {
     async ({ query, limit }) => {
       try {
         return text(await searchRepos(query, limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "user_issues",
+    {
+      title: "My issues",
+      description: "Assigned open issues.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await userIssues());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "repo_issues",
+    {
+      title: "Repo issues",
+      description: "Open issues in a repo.",
+      inputSchema: z.object({
+        owner: z.string().describe("Owner login."),
+        repo: z.string().describe("Repo name.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ owner, repo }) => {
+      try {
+        return text(await repoIssues(owner, repo));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "repo_pulls",
+    {
+      title: "Repo PRs",
+      description: "Open pull requests.",
+      inputSchema: z.object({
+        owner: z.string().describe("Owner login."),
+        repo: z.string().describe("Repo name.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ owner, repo }) => {
+      try {
+        return text(await repoPulls(owner, repo));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "repo_commits",
+    {
+      title: "Repo commits",
+      description: "Recent commits.",
+      inputSchema: z.object({
+        owner: z.string().describe("Owner login."),
+        repo: z.string().describe("Repo name.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ owner, repo }) => {
+      try {
+        return text(await repoCommits(owner, repo));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "get_user",
+    {
+      title: "Get user",
+      description: "Public user profile.",
+      inputSchema: z.object({
+        username: z.string().describe("Username.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ username }) => {
+      try {
+        return text(await getUser(username));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "search_code",
+    {
+      title: "Search code",
+      description: "Code search.",
+      inputSchema: z.object({
+        query: z.string().describe("Search text.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query }) => {
+      try {
+        return text(await searchCode(query));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "list_workflows",
+    {
+      title: "List workflows",
+      description: "Actions workflows.",
+      inputSchema: z.object({
+        owner: z.string().describe("Owner login."),
+        repo: z.string().describe("Repo name.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ owner, repo }) => {
+      try {
+        return text(await listWorkflows(owner, repo));
       } catch (e) {
         return textError(errorMessage(e));
       }

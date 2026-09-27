@@ -47,3 +47,32 @@ export function getTokenTransfers(address: string, chainId?: string): Promise<st
   return call({ module: "account", action: "tokentx", address, startblock: "0", endblock: "99999999", page: "1", offset: "10", sort: "desc" }, chainId);
 }
 
+
+
+export function txStatus(txhash: string, chainId?: string): Promise<string> {
+  return call({ module: "transaction", action: "getstatus", txhash }, chainId);
+}
+
+export function contractAbi(address: string, chainId?: string): Promise<string> {
+  return call({ module: "contract", action: "getabi", address }, chainId).then((t) => t.slice(0, 8000));
+}
+
+export function contractSource(address: string, chainId?: string): Promise<string> {
+  return call({ module: "contract", action: "getsourcecode", address }, chainId).then((t) => t.slice(0, 4000));
+}
+
+export function tokenBalance(contract: string, address: string, chainId?: string): Promise<string> {
+  return call({ module: "account", action: "tokenbalance", contractaddress: contract, address, tag: "latest" }, chainId);
+}
+
+export function gasOracle(chainId?: string): Promise<string> {
+  return call({ module: "gastracker", action: "gasoracle" }, chainId);
+}
+
+export function ethPrice(chainId?: string): Promise<string> {
+  return call({ module: "stats", action: "ethprice" }, chainId);
+}
+
+export function blockNumber(chainId?: string): Promise<string> {
+  return call({ module: "proxy", action: "eth_blockNumber" }, chainId);
+}
