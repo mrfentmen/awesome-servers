@@ -57,3 +57,40 @@ export async function indicator(args: IndicatorArgs): Promise<string> {
   if (!rows.length) return `No observations for ${country}/${series}.`;
   return `OECD ${dataset} ${series} for ${country} (latest ${rows.length} points):\n${rows.join('\n')}`;
 }
+
+const NEWAPI = 'https://sdmx.oecd.org/public/rest';
+const NEWUA = 'Mozilla/5.0 (compatible; mrfentmen-oecd-mcp/1.0)';
+
+async function newGet(path: string): Promise<any> {
+  const res = await fetch(`${NEWAPI}${path}`, {
+    headers: { 'User-Agent': NEWUA },
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!res.ok) throw new Error(`OECD returned ${res.status}`);
+  return res.json();
+}
+
+export async function nadData(args: { indicator?: string; country?: string; start?: string }): Promise<string> {
+  const ind = (args.indicator ?? 'GDP').trim().toUpperCase();
+  const country = (args.country ?? 'USA').trim().toUpperCase();
+  const start = (args.start ?? '2020').trim();
+  const d = await newGet(`/data/OECD.SDD.NAD,DSD_NAAG@DF_NAAG_I/${country}...?startPeriod=${encodeURIComponent(start)}&dimensionAtObservation=AllDimensions&format=jsondata`);
+  const obs = d?.data?.observations ?? d?.observations ?? {};
+  const vals = Object.entries(obs as Record<string, number[]>).slice(-8);
+  if (!vals.length) return `No OECD NAD data for ${country}/${ind}.`;
+  return `OECD national accounts ${country} (last ${vals.length} points):\n` + vals.map(([k, v]) => `${k}: ${Array.isArray(v) ? v[0] : v}`).join('\n');
+}
+
+export async function dataflows(args: { limit?: number }): Promise<string> {
+  const limit = Math.min(Math.max(Number(args?.limit ?? 10) || 10, 1), 30);
+  const res = await fetch(`${NEWAPI}/dataflow/all?dimension_at_observation=AllDimensions`, {
+    headers: { 'User-Agent': NEWUA },
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!res.ok) throw new Error(`OECD returned ${res.status}`);
+  const xml = await res.text();
+  const ids = [...xml.matchAll(/<structure:Dataflow id="([^"]+)"/g)].map((m) => m[1]);
+  const names = [...xml.matchAll(/<common:Name[^>]*>([^<]+)<\/common:Name>/g)].map((m) => m[1]);
+  if (!ids.length) return 'No OECD dataflows returned.';
+  return ids.slice(0, limit).map((id, i) => `${i + 1}. ${id}${names[i] ? ` — ${names[i]}` : ''}`).join('\n');
+}

@@ -12,6 +12,10 @@ A merged MCP server that consolidates duplicate single-purpose servers in this m
 - `elevation` — Elevation for coordinates.
 - `uvForecast` — Daily UV index forecast.
 
+- `air_quality`
+- `marine`
+- `flood`
+- `hourly`
 ## Run
 
 ```bash

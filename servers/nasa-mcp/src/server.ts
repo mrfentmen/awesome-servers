@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_apod, m0_marsPhotos, m0_neo, m1_latestWeather, m2_browse, m3_photos, m4_project } from './api.js'
+import { apodDated, earthAssets, epicImages, m0_apod, m0_marsPhotos, m0_neo, m1_latestWeather, m2_browse, m3_photos, m4_project, neoLookup, techPatents } from './api.js'
 
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -92,6 +92,66 @@ server.registerTool(
     },
     async (args) => {
     try { return text(await m4_project(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+server.registerTool(
+    "neo_lookup",
+    {
+      title: "Neo lookup",
+      description: "One asteroid by NEO id with close approaches.",
+      inputSchema: z.object( { id: z.string().describe("NEO id like 3542519.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await neoLookup(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+server.registerTool(
+    "epic_images",
+    {
+      title: "EPIC images",
+      description: "Latest DSCOVR Earth images with captions.",
+      inputSchema: z.object( { limit: z.number().describe("Max results.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await epicImages(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+server.registerTool(
+    "apod_dated",
+    {
+      title: "APOD by date",
+      description: "Astronomy picture for a specific date.",
+      inputSchema: z.object( { date: z.string().describe("Date YYYY-MM-DD, empty for today.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await apodDated(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+server.registerTool(
+    "earth_assets",
+    {
+      title: "Earth assets",
+      description: "Landsat imagery metadata for coordinates and date.",
+      inputSchema: z.object( { lat: z.number().describe("Latitude."), lon: z.number().describe("Longitude."), date: z.string().describe("Date YYYY-MM-DD.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await earthAssets(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+server.registerTool(
+    "tech_patents",
+    {
+      title: "Tech patents",
+      description: "Search NASA patents and tech.",
+      inputSchema: z.object( { query: z.string().describe("Search terms."), limit: z.number().describe("Max results.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await techPatents(args)) } catch (e) { return textError(error(e)) }
   }
   )
   return server

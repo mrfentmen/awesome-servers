@@ -9,6 +9,10 @@ This file is self contained. It reads public data only and never writes to the m
 
 * `dataset`  Dataset summary and values.
 
+* `unemployment`
+* `gdp`
+* `population`
+* `inflation`
 ## Usage
 
 ```bash

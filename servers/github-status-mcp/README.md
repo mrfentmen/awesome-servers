@@ -10,6 +10,9 @@ This file is self contained. It reads public data only and never writes to the m
 * `status`  Current status.
 * `incidents`  Recent incidents.
 
+* `components`
+* `maintenances`
+* `incident_details`
 ## Usage
 
 ```bash

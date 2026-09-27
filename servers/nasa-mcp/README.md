@@ -13,6 +13,11 @@ A merged MCP server that consolidates duplicate single-purpose servers in this m
 - `asteroids` — Browse near earth objects.
 - `techPort` — One NASA TechPort project.
 
+- `neo_lookup`
+- `epic_images`
+- `apod_dated`
+- `earth_assets`
+- `tech_patents`
 ## Run
 
 ```bash

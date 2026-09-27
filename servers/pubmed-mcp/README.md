@@ -10,6 +10,12 @@ This file is self contained. It reads public data only and never writes to the m
 * `search`  Search PubMed.
 * `article`  One article summary.
 
+* `abstract`
+* `medline`
+* `cited_by`
+* `spellcheck`
+* `db_info`
+* `mesh_search`
 ## Usage
 
 ```bash

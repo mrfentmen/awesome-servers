@@ -32,3 +32,39 @@ export async function indicator(args: IndicatorArgs): Promise<string> {
   if (!rows.length) return `No IMF data for ${indicator}${country ? ` / ${country}` : ''}.`;
   return `IMF indicator ${indicator}${country ? ` for ${country}` : ''}:\n${rows.join('\n')}`;
 }
+
+export async function indicatorsList(args: { limit?: number }): Promise<string> {
+  const limit = Math.min(Math.max(Number(args?.limit ?? 15) || 15, 1), 50);
+  const res = await fetch(`${BASE}/indicators`, {
+    headers: { 'User-Agent': UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!res.ok) throw new Error(`IMF returned ${res.status}`);
+  const d = (await res.json()) as { indicators?: Record<string, { label?: string; unit?: string }> };
+  const entries = Object.entries(d.indicators ?? {}).slice(0, limit);
+  if (!entries.length) return 'No IMF indicators returned.';
+  return entries.map(([code, m], i) => `${i + 1}. ${code} — ${m.label ?? ''}${m.unit ? ` (${m.unit})` : ''}`).join('\n');
+}
+
+export async function compareCountries(args: { indicator?: string; countries?: string; year?: string }): Promise<string> {
+  const indicator = (args.indicator ?? '').trim().toUpperCase();
+  if (!indicator) return 'Provide an indicator like NGDP_RPCH.';
+  const year = (args.year ?? '').trim();
+  const list = (args.countries ?? 'USA,CHN,DEU,JPN,GBR').split(',').map((s) => s.trim().toUpperCase()).filter(Boolean).slice(0, 10);
+  const res = await fetch(`${BASE}/${encodeURIComponent(indicator)}`, {
+    headers: { 'User-Agent': UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!res.ok) throw new Error(`IMF returned ${res.status}`);
+  const d = (await res.json()) as { values?: Record<string, Record<string, Record<string, number>>> };
+  const series = (d.values ?? {})[indicator] ?? {};
+  const rows: string[] = [];
+  for (const code of list) {
+    const years = series[code] ?? {};
+    const keys = Object.keys(years).sort();
+    const y = year || keys[keys.length - 1] || '';
+    const v = y ? years[y] : undefined;
+    rows.push(`${code}: ${y ? `${y}=${v ?? 'n/a'}` : 'no data'}`);
+  }
+  return `IMF ${indicator} comparison:\n${rows.join('\n')}`;
+}

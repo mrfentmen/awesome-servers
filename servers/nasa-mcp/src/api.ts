@@ -235,3 +235,70 @@ export const m1_latestWeather = m1.latestWeather;
 export const m2_browse = m2.browse;
 export const m3_photos = m3.photos;
 export const m4_project = m4.project;
+
+const m5 = (() => {
+const KEY = process.env.NASA_API_KEY || "DEMO_KEY"
+const BASE = "https://api.nasa.gov"
+class Nasa5Error extends Error {}
+
+async function getJson(path: string): Promise<any> {
+  const res = await fetch(`${BASE}${path}${path.includes("?") ? "&" : "?"}api_key=${KEY}`, {
+    signal: AbortSignal.timeout(25000),
+  })
+  if (!res.ok) throw new Nasa5Error(`NASA error ${res.status}`)
+  return res.json()
+}
+
+async function neoLookup(args: { id?: string }): Promise<string> {
+  const id = (args.id ?? "").trim()
+  if (!id) return "Provide a NEO id."
+  const d = await getJson(`/neo/rest/v1/neo/${encodeURIComponent(id)}`)
+  const approaches = (d.close_approach_data ?? []).slice(0, 3).map((c: any) => `${String(c.close_approach_date ?? "?").slice(0, 10)} miss ${(Number(c.miss_distance?.lunar ?? 0)).toFixed(1)} LD ${c.orbiting_body ?? ""}`)
+  return `${d.name ?? id} | H=${d.absolute_magnitude_h ?? "?"} | ${(d.estimated_diameter?.kilometers?.estimated_diameter_max ?? 0).toFixed(2)} km max | ${d.is_potentially_hazardous_asteroid ? "HAZARDOUS" : "safe"}\nClose approaches:\n${approaches.join("\n") || "none listed"}`
+}
+
+async function epicImages(args: { limit?: number }): Promise<string> {
+  const limit = Math.min(Math.max(Number(args.limit ?? 5) || 5, 1), 20)
+  const d = await getJson("/EPIC/api/natural") as any[]
+  const rows = (Array.isArray(d) ? d : []).slice(0, limit)
+  if (!rows.length) return "No EPIC images returned."
+  return rows.map((e: any, i: number) => `${i + 1}. ${e.identifier ?? "?"} (${String(e.date ?? "").slice(0, 10)})\n   ${(e.caption ?? "").slice(0, 160)}`).join("\n")
+}
+
+async function apodDated(args: { date?: string }): Promise<string> {
+  const date = (args.date ?? "").trim()
+  const d = await getJson(date ? `/planetary/apod?date=${encodeURIComponent(date)}` : "/planetary/apod")
+  return `# ${d.title ?? "APOD"}\n${d.date ?? ""} | ${d.copyright ?? "public domain"}\n${d.media_type === "video" ? `Video: ${d.url ?? ""}\n` : ""}${d.explanation ?? ""}`
+}
+
+async function earthAssets(args: { lat?: number; lon?: number; date?: string }): Promise<string> {
+  const lat = Number(args.lat), lon = Number(args.lon)
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return "Provide valid lat and lon."
+  const date = (args.date ?? "").trim() || new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10)
+  const d = await getJson(`/planetary/earth/assets?lon=${lon}&lat=${lat}&date=${encodeURIComponent(date)}&dim=0.1`)
+  return `Landsat passes over ${lat},${lon} near ${date}:\n${JSON.stringify(d).slice(0, 1200)}`
+}
+
+async function techPatents(args: { query?: string; limit?: number }): Promise<string> {
+  const q = (args.query ?? "").trim()
+  if (!q) return "Provide search terms."
+  const limit = Math.min(Math.max(Number(args.limit ?? 5) || 5, 1), 20)
+  const res = await fetch(`https://technology.nasa.gov/api/api/patent/${encodeURIComponent(q)}`, {
+    signal: AbortSignal.timeout(25000),
+  })
+  if (!res.ok) throw new Nasa5Error(`NASA TechTransfer error ${res.status}`)
+  const d = (await res.json()) as { results?: Array<[string, string, string]> }
+  const rows = (d.results ?? []).slice(0, limit)
+  if (!rows.length) return `No NASA patents for "${q}".`
+  return rows.map((r, i) => `${i + 1}. ${r[1] ?? ""} [${r[2] ?? ""}]\n   ${(r[0] ?? "").replace(/<[^>]+>/g, "").slice(0, 160)}`).join("\n")
+}
+
+return { Nasa5Error, neoLookup, epicImages, apodDated, earthAssets, techPatents };
+})();
+
+export const Nasa5Error = m5.Nasa5Error;
+export const neoLookup = m5.neoLookup;
+export const epicImages = m5.epicImages;
+export const apodDated = m5.apodDated;
+export const earthAssets = m5.earthAssets;
+export const techPatents = m5.techPatents;

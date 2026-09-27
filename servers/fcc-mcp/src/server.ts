@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
+import { asOfDates } from "./api.js"
 import { find } from "./api.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
@@ -19,6 +20,18 @@ export function createServer(): McpServer {
     },
     async (args) => {
     try { return text(await find(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "as_of_dates",
+    {
+      title: "As of dates",
+      description: "Broadband map data vintages. Needs FCC_USERNAME and FCC_HASH.",
+      inputSchema: z.object( { type: z.string().describe("fixed or mobile.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await asOfDates(args)) } catch (e) { return textError(error(e)) }
   }
   )
   return server

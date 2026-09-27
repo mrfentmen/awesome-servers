@@ -59,3 +59,53 @@ export async function dataset(args: { code?: string; geo?: string; limit?: numbe
   if (Object.keys(value).length > limit) lines.push(`... and ${Object.keys(value).length - limit} more values`)
   return lines.join("\n")
 }
+
+export async function unemployment(args: { geo?: string; limit?: number }): Promise<string> {
+  const geo = (args.geo ?? "").trim().toUpperCase()
+  const limit = Math.min(args.limit ?? 8, 20)
+  const params = new URLSearchParams({ format: "JSON", lang: "en", sinceTimePeriod: "2020" })
+  if (geo) params.set("geo", geo)
+  const d = await get<any>(`${BASE}/une_rt_a?${params.toString()}`)
+  if (d?.class !== "dataset") throw new EurostatError("Dataset not found: une_rt_a")
+  const value = (d?.value ?? {}) as Record<string, number>
+  const entries = Object.entries(value).slice(-limit)
+  if (!entries.length) return "No unemployment data"
+  return `EU unemployment rate (%${geo ? `, ${geo}` : ""}):\n` + entries.map(([k, v]) => `${k}: ${v}`).join("\n")
+}
+
+export async function gdp(args: { geo?: string; limit?: number }): Promise<string> {
+  const geo = (args.geo ?? "").trim().toUpperCase()
+  const limit = Math.min(args.limit ?? 8, 20)
+  const params = new URLSearchParams({ format: "JSON", lang: "en", sinceTimePeriod: "2020" })
+  if (geo) params.set("geo", geo)
+  const d = await get<any>(`${BASE}/nama_10_gdp?${params.toString()}`)
+  if (d?.class !== "dataset") throw new EurostatError("Dataset not found: nama_10_gdp")
+  const value = (d?.value ?? {}) as Record<string, number>
+  const entries = Object.entries(value).slice(-limit)
+  if (!entries.length) return "No GDP data"
+  return `EU GDP main components (${geo || "all"}):\n` + entries.map(([k, v]) => `${k}: ${Number(v).toLocaleString()}`).join("\n")
+}
+
+export async function population(args: { geo?: string; limit?: number }): Promise<string> {
+  const geo = (args.geo ?? "").trim().toUpperCase()
+  const limit = Math.min(args.limit ?? 8, 20)
+  const params = new URLSearchParams({ format: "JSON", lang: "en", sinceTimePeriod: "2020" })
+  if (geo) params.set("geo", geo)
+  const d = await get<any>(`${BASE}/demo_pjan?${params.toString()}`)
+  if (d?.class !== "dataset") throw new EurostatError("Dataset not found: demo_pjan")
+  const value = (d?.value ?? {}) as Record<string, number>
+  const entries = Object.entries(value).slice(-limit)
+  if (!entries.length) return "No population data"
+  return `EU population 1 Jan (${geo || "all"}):\n` + entries.map(([k, v]) => `${k}: ${Number(v).toLocaleString()}`).join("\n")
+}
+
+export async function inflation(args: { geo?: string }): Promise<string> {
+  const geo = (args.geo ?? "DE").trim().toUpperCase()
+  const params = new URLSearchParams({ format: "JSON", lang: "en", geo, sinceTimePeriod: "2023", untilTimePeriod: "2024" })
+  const d = await get<any>(`${BASE}/prc_hicp_manr?${params.toString()}`)
+  if (d?.class !== "dataset") throw new EurostatError("Dataset not found: prc_hicp_manr")
+  const value = (d?.value ?? {}) as Record<string, number>
+  const entries = Object.entries(value).slice(-12)
+  if (!entries.length) return `No inflation data for ${geo}`
+  return `HICP inflation ${geo} (annual %):\n` + entries.map(([k, v]) => `${k}: ${v}`).join("\n")
+}

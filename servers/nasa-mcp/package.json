@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/nasa-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Unified NASA server: APOD, asteroids (NEO), Mars rover photos, InSight weather, and TechPort projects.",
   "type": "module",
   "main": "dist/index.js",

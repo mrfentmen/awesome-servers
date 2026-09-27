@@ -22,6 +22,8 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 - `check_ip`: Confidence, country, ISP, reports.
 - `blacklist`: Worst IPs right now.
 
+- `check_block`
+- `recent_reports`
 ## Limits and privacy
 
 This project is intentionally narrow. It should be treated as a practical helper, not a complete certification or security audit. Check the implementation and the returned data before using it with sensitive material. Your key stays local and is only sent to AbuseIPDB. Read-only.

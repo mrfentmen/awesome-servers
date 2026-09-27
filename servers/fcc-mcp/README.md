@@ -9,6 +9,7 @@ This file is self contained. It reads public data only and never writes to the m
 
 * `find`  Find census block for coordinates.
 
+* `as_of_dates`
 ## Usage
 
 ```bash

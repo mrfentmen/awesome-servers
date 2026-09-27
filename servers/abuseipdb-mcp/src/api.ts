@@ -47,3 +47,19 @@ export async function blacklist(limit = 10): Promise<string[]> {
   const rows: Raw[] = Array.isArray(data.data) ? data.data : []
   return rows.slice(0, limit).map((r) => `${String(r.ipAddress ?? "?")} (${r.abuseConfidenceScore ?? "?"}%${r.countryCode ? `, ${r.countryCode}` : ""})`)
 }
+
+export async function checkBlock(network: string, days = 90): Promise<string> {
+  if (!network.trim()) throw new AbuseIpDbError("Network is empty.")
+  const data = await getJson<Raw>(`/check-block?network=${encodeURIComponent(network.trim())}&maxAgeInDays=${Math.min(Math.max(days, 1), 365)}`)
+  const d: Raw = data.data ?? {}
+  const hosts: Raw[] = Array.isArray(d.reportedAddress) ? d.reportedAddress : []
+  return `${network.trim()} — ${hosts.length} reported hosts\n` + hosts.slice(0, 10).map((h) => `${String(h.ipAddress ?? "?")} (${h.abuseConfidenceScore ?? "?"}%, ${h.countryCode ?? "?"})`).join("\n")
+}
+
+export async function recentReports(ip: string, limit = 5): Promise<string[]> {
+  if (!ip.trim()) throw new AbuseIpDbError("IP is empty.")
+  const data = await getJson<Raw>(`/reports?ipAddress=${encodeURIComponent(ip.trim())}&page=1&perPage=${Math.min(Math.max(limit, 1), 100)}`)
+  const d: Raw = data.data ?? {}
+  const reports: Raw[] = Array.isArray(d.results) ? d.results : []
+  return reports.slice(0, limit).map((r) => `${String(r.reportedAt ?? "?").slice(0, 10)} [${(r.categories ?? []).join(",")}] ${String(r.comment ?? "").slice(0, 140)}`)
+}

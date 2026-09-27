@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_formatForecast, m0_formatPlace, m0_geocode, m0_getForecast, m0_MeteoError, m1_elevation, m2_uvForecast } from './api.js'
+import { airQuality, flood, hourly, m0_formatForecast, m0_formatPlace, m0_geocode, m0_getForecast, m0_MeteoError, m1_elevation, m2_uvForecast, marine } from './api.js'
 
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -96,6 +96,70 @@ server.registerTool(
     async (args) => {
     try { return text(await m2_uvForecast(args)) } catch (e) { return textError(error(e)) }
   }
+  )
+server.registerTool(
+    "air_quality",
+    {
+      title: "Air quality",
+      description: "Current AQI and pollutants for coordinates.",
+      inputSchema: z.object( { lat: z.number().describe("Latitude."), lon: z.number().describe("Longitude.") }),
+      annotations: READ_ONLY,
+    },
+    async ({ lat, lon }) => {
+      try {
+        return text(await airQuality({ lat, lon }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+server.registerTool(
+    "marine",
+    {
+      title: "Marine",
+      description: "Wave height and sea temperature for coordinates.",
+      inputSchema: z.object( { lat: z.number().describe("Latitude."), lon: z.number().describe("Longitude.") }),
+      annotations: READ_ONLY,
+    },
+    async ({ lat, lon }) => {
+      try {
+        return text(await marine({ lat, lon }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+server.registerTool(
+    "flood",
+    {
+      title: "Flood",
+      description: "River discharge near coordinates.",
+      inputSchema: z.object( { lat: z.number().describe("Latitude."), lon: z.number().describe("Longitude.") }),
+      annotations: READ_ONLY,
+    },
+    async ({ lat, lon }) => {
+      try {
+        return text(await flood({ lat, lon }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+server.registerTool(
+    "hourly",
+    {
+      title: "Hourly",
+      description: "Hour-by-hour temperature and rain chance.",
+      inputSchema: z.object( { lat: z.number().describe("Latitude."), lon: z.number().describe("Longitude."), hours: z.number().int().min(1).max(48).default(12) }),
+      annotations: READ_ONLY,
+    },
+    async ({ lat, lon, hours }) => {
+      try {
+        return text(await hourly({ lat, lon, hours }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
   )
   return server
 }

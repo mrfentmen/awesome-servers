@@ -9,6 +9,8 @@ This file is self contained. It reads public data only and never writes to the m
 
 * `indicator`  Indicator series for a country.
 
+* `indicators_list`
+* `compare_countries`
 ## Usage
 
 ```bash

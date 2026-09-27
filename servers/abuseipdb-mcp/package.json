@@ -1,6 +1,6 @@
 {
   "name": "abuseipdb-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "MCP server for AbuseIPDB: IP abuse reports, reputation. Free key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/abuseipdb-mcp",

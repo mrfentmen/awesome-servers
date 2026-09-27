@@ -195,3 +195,70 @@ export const m1_ElevationError = m1.ElevationError;
 export const m1_elevation = m1.elevation;
 export const m2_UvError = m2.UvError;
 export const m2_uvForecast = m2.uvForecast;
+
+const m3 = (() => {
+const UA3 = "mrfentmen-open-meteo-mcp/1.0 (https://github.com/mrfentmen)"
+class AirError extends Error {}
+
+async function getJson(url: string): Promise<any> {
+  const res = await fetch(url, {
+    headers: { "User-Agent": UA3, Accept: "application/json" },
+    signal: AbortSignal.timeout(20000),
+  })
+  if (!res.ok) throw new AirError(`Open-Meteo error ${res.status}`)
+  return res.json()
+}
+
+async function airQuality(args: { lat?: number; lon?: number }): Promise<string> {
+  const lat = args.lat, lon = args.lon
+  if (lat === undefined || lon === undefined) throw new AirError("Provide lat and lon")
+  const d = await getJson(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm2_5,pm10,ozone`)
+  const c = d?.current ?? {}
+  return `Air quality at ${lat},${lon} (${String(c.time ?? "").slice(0, 16)}): US AQI ${c.us_aqi ?? "?"} | PM2.5 ${c.pm2_5 ?? "?"} | PM10 ${c.pm10 ?? "?"} | O3 ${c.ozone ?? "?"}`
+}
+
+async function marine(args: { lat?: number; lon?: number }): Promise<string> {
+  const lat = args.lat, lon = args.lon
+  if (lat === undefined || lon === undefined) throw new AirError("Provide lat and lon")
+  const d = await getJson(`https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_direction,sea_surface_temperature`)
+  const c = d?.current ?? {}
+  return `Marine at ${lat},${lon}: waves ${c.wave_height ?? "?"} m from ${c.wave_direction ?? "?"}° | SST ${c.sea_surface_temperature ?? "?"} C`
+}
+
+async function flood(args: { lat?: number; lon?: number }): Promise<string> {
+  const lat = args.lat, lon = args.lon
+  if (lat === undefined || lon === undefined) throw new AirError("Provide lat and lon")
+  const d = await getJson(`https://flood-api.open-meteo.com/v1/flood?latitude=${lat}&longitude=${lon}&past_days=7&forecast_days=7&daily=river_discharge`)
+  const daily = d?.daily ?? {}
+  const times: string[] = daily.time ?? []
+  const vals: Array<number | null> = daily.river_discharge ?? []
+  if (!times.length) return "No river discharge data (location may not be near a modeled river)."
+  return `River discharge near ${lat},${lon} (m3/s):\n` + times.slice(-7).map((t, i) => `${t}: ${vals[times.length - 7 + i] ?? "n/a"}`).join("\n")
+}
+
+async function hourly(args: { lat?: number; lon?: number; hours?: number }): Promise<string> {
+  const lat = args.lat, lon = args.lon
+  if (lat === undefined || lon === undefined) throw new AirError("Provide lat and lon")
+  const n = Math.min(Math.max(Number(args.hours ?? 12) || 12, 1), 48)
+  const d = await getJson(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation_probability,weathercode&timezone=auto&forecast_days=2`)
+  const h = d?.hourly ?? {}
+  const times: string[] = h.time ?? []
+  const temps: number[] = h.temperature_2m ?? []
+  const pops: number[] = h.precipitation_probability ?? []
+  if (!times.length) return "No hourly data."
+  return times.slice(0, n).map((t, i) => `${t.slice(5, 16)}: ${temps[i] ?? "?"}C rain ${pops[i] ?? "?"}%`).join("\n")
+}
+
+return { AirError, airQuality, marine, flood, hourly };
+})();
+
+export const AirError = m3.AirError;
+export const airQuality = m3.airQuality;
+export const marine = m3.marine;
+export const flood = m3.flood;
+export const hourly = m3.hourly;
+export const m3_AirError = m3.AirError;
+export const m3_airQuality = m3.airQuality;
+export const m3_marine = m3.marine;
+export const m3_flood = m3.flood;
+export const m3_hourly = m3.hourly;

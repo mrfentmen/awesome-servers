@@ -10,6 +10,14 @@ This file is self contained. It reads public data only and never writes to the m
 * `search`  Search questions.
 * `answers`  Answers for a question.
 
+* `questions`
+* `question_details`
+* `tags`
+* `top_users`
+* `sites`
+* `answer_lookup`
+* `question_comments`
+* `user_answers`
 ## Usage
 
 ```bash
