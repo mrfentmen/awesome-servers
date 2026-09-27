@@ -94,3 +94,25 @@ export function formatWidget(w: WidgetInfo): string {
   ].filter(Boolean)
   return lines.join("\n")
 }
+
+export interface WidgetMember {
+  username?: string
+  status?: string
+  game?: string
+}
+
+export async function widgetMembers(guildId: string): Promise<WidgetMember[]> {
+  if (!/^\d+$/.test(guildId.trim())) throw new DiscordError(`Guild id must be numeric, got "${guildId}".`)
+  const w = await getJson<Raw>(`/guilds/${guildId.trim()}/widget.json`)
+  const members: Raw[] = Array.isArray(w.members) ? w.members : []
+  return members.slice(0, 25).map((m) => ({
+    username: typeof m.username === "string" ? m.username : undefined,
+    status: typeof m.status === "string" ? m.status : undefined,
+    game: typeof m.game?.name === "string" ? m.game.name : undefined,
+  }))
+}
+
+export function formatMembers(members: WidgetMember[], guildId: string): string {
+  if (!members.length) return `No online members visible for ${guildId}.`
+  return `Online now (${members.length} shown):\n` + members.map((m, i) => `${i + 1}. ${m.username ?? "?"} [${m.status ?? "?"}]${m.game ? ` playing ${m.game}` : ""}`).join("\n")
+}

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/discord-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Keyless MCP server for Discord invites and server widgets. No bot token needed.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/discord-mcp",

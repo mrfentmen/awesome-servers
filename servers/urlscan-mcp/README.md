@@ -9,6 +9,11 @@ This file is self contained. It reads public data only and never writes to the m
 
 * `search`  Search recent scans.
 
+* `result_lookup`
+* `domain_search`
+* `ip_search`
+* `asn_search`
+* `hash_search`
 ## Usage
 
 ```bash

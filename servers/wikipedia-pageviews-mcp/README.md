@@ -9,6 +9,9 @@ This file is self contained. It reads public data only and never writes to the m
 
 * `top`  Most viewed pages.
 
+* `article_views`
+* `project_aggregate`
+* `top_by_access`
 ## Usage
 
 ```bash

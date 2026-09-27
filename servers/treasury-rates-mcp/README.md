@@ -9,6 +9,11 @@ This file is self contained. It reads public data only and never writes to the m
 
 * `rates`  Treasury FX rates.
 
+* `avg_interest`
+* `debt_total`
+* `mts_spending`
+* `cash_ops`
+* `debt_penny`
 ## Usage
 
 ```bash

@@ -17,6 +17,7 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 - `lookup_invite`: Server name, description, members, online count from any invite.
 - `get_widget`: Live online count, channels, instant invite (needs widget enabled).
 
+- `widget_members`
 ## Limits and privacy
 
 This project is intentionally narrow. It should be treated as a practical helper, not a complete certification or security audit. Check the implementation and the returned data before using it with sensitive material. No credentials are required. Only public invite/widget endpoints are used.

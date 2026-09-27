@@ -30,14 +30,15 @@ async function getJson<T>(path: string): Promise<T> {
 
 export async function checkIp(ip: string): Promise<string> {
   if (!ip.trim()) throw new GreyNoiseError("IP is empty.")
-  const d = await getJson<Raw>(`/noise/context/${encodeURIComponent(ip.trim())}`)
+  const d = await getJson<Raw>(`/ip/${encodeURIComponent(ip.trim())}`)
   const tags: string[] = Array.isArray(d.tags) ? d.tags.map(String).slice(0, 8) : []
   const lines = [
-    `${ip.trim()} — ${d.noise === true ? "INTERNET NOISE" : d.noise === false ? "not seen" : "?"}`,
+    `${ip.trim()} — ${d.noise === true ? "INTERNET NOISE" : d.noise === false ? "not seen" : (d.message ?? "?")}`,
     d.riot === true ? "Known benign service (RIOT)" : "",
     d.classification ? `Classification: ${d.classification}` : "",
     d.name ? `Actor: ${d.name}` : "",
     d.last_seen ? `Last seen: ${String(d.last_seen).slice(0, 10)}` : "",
+    d.link ? `More: ${d.link}` : "",
     tags.length ? `Tags: ${tags.join(", ")}` : "",
   ].filter(Boolean)
   return lines.join("\n")
@@ -46,7 +47,34 @@ export async function checkIp(ip: string): Promise<string> {
 export async function queryTags(query: string, limit = 5): Promise<string[]> {
   if (!query.trim()) throw new GreyNoiseError("Query is empty.")
   const qs = new URLSearchParams({ query: query.trim(), size: String(Math.min(Math.max(limit, 1), 50)) }).toString()
-  const data = await getJson<Raw>(`/query?${qs}`)
+  const data = await getJson<Raw>(`/gnql?${qs}`)
   const rows: Raw[] = Array.isArray(data.data) ? data.data : []
   return rows.slice(0, limit).map((r) => `${String(r.ip ?? "?")} (${String(r.classification ?? "?")})`)
+}
+
+export async function communityIp(ip: string): Promise<string> {
+  if (!ip.trim()) throw new GreyNoiseError("IP is empty.")
+  const res = await fetch(`${BASE}/community/${encodeURIComponent(ip.trim())}`, {
+    headers: { "User-Agent": "greynoise-mcp/1.0", Accept: "application/json" },
+    signal: AbortSignal.timeout(20000),
+  })
+  if (res.status === 404) {
+    const d = (await res.json().catch(() => ({}))) as Raw
+    return `${ip.trim()} — ${String(d.message ?? "not observed")}`
+  }
+  if (!res.ok) throw new GreyNoiseError(`GreyNoise error ${res.status}`)
+  const d = (await res.json()) as Raw
+  return `${ip.trim()} — ${d.noise === true ? "INTERNET NOISE" : "not seen"}${d.riot === true ? " (RIOT benign)" : ""}${d.classification ? ` | ${d.classification}` : ""}${d.name ? ` | ${d.name}` : ""}`
+}
+
+export async function ping(): Promise<string> {
+  const d = await getJson<Raw>("/ping")
+  return `GreyNoise API: ${JSON.stringify(d).slice(0, 200)}`
+}
+
+export async function gnqlStats(query: string): Promise<string> {
+  if (!query.trim()) throw new GreyNoiseError("Query is empty.")
+  const qs = new URLSearchParams({ query: query.trim() }).toString()
+  const data = await getJson<Raw>(`/gnql/stats?${qs}`)
+  return JSON.stringify(data.stats ?? data, null, 2).slice(0, 2000)
 }

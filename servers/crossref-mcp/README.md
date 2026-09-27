@@ -10,6 +10,14 @@ This file is self contained. It reads public data only and never writes to the m
 * `search_works`  Search works.
 * `doi_lookup`  Metadata for a DOI.
 
+* `journals`
+* `journal_lookup`
+* `funders`
+* `funder_lookup`
+* `members`
+* `member_lookup`
+* `work_types`
+* `licenses`
 ## Usage
 
 ```bash

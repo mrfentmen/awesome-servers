@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { DiscordError, formatInvite, formatWidget, getWidget, lookupInvite } from "./api.js"
+import { DiscordError, formatInvite, formatMembers, formatWidget, getWidget, lookupInvite, widgetMembers } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -45,6 +45,25 @@ export function createServer(): McpServer {
     async ({ guild_id }) => {
       try {
         return text(formatWidget(await getWidget(guild_id)))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "widget_members",
+    {
+      title: "Widget members",
+      description: "Who is online now with status and game. Needs the widget enabled.",
+      inputSchema: z.object({
+        guild_id: z.string().describe("Numeric guild id (shown by lookup_invite)"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ guild_id }) => {
+      try {
+        return text(formatMembers(await widgetMembers(guild_id), guild_id))
       } catch (e) {
         return textError(errorMessage(e))
       }

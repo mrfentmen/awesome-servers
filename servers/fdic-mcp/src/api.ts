@@ -44,3 +44,61 @@ export async function largestBanks(args: { limit?: number }): Promise<string> {
   const rows = d.data ?? []
   return `Largest FDIC insured institutions\n${fmt(rows)}`
 }
+
+export async function failures(args: { limit?: number }): Promise<string> {
+  const limit = Math.min(args.limit ?? 10, 50)
+  const d = await request<any>(`/banks/failures?limit=${limit}&sort_by=FAILDATE&sort_order=DESC`)
+  const rows = d.data ?? []
+  if (!rows.length) return "No bank failures found."
+  return rows.map((r: any) => {
+    const f = r.data ?? r
+    return `${f.NAME ?? ""} | ${f.CITY ?? ""}, ${f.STNAME ?? ""} | Failed ${f.FAILDATE ?? "?"} | Acquirer: ${f.ACQINSTITUTION ?? "none"}`
+  }).join("\n\n")
+}
+
+export async function history(args: { name?: string; limit?: number }): Promise<string> {
+  const limit = Math.min(args.limit ?? 10, 50)
+  const name = args.name?.trim().toUpperCase() ?? ""
+  const filter = name ? `&filters=INSTNAME:(${encodeURIComponent(name)}*)` : ""
+  const d = await request<any>(`/banks/history?limit=${limit}${filter}`)
+  const rows = d.data ?? []
+  if (!rows.length) return "No history events found."
+  return rows.map((r: any) => {
+    const h = r.data ?? r
+    return `${h.INSTNAME ?? ""} | ${h.CHANGECODE_DESC ?? h.CHANGECODE ?? ""} | ${h.PROCDATE ?? ""}`.trim()
+  }).join("\n")
+}
+
+export async function locations(args: { city?: string; state?: string; limit?: number }): Promise<string> {
+  const limit = Math.min(args.limit ?? 10, 50)
+  const filters: string[] = []
+  if ((args.city ?? "").trim()) filters.push(`CITY:(${encodeURIComponent(args.city!.trim())}*)`)
+  if ((args.state ?? "").trim()) filters.push(`STNAME:(${encodeURIComponent(args.state!.trim())}*)`)
+  const filter = filters.length ? `&filters=${filters.join(" AND ")}` : ""
+  const d = await request<any>(`/banks/locations?limit=${limit}${filter}`)
+  const rows = d.data ?? []
+  if (!rows.length) return "No branches found."
+  return rows.map((r: any) => {
+    const l = r.data ?? r
+    return `${l.NAME ?? ""} | ${l.ADDRESS ?? ""}, ${l.CITY ?? ""} ${l.STALP ?? ""} ${l.ZIP ?? ""}`
+  }).join("\n")
+}
+
+export async function financials(args: { name?: string; limit?: number }): Promise<string> {
+  const limit = Math.min(args.limit ?? 10, 50)
+  const name = args.name?.trim().toUpperCase() ?? ""
+  const filter = name ? `&filters=NAME:(${encodeURIComponent(name)}*)` : ""
+  const d = await request<any>(`/banks/financials?limit=${limit}&sort_by=ASSET&sort_order=DESC${filter}`)
+  const rows = d.data ?? []
+  if (!rows.length) return "No financials found."
+  return rows.map((r: any) => {
+    const f = r.data ?? r
+    return `${f.NAME ?? f.NAMEHCR ?? f.CERT ?? ""} (${f.CERT ?? ""})\n  Assets ${money(f.ASSET)} | Deposits ${money(f.DEP)} | Equity ${money(f.EQ)} | Net income ${money(f.NIMY)}`
+  }).join("\n\n")
+}
+
+export async function summary(): Promise<string> {
+  const d = await request<any>(`/banks/summary`)
+  const txt = JSON.stringify(d.totals ?? d, null, 2).slice(0, 1500)
+  return `FDIC summary:\n${txt}`
+}

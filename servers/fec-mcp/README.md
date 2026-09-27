@@ -9,6 +9,12 @@ This file is self contained. It reads public data only and never writes to the m
 
 * `candidates`  Search candidates.
 
+* `committees`
+* `filings`
+* `schedule_a`
+* `schedule_b`
+* `candidate_totals`
+* `elections`
 ## Usage
 
 ```bash

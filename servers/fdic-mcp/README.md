@@ -10,6 +10,11 @@ This file is self contained. It reads public data only and never writes to the m
 * `search_institutions`  Search insured institutions by name.
 * `get_largest_banks`  Largest institutions by assets.
 
+* `bank_failures`
+* `bank_history`
+* `bank_locations`
+* `bank_financials`
+* `fdic_summary`
 ## Usage
 
 ```bash
