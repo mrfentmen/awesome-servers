@@ -6,7 +6,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 
 ## Contents
 
-- **228 MCP servers** in [`servers/`](./servers)
+- **229 MCP servers** in [`servers/`](./servers)
 
 ## MCP servers
 - [`adguardhome-mcp`](./servers/adguardhome-mcp)
@@ -144,6 +144,7 @@ Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, 
 - [`notion-mcp`](./servers/notion-mcp)
 - [`novu-mcp`](./servers/novu-mcp)
 - [`ntfy-mcp`](./servers/ntfy-mcp)
+- [`nyc-arrests-mcp`](./servers/nyc-arrests-mcp)
 - [`nylas-mcp`](./servers/nylas-mcp)
 - [`ocrspace-mcp`](./servers/ocrspace-mcp)
 - [`ohdear-mcp`](./servers/ohdear-mcp)
