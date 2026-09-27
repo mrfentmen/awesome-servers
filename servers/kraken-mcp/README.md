@@ -14,6 +14,9 @@ This file is self contained. It reads public data only and never writes to the m
 * `depth`  Top of book for a pair as ask and bid price x volume rows.
 * `time`  Kraken server time as RFC1123 string and epoch, useful for timestamping quotes.
 * `status`  Whether Kraken reports itself online, with the status timestamp.
+* `recent_trades`  The tape: last trades with side, VWAP, buy/sell split and the largest print.
+* `spread_history`  Bid/ask spread over recent quotes in absolute terms and basis points, with tightest and widest.
+* `pair_details`  Trading rules for one pair: decimals, tick size, minimum order, leverage and fee tiers.
 
 ## Usage
 

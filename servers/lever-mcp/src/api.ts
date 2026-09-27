@@ -167,3 +167,83 @@ export async function locations(args: CompanyArgs): Promise<string> {
   return `Lever locations at "${args.company}" (${ranked.length} places, ${list.length} postings):\n` +
     ranked.map(([place, count], i) => `${i + 1}. ${place} - ${count} posting(s)`).join('\n');
 }
+// ---- batch-4 tools: server-side grouping and recency filter (2026-09-27) ----
+const GROUP_FIELDS: Record<string, string> = {
+  team: "team",
+  department: "department",
+  location: "location",
+  commitment: "commitment",
+}
+
+/** Lever groups the board server-side with ?group=; this reads that structure. */
+export async function groupedPostings(args: { company: string; group_by?: string; samples?: number }): Promise<string> {
+  const wanted = String(args?.group_by ?? "team").trim().toLowerCase()
+  const field = GROUP_FIELDS[wanted]
+  if (!field) throw new LeverError(`Group by one of: ${Object.keys(GROUP_FIELDS).join(", ")}.`)
+  const samples = Math.min(Math.max(Math.round(Number(args?.samples ?? 3)) || 3, 1), 10)
+  const res = await fetch(`${BASE}/${companySlug(args.company)}?mode=json&group=${field}`, {
+    headers: { "User-Agent": UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (res.status === 404) {
+    throw new LeverError(`No Lever board named "${args.company}". Check the slug (Lever boards live at jobs.lever.co/<slug>).`)
+  }
+  if (!res.ok) throw new LeverError(`Lever returned ${res.status} for board "${args.company}".`)
+  const data = (await res.json()) as unknown
+  if (!Array.isArray(data)) {
+    throw new LeverError(`Lever did not group this board by ${field} - the board may be empty.`)
+  }
+  const groups = data
+    .map((row: any) => ({
+      title: String(row?.title ?? "unassigned"),
+      postings: Array.isArray(row?.postings) ? row.postings : [],
+    }))
+    .sort((a, b) => b.postings.length - a.postings.length)
+  const total = groups.reduce((sum, g) => sum + g.postings.length, 0)
+  if (!total) return `No postings for "${args.company}".`
+  const lines = groups.map((g, i) => {
+    const head = `${i + 1}. ${g.title} - ${g.postings.length} posting(s)`
+    const picks = g.postings.slice(0, samples).map((p: any) => {
+      const cat = p?.categories ?? {}
+      return `   · ${p?.text ?? "?"}${cat.location ? ` | ${cat.location}` : ""}${p?.workplaceType ? ` | ${p.workplaceType}` : ""}`
+    })
+    return [head, ...picks].join("\n")
+  })
+  return [
+    `Lever postings at "${args.company}" grouped by ${field} (${groups.length} group(s), ${total} postings):`,
+    "",
+    lines.join("\n"),
+    "",
+    `Grouped server-side by Lever; showing up to ${samples} posting(s) per group.`,
+  ].join("\n")
+}
+
+/** Postings that appeared on the board on or after a date - the "what is new" question. */
+export async function newestSince(args: { company: string; since: string; limit?: number }): Promise<string> {
+  const raw = String(args?.since ?? "").trim()
+  const cutoff = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? Date.parse(`${raw}T00:00:00Z`) : Date.parse(raw)
+  if (!Number.isFinite(cutoff)) {
+    throw new LeverError(`Could not read "${args?.since}" as a date - use YYYY-MM-DD, for example 2026-09-01.`)
+  }
+  const limit = clamp(args?.limit, 20, 40)
+  const list = await fetchPostings(args.company)
+  if (!list.length) return `No postings for "${args.company}".`
+  const fresh = list
+    .filter((p) => (p.createdAt ?? 0) >= cutoff)
+    .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
+  const oldest = list.reduce((min, p) => Math.min(min, p.createdAt ?? min), Number.POSITIVE_INFINITY)
+  const share = ((fresh.length / list.length) * 100).toFixed(1)
+  const head = [
+    `Lever postings at "${args.company}" created on or after ${raw}:`,
+    `${fresh.length} of ${list.length} open posting(s) (${share}% of the board)`,
+    Number.isFinite(oldest) ? `Oldest posting still open: ${posted(oldest)}` : "",
+  ].filter(Boolean)
+  if (!fresh.length) {
+    return [...head, "", `Nothing new since ${raw}. The board has not changed in that window.`].join("\n")
+  }
+  return [
+    ...head,
+    "",
+    fresh.slice(0, limit).map((p, i) => `${brief(p, i)}\n   posted ${posted(p.createdAt)}`).join("\n"),
+  ].join("\n")
+}

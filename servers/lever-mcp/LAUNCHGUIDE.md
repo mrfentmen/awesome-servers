@@ -21,6 +21,8 @@ Jobs
 - Departments: A company's Lever postings grouped by department, ranked by how many are open.
 - Teams: List the teams hiring on a company Lever board, ranked by number of postings.
 - Locations: List where a company is hiring on Lever, with posting counts per location.
+- Grouped postings: Lever's own server-side grouping: counts per team, department, location or commitment, with examples.
+- Newest since: Postings added on or after a date - what changed on the board since you last looked.
 
 ## Getting Started
 
@@ -32,6 +34,8 @@ Jobs
 - Tool: departments — A company's Lever postings grouped by department, ranked by how many are open.
 - Tool: teams — List the teams hiring on a company Lever board, ranked by number of postings.
 - Tool: locations — List where a company is hiring on Lever, with posting counts per location.
+- Tool: grouped_postings — Lever's own server-side grouping: counts per team, department, location or commitment, with examples.
+- Tool: newest_since — Postings added on or after a date - what changed on the board since you last looked.
 
 ## Tags
 lever, mcp, data, keyless

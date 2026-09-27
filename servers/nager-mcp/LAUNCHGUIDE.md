@@ -21,6 +21,9 @@ Other
 - Holidays worldwide: The next public holidays around the world - useful for planning around other countries' closures.
 - Long weekends: Long weekends in a country and year, and whether a bridge day off is needed to get them.
 - Is today a holiday: Whether today is a public holiday in a country.
+- Regional holidays: Holidays that actually apply in one subdivision (US-CA, DE-BE, CA-ON): national days plus local ones.
+- Holiday on a date: Is one specific date a public holiday? Answers yes or no, with the previous and next holiday.
+- Compare countries: Shared, and country-specific, public holidays for two countries in one year.
 
 ## Getting Started
 
@@ -32,6 +35,9 @@ Other
 - Tool: worldwide_holidays — The next public holidays around the world - useful for planning around other countries' closures.
 - Tool: long_weekends — Long weekends in a country and year, and whether a bridge day off is needed to get them.
 - Tool: is_today_holiday — Whether today is a public holiday in a country.
+- Tool: regional_holidays — Holidays that actually apply in one subdivision (US-CA, DE-BE, CA-ON): national days plus local ones.
+- Tool: holiday_on_date — Is one specific date a public holiday? Answers yes or no, with the previous and next holiday.
+- Tool: compare_countries — Shared, and country-specific, public holidays for two countries in one year.
 
 ## Tags
 holidays, calendar, planning, countries, mcp

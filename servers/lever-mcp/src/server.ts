@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { departments, locations, posting, postings, recentPostings, searchPostings, teams } from "./api.js"
-
+import { departments, locations, posting, postings, recentPostings, searchPostings, teams, groupedPostings, newestSince } from "./api.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -105,5 +104,39 @@ export function createServer(): McpServer {
     try { return text(await locations(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "grouped_postings",
+    {
+      title: "Grouped postings",
+      description: "Lever's own server-side grouping: counts per team, department, location or commitment, with examples.",
+      inputSchema: z.object({
+        company: z.string().describe("Lever board slug, e.g. palantir (jobs.lever.co/<slug>)."),
+        group_by: z.enum(["team", "department", "location", "commitment"]).describe("Field to group by (default team).").optional(),
+        samples: z.number().describe("Example postings per group, 1-10 (default 3).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await groupedPostings(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
+  server.registerTool(
+    "newest_since",
+    {
+      title: "Newest since",
+      description: "Postings added on or after a date - what changed on the board since you last looked.",
+      inputSchema: z.object({
+        company: z.string().describe("Lever board slug, e.g. palantir."),
+        since: z.string().describe("Cut-off date, YYYY-MM-DD."),
+        limit: z.number().describe("Max postings to list (default 20, max 40).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await newestSince(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
   return server
 }

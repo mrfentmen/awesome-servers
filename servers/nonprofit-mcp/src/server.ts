@@ -1,17 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  compare,
-  details,
-  errorMessage,
-  financialSummary,
-  formatDetails,
-  formatSearch,
-  search,
-  searchByCategory,
-  searchByState,
-} from "./api.js"
-
+import { compare, details, errorMessage, financialSummary, formatDetails, formatSearch, search, searchByCategory, searchByState, searchBySubsection, filings } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -146,6 +135,39 @@ export function createServer(): McpServer {
       } catch (e) {
         return textError(errorMessage(e))
       }
+    }
+  )
+
+  server.registerTool(
+    "search_by_subsection",
+    {
+      title: "Search by subsection",
+      description: "Nonprofits by IRS subsection: 501(c)(3), (c)(4), (c)(6) and the rest, optionally within one state.",
+      inputSchema: z.object({
+        subsection: z.string().describe("3, 4, 6, 19 or 501(c)(3)."),
+        state: z.string().describe("Optional two-letter state code.").optional(),
+        page: z.number().describe("Page number, 0-based (default 0).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await searchBySubsection(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "filings",
+    {
+      title: "Filing history",
+      description: "Every Form 990 on record for one EIN: year, form type, revenue, expenses, assets and the PDF links.",
+      inputSchema: z.object({
+        ein: z.string().describe("Nine-digit EIN, e.g. 562618866."),
+        limit: z.number().describe("Filings to list (default 10, max 20).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await filings(args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 

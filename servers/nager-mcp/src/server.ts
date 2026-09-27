@@ -1,20 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  countries,
-  countryInfo,
-  errorMessage,
-  formatCountryInfo,
-  formatHoliday,
-  formatHolidays,
-  formatLongWeekends,
-  holidays,
-  isTodayHoliday,
-  longWeekends,
-  nextHolidays,
-  worldwideHolidays,
-} from "./api.js"
-
+import { countries, countryInfo, errorMessage, formatCountryInfo, formatHoliday, formatHolidays, formatLongWeekends, holidays, isTodayHoliday, longWeekends, nextHolidays, worldwideHolidays, regionalHolidays, holidayOnDate, compareCountries } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -161,6 +147,56 @@ export function createServer(): McpServer {
       } catch (e) {
         return textError(errorMessage(e))
       }
+    }
+  )
+
+  server.registerTool(
+    "regional_holidays",
+    {
+      title: "Regional holidays",
+      description: "Holidays that actually apply in one subdivision (US-CA, DE-BE, CA-ON): national days plus local ones.",
+      inputSchema: z.object({
+        year: z.string().describe("Four-digit year, e.g. 2026."),
+        country: z.string().describe("Two-letter country code, e.g. US."),
+        county: z.string().describe("ISO 3166-2 subdivision code, e.g. US-CA.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ year, country, county }) => {
+      try { return text(await regionalHolidays(year, country, county)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "holiday_on_date",
+    {
+      title: "Holiday on a date",
+      description: "Is one specific date a public holiday? Answers yes or no, with the previous and next holiday.",
+      inputSchema: z.object({
+        date: z.string().describe("Date to check, YYYY-MM-DD."),
+        country: z.string().describe("Two-letter country code, e.g. US.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ date, country }) => {
+      try { return text(await holidayOnDate(date, country)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "compare_countries",
+    {
+      title: "Compare countries",
+      description: "Shared, and country-specific, public holidays for two countries in one year.",
+      inputSchema: z.object({
+        year: z.string().describe("Four-digit year, e.g. 2026."),
+        country_a: z.string().describe("First country code, e.g. US."),
+        country_b: z.string().describe("Second country code, e.g. GB.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ year, country_a: countryA, country_b: countryB }) => {
+      try { return text(await compareCountries(year, countryA, countryB)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 

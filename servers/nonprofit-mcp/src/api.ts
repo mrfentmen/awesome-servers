@@ -235,3 +235,97 @@ export async function compare(eins: string[]): Promise<string> {
   const profiles = await Promise.all(list.map((e) => details(e)))
   return `Compared ${profiles.length} nonprofits:\n\n${profiles.map((d) => formatDetails(d)).join("\n\n")}`
 }
+// ---- batch-4 tools: subsection search and filing history (2026-09-27) ----
+/** ProPublica filters by subsection with c_code[id]; these are the common ones. */
+const SUBSECTIONS: Record<number, string> = {
+  2: "501(c)(2) title holding corporation",
+  3: "501(c)(3) charitable, religious or educational",
+  4: "501(c)(4) social welfare",
+  5: "501(c)(5) labour and agriculture",
+  6: "501(c)(6) business league",
+  7: "501(c)(7) social or recreation club",
+  8: "501(c)(8) fraternal beneficiary society",
+  9: "501(c)(9) employees' beneficiary association",
+  10: "501(c)(10) domestic fraternal society",
+  12: "501(c)(12) benevolent life insurance",
+  13: "501(c)(13) cemetery company",
+  19: "501(c)(19) veterans' organisation",
+}
+
+function subsectionCode(input: string): number {
+  const raw = String(input ?? "").trim().toLowerCase()
+  const digits = raw.replace(/[^0-9]/g, "")
+  const value = digits ? Number(digits.replace(/^501/, "").replace(/^0+/, "") || digits) : NaN
+  const code = Number.isFinite(value) && value > 0 ? value : Number(raw)
+  if (!Number.isFinite(code) || !SUBSECTIONS[code]) {
+    throw new NonprofitError(
+      `"${input}" is not a known subsection. Use 3, 4, 6 or 501(c)(3); the API supports ${Object.keys(SUBSECTIONS).join(", ")}.`
+    )
+  }
+  return code
+}
+
+export async function searchBySubsection(args: { subsection: string; state?: string; page?: number }): Promise<string> {
+  const code = subsectionCode(args?.subsection)
+  let query = `c_code%5Bid%5D=${code}`
+  const state = String(args?.state ?? "").trim().toUpperCase()
+  if (state) {
+    if (!/^[A-Z]{2}$/.test(state)) throw new NonprofitError(`"${args.state}" is not a two-letter state code.`)
+    query += `&state%5Bid%5D=${state}`
+  }
+  const result = await getJson<SearchResult>(`/search.json?${query}${page(args?.page)}`)
+  const label = `Subsection ${SUBSECTIONS[code]}${state ? ` in ${state}` : ""}`
+  const rows = result.organizations ?? []
+  if (!rows.length) return `No nonprofits match ${label}.`
+  const states = new Map<string, number>()
+  for (const o of rows) {
+    const key = o.state ?? "?"
+    states.set(key, (states.get(key) ?? 0) + 1)
+  }
+  const top = [...states.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6)
+  return [
+    formatSearch(result, label),
+    "",
+    `States in this page: ${top.map(([s, n]) => `${s} (${n})`).join(", ")}`,
+    `ProPublica lists ${result.total_results} organisation(s) for this filter; paging is 25 per page.`,
+  ].join("\n")
+}
+
+const FILING_FORMS: Record<number, string> = { 0: "990", 1: "990-EZ", 2: "990-PF" }
+
+export async function filings(args: { ein: string; limit?: number }): Promise<string> {
+  const d = await details(args?.ein)
+  const o = d.organization
+  const limit = Math.min(Math.max(Math.round(Number(args?.limit ?? 10)) || 10, 1), 20)
+  const withData = (d.filings_with_data ?? []).filter((f) => (f.tax_prd_yr ?? 0) > 0)
+  const withoutData = (d.filings_without_data ?? []).filter((f) => (f.tax_prd_yr ?? 0) > 0)
+  const all = [...withData, ...withoutData].sort((a, b) => (b.tax_prd_yr ?? 0) - (a.tax_prd_yr ?? 0))
+  if (!all.length) return `${o.name} (EIN ${o.ein}) has no filings on record.`
+  const form = (t?: number) => (typeof t === "number" ? FILING_FORMS[t] ?? `form ${t}` : "form n/a")
+  const rows = all.slice(0, limit).map((f) => {
+    const parts = [
+      `  FY ${String(f.tax_prd_yr).padEnd(5)} ${form(f.formtype).padEnd(8)}`,
+      typeof f.totrevenue === "number" ? `revenue ${money(f.totrevenue).padStart(10)}` : "revenue n/a".padStart(18),
+      typeof f.totfuncexpns === "number" ? `expenses ${money(f.totfuncexpns).padStart(10)}` : "expenses n/a".padStart(19),
+      typeof f.totassetsend === "number" ? `assets ${money(f.totassetsend).padStart(10)}` : "",
+    ]
+    return parts.filter(Boolean).join("  ")
+  })
+  const revenue = withData.reduce((sum, f) => sum + (f.totrevenue ?? 0), 0)
+  const byYear = [...withData].sort((a, b) => (b.tax_prd_yr ?? 0) - (a.tax_prd_yr ?? 0))
+  const newest = byYear[0] ?? all[0]
+  const oldest = byYear[byYear.length - 1] ?? all[all.length - 1]
+  const pdfs = all.filter((f) => f.pdf_url).slice(0, 3).map((f) => `  FY ${f.tax_prd_yr}: ${f.pdf_url}`)
+  return [
+    `Filings for ${o.name} (EIN ${o.ein}):`,
+    "",
+    `  on record     ${all.length} filing(s) - ${withData.length} with financial data`,
+    `  years         ${oldest.tax_prd_yr} to ${newest.tax_prd_yr}`,
+    withData.length ? `  total revenue ${money(revenue)} across the ${withData.length} filing(s) with data` : "",
+    "",
+    "Newest first (form type, revenue and expenses as filed):",
+    ...rows,
+    ...(pdfs.length ? ["Filing PDFs:", ...pdfs] : []),
+    all.length > limit ? `Showing ${limit} of ${all.length}; raise limit for more.` : "",
+  ].filter((line) => line !== "").join("\n")
+}

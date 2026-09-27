@@ -11,6 +11,9 @@ Worldwide public holidays and long weekends - no API key.
 - `worldwide_holidays` — The next public holidays around the world - useful for planning around other countries' closures.
 - `long_weekends` — Long weekends in a country and year, and whether a bridge day off is needed to get them.
 - `is_today_holiday` — Whether today is a public holiday in a country.
+- `regional_holidays` — Holidays that actually apply in one subdivision (US-CA, DE-BE, CA-ON): national days plus local ones.
+- `holiday_on_date` — Is one specific date a public holiday? Answers yes or no, with the previous and next holiday.
+- `compare_countries` — Shared, and country-specific, public holidays for two countries in one year.
 
 ## Setup
 

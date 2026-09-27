@@ -21,6 +21,9 @@ Other
 - Order book: Top of book for a pair as ask and bid price x volume rows.
 - Server time: Kraken server time as RFC1123 string and epoch, useful for timestamping quotes.
 - System status: Whether Kraken reports itself online, with the status timestamp.
+- Recent trades: The tape: last trades with side, VWAP, buy/sell split and the largest print.
+- Spread history: Bid/ask spread over recent quotes in absolute terms and basis points, with tightest and widest.
+- Pair details: Trading rules for one pair: decimals, tick size, minimum order, leverage and fee tiers.
 
 ## Getting Started
 
@@ -32,6 +35,9 @@ Other
 - Tool: depth — Top of book for a pair as ask and bid price x volume rows.
 - Tool: time — Kraken server time as RFC1123 string and epoch, useful for timestamping quotes.
 - Tool: status — Whether Kraken reports itself online, with the status timestamp.
+- Tool: recent_trades — The tape: last trades with side, VWAP, buy/sell split and the largest print.
+- Tool: spread_history — Bid/ask spread over recent quotes in absolute terms and basis points, with tightest and widest.
+- Tool: pair_details — Trading rules for one pair: decimals, tick size, minimum order, leverage and fee tiers.
 
 ## Tags
 kraken, mcp, shopping, keyless

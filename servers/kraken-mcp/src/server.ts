@@ -8,6 +8,9 @@ import { status } from "./api.js"
 import { ticker } from "./api.js"
 import { time } from "./api.js"
 
+import { recentTrades } from "./api.js"
+import { spreadHistory } from "./api.js"
+import { pairDetails } from "./api.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -99,5 +102,52 @@ export function createServer(): McpServer {
     try { return text(await status()) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "recent_trades",
+    {
+      title: "Recent trades",
+      description: "The tape: last trades with side, VWAP, buy/sell split and the largest print.",
+      inputSchema: z.object({
+        pair: z.string().describe("Pair like XBTUSD."),
+        count: z.number().describe("Trades to fetch, 20-100 (default 20).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await recentTrades(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
+  server.registerTool(
+    "spread_history",
+    {
+      title: "Spread history",
+      description: "Bid/ask spread over recent quotes in absolute terms and basis points, with tightest and widest.",
+      inputSchema: z.object({
+        pair: z.string().describe("Pair like XBTUSD."),
+        count: z.number().describe("Quotes to fetch, 20-100 (default 20).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await spreadHistory(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
+  server.registerTool(
+    "pair_details",
+    {
+      title: "Pair details",
+      description: "Trading rules for one pair: decimals, tick size, minimum order, leverage and fee tiers.",
+      inputSchema: z.object({
+        pair: z.string().describe("Pair like XBTUSD.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await pairDetails(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
   return server
 }

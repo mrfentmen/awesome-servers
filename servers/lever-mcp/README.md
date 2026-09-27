@@ -14,6 +14,8 @@ This file is self contained. It reads public data only and never writes to the m
 * `departments`  A company's Lever postings grouped by department, ranked by how many are open.
 * `teams`  List the teams hiring on a company Lever board, ranked by number of postings.
 * `locations`  List where a company is hiring on Lever, with posting counts per location.
+* `grouped_postings`  Lever's own server-side grouping: counts per team, department, location or commitment, with examples.
+* `newest_since`  Postings added on or after a date - what changed on the board since you last looked.
 
 ## Usage
 
