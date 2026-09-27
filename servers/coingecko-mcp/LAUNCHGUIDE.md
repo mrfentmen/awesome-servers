@@ -20,6 +20,10 @@ Other
 - Coin detail: One coin with rank, 24h change, algorithm and categories.
 - Price chart: Sampled daily closes for a coin over N days with the period percent change.
 - Global stats: Total coins and markets plus top-5 dominance shares.
+- Categories: CoinGecko sector categories ranked by market cap, with 24h change and volume.
+- Exchanges: CoinGecko exchange rankings by trust score, with 24h BTC volume and country.
+- Search: Find coin, exchange and category ids on CoinGecko by name or symbol, e.g. solana, aave.
+- Historical snapshot: Coin price, market cap and volume on a past date, e.g. 20-09-2026.
 
 ## Getting Started
 
@@ -30,6 +34,10 @@ Other
 - Tool: coin — One coin with rank, 24h change, algorithm and categories.
 - Tool: chart — Sampled daily closes for a coin over N days with the period percent change.
 - Tool: global — Total coins and markets plus top-5 dominance shares.
+- Tool: categories — CoinGecko sector categories ranked by market cap, with 24h change and volume.
+- Tool: exchanges — CoinGecko exchange rankings by trust score, with 24h BTC volume and country.
+- Tool: search — Find coin, exchange and category ids on CoinGecko by name or symbol, e.g. solana, aave.
+- Tool: history — Coin price, market cap and volume on a past date, e.g. 20-09-2026.
 
 ## Tags
 coingecko, mcp, shopping, keyless

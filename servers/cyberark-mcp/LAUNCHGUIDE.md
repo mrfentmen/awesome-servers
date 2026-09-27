@@ -21,6 +21,10 @@ Developer Tools
 - Browse known breaches: List breaches from the Have I Been Pwned catalogue, largest first, filtered by company domain or year, with the number of accounts and the kinds of data exposed.
 - Breach details: Look up one breach by name and get its date, exposed account count, verification status and the classes of data leaked.
 - Domain email security audit: Audit a domain's anti-spoofing setup: SPF, DMARC, DKIM selectors, MX records and CAA, graded A to F with the exact gaps to fix.
+- Identify a hash: Identify the likely algorithm behind a hash string — bcrypt, Argon2, crypt formats, MD5, SHA-1, SHA-256, SHA-512 and more — entirely offline.
+- Hash text: Compute MD5, SHA-1, SHA-256 or SHA-512 digests of a string locally, for checksum and fingerprint checks.
+- Breach timeline: Year-by-year view of known breaches from Have I Been Pwned: how many sites were breached and how many accounts were exposed.
+- Subdomain inventory: Resolve common subdomains of a domain and show what each points to, flagging third-party CNAME targets that no longer resolve.
 
 ## Getting Started
 
@@ -32,6 +36,10 @@ Developer Tools
 - Tool: breach_catalog — List breaches from the Have I Been Pwned catalogue, largest first, filtered by company domain or year, with the number of accounts and the kinds of data exposed.
 - Tool: breach_detail — Look up one breach by name and get its date, exposed account count, verification status and the classes of data leaked.
 - Tool: domain_email_security — Audit a domain's anti-spoofing setup: SPF, DMARC, DKIM selectors, MX records and CAA, graded A to F with the exact gaps to fix.
+- Tool: identify_hash — Identify the likely algorithm behind a hash string — bcrypt, Argon2, crypt formats, MD5, SHA-1, SHA-256, SHA-512 and more — entirely offline.
+- Tool: hash_text — Compute MD5, SHA-1, SHA-256 or SHA-512 digests of a string locally, for checksum and fingerprint checks.
+- Tool: breach_timeline — Year-by-year view of known breaches from Have I Been Pwned: how many sites were breached and how many accounts were exposed.
+- Tool: subdomain_inventory — Resolve common subdomains of a domain and show what each points to, flagging third-party CNAME targets that no longer resolve.
 
 ## Tags
 security, passwords, breach, dns, spf, mcp

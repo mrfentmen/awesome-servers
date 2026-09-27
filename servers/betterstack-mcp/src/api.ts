@@ -1,6 +1,7 @@
 import { connect } from "node:tls"
 import type { TLSSocket } from "node:tls"
 import { resolve4 } from "node:dns/promises"
+import { connect as netConnect } from "node:net"
 
 const UA = "mrfentmen-betterstack-mcp/1.0"
 const DOH = "https://dns.google/resolve"
@@ -389,4 +390,192 @@ export async function endpointSummary(args: { url: string }): Promise<string> {
   }
 
   return lines.join("\n")
+}
+// ---- batch-3 tools: certificate, DNS, ports, TLS (2026-09-27) ----
+export async function certificateInfo(args: { url: string }): Promise<string> {
+  const url = normalizeTarget(args.url)
+  const port = url.port ? Number(url.port) : 443
+  const info = await new Promise<{
+    subject: string; issuer: string; validFrom: string; validTo: string; daysLeft: number;
+    serial: string; fingerprint: string; altNames: string[]; chain: number; selfSigned: boolean; trusted: boolean;
+  }>((resolve, reject) => {
+    const socket: TLSSocket = connect(
+      { host: url.hostname, port, servername: url.hostname, rejectUnauthorized: false, timeout: 15000 },
+      () => {
+        const cert = socket.getPeerCertificate(true)
+        const trusted = socket.authorized
+        socket.destroy()
+        if (!cert || !cert.valid_to) {
+          reject(new Error(`No TLS certificate returned by ${url.hostname}:${port}.`))
+          return
+        }
+        // Node types the certificate name fields as string | string[], so coerce them.
+        const flat = (value: string | string[] | undefined): string =>
+          Array.isArray(value) ? (value[0] ?? 'unknown') : value ?? 'unknown'
+        const commonName = flat(cert.subject?.CN)
+        const subject = commonName === 'unknown' ? flat(Object.values(cert.subject ?? {})[0]) : commonName
+        const issuerOrg = flat(cert.issuer?.O)
+        const issuer = issuerOrg === 'unknown' ? flat(cert.issuer?.CN) : issuerOrg
+        const validTo = new Date(cert.valid_to)
+        let chain = 0
+        let node = cert as typeof cert | undefined
+        while (node && chain < 6) {
+          chain += 1
+          const next = node.issuerCertificate as typeof cert | undefined
+          if (!next || next.fingerprint === node.fingerprint) break
+          node = next
+        }
+        resolve({
+          subject,
+          issuer,
+          validFrom: cert.valid_from ?? '?',
+          validTo: cert.valid_to ?? '?',
+          daysLeft: Math.floor((validTo.getTime() - Date.now()) / 86400000),
+          serial: cert.serialNumber ?? '?',
+          fingerprint: cert.fingerprint256 ?? '?',
+          altNames: String(cert.subjectaltname ?? '').split(',').map((s) => s.trim()).filter(Boolean).slice(0, 20),
+          chain,
+          selfSigned: subject === issuer,
+          trusted,
+        })
+      },
+    )
+    socket.on('error', (e) => reject(new Error(`Cannot read the certificate of ${url.hostname}:${port}: ${e.message}`)))
+    socket.on('timeout', () => {
+      socket.destroy()
+      reject(new Error(`Connection to ${url.hostname}:${port} timed out.`))
+    })
+  })
+
+  return [
+    `TLS certificate for ${url.hostname}:${port}`,
+    `Subject: ${info.subject} | Issuer: ${info.issuer}`,
+    `Valid: ${String(info.validFrom).slice(0, 16)} to ${String(info.validTo).slice(0, 16)} — ${info.daysLeft} day(s) left${info.daysLeft < 21 ? ' (renew soon)' : ''}`,
+    `Chain presented: ${info.chain} certificate(s) | Self-signed: ${info.selfSigned ? 'yes' : 'no'} | Trusted by Node: ${info.trusted ? 'yes' : 'no'}`,
+    `Serial: ${info.serial}`,
+    `SHA-256 fingerprint: ${info.fingerprint}`,
+    info.altNames.length ? `Alternate names (${info.altNames.length}): ${info.altNames.map((n) => n.replace(/^DNS:/, '')).join(', ')}` : 'No subject alternative names published.',
+  ].join('\n')
+}
+
+const DNS_TYPES: Record<string, number> = { A: 1, NS: 2, CNAME: 5, MX: 15, TXT: 16, AAAA: 28, CAA: 257 }
+const DNS_STATUS: Record<number, string> = { 0: 'ok', 2: 'server failure', 3: 'NXDOMAIN (name does not exist)', 5: 'refused' }
+
+interface DohRow { name?: string; type?: number; data?: string }
+interface DohBody { Status?: number; Answer?: DohRow[] }
+
+async function dnsLookup(name: string, type: string): Promise<{ status: number; values: string[] }> {
+  const res = await fetch(`${DOH}?name=${encodeURIComponent(name)}&type=${encodeURIComponent(type)}`, {
+    headers: { 'User-Agent': UA, Accept: 'application/dns-json' },
+    signal: AbortSignal.timeout(15000),
+  })
+  if (!res.ok) throw new Error(`DNS-over-HTTPS returned ${res.status}`)
+  const body = (await res.json()) as DohBody
+  const values = (body.Answer ?? [])
+    .filter((row) => row.type === DNS_TYPES[type])
+    .map((row) => String(row.data ?? '').trim().replace(/^"([\s\S]*)"$/, '$1'))
+  return { status: body.Status ?? -1, values }
+}
+
+export async function dnsRecords(args: { domain: string }): Promise<string> {
+  const raw = (args.domain ?? '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '')
+  if (!raw || !raw.includes('.')) throw new Error('Provide a domain like example.com.')
+  const types = ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS', 'CAA']
+  const lines = [`DNS records for ${raw} (via DNS-over-HTTPS)`]
+  let anyRecord = false
+  for (const type of types) {
+    const { status, values } = await dnsLookup(raw, type)
+    if (!values.length) {
+      lines.push(`${type}: none${status === 3 ? ' (name does not exist)' : status !== 0 ? ` (${DNS_STATUS[status] ?? `status ${status}`})` : ''}`)
+      continue
+    }
+    anyRecord = true
+    const shown = values.slice(0, 5).map((v) => (v.length > 160 ? `${v.slice(0, 160)}…` : v))
+    lines.push(`${type} (${values.length}): ${shown.join(' | ')}`)
+  }
+  if (!anyRecord) {
+    lines.push('', 'Nothing resolved. Check the spelling or the domain may be parked/expired.')
+    return lines.join('\n')
+  }
+  const txt = (await dnsLookup(raw, 'TXT')).values
+  const spf = txt.find((t) => t.startsWith('v=spf1'))
+  const dmarc = (await dnsLookup(`_dmarc.${raw}`, 'TXT')).values.find((t) => t.startsWith('v=DMARC1'))
+  lines.push('', `SPF: ${spf ?? 'not published'}`, `DMARC: ${dmarc ?? 'not published'}`)
+  return lines.join('\n')
+}
+
+async function probePort(host: string, port: number, timeoutMs = 5000): Promise<{ port: number; open: boolean; ms: number; reason: string }> {
+  const start = Date.now()
+  return new Promise((resolve) => {
+    const socket = netConnect({ host, port, timeout: timeoutMs }, () => {
+      const ms = Date.now() - start
+      socket.destroy()
+      resolve({ port, open: true, ms, reason: 'Connection accepted' })
+    })
+    socket.on('error', (e) => resolve({ port, open: false, ms: Date.now() - start, reason: e.message }))
+    socket.on('timeout', () => {
+      socket.destroy()
+      resolve({ port, open: false, ms: Date.now() - start, reason: `No answer within ${timeoutMs} ms` })
+    })
+  })
+}
+
+export async function portCheck(args: { host: string; ports?: string }): Promise<string> {
+  const url = normalizeTarget(args.host)
+  const wanted = (args.ports ?? '80,443')
+    .split(/[,\s]+/)
+    .map((p) => Number(p.trim()))
+    .filter((p) => Number.isInteger(p) && p > 0 && p <= 65535)
+    .slice(0, 10)
+  if (!wanted.length) throw new Error('Provide TCP ports to test, e.g. "80,443,22".')
+  const results: string[] = []
+  let open = 0
+  for (const port of wanted) {
+    const r = await probePort(url.hostname, port)
+    if (r.open) open += 1
+    results.push(`${r.open ? 'OPEN' : 'closed'} ${port}/tcp — ${r.reason} (${r.ms} ms)`)
+  }
+  return [
+    `TCP port check for ${url.hostname} (${wanted.length} port(s) tested)`,
+    `${open} of ${wanted.length} port(s) accepted a connection.`,
+    '',
+    ...results,
+  ].join('\n')
+}
+
+const TLS_VERSIONS = ['TLSv1.2', 'TLSv1.3'] as const
+
+export async function tlsVersions(args: { host: string; port?: number }): Promise<string> {
+  const url = normalizeTarget(args.host)
+  const port = Number(args.port ?? (url.port ? Number(url.port) : 443))
+  const results: string[] = []
+  for (const version of TLS_VERSIONS) {
+    results.push(await new Promise<string>((resolve) => {
+      const socket: TLSSocket = connect(
+        { host: url.hostname, port, servername: url.hostname, rejectUnauthorized: false, timeout: 10000, minVersion: version, maxVersion: version },
+        () => {
+          const protocol = socket.getProtocol()
+          const cipher = socket.getCipher()
+          socket.destroy()
+          resolve(`SUPPORTED ${version} — negotiated ${protocol ?? version} with ${cipher?.name ?? 'unknown cipher'}`)
+        },
+      )
+      socket.on('error', (e) => resolve(`not supported ${version} — ${e.message}`))
+      socket.on('timeout', () => {
+        socket.destroy()
+        resolve(`not supported ${version} — connection timed out`)
+      })
+    }))
+  }
+  const supported = results.filter((r) => r.startsWith('SUPPORTED')).length
+  return [
+    `TLS protocol support for ${url.hostname}:${port}`,
+    `${supported} of ${TLS_VERSIONS.length} modern version(s) work.`,
+    '',
+    ...results,
+    '',
+    supported === 0
+      ? 'Neither TLS 1.2 nor TLS 1.3 completed: the port may not speak TLS at all.'
+      : 'TLS 1.2 and 1.3 are the only versions that should be enabled; older versions are unsafe.',
+  ].join('\n')
 }

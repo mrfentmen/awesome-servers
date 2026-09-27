@@ -8,6 +8,9 @@ import { markets } from "./api.js"
 import { price } from "./api.js"
 import { ticker } from "./api.js"
 
+import { recentTrades } from "./api.js"
+import { symbolInfo } from "./api.js"
+import { volumeLeaders } from "./api.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -99,5 +102,44 @@ export function createServer(): McpServer {
     try { return text(await markets()) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "recent_trades",
+    {
+      title: "Recent trades",
+      description: "Latest spot trades for a symbol with taker buy/sell split and VWAP over the window.",
+      inputSchema: z.object( { symbol: z.string().describe("Symbol like BTCUSDT.").optional(), limit: z.number().describe("Trades to fetch, 1-50. Defaults to 10.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await recentTrades(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "symbol_info",
+    {
+      title: "Symbol info",
+      description: "Trading rules for one symbol: status, base/quote assets, tick size, step size, min notional and order types.",
+      inputSchema: z.object( { symbol: z.string().describe("Symbol like BTCUSDT.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await symbolInfo(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "volume_leaders",
+    {
+      title: "Volume leaders",
+      description: "Busiest Binance pairs for a quote currency by 24h quote volume, with price change and share of volume.",
+      inputSchema: z.object( { quote: z.string().describe("Quote currency like USDT, USDC or BTC. Defaults to USDT.").optional(), limit: z.number().describe("How many pairs, 1-30. Defaults to 15.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await volumeLeaders(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

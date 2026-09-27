@@ -131,3 +131,65 @@ export const m1_topProtocols = m1.topProtocols;
 export const m1_chainTvl = m1.chainTvl;
 export const m1_protocolInfo = m1.protocolInfo;
 export const m1_DefiError = m1.DefiError;
+// ---- batch-3 tools: extra live market data (2026-09-27) ----
+const LLAMA_BASE = 'https://api.llama.fi';
+const STABLECOIN_BASE = 'https://stablecoins.llama.fi';
+class LlamaBatch3Error extends Error {}
+async function llamaGet<T>(url: string): Promise<T> {
+  const res = await fetch(url, { headers: { 'User-Agent': 'mrfentmen-defillama-mcp/1.0', Accept: 'application/json' }, signal: AbortSignal.timeout(30000) });
+  if (res.status === 429) throw new LlamaBatch3Error('DefiLlama rate limit hit, wait and retry');
+  if (!res.ok) throw new LlamaBatch3Error(`DefiLlama error ${res.status}`);
+  return (await res.json()) as T;
+}
+
+const usd3 = (n?: number) => (n === undefined || !Number.isFinite(n) ? 'n/a' : `$${Math.round(n).toLocaleString()}`);
+
+type Stablecoin = {
+  name?: string; symbol?: string; pegType?: string; pegMechanism?: string; price?: number;
+  circulating?: Record<string, number>; circulatingPrevWeek?: Record<string, number>;
+};
+
+export async function stablecoins(args: { limit?: number }): Promise<string> {
+  const limit = Math.min(Math.max(Math.floor(args.limit ?? 10), 1), 30);
+  const d = await llamaGet<{ peggedAssets?: Stablecoin[] }>(`${STABLECOIN_BASE}/stablecoins?includePrices=true`);
+  const rows = d.peggedAssets ?? [];
+  if (!rows.length) return 'DefiLlama returned no stablecoins.';
+  const value = (a: Stablecoin) => Number(a.circulating?.peggedUSD ?? 0) || Object.values(a.circulating ?? {}).reduce((s, v) => s + (Number(v) || 0), 0);
+  const total = rows.reduce((s, a) => s + value(a), 0);
+  const top = [...rows].sort((a, b) => value(b) - value(a)).slice(0, limit);
+  return [
+    `DefiLlama stablecoins: ${rows.length} assets, ${usd3(total)} circulating (pegged-USD value).`,
+    `Top ${top.length}:`,
+    ...top.map((a, i) => {
+      const v = value(a);
+      const weekAgo = Number(a.circulatingPrevWeek?.peggedUSD ?? 0);
+      const change = weekAgo > 0 ? ` | ${(((v - weekAgo) / weekAgo) * 100).toFixed(1)}% in 7d` : '';
+      return `  ${i + 1}. ${a.symbol ?? '?'} — ${a.name ?? '?'} | ${usd3(v)} | ${a.pegMechanism ?? '?'} (${a.pegType ?? '?'}) | price ${a.price ?? '?'}${change}`;
+    }),
+  ].join('\n');
+}
+
+type Overview = {
+  total24h?: number; total7d?: number; total30d?: number; totalAllTime?: number; change_1d?: number;
+  protocols?: { name?: string; category?: string; chains?: string[]; total24h?: number; total7d?: number; change_1d?: number }[];
+};
+
+async function overview(path: 'dexs' | 'fees', verb: string, limit: number): Promise<string> {
+  const d = await llamaGet<Overview>(`${LLAMA_BASE}/overview/${path}`);
+  const rows = (d.protocols ?? []).filter((p) => Number(p.total24h ?? 0) > 0)
+    .sort((a, b) => Number(b.total24h ?? 0) - Number(a.total24h ?? 0)).slice(0, limit);
+  if (!rows.length) return `DefiLlama returned no ${verb} data.`;
+  return [
+    `DefiLlama ${verb}: ${usd3(d.total24h)} in 24h | ${usd3(d.total7d)} in 7d | ${usd3(d.totalAllTime)} all time | 24h change ${d.change_1d ?? '?'}%.`,
+    `Top ${rows.length} protocols by 24h ${verb}:`,
+    ...rows.map((p, i) => `  ${i + 1}. ${p.name ?? '?'}${p.category ? ` (${p.category})` : ''} | 24h ${usd3(p.total24h)} | 7d ${usd3(p.total7d)} | ${p.change_1d !== undefined ? `${p.change_1d}% in 24h` : 'no 24h change'} | ${(p.chains ?? []).slice(0, 3).join(', ') || 'no chain'}`),
+  ].join('\n');
+}
+
+export async function dexVolume(args: { limit?: number }): Promise<string> {
+  return overview('dexs', 'DEX volume', Math.min(Math.max(Math.floor(args.limit ?? 10), 1), 30));
+}
+
+export async function feesOverview(args: { limit?: number }): Promise<string> {
+  return overview('fees', 'fees', Math.min(Math.max(Math.floor(args.limit ?? 10), 1), 30));
+}

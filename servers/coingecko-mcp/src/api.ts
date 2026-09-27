@@ -166,3 +166,68 @@ export const chart = m2.chart;
 export const global = m2.global;
 export const m1_price = m1.price;
 export const m1_CryptoError = m1.CryptoError;
+// ---- batch-3 tools: extra live market data (2026-09-27) ----
+const B3_BASE = 'https://api.coingecko.com/api/v3';
+class CgBatch3Error extends Error {}
+async function cgBatch3Get<T>(path: string): Promise<T> {
+  const res = await fetch(`${B3_BASE}${path}`, {
+    headers: { 'User-Agent': 'mrfentmen-coingecko-mcp/1.0', Accept: 'application/json' },
+    signal: AbortSignal.timeout(25000),
+  });
+  if (res.status === 429) throw new CgBatch3Error('CoinGecko rate limit hit, wait and retry');
+  if (!res.ok) throw new CgBatch3Error(`CoinGecko error ${res.status}`);
+  return (await res.json()) as T;
+}
+
+const usd3 = (n?: number) => (n === undefined || !Number.isFinite(n) ? 'n/a' : `$${Math.round(n).toLocaleString()}`);
+
+export async function categories(args: { limit?: number }): Promise<string> {
+  const limit = Math.min(Math.max(Math.floor(args.limit ?? 10), 1), 40);
+  const d = await cgBatch3Get<{ id?: string; name?: string; market_cap?: number; market_cap_change_24h?: number; volume_24h?: number; top_3_coins_id?: string[] }[]>('/coins/categories');
+  const rows = d.filter((c) => Number.isFinite(c.market_cap)).sort((a, b) => Number(b.market_cap) - Number(a.market_cap)).slice(0, limit);
+  if (!rows.length) return 'No categories returned.';
+  return `Top ${rows.length} CoinGecko categories by market cap:\n` +
+    rows.map((c, i) => `${i + 1}. ${c.name ?? '?'} (${c.id ?? '?'}) | cap ${usd3(c.market_cap)} | 24h ${c.market_cap_change_24h?.toFixed(2) ?? '?'}% | vol ${usd3(c.volume_24h)}${c.top_3_coins_id?.length ? ` | top ${c.top_3_coins_id.slice(0, 3).join(', ')}` : ''}`).join('\n');
+}
+
+export async function exchanges(args: { limit?: number; page?: number }): Promise<string> {
+  const limit = Math.min(Math.max(Math.floor(args.limit ?? 10), 1), 50);
+  const page = Math.max(Math.floor(args.page ?? 1), 1);
+  const d = await cgBatch3Get<{ id?: string; name?: string; country?: string; year_established?: number; trust_score?: number; trust_score_rank?: number; trade_volume_24h_btc?: number }[]>(`/exchanges?per_page=${limit}&page=${page}`);
+  if (!d.length) return `No exchanges returned on page ${page}.`;
+  return `CoinGecko exchanges page ${page} (${d.length}):\n` +
+    d.map((e) => `#${e.trust_score_rank ?? '?'} ${e.name ?? '?'} (${e.id ?? '?'}) | trust ${e.trust_score ?? '?'} | 24h BTC volume ${Math.round(Number(e.trade_volume_24h_btc ?? 0)).toLocaleString()} | ${e.country ?? '?'}${e.year_established ? ` since ${e.year_established}` : ''}`).join('\n');
+}
+
+export async function search(args: { query: string; limit?: number }): Promise<string> {
+  const query = (args.query ?? '').trim();
+  if (!query) throw new CgBatch3Error('Provide a search query, e.g. solana or aave');
+  const limit = Math.min(Math.max(Math.floor(args.limit ?? 10), 1), 30);
+  const d = await cgBatch3Get<{ coins?: { id?: string; name?: string; symbol?: string; market_cap_rank?: number }[]; exchanges?: { id?: string; name?: string }[]; categories?: { id?: string; name?: string }[] }>(`/search?query=${encodeURIComponent(query)}`);
+  const coins = d.coins ?? [];
+  const lines = [`CoinGecko search for "${query}": ${coins.length} coins, ${(d.exchanges ?? []).length} exchanges, ${(d.categories ?? []).length} categories.`];
+  if (coins.length) {
+    lines.push(`Coins (${Math.min(coins.length, limit)} of ${coins.length}):`);
+    lines.push(...coins.slice(0, limit).map((c) => `  ${c.id ?? '?'} — ${c.name ?? '?'} (${(c.symbol ?? '?').toUpperCase()})${c.market_cap_rank ? ` rank #${c.market_cap_rank}` : ' unranked'}`));
+  }
+  if (d.categories?.length) lines.push(`Category ids: ${d.categories.slice(0, 8).map((c) => c.id ?? '?').join(', ')}`);
+  if (d.exchanges?.length) lines.push(`Exchange ids: ${d.exchanges.slice(0, 8).map((e) => e.id ?? '?').join(', ')}`);
+  return lines.join('\n');
+}
+
+export async function history(args: { date?: string; coin?: string }): Promise<string> {
+  const coin = (args.coin ?? 'bitcoin').trim().toLowerCase();
+  const date = (args.date ?? '').trim();
+  if (!/^\d{2}-\d{2}-\d{4}$/.test(date)) throw new CgBatch3Error('Date must be dd-mm-yyyy, e.g. 20-09-2026');
+  const d = await cgBatch3Get<{ name?: string; symbol?: string; market_data?: { current_price?: Record<string, number>; market_cap?: Record<string, number>; total_volume?: Record<string, number> } }>(
+    `/coins/${encodeURIComponent(coin)}/history?date=${encodeURIComponent(date)}&localization=false`);
+  const md = d.market_data ?? {};
+  const value = (m?: Record<string, number>) => (m && typeof m.usd === 'number' ? `$${m.usd.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : 'n/a');
+  if (!d.name) return `No snapshot found for coin "${coin}" on ${date}.`;
+  return [
+    `${d.name} (${(d.symbol ?? '?').toUpperCase()}) on ${date}:`,
+    `Price: ${value(md.current_price)}`,
+    `Market cap: ${value(md.market_cap)}`,
+    `24h volume: ${value(md.total_volume)}`,
+  ].join('\n');
+}

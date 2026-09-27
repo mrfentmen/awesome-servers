@@ -9,7 +9,7 @@ export function errorMessage(e: unknown): string {
   return e instanceof Error ? e.message : String(e)
 }
 
-const UA = { "User-Agent": "awesome-mcps/1.0" }
+const UA = { "User-Agent": "mrfentmen-aimeleondore-mcp/1.0 (https://github.com/mrfentmen)" }
 const CATALOG = "https://aimeleondore.com/products.json"
 const SUGGEST = "https://aimeleondore.com/search/suggest.json"
 const PRODUCT_BASE = "https://aimeleondore.com/products"
@@ -181,4 +181,104 @@ export async function listCategories(): Promise<string> {
     counts[t] = (counts[t] ?? 0) + 1
   }
   return pretty({ store: "Aimé Leon Dore", sample: Object.values(counts).reduce((a, b) => a + b, 0), categories: counts })
+}
+// ---- batch-3 tools: collections + size search (2026-09-26) ----
+function storeOrigin(): string {
+  return new URL(CATALOG).origin
+}
+
+// Variant titles are "<colour> / <size>" or "<size>", so a size matches the whole part
+// or a part that starts with it: "18" matches "18 inches - 6.3 grams", "7" does not match
+// "7.5". Compared case-insensitively.
+function sizeMatches(part: string, want: string): boolean {
+  const p = part.trim().toLowerCase()
+  return p === want || p.startsWith(`${want} `)
+}
+
+export async function listCollections(query?: string): Promise<string> {
+  const wanted = query ? query.trim().toLowerCase() : null
+  const rows: { title: string; handle: string; store_products: number | null }[] = []
+  for (const page of [1, 2, 3]) {
+    const data = await getJson(`${storeOrigin()}/collections.json?limit=250&page=${page}`)
+    const list: unknown[] = Array.isArray(data.collections) ? data.collections : []
+    if (!list.length) break
+    for (const row of list) {
+      const c = row as { title?: unknown; handle?: unknown; products_count?: unknown }
+      if (typeof c.title !== "string" || typeof c.handle !== "string") continue
+      if (wanted && !c.title.toLowerCase().includes(wanted)) continue
+      rows.push({ title: c.title, handle: c.handle, store_products: typeof c.products_count === "number" ? c.products_count : null })
+    }
+  }
+  return pretty({
+    store: "Aimé Leon Dore", query: query ?? null, returned: rows.length,
+    note: "Collection handles feed browse_collection.",
+    collections: rows.slice(0, 60),
+  })
+}
+
+interface SizeListing extends Slim {
+  matched_size: string
+  size_price_usd: number | null
+  in_stock_sizes: string[]
+}
+
+export async function browseCollection(handle: string, limit?: string, maxPrice?: string, size?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 10) || 10, 25)
+  const mp = maxPrice !== undefined ? Number(maxPrice) : undefined
+  const wantSize = size ? String(size).trim().toLowerCase() : null
+  const out: Slim[] = []
+  let seen = 0
+  for (const page of [1, 2, 3]) {
+    const data = await getJson(`${storeOrigin()}/collections/${encodeURIComponent(handle)}/products.json?limit=250&page=${page}`)
+    const products: any[] = Array.isArray(data.products) ? data.products : []
+    if (!products.length) break
+    for (const p of products) {
+      seen += 1
+      if (wantSize) {
+        const variants: any[] = Array.isArray(p.variants) ? p.variants : []
+        const hit = variants.some((v) => v.available === true && parseParts(v.title).some((part) => sizeMatches(part, wantSize)))
+        if (!hit) continue
+      }
+      const sl = slim(p)
+      if (mp !== undefined && (sl.price_usd === null || sl.price_usd > mp)) continue
+      out.push(sl)
+    }
+  }
+  if (!seen) throw new AimeLeonDoreError(`Collection '${handle}' returned no products. Check the handle with list_collections.`)
+  return pretty({
+    store: "Aimé Leon Dore", collection: handle, size: wantSize, scanned: seen,
+    returned: Math.min(out.length, n), truncated: out.length > n, listings: out.slice(0, n),
+  })
+}
+
+export async function find_by_size(size: string, limit?: string, maxPrice?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 10) || 10, 25)
+  const mp = maxPrice !== undefined ? Number(maxPrice) : undefined
+  const want = String(size).trim().toLowerCase()
+  const sample = await sampleCatalog(300, [1, 2, 3])
+  const out: SizeListing[] = []
+  const seenSizes = new Set<string>()
+  for (const p of sample) {
+    const variants: any[] = Array.isArray(p.variants) ? p.variants : []
+    for (const v of variants) for (const part of parseParts(v.title)) seenSizes.add(part)
+    const hit = variants.find((v) => v.available === true && parseParts(v.title).some((part) => sizeMatches(part, want)))
+    if (!hit) continue
+    const sl = slim(p)
+    if (mp !== undefined && (sl.price_usd === null || sl.price_usd > mp)) continue
+    out.push({
+      ...sl,
+      matched_size: String(hit.title),
+      size_price_usd: Number.isFinite(Number(hit.price)) ? Math.round(Number(hit.price) * 100) / 100 : null,
+      in_stock_sizes: variants.filter((v) => v.available === true).map((v) => String(v.title)),
+    })
+  }
+  if (!out.length) {
+    const seen = [...seenSizes].slice(0, 40).join(", ")
+    throw new AimeLeonDoreError(`No in-stock variant matched size '${size}' in a ${sample.length}-product sample. Sizes seen: ${seen || "none"}.`)
+  }
+  return pretty({
+    store: "Aimé Leon Dore", size: want, scanned: sample.length,
+    returned: Math.min(out.length, n), listings: out.slice(0, n),
+    note: "Availability and size come from the store's own variant stock flags.",
+  })
 }

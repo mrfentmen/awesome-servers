@@ -13,6 +13,8 @@ This file is self contained. It reads public data only and never writes to the m
 * `game_details`  Compare one game's price across every store, plus its cheapest price ever.
 * `top_deals`  The best current game deals ranked by CheapShark's deal rating, all stores or one store.
 * `free_games`  Games currently free (or 100% off) on any tracked store.
+* `steam_lookup`  Find a CheapShark game from its Steam AppID, with the current cheapest price and the gameID for game_details.
+* `filter_deals`  Deals filtered by price range, minimum Metacritic score, minimum Steam rating, on-sale or AAA games, sorted cheapest first or by rating.
 
 ## Usage
 

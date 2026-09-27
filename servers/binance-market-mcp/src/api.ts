@@ -82,3 +82,71 @@ export async function markets(): Promise<string> {
   const sample = symbols.slice(0, 12).map((s) => s.symbol).join(', ');
   return `Binance lists ${symbols.length} symbols (${trading} TRADING). Sample: ${sample}. Full list omitted for size.`;
 }
+// ---- batch-3 tools: extra live market data (2026-09-27) ----
+export async function recentTrades(args: { symbol?: string; limit?: number }): Promise<string> {
+  const symbol = (args.symbol ?? "").trim().toUpperCase();
+  if (!VALID.test(symbol)) throw new BinanceError("Provide a symbol like BTCUSDT");
+  const limit = Math.min(Math.max(Math.floor(args.limit ?? 10), 1), 50);
+  const d = await get<unknown>(`${BASE}/trades?symbol=${encodeURIComponent(symbol)}&limit=${limit}`);
+  if (!Array.isArray(d)) throw new BinanceError(`Binance: ${readMsg(d) ?? "invalid symbol"}`);
+  const rows = d as { price?: string; qty?: string; time?: number; isBuyerMaker?: boolean }[];
+  if (!rows.length) return `No recent trades for ${symbol}.`;
+  const quoteOf = (r: { price?: string; qty?: string }) => Number(r.price ?? 0) * Number(r.qty ?? 0);
+  const buys = rows.filter((r) => r.isBuyerMaker !== true);
+  const sells = rows.filter((r) => r.isBuyerMaker === true);
+  const buyVolume = buys.reduce((s, r) => s + quoteOf(r), 0);
+  const sellVolume = sells.reduce((s, r) => s + quoteOf(r), 0);
+  const total = buyVolume + sellVolume;
+  const qty = rows.reduce((s, r) => s + Number(r.qty ?? 0), 0);
+  const vwap = qty > 0 ? rows.reduce((s, r) => s + quoteOf(r), 0) / qty : 0;
+  return [
+    `${symbol} last ${rows.length} trades (taker flow):`,
+    `Buy ${buyVolume.toFixed(2)} quote (${total > 0 ? ((buyVolume / total) * 100).toFixed(1) : '0'}%) vs sell ${sellVolume.toFixed(2)} quote`,
+    `VWAP ${vwap.toFixed(8)}`,
+    ...rows.slice(0, 10).map((r) => `${r.time ? new Date(r.time).toISOString().slice(11, 19) : '?'} ${r.isBuyerMaker === true ? "sell" : "buy"} ${r.qty ?? "?"} @ ${r.price ?? "?"}`),
+  ].join("\n");
+}
+
+type BinanceFilter = { filterType?: string; tickSize?: string; stepSize?: string; minQty?: string; minNotional?: string };
+
+export async function symbolInfo(args: { symbol?: string }): Promise<string> {
+  const symbol = (args.symbol ?? "").trim().toUpperCase();
+  if (!VALID.test(symbol)) throw new BinanceError("Provide a symbol like BTCUSDT");
+  const d = await get<{ code?: number; msg?: string; timezone?: string; symbols?: { symbol?: string; status?: string; baseAsset?: string; quoteAsset?: string; baseAssetPrecision?: number; quoteAssetPrecision?: number; orderTypes?: string[]; permissions?: string[]; isSpotTradingAllowed?: boolean; filters?: BinanceFilter[] }[] }>(
+    `${BASE}/exchangeInfo?symbol=${encodeURIComponent(symbol)}`);
+  if (d?.code) throw new BinanceError(`Binance: ${String(d.msg ?? "invalid symbol")}`);
+  const s = (d.symbols ?? [])[0];
+  if (!s) throw new BinanceError(`Binance has no symbol ${symbol}`);
+  const filter = (type: string) => (s.filters ?? []).find((f) => f.filterType === type);
+  const price = filter("PRICE_FILTER");
+  const lot = filter("LOT_SIZE");
+  const notional = filter("NOTIONAL");
+  return [
+    `${s.symbol ?? symbol} — ${s.status ?? "?"} | ${s.baseAsset ?? "?"}/${s.quoteAsset ?? "?"} | spot trading ${s.isSpotTradingAllowed ? "allowed" : "not allowed"}`,
+    `Precision: base ${s.baseAssetPrecision ?? "?"}, quote ${s.quoteAssetPrecision ?? "?"}`,
+    `Tick size ${price?.tickSize ?? "?"} | step size ${lot?.stepSize ?? "?"} | min qty ${lot?.minQty ?? "?"} | min notional ${notional?.minNotional ?? "?"}`,
+    `Order types: ${(s.orderTypes ?? []).join(", ") || "?"}`,
+    `Permissions: ${(s.permissions ?? []).join(", ") || "?"} | exchange timezone ${d.timezone ?? "?"}`,
+  ].join("\n");
+}
+
+export async function volumeLeaders(args: { quote?: string; limit?: number }): Promise<string> {
+  const quote = (args.quote ?? "USDT").trim().toUpperCase();
+  if (!/^[A-Z]{2,6}$/.test(quote)) throw new BinanceError("Quote like USDT, USDC or BTC");
+  const limit = Math.min(Math.max(Math.floor(args.limit ?? 15), 1), 30);
+  const d = await get<unknown>(`${BASE}/ticker/24hr`);
+  if (!Array.isArray(d)) throw new BinanceError(`Binance: ${readMsg(d) ?? "ticker list unavailable"}`);
+  const rows = (d as { symbol?: string; lastPrice?: string; priceChangePercent?: string; quoteVolume?: string }[])
+    .filter((t) => (t.symbol ?? "").endsWith(quote) && (t.symbol ?? "").length > quote.length);
+  if (!rows.length) throw new BinanceError(`Binance lists no ${quote} pairs`);
+  const ranked = rows.map((t) => ({ ...t, volume: Number(t.quoteVolume ?? 0) })).filter((t) => t.volume > 0)
+    .sort((a, b) => b.volume - a.volume);
+  if (!ranked.length) throw new BinanceError(`Binance reported no 24h volume for ${quote} pairs`);
+  const total = ranked.reduce((s, t) => s + t.volume, 0);
+  const top = ranked.slice(0, limit);
+  return [
+    `Binance ${quote} pairs: ${rows.length} listed, ${ranked.length} with 24h volume, ${Math.round(total).toLocaleString()} ${quote} total quote volume.`,
+    `Top ${top.length} by 24h quote volume:`,
+    ...top.map((t, i) => `  ${i + 1}. ${t.symbol ?? "?"} | ${Number(t.lastPrice ?? 0).toLocaleString(undefined, { maximumFractionDigits: 8 })} | ${Number(t.priceChangePercent ?? 0).toFixed(2)}% | vol ${Math.round(t.volume).toLocaleString()} ${quote} (${((t.volume / total) * 100).toFixed(1)}%)`),
+  ].join("\n");
+}

@@ -1,15 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  assertContent,
-  assertHeaders,
-  assertStatus,
-  brokenLinks,
-  checkRedirects,
-  checkUrl,
-  errorMessage,
-} from "./api.js"
-
+import { assertContent, assertHeaders, assertStatus, brokenLinks, checkRedirects, checkUrl, errorMessage, assertResponseTime, assertJson, assertRedirect } from "./api.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -113,6 +104,58 @@ export function createServer(): McpServer {
     },
     async (args) => {
       try { return text(await brokenLinks(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "assert_response_time",
+    {
+      title: "Assert response time",
+      description: "Sample a URL a few times and assert the median and worst time stay inside a budget, reporting each sample.",
+      inputSchema: z.object({
+        url: z.string().describe("URL to sample, for example https://example.com."),
+        budget_ms: z.number().describe("Median time budget in milliseconds. Defaults to 1000.").optional(),
+        samples: z.number().describe("Samples to take, 2-5. Defaults to 3.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await assertResponseTime(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "assert_json",
+    {
+      title: "Assert JSON",
+      description: "Treat a URL as a JSON API: check it parses, then assert a dot-path exists and optionally equals or contains a value.",
+      inputSchema: z.object({
+        url: z.string().describe("JSON endpoint to check, for example https://api.github.com/repos/microsoft/vscode."),
+        path: z.string().describe("Dot path to read, e.g. status or data.items.0.name.").optional(),
+        equals: z.string().describe("Exact value the path must equal (compared as text).").optional(),
+        contains: z.string().describe("Substring the resolved value must contain.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await assertJson(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "assert_redirect",
+    {
+      title: "Assert redirect",
+      description: "Assert that a URL redirects, optionally that it lands on a given Location and answers with a specific status.",
+      inputSchema: z.object({
+        url: z.string().describe("URL expected to redirect, for example http://example.com."),
+        location_contains: z.string().describe("Text the first Location header must contain, e.g. https://example.com.").optional(),
+        status: z.string().describe('Redirect status to expect: "301", "3xx" or a list.').optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await assertRedirect(args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 

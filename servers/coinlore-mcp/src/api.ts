@@ -107,3 +107,54 @@ export async function markets(args: { id?: number }): Promise<string> {
       `vol 24h ${Number.isFinite(volumeUsd) ? `$${Math.round(volumeUsd).toLocaleString()}` : 'n/a'}`;
   }).join('\n');
 }
+// ---- batch-3 tools: extra live market data (2026-09-27) ----
+export async function socialStats(args: { id?: number }): Promise<string> {
+  const id = Number(args.id);
+  if (!Number.isFinite(id) || id <= 0) throw new CoinloreError('Provide a coin id, e.g. 90 for Bitcoin');
+  const d = await get<{ reddit?: Record<string, unknown>; twitter?: Record<string, unknown>; telegram?: Record<string, unknown> }>(
+    `${BASE}/coin/social_stats/?id=${id}`);
+  const fmt = (v: unknown) => (typeof v === 'number' ? v.toLocaleString() : String(v));
+  const lines: string[] = [];
+  const show = (label: string, obj?: Record<string, unknown>) => {
+    if (!obj) return;
+    const parts = Object.entries(obj).filter(([, v]) => v !== null && v !== undefined && v !== 0).map(([k, v]) => `${k.replace(/_/g, ' ')} ${fmt(v)}`);
+    if (parts.length) lines.push(`${label}: ${parts.join(' | ')}`);
+  };
+  show('Reddit', d.reddit);
+  show('Twitter', d.twitter);
+  show('Telegram', d.telegram);
+  if (!lines.length) return `CoinLore has no social stats for coin id ${id} (null counters are skipped).`;
+  return `CoinLore social stats for coin id ${id}:\n${lines.join('\n')}`;
+}
+
+export async function rankRange(args: { start?: number; limit?: number }): Promise<string> {
+  const start = Math.max(Math.floor(args.start ?? 0), 0);
+  const limit = Math.min(Math.max(Math.floor(args.limit ?? 25), 1), 100);
+  const d = await get<{ data?: Array<Record<string, unknown>> }>(`${BASE}/tickers/?start=${start}&limit=${limit}`);
+  const rows = d.data ?? [];
+  if (!rows.length) return `CoinLore returned no coins from rank ${start + 1}.`;
+  return `CoinLore ranks ${start + 1}-${start + rows.length}:\n` + rows.map((c) => {
+    const s = (k: string) => (c[k] != null ? String(c[k]) : '?');
+    return `#${s('rank')} ${s('name')} (${s('symbol')}) id ${s('id')} | $${s('price_usd')} | 24h ${s('percent_change_24h')}% | mcap $${s('market_cap_usd')}`;
+  }).join('\n');
+}
+
+export async function volumeLeaders(args: { limit?: number; sample?: number }): Promise<string> {
+  const limit = Math.min(Math.max(Math.floor(args.limit ?? 10), 1), 25);
+  const sample = Math.min(Math.max(Math.floor(args.sample ?? 100), 25), 200);
+  const rows: Array<Record<string, unknown>> = [];
+  for (const start of sample > 100 ? [0, 100] : [0]) {
+    const d = await get<{ data?: Array<Record<string, unknown>> }>(`${BASE}/tickers/?start=${start}&limit=100`);
+    rows.push(...(d.data ?? []));
+  }
+  const ranked = rows.map((c) => ({ coin: c, volume: num(c.volume24a) })).filter((r) => Number.isFinite(r.volume) && r.volume > 0);
+  if (!ranked.length) return 'CoinLore returned no 24h volume data.';
+  ranked.sort((a, b) => b.volume - a.volume);
+  const total = ranked.reduce((s, r) => s + r.volume, 0);
+  const top = ranked.slice(0, limit);
+  return `Top ${top.length} coins by 24h volume among the ${rows.length} largest by market cap (sample volume $${Math.round(total).toLocaleString()}):\n` +
+    top.map((r, i) => {
+      const s = (k: string) => (r.coin[k] != null ? String(r.coin[k]) : '?');
+      return `${i + 1}. ${s('name')} (${s('symbol')}) #${s('rank')} | vol $${Math.round(r.volume).toLocaleString()} (${((r.volume / total) * 100).toFixed(1)}% of sample) | $${s('price_usd')} | 24h ${s('percent_change_24h')}%`;
+    }).join('\n');
+}

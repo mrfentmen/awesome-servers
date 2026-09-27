@@ -20,6 +20,9 @@ Other
 - Address: Bitcoin address summary: transaction count, total received/sent, balance and recent transactions.
 - Address balances: Check the balance of up to 20 Bitcoin addresses at once, comma or space separated.
 - Transaction: Look up a Bitcoin transaction by hash: size, fee, inputs, outputs and the largest payments.
+- Block by height: Bitcoin block at a height: hash, mining time, size, weight, total fees and neighbouring blocks.
+- Block by hash: Bitcoin block by its 64-character hash, with the same size, fee and chain fields as block_by_height.
+- Mempool: Pending Bitcoin transactions: mempool depth plus fees and sizes of the newest waiting transactions.
 
 ## Getting Started
 
@@ -30,6 +33,9 @@ Other
 - Tool: address — Bitcoin address summary: transaction count, total received/sent, balance and recent transactions.
 - Tool: address_balance — Check the balance of up to 20 Bitcoin addresses at once, comma or space separated.
 - Tool: transaction — Look up a Bitcoin transaction by hash: size, fee, inputs, outputs and the largest payments.
+- Tool: block_by_height — Bitcoin block at a height: hash, mining time, size, weight, total fees and neighbouring blocks.
+- Tool: block_by_hash — Bitcoin block by its 64-character hash, with the same size, fee and chain fields as block_by_height.
+- Tool: mempool — Pending Bitcoin transactions: mempool depth plus fees and sizes of the newest waiting transactions.
 
 ## Tags
 blockchain info, mcp, shopping, keyless

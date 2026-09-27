@@ -13,6 +13,9 @@ A merged MCP server that consolidates duplicate single-purpose servers in this m
 - `protocol_info` — Get details for a specific protocol.
 - `topYields` — Highest-APY DeFi pools with project, chain, APY and TVL.
 - `hacks` — Largest recent DeFi hacks with date, target, chain, amount and technique.
+- `stablecoins` — Stablecoin circulating value by asset, with peg mechanism, price and 7-day change.
+- `dex_volume` — DeFi DEX trading volume: 24h, 7d and all-time totals plus the busiest protocols.
+- `fees_overview` — DeFi protocol fees: 24h, 7d and all-time totals plus the protocols charging the most.
 
 ## Run
 

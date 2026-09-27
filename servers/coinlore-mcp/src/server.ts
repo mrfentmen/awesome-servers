@@ -1,7 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { tickers, coin, globalStats, markets, movers, searchCoins } from './api.js'
-
+import { tickers, coin, globalStats, markets, movers, searchCoins, socialStats, rankRange, volumeLeaders } from './api.js'
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -81,5 +80,44 @@ export function createServer(): McpServer {
     try { return text(await markets(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "social_stats",
+    {
+      title: "Social stats",
+      description: "Reddit, Twitter and Telegram community sizes for a CoinLore coin id, e.g. 90 for Bitcoin.",
+      inputSchema: z.object( { id: z.number().describe("CoinLore coin id, e.g. 90 for Bitcoin.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await socialStats(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "rank_range",
+    {
+      title: "Rank range",
+      description: "Coins in a rank window beyond the top 100, e.g. ranks 101-150, including the CoinLore id for the coin tool.",
+      inputSchema: z.object( { start: z.number().describe("Zero-based rank offset, e.g. 100 starts at rank 101."), limit: z.number().describe("How many coins, 1-100. Defaults to 25.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await rankRange(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "volume_leaders",
+    {
+      title: "Volume leaders",
+      description: "Most-traded coins by 24h volume across the largest coins, with each coin's share of the sampled volume.",
+      inputSchema: z.object( { limit: z.number().describe("How many coins, 1-25. Defaults to 10.").optional(), sample: z.number().describe("How many coins to rank, 25-200. Defaults to 100.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await volumeLeaders(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

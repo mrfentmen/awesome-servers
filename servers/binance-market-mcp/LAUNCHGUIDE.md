@@ -21,6 +21,9 @@ Other
 - Average price: 5-minute average price for a symbol.
 - Order book: Top bids and asks with quantities for a symbol.
 - Markets: How many symbols Binance lists with a TRADING count and a 12-symbol sample. Full list omitted for size.
+- Recent trades: Latest spot trades for a symbol with taker buy/sell split and VWAP over the window.
+- Symbol info: Trading rules for one symbol: status, base/quote assets, tick size, step size, min notional and order types.
+- Volume leaders: Busiest Binance pairs for a quote currency by 24h quote volume, with price change and share of volume.
 
 ## Getting Started
 
@@ -32,6 +35,9 @@ Other
 - Tool: avg — 5-minute average price for a symbol.
 - Tool: depth — Top bids and asks with quantities for a symbol.
 - Tool: markets — How many symbols Binance lists with a TRADING count and a 12-symbol sample. Full list omitted for size.
+- Tool: recent_trades — Latest spot trades for a symbol with taker buy/sell split and VWAP over the window.
+- Tool: symbol_info — Trading rules for one symbol: status, base/quote assets, tick size, step size, min notional and order types.
+- Tool: volume_leaders — Busiest Binance pairs for a quote currency by 24h quote volume, with price change and share of volume.
 
 ## Tags
 binance market, mcp, shopping, keyless

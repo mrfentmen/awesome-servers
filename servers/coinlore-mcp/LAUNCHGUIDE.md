@@ -20,6 +20,9 @@ Other
 - Search coins: Find a coin by name or symbol among the top 100 by market cap, with its CoinLore id for the coin tool.
 - Movers: Biggest 24-hour gainers and losers among the top 100 coins by market cap.
 - Markets: Markets for a coin id across exchanges, e.g. 90 for Bitcoin.
+- Social stats: Reddit, Twitter and Telegram community sizes for a CoinLore coin id, e.g. 90 for Bitcoin.
+- Rank range: Coins in a rank window beyond the top 100, e.g. ranks 101-150, including the CoinLore id for the coin tool.
+- Volume leaders: Most-traded coins by 24h volume across the largest coins, with each coin's share of the sampled volume.
 
 ## Getting Started
 
@@ -30,6 +33,9 @@ Other
 - Tool: search_coins — Find a coin by name or symbol among the top 100 by market cap, with its CoinLore id for the coin tool.
 - Tool: movers — Biggest 24-hour gainers and losers among the top 100 coins by market cap.
 - Tool: markets — Markets for a coin id across exchanges, e.g. 90 for Bitcoin.
+- Tool: social_stats — Reddit, Twitter and Telegram community sizes for a CoinLore coin id, e.g. 90 for Bitcoin.
+- Tool: rank_range — Coins in a rank window beyond the top 100, e.g. ranks 101-150, including the CoinLore id for the coin tool.
+- Tool: volume_leaders — Most-traded coins by 24h volume across the largest coins, with each coin's share of the sampled volume.
 
 ## Tags
 coinlore, mcp, data, keyless

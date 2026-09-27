@@ -1,7 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { address, addressBalance, latestBlock, networkStats, ticker, transaction } from './api.js'
-
+import { address, addressBalance, latestBlock, networkStats, ticker, transaction, blockByHeight, blockByHash, mempool } from './api.js'
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -88,5 +87,48 @@ export function createServer(): McpServer {
       try { return text(await transaction(args)) } catch (e) { return textError(error(e)) }
     }
   )
+  server.registerTool(
+    'block_by_height',
+    {
+      title: "Block by height",
+      description: 'Bitcoin block at a height: hash, mining time, size, weight, total fees and neighbouring blocks.',
+      inputSchema: z.object({
+        height: z.number().describe('Block height, e.g. 968000.'),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await blockByHeight(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
+  server.registerTool(
+    'block_by_hash',
+    {
+      title: "Block by hash",
+      description: 'Bitcoin block by its 64-character hash, with the same size, fee and chain fields as block_by_height.',
+      inputSchema: z.object({
+        hash: z.string().describe('64-character block hash.'),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await blockByHash(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
+  server.registerTool(
+    'mempool',
+    {
+      title: "Mempool",
+      description: 'Pending Bitcoin transactions: mempool depth plus fees and sizes of the newest waiting transactions.',
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async () => {
+      try { return text(await mempool()) } catch (e) { return textError(error(e)) }
+    }
+  )
+
   return server
 }

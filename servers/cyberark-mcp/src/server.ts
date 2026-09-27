@@ -1,16 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  breachCatalog,
-  breachDetail,
-  checkPassword,
-  checkPasswords,
-  domainEmailSecurity,
-  errorMessage,
-  generatePassword,
-  passwordStrength,
-} from "./api.js"
-
+import { breachCatalog, breachDetail, checkPassword, checkPasswords, domainEmailSecurity, errorMessage, generatePassword, passwordStrength, identifyHash, hashText, breachTimeline, subdomainInventory } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -154,6 +144,86 @@ export function createServer(): McpServer {
     async ({ domain }) => {
       try {
         return text(await domainEmailSecurity({ domain }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "identify_hash",
+    {
+      title: "Identify a hash",
+      description: "Identify the likely algorithm behind a hash string — bcrypt, Argon2, crypt formats, MD5, SHA-1, SHA-256, SHA-512 and more — entirely offline.",
+      inputSchema: z.object({
+        hash: z.string().describe("One hash string to identify."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ hash }) => {
+      try {
+        return text(await identifyHash({ hash }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "hash_text",
+    {
+      title: "Hash text",
+      description: "Compute MD5, SHA-1, SHA-256 or SHA-512 digests of a string locally, for checksum and fingerprint checks.",
+      inputSchema: z.object({
+        text: z.string().describe("Text to hash."),
+        algorithm: z.string().describe("md5, sha1, sha256, sha512, or all (default all).").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ text: value, algorithm }) => {
+      try {
+        return text(await hashText({ text: value, algorithm }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "breach_timeline",
+    {
+      title: "Breach timeline",
+      description: "Year-by-year view of known breaches from Have I Been Pwned: how many sites were breached and how many accounts were exposed.",
+      inputSchema: z.object({
+        from: z.number().describe("First year to include, defaults to 2004.").optional(),
+        to: z.number().describe("Last year to include, defaults to the current year.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ from, to }) => {
+      try {
+        return text(await breachTimeline({ from, to }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "subdomain_inventory",
+    {
+      title: "Subdomain inventory",
+      description: "Resolve common subdomains of a domain and show what each points to, flagging third-party CNAME targets that no longer resolve.",
+      inputSchema: z.object({
+        domain: z.string().describe("Your domain, e.g. example.com."),
+        names: z.string().describe("Subdomain labels to check instead of the default 20, comma separated.").optional(),
+        limit: z.number().describe("How many labels to check, 1-40. Defaults to 20.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ domain, names, limit }) => {
+      try {
+        return text(await subdomainInventory({ domain, names, limit }))
       } catch (e) {
         return textError(errorMessage(e))
       }

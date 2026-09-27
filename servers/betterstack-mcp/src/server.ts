@@ -1,15 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  contentCheck,
-  endpointSummary,
-  errorMessage,
-  headersReport,
-  latencyBreakdown,
-  redirectChain,
-  responseTimes,
-} from "./api.js"
-
+import { contentCheck, endpointSummary, errorMessage, headersReport, latencyBreakdown, redirectChain, responseTimes, certificateInfo, dnsRecords, portCheck, tlsVersions } from "./api.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -105,6 +96,68 @@ export function createServer(): McpServer {
     },
     async (args) => {
       try { return text(await endpointSummary(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "certificate_info",
+    {
+      title: "Certificate info",
+      description: "Read the TLS certificate a host presents: subject, issuer, validity and days left, chain length, SAN list and whether Node trusts it.",
+      inputSchema: z.object({
+        url: z.string().describe("Host or URL to read the certificate from, for example https://example.com.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await certificateInfo(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "dns_records",
+    {
+      title: "DNS records",
+      description: "Look up a domain's A, AAAA, CNAME, MX, TXT, NS and CAA records at once and report its SPF and DMARC status.",
+      inputSchema: z.object({
+        domain: z.string().describe("Domain to inspect, for example example.com.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await dnsRecords(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "port_check",
+    {
+      title: "Port check",
+      description: "Test whether TCP ports accept a connection, with the time each port took and the reason a port is closed.",
+      inputSchema: z.object({
+        host: z.string().describe("Host or URL to test, for example example.com."),
+        ports: z.string().describe('Ports to test, comma separated, max 10. Defaults to "80,443".').optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await portCheck(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "tls_versions",
+    {
+      title: "TLS versions",
+      description: "Check whether a host still negotiates TLS 1.2 and TLS 1.3, and which protocol and cipher it picks for each.",
+      inputSchema: z.object({
+        host: z.string().describe("Host or URL to test, for example example.com."),
+        port: z.number().describe("TCP port, defaults to 443.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await tlsVersions(args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 

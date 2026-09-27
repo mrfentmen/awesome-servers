@@ -20,6 +20,9 @@ Developer Tools
 - Check URL: Plain reachability check: HTTP status, response time, server header and any redirects.
 - Check redirects: Trace every redirect hop with its timing, and flag loops or an http-to-https upgrade that never happens.
 - Broken links: Read the links on a page and report which ones answer with an error status, so a deploy cannot ship dead links.
+- Assert response time: Sample a URL a few times and assert the median and worst time stay inside a budget, reporting each sample.
+- Assert JSON: Treat a URL as a JSON API: check it parses, then assert a dot-path exists and optionally equals or contains a value.
+- Assert redirect: Assert that a URL redirects, optionally that it lands on a given Location and answers with a specific status.
 
 ## Getting Started
 
@@ -30,6 +33,9 @@ Developer Tools
 - Tool: check_url — Plain reachability check: HTTP status, response time, server header and any redirects.
 - Tool: check_redirects — Trace every redirect hop with its timing, and flag loops or an http-to-https upgrade that never happens.
 - Tool: broken_links — Read the links on a page and report which ones answer with an error status, so a deploy cannot ship dead links.
+- Tool: assert_response_time — Sample a URL a few times and assert the median and worst time stay inside a budget, reporting each sample.
+- Tool: assert_json — Treat a URL as a JSON API: check it parses, then assert a dot-path exists and optionally equals or contains a value.
+- Tool: assert_redirect — Assert that a URL redirects, optionally that it lands on a given Location and answers with a specific status.
 
 ## Tags
 synthetic, monitoring, assertions, smoke test, links, mcp

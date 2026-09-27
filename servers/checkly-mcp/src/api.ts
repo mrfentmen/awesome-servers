@@ -299,3 +299,129 @@ export async function brokenLinks(args: { url: string; limit?: number }): Promis
     ...rows,
   ].join("\n")
 }
+// ---- batch-3 tools: response time, JSON and redirect assertions (2026-09-27) ----
+export async function assertResponseTime(args: { url: string; budget_ms?: number; samples?: number }): Promise<string> {
+  const url = normalizeTarget(args.url).toString()
+  const samples = Math.min(Math.max(Math.floor(Number(args.samples ?? 3) || 3), 2), 5)
+  const budget = Math.min(Math.max(Math.floor(Number(args.budget_ms ?? 1000) || 1000), 50), 30000)
+  const times: number[] = []
+  const statuses: number[] = []
+  for (let i = 0; i < samples; i += 1) {
+    const start = Date.now()
+    const res = await fetch(url, {
+      headers: { "User-Agent": UA, Accept: "*/*" },
+      signal: AbortSignal.timeout(Math.max(budget * 4, 5000)),
+    })
+    await res.arrayBuffer()
+    times.push(Date.now() - start)
+    statuses.push(res.status)
+  }
+  const sorted = [...times].sort((a, b) => a - b)
+  const median = sorted.length % 2 === 1
+    ? sorted[(sorted.length - 1) / 2]
+    : Math.round((sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2)
+  const worst = sorted[sorted.length - 1]
+  const checks: Assertion[] = [
+    { name: "median under budget", passed: median <= budget, detail: `${median} ms vs budget ${budget} ms` },
+    { name: "worst under 2x budget", passed: worst <= budget * 2, detail: `${worst} ms vs limit ${budget * 2} ms` },
+    { name: "all samples answered < 400", passed: statuses.every((s) => s < 400), detail: `statuses ${statuses.join(", ")}` },
+  ]
+  return summarise(`Response-time assertion for ${url} (${samples} samples: ${times.map((t) => `${t}ms`).join(", ")})`, checks)
+}
+
+const valueAtPath = (body: unknown, path: string): { found: boolean; value: unknown } => {
+  let current: unknown = body
+  for (const part of path.split(".").map((p) => p.trim()).filter(Boolean)) {
+    if (Array.isArray(current)) {
+      const index = Number(part)
+      if (!Number.isInteger(index) || index < 0 || index >= current.length) return { found: false, value: undefined }
+      current = current[index]
+      continue
+    }
+    if (current !== null && typeof current === "object" && part in (current as Record<string, unknown>)) {
+      current = (current as Record<string, unknown>)[part]
+      continue
+    }
+    return { found: false, value: undefined }
+  }
+  return { found: true, value: current }
+}
+
+export async function assertJson(args: { url: string; path?: string; equals?: string; contains?: string }): Promise<string> {
+  const r = await fetchChain(args.url, 20000)
+  const contentType = r.headers.get("content-type") ?? ""
+  const checks: Assertion[] = [
+    { name: "json content type", passed: /json/i.test(contentType), detail: contentType || "no content-type header" },
+    { name: "status under 400", passed: r.status < 400, detail: `HTTP ${r.status}` },
+  ]
+  let parsed: unknown
+  let parseError = ""
+  try {
+    parsed = JSON.parse(r.html)
+  } catch (e) {
+    parseError = errorMessage(e)
+  }
+  const ok = parsed !== undefined
+  checks.push({ name: "parses as JSON", passed: ok, detail: ok ? `${r.html.length} bytes of JSON` : parseError })
+
+  if (args.path) {
+    const hit = valueAtPath(parsed, args.path)
+    checks.push({
+      name: `path ${args.path}`,
+      passed: hit.found,
+      detail: hit.found ? `= ${JSON.stringify(hit.value)?.slice(0, 200) ?? "undefined"}` : "not present in the response",
+    })
+    if (args.equals !== undefined) {
+      const actual = typeof hit.value === "string" ? hit.value : JSON.stringify(hit.value)
+      checks.push({
+        name: "value equals",
+        passed: hit.found && actual === args.equals,
+        detail: `got ${String(actual).slice(0, 120) || "undefined"}, expected ${args.equals}`,
+      })
+    }
+    if (args.contains !== undefined) {
+      const hay = JSON.stringify(hit.value ?? "").toLowerCase()
+      checks.push({
+        name: "value contains",
+        passed: hit.found && hay.includes(args.contains.toLowerCase()),
+        detail: hay.slice(0, 160) || "no value resolved",
+      })
+    }
+  }
+  return summarise(`JSON API assertion for ${r.finalUrl} (HTTP ${r.status})`, checks)
+}
+
+export async function assertRedirect(args: { url: string; location_contains?: string; status?: string }): Promise<string> {
+  const r = await fetchChain(args.url, 15000)
+  const first = r.hops[0]
+  const redirectCodes = [301, 302, 303, 307, 308]
+  const checks: Assertion[] = [
+    {
+      name: "redirected",
+      passed: r.hops.length > 1,
+      detail: r.hops.length > 1 ? `${r.hops.length - 1} hop(s) to ${r.finalUrl}` : "answered directly with no redirect",
+    },
+    {
+      name: "redirect status",
+      passed: first ? redirectCodes.includes(first.status) : false,
+      detail: first ? `HTTP ${first.status}` : "no response",
+    },
+  ]
+  if (args.status) {
+    const matcher = statusMatcher(args.status)
+    checks.push({
+      name: "status matches",
+      passed: first ? matcher(first.status) : false,
+      detail: first ? `HTTP ${first.status} vs expected ${args.status}` : "no response",
+    })
+  }
+  if (args.location_contains) {
+    const target = first?.location ?? ""
+    checks.push({
+      name: "location contains",
+      passed: target.includes(args.location_contains),
+      detail: target ? target.slice(0, 200) : "no Location header on the first hop",
+    })
+  }
+  return summarise(`Redirect assertion for ${normalizeTarget(args.url).toString()}`, checks)
+}

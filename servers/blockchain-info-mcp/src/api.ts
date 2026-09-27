@@ -147,3 +147,69 @@ export async function transaction(args: { tx_hash?: string }): Promise<string> {
   }
   return lines.join('\n');
 }
+// ---- batch-3 tools: extra live market data (2026-09-27) ----
+async function plainNumber(path: string): Promise<number> {
+  const res = await fetch(`${BASE}${path}`, {
+    headers: { 'User-Agent': UA, Accept: 'text/plain' },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new BcError(`blockchain.info returned ${res.status}`);
+  return Number((await res.text()).trim());
+}
+
+type RawBlock = {
+  hash?: string; height?: number; block_index?: number; time?: number; n_tx?: number; size?: number; weight?: number;
+  fee?: number; prev_block?: string; next_block?: string[]; mrkl_root?: string; bits?: number; nonce?: number; main_chain?: boolean;
+};
+
+function blockSummary(block: RawBlock, label: string): string {
+  const when = block.time ? `${new Date(block.time * 1000).toISOString().replace('T', ' ').slice(0, 19)} UTC` : '?';
+  const lines = [
+    label,
+    `Height: ${block.height ?? '?'} | hash ${block.hash ?? '?'}`,
+    `Mined: ${when} | transactions ${block.n_tx ?? '?'} | size ${Number(block.size ?? 0).toLocaleString()} bytes | weight ${Number(block.weight ?? 0).toLocaleString()}`,
+    `Total fees: ${btc(block.fee)} | merkle root ${block.mrkl_root ?? '?'}`,
+    `Previous block: ${block.prev_block ?? '?'}`,
+  ];
+  if (block.next_block?.length) lines.push(`Next block(s): ${block.next_block.join(', ')}`);
+  lines.push(`Main chain: ${block.main_chain === undefined ? '?' : block.main_chain ? 'yes' : 'no'} | bits ${block.bits ?? '?'} | nonce ${block.nonce ?? '?'}`);
+  return lines.join('\n');
+}
+
+export async function blockByHeight(args: { height?: number }): Promise<string> {
+  const height = Math.floor(Number(args.height));
+  if (!Number.isFinite(height) || height <= 0 || height > 10_000_000) throw new BcError('Provide a block height, e.g. 900000');
+  const d = await get<{ blocks?: RawBlock[] }>(`${BASE}/block-height/${height}?format=json`);
+  const block = (d.blocks ?? [])[0];
+  if (!block) throw new BcError(`No block at height ${height}`);
+  return blockSummary(block, `Bitcoin block at height ${height}:`);
+}
+
+export async function blockByHash(args: { hash?: string }): Promise<string> {
+  const hash = (args.hash ?? '').trim();
+  if (!/^[0-9a-fA-F]{64}$/.test(hash)) throw new BcError('Provide a 64-character block hash');
+  const block = await get<RawBlock>(`${BASE}/rawblock/${hash}`);
+  if (!block?.hash) throw new BcError(`No block with hash ${hash}`);
+  return blockSummary(block, `Bitcoin block ${hash.slice(0, 20)}... at height ${block.height ?? '?'}:`);
+}
+
+export async function mempool(_args: Record<string, never> = {}): Promise<string> {
+  const pending = await plainNumber('/q/unconfirmedcount');
+  const d = await get<{ txs?: { hash?: string; fee?: number; size?: number; vin_sz?: number; vout_sz?: number }[] }>(
+    `${BASE}/unconfirmed-transactions?format=json`);
+  const rows = d.txs ?? [];
+  const count = Number.isFinite(pending) ? pending.toLocaleString() : '?';
+  if (!rows.length) return `Bitcoin mempool: ${count} unconfirmed transactions, but no sample was returned.`;
+  const fees = rows.map((t) => Number(t.fee ?? 0)).filter((n) => Number.isFinite(n));
+  const sizes = rows.map((t) => Number(t.size ?? 0)).filter((n) => Number.isFinite(n));
+  const totalFee = fees.reduce((s, n) => s + n, 0);
+  const totalSize = sizes.reduce((s, n) => s + n, 0);
+  const perByte = (t: { fee?: number; size?: number }) => Number(t.fee ?? 0) / Math.max(Number(t.size ?? 1), 1);
+  const fastest = [...rows].sort((a, b) => perByte(b) - perByte(a))[0];
+  return [
+    `Bitcoin mempool: ${count} unconfirmed transactions right now.`,
+    `Newest ${rows.length} waiting: total fees ${btc(totalFee)} over ${totalSize.toLocaleString()} bytes (average ${btc(totalFee / rows.length)} per transaction, ${Math.round(totalSize / rows.length)} bytes).`,
+    `Fee range in the sample: ${btc(Math.min(...fees))} to ${btc(Math.max(...fees))}.`,
+    `Best fee rate in the sample: ${perByte(fastest).toFixed(1)} sat/byte for ${fastest.hash ?? '?'} (${fastest.vin_sz ?? '?'} inputs, ${fastest.vout_sz ?? '?'} outputs).`,
+  ].join('\n');
+}

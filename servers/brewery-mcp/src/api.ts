@@ -194,3 +194,32 @@ export function breweryStats(): Promise<string> {
     return truncate(blocks.join("\n"))
   })
 }
+// ---- batch-3 tools: autocomplete, random batch, id lookup (2026-09-27) ----
+export function autocompleteBreweries(query: string, limit?: number): Promise<string> {
+  const q = (query ?? "").trim()
+  if (!q) throw new BreweryError("Provide a partial name to autocomplete, e.g. dog.")
+  const count = clamp(limit, 10, 50)
+  return getJson<Brewery[]>("/breweries/autocomplete", { query: q }).then(
+    (list) => formatAll(list, count) || `Nothing matched "${q}".`
+  )
+}
+
+export function randomBreweries(count?: number): Promise<string> {
+  const n = clamp(count, 3, 10)
+  return getJson<Brewery[]>("/breweries/random", { size: String(n) }).then(
+    (list) => formatAll(list, n) || "Open Brewery DB returned no random breweries."
+  )
+}
+
+export function breweriesByIds(ids: string, limit?: number): Promise<string> {
+  const list = (ids ?? "")
+    .split(/[,\s]+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 10)
+  if (!list.length) throw new BreweryError("Provide one or more brewery ids, comma separated (max 10).")
+  const count = clamp(limit, list.length, 50)
+  return getJson<Brewery[]>("/breweries", { by_ids: list.join(","), per_page: String(count) }).then(
+    (found) => formatAll(found, count) || "No breweries matched those ids."
+  )
+}

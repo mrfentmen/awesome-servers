@@ -11,6 +11,9 @@ Burberry resale listings aggregated from Fashionphile and Rebag public catalogs 
 - `compare_prices` — Group same-model listings across sources with min/max/spread.
 - `find_deals` — Available listings priced below the brand median.
 - `brand_overview` — Catalog sample counts by source, type and condition.
+- `list_collections` — Curated store collections with handles for browse_collection, e.g. sale or category collections.
+- `browse_collection` — Listings inside one collection handle from list_collections, e.g. a sale or category collection.
+- `find_by_attribute` — Listings filtered by color, exterior material or condition, plus the common values in the sample.
 
 ## Source
 

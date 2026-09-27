@@ -103,3 +103,55 @@ export async function freeGames(args: { limit?: number }): Promise<string> {
     `${i + 1}. ${x?.title ?? "?"} — free at ${names.get(String(x?.storeID ?? "")) ?? "?"} (was ${money(x?.normalPrice)})`
   ).join("\n")
 }
+// ---- batch-3 tools: Steam AppID lookup + filtered deals (2026-09-27) ----
+export async function steamLookup(args: { appID?: string; limit?: number }): Promise<string> {
+  const id = String(args.appID ?? "").trim()
+  if (!/^\d{2,10}$/.test(id)) throw new CheapsharkError("Provide a numeric Steam AppID, e.g. 1245620 for ELDEN RING")
+  const limit = Math.min(args.limit ?? 5, 20)
+  const d = await get<any[]>(`${BASE}/games?steamAppID=${encodeURIComponent(id)}`)
+  if (!Array.isArray(d) || !d.length) {
+    return `CheapShark has no Steam-linked entry for AppID ${id}. Not every game is linked to its Steam AppID — try search_games with the title instead.`
+  }
+  return `Steam AppID ${id} — ${d.length} CheapShark game(s):\n` + d.slice(0, limit).map((g: any, i: number) =>
+    `${i + 1}. ${g?.external ?? "?"} — cheapest ${money(g?.cheapest)} | gameID ${g?.gameID ?? "?"}`
+  ).join("\n")
+}
+
+const DEAL_SORTS = ["Deal Rating", "Price", "Savings", "Metacritic", "Reviews", "Release", "Recent"]
+
+export async function filterDeals(args: {
+  minPrice?: number
+  maxPrice?: number
+  metacritic?: number
+  steamRating?: number
+  onSale?: boolean
+  aaa?: boolean
+  sort?: string
+  limit?: number
+}): Promise<string> {
+  const limit = Math.min(args.limit ?? 10, 25)
+  const params = new URLSearchParams()
+  if (typeof args.minPrice === "number" && Number.isFinite(args.minPrice)) params.set("lowerPrice", String(args.minPrice))
+  if (typeof args.maxPrice === "number" && Number.isFinite(args.maxPrice)) params.set("upperPrice", String(args.maxPrice))
+  if (typeof args.metacritic === "number" && Number.isFinite(args.metacritic)) params.set("metacritic", String(args.metacritic))
+  if (typeof args.steamRating === "number" && Number.isFinite(args.steamRating)) params.set("steamRating", String(args.steamRating))
+  if (args.onSale === true) params.set("onSale", "1")
+  if (args.aaa === true) params.set("AAA", "1")
+  const sort = (args.sort ?? "").trim()
+  if (sort) {
+    const match = DEAL_SORTS.find((s) => s.toLowerCase() === sort.toLowerCase())
+    if (!match) throw new CheapsharkError(`sort must be one of ${DEAL_SORTS.join(", ")}`)
+    params.set("sortBy", match)
+    params.set("desc", "0")
+  }
+  params.set("pageSize", String(limit))
+  const d = await get<any[]>(`${BASE}/deals?${params.toString()}`)
+  if (!Array.isArray(d) || !d.length) return "No deals matched those filters."
+  const names = await storeNames()
+  return `Filtered deals (${d.length} shown):\n` + d.map((x: any, i: number) => {
+    const pct = x?.savings ? Math.round(Number(x.savings)) : 0
+    const meta = x?.metacriticScore && x.metacriticScore !== "0" ? ` | metacritic ${x.metacriticScore}` : ""
+    const rating = x?.steamRatingText ? ` | Steam ${x.steamRatingText}` : ""
+    return `${i + 1}. ${x?.title ?? "?"} — ${money(x?.salePrice)} (was ${money(x?.normalPrice)}), ${pct}% off at ${names.get(String(x?.storeID ?? "")) ?? "?"}${meta}${rating}`
+  }).join("\n")
+}

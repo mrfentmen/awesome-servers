@@ -20,6 +20,8 @@ Games
 - Game details: Compare one game's price across every store, plus its cheapest price ever.
 - Top deals: The best current game deals ranked by CheapShark's deal rating, all stores or one store.
 - Free games: Games currently free (or 100% off) on any tracked store.
+- Steam lookup: Find a CheapShark game from its Steam AppID, with the current cheapest price and the gameID for game_details.
+- Filter deals: Deals filtered by price range, minimum Metacritic score, minimum Steam rating, on-sale or AAA games, sorted cheapest first or by rating.
 
 ## Getting Started
 
@@ -30,6 +32,8 @@ Games
 - Tool: game_details — Compare one game's price across every store, plus its cheapest price ever.
 - Tool: top_deals — The best current game deals ranked by CheapShark's deal rating, all stores or one store.
 - Tool: free_games — Games currently free (or 100% off) on any tracked store.
+- Tool: steam_lookup — Find a CheapShark game from its Steam AppID, with the current cheapest price and the gameID for game_details.
+- Tool: filter_deals — Deals filtered by price range, minimum Metacritic score, minimum Steam rating, on-sale or AAA games, sorted cheapest first or by rating.
 
 ## Tags
 cheapshark, mcp, shopping, keyless

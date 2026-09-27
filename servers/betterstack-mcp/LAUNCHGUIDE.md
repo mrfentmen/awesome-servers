@@ -20,6 +20,10 @@ Developer Tools
 - Redirect chain: Every hop from the URL you give to the URL that finally answers, with timing and loop detection.
 - Header report: Grouped response headers — origin, caching and CDN, compression, security and cookies — with what looks wrong.
 - Endpoint summary: One call for a whole endpoint: reachable or not, latency stages, TLS certificate age and DNS address.
+- Certificate info: Read the TLS certificate a host presents: subject, issuer, validity and days left, chain length, SAN list and whether Node trusts it.
+- DNS records: Look up a domain's A, AAAA, CNAME, MX, TXT, NS and CAA records at once and report its SPF and DMARC status.
+- Port check: Test whether TCP ports accept a connection, with the time each port took and the reason a port is closed.
+- TLS versions: Check whether a host still negotiates TLS 1.2 and TLS 1.3, and which protocol and cipher it picks for each.
 
 ## Getting Started
 
@@ -30,6 +34,10 @@ Developer Tools
 - Tool: redirect_chain — Every hop from the URL you give to the URL that finally answers, with timing and loop detection.
 - Tool: headers_report — Grouped response headers — origin, caching and CDN, compression, security and cookies — with what looks wrong.
 - Tool: endpoint_summary — One call for a whole endpoint: reachable or not, latency stages, TLS certificate age and DNS address.
+- Tool: certificate_info — Read the TLS certificate a host presents: subject, issuer, validity and days left, chain length, SAN list and whether Node trusts it.
+- Tool: dns_records — Look up a domain's A, AAAA, CNAME, MX, TXT, NS and CAA records at once and report its SPF and DMARC status.
+- Tool: port_check — Test whether TCP ports accept a connection, with the time each port took and the reason a port is closed.
+- Tool: tls_versions — Check whether a host still negotiates TLS 1.2 and TLS 1.3, and which protocol and cipher it picks for each.
 
 ## Tags
 observability, latency, performance, seo, headers, mcp

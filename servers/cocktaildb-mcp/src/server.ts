@@ -1,16 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  errorMessage,
-  searchCocktails,
-  getCocktail,
-  randomCocktail,
-  listIngredients,
-  filterCocktails,
-  ingredientInfo,
-  listFilters,
-} from "./api.js"
-
+import { errorMessage, searchCocktails, getCocktail, randomCocktail, listIngredients, filterCocktails, ingredientInfo, listFilters, searchByLetter, filterMultiIngredient } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -159,6 +149,48 @@ export function createServer(): McpServer {
     async ({ kind }) => {
       try {
         return text(await listFilters(kind))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "search_by_letter",
+    {
+      title: "Browse by letter",
+      description:
+        "List every cocktail whose name starts with one letter, for browsing the database alphabetically.",
+      inputSchema: z.object({
+        letter: z.string().describe("Single letter a-z, e.g. m."),
+        limit: z.number().describe("How many drinks to list, 1-50 (default 20).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ letter, limit }) => {
+      try {
+        return text(await searchByLetter(letter, limit))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "filter_multi_ingredient",
+    {
+      title: "Filter by several ingredients",
+      description:
+        "Cocktails that contain all of the listed ingredients at once, e.g. Gin and Tonic water — the recipe finder for what is already in the bar.",
+      inputSchema: z.object({
+        ingredients: z.string().describe("Two to six ingredient names, comma separated, e.g. Gin,Tonic water."),
+        limit: z.number().describe("How many drinks to list, 1-50 (default 20).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ ingredients, limit }) => {
+      try {
+        return text(await filterMultiIngredient(ingredients, limit))
       } catch (e) {
         return textError(errorMessage(e))
       }

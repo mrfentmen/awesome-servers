@@ -12,6 +12,10 @@ A merged MCP server that consolidates duplicate single-purpose servers in this m
 - `coin` — One coin with rank, 24h change, algorithm and categories.
 - `chart` — Sampled daily closes for a coin over N days with the period percent change.
 - `global` — Total coins and markets plus top-5 dominance shares.
+- `categories` — CoinGecko sector categories ranked by market cap, with 24h change and volume.
+- `exchanges` — CoinGecko exchange rankings by trust score, with 24h BTC volume and country.
+- `search` — Find coin, exchange and category ids on CoinGecko by name or symbol, e.g. solana, aave.
+- `history` — Coin price, market cap and volume on a past date, e.g. 20-09-2026.
 
 ## Run
 

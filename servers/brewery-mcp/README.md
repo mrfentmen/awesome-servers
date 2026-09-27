@@ -10,6 +10,9 @@ Query Open Brewery DB (keyless): search US breweries by name/city/state/type, de
 - `get_brewery` — Full details for one brewery by its id, including address, coordinates and contact info.
 - `random_brewery` — A random brewery from the directory, useful for discovery and examples.
 - `brewery_stats` — Directory totals from Open Brewery DB broken down by country, brewery type and state/region. Good for market sizing and picking valid filter values.
+- `autocomplete_breweries` — Type-ahead suggestions for a partial brewery name, with the id needed by get_brewery and the address fields.
+- `random_breweries` — A batch of random breweries in one call, useful for sampling the directory or building a shortlist.
+- `breweries_by_ids` — Fetch up to 10 breweries by id in one call — the batch lookup for a list of ids collected from earlier results.
 
 ## Source
 

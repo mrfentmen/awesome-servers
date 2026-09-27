@@ -21,6 +21,8 @@ Other
 - Filter cocktails: Browse cocktails by one attribute: an ingredient they contain, a category, a glass type, or an alcohol option. Returns drink names with ids.
 - Ingredient info: Profile of one ingredient: type, whether it contains alcohol, ABV, and a description of what it is.
 - List filters: The valid values for filter_cocktails: drink categories, glass types and alcohol options.
+- Browse by letter: List every cocktail whose name starts with one letter, for browsing the database alphabetically.
+- Filter by several ingredients: Cocktails that contain all of the listed ingredients at once, e.g. Gin and Tonic water — the recipe finder for what is already in the bar.
 
 ## Getting Started
 
@@ -33,6 +35,8 @@ Other
 - Tool: filter_cocktails — Browse cocktails by one attribute: an ingredient they contain, a category, a glass type, or an alcohol option. Returns drink names with ids.
 - Tool: ingredient_info — Profile of one ingredient: type, whether it contains alcohol, ABV, and a description of what it is.
 - Tool: list_filters — The valid values for filter_cocktails: drink categories, glass types and alcohol options.
+- Tool: search_by_letter — List every cocktail whose name starts with one letter, for browsing the database alphabetically.
+- Tool: filter_multi_ingredient — Cocktails that contain all of the listed ingredients at once, e.g. Gin and Tonic water — the recipe finder for what is already in the bar.
 
 ## Tags
 cocktails, recipes, drinks, bar, keyless

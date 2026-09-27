@@ -20,6 +20,9 @@ Ecommerce
 - Price overview: Ask-price distribution (min/p25/median/p75/max).
 - Find deals: Available products priced below the median.
 - Categories: Product-type counts in the catalog sample.
+- List collections: Every store collection with its handle, for browse_collection, e.g. shop-all, accessories, uniform.
+- Browse collection: Listings inside one collection handle from list_collections, optionally only items in stock in a size.
+- Find by size: In-stock items in a size, with that size's price and the other sizes still in stock.
 
 ## Getting Started
 
@@ -30,6 +33,9 @@ Ecommerce
 - Tool: price_overview — Ask-price distribution (min/p25/median/p75/max).
 - Tool: find_deals — Available products priced below the median.
 - Tool: list_categories — Product-type counts in the catalog sample.
+- Tool: list_collections — Every store collection with its handle, for browse_collection, e.g. shop-all, accessories, uniform.
+- Tool: browse_collection — Listings inside one collection handle from list_collections, optionally only items in stock in a size.
+- Tool: find_by_size — In-stock items in a size, with that size's price and the other sizes still in stock.
 
 ## Tags
 aimeleondore, mcp, shopping, keyless

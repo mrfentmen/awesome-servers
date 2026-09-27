@@ -364,3 +364,160 @@ export async function domainEmailSecurity(args: { domain: string }): Promise<str
       : "",
   ].filter(Boolean).join("\n")
 }
+// ---- batch-3 tools: hash ID, hashing, breach trends, subdomain inventory (2026-09-27) ----
+const HASH_PATTERNS: Array<{ name: string; pattern: RegExp; note: string }> = [
+  { name: "bcrypt", pattern: /^\$2[aby]?\$\d{2}\$[./A-Za-z0-9]{53}$/, note: "bcrypt, with the cost factor in the third field" },
+  { name: "argon2", pattern: /^\$argon2(i|d|id)\$/, note: "Argon2 — modern password hash" },
+  { name: "sha512crypt", pattern: /^\$6\$/, note: "SHA-512 crypt, used in Linux /etc/shadow" },
+  { name: "sha256crypt", pattern: /^\$5\$/, note: "SHA-256 crypt, used in Linux /etc/shadow" },
+  { name: "md5crypt", pattern: /^\$1\$/, note: "MD5 crypt — obsolete" },
+  { name: "phpass", pattern: /^\$P\$[./A-Za-z0-9]{31}$/, note: "phpass, used by older WordPress and phpBB" },
+  { name: "mysql5", pattern: /^\*[A-F0-9]{40}$/, note: "MySQL 5 password hash" },
+  { name: "windows-lmntlm", pattern: /^[a-f0-9]{32}:[a-f0-9]{32}$/i, note: "Windows LM:NTLM pair" },
+  { name: "md5", pattern: /^[a-f0-9]{32}$/i, note: "MD5 or NTLM — same length, both fast and broken" },
+  { name: "sha1", pattern: /^[a-f0-9]{40}$/i, note: "SHA-1 or MySQL 4.1 password hash" },
+  { name: "sha256", pattern: /^[a-f0-9]{64}$/i, note: "SHA-256 or SHA3-256" },
+  { name: "sha512", pattern: /^[a-f0-9]{128}$/i, note: "SHA-512 or SHA3-512" },
+  { name: "crc32", pattern: /^[a-f0-9]{8}$/i, note: "CRC-32 checksum, not a security hash" },
+]
+
+export async function identifyHash(args: { hash: string }): Promise<string> {
+  const value = (args.hash ?? "").trim()
+  if (!value) throw new Error("Provide a hash string to identify.")
+  if (value.length > 512) throw new Error("That is longer than any supported hash; paste one hash at a time.")
+  const matches = HASH_PATTERNS.filter((p) => p.pattern.test(value))
+  const lines = [
+    `Hash identification (${value.length} character(s))`,
+    `Preview: ${value.slice(0, 72)}${value.length > 72 ? "…" : ""}`,
+    "",
+    matches.length ? `Possible formats (${matches.length}):` : "No known hash format matched.",
+    ...matches.map((m) => `  - ${m.name}: ${m.note}`),
+  ]
+  if (!matches.length) {
+    lines.push("A hash is normally hex or starts with $; check for a truncation, a salt prefix, or mixed case that broke the pattern.")
+  }
+  const weak = matches.some((m) => ["md5", "sha1", "crc32", "md5crypt"].includes(m.name))
+  if (weak) lines.push("", "Warning: MD5, SHA-1 and CRC-32 are unsuitable for password storage. Migrate to bcrypt, scrypt or Argon2.")
+  lines.push("", "The format was identified locally — nothing was cracked and nothing left this machine.")
+  return lines.join("\n")
+}
+
+const HASH_ALGORITHMS = ["md5", "sha1", "sha256", "sha512"] as const
+
+export async function hashText(args: { text: string; algorithm?: string }): Promise<string> {
+  const value = args.text ?? ""
+  if (!value) throw new Error("Provide the text to hash.")
+  const wanted = (args.algorithm ?? "all").trim().toLowerCase()
+  const chosen = wanted === "all" ? [...HASH_ALGORITHMS] : HASH_ALGORITHMS.filter((a) => a === wanted)
+  if (!chosen.length) throw new Error(`algorithm must be one of ${HASH_ALGORITHMS.join(", ")} or all`)
+  return [
+    `Hashes of ${value.length} character(s), computed locally:`,
+    ...chosen.map((a) => `${a}: ${createHash(a).update(value, "utf8").digest("hex")}`),
+    "",
+    "MD5 and SHA-1 are checksums, not password storage. Use bcrypt, scrypt or Argon2 for credentials.",
+  ].join("\n")
+}
+
+export async function breachTimeline(args: { from?: number; to?: number }): Promise<string> {
+  const res = await fetch(`${HIBP}/breaches`, {
+    headers: { "User-Agent": UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(20000),
+  })
+  if (!res.ok) throw new Error(`Have I Been Pwned returned HTTP ${res.status}.`)
+  const breaches = ((await res.json()) as Breach[]).filter((b) => !b.IsSensitive)
+  const thisYear = new Date().getFullYear()
+  const from = Math.min(Math.max(Math.floor(Number(args.from ?? 2004) || 2004), 1990), thisYear)
+  const to = Math.min(Math.max(Math.floor(Number(args.to ?? thisYear) || thisYear), from), thisYear)
+  const byYear = new Map<number, { breaches: number; accounts: number }>()
+  for (const b of breaches) {
+    const year = Number((b.BreachDate ?? "").slice(0, 4))
+    if (!Number.isFinite(year) || year < from || year > to) continue
+    const row = byYear.get(year) ?? { breaches: 0, accounts: 0 }
+    row.breaches += 1
+    row.accounts += Number(b.PwnCount ?? 0)
+    byYear.set(year, row)
+  }
+  const years = [...byYear.entries()].sort((a, b) => a[0] - b[0])
+  if (!years.length) return `No breaches in the Have I Been Pwned catalogue between ${from} and ${to}.`
+  const totBreaches = years.reduce((s, [, r]) => s + r.breaches, 0)
+  const totAccounts = years.reduce((s, [, r]) => s + r.accounts, 0)
+  return [
+    `Have I Been Pwned breaches per year, ${from}-${to}`,
+    `${totBreaches} breached site(s) and ${totAccounts.toLocaleString("en-US")} exposed account record(s) in that window.`,
+    "",
+    ...years.map(([year, row]) => `${year}: ${String(row.breaches).padStart(4)} breach(es) | ${row.accounts.toLocaleString("en-US").padStart(16)} accounts`),
+  ].join("\n")
+}
+
+const TAKEOVER_SERVICES: Array<{ suffix: string; service: string }> = [
+  { suffix: "github.io", service: "GitHub Pages" },
+  { suffix: "s3.amazonaws.com", service: "Amazon S3" },
+  { suffix: "herokuapp.com", service: "Heroku" },
+  { suffix: "netlify.app", service: "Netlify" },
+  { suffix: "vercel.app", service: "Vercel" },
+  { suffix: "myshopify.com", service: "Shopify" },
+  { suffix: "azurewebsites.net", service: "Azure App Service" },
+  { suffix: "cloudfront.net", service: "Amazon CloudFront" },
+  { suffix: "fastly.net", service: "Fastly" },
+  { suffix: "wordpress.com", service: "WordPress.com" },
+  { suffix: "surge.sh", service: "Surge" },
+  { suffix: "fly.dev", service: "Fly.io" },
+  { suffix: "onrender.com", service: "Render" },
+  { suffix: "web.app", service: "Firebase Hosting" },
+]
+
+const DEFAULT_SUBDOMAINS = [
+  "www", "mail", "dev", "staging", "api", "app", "cdn", "blog", "shop", "test",
+  "admin", "portal", "docs", "support", "status", "beta", "demo", "m", "vpn", "assets",
+]
+
+async function lookupHost(name: string, type: "A" | "CNAME"): Promise<{ status: number; values: string[] }> {
+  const body = await dns(name, type)
+  return { status: body.Status ?? -1, values: records(body, type) }
+}
+
+export async function subdomainInventory(args: { domain: string; names?: string; limit?: number }): Promise<string> {
+  const raw = (args.domain ?? "").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "")
+  if (!raw || !raw.includes(".")) return "Provide a domain like example.com."
+  const candidates = args.names
+    ? args.names.split(/[,\s]+/).map((s) => s.trim().toLowerCase().replace(/\.$/, "")).filter(Boolean)
+    : DEFAULT_SUBDOMAINS
+  const limit = Math.min(Math.max(Math.floor(Number(args.limit ?? 20) || 20), 1), 40)
+  const list = [...new Set(candidates)].slice(0, limit)
+  const rows: string[] = []
+  const findings: string[] = []
+  for (const name of list) {
+    const host = `${name}.${raw}`
+    const cname = await lookupHost(host, "CNAME")
+    if (cname.values.length) {
+      const target = cname.values[0]
+      const bare = target.replace(/\.$/, "")
+      const targetA = await lookupHost(bare, "A")
+      const service = TAKEOVER_SERVICES.find((s) => bare.toLowerCase().endsWith(s.suffix))
+      const dangling = targetA.values.length === 0 || targetA.status === 3
+      rows.push(
+        `${host} -> CNAME ${bare}${service ? ` (${service.service})` : ""} | target ${dangling ? "does not resolve" : `resolves to ${targetA.values.slice(0, 2).join(", ")}`}`
+      )
+      if (dangling && service) {
+        findings.push(`${host} points at ${service.service} but the target does not resolve — claim the resource or remove the record.`)
+      }
+      continue
+    }
+    const a = await lookupHost(host, "A")
+    if (a.values.length) {
+      rows.push(`${host} -> ${a.values.slice(0, 3).join(", ")}`)
+      continue
+    }
+    rows.push(`${host} -> no A or CNAME record${a.status === 3 ? " (NXDOMAIN)" : a.status !== 0 ? ` (DNS status ${a.status})` : ""}`)
+  }
+  return [
+    `Subdomain inventory for ${raw} (${list.length} name(s), DNS-over-HTTPS)`,
+    "",
+    ...rows,
+    "",
+    findings.length
+      ? `Possible dangling records (${findings.length}):\n${findings.map((f) => `  - ${f}`).join("\n")}`
+      : "No dangling third-party CNAME records found in this sample.",
+    "Resolving subdomains is reconnaissance, so only run this against domains you own or are authorised to test.",
+  ].join("\n")
+}

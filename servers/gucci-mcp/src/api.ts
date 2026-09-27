@@ -359,3 +359,113 @@ export async function brandOverview(): Promise<string> {
     note: "Sample of newest ~500 listings per source. Not affiliated with Gucci.",
   })
 }
+
+
+// --- catalog tools: collections + attribute/size filters ---
+function collectionsOrigin(catalogUrl: string): string {
+  return new URL(catalogUrl).origin
+}
+
+// Curated store collections. store_products is the collection's full size on the
+// store, not just this brand's slice - browse_collection returns the brand rows.
+export async function listCollections(query?: string): Promise<string> {
+  const wanted = query ? query.trim().toLowerCase() : null
+  const rows: { source: string; title: string; handle: string; store_products: number | null }[] = []
+  for (const s of SOURCES) {
+    try {
+      const list: unknown[] = []
+      for (const page of [1, 2, 3]) {
+        const data = await getJson(`${collectionsOrigin(s.catalog)}/collections.json?limit=250&page=${page}`)
+        const rows: unknown[] = Array.isArray(data.collections) ? data.collections : []
+        if (!rows.length) break
+        list.push(...rows)
+      }
+      for (const row of list) {
+        const c = row as { title?: unknown; handle?: unknown; products_count?: unknown }
+        if (typeof c.title !== "string" || typeof c.handle !== "string") continue
+        if (wanted && !c.title.toLowerCase().includes(wanted)) continue
+        rows.push({
+          source: s.name,
+          title: c.title,
+          handle: c.handle,
+          store_products: typeof c.products_count === "number" ? c.products_count : null,
+        })
+      }
+    } catch { /* source down - keep the other */ }
+  }
+  return pretty({
+    brand: "Gucci", query: query ?? null, returned: rows.length,
+    note: "Collection handles feed browse_collection. store_products counts the whole collection.",
+    collections: rows.slice(0, 60),
+  })
+}
+
+export async function browseCollection(handle: string, source?: string, limit?: string, maxPrice?: string, condition?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 10) || 10, 25)
+  const mp = maxPrice !== undefined ? Number(maxPrice) : undefined
+  const cond = condition !== undefined ? normCondition(condition) : undefined
+  if (condition !== undefined && cond === null) throw new GucciError(`Unknown condition '${condition}'. Use: ${CONDITIONS.join(", ")}.`)
+  const sources = source ? SOURCES.filter((s) => s.name === source) : SOURCES
+  if (!sources.length) throw new GucciError(`Unknown source '${source}'. Use ${SOURCES.map((s) => s.name).join(" or ")}.`)
+  const out: Slim[] = []
+  let brandItems = 0
+  for (const s of sources) {
+    try {
+      for (const page of [1, 2, 3]) {
+        const data = await getJson(`${collectionsOrigin(s.catalog)}/collections/${encodeURIComponent(handle)}/products.json?limit=250&page=${page}`)
+        const products: unknown[] = Array.isArray(data.products) ? data.products : []
+        if (!products.length) break
+        for (const raw of products) {
+          if (!isProduct(raw) || !matchesBrand(raw.vendor)) continue
+          brandItems += 1
+          const sl = slim(s.name, s.base, raw)
+          if (passes(sl, mp, cond ?? undefined)) out.push(sl)
+        }
+      }
+    } catch { /* collection or source missing - keep the other */ }
+  }
+  if (!brandItems) throw new GucciError(`Collection '${handle}' has no Gucci listings on ${sources.map((s) => s.name).join(", ")}.`)
+  out.sort((a, b) => String(b.published_at ?? "").localeCompare(String(a.published_at ?? "")))
+  return pretty({
+    brand: "Gucci", collection: handle, brand_items_matched: brandItems,
+    returned: Math.min(out.length, n), truncated: out.length > n, listings: out.slice(0, n),
+  })
+}
+
+export async function find_by_attribute(color?: string, material?: string, condition?: string, maxPrice?: string, limit?: string, sample?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 10) || 10, 25)
+  const per = Math.min(Number(sample ?? 200) || 200, 500)
+  const mp = maxPrice !== undefined ? Number(maxPrice) : undefined
+  const cond = condition !== undefined ? normCondition(condition) : undefined
+  if (condition !== undefined && cond === null) throw new GucciError(`Unknown condition '${condition}'. Use: ${CONDITIONS.join(", ")}.`)
+  const wantColor = color ? color.trim().toLowerCase() : null
+  const wantMaterial = material ? material.trim().toLowerCase() : null
+  if (!wantColor && !wantMaterial && !cond) throw new GucciError("Give at least one of color, material or condition.")
+  const all: (Slim & { matched_on: string })[] = []
+  const colors: Record<string, number> = {}
+  const materials: Record<string, number> = {}
+  let tagged = 0
+  for (const { source: s, p } of await sampleCatalog(per, [1, 2, 3, 4])) {
+    const sl = slim(s.name, s.base, p)
+    if (sl.color) { tagged += 1; colors[sl.color] = (colors[sl.color] ?? 0) + 1 }
+    if (sl.material) materials[sl.material] = (materials[sl.material] ?? 0) + 1
+    if (wantColor && !(sl.color ?? "").toLowerCase().includes(wantColor)) continue
+    if (wantMaterial && !(sl.material ?? "").toLowerCase().includes(wantMaterial)) continue
+    // Structured tags exist on one source only, so a colour/material also matches the
+    // listing title. Which side matched is reported per row (matched_on).
+    const colorOnTag = wantColor ? (sl.color ?? "").toLowerCase().includes(wantColor) : false
+    const materialOnTag = wantMaterial ? (sl.material ?? "").toLowerCase().includes(wantMaterial) : false
+    const hay = `${sl.title} ${sl.vendor} ${sl.product_type}`.toLowerCase()
+    if (wantColor && !colorOnTag && !hay.includes(wantColor)) continue
+    if (wantMaterial && !materialOnTag && !hay.includes(wantMaterial)) continue
+    if (!passes(sl, mp, cond ?? undefined)) continue
+    all.push({ ...sl, matched_on: colorOnTag || materialOnTag ? "structured attribute" : "title keyword" })
+  }
+  const top = (m: Record<string, number>) => Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([name, count]) => ({ name, count }))
+  return pretty({
+    brand: "Gucci", color: wantColor, material: wantMaterial, condition: cond ?? null,
+    sample: per, attributes_known: tagged, top_colors: top(colors), top_materials: top(materials),
+    note: "Structured colour/material tags where the source publishes them, listing-title match otherwise.",
+    matched: all.length, returned: Math.min(all.length, n), listings: all.slice(0, n).sort((a, b) => (a.price_usd ?? Infinity) - (b.price_usd ?? Infinity)),
+  })
+}

@@ -20,6 +20,9 @@ Other
 - Get brewery: Full details for one brewery by its id, including address, coordinates and contact info.
 - Random brewery: A random brewery from the directory, useful for discovery and examples.
 - Brewery stats: Directory totals from Open Brewery DB broken down by country, brewery type and state/region. Good for market sizing and picking valid filter values.
+- Autocomplete breweries: Type-ahead suggestions for a partial brewery name, with the id needed by get_brewery and the address fields.
+- Random breweries: A batch of random breweries in one call, useful for sampling the directory or building a shortlist.
+- Breweries by ids: Fetch up to 10 breweries by id in one call — the batch lookup for a list of ids collected from earlier results.
 
 ## Getting Started
 
@@ -31,6 +34,9 @@ Other
 - Tool: get_brewery — Full details for one brewery by its id, including address, coordinates and contact info.
 - Tool: random_brewery — A random brewery from the directory, useful for discovery and examples.
 - Tool: brewery_stats — Directory totals from Open Brewery DB broken down by country, brewery type and state/region. Good for market sizing and picking valid filter values.
+- Tool: autocomplete_breweries — Type-ahead suggestions for a partial brewery name, with the id needed by get_brewery and the address fields.
+- Tool: random_breweries — A batch of random breweries in one call, useful for sampling the directory or building a shortlist.
+- Tool: breweries_by_ids — Fetch up to 10 breweries by id in one call — the batch lookup for a list of ids collected from earlier results.
 
 ## Tags
 beer, breweries, craft-beer, travel, keyless

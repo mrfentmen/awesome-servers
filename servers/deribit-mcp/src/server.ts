@@ -1,7 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { indexPrice, ticker, supported, book, instruments, trades, summary } from './api.js'
-
+import { indexPrice, ticker, supported, book, instruments, trades, summary, fundingRateHistory, historicalVolatility, optionsSummary, currencies } from './api.js'
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -93,5 +92,57 @@ export function createServer(): McpServer {
     try { return text(await summary(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "funding_rate_history",
+    {
+      title: "Funding history",
+      description: "Perpetual funding rate history with latest, average and annualised rate for an instrument.",
+      inputSchema: z.object( { instrument: z.string().describe("Instrument like BTC-PERPETUAL.").optional(), hours: z.number().describe("Hours of history, 8-720. Defaults to 168.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await fundingRateHistory(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "historical_volatility",
+    {
+      title: "Historical volatility",
+      description: "Deribit's historical volatility series for a currency: latest, 7-day average and full range.",
+      inputSchema: z.object( { currency: z.string().describe("Currency like BTC.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await historicalVolatility(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "options_summary",
+    {
+      title: "Options summary",
+      description: "Option chain overview: calls vs puts, expiries and the instruments with the most open interest.",
+      inputSchema: z.object( { currency: z.string().describe("Currency like BTC.").optional(), limit: z.number().describe("How many top instruments, 1-25. Defaults to 10.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await optionsSummary(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "currencies",
+    {
+      title: "Currencies",
+      description: "Every currency Deribit lists for trading, with the count per coin type.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await currencies(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

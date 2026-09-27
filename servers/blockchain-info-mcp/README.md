@@ -12,6 +12,9 @@ This file is self contained. It reads public data only and never writes to the m
 * `address`  Bitcoin address summary: transaction count, total received/sent, balance and recent transactions.
 * `address_balance`  Check the balance of up to 20 Bitcoin addresses at once, comma or space separated.
 * `transaction`  Look up a Bitcoin transaction by hash: size, fee, inputs, outputs and the largest payments.
+* `block_by_height`  Bitcoin block at a height: hash, mining time, size, weight, total fees and neighbouring blocks.
+* `block_by_hash`  Bitcoin block by its 64-character hash, with the same size, fee and chain fields as block_by_height.
+* `mempool`  Pending Bitcoin transactions: mempool depth plus fees and sizes of the newest waiting transactions.
 
 ## Usage
 

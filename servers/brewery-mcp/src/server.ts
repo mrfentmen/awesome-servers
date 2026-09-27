@@ -1,15 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  breweryStats,
-  errorMessage,
-  findBreweries,
-  getBrewery,
-  randomBrewery,
-  searchAllBreweries,
-  searchBreweries,
-} from "./api.js"
-
+import { breweryStats, errorMessage, findBreweries, getBrewery, randomBrewery, searchAllBreweries, searchBreweries, autocompleteBreweries, randomBreweries, breweriesByIds } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -138,6 +129,68 @@ export function createServer(): McpServer {
     async () => {
       try {
         return text(await breweryStats())
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "autocomplete_breweries",
+    {
+      title: "Autocomplete breweries",
+      description:
+        "Type-ahead suggestions for a partial brewery name, with the id needed by get_brewery and the address fields.",
+      inputSchema: z.object({
+        query: z.string().describe("Partial name, e.g. dog or bre."),
+        limit: z.number().describe("Max results, 1-50 (default 10).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, limit }) => {
+      try {
+        return text(await autocompleteBreweries(query, limit))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "random_breweries",
+    {
+      title: "Random breweries",
+      description:
+        "A batch of random breweries in one call, useful for sampling the directory or building a shortlist.",
+      inputSchema: z.object({
+        count: z.number().describe("How many breweries, 1-10 (default 3).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ count }) => {
+      try {
+        return text(await randomBreweries(count))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "breweries_by_ids",
+    {
+      title: "Breweries by ids",
+      description:
+        "Fetch up to 10 breweries by id in one call — the batch lookup for a list of ids collected from earlier results.",
+      inputSchema: z.object({
+        ids: z.string().describe("Comma-separated brewery ids (max 10)."),
+        limit: z.number().describe("Max results, 1-50 (default: as many as ids given).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ ids, limit }) => {
+      try {
+        return text(await breweriesByIds(ids, limit))
       } catch (e) {
         return textError(errorMessage(e))
       }

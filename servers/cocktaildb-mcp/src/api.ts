@@ -197,3 +197,34 @@ export async function listFilters(kind?: string): Promise<string> {
   }
   return truncate(`${blocks.join("\n\n")}\n\nUse these values with filter_cocktails.`)
 }
+// ---- batch-3 tools: browse by letter + multi-ingredient filter (2026-09-27) ----
+export async function searchByLetter(letter: string, limit?: number): Promise<string> {
+  const wanted = (letter ?? "").trim()
+  if (!/^[a-zA-Z]$/.test(wanted)) throw new CocktailError("Provide a single letter a-z.")
+  const found = drinksOf(await getJson(`/search.php?f=${encodeURIComponent(wanted.toLowerCase())}`))
+  if (!found.length) return `No cocktails start with "${wanted}".`
+  const count = clamp(limit, 20, 50)
+  const shown = found.slice(0, count)
+  return truncate(
+    `${found.length} cocktail(s) starting with "${wanted.toUpperCase()}" (showing ${shown.length}):\n` +
+      shown.map((d, i) => `${i + 1}. ${compact(d)}`).join("\n") +
+      "\nUse get_cocktail with an id for the full recipe."
+  )
+}
+
+export async function filterMultiIngredient(ingredients: string, limit?: number): Promise<string> {
+  const list = (ingredients ?? "").split(",").map((s) => s.trim()).filter(Boolean)
+  if (list.length < 2) throw new CocktailError("Provide at least two ingredients, comma separated, e.g. Gin,Tonic water.")
+  if (list.length > 6) throw new CocktailError("Provide at most six ingredients.")
+  const found = drinksOf(await getJson(`/filter.php?i=${encodeURIComponent(list.join(","))}`))
+  if (!found.length) {
+    return `No cocktail contains all of: ${list.join(", ")}. Check exact ingredient names with list_ingredients.`
+  }
+  const count = clamp(limit, 20, 50)
+  const shown = found.slice(0, count)
+  return truncate(
+    `${found.length} cocktail(s) containing all of ${list.join(", ")} (showing ${shown.length}):\n` +
+      shown.map((d, i) => `${i + 1}. ${compact(d)}`).join("\n") +
+      "\nUse get_cocktail with an id for the full recipe."
+  )
+}

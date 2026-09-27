@@ -21,6 +21,10 @@ Other
 - Instruments: How many live instruments a currency and kind has, with a 10-name sample. Full list omitted for size.
 - Last trades: Most recent trades for an instrument as time, direction, amount and price rows.
 - Futures summary: Per-future last, mark and open interest rows for a currency.
+- Funding history: Perpetual funding rate history with latest, average and annualised rate for an instrument.
+- Historical volatility: Deribit's historical volatility series for a currency: latest, 7-day average and full range.
+- Options summary: Option chain overview: calls vs puts, expiries and the instruments with the most open interest.
+- Currencies: Every currency Deribit lists for trading, with the count per coin type.
 
 ## Getting Started
 
@@ -32,6 +36,10 @@ Other
 - Tool: instruments — How many live instruments a currency and kind has, with a 10-name sample. Full list omitted for size.
 - Tool: trades — Most recent trades for an instrument as time, direction, amount and price rows.
 - Tool: summary — Per-future last, mark and open interest rows for a currency.
+- Tool: funding_rate_history — Perpetual funding rate history with latest, average and annualised rate for an instrument.
+- Tool: historical_volatility — Deribit's historical volatility series for a currency: latest, 7-day average and full range.
+- Tool: options_summary — Option chain overview: calls vs puts, expiries and the instruments with the most open interest.
+- Tool: currencies — Every currency Deribit lists for trading, with the count per coin type.
 
 ## Tags
 deribit, mcp, shopping, keyless

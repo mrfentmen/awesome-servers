@@ -21,6 +21,9 @@ Other
 - Protocol info: Get details for a specific protocol.
 - Top yields: Highest-APY DeFi pools with project, chain, APY and TVL.
 - Recent hacks: Largest recent DeFi hacks with date, target, chain, amount and technique.
+- Stablecoins: Stablecoin circulating value by asset, with peg mechanism, price and 7-day change.
+- DEX volume: DeFi DEX trading volume: 24h, 7d and all-time totals plus the busiest protocols.
+- Fees overview: DeFi protocol fees: 24h, 7d and all-time totals plus the protocols charging the most.
 
 ## Getting Started
 
@@ -32,6 +35,9 @@ Other
 - Tool: protocol_info — Get details for a specific protocol.
 - Tool: topYields — Highest-APY DeFi pools with project, chain, APY and TVL.
 - Tool: hacks — Largest recent DeFi hacks with date, target, chain, amount and technique.
+- Tool: stablecoins — Stablecoin circulating value by asset, with peg mechanism, price and 7-day change.
+- Tool: dex_volume — DeFi DEX trading volume: 24h, 7d and all-time totals plus the busiest protocols.
+- Tool: fees_overview — DeFi protocol fees: 24h, 7d and all-time totals plus the protocols charging the most.
 
 ## Tags
 defillama, mcp, data, keyless

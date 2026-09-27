@@ -11,6 +11,10 @@ Password breach checks and identity security audits - no API key.
 - `breach_catalog` — List breaches from the Have I Been Pwned catalogue, largest first, filtered by company domain or year, with the number of accounts and the kinds of data exposed.
 - `breach_detail` — Look up one breach by name and get its date, exposed account count, verification status and the classes of data leaked.
 - `domain_email_security` — Audit a domain's anti-spoofing setup: SPF, DMARC, DKIM selectors, MX records and CAA, graded A to F with the exact gaps to fix.
+- `identify_hash` — Identify the likely algorithm behind a hash string — bcrypt, Argon2, crypt formats, MD5, SHA-1, SHA-256, SHA-512 and more — entirely offline.
+- `hash_text` — Compute MD5, SHA-1, SHA-256 or SHA-512 digests of a string locally, for checksum and fingerprint checks.
+- `breach_timeline` — Year-by-year view of known breaches from Have I Been Pwned: how many sites were breached and how many accounts were exposed.
+- `subdomain_inventory` — Resolve common subdomains of a domain and show what each points to, flagging third-party CNAME targets that no longer resolve.
 
 ## Setup
 

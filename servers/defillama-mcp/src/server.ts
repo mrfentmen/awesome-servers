@@ -1,7 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_chains, m0_protocol, m1_chainTvl, m1_protocolInfo, m1_topProtocols, topYields, hacks } from './api.js'
-
+import { m0_chains, m0_protocol, m1_chainTvl, m1_protocolInfo, m1_topProtocols, topYields, hacks, stablecoins, dexVolume, feesOverview } from './api.js'
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -92,5 +91,44 @@ server.registerTool(
     try { return text(await hacks(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "stablecoins",
+    {
+      title: "Stablecoins",
+      description: "Stablecoin circulating value by asset, with peg mechanism, price and 7-day change.",
+      inputSchema: z.object( { limit: z.number().describe("How many assets, 1-30. Defaults to 10.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await stablecoins(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "dex_volume",
+    {
+      title: "DEX volume",
+      description: "DeFi DEX trading volume: 24h, 7d and all-time totals plus the busiest protocols.",
+      inputSchema: z.object( { limit: z.number().describe("How many protocols, 1-30. Defaults to 10.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await dexVolume(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "fees_overview",
+    {
+      title: "Fees overview",
+      description: "DeFi protocol fees: 24h, 7d and all-time totals plus the protocols charging the most.",
+      inputSchema: z.object( { limit: z.number().describe("How many protocols, 1-30. Defaults to 10.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await feesOverview(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

@@ -11,6 +11,8 @@ Query TheCocktailDB (keyless): cocktail search, full recipes with ingredients/me
 - `filter_cocktails` — Browse cocktails by one attribute: an ingredient they contain, a category, a glass type, or an alcohol option. Returns drink names with ids.
 - `ingredient_info` — Profile of one ingredient: type, whether it contains alcohol, ABV, and a description of what it is.
 - `list_filters` — The valid values for filter_cocktails: drink categories, glass types and alcohol options.
+- `search_by_letter` — List every cocktail whose name starts with one letter, for browsing the database alphabetically.
+- `filter_multi_ingredient` — Cocktails that contain all of the listed ingredients at once, e.g. Gin and Tonic water — the recipe finder for what is already in the bar.
 
 ## Source
 

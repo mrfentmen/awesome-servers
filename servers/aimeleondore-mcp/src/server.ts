@@ -8,6 +8,9 @@ import {
   priceOverview,
   findDeals,
   listCategories,
+  listCollections,
+  browseCollection,
+  find_by_size,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -133,6 +136,68 @@ export function createServer(): McpServer {
     async ({  }) => {
       try {
         return text(await listCategories());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "list_collections",
+    {
+      title: "List collections",
+      description: "Every store collection with its handle, for browse_collection, e.g. shop-all, accessories, uniform.",
+      inputSchema: z.object({
+        query: z.string().describe("Filter collection titles, e.g. uniform, chains, rings, sale.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query }) => {
+      try {
+        return text(await listCollections(query));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "browse_collection",
+    {
+      title: "Browse collection",
+      description: "Listings inside one collection handle from list_collections, optionally only items in stock in a size.",
+      inputSchema: z.object({
+        handle: z.string().describe("Collection handle from list_collections, e.g. uniform."),
+        limit: z.string().describe("Max results (default 10, max 25).").optional(),
+        max_price: z.string().describe("Max USD price.").optional(),
+        size: z.string().describe("Only items in stock in this size, e.g. M, 32, 7.5.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ handle, limit, max_price: maxPrice, size }) => {
+      try {
+        return text(await browseCollection(handle, limit, maxPrice, size));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "find_by_size",
+    {
+      title: "Find by size",
+      description: "In-stock items in a size, with that size's price and the other sizes still in stock.",
+      inputSchema: z.object({
+        size: z.string().describe("Size to match a variant, e.g. M, 32, 7.5, 18."),
+        limit: z.string().describe("Max results (default 10, max 25).").optional(),
+        max_price: z.string().describe("Max USD price.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ size, limit, max_price: maxPrice }) => {
+      try {
+        return text(await find_by_size(size, limit, maxPrice));
       } catch (e) {
         return textError(errorMessage(e));
       }

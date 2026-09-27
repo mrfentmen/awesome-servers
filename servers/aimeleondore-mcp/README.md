@@ -10,6 +10,9 @@ Query the Aimé Leon Dore catalog (aimeleondore.com, NYC): search menswear, newe
 - `price_overview` — Ask-price distribution (min/p25/median/p75/max).
 - `find_deals` — Available products priced below the median.
 - `list_categories` — Product-type counts in the catalog sample.
+- `list_collections` — Every store collection with its handle, for browse_collection, e.g. shop-all, accessories, uniform.
+- `browse_collection` — Listings inside one collection handle from list_collections, optionally only items in stock in a size.
+- `find_by_size` — In-stock items in a size, with that size's price and the other sizes still in stock.
 
 ## Source
 
