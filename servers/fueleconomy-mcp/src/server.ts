@@ -1,17 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  compareVehicles,
-  errorMessage,
-  formatVehicle,
-  fuelPrices,
-  listMakes,
-  listModels,
-  listOptions,
-  listYears,
-  vehicleDetails,
-} from "./api.js"
-
+import { compareVehicles, errorMessage, formatVehicle, fuelPrices, listMakes, listModels, listOptions, listYears, vehicleDetails, runningCost, compareCosts } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -157,6 +146,50 @@ export function createServer(): McpServer {
     async () => {
       try {
         return text(await fuelPrices())
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "running_cost",
+    {
+      title: "Running cost",
+      description:
+        "Estimated annual fuel cost for one vehicle at a chosen mileage, using its EPA combined MPG and either your fuel price or the national average for that fuel.",
+      inputSchema: z.object({
+        vehicle_id: z.string().describe("Vehicle id from list_options, e.g. '46748'"),
+        miles_per_year: z.number().describe("Miles driven per year, 500-100000 (default 12000).").optional(),
+        fuel_price: z.number().describe("Your local price per gallon or kWh; omit to use the national average.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ vehicle_id, miles_per_year, fuel_price }) => {
+      try {
+        return text(await runningCost({ vehicle_id, miles_per_year, fuel_price }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "compare_costs",
+    {
+      title: "Compare running costs",
+      description:
+        "Rank two to six vehicles by estimated annual fuel cost at the same mileage, with CO2, from their EPA records.",
+      inputSchema: z.object({
+        vehicle_ids: z.string().describe("Comma-separated vehicle ids, e.g. '46748, 45001'"),
+        miles_per_year: z.number().describe("Miles driven per year, 500-100000 (default 12000).").optional(),
+        fuel_price: z.number().describe("Your local price per gallon or kWh; omit to use national averages.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ vehicle_ids, miles_per_year, fuel_price }) => {
+      try {
+        return text(await compareCosts({ vehicle_ids, miles_per_year, fuel_price }))
       } catch (e) {
         return textError(errorMessage(e))
       }

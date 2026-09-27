@@ -21,6 +21,9 @@ Developer Tools
 - CAA records: Which certificate authorities may issue TLS certificates for a domain, and whether any authority is allowed.
 - Reverse DNS lookup: Turn an IPv4 or IPv6 address into its hostname by querying the PTR record.
 - List resolvers: The keyless DoH resolvers this server can query, and the record types it understands.
+- DNSSEC check: Whether a zone is signed and the resolver validated it: DNSKEY and DS records plus the AD flag.
+- Propagation check: Resolve one record through Cloudflare, Google and AdGuard and say whether they agree - catches a DNS change that has not propagated.
+- Find TXT value: Check whether any TXT record on a domain contains a given string, for example a site-verification token or an SPF include.
 
 ## Getting Started
 
@@ -32,6 +35,9 @@ Developer Tools
 - Tool: caa_records — Which certificate authorities may issue TLS certificates for a domain, and whether any authority is allowed.
 - Tool: reverse_lookup — Turn an IPv4 or IPv6 address into its hostname by querying the PTR record.
 - Tool: providers — The keyless DoH resolvers this server can query, and the record types it understands.
+- Tool: dnssec_check — Whether a zone is signed and the resolver validated it: DNSKEY and DS records plus the AD flag.
+- Tool: propagation_check — Resolve one record through Cloudflare, Google and AdGuard and say whether they agree - catches a DNS change that has not propagated.
+- Tool: txt_contains — Check whether any TXT record on a domain contains a given string, for example a site-verification token or an SPF include.
 
 ## Tags
 dns, doh, email, spf, dmarc, mcp

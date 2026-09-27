@@ -11,6 +11,9 @@ DNS lookups, email records and reverse DNS - no API key.
 - `caa_records` — Which certificate authorities may issue TLS certificates for a domain, and whether any authority is allowed.
 - `reverse_lookup` — Turn an IPv4 or IPv6 address into its hostname by querying the PTR record.
 - `providers` — The keyless DoH resolvers this server can query, and the record types it understands.
+- `dnssec_check` — Whether a zone is signed and the resolver validated it: DNSKEY and DS records plus the AD flag.
+- `propagation_check` — Resolve one record through Cloudflare, Google and AdGuard and say whether they agree - catches a DNS change that has not propagated.
+- `txt_contains` — Check whether any TXT record on a domain contains a given string, for example a site-verification token or an SPF include.
 
 ## Setup
 

@@ -20,6 +20,9 @@ Developer Tools
 - Normalize email: Canonical form of an address: lowercase the domain, drop the +tag, and remove Gmail dots, so duplicates collapse to one record.
 - Extract emails: Pull every unique email address out of a block of text, flagging any disposable domains.
 - Disposable domains: List the known disposable email domains this server checks against.
+- Email auth records: The full anti-spoofing picture for a domain: MX hosts, SPF with its all-rule, DMARC policy and DKIM selectors.
+- MX health: Every MX host for a domain, whether it resolves to an A record, and its reverse DNS.
+- Correct typo: Suggests the mail provider a mistyped domain probably meant, e.g. gmial.com -> gmail.com, without contacting the domain.
 
 ## Getting Started
 
@@ -30,6 +33,9 @@ Developer Tools
 - Tool: normalize_email — Canonical form of an address: lowercase the domain, drop the +tag, and remove Gmail dots, so duplicates collapse to one record.
 - Tool: extract_emails — Pull every unique email address out of a block of text, flagging any disposable domains.
 - Tool: disposable_domains — List the known disposable email domains this server checks against.
+- Tool: email_auth_records — The full anti-spoofing picture for a domain: MX hosts, SPF with its all-rule, DMARC policy and DKIM selectors.
+- Tool: mx_health — Every MX host for a domain, whether it resolves to an A record, and its reverse DNS.
+- Tool: correct_typo — Suggests the mail provider a mistyped domain probably meant, e.g. gmial.com -> gmail.com, without contacting the domain.
 
 ## Tags
 email validator, mcp, data, keyless

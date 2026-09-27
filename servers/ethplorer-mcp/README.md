@@ -13,6 +13,9 @@ This file is self contained. It reads public data only and never writes to the m
 * `topTokens`  Top ERC-20 tokens by activity with holder and transaction counts.
 * `tokenHolders`  Largest holders of a token with balances and share percent.
 * `addressHistory`  Token operations involving an address, newest first.
+* `last_block`  Current Ethereum head block height, useful for timestamping the other lookups.
+* `address_transactions`  Latest plain ETH transfers for an address, with direction and USD value — token movements live in address_history.
+* `tx_info`  One Ethereum transaction by hash: status, sender, receiver, value, gas used and fee, plus token transfer and log counts.
 
 ## Usage
 

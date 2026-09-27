@@ -318,3 +318,95 @@ export function providersHelp(): string {
     `Record types: ${RECORD_TYPES.join(", ")}`,
   ].join("\n")
 }
+// ---- batch-4 tools: DNSSEC, propagation, TXT checks (2026-09-27) ----
+interface DohRaw {
+  Status?: number
+  AD?: boolean
+  Answer?: DohAnswer[]
+}
+
+async function rawQuery(name: string, type: string, provider: string): Promise<DohRaw> {
+  const clean = name.trim().replace(/\.$/, "")
+  if (!clean) throw new DohError("Record name is required.")
+  const res = await fetch(
+    `${PROVIDERS[provider]}?name=${encodeURIComponent(clean)}&type=${encodeURIComponent(type)}&do=true`,
+    { headers: { "User-Agent": UA, Accept: "application/dns-json" }, signal: AbortSignal.timeout(15000) }
+  )
+  if (!res.ok) throw new DohError(`The ${provider} resolver returned HTTP ${res.status}`)
+  return (await res.json()) as DohRaw
+}
+
+export async function dnssecCheck(args: { domain: string; provider?: string }): Promise<string> {
+  const domain = (args.domain ?? "").trim().replace(/\.$/, "")
+  if (!domain) throw new DohError("Give a domain, e.g. example.com")
+  const provider = normaliseProvider(args.provider)
+  const [key, ds] = await Promise.all([
+    rawQuery(domain, "DNSKEY", provider),
+    rawQuery(domain, "DS", provider),
+  ])
+  const keys = (key.Answer ?? []).filter((a) => a.type === 48)
+  const dsRows = (ds.Answer ?? []).filter((a) => a.type === 43)
+  const validated = key.AD === true || ds.AD === true
+  const lines = [
+    `DNSSEC for ${domain} (via ${provider}, DO bit set)`,
+    `Validated by the resolver (AD flag): ${validated ? "yes" : "no"}`,
+    `DNSKEY records published: ${keys.length}`,
+    `DS records at the delegation: ${dsRows.length}`,
+  ]
+  if (dsRows.length) lines.push(`DS: ${dsRows.map((a) => txtValue(a.data)).slice(0, 4).join(" | ")}`)
+  lines.push(
+    "",
+    validated && keys.length
+      ? "The zone is signed and the resolver validated the chain of trust."
+      : "Not validated: either the zone is unsigned, or the DS record is missing at the registrar/parent zone, which breaks the chain."
+  )
+  return lines.join("\n")
+}
+
+export async function propagationCheck(args: { name: string; type?: string; provider?: string }): Promise<string> {
+  const name = (args.name ?? "").trim().replace(/\.$/, "")
+  if (!name) throw new DohError("Give a hostname to check, e.g. www.example.com")
+  const type = normaliseType(args.type)
+  const providers = args.provider ? [normaliseProvider(args.provider)] : [...PROVIDER_NAMES]
+  const rows: string[] = []
+  const seen = new Map<string, string[]>()
+  for (const provider of providers) {
+    try {
+      const res = await resolve(name, type, provider)
+      const values = res.answers.map((a) => formatValue(a)).sort()
+      const key = values.join(" | ") || res.statusText
+      seen.set(key, [...(seen.get(key) ?? []), provider])
+      rows.push(`${provider.padEnd(11)} ${values.length ? values.slice(0, 3).join(", ") : res.statusText}`)
+    } catch (e) {
+      rows.push(`${provider.padEnd(11)} error: ${errorMessage(e)}`)
+    }
+  }
+  const agreeing = seen.size <= 1
+  return [
+    `${type} propagation for ${name} across ${providers.length} resolver(s)`,
+    agreeing
+      ? "All resolvers returned the same answer."
+      : "Resolvers DISAGREE - the record has not propagated everywhere yet, or a CDN answers differently per region:",
+    "",
+    ...rows,
+    ...(agreeing ? [] : ["", ...[...seen.entries()].map(([values, names]) => `${names.join(", ")}: ${values}`)]),
+  ].join("\n")
+}
+
+export async function txtContains(args: { domain: string; value: string; provider?: string }): Promise<string> {
+  const domain = (args.domain ?? "").trim().replace(/\.$/, "")
+  const needle = (args.value ?? "").trim()
+  if (!domain || !needle) throw new DohError("Give a domain and the text to look for")
+  const provider = normaliseProvider(args.provider)
+  const res = await resolve(domain, "TXT", provider)
+  const values = res.answers.filter((a) => a.type === 16).map((a) => txtValue(a.data))
+  const hits = values.filter((v) => v.toLowerCase().includes(needle.toLowerCase()))
+  return [
+    `TXT records for ${domain} (via ${provider}): ${values.length}`,
+    hits.length ? `MATCH - ${hits.length} record(s) contain "${needle}":` : `No TXT record contains "${needle}".`,
+    ...hits.map((h) => `  ${h.slice(0, 300)}`),
+    "",
+    "All TXT values:",
+    ...(values.length ? values.slice(0, 10).map((v) => `  ${v.slice(0, 300)}`) : ["  none"]),
+  ].join("\n")
+}

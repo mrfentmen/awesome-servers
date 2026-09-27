@@ -1,14 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  checkDomain,
-  disposableDomains,
-  extractEmails,
-  normalizeEmail,
-  validateBatch,
-  validateEmail,
-} from "./api.js"
-
+import { checkDomain, disposableDomains, extractEmails, normalizeEmail, validateBatch, validateEmail, emailAuthRecords, mxHealth, correctTypo } from "./api.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -104,5 +96,52 @@ export function createServer(): McpServer {
       try { return text(disposableDomains(args)) } catch (e) { return textError(error(e)) }
     }
   )
+  server.registerTool(
+    "email_auth_records",
+    {
+      title: "Email auth records",
+      description:
+        "The full anti-spoofing picture for a domain: MX hosts, SPF with its all-rule, DMARC policy and DKIM selectors.",
+      inputSchema: z.object({
+        domain: z.string().describe("Domain name, e.g. 'example.com' (a leading @ is fine)."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await emailAuthRecords(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
+  server.registerTool(
+    "mx_health",
+    {
+      title: "MX health",
+      description: "Every MX host for a domain, whether it resolves to an A record, and its reverse DNS.",
+      inputSchema: z.object({
+        domain: z.string().describe("Domain name, e.g. 'example.com' (a leading @ is fine)."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await mxHealth(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
+  server.registerTool(
+    "correct_typo",
+    {
+      title: "Correct typo",
+      description:
+        "Suggests the mail provider a mistyped domain probably meant, e.g. gmial.com -> gmail.com, without contacting the domain.",
+      inputSchema: z.object({
+        email: z.string().describe("Email address that may contain a typo."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(correctTypo(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
   return server
 }

@@ -1,18 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  caaRecords,
-  emailRecords,
-  errorMessage,
-  normaliseProvider,
-  resolve,
-  resolveMany,
-  reverseLookup,
-  formatAnswer,
-  providersHelp,
-  recordSummary,
-} from "./api.js"
-
+import { caaRecords, emailRecords, errorMessage, normaliseProvider, resolve, resolveMany, reverseLookup, formatAnswer, providersHelp, recordSummary, dnssecCheck, propagationCheck, txtContains } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -161,6 +149,68 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async () => text(providersHelp())
+  )
+
+  server.registerTool(
+    "dnssec_check",
+    {
+      title: "DNSSEC check",
+      description:
+        "Whether a zone is signed and the resolver validated it: DNSKEY and DS records plus the AD flag.",
+      inputSchema: z.object({ domain: NAME, provider: PROVIDER }),
+      annotations: READ_ONLY,
+    },
+    async ({ domain, provider }) => {
+      try {
+        return text(await dnssecCheck({ domain, provider }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "propagation_check",
+    {
+      title: "Propagation check",
+      description:
+        "Resolve one record through Cloudflare, Google and AdGuard and say whether they agree - catches a DNS change that has not propagated.",
+      inputSchema: z.object({
+        name: NAME,
+        type: TYPE,
+        provider: z.enum(["cloudflare", "google", "adguard"]).describe("Ask only this resolver (default: all three)").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ name, type, provider }) => {
+      try {
+        return text(await propagationCheck({ name, type, provider }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "txt_contains",
+    {
+      title: "Find TXT value",
+      description:
+        "Check whether any TXT record on a domain contains a given string, for example a site-verification token or an SPF include.",
+      inputSchema: z.object({
+        domain: NAME,
+        value: z.string().describe("Text to look for inside the TXT records"),
+        provider: PROVIDER,
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ domain, value, provider }) => {
+      try {
+        return text(await txtContains({ domain, value, provider }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
   )
 
   return server

@@ -242,3 +242,94 @@ export async function fuelPrices(): Promise<string> {
     "Updated weekly by the US Department of Energy.",
   ].join("\n")
 }
+// ---- batch-4 tools: running cost estimates (2026-09-27) ----
+const FUEL_KEYS: Array<[RegExp, keyof FuelPrices]> = [
+  [/diesel/i, "diesel"],
+  [/e85|ethanol/i, "e85"],
+  [/electric|electricity|ev\b/i, "electric"],
+  [/premium/i, "premium"],
+  [/midgrade/i, "midgrade"],
+  [/cng/i, "cng"],
+  [/lpg|propane/i, "lpg"],
+]
+
+function fuelKey(fuel: string): keyof FuelPrices {
+  for (const [pattern, key] of FUEL_KEYS) {
+    if (pattern.test(fuel)) return key
+  }
+  return "regular"
+}
+
+async function nationalPrices(): Promise<Partial<FuelPrices>> {
+  const raw = await get("/fuelprices", "json")
+  if (!raw) return {}
+  try {
+    return JSON.parse(raw) as Partial<FuelPrices>
+  } catch {
+    return {}
+  }
+}
+
+const clampMiles = (value: number | undefined) =>
+  Math.min(Math.max(Number(value ?? 12000) || 12000, 500), 100000)
+
+/** Annual fuel cost for one vehicle at a chosen mileage, from the EPA record. */
+export async function runningCost(args: { vehicle_id: string; miles_per_year?: number; fuel_price?: number }): Promise<string> {
+  const vehicle = await vehicleDetails(args.vehicle_id)
+  const miles = clampMiles(args.miles_per_year)
+  const mpg = Number(vehicle.combined)
+  if (!Number.isFinite(mpg) || mpg <= 0) {
+    throw new FuelError(`${vehicle.year} ${vehicle.make} ${vehicle.model} has no combined MPG in the EPA record, so cost cannot be estimated.`)
+  }
+  const key = fuelKey(vehicle.fuel)
+  const givenPrice = Number(args.fuel_price)
+  const useNational = !Number.isFinite(givenPrice)
+  const price = useNational ? Number((await nationalPrices())[key]) : givenPrice
+  if (!Number.isFinite(price) || price <= 0) {
+    throw new FuelError("No usable fuel price: pass fuel_price, or the national average for this fuel is unavailable.")
+  }
+  const gallons = miles / mpg
+  const cost = gallons * price
+  const co2 = Number(vehicle.co2)
+  const unit = key === "electric" ? "$/kWh" : "$/gallon"
+  return [
+    `Running cost for ${vehicle.year} ${vehicle.make} ${vehicle.model}`,
+    `EPA combined ${vehicle.combined} MPG over ${miles.toLocaleString()} miles/year`,
+    useNational
+      ? `Fuel price: $${price} ${unit} (national average for ${vehicle.fuel || "regular"})`
+      : `Fuel price: $${price}/gallon as given`,
+    `Fuel used: ${gallons.toFixed(1)} ${key === "electric" ? "kWh" : "gallons"}/year | cost $${cost.toFixed(0)}/year ($${(cost / miles).toFixed(3)}/mile)`,
+    Number.isFinite(co2) && co2 > 0 ? `Tailpipe CO2 at this mileage: ${((co2 * miles) / 1000000).toFixed(2)} tonnes/year` : "",
+    "Estimate only - real efficiency and local prices differ.",
+  ].filter(Boolean).join("\n")
+}
+
+/** Ranks two to six vehicles by estimated annual fuel cost at the same mileage. */
+export async function compareCosts(args: { vehicle_ids: string; miles_per_year?: number; fuel_price?: number }): Promise<string> {
+  const ids = (args.vehicle_ids ?? "").split(",").map((s) => s.trim()).filter(Boolean).slice(0, 6)
+  if (ids.length < 2) throw new FuelError("Give two to six vehicle ids, comma separated.")
+  const miles = clampMiles(args.miles_per_year)
+  const givenPrice = Number(args.fuel_price)
+  const prices = Number.isFinite(givenPrice) ? null : await nationalPrices()
+  const rows: Array<{ label: string; cost: number; mpg: number; fuel: string; co2: number }> = []
+  for (const id of ids) {
+    const v = await vehicleDetails(id)
+    const mpg = Number(v.combined)
+    const price = Number.isFinite(givenPrice) ? givenPrice : Number(prices?.[fuelKey(v.fuel)])
+    const cost = mpg > 0 && Number.isFinite(price) && price > 0 ? (miles / mpg) * price : NaN
+    rows.push({ label: `${v.year} ${v.make} ${v.model}`, cost, mpg, fuel: v.fuel || "regular", co2: Number(v.co2) })
+  }
+  const ranked = [...rows].filter((r) => Number.isFinite(r.cost)).sort((a, b) => a.cost - b.cost)
+  if (!ranked.length) throw new FuelError("None of those vehicles has both an MPG figure and a usable fuel price.")
+  const worst = ranked[ranked.length - 1]
+  const best = ranked[0]
+  return [
+    `Annual fuel cost at ${miles.toLocaleString()} miles/year (${givenPrice ? `$${givenPrice}/gallon` : "national average prices"}):`,
+    ...ranked.map((r, i) => `${i + 1}. ${r.label} | ${r.mpg} MPG | $${r.cost.toFixed(0)}/year${Number.isFinite(r.co2) && r.co2 > 0 ? ` | ${((r.co2 * miles) / 1000000).toFixed(2)} t CO2/year` : ""}`),
+    "",
+    ranked.length > 1
+      ? `Cheapest to run: ${best.label} at $${best.cost.toFixed(0)}/year, $${(worst.cost - best.cost).toFixed(0)}/year less than ${worst.label}.`
+      : "",
+    "Estimates from EPA combined MPG; real-world mileage varies.",
+  ].filter(Boolean).join("\n")
+}

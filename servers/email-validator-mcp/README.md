@@ -13,6 +13,9 @@ This file is self contained. It reads public data only and never writes to the m
 * `normalize_email`  Canonical form of an address: lowercase the domain, drop the +tag, and remove Gmail dots, so duplicates collapse to one record.
 * `extract_emails`  Pull every unique email address out of a block of text, flagging any disposable domains.
 * `disposable_domains`  List the known disposable email domains this server checks against.
+* `email_auth_records`  The full anti-spoofing picture for a domain: MX hosts, SPF with its all-rule, DMARC policy and DKIM selectors.
+* `mx_health`  Every MX host for a domain, whether it resolves to an A record, and its reverse DNS.
+* `correct_typo`  Suggests the mail provider a mistyped domain probably meant, e.g. gmial.com -> gmail.com, without contacting the domain.
 
 ## Usage
 
