@@ -13,6 +13,13 @@ Profiles, lists, campaigns. Key. Not affiliated with the vendor.
 Business Tools
 
 ## Features
+- profile_details: Single profile.
+- list_details: Single list.
+- campaign_details: Single campaign.
+- metrics: Event metrics.
+- events: Recent events.
+- flows: Automation flows.
+- segments: Segments.
 
 - List profiles: Customer profiles with email and location.
 - List lists: Marketing lists with subscriber counts.

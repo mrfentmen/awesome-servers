@@ -5,6 +5,11 @@ import {
   search,
   bestPodcasts,
   getEpisode,
+  justListen,
+  getPodcast,
+  podcastRecommendations,
+  listGenres,
+  trendingSearches,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -69,6 +74,95 @@ export function createServer(): McpServer {
     async ({ episode_id }) => {
       try {
         return text(await getEpisode(episode_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "just_listen",
+    {
+      title: "Random episode",
+      description: "Serendipity listen.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await justListen());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "get_podcast",
+    {
+      title: "Get podcast",
+      description: "Show details.",
+      inputSchema: z.object({
+        podcast_id: z.string().describe("Podcast UUID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ podcast_id }) => {
+      try {
+        return text(await getPodcast(podcast_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "podcast_recommendations",
+    {
+      title: "Similar shows",
+      description: "Recommended podcasts.",
+      inputSchema: z.object({
+        podcast_id: z.string().describe("Podcast UUID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ podcast_id }) => {
+      try {
+        return text(await podcastRecommendations(podcast_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "list_genres",
+    {
+      title: "Podcast genres",
+      description: "Genre list.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await listGenres());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "trending_searches",
+    {
+      title: "Trending searches",
+      description: "Trending queries.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await trendingSearches());
       } catch (e) {
         return textError(errorMessage(e));
       }

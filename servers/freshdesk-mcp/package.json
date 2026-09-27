@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/freshdesk-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Query Freshdesk (set FRESHDESK_DOMAIN + FRESHDESK_API_KEY, key:X Basic): tickets, ticket details, contacts.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/freshdesk-mcp",

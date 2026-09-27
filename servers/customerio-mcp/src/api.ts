@@ -48,3 +48,32 @@ export function listSegments(): Promise<string> {
   return get("/segments");
 }
 
+
+
+export function segmentDetails(segmentId: string): Promise<string> {
+  return get(`/segments/${encodeURIComponent(segmentId)}`);
+}
+
+export function campaigns(): Promise<string> {
+  return get("/campaigns");
+}
+
+export function campaignDetails(campaignId: string): Promise<string> {
+  return get(`/campaigns/${encodeURIComponent(campaignId)}`);
+}
+
+export function newsletters(): Promise<string> {
+  return get("/newsletters");
+}
+
+export function activities(): Promise<string> {
+  return get("/activities");
+}
+
+export function customerActivities(identifier: string): Promise<string> {
+  return get(`/customers/${encodeURIComponent(identifier)}/activities`);
+}
+
+export function customerMessages(identifier: string): Promise<string> {
+  return get(`/customers/${encodeURIComponent(identifier)}/messages`);
+}

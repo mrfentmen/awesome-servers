@@ -47,3 +47,17 @@ export function getConversation(websiteId: string, sessionId: string): Promise<s
   return get(`/website/${encodeURIComponent(websiteId)}/conversations/${encodeURIComponent(sessionId)}`);
 }
 
+
+
+export function conversations(websiteId: string, page?: string): Promise<string> {
+  const p = Number(page ?? 1) || 1;
+  return get(`/website/${encodeURIComponent(websiteId)}/conversations/${p}`);
+}
+
+export function conversationMessages(websiteId: string, sessionId: string): Promise<string> {
+  return get(`/website/${encodeURIComponent(websiteId)}/conversation/${encodeURIComponent(sessionId)}/messages`);
+}
+
+export function conversationMeta(websiteId: string, sessionId: string): Promise<string> {
+  return get(`/website/${encodeURIComponent(websiteId)}/conversation/${encodeURIComponent(sessionId)}/meta`);
+}

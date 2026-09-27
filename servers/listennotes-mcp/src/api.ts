@@ -47,3 +47,24 @@ export function getEpisode(episodeId: string): Promise<string> {
   return get(`/episodes/${encodeURIComponent(episodeId)}`);
 }
 
+
+
+export function justListen(): Promise<string> {
+  return get("/just_listen");
+}
+
+export function getPodcast(podcastId: string): Promise<string> {
+  return get(`/podcasts/${encodeURIComponent(podcastId)}`);
+}
+
+export function podcastRecommendations(podcastId: string): Promise<string> {
+  return get(`/podcasts/${encodeURIComponent(podcastId)}/recommendations`);
+}
+
+export function listGenres(): Promise<string> {
+  return get("/genres");
+}
+
+export function trendingSearches(): Promise<string> {
+  return get("/trending_searches");
+}

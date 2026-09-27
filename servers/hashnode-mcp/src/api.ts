@@ -50,3 +50,45 @@ export function getUser(username: string): Promise<string> {
   return gql("query($u: String!) { user(username: $u) { name bio } }", { u: username });
 }
 
+
+
+export function publicationInfo(host: string): Promise<string> {
+  return gql("query($h: String!) { publication(host: $h) { title displayTitle about { markdown } } }", { h: host });
+}
+
+export function postDetails(host: string, slug: string): Promise<string> {
+  return gql(
+    "query($h: String!, $s: String!) { publication(host: $h) { post(slug: $s) { title brief url readTimeInMinutes } } }",
+    { h: host, s: slug }
+  );
+}
+
+export function seriesList(host: string, limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 5) || 5, 20);
+  return gql(
+    "query($h: String!, $n: Int!) { publication(host: $h) { seriesList(first: $n) { edges { node { name slug } } } } }",
+    { h: host, n }
+  );
+}
+
+export function tagInfo(slug: string): Promise<string> {
+  return gql("query($s: String!) { tag(slug: $s) { name slug } }", { s: slug });
+}
+
+export function userStats(username: string): Promise<string> {
+  return gql("query($u: String!) { user(username: $u) { name followersCount } }", { u: username });
+}
+
+export function userPublications(username: string): Promise<string> {
+  return gql(
+    "query($u: String!) { user(username: $u) { publications(first: 5) { edges { node { title displayTitle } } } } }",
+    { u: username }
+  );
+}
+
+export function publicationMembers(host: string): Promise<string> {
+  return gql(
+    "query($h: String!) { publication(host: $h) { members(first: 10) { edges { node { role user { username name } } } } } }",
+    { h: host }
+  );
+}

@@ -1,6 +1,6 @@
 {
   "name": "tally-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Query Tally (key; set TALLY_API_KEY, Bearer): forms, form details, submissions.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/tally-mcp",

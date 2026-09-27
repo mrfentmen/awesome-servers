@@ -13,6 +13,11 @@ Podcast search. Free key. Not affiliated with the vendor.
 Entertainment
 
 ## Features
+- just_listen: Serendipity listen.
+- get_podcast: Show details.
+- podcast_recommendations: Similar shows
+- list_genres: Genres
+- trending_searches: Trends
 
 - Search episodes: Podcast episodes matching a query, with podcast and date.
 - Best podcasts: Curated best-podcast lists, e.g. tech.

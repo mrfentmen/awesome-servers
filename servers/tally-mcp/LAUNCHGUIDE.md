@@ -13,6 +13,8 @@ Forms and submissions. Key. Not affiliated with the vendor.
 Business Tools
 
 ## Features
+- list_webhooks: Form webhooks.
+- get_webhook: Webhook details.
 
 - List forms: All Tally forms, with id and title.
 - Get form: One form's structure: blocks, fields and settings.

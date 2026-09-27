@@ -13,6 +13,13 @@ Subscribers and topics. Key. Not affiliated with the vendor.
 Developer Tools
 
 ## Features
+- topic_details: Single topic.
+- notifications: Templates list.
+- environments: All environments.
+- integrations: Providers.
+- layouts: Email layouts.
+- feeds: Notification feeds.
+- blueprint_groups: Grouped blueprints.
 
 - Subscribers: Notification subscribers, with email and id.
 - Get subscriber: One subscriber by id, with channels and data.

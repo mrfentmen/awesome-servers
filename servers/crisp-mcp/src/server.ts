@@ -5,6 +5,9 @@ import {
   listVisitors,
   getProfile,
   getConversation,
+  conversations,
+  conversationMessages,
+  conversationMeta,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -71,6 +74,66 @@ export function createServer(): McpServer {
     async ({ website_id, session_id }) => {
       try {
         return text(await getConversation(website_id, session_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "conversations",
+    {
+      title: "Conversations",
+      description: "Paged conversation list.",
+      inputSchema: z.object({
+        website_id: z.string().describe("Website ID."),
+        page: z.string().describe("Page (default 1).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ website_id, page }) => {
+      try {
+        return text(await conversations(website_id, page));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "conversation_messages",
+    {
+      title: "Messages",
+      description: "Messages in a session.",
+      inputSchema: z.object({
+        website_id: z.string().describe("Website ID."),
+        session_id: z.string().describe("Session ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ website_id, session_id }) => {
+      try {
+        return text(await conversationMessages(website_id, session_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "conversation_meta",
+    {
+      title: "Session meta",
+      description: "Session metadata.",
+      inputSchema: z.object({
+        website_id: z.string().describe("Website ID."),
+        session_id: z.string().describe("Session ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ website_id, session_id }) => {
+      try {
+        return text(await conversationMeta(website_id, session_id));
       } catch (e) {
         return textError(errorMessage(e));
       }

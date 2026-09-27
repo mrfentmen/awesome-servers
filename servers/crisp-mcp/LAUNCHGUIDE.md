@@ -13,6 +13,9 @@ Chat data per website. ID + key. Not affiliated with the vendor.
 Business Tools
 
 ## Features
+- conversations: Paged conversation list.
+- conversation_messages: Messages in a session.
+- conversation_meta: Session metadata.
 
 - Visitors: Visitors on the site right now, with last page seen.
 - People profile: Crisp profile for one email, with custom fields.

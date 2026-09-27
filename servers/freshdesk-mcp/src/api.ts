@@ -48,3 +48,32 @@ export function listContacts(): Promise<string> {
   return get("/contacts?per_page=20");
 }
 
+
+
+export function contactDetails(contactId: string): Promise<string> {
+  return get(`/contacts/${encodeURIComponent(contactId)}`);
+}
+
+export function agents(): Promise<string> {
+  return get("/agents?per_page=20");
+}
+
+export function companies(): Promise<string> {
+  return get("/companies?per_page=20");
+}
+
+export function groups(): Promise<string> {
+  return get("/groups?per_page=20");
+}
+
+export function conversations(ticketId: string): Promise<string> {
+  return get(`/tickets/${encodeURIComponent(ticketId)}/conversations`);
+}
+
+export function satisfaction(): Promise<string> {
+  return get("/surveys/satisfaction_ratings?per_page=10");
+}
+
+export function canned(): Promise<string> {
+  return get("/canned_response_folders?per_page=10").then((t) => t.slice(0, 4000));
+}

@@ -13,6 +13,13 @@ Pages and incidents. Key. Not affiliated with the vendor.
 Developer Tools
 
 ## Features
+- incident_details: Single incident.
+- incident_updates: Update timeline.
+- components: Status components.
+- component_details: Single component.
+- subscribers: Page subscribers.
+- upcoming_maintenance: Scheduled windows.
+- maintenance_details: Single window.
 
 - List pages: Status pages the key can read, with id and name.
 - Get page: One status page by id, with components and status.

@@ -13,6 +13,13 @@ Tickets and contacts. Domain + key. Not affiliated with the vendor.
 Business Tools
 
 ## Features
+- contact_details: Single contact.
+- agents: Support agents.
+- companies: Customer companies.
+- groups: Agent groups.
+- conversations: Conversation on a ticket.
+- satisfaction: CSAT ratings.
+- canned: Reply templates.
 
 - List tickets: Most recent support tickets, with status and priority.
 - Get ticket: One ticket by id, with requester and full text.

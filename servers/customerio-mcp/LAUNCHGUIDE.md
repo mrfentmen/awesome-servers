@@ -13,6 +13,13 @@ Customers and segments. Site ID + key. Not affiliated with the vendor.
 Business Tools
 
 ## Features
+- segment_details: Single segment.
+- campaigns: All campaigns.
+- campaign_details: Single campaign.
+- newsletters: All newsletters.
+- activities: Workspace activity.
+- customer_activities: Activity for a customer.
+- customer_messages: Messages for a customer.
 
 - List customers: Tracked customers with email and attributes.
 - Get customer: One customer profile by id, with its attributes.

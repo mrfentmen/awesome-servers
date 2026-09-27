@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/crisp-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Query Crisp (set CRISP_IDENTIFIER + CRISP_KEY, Basic; website-scoped reads): visitor list, people profile, conversation.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/crisp-mcp",

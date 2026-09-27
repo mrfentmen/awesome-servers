@@ -5,6 +5,8 @@ import {
   listForms,
   getForm,
   listSubmissions,
+  listWebhooks,
+  getWebhook,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -68,6 +70,45 @@ export function createServer(): McpServer {
     async ({ form_id, limit }) => {
       try {
         return text(await listSubmissions(form_id, limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "list_webhooks",
+    {
+      title: "List webhooks",
+      description: "Form webhooks.",
+      inputSchema: z.object({
+        form_id: z.string().describe("Form ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ form_id }) => {
+      try {
+        return text(await listWebhooks(form_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "get_webhook",
+    {
+      title: "Get webhook",
+      description: "Webhook details.",
+      inputSchema: z.object({
+        form_id: z.string().describe("Form ID."),
+        webhook_id: z.string().describe("Webhook ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ form_id, webhook_id }) => {
+      try {
+        return text(await getWebhook(form_id, webhook_id));
       } catch (e) {
         return textError(errorMessage(e));
       }

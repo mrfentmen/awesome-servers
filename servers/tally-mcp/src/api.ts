@@ -47,3 +47,12 @@ export function listSubmissions(formId: string, limit?: string): Promise<string>
   return get(`/forms/${encodeURIComponent(formId)}/submissions?page=1&limit=${n}`);
 }
 
+
+
+export function listWebhooks(formId: string): Promise<string> {
+  return get(`/forms/${encodeURIComponent(formId)}/webhooks`);
+}
+
+export function getWebhook(formId: string, webhookId: string): Promise<string> {
+  return get(`/forms/${encodeURIComponent(formId)}/webhooks/${encodeURIComponent(webhookId)}`);
+}

@@ -5,6 +5,13 @@ import {
   listCustomers,
   getCustomer,
   listSegments,
+  segmentDetails,
+  campaigns,
+  campaignDetails,
+  newsletters,
+  activities,
+  customerActivities,
+  customerMessages,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -67,6 +74,133 @@ export function createServer(): McpServer {
     async ({  }) => {
       try {
         return text(await listSegments());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "segment_details",
+    {
+      title: "Segment details",
+      description: "Single segment.",
+      inputSchema: z.object({
+        segment_id: z.string().describe("Segment ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ segment_id }) => {
+      try {
+        return text(await segmentDetails(segment_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "campaigns",
+    {
+      title: "Campaigns",
+      description: "All campaigns.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await campaigns());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "campaign_details",
+    {
+      title: "Campaign details",
+      description: "Single campaign.",
+      inputSchema: z.object({
+        campaign_id: z.string().describe("Campaign ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ campaign_id }) => {
+      try {
+        return text(await campaignDetails(campaign_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "newsletters",
+    {
+      title: "Newsletters",
+      description: "All newsletters.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await newsletters());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "activities",
+    {
+      title: "Activities",
+      description: "Workspace activity.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await activities());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "customer_activities",
+    {
+      title: "Customer activity",
+      description: "Activity for a customer.",
+      inputSchema: z.object({
+        identifier: z.string().describe("ID or email.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ identifier }) => {
+      try {
+        return text(await customerActivities(identifier));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "customer_messages",
+    {
+      title: "Customer messages",
+      description: "Messages for a customer.",
+      inputSchema: z.object({
+        identifier: z.string().describe("ID or email.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ identifier }) => {
+      try {
+        return text(await customerMessages(identifier));
       } catch (e) {
         return textError(errorMessage(e));
       }

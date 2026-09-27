@@ -51,3 +51,33 @@ export function listTopics(): Promise<string> {
   return get("/topics?page=0&limit=20");
 }
 
+
+
+export function topicDetails(topicKey: string): Promise<string> {
+  return get(`/topics/${encodeURIComponent(topicKey)}`);
+}
+
+export function notifications(limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 10) || 10, 100);
+  return get(`/notifications?page=0&limit=${n}`);
+}
+
+export function environments(): Promise<string> {
+  return get("/environments");
+}
+
+export function integrations(): Promise<string> {
+  return get("/integrations");
+}
+
+export function layouts(): Promise<string> {
+  return get("/layouts?page=0&limit=20");
+}
+
+export function feeds(): Promise<string> {
+  return get("/feeds");
+}
+
+export function blueprintGroups(): Promise<string> {
+  return get("/blueprints/grouped");
+}

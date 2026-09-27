@@ -13,6 +13,13 @@ Forms and responses. Token. Not affiliated with the vendor.
 Business Tools
 
 ## Features
+- find_response: Response by token.
+- account_images: Image library.
+- account_image: Single image.
+- themes: All themes.
+- theme_details: Single theme.
+- workspaces: All workspaces.
+- create_form: Create a REAL empty form.
 
 - List forms: All Typeform forms, with id and title.
 - Get form: One form's structure: fields, logic and settings.

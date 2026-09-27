@@ -46,3 +46,32 @@ export function listIncidents(pageId: string): Promise<string> {
   return get(`/pages/${encodeURIComponent(pageId)}/incidents?limit=10`);
 }
 
+
+
+export function incidentDetails(pageId: string, incidentId: string): Promise<string> {
+  return get(`/pages/${encodeURIComponent(pageId)}/incidents/${encodeURIComponent(incidentId)}`);
+}
+
+export function incidentUpdates(pageId: string, incidentId: string): Promise<string> {
+  return get(`/pages/${encodeURIComponent(pageId)}/incidents/${encodeURIComponent(incidentId)}/incident_updates`);
+}
+
+export function components(pageId: string): Promise<string> {
+  return get(`/pages/${encodeURIComponent(pageId)}/components`);
+}
+
+export function componentDetails(pageId: string, componentId: string): Promise<string> {
+  return get(`/pages/${encodeURIComponent(pageId)}/components/${encodeURIComponent(componentId)}`);
+}
+
+export function subscribers(pageId: string): Promise<string> {
+  return get(`/pages/${encodeURIComponent(pageId)}/subscribers?limit=20`);
+}
+
+export function upcomingMaintenance(pageId: string): Promise<string> {
+  return get(`/pages/${encodeURIComponent(pageId)}/scheduled-maintenances/upcoming`);
+}
+
+export function maintenanceDetails(pageId: string, maintenanceId: string): Promise<string> {
+  return get(`/pages/${encodeURIComponent(pageId)}/scheduled-maintenances/${encodeURIComponent(maintenanceId)}`);
+}

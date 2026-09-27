@@ -46,3 +46,32 @@ export function listCampaigns(): Promise<string> {
   return get("/campaigns/?page[size]=10");
 }
 
+
+
+export function profileDetails(profileId: string): Promise<string> {
+  return get(`/profiles/${encodeURIComponent(profileId)}/`);
+}
+
+export function listDetails(listId: string): Promise<string> {
+  return get(`/lists/${encodeURIComponent(listId)}/`);
+}
+
+export function campaignDetails(campaignId: string): Promise<string> {
+  return get(`/campaigns/${encodeURIComponent(campaignId)}/`);
+}
+
+export function metrics(): Promise<string> {
+  return get("/metrics/?page[size]=20");
+}
+
+export function events(): Promise<string> {
+  return get("/events/?page[size]=10");
+}
+
+export function flows(): Promise<string> {
+  return get("/flows/?page[size]=10");
+}
+
+export function segments(): Promise<string> {
+  return get("/segments/?page[size]=20");
+}
