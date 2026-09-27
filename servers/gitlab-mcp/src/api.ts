@@ -70,3 +70,47 @@ export async function searchPublic(query: string, limit?: string): Promise<strin
   return (await res.text()).slice(0, 12000);
 }
 
+
+
+export function listIssues(): Promise<string> {
+  return get("/issues?scope=all&per_page=20&state=opened");
+}
+
+export function listMergeRequests(): Promise<string> {
+  return get("/merge_requests?scope=all&per_page=20&state=opened");
+}
+
+export function projectDetails(projectId: string): Promise<string> {
+  return get(`/projects/${encodeURIComponent(projectId)}`);
+}
+
+export function projectPipelines(projectId: string): Promise<string> {
+  return get(`/projects/${encodeURIComponent(projectId)}/pipelines?per_page=10`);
+}
+
+export function groupProjects(groupId: string): Promise<string> {
+  return get(`/groups/${encodeURIComponent(groupId)}/projects?per_page=20`);
+}
+
+export function renderMarkdown(markdown: string): Promise<string> {
+  return (async () => {
+    let res: Response;
+    try {
+      res = await fetch(base() + "/markdown", {
+        method: "POST",
+        headers: { ...headers(), "Content-Type": "application/json" },
+        body: JSON.stringify({ text: markdown.slice(0, 2000) }),
+        signal: AbortSignal.timeout(25000),
+      });
+    } catch (e) {
+      throw new GitlabError(`Network error: ${(e as Error).message}`);
+    }
+    const text = await res.text();
+    if (!res.ok) throw new GitlabError(`HTTP ${res.status}: ${text.slice(0, 300)}`);
+    return text.slice(0, 4000);
+  })();
+}
+
+export function publicSnippets(): Promise<string> {
+  return get("/snippets/public?per_page=10");
+}

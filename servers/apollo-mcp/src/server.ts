@@ -5,6 +5,13 @@ import {
   health,
   matchPerson,
   searchPeople,
+  peopleSearch,
+  companySearch,
+  orgEnrich,
+  bulkMatch,
+  getContact,
+  accountSearch,
+  peopleSearchV1,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -71,6 +78,143 @@ export function createServer(): McpServer {
     async ({ query, limit }) => {
       try {
         return text(await searchPeople(query, limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "people_search",
+    {
+      title: "People search v2",
+      description: "Prospects by keywords.",
+      inputSchema: z.object({
+        query: z.string().describe("Keywords."),
+        limit: z.string().describe("Max results (default 5, max 25).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, limit }) => {
+      try {
+        return text(await peopleSearch(query, limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "company_search",
+    {
+      title: "Company search",
+      description: "Companies by name.",
+      inputSchema: z.object({
+        query: z.string().describe("Company name."),
+        limit: z.string().describe("Max results (default 5, max 25).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, limit }) => {
+      try {
+        return text(await companySearch(query, limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "org_enrich",
+    {
+      title: "Enrich company",
+      description: "Company by domain.",
+      inputSchema: z.object({
+        domain: z.string().describe("e.g. apollo.io.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ domain }) => {
+      try {
+        return text(await orgEnrich(domain));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "bulk_match",
+    {
+      title: "Bulk enrich",
+      description: "Up to 10 emails.",
+      inputSchema: z.object({
+        emails: z.string().describe("Comma-separated emails.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ emails }) => {
+      try {
+        return text(await bulkMatch(emails));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "get_contact",
+    {
+      title: "Get contact",
+      description: "Contact by ID.",
+      inputSchema: z.object({
+        contact_id: z.string().describe("Contact ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ contact_id }) => {
+      try {
+        return text(await getContact(contact_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "account_search",
+    {
+      title: "Account search",
+      description: "Accounts by name.",
+      inputSchema: z.object({
+        query: z.string().describe("Company name."),
+        limit: z.string().describe("Max results (default 5, max 25).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, limit }) => {
+      try {
+        return text(await accountSearch(query, limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "people_search_v1",
+    {
+      title: "Search by title",
+      description: "Prospects by job title.",
+      inputSchema: z.object({
+        titles: z.string().describe("Comma-separated titles."),
+        limit: z.string().describe("Max results (default 5, max 25).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ titles, limit }) => {
+      try {
+        return text(await peopleSearchV1(titles, limit));
       } catch (e) {
         return textError(errorMessage(e));
       }

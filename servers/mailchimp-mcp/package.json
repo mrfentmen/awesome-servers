@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/mailchimp-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Query Mailchimp (key; set MAILCHIMP_API_KEY, datacenter derived from key suffix): ping, lists, members, campaigns.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/mailchimp-mcp",

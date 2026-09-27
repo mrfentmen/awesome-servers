@@ -5,6 +5,13 @@ import {
   listContacts,
   listCompanies,
   listDeals,
+  listTickets,
+  listOwners,
+  getContact,
+  getCompany,
+  getDeal,
+  searchContacts,
+  dealPipelines,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -69,6 +76,135 @@ export function createServer(): McpServer {
     async ({ limit }) => {
       try {
         return text(await listDeals(limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "list_tickets",
+    {
+      title: "List tickets",
+      description: "Service tickets.",
+      inputSchema: z.object({
+        limit: z.string().describe("Max results (default 10, max 100).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ limit }) => {
+      try {
+        return text(await listTickets(limit));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "list_owners",
+    {
+      title: "List owners",
+      description: "Record owners.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await listOwners());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "get_contact",
+    {
+      title: "Get contact",
+      description: "Contact details.",
+      inputSchema: z.object({
+        contact_id: z.string().describe("Contact ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ contact_id }) => {
+      try {
+        return text(await getContact(contact_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "get_company",
+    {
+      title: "Get company",
+      description: "Company details.",
+      inputSchema: z.object({
+        company_id: z.string().describe("Company ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ company_id }) => {
+      try {
+        return text(await getCompany(company_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "get_deal",
+    {
+      title: "Get deal",
+      description: "Deal details.",
+      inputSchema: z.object({
+        deal_id: z.string().describe("Deal ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ deal_id }) => {
+      try {
+        return text(await getDeal(deal_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "search_contacts",
+    {
+      title: "Find by email",
+      description: "Contact lookup.",
+      inputSchema: z.object({
+        email: z.string().describe("Email address.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ email }) => {
+      try {
+        return text(await searchContacts(email));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "deal_pipelines",
+    {
+      title: "Deal pipelines",
+      description: "Stages.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async ({  }) => {
+      try {
+        return text(await dealPipelines());
       } catch (e) {
         return textError(errorMessage(e));
       }

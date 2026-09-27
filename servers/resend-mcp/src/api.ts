@@ -46,3 +46,66 @@ export function getEmail(emailId: string): Promise<string> {
   return get(`/emails/${encodeURIComponent(emailId)}`);
 }
 
+
+
+export function listApiKeys(): Promise<string> {
+  return get("/api-keys/list");
+}
+
+export function listAudiences(): Promise<string> {
+  return get("/audiences");
+}
+
+export function getAudience(audienceId: string): Promise<string> {
+  return get(`/audiences/${encodeURIComponent(audienceId)}`);
+}
+
+export function listContacts(audienceId: string): Promise<string> {
+  return get(`/audiences/${encodeURIComponent(audienceId)}/contacts`);
+}
+
+export function listBroadcasts(): Promise<string> {
+  return get("/broadcasts");
+}
+
+export function getBroadcast(broadcastId: string): Promise<string> {
+  return get(`/broadcasts/${encodeURIComponent(broadcastId)}`);
+}
+
+export function createContact(audienceId: string, email: string): Promise<string> {
+  return (async () => {
+    let res: Response;
+    try {
+      res = await fetch(`https://api.resend.com/audiences/${encodeURIComponent(audienceId)}/contacts`, {
+        method: "POST",
+        headers: { ...UA, Accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+        body: JSON.stringify({ email }),
+        signal: AbortSignal.timeout(25000),
+      });
+    } catch (e) {
+      throw new ResendError(`Network error: ${(e as Error).message}`);
+    }
+    const text = await res.text();
+    if (!res.ok) throw new ResendError(`HTTP ${res.status}: ${text.slice(0, 300)}`);
+    return text.slice(0, 4000);
+  })();
+}
+
+export function addDomain(name: string): Promise<string> {
+  return (async () => {
+    let res: Response;
+    try {
+      res = await fetch("https://api.resend.com/domains", {
+        method: "POST",
+        headers: { ...UA, Accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+        body: JSON.stringify({ name }),
+        signal: AbortSignal.timeout(25000),
+      });
+    } catch (e) {
+      throw new ResendError(`Network error: ${(e as Error).message}`);
+    }
+    const text = await res.text();
+    if (!res.ok) throw new ResendError(`HTTP ${res.status}: ${text.slice(0, 300)}`);
+    return text.slice(0, 4000);
+  })();
+}

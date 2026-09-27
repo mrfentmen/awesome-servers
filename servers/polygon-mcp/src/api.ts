@@ -48,3 +48,43 @@ export function prevClose(ticker: string): Promise<string> {
   return get(`/v2/aggs/ticker/${encodeURIComponent(ticker.toUpperCase())}/prev`);
 }
 
+
+
+export function aggregates(ticker: string, from: string, to: string): Promise<string> {
+  return get(`/v2/aggs/ticker/${encodeURIComponent(ticker.toUpperCase())}/range/1/day/${encodeURIComponent(from)}/${encodeURIComponent(to)}?limit=30`);
+}
+
+export function groupedDaily(date: string): Promise<string> {
+  return get(`/v2/aggs/grouped/locale/us/market/stocks/${encodeURIComponent(date)}`).then((t) => t.slice(0, 6000));
+}
+
+export function openClose(ticker: string, date: string): Promise<string> {
+  return get(`/v1/open-close/${encodeURIComponent(ticker.toUpperCase())}/${encodeURIComponent(date)}`);
+}
+
+export function rsi(ticker: string): Promise<string> {
+  return get(`/v1/indicators/rsi/${encodeURIComponent(ticker.toUpperCase())}?timespan=day&window=14&limit=5`);
+}
+
+export function macd(ticker: string): Promise<string> {
+  return get(`/v1/indicators/macd/${encodeURIComponent(ticker.toUpperCase())}?limit=5`);
+}
+
+export function dividends(ticker?: string): Promise<string> {
+  const q = ticker ? `?ticker=${encodeURIComponent(ticker.toUpperCase())}&limit=10` : "?limit=10";
+  return get(`/v3/reference/dividends${q}`);
+}
+
+export function splits(ticker?: string): Promise<string> {
+  const q = ticker ? `?ticker=${encodeURIComponent(ticker.toUpperCase())}&limit=10` : "?limit=10";
+  return get(`/v3/reference/splits${q}`);
+}
+
+export function news(ticker: string, limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 5) || 5, 20);
+  return get(`/v2/reference/news?ticker=${encodeURIComponent(ticker.toUpperCase())}&limit=${n}`);
+}
+
+export function gainers(): Promise<string> {
+  return get("/v2/snapshot/locale/us/markets/stocks/gainers").then((t) => t.slice(0, 6000));
+}

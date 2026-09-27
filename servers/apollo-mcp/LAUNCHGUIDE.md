@@ -13,6 +13,13 @@ B2B search and enrich. Free key (APOLLO_API_KEY). Not affiliated with the vendor
 Business Tools
 
 ## Features
+- people_search: Prospects by keywords.
+- company_search: Companies by name.
+- org_enrich: Company by domain.
+- bulk_match: Up to 10 emails.
+- get_contact: Contact by ID.
+- account_search: Accounts by name.
+- people_search_v1: Prospects by job title.
 
 - Account health: Check that the Apollo API key still works.
 - Enrich person: Match one person by email, name or company.

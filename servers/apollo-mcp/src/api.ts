@@ -54,3 +54,38 @@ export function searchPeople(query: string, limit?: string): Promise<string> {
   return call("/v1/mixed_people/api_search", "POST", { q_keywords: query, page: 1, per_page: n });
 }
 
+
+
+export function peopleSearch(query: string, limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 5) || 5, 25);
+  return call("/v1/mixed_people/search", "POST", { q_keywords: query, page: 1, per_page: n });
+}
+
+export function companySearch(query: string, limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 5) || 5, 25);
+  return call("/v1/mixed_companies/search", "POST", { q_organization_name: query, page: 1, per_page: n });
+}
+
+export function orgEnrich(domain: string): Promise<string> {
+  return call(`/v1/organizations/enrich?domain=${encodeURIComponent(domain)}`, "GET");
+}
+
+export function bulkMatch(emails: string): Promise<string> {
+  const list = emails.split(",").map((e) => e.trim()).filter(Boolean).slice(0, 10)
+    .map((email) => ({ email }));
+  return call("/v1/people/bulk_match", "POST", { details: list });
+}
+
+export function getContact(contactId: string): Promise<string> {
+  return call(`/v1/contacts/${encodeURIComponent(contactId)}`, "GET");
+}
+
+export function accountSearch(query: string, limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 5) || 5, 25);
+  return call("/v1/accounts/search", "POST", { q_organization_name: query, page: 1, per_page: n });
+}
+
+export function peopleSearchV1(titles: string, limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 5) || 5, 25);
+  return call("/v1/people/search", "POST", { person_titles: titles.split(",").map((t) => t.trim()), page: 1, per_page: n });
+}

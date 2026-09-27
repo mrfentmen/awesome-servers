@@ -5,6 +5,13 @@ import {
   listZones,
   listAccounts,
   listDns,
+  zoneDetails,
+  dnsRecord,
+  firewallRules,
+  pageRules,
+  workers,
+  analytics,
+  tunnels,
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
@@ -65,6 +72,140 @@ export function createServer(): McpServer {
     async ({ zone_id }) => {
       try {
         return text(await listDns(zone_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "zone_details",
+    {
+      title: "Zone details",
+      description: "Single zone.",
+      inputSchema: z.object({
+        zone_id: z.string().describe("Zone ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ zone_id }) => {
+      try {
+        return text(await zoneDetails(zone_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "dns_record",
+    {
+      title: "DNS record",
+      description: "Single record.",
+      inputSchema: z.object({
+        zone_id: z.string().describe("Zone ID."),
+        record_id: z.string().describe("Record ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ zone_id, record_id }) => {
+      try {
+        return text(await dnsRecord(zone_id, record_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "firewall_rules",
+    {
+      title: "Firewall rules",
+      description: "Zone firewall.",
+      inputSchema: z.object({
+        zone_id: z.string().describe("Zone ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ zone_id }) => {
+      try {
+        return text(await firewallRules(zone_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "page_rules",
+    {
+      title: "Page rules",
+      description: "Zone page rules.",
+      inputSchema: z.object({
+        zone_id: z.string().describe("Zone ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ zone_id }) => {
+      try {
+        return text(await pageRules(zone_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "workers",
+    {
+      title: "Workers",
+      description: "Account scripts.",
+      inputSchema: z.object({
+        account_id: z.string().describe("Account ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ account_id }) => {
+      try {
+        return text(await workers(account_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "analytics",
+    {
+      title: "Analytics",
+      description: "24h dashboard.",
+      inputSchema: z.object({
+        zone_id: z.string().describe("Zone ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ zone_id }) => {
+      try {
+        return text(await analytics(zone_id));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "tunnels",
+    {
+      title: "Tunnels",
+      description: "Cloudflare tunnels.",
+      inputSchema: z.object({
+        account_id: z.string().describe("Account ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ account_id }) => {
+      try {
+        return text(await tunnels(account_id));
       } catch (e) {
         return textError(errorMessage(e));
       }

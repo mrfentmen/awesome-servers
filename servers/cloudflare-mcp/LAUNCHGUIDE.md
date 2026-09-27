@@ -13,6 +13,13 @@ Zones and DNS. Token. Not affiliated with the vendor.
 Developer Tools
 
 ## Features
+- zone_details: Single zone.
+- dns_record: Single record.
+- firewall_rules: Zone firewall.
+- page_rules: Zone page rules.
+- workers: Account scripts.
+- analytics: 24h dashboard.
+- tunnels: Cloudflare tunnels.
 
 - List zones: Cloudflare zones (domains) in the account.
 - List accounts: Cloudflare accounts the token can reach.

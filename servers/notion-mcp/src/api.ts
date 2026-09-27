@@ -48,3 +48,39 @@ export function getPage(pageId: string): Promise<string> {
   return call(`/pages/${encodeURIComponent(pageId)}`, "GET");
 }
 
+
+
+export function queryDatabase(databaseId: string): Promise<string> {
+  return call(`/databases/${encodeURIComponent(databaseId)}/query`, "POST", { page_size: 10 });
+}
+
+export function blockChildren(blockId: string): Promise<string> {
+  return call(`/blocks/${encodeURIComponent(blockId)}/children?page_size=20`, "GET");
+}
+
+export function searchDatabases(query: string): Promise<string> {
+  return call("/search", "POST", { query, filter: { property: "object", value: "database" }, page_size: 10 });
+}
+
+export function getUser(userId: string): Promise<string> {
+  return call(`/users/${encodeURIComponent(userId)}`, "GET");
+}
+
+export function appendBlock(blockId: string, paragraph: string): Promise<string> {
+  return call(`/blocks/${encodeURIComponent(blockId)}/children`, "PATCH", {
+    children: [{ object: "block", type: "paragraph", paragraph: { rich_text: [{ type: "text", text: { content: paragraph.slice(0, 1000) } }] } }],
+  });
+}
+
+export function updatePageTitle(pageId: string, title: string): Promise<string> {
+  return call(`/pages/${encodeURIComponent(pageId)}`, "PATCH", {
+    properties: { title: { title: [{ text: { content: title.slice(0, 100) } }] } },
+  });
+}
+
+export function createPage(parentPageId: string, title: string): Promise<string> {
+  return call("/pages", "POST", {
+    parent: { page_id: parentPageId },
+    properties: { title: { title: [{ text: { content: title.slice(0, 100) } }] } },
+  });
+}

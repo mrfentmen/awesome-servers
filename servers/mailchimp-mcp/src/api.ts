@@ -1,3 +1,5 @@
+import crypto from "node:crypto";
+
 export class MailchimpError extends Error {
   constructor(message: string) {
     super(message)
@@ -55,3 +57,29 @@ export function listCampaigns(count?: string): Promise<string> {
   return get(`/campaigns?count=${n}`);
 }
 
+
+
+export function listDetails(listId: string): Promise<string> {
+  return get(`/lists/${encodeURIComponent(listId)}`);
+}
+
+export function memberDetails(listId: string, email: string): Promise<string> {
+  const hash = crypto.createHash("md5").update(email.toLowerCase()).digest("hex");
+  return get(`/lists/${encodeURIComponent(listId)}/members/${hash}`);
+}
+
+export function campaignDetails(campaignId: string): Promise<string> {
+  return get(`/campaigns/${encodeURIComponent(campaignId)}`);
+}
+
+export function automations(): Promise<string> {
+  return get("/automations?count=10");
+}
+
+export function segments(listId: string): Promise<string> {
+  return get(`/lists/${encodeURIComponent(listId)}/segments?count=20`);
+}
+
+export function campaignReport(campaignId: string): Promise<string> {
+  return get(`/reports/${encodeURIComponent(campaignId)}`);
+}

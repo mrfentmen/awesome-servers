@@ -13,6 +13,12 @@ Audiences and campaigns. Key. Not affiliated with the vendor.
 Business Tools
 
 ## Features
+- list_details: Single audience.
+- member_details: Member by email.
+- campaign_details: Single campaign.
+- automations: Customer journeys.
+- segments: Audience segments.
+- campaign_report: Opens/clicks.
 
 - Ping: Check that the Mailchimp API key still works.
 - List audiences: Mailchimp audiences, with member counts.

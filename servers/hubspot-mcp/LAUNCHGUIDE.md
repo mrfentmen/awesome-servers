@@ -13,6 +13,13 @@ CRM objects. Token (HUBSPOT_ACCESS_TOKEN). Not affiliated with the vendor.
 Business Tools
 
 ## Features
+- list_tickets: Service tickets.
+- list_owners: Record owners.
+- get_contact: Contact details.
+- get_company: Company details.
+- get_deal: Deal details.
+- search_contacts: Contact lookup.
+- deal_pipelines: Stages.
 
 - List contacts: CRM contacts with email, name and owner.
 - List companies: CRM companies with domain and industry.

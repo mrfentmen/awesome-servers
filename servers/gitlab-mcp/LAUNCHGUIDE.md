@@ -13,6 +13,13 @@ Profile, projects, groups. Token. Not affiliated with the vendor.
 Developer Tools
 
 ## Features
+- list_issues: Assigned/open issues.
+- list_merge_requests: Open merge requests.
+- project_details: Single project.
+- project_pipelines: Recent pipelines.
+- group_projects: Projects in a group.
+- render_markdown: GitLab-flavored HTML.
+- public_snippets: Discover snippets.
 
 - My profile: The GitLab user the token belongs to.
 - List projects: Projects the token can see, most recent first.
