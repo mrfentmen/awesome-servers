@@ -21,6 +21,8 @@ Jobs
 - Job categories: The job boards this server aggregates, their ids, and how each one filters — so an agent knows which board to target for a given query.
 - Salary insights: Scan the job boards for a keyword and summarise the pay that postings actually disclosed: lowest, median and highest USD-per-year figure, plus the best paying matches.
 - Board coverage: Compare how many jobs each aggregated board returns for a query, and report which boards are unreachable, so an agent knows where a search is actually coming from.
+- Jobs last hours: Postings published inside a time window - what is actually new, with a per-board count.
+- Skill demand: Which skills, tags and companies appear most often across the boards' latest postings.
 
 ## Getting Started
 
@@ -32,6 +34,8 @@ Jobs
 - Tool: job_categories — The job boards this server aggregates, their ids, and how each one filters — so an agent knows which board to target for a given query.
 - Tool: salary_insights — Scan the job boards for a keyword and summarise the pay that postings actually disclosed: lowest, median and highest USD-per-year figure, plus the best paying matches.
 - Tool: board_coverage — Compare how many jobs each aggregated board returns for a query, and report which boards are unreachable, so an agent knows where a search is actually coming from.
+- Tool: jobs_last_hours — Postings published inside a time window - what is actually new, with a per-board count.
+- Tool: skill_demand — Which skills, tags and companies appear most often across the boards' latest postings.
 
 ## Tags
 job search, mcp, data, keyless

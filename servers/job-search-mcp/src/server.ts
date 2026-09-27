@@ -1,16 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  errorMessage,
-  searchJobs,
-  latestJobs,
-  jobsByBoard,
-  companyJobs,
-  salaryInsights,
-  boardCoverage,
-  jobCategories,
-} from "./api.js"
-
+import { errorMessage, searchJobs, latestJobs, jobsByBoard, companyJobs, salaryInsights, boardCoverage, jobCategories, jobsLastHours, skillDemand } from "./api.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -174,6 +164,42 @@ export function createServer(): McpServer {
       } catch (e) {
         return textError(errorMessage(e))
       }
+    }
+  )
+
+  server.registerTool(
+    "jobs_last_hours",
+    {
+      title: "Jobs last hours",
+      description: "Postings published inside a time window - what is actually new, with a per-board count.",
+      inputSchema: z.object({
+        hours: z.number().describe("Window in hours, 1-720 (default 24).").optional(),
+        query: z.string().describe("Optional keyword filter.").optional(),
+        location: z.string().describe("Optional location filter.").optional(),
+        boards: z.string().describe("Comma-separated board ids (default all).").optional(),
+        limit: z.number().describe("Max postings to list (default 10, max 50).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await jobsLastHours(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "skill_demand",
+    {
+      title: "Skill demand",
+      description: "Which skills, tags and companies appear most often across the boards' latest postings.",
+      inputSchema: z.object({
+        query: z.string().describe("Optional keyword filter, e.g. rust.").optional(),
+        boards: z.string().describe("Comma-separated board ids (default all).").optional(),
+        limit: z.number().describe("Max tags to rank (default 10, max 50).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await skillDemand(args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 

@@ -167,7 +167,8 @@ async function fromArbeitnow(opts: Query): Promise<Job[]> {
       location: str(j.location) || (j.remote === true ? "Remote" : ""),
       url: str(j.url),
       source: "Arbeitnow",
-      posted: str(j.created_at),
+      // Arbeitnow dates postings with unix seconds, not an ISO string.
+      posted: typeof j.created_at === "number" ? new Date(j.created_at * 1000).toISOString() : str(j.created_at),
       type: Array.isArray(j.job_types) ? (j.job_types as unknown[]).map(str).filter(Boolean).join("/") : "",
       tags: Array.isArray(j.tags) ? (j.tags as unknown[]).map(str).filter(Boolean) : [],
     }))
@@ -547,5 +548,116 @@ export async function boardCoverage(args: CoverageArgs = {}): Promise<string> {
       ``,
       "Pass these ids to the `boards` argument of search_jobs, jobs_by_board or company_jobs. Counts are board-declared result sizes, so boards with a large feed naturally rank higher.",
     ].join("\n")
+  )
+}
+// ---- batch-4 tools: freshness window and skill demand (2026-09-27) ----
+/** Boards date postings in ISO strings; normalise to epoch milliseconds. */
+function postedMs(job: Job): number | null {
+  const raw = (job.posted ?? "").trim()
+  if (!raw) return null
+  if (/^\d{9,13}$/.test(raw)) {
+    const n = Number(raw)
+    return n > 1e12 ? n : n * 1000
+  }
+  const parsed = Date.parse(raw)
+  return Number.isNaN(parsed) ? null : parsed
+}
+
+export interface FreshArgs {
+  hours?: number
+  query?: string
+  location?: string
+  boards?: string
+  limit?: number
+}
+
+export async function jobsLastHours(args: FreshArgs = {}): Promise<string> {
+  const hours = Math.min(Math.max(Number(args.hours ?? 24) || 24, 1), 720)
+  const limit = clamp(args.limit, 10, 50)
+  const harvest = await collect({ query: args.query, location: args.location, limit }, args.boards)
+  const cutoff = Date.now() - hours * 3600000
+  const dated = harvest.jobs.map((job) => ({ job, at: postedMs(job) }))
+  const undated = dated.filter((row) => row.at === null).length
+  const fresh = dated
+    .filter((row): row is { job: Job; at: number } => row.at !== null && row.at >= cutoff)
+    .sort((a, b) => b.at - a.at)
+  const perBoard = new Map<string, number>()
+  for (const row of fresh) perBoard.set(row.job.source, (perBoard.get(row.job.source) ?? 0) + 1)
+  const head = [
+    `Postings published in the last ${hours} hour(s)${args.query ? ` matching "${args.query}"` : ""}:`,
+    `${header(harvest, fresh.length, limit)}`,
+    undated ? `${undated} posting(s) carry no date this feed can read and are left out of the window.` : "",
+  ].filter(Boolean)
+  if (!fresh.length) {
+    return [...head, "", "Nothing new in that window - widen the hours, or use latest_jobs for the newest postings regardless of age."].join("\n")
+  }
+  const age = (at: number) => {
+    const minutes = Math.round((Date.now() - at) / 60000)
+    if (minutes < 60) return `${minutes} minute(s) ago`
+    const hours2 = Math.floor(minutes / 60)
+    return hours2 < 48 ? `${hours2} hour(s) ago` : `${Math.floor(hours2 / 24)} day(s) ago`
+  }
+  const lines = fresh.slice(0, limit).map((row, i) => {
+    const bits = [row.job.company, row.job.location, row.job.type, row.job.salary].filter(Boolean)
+    return [
+      `${i + 1}. ${row.job.title}${bits.length ? ` — ${bits.join(" | ")}` : ""}`,
+      `   ${row.job.source}, ${age(row.at)}`,
+      row.job.url ? `   ${row.job.url}` : "",
+    ].filter(Boolean).join("\n")
+  })
+  return truncate(
+    [
+      ...head,
+      `By board: ${[...perBoard.entries()].sort((a, b) => b[1] - a[1]).map(([name, n]) => `${name} (${n})`).join(", ")}`,
+      "",
+      ...lines,
+      "",
+      "Boards publish on their own cadence, so a quiet window usually means the feed has not refreshed, not that hiring stopped.",
+    ].join("\n")
+  )
+}
+
+export interface SkillArgs {
+  query?: string
+  boards?: string
+  limit?: number
+}
+
+export async function skillDemand(args: SkillArgs = {}): Promise<string> {
+  const limit = clamp(args.limit, 10, 50)
+  const harvest = await collect({ query: args.query, location: undefined, limit }, args.boards)
+  const jobs = dedupe(harvest.jobs)
+  if (!jobs.length) return `${header(harvest, 0, limit)}\nNo postings to analyse.`
+  const tags = new Map<string, number>()
+  const companies = new Map<string, number>()
+  let tagged = 0
+  for (const job of jobs) {
+    if (job.tags.length) tagged += 1
+    for (const tag of job.tags) {
+      const key = tag.trim().toLowerCase()
+      if (key) tags.set(key, (tags.get(key) ?? 0) + 1)
+    }
+    const company = job.company.trim()
+    if (company) companies.set(company, (companies.get(company) ?? 0) + 1)
+  }
+  const ranked = [...tags.entries()].sort((a, b) => b[1] - a[1])
+  const share = (count: number) => `${((count / jobs.length) * 100).toFixed(1)}%`
+  const topTags = ranked.slice(0, Math.min(limit, 25)).map(([tag, count], i) =>
+    `  ${String(i + 1).padStart(2)}. ${tag} — ${count} posting(s), ${share(count)} of the sample`
+  )
+  const hiring = [...companies.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8)
+  return truncate(
+    [
+      `Skill demand${args.query ? ` for "${args.query}"` : ""} across ${harvest.searched.length} board(s):`,
+      `${jobs.length} posting(s) scanned, ${tagged} of them publish tags (${share(tagged)}).`,
+      "",
+      ranked.length ? "Most requested tags:" : "No board in this set publishes tags for these postings.",
+      ...topTags,
+      "",
+      `Tags come from the boards that publish them (Arbeitnow, RemoteOK, Remotive, The Muse); Jobicy and Hacker News do not, so their postings cannot be counted here.`,
+      "",
+      companies.size ? `Posting the most roles: ${hiring.map(([name, n]) => `${name} (${n})`).join(", ")}` : "",
+      `Counts are tag occurrences, not hires: a posting listing "react" twice counts once.`,
+    ].filter((line) => line !== "").join("\n")
   )
 }
