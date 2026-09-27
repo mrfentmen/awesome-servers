@@ -1,15 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  errorMessage,
-  getJoke,
-  jokeById,
-  jokeInfo,
-  listCategories,
-  listLanguages,
-  searchJokes,
-} from "./api.js"
-
+import { errorMessage, getJoke, jokeById, jokeInfo, listCategories, listLanguages, searchJokes, jokesByType, jokeRange } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -153,6 +144,41 @@ export function createServer(): McpServer {
       } catch (e) {
         return textError(errorMessage(e))
       }
+    }
+  )
+
+  server.registerTool(
+    "jokes_by_type",
+    {
+      title: "Jokes by type",
+      description: "Only one-liners or only setup-and-punchline jokes, from any safe-mode category.",
+      inputSchema: z.object({
+        type: z.enum(["single", "twopart"]).describe("single (one-liners) or twopart (setup and punchline)."),
+        category: z.string().describe("Any category name, or omit for Any.").optional(),
+        amount: z.number().describe("How many jokes, 1-10 (default 3).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await jokesByType(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "joke_range",
+    {
+      title: "Joke range",
+      description: "Fetch a batch of jokes by id range, for building lists or checking ids.",
+      inputSchema: z.object({
+        from: z.string().describe("First joke id, e.g. 1."),
+        to: z.string().describe("Last joke id, e.g. 200."),
+        category: z.string().describe("Any category name, or omit for Any.").optional(),
+        amount: z.number().describe("How many jokes, 1-10 (default 3).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await jokeRange(args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 

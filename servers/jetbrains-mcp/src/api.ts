@@ -187,3 +187,78 @@ export function formatPlugin(p: PluginDetails): string {
   ].filter(Boolean)
   return lines.join("\n")
 }
+// ---- batch-4 tools: build-aware search and tag catalogue (2026-09-27) ----
+export function errorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e)
+}
+
+export interface TagRow {
+  id: number
+  name: string
+  searchable?: boolean
+  privileged?: boolean
+  families?: string[]
+}
+
+function hitFromRaw(p: Raw): PluginHit {
+  return {
+    id: Number(p.id),
+    xmlId: String(p.xmlId ?? p.id),
+    name: String(p.name ?? "?"),
+    preview: p.preview ? String(p.preview).replace(/<[^>]+>/g, "").slice(0, 140) : undefined,
+    downloads: typeof p.downloads === "number" ? p.downloads : undefined,
+    rating: typeof p.rating === "number" ? Math.round(p.rating * 10) / 10 : undefined,
+  }
+}
+
+/** Marketplace search restricted to plugins that install on a given IDE build. */
+export async function searchByBuild(query: string, build: string, limit = 5, orderBy = "downloads"): Promise<string> {
+  const buildId = String(build ?? "").trim()
+  if (!/^[A-Z]{1,4}-\d{3}\.\d+(\.\d+)?$/.test(buildId)) {
+    throw new JetBrainsError(
+      `"${build}" is not an IDE build. Use the format PRODUCT-VERSION, for example IC-241.18034.62 (IU- is IntelliJ Ultimate, PY- is PyCharm, WS- is WebStorm).`
+    )
+  }
+  const order = (MARKETPLACE_ORDERS as readonly string[]).includes(orderBy) ? orderBy : "downloads"
+  const size = Math.min(Math.max(Math.round(limit) || 5, 1), 20)
+  const data = await getJson<Raw>(
+    `/searchPlugins?search=${encodeURIComponent(String(query ?? ""))}&max=${size}&orderBy=${order}&build=${encodeURIComponent(buildId)}`
+  )
+  const rows: Raw[] = Array.isArray(data.plugins) ? data.plugins : []
+  if (!rows.length) return `No plugin on build ${buildId} matches "${query}".`
+  return (
+    `${rows.length} plugin(s) installable on ${buildId}, ordered by ${order}:\n\n` +
+    rows.map((p, i) => formatHit(hitFromRaw(p), i)).join("\n\n")
+  )
+}
+
+export async function listTags(limit = 80, family?: string): Promise<string> {
+  const raw = await getJson<Raw[]>("/tags")
+  const rows: TagRow[] = (Array.isArray(raw) ? raw : [])
+    .filter((t) => t && t.name)
+    .map((t) => ({
+      id: Number(t.id),
+      name: String(t.name),
+      searchable: t.searchable === true,
+      privileged: t.privileged === true,
+      families: Array.isArray(t.families) ? t.families.map(String) : [],
+    }))
+  const wanted = String(family ?? "").trim().toLowerCase()
+  const filtered = wanted ? rows.filter((t) => (t.families ?? []).some((f) => f.toLowerCase() === wanted)) : rows
+  if (!filtered.length) {
+    const families = [...new Set(rows.flatMap((t) => t.families ?? []))].sort()
+    return `No tags for family "${family}". Known families: ${families.join(", ")}.`
+  }
+  const n = Math.min(Math.max(Math.round(limit) || 80, 1), 300)
+  const searchable = filtered.filter((t) => t.searchable).length
+  const byFamily = new Map<string, number>()
+  for (const t of filtered) for (const f of t.families ?? []) byFamily.set(f, (byFamily.get(f) ?? 0) + 1)
+  return [
+    `JetBrains Marketplace tags${wanted ? ` for family ${wanted}` : ""}: ${filtered.length} in total, ${searchable} searchable, showing ${Math.min(n, filtered.length)}`,
+    "",
+    ...filtered.slice(0, n).map((t) => `  ${String(t.id).padStart(4)}  ${t.name}${t.families?.length ? `  [${t.families.join(", ")}]` : ""}`),
+    "",
+    "Tags per family:",
+    ...[...byFamily.entries()].sort((a, b) => b[1] - a[1]).map(([f, count]) => `  ${f.padEnd(12)} ${count}`),
+  ].join("\n")
+}

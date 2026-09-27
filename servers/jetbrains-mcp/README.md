@@ -22,6 +22,8 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 - `plugin_versions`: Recent releases of one plugin, with version strings and release dates.
 - `plugin_reviews`: Read the most recent written reviews of a plugin, with each reviewer's star rating and date, so you can judge real user sentiment.
 - `plugin_ratings`: Show a plugin's review score distribution — how many raters gave each star value and the average — so an agent can tell a strong plugin from a thin one.
+- `search_by_build`: Find plugins that actually install on a specific IDE build, e.g. IC-241.18034.62.
+- `list_tags`: Every Marketplace tag with its id and product families, filterable by family.
 
 ## Limits and privacy
 

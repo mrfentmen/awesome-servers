@@ -1,18 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  crew,
-  distanceFrom,
-  errorMessage,
-  formatCrew,
-  formatPosition,
-  groundSpeed,
-  orbitSummary,
-  overheadNow,
-  passes,
-  position,
-} from "./api.js"
-
+import { crew, distanceFrom, errorMessage, formatCrew, formatPosition, groundSpeed, orbitSummary, overheadNow, passes, position, groundTrack, viewingWindow } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -157,6 +145,39 @@ export function createServer(): McpServer {
       } catch (e) {
         return textError(errorMessage(e))
       }
+    }
+  )
+
+  server.registerTool(
+    "ground_track",
+    {
+      title: "Ground track",
+      description: "Where the ISS flies over the next one to three hours: position table, daylight/eclipse state and start and end points.",
+      inputSchema: z.object({
+        minutes: z.number().describe("How far ahead to project, 30-180 (default 90).").optional(),
+        step_minutes: z.number().describe("Minutes between samples, 1-15 (default 5).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await groundTrack(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "viewing_window",
+    {
+      title: "Viewing window",
+      description: "Can you see the ISS from here? Combines the closest approach, twilight times and whether the station is sunlit.",
+      inputSchema: z.object({
+        latitude: z.string().describe("Observer latitude, e.g. 40.7128."),
+        longitude: z.string().describe("Observer longitude, e.g. -74.0060."),
+        date: z.string().describe("YYYY-MM-DD for the twilight times (default today).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await viewingWindow(args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 

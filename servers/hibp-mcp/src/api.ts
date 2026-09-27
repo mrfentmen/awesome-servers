@@ -266,3 +266,88 @@ export async function passwordAudit(args: { passwords: string[] }): Promise<stri
     ...rows,
   ].join("\n")
 }
+// ---- batch-4 tools: latest breach and password strength (2026-09-27) ----
+export async function latestBreach(): Promise<string> {
+  const b = await getJson<Breach>(`${HIBP}/latestbreach`)
+  if (!b?.Name) throw new Error("Have I Been Pwned returned no latest breach.")
+  const description = (b.Description ?? "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim()
+  const added = (b.AddedDate ?? "").slice(0, 10)
+  const days = added ? Math.round((Date.now() - Date.parse(b.AddedDate)) / 86400000) : null
+  const exposure = (b.PwnCount ?? 0) / 1_000_000
+  return [
+    `Newest breach added to Have I Been Pwned: ${b.Title || b.Name}`,
+    `  domain         ${b.Domain || "not disclosed"}`,
+    `  breach date    ${b.BreachDate ?? "unknown"}${days !== null ? ` | added to the catalogue ${added} (${days} day(s) ago)` : ""}`,
+    `  accounts       ${n(b.PwnCount)}`,
+    `  verified       ${b.IsVerified ? "yes" : "no"}${b.IsFabricated ? " | flagged as fabricated" : ""}${b.IsSensitive ? " | flagged as sensitive" : ""}`,
+    `  data exposed   ${(b.DataClasses ?? []).join(", ") || "not disclosed"}`,
+    exposure >= 1 ? `  scale          about 1 in every ${Math.max(1, Math.round(340 / exposure))} people on earth are in this dump` : "",
+    "",
+    description ? description.slice(0, 1200) : "No description published.",
+    "",
+    "This endpoint answers with the single most recent addition; call recent_breaches for a window.",
+  ].filter((line) => line !== "").join("\n")
+}
+
+/** Character-set size of the classes actually present in the password. */
+function charsetSize(password: string): { size: number; classes: string[] } {
+  const classes: string[] = []
+  let size = 0
+  if (/[a-z]/.test(password)) { classes.push("lowercase"); size += 26 }
+  if (/[A-Z]/.test(password)) { classes.push("uppercase"); size += 26 }
+  if (/[0-9]/.test(password)) { classes.push("digits"); size += 10 }
+  if (/[^A-Za-z0-9]/.test(password)) { classes.push("symbols"); size += 33 }
+  if (/[^\x20-\x7e]/.test(password)) { classes.push("non-ASCII"); size += 100 }
+  return { size: Math.max(size, 1), classes }
+}
+
+function humanTime(seconds: number): string {
+  if (seconds < 1) return "under a second"
+  const units: Array<[number, string]> = [
+    [60, "second"], [60, "minute"], [24, "hour"], [365, "day"], [1000, "year"],
+  ]
+  let value = seconds
+  let label = "second"
+  for (const [factor, name] of units) {
+    if (value < factor) { label = name; break }
+    value /= factor
+    label = name
+  }
+  if (label === "year" && value > 1000) return `${Math.round(value).toLocaleString("en-US")} years`
+  return `${value.toFixed(value < 10 ? 1 : 0)} ${label}${value >= 2 ? "s" : ""}`
+}
+
+/**
+ * Entropy estimate plus a breach lookup. The maths assumes the password is drawn
+ * from the character classes it happens to use; a phrase a human invented has far
+ * less real entropy, so the headline number is an upper bound.
+ */
+export async function passwordStrength(args: { password: string; guesses_per_second?: number }): Promise<string> {
+  const password = String(args?.password ?? "")
+  if (!password) throw new Error("Provide the password to estimate.")
+  const { size, classes } = charsetSize(password)
+  const bits = password.length * Math.log2(size)
+  const rate = Math.min(Math.max(Number(args?.guesses_per_second ?? 1e10) || 1e10, 1), 1e18)
+  const guesses = Math.pow(2, Math.min(bits, 1024))
+  const seconds = guesses / 2 / rate
+  const breached = await pwnedCount(password)
+  const verdict =
+    breached > 0 ? "COMPROMISED - it is already in a public breach corpus, so length does not help"
+      : bits < 40 ? "weak for anything that matters"
+      : bits < 60 ? "usable for low-value logins only"
+      : bits < 80 ? "solid against online guessing, thin against a dedicated cracker"
+      : "strong against offline cracking at the assumed rate"
+  return [
+    `Password strength estimate (${password.length} character(s), ${classes.join(" + ") || "no classes"})`,
+    "",
+    `  charset        ${size} possible characters per position`,
+    `  entropy        ${bits.toFixed(1)} bits (upper bound - assumes random characters)`,
+    `  crack rate     ${rate.toExponential(0)} guesses/second`,
+    `  time to crack  ${humanTime(seconds)} on average (half the keyspace)`,
+    `  breach check   ${breached > 0 ? `found in ${n(breached)} breach record(s)` : "not in any known breach"}`,
+    "",
+    `Reading: ${verdict}.`,
+    "The password is hashed locally and only a 5-character hash prefix is sent for the breach check; nothing is stored or logged.",
+    "Prefer a long passphrase or a password manager: 4 random words beat 12 random characters for memorability at the same entropy.",
+  ].join("\n")
+}

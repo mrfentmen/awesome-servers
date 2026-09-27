@@ -1,16 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  breachCatalog,
-  breachDetail,
-  breachStats,
-  dataClasses,
-  errorMessage,
-  passwordAudit,
-  passwordExposure,
-  recentBreaches,
-} from "./api.js"
-
+import { breachCatalog, breachDetail, breachStats, dataClasses, errorMessage, passwordAudit, passwordExposure, recentBreaches, latestBreach, passwordStrength } from "./api.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -123,6 +113,35 @@ export function createServer(): McpServer {
     },
     async (args) => {
       try { return text(await passwordAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "latest_breach",
+    {
+      title: "Latest breach",
+      description: "The newest breach added to Have I Been Pwned: domain, date, account count and exposed data.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async () => {
+      try { return text(await latestBreach()) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "password_strength",
+    {
+      title: "Password strength",
+      description: "Entropy and crack-time estimate for a password, plus whether it already appears in a breach.",
+      inputSchema: z.object({
+        password: z.string().describe("The password to estimate. It is hashed locally and never stored."),
+        guesses_per_second: z.number().describe("Attacker guess rate (default 1e10/s, a modern GPU rig).").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await passwordStrength(args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 

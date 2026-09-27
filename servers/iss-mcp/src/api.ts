@@ -274,3 +274,98 @@ export function formatCrew(people: Crew[]): string {
   )
   return `${people.length} people in space:\n\n${sections.join("\n\n")}`
 }
+// ---- batch-4 tools: ground track and viewing window (2026-09-27) ----
+const SUN_URL = "https://api.sunrise-sunset.org/json"
+
+interface SunTimes {
+  sunrise?: string
+  sunset?: string
+  civil_twilight_begin?: string
+  civil_twilight_end?: string
+  nautical_twilight_end?: string
+  astronomical_twilight_end?: string
+}
+
+async function sunTimes(lat: number, lon: number, date?: string): Promise<SunTimes> {
+  const day = date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : "today"
+  const json = await fetchJson<{ status?: string; results?: SunTimes }>(
+    `${SUN_URL}?lat=${lat}&lng=${lon}&date=${day}&formatted=0`
+  )
+  if (json.status && json.status !== "OK") throw new IssError(`Sun times service said ${json.status}.`)
+  return json.results ?? {}
+}
+
+const clock = (iso?: string) => (iso ? new Date(iso).toISOString().slice(11, 19) : "n/a")
+
+/** Sampled positions over the next `minutes`, at a fixed step. */
+async function trackSamples(minutes: number, stepMinutes: number): Promise<Array<{ at: number; p: IssPosition }>> {
+  const now = Math.floor(Date.now() / 1000)
+  const offsets: number[] = []
+  for (let t = 0; t <= minutes * 60; t += stepMinutes * 60) offsets.push(now + t)
+  const out: Array<{ at: number; p: IssPosition }> = []
+  for (const batch of chunk(offsets, 10)) {
+    const points = await positionsAt(batch)
+    for (let i = 0; i < points.length; i += 1) out.push({ at: batch[i], p: points[i] })
+  }
+  return out
+}
+
+export async function groundTrack(args: { minutes?: number; step_minutes?: number }): Promise<string> {
+  const minutes = Math.min(Math.max(Math.round(Number(args?.minutes ?? 90)) || 90, 30), 180)
+  const step = Math.min(Math.max(Math.round(Number(args?.step_minutes ?? 5)) || 5, 1), 15)
+  const samples = await trackSamples(minutes, step)
+  if (!samples.length) throw new IssError("The tracker returned no positions.")
+  const first = samples[0].p
+  const last = samples[samples.length - 1].p
+  const litres = samples.filter((s) => s.p.visibility === "daylight").length
+  const rows = samples.map((s) => {
+    const t = new Date(s.at * 1000).toISOString().slice(11, 16)
+    return `  ${t}Z  ${s.p.latitude.toFixed(2).padStart(7)}, ${s.p.longitude.toFixed(2).padStart(8)}  ${s.p.altitude.toFixed(0)} km  ${s.p.visibility}`
+  })
+  return [
+    `ISS ground track over the next ${minutes} minutes (every ${step} minute(s)):`,
+    "",
+    `  start  ${first.latitude.toFixed(2)}, ${first.longitude.toFixed(2)} at ${new Date(samples[0].at * 1000).toISOString().slice(11, 19)}Z`,
+    `  end    ${last.latitude.toFixed(2)}, ${last.longitude.toFixed(2)} at ${new Date(samples[samples.length - 1].at * 1000).toISOString().slice(11, 19)}Z`,
+    `  sunlit ${litres} of ${samples.length} sample(s) in daylight`,
+    "",
+    "Position table (UTC, latitude, longitude, altitude):",
+    ...rows,
+    "",
+    "Latitude moves about 4 degrees per minute at this inclination, so a pass crosses whole continents.",
+  ].join("\n")
+}
+
+export async function viewingWindow(args: { latitude: string; longitude: string; date?: string }): Promise<string> {
+  const { lat, lon } = requireCoord(args?.latitude, args?.longitude)
+  const [sun, samples] = await Promise.all([sunTimes(lat, lon, args?.date), trackSamples(120, 2)])
+  if (!samples.length) throw new IssError("The tracker returned no positions.")
+  let best = samples[0]
+  for (const s of samples) {
+    if (distanceKm(lat, lon, s.p.latitude, s.p.longitude) < distanceKm(lat, lon, best.p.latitude, best.p.longitude)) best = s
+  }
+  const closest = distanceKm(lat, lon, best.p.latitude, best.p.longitude)
+  const approachAt = new Date(best.at * 1000)
+  const darkFrom = sun.civil_twilight_end ? Date.parse(sun.civil_twilight_end) : NaN
+  const darkTo = sun.civil_twilight_begin ? Date.parse(sun.civil_twilight_begin) : NaN
+  const afterDusk = Number.isFinite(darkFrom) && approachAt.getTime() >= darkFrom
+  const beforeDawn = Number.isFinite(darkTo) && approachAt.getTime() <= darkTo
+  const dark = afterDusk || beforeDawn
+  const sunlit = best.p.visibility === "daylight"
+  const visible = dark && sunlit && closest <= 1500
+  return [
+    `Viewing window at ${lat.toFixed(3)}, ${lon.toFixed(3)}${args?.date ? ` on ${args.date}` : " today"}:`,
+    "",
+    `  closest approach  ${closest.toFixed(0)} km at ${approachAt.toISOString().slice(11, 19)}Z (${best.p.latitude.toFixed(2)}, ${best.p.longitude.toFixed(2)})`,
+    `  station sunlit    ${sunlit ? "yes - daylight at the ISS, so it can be seen as a bright point" : "no - the station is in Earth's shadow and will not shine"}`,
+    `  sky at observer   ${dark ? `dark enough from ${clock(sun.civil_twilight_end)}Z${Number.isFinite(darkTo) ? ` until ${clock(sun.civil_twilight_begin)}Z` : ""}` : "not dark in that window - daylight or twilight washes the station out"}`,
+    `  twilight today    civil ends ${clock(sun.civil_twilight_end)}Z, nautical ends ${clock(sun.nautical_twilight_end)}Z, astronomical ends ${clock(sun.astronomical_twilight_end)}Z`,
+    `  sunrise / sunset  ${clock(sun.sunrise)}Z / ${clock(sun.sunset)}Z`,
+    "",
+    visible
+      ? "Verdict: look up - dark sky here, sunlit station up there, and it comes within 1500 km."
+      : "Verdict: not a naked-eye window in the next two hours; the reason is in the two lines above.",
+    "Sampled every 2 minutes over the next 120 minutes; a real pass lasts about 6 minutes either side of the closest approach.",
+    "Sun times come from sunrise-sunset.org for this point and date.",
+  ].join("\n")
+}

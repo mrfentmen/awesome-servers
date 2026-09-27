@@ -21,6 +21,8 @@ Other
 - Upcoming passes: Overhead windows for a location over the next N minutes, based on sampled ISS positions. Use 120 minutes for the best chance of catching a pass.
 - Ground track speed: How far the ISS moved in the last minute, its heading, and why the ground speed is slower than the orbital speed.
 - Orbit summary: ISS orbit at a glance: altitude, orbital speed, period in minutes, orbits per day and ground coverage.
+- Ground track: Where the ISS flies over the next one to three hours: position table, daylight/eclipse state and start and end points.
+- Viewing window: Can you see the ISS from here? Combines the closest approach, twilight times and whether the station is sunlit.
 
 ## Getting Started
 
@@ -32,6 +34,8 @@ Other
 - Tool: passes — Overhead windows for a location over the next N minutes, based on sampled ISS positions. Use 120 minutes for the best chance of catching a pass.
 - Tool: ground_speed — How far the ISS moved in the last minute, its heading, and why the ground speed is slower than the orbital speed.
 - Tool: orbit_summary — ISS orbit at a glance: altitude, orbital speed, period in minutes, orbits per day and ground coverage.
+- Tool: ground_track — Where the ISS flies over the next one to three hours: position table, daylight/eclipse state and start and end points.
+- Tool: viewing_window — Can you see the ISS from here? Combines the closest approach, twilight times and whether the station is sunlit.
 
 ## Tags
 iss, space, satellite, tracking, science, mcp

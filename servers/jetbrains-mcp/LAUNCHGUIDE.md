@@ -20,6 +20,8 @@ Developer Tools
 - Plugin versions: Recent releases of one plugin, with version strings and release dates.
 - Plugin reviews: Read the most recent written reviews of a plugin, with each reviewer's star rating and date, so you can judge real user sentiment.
 - Plugin rating breakdown: Show a plugin's review score distribution — how many raters gave each star value and the average — so an agent can tell a strong plugin from a thin one.
+- Search by IDE build: Find plugins that actually install on a specific IDE build, e.g. IC-241.18034.62.
+- List tags: Every Marketplace tag with its id and product families, filterable by family.
 
 ## Getting Started
 
@@ -30,6 +32,8 @@ Developer Tools
 - Tool: plugin_versions — Recent releases of one plugin, with version strings and release dates.
 - Tool: plugin_reviews — Read the most recent written reviews of a plugin, with each reviewer's star rating and date, so you can judge real user sentiment.
 - Tool: plugin_ratings — Show a plugin's review score distribution — how many raters gave each star value and the average — so an agent can tell a strong plugin from a thin one.
+- Tool: search_by_build — Find plugins that actually install on a specific IDE build, e.g. IC-241.18034.62.
+- Tool: list_tags — Every Marketplace tag with its id and product families, filterable by family.
 
 ## Tags
 jetbrains, mcp, data, keyless

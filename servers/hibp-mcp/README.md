@@ -11,6 +11,8 @@ Data breach catalogue and password leak checks - no API key.
 - `data_classes` — Which kinds of personal data leak most often, ranked by how many breaches exposed each type.
 - `password_exposure` — Check one password against known breach dumps. Uses k-anonymity, so the password is never transmitted.
 - `password_audit` — Check up to 10 passwords at once and report which have already appeared in a breach.
+- `latest_breach` — The newest breach added to Have I Been Pwned: domain, date, account count and exposed data.
+- `password_strength` — Entropy and crack-time estimate for a password, plus whether it already appears in a breach.
 
 ## Setup
 

@@ -1,20 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  formatHit,
-  formatPlugin,
-  formatRating,
-  formatReview,
-  getPlugin,
-  JetBrainsError,
-  pluginRatings,
-  pluginReviews,
-  pluginVersions,
-  searchPlugins,
-  topPlugins,
-} from "./api.js"
-
-
+import { formatHit, formatPlugin, formatRating, formatReview, getPlugin, JetBrainsError, pluginRatings, pluginReviews, pluginVersions, searchPlugins, topPlugins, searchByBuild, listTags, errorMessage } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -176,11 +162,40 @@ export function createServer(): McpServer {
     }
   )
 
+  server.registerTool(
+    "search_by_build",
+    {
+      title: "Search by IDE build",
+      description: "Find plugins that actually install on a specific IDE build, e.g. IC-241.18034.62.",
+      inputSchema: z.object({
+        query: z.string().describe("Search text; empty string lists the top plugins for that build."),
+        build: z.string().describe("IDE build id like IC-241.18034.62, IU-241.18034.62 or PY-241.18034.62."),
+        limit: z.number().describe("Max results (default 5, max 20).").optional(),
+        order_by: z.enum(["relevance", "downloads", "rating", "name", "updated"]).describe("Sort order (default downloads).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, build, limit, order_by: orderBy }) => {
+      try { return text(await searchByBuild(query, build, limit, orderBy)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "list_tags",
+    {
+      title: "List tags",
+      description: "Every Marketplace tag with its id and product families, filterable by family.",
+      inputSchema: z.object({
+        limit: z.number().describe("Tags to show (default 80, max 300).").optional(),
+        family: z.string().describe("Filter by family, e.g. intellij, pycharm, youtrack.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ limit, family }) => {
+      try { return text(await listTags(limit, family)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
   return server
 }
 
-function errorMessage(e: unknown): string {
-  if (e instanceof JetBrainsError) return `Error: ${e.message}`
-  if (e instanceof Error) return `Error: ${e.message}`
-  return `Error: ${String(e)}`
-}

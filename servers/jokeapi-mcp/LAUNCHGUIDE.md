@@ -21,6 +21,8 @@ Other
 - Joke database info: How many jokes exist and how they break down by category.
 - List languages: Languages the joke database is translated into.
 - Programming joke: A quick programming joke - handy when you just want something to say to a developer.
+- Jokes by type: Only one-liners or only setup-and-punchline jokes, from any safe-mode category.
+- Joke range: Fetch a batch of jokes by id range, for building lists or checking ids.
 
 ## Getting Started
 
@@ -32,6 +34,8 @@ Other
 - Tool: joke_info — How many jokes exist and how they break down by category.
 - Tool: list_languages — Languages the joke database is translated into.
 - Tool: random_programming_joke — A quick programming joke - handy when you just want something to say to a developer.
+- Tool: jokes_by_type — Only one-liners or only setup-and-punchline jokes, from any safe-mode category.
+- Tool: joke_range — Fetch a batch of jokes by id range, for building lists or checking ids.
 
 ## Tags
 jokes, humour, fun, content, mcp

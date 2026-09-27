@@ -159,3 +159,39 @@ export async function listLanguages(): Promise<string> {
     ...rows,
   ].join("\n")
 }
+// ---- batch-4 tools: type filter and id range (2026-09-27) ----
+const JOKE_TYPES = ["single", "twopart"]
+
+export async function jokesByType(args: { type?: string; category?: string; amount?: number }): Promise<string> {
+  const type = String(args?.type ?? "twopart").trim().toLowerCase()
+  if (!JOKE_TYPES.includes(type)) {
+    throw new JokeError(`"${args?.type}" is not a joke type - use single (one-liners) or twopart (setup and punchline).`)
+  }
+  const cat = (args?.category ?? "Any").trim() || "Any"
+  const size = Math.min(Math.max(Math.round(Number(args?.amount ?? 3)) || 3, 1), 10)
+  const jokes = pick(unwrap(await get(`/joke/${encodeURIComponent(cat)}?safe-mode&type=${type}&amount=${size}`)))
+  if (jokes.length === 0) throw new JokeError(`No ${type} jokes in ${cat}.`)
+  return `${jokes.length} ${type} joke(s) from ${cat}:\n\n${jokes.map((j, i) => formatJoke(j, i)).join("\n\n")}`
+}
+
+export async function jokeRange(args: { from: string; to: string; category?: string; amount?: number }): Promise<string> {
+  const from = Math.floor(Number(args?.from ?? 0))
+  const to = Math.floor(Number(args?.to ?? 0))
+  if (!Number.isFinite(from) || !Number.isFinite(to) || from <= 0 || to <= 0) {
+    throw new JokeError("Give two positive joke ids, from and to.")
+  }
+  if (to < from) throw new JokeError(`from (${from}) must not be greater than to (${to}).`)
+  if (to - from > 5000) throw new JokeError(`Range too wide: ask for at most 5000 ids, got ${to - from}.`)
+  const cat = (args?.category ?? "Any").trim() || "Any"
+  const size = Math.min(Math.max(Math.round(Number(args?.amount ?? 3)) || 3, 1), 10)
+  const jokes = pick(unwrap(await get(`/joke/${encodeURIComponent(cat)}?safe-mode&idRange=${from}-${to}&amount=${size}`)))
+  if (jokes.length === 0) return `No ${cat} jokes with ids between ${from} and ${to}.`
+  const ids = jokes.map((j) => j.id).filter((id): id is number => typeof id === "number")
+  return [
+    `${jokes.length} joke(s) from ids ${from}-${to} in ${cat}${ids.length ? ` (returned ids ${ids.join(", ")})` : ""}:`,
+    "",
+    ...jokes.map((j, i) => formatJoke(j, i)),
+    "",
+    "Ids are not guaranteed contiguous inside a range: gaps are categories you filtered out.",
+  ].join("\n")
+}
