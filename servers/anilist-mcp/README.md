@@ -9,6 +9,12 @@ This file is self contained. It reads public data only and never writes to the m
 * `searchAnime`  Search AniList anime.
 * `searchManga`  Search AniList manga.
 
+* `media_details`
+* `season_browse`
+* `character_details`
+* `studio_details`
+* `staff_details`
+* `user_list`
 ## Usage
 
 ```bash

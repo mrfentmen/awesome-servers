@@ -95,3 +95,32 @@ export function formatFiles(name: string, version: string, files: ReleaseFile[])
     files.map((f, i) => `${i + 1}. ${f.filename}${f.packagetype ? ` (${f.packagetype}${f.pythonVersion ? `, py${f.pythonVersion}` : ""})` : ""}${fmtSize(f.size)}${f.url ? `\n   ${f.url}` : ""}`).join("\n")
   )
 }
+
+export async function versionDetails(name: string, version: string): Promise<PackageInfo> {
+  return infoOf(name, await getJson<Raw>(`/${encodeURIComponent(name.trim())}/${encodeURIComponent(version.trim())}/json`))
+}
+
+export async function fileIndex(name: string): Promise<string[]> {
+  const res = await fetch(`https://pypi.org/simple/${encodeURIComponent(name.trim())}/`, {
+    headers: { "User-Agent": "pypi-mcp/1.0", Accept: "text/html" },
+    signal: AbortSignal.timeout(15000),
+  })
+  if (!res.ok) throw new PypiError(`PyPI simple index error ${res.status}`)
+  const html = await res.text()
+  const files = [...html.matchAll(/<a[^>]*>([^<]+)<\/a>/g)].map((m) => m[1].trim()).filter(Boolean)
+  return files.slice(0, 30)
+}
+
+export async function projectLinks(name: string): Promise<string> {
+  const p = await getPackage(name)
+  const data = await getJson<Raw>(`/${encodeURIComponent(name.trim())}/json`)
+  const urls = (data.info?.project_urls ?? {}) as Record<string, string>
+  const entries = Object.entries(urls)
+  if (!entries.length) return `No project links for ${p.name}.`
+  return entries.map(([k, v]) => `${k}: ${v}`).join("\n")
+}
+
+export async function releaseHistory(name: string): Promise<string[]> {
+  const p = await getPackage(name)
+  return p.releases
+}

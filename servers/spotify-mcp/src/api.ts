@@ -99,3 +99,53 @@ export function formatArtist(a: Raw): string {
   const followers = a.followers?.total !== undefined ? `${Number(a.followers.total).toLocaleString()} followers` : ""
   return `[${String(a.id)}] ${String(a.name ?? "?")}${followers ? ` — ${followers}` : ""}${a.genres?.length ? `\nGenres: ${(a.genres as string[]).slice(0, 5).join(", ")}` : ""}\n${a.external_urls?.spotify ?? ""}`.trim()
 }
+
+export async function getTrack(id: string): Promise<Raw> {
+  if (!/^[\w-]+$/.test(id.trim())) throw new SpotifyError(`Not a Spotify id: "${id}".`)
+  return await api<Raw>(`/tracks/${encodeURIComponent(id.trim())}`)
+}
+
+export async function artistTop(id: string): Promise<string> {
+  if (!/^[\w-]+$/.test(id.trim())) throw new SpotifyError(`Not a Spotify id: "${id}".`)
+  const d = await api<Raw>(`/artists/${encodeURIComponent(id.trim())}/top-tracks?market=US`)
+  const rows: Raw[] = Array.isArray(d.tracks) ? d.tracks : []
+  if (!rows.length) return "No top tracks."
+  return rows.slice(0, 10).map((t, i) => `${i + 1}. ${String(t.name ?? "?")} (pop ${t.popularity ?? "?"})`).join("\n")
+}
+
+export async function artistAlbums(id: string): Promise<string> {
+  if (!/^[\w-]+$/.test(id.trim())) throw new SpotifyError(`Not a Spotify id: "${id}".`)
+  const d = await api<Raw>(`/artists/${encodeURIComponent(id.trim())}/albums?limit=10&market=US`)
+  const rows: Raw[] = Array.isArray(d.items) ? d.items : []
+  if (!rows.length) return "No albums."
+  return rows.map((a, i) => `${i + 1}. ${String(a.name ?? "?")} (${String(a.release_date ?? "?").slice(0, 4)})`).join("\n")
+}
+
+export async function newReleases(limit = 10): Promise<string> {
+  const d = await api<Raw>(`/browse/new-releases?limit=${Math.min(Math.max(limit, 1), 50)}`)
+  const rows: Raw[] = Array.isArray(d.albums?.items) ? d.albums.items : []
+  if (!rows.length) return "No new releases."
+  return rows.map((a, i) => `${i + 1}. ${String(a.name ?? "?")} — ${((a.artists ?? []) as Raw[]).map((x) => x.name).join(", ")}`).join("\n")
+}
+
+export async function getEpisode(id: string): Promise<Raw> {
+  if (!/^[\w-]+$/.test(id.trim())) throw new SpotifyError(`Not a Spotify id: "${id}".`)
+  return await api<Raw>(`/episodes/${encodeURIComponent(id.trim())}?market=US`)
+}
+
+export async function getShow(id: string): Promise<Raw> {
+  if (!/^[\w-]+$/.test(id.trim())) throw new SpotifyError(`Not a Spotify id: "${id}".`)
+  return await api<Raw>(`/shows/${encodeURIComponent(id.trim())}?market=US`)
+}
+
+export async function browseCategories(limit = 10): Promise<string> {
+  const d = await api<Raw>(`/browse/categories?limit=${Math.min(Math.max(limit, 1), 50)}`)
+  const rows: Raw[] = Array.isArray(d.categories?.items) ? d.categories.items : []
+  if (!rows.length) return "No categories."
+  return rows.map((c, i) => `${i + 1}. ${String(c.name ?? "?")} [${String(c.id ?? "?")}]`).join("\n")
+}
+
+export function formatTrack(t: Raw): string {
+  const artists = ((t.artists ?? []) as Raw[]).map((x) => x.name).join(", ")
+  return `[${String(t.id)}] ${String(t.name ?? "?")} — ${artists}\nAlbum: ${String(t.album?.name ?? "?")} | ${Math.round(Number(t.duration_ms ?? 0) / 1000)}s | pop ${t.popularity ?? "?"}${t.external_urls?.spotify ? `\n${t.external_urls.spotify}` : ""}`.trim()
+}

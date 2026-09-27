@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatComment, formatPost, RedditError, searchComments, searchPosts } from "./api.js"
+import { formatComment, formatPost, RedditError, searchComments, searchPosts, subredditPosts, userPosts } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -56,6 +56,51 @@ export function createServer(): McpServer {
         const results = await searchComments(subreddit, query, limit)
         if (results.length === 0) return text("No Reddit comments found.")
         return text(results.map((c, i) => formatComment(c, i)).join("\n\n"))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "user_posts",
+    {
+      title: "User posts",
+      description: "Posts by one Reddit user (via the Arctic Shift archive).",
+      inputSchema: z.object({
+        author: z.string().describe("Username without u/, e.g. 'spez'"),
+        limit: z.number().int().min(1).max(100).default(5),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ author, limit }) => {
+      try {
+        const results = await userPosts(author, limit)
+        if (results.length === 0) return text(`No posts by u/${author}.`)
+        return text(results.map((p, i) => formatPost(p, i)).join("\n\n"))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "subreddit_posts",
+    {
+      title: "Subreddit posts",
+      description: "Latest posts in one subreddit (via the Arctic Shift archive).",
+      inputSchema: z.object({
+        subreddit: z.string().describe("Subreddit without r/, e.g. 'python'"),
+        sort: z.enum(["newest", "oldest"]).default("newest"),
+        limit: z.number().int().min(1).max(100).default(5),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ subreddit, sort, limit }) => {
+      try {
+        const results = await subredditPosts(subreddit, sort, limit)
+        if (results.length === 0) return text(`No posts in r/${subreddit}.`)
+        return text(results.map((p, i) => formatPost(p, i)).join("\n\n"))
       } catch (e) {
         return textError(errorMessage(e))
       }

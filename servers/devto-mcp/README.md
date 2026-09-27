@@ -10,6 +10,12 @@ This file is self contained. It reads public data only and never writes to the m
 * `latest_articles`  The latest articles.
 * `search_articles`  Search articles.
 
+* `article_details`
+* `user_articles`
+* `tag_list`
+* `videos`
+* `podcasts`
+* `top_articles`
 ## Usage
 
 ```bash

@@ -9,6 +9,9 @@ This file is self contained. It reads public data only and never writes to the m
 
 * `search`  Search songs and artists.
 
+* `song_details`
+* `artist_songs`
+* `artist_details`
 ## Usage
 
 ```bash

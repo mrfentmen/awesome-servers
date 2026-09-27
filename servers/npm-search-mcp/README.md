@@ -9,6 +9,10 @@ This file is self contained. It reads public data only and never writes to the m
 * `search`  Search npm packages.
 * `packageInfo`  Details for one npm package.
 
+* `versionInfo`
+* `downloadStats`
+* `maintainerSearch`
+* `npmsScore`
 ## Usage
 
 ```bash

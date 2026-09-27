@@ -94,3 +94,24 @@ export function formatComment(c: RedditComment, index?: number): string {
   const meta = [c.author ? `u/${c.author}` : "", c.subreddit ? `r/${c.subreddit}` : "", c.score !== undefined ? `${c.score}↑` : ""].filter(Boolean).join(" · ")
   return `${prefix}${c.body}${meta ? `\n— ${meta}` : ""}`
 }
+
+export async function userPosts(author: string, limit = 5): Promise<Post[]> {
+  if (!author.trim()) throw new RedditError("Provide a username.")
+  const data = await getJson<{ data: Raw[] }>("/posts/search", { author: author.trim(), limit: String(Math.min(Math.max(limit, 1), 100)), sort: "desc" })
+  return (data.data ?? []).slice(0, limit).map((p) => ({
+    id: p.id,
+    title: String(p.title ?? "(no title)"),
+    author: p.author,
+    subreddit: p.subreddit,
+    score: typeof p.score === "number" ? p.score : undefined,
+    comments: typeof p.num_comments === "number" ? p.num_comments : undefined,
+    created: fmtDate(p.created_utc),
+    url: p.permalink ? `https://www.reddit.com${p.permalink}` : undefined,
+    text: p.selftext ? String(p.selftext).slice(0, 400) : undefined,
+  }))
+}
+
+export async function subredditPosts(subreddit: string, sort: "newest" | "oldest" = "newest", limit = 5): Promise<Post[]> {
+  if (!subreddit.trim()) throw new RedditError("Provide a subreddit.")
+  return searchPosts(subreddit, "", sort, limit)
+}

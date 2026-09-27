@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatFiles, formatPackage, getPackage, getReleaseFiles, PypiError } from "./api.js"
+import { fileIndex, formatFiles, formatPackage, getPackage, getReleaseFiles, projectLinks, PypiError, releaseHistory, versionDetails } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -46,6 +46,87 @@ export function createServer(): McpServer {
     async ({ name, version }) => {
       try {
         return text(formatFiles(name, version, await getReleaseFiles(name, version)))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "version_details",
+    {
+      title: "Version details",
+      description: "Metadata for one release version.",
+      inputSchema: z.object({
+        name: z.string().describe("Package name"),
+        version: z.string().describe("Version"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ name, version }) => {
+      try {
+        return text(formatPackage(await versionDetails(name, version)))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "file_index",
+    {
+      title: "File index",
+      description: "All files ever published (simple index).",
+      inputSchema: z.object({
+        name: z.string().describe("Package name"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ name }) => {
+      try {
+        const files = await fileIndex(name)
+        if (!files.length) return text(`No files for ${name}.`)
+        return text(files.map((f, i) => `${i + 1}. ${f}`).join("\n"))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "project_links",
+    {
+      title: "Project links",
+      description: "Homepage, docs, repo links.",
+      inputSchema: z.object({
+        name: z.string().describe("Package name"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ name }) => {
+      try {
+        return text(await projectLinks(name))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "release_history",
+    {
+      title: "Release history",
+      description: "All published versions.",
+      inputSchema: z.object({
+        name: z.string().describe("Package name"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ name }) => {
+      try {
+        const rows = await releaseHistory(name)
+        if (!rows.length) return text(`No releases for ${name}.`)
+        return text(rows.join(", "))
       } catch (e) {
         return textError(errorMessage(e))
       }

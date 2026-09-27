@@ -11,6 +11,13 @@ This file is self contained. It reads public data only and never writes to the m
 * `search_tv`  Search TV shows by title.
 * `trending`  Trending movies and TV shows this week.
 
+* `search_person`
+* `movie_details`
+* `tv_details`
+* `person_details`
+* `movie_credits`
+* `discover_movies`
+* `discover_tv`
 ## Usage
 
 ```bash

@@ -38,8 +38,11 @@ export interface GameDetails extends GameSummary {
 async function fetchXml(path: string, retries = 3): Promise<string> {
   let lastStatus = 0
   for (let attempt = 0; attempt < retries; attempt++) {
+    const headers: Record<string, string> = { "User-Agent": UA }
+    const token = process.env.BGG_API_TOKEN?.trim()
+    if (token) headers.Authorization = `Bearer ${token}`
     const res = await fetch(`${BASE}${path}`, {
-      headers: { "User-Agent": UA },
+      headers,
       signal: AbortSignal.timeout(20000),
     })
     lastStatus = res.status
@@ -49,7 +52,7 @@ async function fetchXml(path: string, retries = 3): Promise<string> {
     }
     if (res.status === 401 || res.status === 403) {
       throw new BggError(
-        "BoardGameGeek refused the request (HTTP 401/403). BGG throttles datacenter IPs; try again later or from a residential IP."
+        "BoardGameGeek refused the request (HTTP 401/403). Since 2025 the XML API needs a token: set BGG_API_TOKEN. It also throttles datacenter IPs; try again later."
       )
     }
     if (!res.ok) throw new BggError(`BoardGameGeek error ${res.status}`)
@@ -192,4 +195,84 @@ export function formatDetails(g: GameDetails): string {
     g.publishers?.length ? `Publishers: ${g.publishers.slice(0, 5).join(", ")}` : "",
   ].filter(Boolean)
   return lines.join("\n")
+}
+
+export interface BggUser {
+  username: string
+  firstName?: string
+  lastName?: string
+  yearRegistered?: string
+}
+
+export async function getUser(username: string): Promise<BggUser | null> {
+  const clean = username.trim()
+  if (!clean) throw new BggError("Provide a BGG username.")
+  const xml = await fetchXml(`/user?name=${encodeURIComponent(clean)}`)
+  const m = xml.match(/<user[^>]*name="([^"]*)"[^>]*>/)
+  if (!m) return null
+  const tag = (t: string): string | undefined => {
+    const x = xml.match(new RegExp(`<${t}[^>]*value="([^"]*)"`))
+    return x ? decodeEntities(x[1]) : undefined
+  }
+  return { username: decodeEntities(m[1]), firstName: tag("firstname"), lastName: tag("lastname"), yearRegistered: tag("yearregistered") }
+}
+
+export async function userPlays(username: string, limit = 10): Promise<string[]> {
+  const clean = username.trim()
+  if (!clean) throw new BggError("Provide a BGG username.")
+  const xml = await fetchXml(`/plays?username=${encodeURIComponent(clean)}`)
+  const out: string[] = []
+  const re = /<play[^>]*date="([^"]*)"[^>]*quantity="([^"]*)"[^>]*>[\s\S]*?<item[^>]*name="([^"]*)"/g
+  let m: RegExpExecArray | null
+  while ((m = re.exec(xml)) !== null && out.length < limit) {
+    out.push(`${m[1]}: ${decodeEntities(m[3])} x${m[2]}`)
+  }
+  return out
+}
+
+export async function userCollection(username: string, own = true, limit = 10): Promise<GameSummary[]> {
+  const clean = username.trim()
+  if (!clean) throw new BggError("Provide a BGG username.")
+  const xml = await fetchXml(`/collection?username=${encodeURIComponent(clean)}${own ? "&own=1" : ""}`)
+  if (xml.includes("Invalid username")) throw new BggError(`Invalid BGG username: ${clean}.`)
+  return parseSearch(xml).slice(0, limit)
+}
+
+export async function guildInfo(id: string): Promise<string> {
+  if (!/^\d+$/.test(id.trim())) throw new BggError(`Guild id must be numeric, got "${id}".`)
+  const xml = await fetchXml(`/guild?id=${id.trim()}`)
+  const name = xml.match(/<name[^>]*value="([^"]*)"/)
+  const desc = xml.match(/<description>([\s\S]*?)<\/description>/)
+  const members = [...xml.matchAll(/<member[^>]*name="([^"]*)"/g)].map((m) => decodeEntities(m[1]))
+  return [`${name ? decodeEntities(name[1]) : `Guild ${id}`}`, desc ? desc[1].replace(/<[^>]+>/g, "").slice(0, 200) : "", members.length ? `Members (${members.length} shown): ${members.slice(0, 10).join(", ")}` : ""].filter(Boolean).join("\n")
+}
+
+export async function forumThreads(id: string, limit = 10): Promise<string[]> {
+  if (!/^\d+$/.test(id.trim())) throw new BggError(`Forum id must be numeric, got "${id}".`)
+  const xml = await fetchXml(`/forum?id=${id.trim()}`)
+  const out: string[] = []
+  const re = /<thread[^>]*id="([^"]*)"[^>]*subject="([^"]*)"[^>]*numarticles="([^"]*)"/g
+  let m: RegExpExecArray | null
+  while ((m = re.exec(xml)) !== null && out.length < limit) {
+    out.push(`[${m[1]}] ${decodeEntities(m[2])} (${m[3]} posts)`)
+  }
+  return out
+}
+
+export async function threadArticles(id: string, limit = 5): Promise<string[]> {
+  if (!/^\d+$/.test(id.trim())) throw new BggError(`Thread id must be numeric, got "${id}".`)
+  const xml = await fetchXml(`/thread?id=${id.trim()}`)
+  const out: string[] = []
+  const re = /<article[^>]*username="([^"]*)"[^>]*>[\s\S]*?<body>([\s\S]*?)<\/body>/g
+  let m: RegExpExecArray | null
+  while ((m = re.exec(xml)) !== null && out.length < limit) {
+    out.push(`${decodeEntities(m[1])}: ${m[2].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim().slice(0, 300)}`)
+  }
+  return out
+}
+
+export async function geeklist(id: string, limit = 10): Promise<GameSummary[]> {
+  if (!/^\d+$/.test(id.trim())) throw new BggError(`Geeklist id must be numeric, got "${id}".`)
+  const xml = await fetchXml(`/geeklist/${id.trim()}`)
+  return parseSearch(xml).slice(0, limit)
 }

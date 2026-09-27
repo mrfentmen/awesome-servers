@@ -11,6 +11,12 @@ This file is self contained. It reads public data only and never writes to the m
 * `anime_info`  Details for an anime.
 * `season_anime`  Anime in the current season.
 
+* `search_manga`
+* `manga_info`
+* `top_anime`
+* `top_manga`
+* `anime_characters`
+* `schedule_day`
 ## Usage
 
 ```bash

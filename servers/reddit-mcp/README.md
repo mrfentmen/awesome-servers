@@ -19,6 +19,8 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 - `search_posts`: Posts by subreddit/keywords with scores and links.
 - `search_comments`: Comments by subreddit/keywords.
 
+- `user_posts`
+- `subreddit_posts`
 ## Limits and privacy
 
 This project is intentionally narrow. It should be treated as a practical helper, not a complete certification or security audit. Check the implementation and the returned data before using it with sensitive material. No credentials are required. Note: reads the open Arctic Shift archive (Reddit's own JSON blocks datacenter IPs), so very fresh posts may lag.
