@@ -20,6 +20,9 @@ Jobs
 - Company jobs: Every open Muse role at companies matching a name, found by scanning the newest postings.
 - Search jobs: Keyword search across the newest Muse postings (title, company, location, category, level, tags). Add a level or location to narrow what gets scanned.
 - Job insights: Market overview for a level and/or location: the top employers, locations, levels and categories hiring right now. Supersedes a plain \"who is hiring\" company count.
+- List companies: Browse The Muse employer directory page by page: company, industries, locations and size, with the total number profiled.
+- Find a company: Search the employer directory by name, scanning several pages because the directory has no search parameter, and reports which page each match came from.
+- Compare employers: Open-role counts for two to five employers side by side, ranked, so a shortlist of companies can be compared on actual hiring.
 
 ## Getting Started
 
@@ -30,6 +33,9 @@ Jobs
 - Tool: company_jobs — Every open Muse role at companies matching a name, found by scanning the newest postings.
 - Tool: search_jobs — Keyword search across the newest Muse postings (title, company, location, category, level, tags). Add a level or location to narrow what gets scanned.
 - Tool: job_insights — Market overview for a level and/or location: the top employers, locations, levels and categories hiring right now. Supersedes a plain \"who is hiring\" company count.
+- Tool: list_companies — Browse The Muse employer directory page by page: company, industries, locations and size, with the total number profiled.
+- Tool: company_search — Search the employer directory by name, scanning several pages because the directory has no search parameter, and reports which page each match came from.
+- Tool: compare_companies — Open-role counts for two to five employers side by side, ranked, so a shortlist of companies can be compared on actual hiring.
 
 ## Tags
 themuse, mcp, data, keyless

@@ -13,6 +13,9 @@ This file is self contained. It reads public data only and never writes to the m
 * `top_salaries`  List the remote jobs in the live feed that publish the highest salaries.
 * `companies`  List the companies hiring the most on RemoteOK right now, with opening counts.
 * `tags`  Show which skills and tags appear most often in the live RemoteOK feed.
+* `newest_jobs`  Remote jobs posted inside a time window, newest first, with the tags and companies active in that window. The feed itself is unfiltered.
+* `tag_combinations`  Find roles carrying every tag given, e.g. react plus senior, which the feed's single-tag filter cannot express, with the pay range they publish.
+* `company_jobs`  Every open role from one company on the feed, with the tag mix across its roles and the salary range it publishes.
 
 ## Usage
 

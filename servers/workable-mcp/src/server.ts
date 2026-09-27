@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { companies, companyJobs, jobDetail, marketSummary, recentJobs, remoteJobs, searchJobs } from "./api.js"
-
+import { companies, companyJobs, jobDetail, marketSummary, recentJobs, remoteJobs, searchJobs, compareQueries, companyOpenings, workplaceSplit } from "./api.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -123,5 +122,69 @@ export function createServer(): McpServer {
       try { return text(await recentJobs(args)) } catch (e) { return textError(error(e)) }
     }
   )
+  server.registerTool(
+    "compare_queries",
+    {
+      title: "Compare search demand",
+      description:
+        "Open-role counts for two to five searches side by side, ranked, using the API's own totals - a direct read on which skill the market is hiring for.",
+      inputSchema: z.object({
+        queries: z.array(z.string()).describe('Searches to compare, e.g. ["rust", "go", "elixir"]'),
+        location: z.string().describe("Restrict every count to a location, e.g. 'Berlin'. Optional.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ queries, location }) => {
+      try {
+        return text(await compareQueries({ queries, location }))
+      } catch (e) {
+        return textError(error(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "company_openings",
+    {
+      title: "One company's openings",
+      description:
+        "Every open role from one employer, found through the market search and filtered to that company, with its workplace mix.",
+      inputSchema: z.object({
+        company: z.string().describe("Company name, e.g. 'Stripe'"),
+        query: z.string().describe("Broader search to sample from. Defaults to the company name.").optional(),
+        limit: z.number().describe("How many roles to show, 1-20. Defaults to 15.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ company, query, limit }) => {
+      try {
+        return text(await companyOpenings({ company, query, limit }))
+      } catch (e) {
+        return textError(error(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "workplace_split",
+    {
+      title: "Remote vs hybrid vs on-site",
+      description:
+        "How a search splits between remote, hybrid and on-site roles, using the API's own workplace filter on each of the three counts.",
+      inputSchema: z.object({
+        query: z.string().describe("Search term, e.g. 'product manager'"),
+        location: z.string().describe("Restrict to a location, e.g. 'London'. Optional.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, location }) => {
+      try {
+        return text(await workplaceSplit({ query, location }))
+      } catch (e) {
+        return textError(error(e))
+      }
+    }
+  )
+
   return server
 }

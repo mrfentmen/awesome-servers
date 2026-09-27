@@ -14,6 +14,9 @@ This file is self contained. It reads public data only and never writes to the m
 * `market_summary` — Rough shape of the job market for a keyword: top employers, locations, contract types and departments.
 * `remote_jobs` — List only remote, hybrid or on-site roles, using Workable's own workplace filter rather than sorting through mixed results.
 * `recent_jobs` — Sort Workable results by posting date, newest first, and report how fresh the sample actually is.
+* `compare_queries` — Open-role counts for two to five searches side by side, ranked, using the API's own totals - a direct read on which skill the market is hiring for.
+* `company_openings` — Every open role from one employer, found through the market search and filtered to that company, with its workplace mix.
+* `workplace_split` — How a search splits between remote, hybrid and on-site roles, using the API's own workplace filter on each of the three counts.
 
 ## Usage
 

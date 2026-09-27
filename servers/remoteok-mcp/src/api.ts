@@ -129,3 +129,99 @@ export async function tags(args: RankedArgs): Promise<string> {
   return `Top RemoteOK tags (from ${list.length} live postings):\n` +
     ranked.map(([tag, count], i) => `${i + 1}. ${tag} - ${count} job(s)`).join('\n');
 }
+// ---- batch-5 tools: freshness window, tag intersections, one company's board (2026-09-27) ----
+
+// The feed dates every job, but the Job type the earlier tools read omits the
+// epoch, so it is declared here (declarations merge).
+interface Job {
+  epoch?: number
+}
+
+const hoursOld = (job: Job): number => {
+  if (typeof job.epoch === "number" && job.epoch > 0) return (Date.now() / 1000 - job.epoch) / 3600
+  const parsed = Date.parse(job.date ?? "")
+  return Number.isNaN(parsed) ? Number.POSITIVE_INFINITY : (Date.now() - parsed) / 3600000
+}
+
+const tally = (values: string[]): [string, number][] => {
+  const counts = new Map<string, number>()
+  for (const value of values) {
+    const key = value.trim().toLowerCase()
+    if (key) counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1])
+}
+
+const ageLabel = (hours: number) => (hours < 1 ? `${Math.round(hours * 60)} min ago` : hours < 24 ? `${Math.floor(hours)}h ago` : `${Math.floor(hours / 24)}d ago`)
+
+/**
+ * Jobs posted inside a time window. The public feed is a rolling list, so
+ * "newest" is a filter the feed itself does not offer.
+ */
+export async function newestJobs(args: { hours?: number; limit?: number }): Promise<string> {
+  const hours = Math.min(Math.max(Math.trunc(args.hours ?? 24), 1), 720)
+  const limit = clamp(args.limit, 10, 50)
+  const all = await fetchJobs()
+  const fresh = all.filter((job) => hoursOld(job) <= hours).sort((a, b) => hoursOld(a) - hoursOld(b))
+  if (!fresh.length) return `Nothing in the RemoteOK feed was posted in the last ${hours} hour(s). The feed holds ${all.length} job(s) in total.`
+  const tags = tally(fresh.flatMap((job) => job.tags ?? [])).slice(0, 8)
+  const companies = new Set(fresh.map((job) => (job.company ?? "").toLowerCase()).filter(Boolean))
+  return [
+    `Posted in the last ${hours} hour(s): ${fresh.length} of ${all.length} job(s) on the feed`,
+    `  ${companies.size} compan${companies.size === 1 ? "y" : "ies"} hiring | tags in this window: ${tags.map(([tag, n]) => `${tag} (${n})`).join(", ") || "none"}`,
+    "",
+    ...fresh.slice(0, limit).map((job, i) => `${i + 1}. ${ageLabel(hoursOld(job))} — ${job.position ?? "?"} @ ${job.company ?? "?"} — ${pay(job)} | ${job.location || "remote"}`),
+    fresh.length > limit ? `\nShowing ${limit} of ${fresh.length}.` : "",
+  ].filter((line) => line !== "").join("\n")
+}
+
+/**
+ * Jobs that carry every tag given, which is how a skills intersection is
+ * searched: "react" plus "senior" finds roles the feed's single-tag filter
+ * cannot express.
+ */
+export async function tagCombinations(args: { tags: string[]; limit?: number }): Promise<string> {
+  const wanted = (args.tags ?? []).map((tag) => String(tag).trim().toLowerCase()).filter(Boolean)
+  if (wanted.length < 2) throw new Error("Give at least two tags, e.g. ['react', 'senior'].")
+  const limit = clamp(args.limit, 10, 40)
+  const all = await fetchJobs()
+  const hits = all.filter((job) => {
+    const jobTags = (job.tags ?? []).map((tag) => tag.toLowerCase())
+    return wanted.every((want) => jobTags.some((tag) => tag === want || tag.includes(want)))
+  })
+  if (!hits.length) return `No job on the current feed carries all of: ${wanted.join(" + ")}. The feed returns a rolling sample, so a narrower combination can come back empty.`
+  const withPay = hits.filter((job) => (job.salary_max ?? 0) > 0)
+  return [
+    `Jobs tagged ${wanted.join(" + ")}: ${hits.length} of ${all.length} on the feed`,
+    withPay.length ? `  ${withPay.length} publish a salary, top ${Math.max(...withPay.map((job) => job.salary_max ?? 0)).toLocaleString()} USD` : "  none of them publishes a salary",
+    "",
+    ...hits.slice(0, limit).map((job, i) => `${i + 1}. ${job.position ?? "?"} @ ${job.company ?? "?"} — ${pay(job)} | ${(job.tags ?? []).slice(0, 5).join(", ")}`),
+    hits.length > limit ? `\nShowing ${limit} of ${hits.length}.` : "",
+  ].filter((line) => line !== "").join("\n")
+}
+
+/**
+ * Everything one company has open right now, plus the tag mix and pay range of
+ * its roles — the question a candidate asks before applying anywhere.
+ */
+export async function companyJobs(args: { company: string; limit?: number }): Promise<string> {
+  const wanted = (args.company ?? "").trim().toLowerCase()
+  if (wanted.length < 2) throw new Error("Give a company name, e.g. 'stripe'.")
+  const limit = clamp(args.limit, 15, 40)
+  const all = await fetchJobs()
+  const hits = all.filter((job) => (job.company ?? "").toLowerCase().includes(wanted))
+  if (!hits.length) return `No company on the current feed matches "${args.company}". The feed holds ${all.length} job(s) at a time.`
+  const exact = hits.filter((job) => (job.company ?? "").toLowerCase() === wanted)
+  const chosen = exact.length ? exact : hits
+  const name = chosen[0].company ?? args.company
+  const tags = tally(chosen.flatMap((job) => job.tags ?? [])).slice(0, 10)
+  const pays = chosen.map((job) => job.salary_max ?? 0).filter((n) => n > 0)
+  return [
+    `${name}: ${chosen.length} open role(s) on the feed`,
+    pays.length ? `  published pay range: ${Math.min(...chosen.map((job) => job.salary_min ?? 0).filter((n) => n > 0)).toLocaleString()} to ${Math.max(...pays).toLocaleString()} USD` : "  no salary published",
+    `  tags across its roles: ${tags.map(([tag, n]) => `${tag} (${n})`).join(", ") || "none"}`,
+    "",
+    ...chosen.slice(0, limit).map((job, i) => `${i + 1}. ${job.position ?? "?"} — ${pay(job)} | ${job.location || "remote"} | ${(job.tags ?? []).slice(0, 4).join(", ")}\n   ${job.url ?? job.apply_url ?? ""}`),
+    chosen.length > limit ? `\nShowing ${limit} of ${chosen.length}.` : "",
+  ].filter((line) => line !== "").join("\n")
+}

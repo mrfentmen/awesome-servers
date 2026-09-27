@@ -20,6 +20,9 @@ Jobs
 - Top salaries: List the remote jobs in the live feed that publish the highest salaries.
 - Companies: List the companies hiring the most on RemoteOK right now, with opening counts.
 - Top tags: Show which skills and tags appear most often in the live RemoteOK feed.
+- Newest jobs: Remote jobs posted inside a time window, newest first, with the tags and companies active in that window. The feed itself is unfiltered.
+- Jobs with all these tags: Find roles carrying every tag given, e.g. react plus senior, which the feed's single-tag filter cannot express, with the pay range they publish.
+- One company's jobs: Every open role from one company on the feed, with the tag mix across its roles and the salary range it publishes.
 
 ## Getting Started
 
@@ -30,6 +33,9 @@ Jobs
 - Tool: top_salaries — List the remote jobs in the live feed that publish the highest salaries.
 - Tool: companies — List the companies hiring the most on RemoteOK right now, with opening counts.
 - Tool: tags — Show which skills and tags appear most often in the live RemoteOK feed.
+- Tool: newest_jobs — Remote jobs posted inside a time window, newest first, with the tags and companies active in that window. The feed itself is unfiltered.
+- Tool: tag_combinations — Find roles carrying every tag given, e.g. react plus senior, which the feed's single-tag filter cannot express, with the pay range they publish.
+- Tool: company_jobs — Every open role from one company on the feed, with the tag mix across its roles and the salary range it publishes.
 
 ## Tags
 remoteok, mcp, data, keyless

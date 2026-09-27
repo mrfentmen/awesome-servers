@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { companyJobs, findJobs, job, jobInsights, jobs, MUSE_LEVELS, searchJobs } from "./api.js"
-
+import { companyJobs, findJobs, job, jobInsights, jobs, MUSE_LEVELS, searchJobs, listCompanies, companySearch, compareCompanies } from "./api.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -117,5 +116,67 @@ export function createServer(): McpServer {
       try { return text(await jobInsights(args)) } catch (e) { return textError(error(e)) }
     }
   )
+  server.registerTool(
+    "list_companies",
+    {
+      title: "List companies",
+      description:
+        "Browse The Muse employer directory page by page: company, industries, locations and size, with the total number profiled.",
+      inputSchema: z.object({
+        page: z.number().describe("Directory page to read, starting at 1. Defaults to 1.").optional(),
+        limit: z.number().describe("How many companies to show, 1-40. Defaults to 10.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ page, limit }) => {
+      try {
+        return text(await listCompanies({ page, limit }))
+      } catch (e) {
+        return textError(error(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "company_search",
+    {
+      title: "Find a company",
+      description:
+        "Search the employer directory by name, scanning several pages because the directory has no search parameter, and reports which page each match came from.",
+      inputSchema: z.object({
+        name: z.string().describe("Company name or part of it, e.g. 'space'"),
+        pages: z.number().describe("How many directory pages to scan, 1-20. Defaults to 5.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ name, pages }) => {
+      try {
+        return text(await companySearch({ name, pages }))
+      } catch (e) {
+        return textError(error(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "compare_companies",
+    {
+      title: "Compare employers",
+      description:
+        "Open-role counts for two to five employers side by side, ranked, so a shortlist of companies can be compared on actual hiring.",
+      inputSchema: z.object({
+        companies: z.array(z.string()).describe('Company names, e.g. ["SpaceX", "Tesla", "Apple"]'),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ companies }) => {
+      try {
+        return text(await compareCompanies({ companies }))
+      } catch (e) {
+        return textError(error(e))
+      }
+    }
+  )
+
   return server
 }

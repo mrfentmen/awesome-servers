@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { companies, job, jobs, search, tags, topSalaries } from "./api.js"
-
+import { companies, job, jobs, search, tags, topSalaries, newestJobs, tagCombinations, companyJobs } from "./api.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -81,5 +80,68 @@ export function createServer(): McpServer {
     try { return text(await tags(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "newest_jobs",
+    {
+      title: "Newest jobs",
+      description:
+        "Remote jobs posted inside a time window, newest first, with the tags and companies active in that window. The feed itself is unfiltered.",
+      inputSchema: z.object({
+        hours: z.number().describe("How far back to look, 1-720 hours. Defaults to 24.").optional(),
+        limit: z.number().describe("How many jobs to show, 1-50. Defaults to 10.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ hours, limit }) => {
+      try {
+        return text(await newestJobs({ hours, limit }))
+      } catch (e) {
+        return textError(error(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "tag_combinations",
+    {
+      title: "Jobs with all these tags",
+      description:
+        "Find roles carrying every tag given, e.g. react plus senior, which the feed's single-tag filter cannot express, with the pay range they publish.",
+      inputSchema: z.object({
+        tags: z.array(z.string()).describe('Tags that must all be present, e.g. ["react", "senior"]'),
+        limit: z.number().describe("How many jobs to show, 1-40. Defaults to 10.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ tags, limit }) => {
+      try {
+        return text(await tagCombinations({ tags, limit }))
+      } catch (e) {
+        return textError(error(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "company_jobs",
+    {
+      title: "One company's jobs",
+      description:
+        "Every open role from one company on the feed, with the tag mix across its roles and the salary range it publishes.",
+      inputSchema: z.object({
+        company: z.string().describe("Company name or part of it, e.g. 'stripe'"),
+        limit: z.number().describe("How many roles to show, 1-40. Defaults to 15.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ company, limit }) => {
+      try {
+        return text(await companyJobs({ company, limit }))
+      } catch (e) {
+        return textError(error(e))
+      }
+    }
+  )
+
   return server
 }

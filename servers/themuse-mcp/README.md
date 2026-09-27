@@ -13,6 +13,9 @@ This file is self contained. It reads public data only and never writes to the m
 * `company_jobs`  Every open Muse role at companies matching a name, found by scanning the newest postings.
 * `search_jobs`  Keyword search across the newest Muse postings (title, company, location, category, level, tags). Add a level or location to narrow what gets scanned.
 * `job_insights`  Market overview for a level and/or location: the top employers, locations, levels and categories hiring right now. Supersedes a plain \"who is hiring\" company count.
+* `list_companies`  Browse The Muse employer directory page by page: company, industries, locations and size, with the total number profiled.
+* `company_search`  Search the employer directory by name, scanning several pages because the directory has no search parameter, and reports which page each match came from.
+* `compare_companies`  Open-role counts for two to five employers side by side, ranked, so a shortlist of companies can be compared on actual hiring.
 
 ## Usage
 

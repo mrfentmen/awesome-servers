@@ -288,3 +288,88 @@ export async function recentJobs(args: { query?: string; location?: string; limi
     `because Workable returns only 20 rows per search and not in date order.`
   )
 }
+// ---- batch-5 tools: query demand, one employer's roles, workplace split (2026-09-27) ----
+
+/**
+ * Open-role counts for several searches side by side. Each count is the API's
+ * own total, which is the only way to compare demand without paging.
+ */
+export async function compareQueries(args: { queries: string[]; location?: string }): Promise<string> {
+  const wanted = (args.queries ?? []).map((q) => String(q).trim()).filter(Boolean)
+  if (wanted.length < 2) throw new Error("Give at least two queries to compare, e.g. ['rust', 'go'].")
+  if (wanted.length > 5) throw new Error("Compare at most five queries at a time.")
+  const rows = await Promise.all(
+    wanted.map(async (term) => {
+      const d = await query(searchParams({ query: term, location: args.location, limit: 1 }))
+      return { query: term, total: d.totalSize ?? 0 }
+    })
+  )
+  const ranked = [...rows].sort((a, b) => b.total - a.total)
+  const top = ranked[0].total
+  const bottom = ranked[ranked.length - 1]
+  return [
+    `Open Workable roles${args.location ? ` in ${args.location}` : ""}`,
+    "",
+    ...ranked.map((row, i) => `  ${i + 1}. ${row.query} — ${row.total.toLocaleString()} role(s)${top > 0 && row.total < top ? ` (${Math.round((row.total / top) * 100)}% of ${ranked[0].query})` : ""}`),
+    "",
+    top > 0
+      ? `${ranked[0].query} has ${(top / Math.max(bottom.total, 1)).toFixed(1)}x the openings of ${bottom.query}.`
+      : "None of these searches has open roles right now.",
+    "Counts are the API's own totals for the whole market, not a sample.",
+  ].join("\n")
+}
+
+/**
+ * Every open role from one employer, found through the market search and then
+ * filtered to that company, which the text search alone cannot do.
+ */
+export async function companyOpenings(args: { company: string; query?: string; limit?: number }): Promise<string> {
+  const company = (args.company ?? "").trim()
+  if (company.length < 2) throw new Error("Give a company name, e.g. 'Stripe'.")
+  const q = (args.query ?? "").trim() || company
+  const limit = Math.min(Math.max(Math.trunc(args.limit ?? 15), 1), 20)
+  const d = await query(searchParams({ query: q, limit: 20 }))
+  const jobs = (Array.isArray(d.jobs) ? d.jobs : []).filter((j) => (j.company?.title ?? "").toLowerCase().includes(company.toLowerCase()))
+  if (!jobs.length) {
+    return `No role from "${company}" appears in a sample of ${(d.totalSize ?? 0).toLocaleString()} result(s) for "${q}". Try a broader query, or the company's board slug with company_jobs.`
+  }
+  const workplaces = jobs.reduce<Record<string, number>>((acc, j) => {
+    const mode = (j.workplace ?? "unstated").toLowerCase()
+    acc[mode] = (acc[mode] ?? 0) + 1
+    return acc
+  }, {})
+  return [
+    `${company} on Workable: ${jobs.length} role(s) in the sampled page (${(d.totalSize ?? 0).toLocaleString()} result(s) for "${q}")`,
+    `  workplace mix: ${Object.entries(workplaces).map(([mode, n]) => `${mode} ${n}`).join(", ")}`,
+    "",
+    ...jobs.slice(0, limit).map((j, i) => `${i + 1}. ${j.title ?? "?"} — ${where(j)} | ${j.employmentType ?? "?"}${j.department ? ` | ${j.department}` : ""}\n   ${j.url ?? j.company?.url ?? ""}`),
+    jobs.length > limit ? `\nShowing ${limit} of ${jobs.length}.` : "",
+  ].filter((line) => line !== "").join("\n")
+}
+
+/**
+ * How a market splits between remote, hybrid and on-site work, from the API's
+ * own workplace filter rather than from the fields of one page of results.
+ */
+export async function workplaceSplit(args: { query: string; location?: string }): Promise<string> {
+  const q = (args.query ?? "").trim()
+  if (!q) throw new Error("Give a query, e.g. 'product manager'.")
+  const counts = await Promise.all(
+    WORKPLACES.map(async (mode) => {
+      const d = await query(searchParams({ query: q, location: args.location, workplace: mode, limit: 1 }))
+      return { mode, total: d.totalSize ?? 0 }
+    })
+  )
+  const total = counts.reduce((sum, row) => sum + row.total, 0)
+  if (!total) return `No Workable role matches "${q}"${args.location ? ` in ${args.location}` : ""}.`
+  return [
+    `Workplace split for "${q}"${args.location ? ` in ${args.location}` : ""}: ${total.toLocaleString()} role(s)`,
+    "",
+    ...counts
+      .sort((a, b) => b.total - a.total)
+      .map((row) => `  ${row.mode.padEnd(8)} ${row.total.toLocaleString().padStart(8)}  ${Math.round((row.total / total) * 100)}%`),
+    "",
+    `${Math.round((Math.max(...counts.map((row) => row.total)) / total) * 100)}% of the market sits in the largest bucket.`,
+    "Each figure is the API's own total for that filter, so the three are independent counts, not a sample.",
+  ].join("\n")
+}

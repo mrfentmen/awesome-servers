@@ -21,6 +21,9 @@ Jobs
 - Market summary: Rough shape of the job market for a keyword: top employers, locations, contract types and departments.
 - Remote jobs: List only remote, hybrid or on-site roles, using Workable's own workplace filter rather than sorting through mixed results.
 - Newest jobs: Sort Workable results by posting date, newest first, and report how fresh the sample actually is.
+- Compare search demand: Open-role counts for two to five searches side by side, ranked, using the API's own totals - a direct read on which skill the market is hiring for.
+- One company's openings: Every open role from one employer, found through the market search and filtered to that company, with its workplace mix.
+- Remote vs hybrid vs on-site: How a search splits between remote, hybrid and on-site roles, using the API's own workplace filter on each of the three counts.
 
 ## Getting Started
 
@@ -32,6 +35,9 @@ Jobs
 - Tool: market_summary — Rough shape of the job market for a keyword: top employers, locations, contract types and departments.
 - Tool: remote_jobs — List only remote, hybrid or on-site roles, using Workable's own workplace filter rather than sorting through mixed results.
 - Tool: recent_jobs — Sort Workable results by posting date, newest first, and report how fresh the sample actually is.
+- Tool: compare_queries — Open-role counts for two to five searches side by side, ranked, using the API's own totals - a direct read on which skill the market is hiring for.
+- Tool: company_openings — Every open role from one employer, found through the market search and filtered to that company, with its workplace mix.
+- Tool: workplace_split — How a search splits between remote, hybrid and on-site roles, using the API's own workplace filter on each of the three counts.
 
 ## Tags
 workable, mcp, data, keyless

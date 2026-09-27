@@ -286,3 +286,100 @@ export async function hiringCompanies(args: HiringCompaniesArgs): Promise<string
       })
       .join('\n');
 }
+// ---- batch-5 tools: deep paging, country filter, board overview (2026-09-27) ----
+
+/**
+ * The postings endpoint pages with offset, and every earlier tool reads offset 0,
+ * so large boards (BoschGroup lists thousands) were only ever seen from the top.
+ * It also filters by country server-side.
+ */
+async function fetchPostingPage(
+  company: string,
+  offset: number,
+  limit: number,
+  country?: string
+): Promise<{ total: number; rows: Posting[] }> {
+  const countryParam = country ? `&country=${encodeURIComponent(country.toLowerCase())}` : ''
+  const url = `${BASE}/${companyId(company)}/postings?limit=${clamp(limit, 100, 100)}&offset=${Math.max(offset, 0)}${countryParam}`
+  const res = await fetch(url, {
+    headers: { 'User-Agent': UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (!res.ok) throw new Error(`SmartRecruiters returned ${res.status}`)
+  const d = (await res.json()) as { totalFound?: number; content?: Posting[] }
+  const rows = d.content ?? []
+  return { total: d.totalFound ?? rows.length, rows }
+}
+
+/** Page deeper into a board than the first hundred postings. */
+export async function postingsPage(args: { company: string; offset?: number; limit?: number }): Promise<string> {
+  const offset = Math.max(Math.trunc(args.offset ?? 0), 0)
+  const limit = clamp(args.limit, 25, 100)
+  const { total, rows } = await fetchPostingPage(args.company, offset, limit)
+  if (!rows.length) {
+    return total
+      ? `No postings at offset ${offset}: ${companyId(args.company)} lists ${total.toLocaleString()} in total, so the offset is past the end.`
+      : `${companyId(args.company)} has no public postings.`
+  }
+  return [
+    `${companyId(args.company)} postings ${offset + 1}-${offset + rows.length} of ${total.toLocaleString()}`,
+    "",
+    ...rows.map((posting, i) => row(posting, offset + i)),
+    offset + rows.length < total ? `\nNext page: postings_page with offset ${offset + rows.length}.` : "",
+  ].filter((line) => line !== "").join("\n")
+}
+
+/**
+ * One country's postings, filtered by the API itself rather than by reading
+ * every page and discarding the rest.
+ */
+export async function postingsByCountry(args: { company: string; country: string; limit?: number }): Promise<string> {
+  const country = (args.country ?? '').trim().toLowerCase()
+  if (!/^[a-z]{2}$/.test(country)) throw new Error("Give a two-letter country code, e.g. 'fr', 'us', 'de'.")
+  const limit = clamp(args.limit, 25, 100)
+  const { total, rows } = await fetchPostingPage(args.company, 0, limit, country)
+  const whole = await fetchPostingPage(args.company, 0, 1)
+  if (!rows.length) return `No public posting for ${companyId(args.company)} is in ${country.toUpperCase()}.`
+  const share = whole.total ? Math.round((total / whole.total) * 100) : 0
+  const hybrid = rows.filter((posting) => posting.location?.remote).length
+  return [
+    `${companyId(args.company)} in ${country.toUpperCase()}: ${total.toLocaleString()} of ${whole.total.toLocaleString()} posting(s) (${share}%)`,
+    hybrid ? `  ${hybrid} of the ${rows.length} shown are flagged remote` : "  none of the ones shown are flagged remote",
+    "",
+    ...rows.map((posting, i) => row(posting, i)),
+    total > rows.length ? `\nShowing ${rows.length} of ${total.toLocaleString()}; raise limit (max 100) or use postings_page with the country offset.` : "",
+  ].filter((line) => line !== "").join("\n")
+}
+
+/**
+ * A board as a whole: how many postings, which countries and departments they
+ * sit in, the mix of experience levels and how much of it is remote.
+ */
+export async function boardOverview(args: { company: string }): Promise<string> {
+  const { total, rows } = await fetchPostingPage(args.company, 0, 100)
+  if (!rows.length) return `${companyId(args.company)} has no public postings.`
+  const tally = (values: string[]) => {
+    const counts = new Map<string, number>()
+    for (const value of values) if (value) counts.set(value, (counts.get(value) ?? 0) + 1)
+    return [...counts.entries()].sort((a, b) => b[1] - a[1])
+  }
+  const countries = tally(rows.map((posting) => (posting.location?.country ?? '').toUpperCase()))
+  const departments = tally(rows.map((posting) => posting.department?.label ?? ''))
+  const levels = tally(rows.map((posting) => posting.experienceLevel?.label ?? ''))
+  const types = tally(rows.map((posting) => posting.employmentType ?? posting.typeOfEmployment?.label ?? ''))
+  const remote = rows.filter((posting) => posting.location?.remote).length
+  const dates = rows.map((posting) => String(posting.releasedDate ?? '').slice(0, 10)).filter(Boolean).sort()
+  const block = (label: string, entries: [string, number][]) =>
+    entries.length ? `${label}:\n${entries.slice(0, 6).map(([key, n]) => `  ${key} — ${n}`).join('\n')}` : ''
+  return [
+    `${companyId(args.company)} board: ${total.toLocaleString()} posting(s), analysed ${rows.length}`,
+    dates.length ? `  released between ${dates[0]} and ${dates[dates.length - 1]}` : '',
+    `  remote: ${remote} of ${rows.length} (${Math.round((remote / rows.length) * 100)}%)`,
+    '',
+    block('Countries', countries),
+    block('Departments', departments),
+    block('Experience levels', levels),
+    block('Contract types', types),
+    total > rows.length ? `\nThe picture covers the newest ${rows.length} of ${total.toLocaleString()}; use postings_page to sample further in.` : '',
+  ].filter((line) => line !== '').join('\n')
+}

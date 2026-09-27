@@ -216,3 +216,118 @@ export async function jobInsights(args: { level?: string; location?: string; pag
     .filter(Boolean)
     .join('\n');
 }
+// ---- batch-5 tools: company directory, name search, hiring comparison (2026-09-27) ----
+
+interface MuseCompany {
+  id?: number
+  name?: string
+  short_name?: string
+  description?: string
+  industries?: { name?: string }[]
+  locations?: { name?: string }[]
+  size?: { name?: string }
+  refs?: { landing_page?: string }
+}
+
+interface CompanyPage {
+  page_count?: number
+  total?: number
+  results?: MuseCompany[]
+}
+
+/** The company directory is a separate endpoint from the jobs feed. */
+async function fetchCompanies(page: number): Promise<{ pageCount: number; total: number; results: MuseCompany[] }> {
+  const url = `${BASE}/companies?page=${clamp(page, 1, 20000)}`
+  const res = await fetch(url, {
+    headers: { 'User-Agent': UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (!res.ok) throw new MuseError(`The Muse returned ${res.status} for ${url}`)
+  const d = (await res.json()) as CompanyPage
+  return { pageCount: d.page_count ?? 0, total: d.total ?? 0, results: d.results ?? [] }
+}
+
+const companyLine = (company: MuseCompany, index: number) =>
+  `${index + 1}. ${company.name ?? '?'} — ${names(company.industries)} | ${names(company.locations)} | ${company.size?.name ?? 'size n/a'}` +
+  (company.refs?.landing_page ? `\n   ${company.refs.landing_page}` : '')
+
+/**
+ * The employer directory: every company The Muse profiles, with its industries,
+ * locations and size, which no job tool exposes.
+ */
+export async function listCompanies(args: { page?: number; limit?: number }): Promise<string> {
+  const page = Math.max(Math.trunc(args.page ?? 1), 1)
+  const limit = clamp(args.limit, 10, 40)
+  const { pageCount, total, results } = await fetchCompanies(page)
+  if (!results.length) return `No companies on page ${page} of The Muse directory.`
+  return [
+    `The Muse companies — ${total.toLocaleString()} profiled (page ${page} of ${pageCount.toLocaleString()})`,
+    '',
+    ...results.slice(0, limit).map(companyLine),
+    results.length > limit ? `\nShowing ${limit} of ${results.length} on this page.` : '',
+  ].filter((line) => line !== '').join('\n')
+}
+
+/**
+ * Find a company by name across the directory. The directory has no search
+ * parameter, so several pages are scanned and the matches reported with the
+ * page each was found on.
+ */
+export async function companySearch(args: { name: string; pages?: number }): Promise<string> {
+  const wanted = (args.name ?? '').trim().toLowerCase()
+  if (wanted.length < 2) throw new MuseError("Give at least two characters of a company name.")
+  const pages = Math.min(Math.max(Math.trunc(args.pages ?? 5), 1), 20)
+  const hits: { company: MuseCompany; page: number }[] = []
+  let total = 0
+  for (let page = 1; page <= pages; page += 1) {
+    const { total: count, results } = await fetchCompanies(page)
+    total = count
+    if (!results.length) break
+    for (const company of results) {
+      if ((company.name ?? '').toLowerCase().includes(wanted) || (company.short_name ?? '').toLowerCase().includes(wanted)) {
+        hits.push({ company, page })
+      }
+    }
+  }
+  if (!hits.length) return `No company in the first ${pages} page(s) of ${total.toLocaleString()} matches "${args.name}". Raise pages to scan further.`
+  return [
+    `Companies matching "${args.name}": ${hits.length} in ${pages} page(s) of the ${total.toLocaleString()} strong directory`,
+    '',
+    ...hits.slice(0, 20).map((hit) => `${companyLine(hit.company, 0)}   (page ${hit.page})`),
+    hits.length > 20 ? `\nShowing 20 of ${hits.length}.` : '',
+  ].filter((line) => line !== '').join('\n')
+}
+
+/** Open-role count for one company, straight from the jobs endpoint's total. */
+async function rolesFor(company: string): Promise<number> {
+  const params = new URLSearchParams({ page: '1', company })
+  const res = await fetch(`${BASE}/jobs?${params.toString()}`, {
+    headers: { 'User-Agent': UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (!res.ok) throw new MuseError(`The Muse returned ${res.status} for company "${company}"`)
+  const d = (await res.json()) as { total?: number; page_count?: number }
+  return d.total ?? 0
+}
+
+/**
+ * Open-role counts for several employers side by side, which is the question a
+ * candidate asks when choosing between them.
+ */
+export async function compareCompanies(args: { companies: string[] }): Promise<string> {
+  const wanted = (args.companies ?? []).map((name) => String(name).trim()).filter(Boolean)
+  if (wanted.length < 2) throw new MuseError("Give at least two companies to compare.")
+  if (wanted.length > 5) throw new MuseError("Compare at most five companies at a time.")
+  const counts = await Promise.all(wanted.map(async (name) => ({ name, roles: await rolesFor(name) })))
+  const ranked = [...counts].sort((a, b) => b.roles - a.roles)
+  const leader = ranked[0]
+  const empty = counts.filter((row) => row.roles === 0).map((row) => row.name)
+  return [
+    'Open roles on The Muse',
+    '',
+    ...ranked.map((row, i) => `  ${i + 1}. ${row.name} — ${row.roles.toLocaleString()} role(s)`),
+    '',
+    leader.roles > 0 ? `${leader.name} is hiring the most, with ${leader.roles.toLocaleString()} open role(s).` : 'None of these companies has open roles listed.',
+    empty.length ? `No listings found for: ${empty.join(', ')}. The Muse matches the company name in its own records, so try the exact spelling it uses.` : '',
+  ].filter((line) => line !== '').join('\n')
+}

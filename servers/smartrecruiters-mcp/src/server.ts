@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { departments, hiringCompanies, jobs, posting, searchAllJobs, searchPostings } from "./api.js"
-
+import { departments, hiringCompanies, jobs, posting, searchAllJobs, searchPostings, postingsPage, postingsByCountry, boardOverview } from "./api.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -103,5 +102,69 @@ export function createServer(): McpServer {
     try { return text(await hiringCompanies(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "postings_page",
+    {
+      title: "Page a board",
+      description:
+        "Page deeper into a company board by offset, so a board with thousands of postings can be read past the newest hundred.",
+      inputSchema: z.object({
+        company: z.string().describe("Company identifier as used in its job URLs, e.g. 'BoschGroup'"),
+        offset: z.number().describe("How many postings to skip, e.g. 100. Defaults to 0.").optional(),
+        limit: z.number().describe("How many postings to return, 1-100. Defaults to 25.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ company, offset, limit }) => {
+      try {
+        return text(await postingsPage({ company, offset, limit }))
+      } catch (e) {
+        return textError(error(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "postings_by_country",
+    {
+      title: "Postings by country",
+      description:
+        "One country's postings from a company board, filtered by the API itself, with the share of the whole board that country represents.",
+      inputSchema: z.object({
+        company: z.string().describe("Company identifier, e.g. 'Ubisoft2'"),
+        country: z.string().describe("Two-letter country code, e.g. 'fr' or 'us'"),
+        limit: z.number().describe("How many postings to return, 1-100. Defaults to 25.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ company, country, limit }) => {
+      try {
+        return text(await postingsByCountry({ company, country, limit }))
+      } catch (e) {
+        return textError(error(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "board_overview",
+    {
+      title: "Board overview",
+      description:
+        "A company board as a whole: posting count, countries, departments, experience levels, contract types and how much of it is remote.",
+      inputSchema: z.object({
+        company: z.string().describe("Company identifier, e.g. 'BoschGroup'"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ company }) => {
+      try {
+        return text(await boardOverview({ company }))
+      } catch (e) {
+        return textError(error(e))
+      }
+    }
+  )
+
   return server
 }
