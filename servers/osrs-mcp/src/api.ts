@@ -387,3 +387,214 @@ export async function getFlips(limit = 10, minVolume = 100): Promise<Flip[]> {
   flips.sort((a, b) => b.potential - a.potential)
   return flips.slice(0, Math.min(Math.max(limit, 1), 25))
 }
+// ---- batch-5 tools: traded volume, price windows, alchemy profit, player compare (2026-09-27) ----
+
+// The cached mapping type declares only what the earlier tools read; interfaces
+// merge, so these optional fields become reachable without a second fetch.
+interface MappingEntry {
+  lowalch?: number
+  limit?: number
+  value?: number
+}
+
+interface VolumeShape {
+  timestamp?: number
+  data: Record<string, number>
+}
+
+interface WindowShape {
+  data: Record<string, { avgHighPrice?: number | null; avgLowPrice?: number | null; highPriceVolume?: number; lowPriceVolume?: number }>
+}
+
+interface LatestShape {
+  data: Record<string, { high?: number | null; low?: number | null; highTime?: number; lowTime?: number }>
+}
+
+const gp = (value: number) => (value > 0 ? `${value.toLocaleString()} gp` : "n/a")
+const count = (value: number) => value.toLocaleString()
+const numOr = (value: number | null | undefined, fallback: number) => (typeof value === "number" && Number.isFinite(value) ? value : fallback)
+
+function findItem(map: MappingEntry[], name: string): MappingEntry | null {
+  const q = (name ?? "").toLowerCase().trim()
+  if (!q) return null
+  return map.find((m) => m.name.toLowerCase() === q) ?? map.find((m) => m.name.toLowerCase().includes(q)) ?? null
+}
+
+/**
+ * How much of an item actually trades in a day, and how many buy-limit windows
+ * that volume represents — the wiki API publishes volume but nothing that
+ * relates it to the 4-hourly GE buy limit, which is what a buyer needs.
+ */
+export async function itemVolume(args: { name?: string; limit?: number }): Promise<string> {
+  const size = Math.min(Math.max(Math.trunc(args.limit ?? 10), 1), 30)
+  const [map, volumes] = await Promise.all([mapping(), fetchJson<VolumeShape>(`${PRICES}/volumes`)])
+  const volumeOf = (id: number) => Math.trunc(volumes.data[String(id)] ?? 0)
+
+  const wanted = (args.name ?? "").trim()
+  if (wanted) {
+    const entry = findItem(map, wanted)
+    if (!entry) throw new OsrsError(`No Grand Exchange item matches "${wanted}".`)
+    const volume = volumeOf(entry.id)
+    const buyLimit = Math.trunc(entry.limit ?? 0)
+    const windows = buyLimit > 0 && volume > 0 ? (volume / buyLimit).toFixed(1) : "n/a"
+    return [
+      `Traded volume: ${entry.name} (id ${entry.id}${entry.members ? ", members" : ""})`,
+      `  24h volume: ${count(volume)} item(s)`,
+      `  GE buy limit: ${buyLimit > 0 ? `${count(buyLimit)} per 4 hours, so ${count(buyLimit * 6)} a day` : "not published"}`,
+      `  daily volume covers ${windows} buy-limit window(s)`,
+      volume === 0 ? "  nothing traded today, so any price you see is stale." : "",
+      buyLimit > 0 && volume > 0 && volume < buyLimit ? "  thin market: a day's trade is less than one buy limit, so expect slow fills." : "",
+    ].filter((line) => line !== "").join("\n")
+  }
+
+  const rows = map
+    .map((m) => ({ name: m.name, id: m.id, members: m.members, volume: volumeOf(m.id), buyLimit: Math.trunc(m.limit ?? 0) }))
+    .filter((row) => row.volume > 0)
+    .sort((a, b) => b.volume - a.volume)
+    .slice(0, size)
+  if (!rows.length) throw new OsrsError("The wiki volume feed returned no traded items.")
+  const total = map.reduce((sum, m) => sum + volumeOf(m.id), 0)
+  return [
+    `Most traded items in the last 24 hours (top ${rows.length} of ${map.length} items)`,
+    `Whole market: ${count(total)} item(s) changed hands across every item.`,
+    "",
+    ...rows.map(
+      (row, i) =>
+        `${String(i + 1).padStart(2)}. ${row.name}${row.members ? " *" : ""} — ${count(row.volume)} traded, buy limit ${row.buyLimit > 0 ? `${count(row.buyLimit)}/4h (x${(row.volume / row.buyLimit).toFixed(1)} a day)` : "n/a"}`
+    ),
+    "",
+    "* members-only item.",
+  ].join("\n")
+}
+
+/**
+ * One item's price in every window the wiki publishes (instant, 5 minutes, an
+ * hour, a day), so a buy or sell is not made off a single stale print.
+ */
+export async function priceWindows(args: { name: string }): Promise<string> {
+  const map = await mapping()
+  const entry = findItem(map, args.name)
+  if (!entry) throw new OsrsError(`No Grand Exchange item matches "${args.name}".`)
+  const key = String(entry.id)
+  const [latest, fiveMin, hour, day] = await Promise.all([
+    fetchJson<LatestShape>(`${PRICES}/latest`),
+    fetchJson<WindowShape>(`${PRICES}/5m`),
+    fetchJson<WindowShape>(`${PRICES}/1h`),
+    fetchJson<WindowShape>(`${PRICES}/24h`),
+  ])
+  const instant = latest.data[key] ?? {}
+  const window = (shape: WindowShape, label: string) => {
+    const row = shape.data[key]
+    if (!row) return `  ${label.padEnd(8)} no trades in this window`
+    const high = numOr(row.avgHighPrice, 0)
+    const low = numOr(row.avgLowPrice, 0)
+    const volume = (row.highPriceVolume ?? 0) + (row.lowPriceVolume ?? 0)
+    return `  ${label.padEnd(8)} buy ${gp(high)} | sell ${gp(low)} | ${count(Math.trunc(volume))} traded`
+  }
+  const dayRow = day.data[key]
+  const dayHigh = numOr(dayRow?.avgHighPrice, 0)
+  const instantHigh = numOr(instant.high, 0)
+  const drift = dayHigh > 0 && instantHigh > 0 ? ((instantHigh - dayHigh) / dayHigh) * 100 : 0
+  return [
+    `Price windows: ${entry.name} (id ${entry.id}${entry.members ? ", members" : ""})`,
+    `  instant  buy ${gp(numOr(instant.high, 0))} | sell ${gp(numOr(instant.low, 0))}`,
+    window(fiveMin, "5m"),
+    window(hour, "1h"),
+    window(day, "24h"),
+    "",
+    dayHigh > 0
+      ? `The instant buy price is ${drift >= 0 ? "up" : "down"} ${Math.abs(drift).toFixed(1)}% against the 24h average of ${gp(dayHigh)}.`
+      : "No 24h average to compare against.",
+    `Buy limit ${numOr(entry.limit, 0) > 0 ? `${gp(numOr(entry.limit, 0))} per 4 hours` : "not published"} — windows with no trades mean an illiquid item, not a free price.`,
+  ].join("\n")
+}
+
+/**
+ * Which items are worth high-alching right now: the alchemy value against the
+ * current sell price, ranked, with the buy limit that caps the profit per
+ * window. The nature rune is not included, so the figure is gross.
+ */
+export async function alchProfit(args: { limit?: number; membersOnly?: boolean }): Promise<string> {
+  const size = Math.min(Math.max(Math.trunc(args.limit ?? 10), 1), 40)
+  const [map, latest] = await Promise.all([mapping(), fetchJson<LatestShape>(`${PRICES}/latest`)])
+  const rows = map
+    .filter((m) => !args.membersOnly || m.members)
+    .map((m) => {
+      const price = latest.data[String(m.id)] ?? {}
+      const sell = numOr(price.low, 0)
+      const highalch = Math.trunc(m.highalch ?? 0)
+      return { name: m.name, id: m.id, members: m.members, sell, highalch, profit: highalch > 0 && sell > 0 ? highalch - sell : 0, buyLimit: Math.trunc(m.limit ?? 0) }
+    })
+    .filter((row) => row.profit > 0)
+    .sort((a, b) => b.profit - a.profit)
+    .slice(0, size)
+  if (!rows.length) throw new OsrsError("No item is profitable to alch at the current prices.")
+  return [
+    `Best high-alchemy margins (gross, before the nature rune)`,
+    "",
+    ...rows.map(
+      (row, i) =>
+        `${String(i + 1).padStart(2)}. ${row.name}${row.members ? " *" : ""} — buy ${gp(row.sell)}, alch ${gp(row.highalch)}, profit ${gp(row.profit)} each${row.buyLimit > 0 ? `, ${gp(row.buyLimit)}/4h` : ""}`
+    ),
+    "",
+    "profit = high alch value minus the current buy price; a nature rune costs extra.",
+    "* members-only item.",
+  ].join("\n")
+}
+
+const PLAYER_MODES = Object.keys(HISCORES) as Array<keyof typeof HISCORES>
+
+function parseMode(mode?: string): keyof typeof HISCORES {
+  const wanted = (mode ?? "normal").toLowerCase().trim()
+  const found = PLAYER_MODES.find((m) => m === wanted)
+  if (!found) throw new OsrsError(`Unknown mode "${mode}". Use one of: ${PLAYER_MODES.join(", ")}.`)
+  return found
+}
+
+type PlayerSnapshot = Awaited<ReturnType<typeof getPlayerStats>>
+
+/**
+ * Two players side by side: overall level and XP gap, the skills with the
+ * biggest difference, and the activities where both have a score.
+ */
+export async function playerCompare(args: { playerA: string; playerB: string; mode?: string }): Promise<string> {
+  const mode = parseMode(args.mode)
+  const [a, b] = await Promise.all([getPlayerStats(args.playerA, mode), getPlayerStats(args.playerB, mode)])
+  return renderCompare(a, b, mode)
+}
+
+function renderCompare(a: PlayerSnapshot, b: PlayerSnapshot, mode: keyof typeof HISCORES): string {
+  const bByName = new Map(b.skills.map((s) => [s.skill, s]))
+  const diffs = a.skills
+    .filter((s) => s.level > 0 || (bByName.get(s.skill)?.level ?? 0) > 0)
+    .map((s) => {
+      const other = bByName.get(s.skill)
+      return { skill: s.skill, levelGap: s.level - (other?.level ?? 0), xpGap: s.xp - (other?.xp ?? 0), a: s, b: other }
+    })
+    .sort((x, y) => Math.abs(y.xpGap) - Math.abs(x.xpGap))
+  const levelGap = a.overall.level - b.overall.level
+  const xpGap = a.overall.xp - b.overall.xp
+  const bAct = new Map(b.activities.map((entry) => [entry.activity, entry]))
+  const shared = a.activities
+    .filter((entry) => entry.score > 0 && (bAct.get(entry.activity)?.score ?? 0) > 0)
+    .map((entry) => ({ activity: entry.activity, a: entry.score, b: bAct.get(entry.activity)?.score ?? 0 }))
+    .sort((x, y) => Math.abs(y.a - y.b) - Math.abs(x.a - x.b))
+    .slice(0, 8)
+
+  return [
+    `Player compare (${mode})`,
+    `  ${a.username}: total level ${count(a.overall.level)}, ${count(a.overall.xp)} xp, rank ${count(a.overall.rank)}`,
+    `  ${b.username}: total level ${count(b.overall.level)}, ${count(b.overall.xp)} xp, rank ${count(b.overall.rank)}`,
+    "",
+    levelGap === 0
+      ? "Identical total level."
+      : `${levelGap > 0 ? a.username : b.username} holds ${Math.abs(levelGap)} more total level(s) and ${count(Math.abs(xpGap))} more xp.`,
+    "",
+    "Biggest skill gaps:",
+    ...diffs
+      .slice(0, 10)
+      .map((d) => `  ${d.skill.padEnd(14)} ${d.a.level} vs ${d.b?.level ?? 0} (level ${d.levelGap >= 0 ? "+" : "-"}${Math.abs(d.levelGap)}, xp ${d.xpGap >= 0 ? "+" : "-"}${count(Math.abs(d.xpGap))})`),
+    shared.length ? "\nActivities both have scores in:" : "\nNeither player has a shared scored activity.",
+    ...shared.map((s) => `  ${s.activity}: ${count(s.a)} vs ${count(s.b)}`),
+  ].join("\n")
+}

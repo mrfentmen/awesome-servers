@@ -203,3 +203,136 @@ function formatList(rows: Emoji[], title: string): string {
   )
   return `${title}:\n\n${lines.join("\n")}`
 }
+// ---- batch-5 tools: SVG links, skin tone variants, emoji compare (2026-09-27) ----
+
+// Skin-tone metadata lives in the dataset but was not part of the Emoji type
+// the earlier tools read. Declarations merge, and a merged declaration must be
+// exported on both sides, so this keeps the export keyword.
+export interface Emoji {
+  skintone?: number | string
+  skintone_base_hexcode?: string
+  skintone_combination?: string
+  openmoji_tags?: string
+  openmoji_author?: string
+  openmoji_date?: string
+  unicode?: number
+}
+
+const TONES: Record<string, string> = {
+  "1F3FB": "light",
+  "1F3FC": "medium-light",
+  "1F3FD": "medium",
+  "1F3FE": "medium-dark",
+  "1F3FF": "dark",
+}
+
+const SVG_BASE = "https://openmoji.org/data"
+
+const normalize = (value: string) => (value ?? "").trim().toUpperCase().replace(/^U\+/, "")
+
+/** Find a dataset row by hexcode, by the emoji character itself, or by exact annotation. */
+async function resolveEmoji(input: string): Promise<Emoji> {
+  const wanted = (input ?? "").trim()
+  if (!wanted) throw new OpenmojiError("Give an emoji, a hexcode such as 1F44D, or an annotation such as 'thumbs up'.")
+  const all = await dataset()
+  const hex = normalize(wanted)
+  const found =
+    all.find((e) => e.hexcode.toUpperCase() === hex) ??
+    all.find((e) => e.emoji === wanted) ??
+    all.find((e) => e.annotation.toLowerCase() === wanted.toLowerCase())
+  if (!found) throw new OpenmojiError(`No OpenMoji entry matches "${input}".`)
+  return found
+}
+
+const tagSet = (value: string | undefined) =>
+  new Set((value ?? "").split(",").map((t) => t.trim().toLowerCase()).filter(Boolean))
+
+/**
+ * The two SVG files OpenMoji publishes for one emoji, checked before they are
+ * handed over, because a designer pasting a URL wants it to work.
+ */
+export async function svgLinks(args: { hexcode: string }): Promise<string> {
+  const entry = await resolveEmoji(args.hexcode)
+  const hex = entry.hexcode.toUpperCase()
+  const styles = ["color", "black"] as const
+  const rows = await Promise.all(
+    styles.map(async (style) => {
+      const url = `${SVG_BASE}/${style}/svg/${hex}.svg`
+      try {
+        const res = await fetch(url, { method: "HEAD", headers: { "User-Agent": UA }, signal: AbortSignal.timeout(20000) })
+        const bytes = Number(res.headers.get("content-length") ?? 0)
+        return {
+          style,
+          url,
+          ok: res.ok,
+          detail: res.ok ? `${res.headers.get("content-type") ?? "image/svg+xml"}${bytes ? `, ${(bytes / 1024).toFixed(1)} kB` : ""}` : `HTTP ${res.status}`,
+        }
+      } catch (e) {
+        return { style, url, ok: false, detail: errorMessage(e) }
+      }
+    })
+  )
+  return [
+    `SVG files for ${entry.emoji} (${hex}) — ${entry.annotation}`,
+    "",
+    ...rows.map((row) => `  ${row.style.padEnd(6)} ${row.ok ? "ok  " : "FAIL"} ${row.url}${row.ok ? ` (${row.detail})` : ` — ${row.detail}`}`),
+    "",
+    "OpenMoji is CC BY-SA 4.0, so credit the project wherever the artwork is used.",
+  ].join("\n")
+}
+
+/**
+ * The skin-tone run of one emoji, taken from the dataset's own base-hexcode
+ * links rather than guessed from the code points.
+ */
+export async function skinToneVariants(args: { emoji: string }): Promise<string> {
+  const base = await resolveEmoji(args.emoji)
+  const all = await dataset()
+  const variants = all
+    .filter((e) => (e.skintone_base_hexcode ?? "").toUpperCase() === base.hexcode.toUpperCase() && e.hexcode.toUpperCase() !== base.hexcode.toUpperCase())
+    .sort((a, b) => String(a.hexcode).localeCompare(String(b.hexcode)))
+  if (!variants.length) {
+    return [
+      `${base.emoji} (${base.hexcode}) — ${base.annotation}`,
+      "No skin-tone variants: this emoji is published in one form only.",
+    ].join("\n")
+  }
+  return [
+    `Skin-tone variants of ${base.emoji} (${base.hexcode}) — ${base.annotation}`,
+    `  base: ${base.emoji} ${base.hexcode}`,
+    "",
+    ...variants.map((v) => {
+      const tone = TONES[String(v.hexcode).split("-").pop() ?? ""] ?? "tone"
+      return `  ${tone.padEnd(13)} ${v.emoji} ${v.hexcode} — ${v.annotation}`
+    }),
+    "",
+    `OpenMoji stores ${variants.length} variant(s) for this emoji, in the tones above; the base emoji is used when none is chosen.`,
+  ].join("\n")
+}
+
+/** Two emoji compared on the metadata that decides whether they are interchangeable. */
+export async function compareEmoji(args: { a: string; b: string }): Promise<string> {
+  const first = await resolveEmoji(args.a)
+  const second = await resolveEmoji(args.b)
+  const firstTags = tagSet(first.tags)
+  const secondTags = tagSet(second.tags)
+  const shared = [...firstTags].filter((t) => secondTags.has(t)).sort()
+  const onlyFirst = [...firstTags].filter((t) => !secondTags.has(t)).sort().slice(0, 12)
+  const onlySecond = [...secondTags].filter((t) => !firstTags.has(t)).sort().slice(0, 12)
+  const overlap = firstTags.size && secondTags.size ? Math.round((shared.length / Math.min(firstTags.size, secondTags.size)) * 100) : 0
+  return [
+    `Emoji compare: ${first.emoji} ${first.hexcode} vs ${second.emoji} ${second.hexcode}`,
+    `  ${first.annotation} | ${first.group} / ${first.subgroups}`,
+    `  ${second.annotation} | ${second.group} / ${second.subgroups}`,
+    "",
+    first.group === second.group ? `Same group (${first.group}).` : `Different groups: ${first.group} vs ${second.group}.`,
+    first.subgroups === second.subgroups
+      ? `Same subgroup (${first.subgroups}).`
+      : `Different subgroups: ${first.subgroups} vs ${second.subgroups}.`,
+    `Tag overlap ${overlap}% — shared: ${shared.length ? shared.join(", ") : "none"}`,
+    onlyFirst.length ? `  only in ${first.emoji}: ${onlyFirst.join(", ")}` : "",
+    onlySecond.length ? `  only in ${second.emoji}: ${onlySecond.join(", ")}` : "",
+    "",
+    `Unicode version: ${first.unicode ?? "not stated"} vs ${second.unicode ?? "not stated"}; colours of the same subject usually share a subgroup, so a shared subgroup is the strongest signal that two emoji are near-duplicates.`,
+  ].filter((line) => line !== "").join("\n")
+}

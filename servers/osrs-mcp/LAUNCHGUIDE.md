@@ -20,6 +20,10 @@ Games
 - Get hot items: What's trading the most on the Grand Exchange right now — ranked by trade volume in the last hour, with buy/sell averages.
 - Get price history: Price history for one item: average buy/sell price and trade volume per step. Steps: 5m / 1h / 6h / 24h.
 - Get flip margins: Grand Exchange flipping opportunities: buy at the instant-sell price, sell at the instant-buy price, ranked by margin x hourly volume. Filtered by minimum hourly volume so illiquid junk stays out.
+- Item volume: How much an item really trades: 24h volume against the 4-hourly GE buy limit, or the market's most traded items when no name is given.
+- Price windows: One item priced in every window the wiki publishes - instant, 5 minutes, 1 hour, 24 hours - with trade counts and how today's price sits against the 24h average.
+- Alchemy profit: Rank items by high-alchemy margin - alchemy value minus the current buy price - with the GE buy limit that caps how much can be alched per window.
+- Compare players: Compare two Old School accounts: total level and XP gap, the skills with the biggest difference, and the activities both players have scores in.
 
 ## Getting Started
 
@@ -30,6 +34,10 @@ Games
 - Tool: get_hot_items — What's trading the most on the Grand Exchange right now — ranked by trade volume in the last hour, with buy/sell averages.
 - Tool: get_price_history — Price history for one item: average buy/sell price and trade volume per step. Steps: 5m / 1h / 6h / 24h.
 - Tool: get_flip_margins — Grand Exchange flipping opportunities: buy at the instant-sell price, sell at the instant-buy price, ranked by margin x hourly volume. Filtered by minimum hourly volume so illiquid junk stays out.
+- Tool: item_volume — How much an item really trades: 24h volume against the 4-hourly GE buy limit, or the market's most traded items when no name is given.
+- Tool: price_windows — One item priced in every window the wiki publishes - instant, 5 minutes, 1 hour, 24 hours - with trade counts and how today's price sits against the 24h average.
+- Tool: alch_profit — Rank items by high-alchemy margin - alchemy value minus the current buy price - with the GE buy limit that caps how much can be alched per window.
+- Tool: player_compare — Compare two Old School accounts: total level and XP gap, the skills with the biggest difference, and the activities both players have scores in.
 
 ## Tags
 runescape, osrs, gaming, prices, keyless

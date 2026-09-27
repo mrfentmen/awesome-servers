@@ -21,6 +21,9 @@ Education
 - Get edition: Edition details by ID (OL123M): publisher, page count, ISBNs and cover.
 - Get author: Author details by ID (OL123A): birth/death dates, alternate names, bio and links.
 - Author works: List the works credited to an author ID, with publication years.
+- Look up an ISBN: Resolve an ISBN straight to its edition record - title, publisher, pages, language and cover - after checking the ISBN's own check digit, so a typo is caught before the request.
+- Work editions: Every printing of a work that Open Library holds: edition count, publication-year range, publishers, languages and the edition keys to drill into.
+- Subject overview: A subject as an entity rather than a search: how many works it holds and the works Open Library ranks first, with authors and first publication years.
 
 ## Getting Started
 
@@ -33,6 +36,9 @@ Education
 - Tool: get_edition — Edition details by ID (OL123M): publisher, page count, ISBNs and cover.
 - Tool: get_author — Author details by ID (OL123A): birth/death dates, alternate names, bio and links.
 - Tool: author_works — List the works credited to an author ID, with publication years.
+- Tool: edition_by_isbn — Resolve an ISBN straight to its edition record - title, publisher, pages, language and cover - after checking the ISBN's own check digit, so a typo is caught before the request.
+- Tool: work_editions — Every printing of a work that Open Library holds: edition count, publication-year range, publishers, languages and the edition keys to drill into.
+- Tool: subject_overview — A subject as an entity rather than a search: how many works it holds and the works Open Library ranks first, with authors and first publication years.
 
 ## Tags
 books, open-library, reading, library, keyless

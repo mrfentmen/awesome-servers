@@ -222,3 +222,125 @@ export async function authorWorks(authorId: string, limit = 20): Promise<string>
       .join("\n")
   )
 }
+// ---- batch-5 tools: ISBN lookup, every edition of a work, subject overview (2026-09-27) ----
+
+// Fields these tools read that the shared record type does not declare.
+// Interfaces merge, so this only widens what is already there.
+interface OpenLibraryRecord {
+  subtitle?: string
+  by_statement?: string
+  ocaid?: string
+  edition_name?: string
+  physical_format?: string
+  publish_places?: string[]
+  work_count?: number
+  subject_type?: string
+  works?: { key?: string; title?: string; authors?: { name?: string }[]; first_publish_year?: number; cover_id?: number }[]
+}
+
+/**
+ * An ISBN carries a check digit, so a mistyped one can be rejected before a
+ * request is spent on it.
+ */
+function normalizeIsbn(input: string): string {
+  const clean = (input ?? "").replace(/[^0-9Xx]/g, "").toUpperCase()
+  if (clean.length === 10) {
+    if (!/^[0-9]{9}[0-9X]$/.test(clean)) throw new OpenLibraryError(`"${input}" is not a valid ISBN-10.`)
+    let sum = 0
+    for (let i = 0; i < 10; i++) sum += (clean[i] === "X" ? 10 : Number(clean[i])) * (10 - i)
+    if (sum % 11 !== 0) throw new OpenLibraryError(`ISBN-10 "${clean}" fails its check digit, so it is a typo.`)
+    return clean
+  }
+  if (clean.length === 13) {
+    if (!/^[0-9]{13}$/.test(clean)) throw new OpenLibraryError(`"${input}" is not a valid ISBN-13.`)
+    let sum = 0
+    for (let i = 0; i < 13; i++) sum += Number(clean[i]) * (i % 2 === 0 ? 1 : 3)
+    if (sum % 10 !== 0) throw new OpenLibraryError(`ISBN-13 "${clean}" fails its check digit, so it is a typo.`)
+    return clean
+  }
+  throw new OpenLibraryError(`"${input}" has ${clean.length} digit(s); an ISBN has 10 or 13.`)
+}
+
+const asList = (value: string[] | undefined, max = 4) => (value ?? []).slice(0, max).join(", ")
+
+const languageList = (languages: { key?: string }[] | undefined) =>
+  (languages ?? [])
+    .map((l) => (l.key ?? "").replace("/languages/", ""))
+    .filter(Boolean)
+    .slice(0, 8)
+    .join(", ")
+
+/** Resolve an ISBN to its edition record, without walking through search first. */
+export async function editionByIsbn(args: { isbn: string }): Promise<string> {
+  const isbn = normalizeIsbn(args.isbn)
+  const edition = await req(`/isbn/${isbn}.json`)
+  const authors = (edition.authors ?? []).map((a) => keyToString(a.key)).filter(Boolean)
+  const cover = (edition.covers ?? []).find((id) => id > 0)
+  return [
+    `Edition for ISBN ${isbn}`,
+    `  ${edition.title ?? "Untitled"}${edition.subtitle ? `: ${edition.subtitle}` : ""}`,
+    `  format: ${edition.physical_format ?? edition.edition_name ?? "not stated"} | pages: ${edition.number_of_pages ?? "not stated"}`,
+    `  published: ${edition.publish_date ?? "not stated"}${edition.publish_places?.length ? ` in ${asList(edition.publish_places, 3)}` : ""}`,
+    `  publisher(s): ${asList(edition.publishers) || "not stated"}`,
+    authors.length ? `  author record(s): ${authors.map((k) => `/${k}`).join(", ")}` : `  by: ${edition.by_statement ?? "not stated"}`,
+    `  work: ${keyToString(edition.works?.[0]?.key) || "not linked"}`,
+    `  ISBN-13: ${asList(edition.isbn_13, 3) || "none"} | ISBN-10: ${asList(edition.isbn_10, 2) || "none"}`,
+    cover ? `  cover: ${COVERS}/${cover}-L.jpg` : "  no cover on this edition",
+    edition.ocaid ? `  scanned copy: https://archive.org/details/${edition.ocaid}` : "",
+  ].filter((line) => line !== "").join("\n")
+}
+
+/**
+ * Every edition Open Library knows for a work — the answer to "is there a later
+ * or translated printing", which a single work record does not contain.
+ */
+export async function workEditions(args: { workId: string; limit?: number }): Promise<string> {
+  const id = idPart(args.workId, "/works/")
+  if (!id) throw new OpenLibraryError("Give a work id such as OL27448W.")
+  const limit = Math.min(Math.max(Math.trunc(args.limit ?? 10), 1), 50)
+  const d = await req(`/works/${encodeURIComponent(id)}/editions.json?limit=${limit}`)
+  const entries = Array.isArray(d.entries) ? d.entries : []
+  if (!entries.length) return `Work ${id} has no editions listed.`
+  const total = typeof d.size === "number" ? d.size : entries.length
+  const years = entries
+    .map((e) => Number(String(e.publish_date ?? "").match(/\d{4}/)?.[0] ?? 0))
+    .filter((y) => y > 0)
+    .sort((a, b) => a - b)
+  const publishers = [...new Set(entries.flatMap((e) => e.publishers ?? []))].slice(0, 10)
+  return [
+    `Editions of work ${id}: ${total.toLocaleString()} listed, showing ${entries.length}`,
+    years.length ? `  publication years in this page: ${years[0]} to ${years[years.length - 1]}` : "  no dated editions in this page",
+    publishers.length ? `  publishers: ${publishers.join(", ")}` : "",
+    "",
+    ...entries.map((e, i) => {
+      const bits = [
+        e.publish_date ?? "",
+        asList(e.publishers, 1) || "",
+        e.number_of_pages ? `${e.number_of_pages}pp` : "",
+        languageList(e.languages) || "",
+      ].filter(Boolean)
+      return `${i + 1}. ${e.title ?? "Untitled"} — ${bits.join(" | ") || "no details"}\n   edition: ${keyToString(e.key) || "?"}`
+    }),
+    total > entries.length ? `\nRaise limit (max 50) to see more than ${entries.length} of ${total.toLocaleString()}.` : "",
+  ].filter((line) => line !== "").join("\n")
+}
+
+/** A subject as an entity: how many works it holds and which ones Open Library ranks first. */
+export async function subjectOverview(args: { subject: string; limit?: number }): Promise<string> {
+  const slug = (args.subject ?? "").trim().toLowerCase().replace(/\s+/g, "_").replace(/^\/subjects\//, "")
+  if (!slug) throw new OpenLibraryError("Give a subject, e.g. 'science fiction' or 'cooking'.")
+  const limit = Math.min(Math.max(Math.trunc(args.limit ?? 10), 1), 25)
+  const d = await req(`/subjects/${encodeURIComponent(slug)}.json?limit=${limit}`)
+  const works = Array.isArray(d.works) ? d.works : []
+  if (typeof d.work_count !== "number" && !works.length) throw new OpenLibraryError(`Open Library has no subject "${args.subject}".`)
+  return [
+    `Subject "${d.name ?? slug}" (${d.subject_type ?? "subject"})`,
+    `  works: ${typeof d.work_count === "number" ? d.work_count.toLocaleString() : "unknown"}`,
+    "",
+    works.length ? "Top works:" : "No works listed for this subject.",
+    ...works.map((w, i) => {
+      const authors = (w.authors ?? []).map((a) => a.name).filter(Boolean).slice(0, 2).join(", ")
+      return `${i + 1}. ${w.title ?? "Untitled"}${authors ? ` — ${authors}` : ""}${w.first_publish_year ? ` (${w.first_publish_year})` : ""}\n   work: ${keyToString(w.key) || "?"}`
+    }),
+  ].join("\n")
+}

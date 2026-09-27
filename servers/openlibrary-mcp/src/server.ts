@@ -1,16 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  authorWorks,
-  errorMessage,
-  getAuthor,
-  getEdition,
-  getWork,
-  searchBooks,
-  searchByAuthor,
-  searchBySubject,
-} from "./api.js"
-
+import { authorWorks, errorMessage, getAuthor, getEdition, getWork, searchBooks, searchByAuthor, searchBySubject, editionByIsbn, workEditions, subjectOverview } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -153,6 +143,68 @@ export function createServer(): McpServer {
     async ({ author_id, limit }) => {
       try {
         return text(await authorWorks(author_id, limit))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "edition_by_isbn",
+    {
+      title: "Look up an ISBN",
+      description:
+        "Resolve an ISBN straight to its edition record - title, publisher, pages, language and cover - after checking the ISBN's own check digit, so a typo is caught before the request.",
+      inputSchema: z.object({
+        isbn: z.string().describe("ISBN-10 or ISBN-13, hyphens allowed, e.g. 9780140328721"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ isbn }) => {
+      try {
+        return text(await editionByIsbn({ isbn }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "work_editions",
+    {
+      title: "Work editions",
+      description:
+        "Every printing of a work that Open Library holds: edition count, publication-year range, publishers, languages and the edition keys to drill into.",
+      inputSchema: z.object({
+        workId: z.string().describe("Work id or path, e.g. OL27448W"),
+        limit: z.number().describe("Editions to list, 1-50. Defaults to 10.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ workId, limit }) => {
+      try {
+        return text(await workEditions({ workId, limit }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "subject_overview",
+    {
+      title: "Subject overview",
+      description:
+        "A subject as an entity rather than a search: how many works it holds and the works Open Library ranks first, with authors and first publication years.",
+      inputSchema: z.object({
+        subject: z.string().describe("Subject name or slug, e.g. 'science fiction' or 'cooking'"),
+        limit: z.number().describe("Works to list, 1-25. Defaults to 10.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ subject, limit }) => {
+      try {
+        return text(await subjectOverview({ subject, limit }))
       } catch (e) {
         return textError(errorMessage(e))
       }

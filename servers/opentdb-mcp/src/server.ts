@@ -1,15 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  categoryCounts,
-  errorMessage,
-  formatQuiz,
-  globalCounts,
-  listCategories,
-  questions,
-  sessionToken,
-} from "./api.js"
-
+import { categoryCounts, errorMessage, formatQuiz, globalCounts, listCategories, questions, sessionToken, compareCategories, quizReadiness, categoryQuality } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -172,6 +163,70 @@ export function createServer(): McpServer {
         return text(
           `${action === "request" ? "New" : "Reset"} session token:\n\n  ${token}\n\nPass it as the token argument to quiz or get_questions.`
         )
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "compare_categories",
+    {
+      title: "Compare categories",
+      description:
+        "Put two categories side by side: total questions, the easy/medium/hard split with shares, and which of the pair is deeper in hard questions.",
+      inputSchema: z.object({
+        a: z.string().describe("First category id from list_categories, e.g. '17' for Science & Nature"),
+        b: z.string().describe("Second category id, e.g. '9' for General Knowledge"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ a, b }) => {
+      try {
+        return text(await compareCategories({ a, b }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "quiz_readiness",
+    {
+      title: "Quiz readiness",
+      description:
+        "Pre-flight a planned quiz: does this category hold enough questions at that difficulty for the amount asked, and what is the largest amount it can serve if not.",
+      inputSchema: z.object({
+        category: z.string().describe("Category id from list_categories, e.g. '17'"),
+        difficulty: z.enum(["easy", "medium", "hard"]).describe("Difficulty to serve"),
+        amount: z.number().describe("Questions you plan to request, 1-50 per call"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ category, difficulty, amount }) => {
+      try {
+        return text(await quizReadiness({ category, difficulty, amount }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "category_quality",
+    {
+      title: "Category quality",
+      description:
+        "Rank categories by their share of human-verified questions and show pending and rejected counts, so a quiz is not built from a poorly reviewed category.",
+      inputSchema: z.object({
+        limit: z.number().describe("How many categories to show, 1-30. Defaults to 10.").optional(),
+        minTotal: z.number().describe("Ignore categories with fewer than this many questions. Defaults to 50.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ limit, minTotal }) => {
+      try {
+        return text(await categoryQuality({ limit, minTotal }))
       } catch (e) {
         return textError(errorMessage(e))
       }

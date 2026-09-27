@@ -11,6 +11,9 @@ Query the Open Library (openlibrary.org, keyless): full-text book search, work d
 - `get_edition` — Edition details by ID (OL123M): publisher, page count, ISBNs and cover.
 - `get_author` — Author details by ID (OL123A): birth/death dates, alternate names, bio and links.
 - `author_works` — List the works credited to an author ID, with publication years.
+- `edition_by_isbn` — Resolve an ISBN straight to its edition record - title, publisher, pages, language and cover - after checking the ISBN's own check digit, so a typo is caught before the request.
+- `work_editions` — Every printing of a work that Open Library holds: edition count, publication-year range, publishers, languages and the edition keys to drill into.
+- `subject_overview` — A subject as an entity rather than a search: how many works it holds and the works Open Library ranks first, with authors and first publication years.
 
 ## Source
 

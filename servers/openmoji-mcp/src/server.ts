@@ -1,16 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  emojiStats,
-  emojisInGroup,
-  errorMessage,
-  getEmoji,
-  listGroups,
-  listSubgroups,
-  randomEmoji,
-  searchEmoji,
-} from "./api.js"
-
+import { emojiStats, emojisInGroup, errorMessage, getEmoji, listGroups, listSubgroups, randomEmoji, searchEmoji, svgLinks, skinToneVariants, compareEmoji } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -152,6 +142,67 @@ export function createServer(): McpServer {
     async () => {
       try {
         return text(await emojiStats())
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "svg_links",
+    {
+      title: "SVG file links",
+      description:
+        "The colour and black SVG files OpenMoji publishes for one emoji, each checked live so the URL, content type and file size are known before it is used.",
+      inputSchema: z.object({
+        hexcode: z.string().describe("Hexcode (1F44D), the emoji itself, or an annotation such as 'thumbs up'"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ hexcode }) => {
+      try {
+        return text(await svgLinks({ hexcode }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "skin_tone_variants",
+    {
+      title: "Skin tone variants",
+      description:
+        "Every skin-tone variant OpenMoji publishes for an emoji, read from the dataset's own base links and labelled light through dark.",
+      inputSchema: z.object({
+        emoji: z.string().describe("Emoji character, hexcode or annotation, e.g. 'waving hand'"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ emoji }) => {
+      try {
+        return text(await skinToneVariants({ emoji }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "compare_emoji",
+    {
+      title: "Compare emoji",
+      description:
+        "Compare two emoji on group, subgroup and tags with a tag-overlap score, to tell a near-duplicate apart from a genuinely different choice.",
+      inputSchema: z.object({
+        a: z.string().describe("First emoji, hexcode or annotation, e.g. 'thumbs up'"),
+        b: z.string().describe("Second emoji, hexcode or annotation, e.g. '+1'"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ a, b }) => {
+      try {
+        return text(await compareEmoji({ a, b }))
       } catch (e) {
         return textError(errorMessage(e))
       }

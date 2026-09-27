@@ -1,16 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  OsrsError,
-  formatStats,
-  getFlips,
-  getHotItems,
-  getItemPrice,
-  getPlayerStats,
-  getPriceHistory,
-  searchItems,
-} from "./api.js"
-
+import { OsrsError, formatStats, getFlips, getHotItems, getItemPrice, getPlayerStats, getPriceHistory, searchItems, itemVolume, priceWindows, alchProfit, playerCompare } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -200,6 +190,90 @@ export function createServer(): McpServer {
               )
               .join("\n")
         )
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "item_volume",
+    {
+      title: "Item volume",
+      description:
+        "How much an item really trades: 24h volume against the 4-hourly GE buy limit, or the market's most traded items when no name is given.",
+      inputSchema: z.object({
+        name: z.string().describe("Item name, e.g. 'Dragon bones'. Omit for the most traded items.").optional(),
+        limit: z.number().describe("How many items to rank when no name is given, 1-30. Defaults to 10.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ name, limit }) => {
+      try {
+        return text(await itemVolume({ name, limit }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "price_windows",
+    {
+      title: "Price windows",
+      description:
+        "One item priced in every window the wiki publishes - instant, 5 minutes, 1 hour, 24 hours - with trade counts and how today's price sits against the 24h average.",
+      inputSchema: z.object({
+        name: z.string().describe("Item name, e.g. 'Rune platebody'"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ name }) => {
+      try {
+        return text(await priceWindows({ name }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "alch_profit",
+    {
+      title: "Alchemy profit",
+      description:
+        "Rank items by high-alchemy margin - alchemy value minus the current buy price - with the GE buy limit that caps how much can be alched per window.",
+      inputSchema: z.object({
+        limit: z.number().describe("How many items to rank, 1-40. Defaults to 10.").optional(),
+        membersOnly: z.boolean().describe("Only members items. Defaults to false.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ limit, membersOnly }) => {
+      try {
+        return text(await alchProfit({ limit, membersOnly }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "player_compare",
+    {
+      title: "Compare players",
+      description:
+        "Compare two Old School accounts: total level and XP gap, the skills with the biggest difference, and the activities both players have scores in.",
+      inputSchema: z.object({
+        playerA: z.string().describe("First account name, e.g. 'Lynx Titan'"),
+        playerB: z.string().describe("Second account name"),
+        mode: z.string().describe("Hiscores mode: normal, ironman, hardcore_ironman, ultimate_ironman, deadman. Defaults to normal.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ playerA, playerB, mode }) => {
+      try {
+        return text(await playerCompare({ playerA, playerB, mode }))
       } catch (e) {
         return textError(errorMessage(e))
       }

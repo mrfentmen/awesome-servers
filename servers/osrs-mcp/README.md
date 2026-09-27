@@ -11,6 +11,10 @@ the official Jagex hiscores and the runescape.wiki prices API. No key.
 - `get_hot_items`, What's trading the most on the Grand Exchange right now — ranked by trade volume in the last hour, with buy/sell averages.
 - `get_price_history`, Price history for one item: average buy/sell price and trade volume per step. Steps: 5m / 1h / 6h / 24h.
 - `get_flip_margins`, Grand Exchange flipping opportunities: buy at the instant-sell price, sell at the instant-buy price, ranked by margin x hourly volume. Filtered by minimum hourly volume so illiquid junk stays out.
+- `item_volume`, How much an item really trades: 24h volume against the 4-hourly GE buy limit, or the market's most traded items when no name is given.
+- `price_windows`, One item priced in every window the wiki publishes - instant, 5 minutes, 1 hour, 24 hours - with trade counts and how today's price sits against the 24h average.
+- `alch_profit`, Rank items by high-alchemy margin - alchemy value minus the current buy price - with the GE buy limit that caps how much can be alched per window.
+- `player_compare`, Compare two Old School accounts: total level and XP gap, the skills with the biggest difference, and the activities both players have scores in.
 
 ## Run
 

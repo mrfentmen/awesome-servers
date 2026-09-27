@@ -20,6 +20,9 @@ Education
 - Get raw questions: Fetch trivia questions with their answers as structured data, for your own formatting.
 - Build a quiz: A ready-to-read quiz: numbered questions with options and an answer key at the end. Filter by category and difficulty.
 - Session token: Get or reset a session token. Pass it to quiz or get_questions so the same question is never served twice.
+- Compare categories: Put two categories side by side: total questions, the easy/medium/hard split with shares, and which of the pair is deeper in hard questions.
+- Quiz readiness: Pre-flight a planned quiz: does this category hold enough questions at that difficulty for the amount asked, and what is the largest amount it can serve if not.
+- Category quality: Rank categories by their share of human-verified questions and show pending and rejected counts, so a quiz is not built from a poorly reviewed category.
 
 ## Getting Started
 
@@ -30,6 +33,9 @@ Education
 - Tool: get_questions — Fetch trivia questions with their answers as structured data, for your own formatting.
 - Tool: quiz — A ready-to-read quiz: numbered questions with options and an answer key at the end. Filter by category and difficulty.
 - Tool: session_token — Get or reset a session token. Pass it to quiz or get_questions so the same question is never served twice.
+- Tool: compare_categories — Put two categories side by side: total questions, the easy/medium/hard split with shares, and which of the pair is deeper in hard questions.
+- Tool: quiz_readiness — Pre-flight a planned quiz: does this category hold enough questions at that difficulty for the amount asked, and what is the largest amount it can serve if not.
+- Tool: category_quality — Rank categories by their share of human-verified questions and show pending and rejected counts, so a quiz is not built from a poorly reviewed category.
 
 ## Tags
 trivia, quiz, questions, education, games, mcp
