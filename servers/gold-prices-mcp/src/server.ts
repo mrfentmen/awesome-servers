@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { all, convert, errorMessage, marketOverview, metalRatios, portfolioValue, price, symbols } from "./api.js"
-
+import { all, convert, errorMessage, marketOverview, metalRatios, portfolioValue, price, symbols, meltValue, premiumCheck, priceTrend } from "./api.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -112,6 +111,61 @@ export function createServer(): McpServer {
     },
     async () => {
       try { return text(await metalRatios()) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "melt_value",
+    {
+      title: "Melt value",
+      description: "Metal content value of a weight in any bullion unit (g, troy oz, dwt, tola, kg) at any purity.",
+      inputSchema: z.object({
+        weight: z.number().describe("Weight of one item, e.g. 1 or 31.1."),
+        unit: z.string().describe("g, troy_oz, dwt, tola, grain, kg or lb (default g).").optional(),
+        metal: z.string().describe("XAU, XAG, XPT, XPD or an alias like gold (default XAU).").optional(),
+        purity: z.string().describe("24k, 18k, 0.999 or 925 (default pure).").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await meltValue(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "premium_check",
+    {
+      title: "Premium check",
+      description: "What you paid versus live melt value: premium in dollars and percent, with a plain reading.",
+      inputSchema: z.object({
+        weight: z.number().describe("Weight of one item, e.g. 1."),
+        unit: z.string().describe("g, troy_oz, dwt, tola, grain, kg or lb (default g).").optional(),
+        metal: z.string().describe("XAU, XAG, XPT, XPD or an alias like gold (default XAU).").optional(),
+        purity: z.string().describe("24k, 18k, 0.999 or 925 (default pure).").optional(),
+        paid: z.number().describe("Total paid in USD for the whole lot."),
+        quantity: z.number().describe("How many identical items (default 1).").optional(),
+        label: z.string().describe("Optional label to echo back, e.g. '1 oz Krugerrand'.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await premiumCheck(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "price_trend",
+    {
+      title: "Price trend",
+      description: "Daily close trend for a metal over 5d to 1y: change, range and the last ten closes.",
+      inputSchema: z.object({
+        metal: z.string().describe("XAU, XAG, XPT or XPD (default XAU).").optional(),
+        range: z.string().describe("5d, 1mo, 3mo, 6mo, 1y or ytd (default 1mo).").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await priceTrend(args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 

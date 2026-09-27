@@ -1,15 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  errorMessage,
-  searchProducts,
-  listNewest,
-  getProduct,
-  priceOverview,
-  findDeals,
-  listCategories,
-} from "./api.js"
-
+import { errorMessage, searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections, collectionProducts, restockCheck } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -136,6 +127,53 @@ export function createServer(): McpServer {
       } catch (e) {
         return textError(errorMessage(e));
       }
+    }
+  )
+
+  server.registerTool(
+    "list_collections",
+    {
+      title: "List collections",
+      description: "Collections with handle, product count and URL, longest first.",
+      inputSchema: z.object({
+        limit: z.string().describe("Max collections (default 40, max 250).").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ limit }) => {
+      try { return text(await listCollections(limit)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "collection_products",
+    {
+      title: "Collection products",
+      description: "Every product in one collection with live price and stock, sortable.",
+      inputSchema: z.object({
+        handle: z.string().describe("Collection handle from list_collections, e.g. balms."),
+        limit: z.string().describe("Max results (default 20, max 50).").optional(),
+        sort: z.string().describe("featured, price_low, price_high or newest.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ handle, limit, sort }) => {
+      try { return text(await collectionProducts(handle, limit, sort)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "restock_check",
+    {
+      title: "Restock check",
+      description: "Stock and price for specific product handles: what is buyable right now and which options are left.",
+      inputSchema: z.object({
+        handles: z.string().describe("Up to 10 product handles, comma separated.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ handles }) => {
+      try { return text(await restockCheck(handles)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 

@@ -314,3 +314,180 @@ export async function metalRatios(): Promise<string> {
   const footer = problems.length ? `\nUnavailable: ${problems.join("; ")}` : ""
   return `Live asset ratios (both sides quoted at the same moment):\n${numbered(lines)}${footer}`
 }
+// ---- batch-4 tools: bullion maths and price trend (2026-09-27) ----
+/** Weights bullion is quoted in, expressed in grams. */
+const GRAMS_PER: Record<string, number> = {
+  g: 1, gram: 1, grams: 1,
+  oz: 31.1034768, ozt: 31.1034768, ounce: 31.1034768, ounces: 31.1034768, troy_oz: 31.1034768,
+  dwt: 1.55517384, pennyweight: 1.55517384, pennyweights: 1.55517384,
+  tola: 11.6638038,
+  grain: 0.06479891, grains: 0.06479891,
+  kg: 1000, kilo: 1000, kilos: 1000, kilogram: 1000, kilograms: 1000,
+  lb: 453.59237, pound: 453.59237, pounds: 453.59237,
+}
+
+function gramsOf(weight: number, unit: string): number {
+  const key = String(unit ?? "g").trim().toLowerCase().replace(/\s+/g, "_")
+  const factor = GRAMS_PER[key]
+  if (!factor) {
+    throw new GoldError(`Unknown weight unit "${unit}". Use one of: ${Object.keys(GRAMS_PER).join(", ")}.`)
+  }
+  return weight * factor
+}
+
+/** Karat ("24k", "18k"), a decimal ("0.999") or a fineness ("999", "99.9%") to a 0-1 factor. */
+function purityFactor(purity?: string): number {
+  const raw = String(purity ?? "pure").trim().toLowerCase()
+  if (!raw || raw === "pure" || raw === "24k") return 1
+  const karat = raw.match(/^(\d{1,2}(?:\.\d+)?)\s*k(?:t|arat)?$/)
+  if (karat) {
+    const k = Number(karat[1])
+    if (!Number.isFinite(k) || k <= 0 || k > 24) throw new GoldError(`Karat must be between 1 and 24, got "${purity}".`)
+    return k / 24
+  }
+  const plain = raw.replace(/[^0-9.]/g, "")
+  const n = Number(plain)
+  if (!Number.isFinite(n) || n <= 0) throw new GoldError(`Could not read purity "${purity}". Use 24k, 18k, 0.999 or 999.`)
+  if (n <= 1) return n
+  if (n <= 100) return n / 100
+  if (n <= 1000) return n / 1000
+  throw new GoldError(`Purity "${purity}" is out of range.`)
+}
+
+function metalArg(metal?: string): string {
+  return normalizeSymbol(String(metal ?? "XAU"))
+}
+
+export interface MeltArgs {
+  weight: number
+  unit?: string
+  metal?: string
+  purity?: string
+}
+
+export async function meltValue(args: MeltArgs): Promise<string> {
+  const weight = Number(args?.weight)
+  if (!Number.isFinite(weight) || weight <= 0) throw new GoldError("weight must be a positive number.")
+  const unit = String(args?.unit ?? "g")
+  const factor = purityFactor(args?.purity)
+  const symbol = metalArg(args?.metal)
+  const grams = gramsOf(weight, unit)
+  const fineGrams = grams * factor
+  const quote = await fetchQuote(symbol)
+  const perGram = quote.price / 31.1034768
+  const value = fineGrams * perGram
+  return [
+    `${quote.name} (${quote.symbol}) melt value`,
+    "",
+    `  weight        ${weight} ${unit} = ${grams.toFixed(3)} g`,
+    `  purity        ${(factor * 100).toFixed(2)}% fine`,
+    `  fine metal    ${fineGrams.toFixed(3)} g`,
+    `  spot          ${usd(quote.price)} per troy ounce (${usd(perGram)} per gram)`,
+    `  melt value    ${usd(value)}`,
+    "",
+    `Source: ${quote.source} | Updated: ${quote.updated}`,
+    "Melt value is metal content only - it ignores fabrication, brand and collector premiums.",
+  ].join("\n")
+}
+
+export interface PremiumArgs extends MeltArgs {
+  paid: number
+  quantity?: number
+  label?: string
+}
+
+export async function premiumCheck(args: PremiumArgs): Promise<string> {
+  const weight = Number(args?.weight)
+  if (!Number.isFinite(weight) || weight <= 0) throw new GoldError("weight must be a positive number.")
+  const paid = Number(args?.paid)
+  if (!Number.isFinite(paid) || paid <= 0) throw new GoldError("paid must be the positive total you paid, in USD.")
+  const quantity = Math.min(Math.max(Math.round(Number(args?.quantity ?? 1)) || 1, 1), 10000)
+  const factor = purityFactor(args?.purity)
+  const symbol = metalArg(args?.metal)
+  const grams = gramsOf(weight, String(args?.unit ?? "g")) * quantity
+  const fineGrams = grams * factor
+  const quote = await fetchQuote(symbol)
+  const melt = (fineGrams / 31.1034768) * quote.price
+  const premium = paid - melt
+  const premiumPct = (premium / melt) * 100
+  const grade =
+    premiumPct <= 0 ? "at or below melt - unusual for retail, check the weight and purity"
+      : premiumPct < 10 ? "thin premium"
+      : premiumPct < 30 ? "normal retail premium for bullion"
+      : premiumPct < 75 ? "high premium - typical of coins, small bars and jewellery"
+      : "very high premium - collectible or fabrication-heavy, not a metal play"
+  return [
+    `Premium check${args?.label ? `: ${args.label}` : ""}, ${quantity} item(s)`,
+    "",
+    `  weight        ${weight} ${String(args?.unit ?? "g")} each = ${grams.toFixed(3)} g total`,
+    `  purity        ${(factor * 100).toFixed(2)}% fine -> ${fineGrams.toFixed(3)} g fine metal`,
+    `  melt value    ${usd(melt)} at ${usd(quote.price)}/ozt`,
+    `  paid          ${usd(paid)} (${usd(paid / quantity)} per item)`,
+    `  premium       ${premium >= 0 ? "+" : ""}${usd(premium)} (${premiumPct >= 0 ? "+" : ""}${premiumPct.toFixed(1)}% over melt)`,
+    "",
+    `Reading: ${grade}.`,
+    `Source: ${quote.source} | Updated: ${quote.updated}`,
+  ].join("\n")
+}
+
+const TREND_RANGES: Record<string, string> = {
+  "5d": "5d", "1w": "5d", "1mo": "1mo", "1m": "1mo", "30d": "1mo",
+  "3mo": "3mo", "3m": "3mo", "90d": "3mo", "6mo": "6mo", "6m": "6mo",
+  "1y": "1y", "12mo": "1y", ytd: "ytd",
+}
+
+export async function priceTrend(args: { metal?: string; range?: string }): Promise<string> {
+  const symbol = metalArg(args?.metal)
+  const ticker = YAHOO_SYMBOLS[symbol]
+  if (!ticker) {
+    throw new GoldError(
+      `${symbol} has no daily chart on Yahoo Finance. Trends are available for ${Object.keys(YAHOO_SYMBOLS).join(", ")}.`
+    )
+  }
+  const key = String(args?.range ?? "1mo").trim().toLowerCase()
+  const range = TREND_RANGES[key]
+  if (!range) {
+    throw new GoldError(`Range "${args?.range}" is not supported. Use one of: ${[...new Set(Object.values(TREND_RANGES))].join(", ")}.`)
+  }
+  let res: Response
+  try {
+    res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=${range}&interval=1d`, {
+      headers: { "User-Agent": UA, Accept: "application/json" },
+      signal: AbortSignal.timeout(20000),
+    })
+  } catch (e) {
+    throw new GoldError(`Yahoo Finance network error: ${errorMessage(e)}`)
+  }
+  if (res.status === 429) throw new GoldError("Yahoo Finance rate limit hit, wait and retry")
+  if (!res.ok) throw new GoldError(`Yahoo Finance error ${res.status}`)
+  const data = (await res.json()) as {
+    chart?: { result?: Array<{ timestamp?: number[]; indicators?: { quote?: Array<{ close?: Array<number | null>; high?: Array<number | null>; low?: Array<number | null> }> } }> }
+  }
+  const result = data.chart?.result?.[0]
+  const quote = result?.indicators?.quote?.[0]
+  const stamps = result?.timestamp ?? []
+  const closes = (quote?.close ?? []).map((c, i) => ({ at: stamps[i], close: c }))
+    .filter((row): row is { at: number; close: number } => typeof row.close === "number" && typeof row.at === "number")
+  if (!closes.length) throw new GoldError(`Yahoo Finance returned no daily closes for ${ticker}.`)
+  const highs = (quote?.high ?? []).filter((v): v is number => typeof v === "number")
+  const lows = (quote?.low ?? []).filter((v): v is number => typeof v === "number")
+  const first = closes[0]
+  const last = closes[closes.length - 1]
+  const change = last.close - first.close
+  const changePct = (change / first.close) * 100
+  const tail = closes.slice(-10).map((row) => `  ${new Date(row.at * 1000).toISOString().slice(0, 10)}  ${usd(row.close)}`)
+  return [
+    `${PRECIOUS[symbol] ?? symbol} (${symbol}) daily closes over ${range} via Yahoo Finance ${ticker}`,
+    "",
+    `  first   ${usd(first.close)} on ${new Date(first.at * 1000).toISOString().slice(0, 10)}`,
+    `  last    ${usd(last.close)} on ${new Date(last.at * 1000).toISOString().slice(0, 10)}`,
+    `  change  ${change >= 0 ? "+" : "-"}${usd(Math.abs(change))} (${changePct >= 0 ? "+" : ""}${changePct.toFixed(2)}%)`,
+    highs.length ? `  range   ${usd(Math.min(...lows))} low to ${usd(Math.max(...highs))} high` : "",
+    `  samples ${closes.length} daily close(s)`,
+    "",
+    "Last closes:",
+    ...tail,
+    "",
+    "Futures prices track spot but settle separately, so they differ slightly from the price tool.",
+  ].filter((line) => line !== "").join("\n")
+}

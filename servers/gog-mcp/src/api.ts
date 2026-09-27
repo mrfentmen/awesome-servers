@@ -165,3 +165,82 @@ export async function gameDetails(args: { product_id: string }): Promise<string>
   else if (d.purchase_link) lines.push("", `Buy: ${d.purchase_link}`)
   return lines.join("\n")
 }
+// ---- batch-4 tools: product-type browse and batch prices (2026-09-27) ----
+const PRICES = "https://api.gog.com/products/prices"
+
+export function errorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e)
+}
+
+/** Product kinds the catalog filter accepts. */
+const PRODUCT_TYPES: Record<string, string> = {
+  game: "game", games: "game",
+  dlc: "dlc", addon: "dlc", addons: "dlc",
+  pack: "pack", packs: "pack", bundle: "pack", bundles: "pack",
+}
+
+function priceRows(items: any[]): Array<{ id: number; base_usd: number | null; final_usd: number | null; discount_pct: number | null }> {
+  const num = (s: unknown) => {
+    const n = Number(String(s ?? "").replace(/[^0-9.]/g, ""))
+    return Number.isFinite(n) && n > 0 ? n : null
+  }
+  return items.map((row: any) => {
+    const price = row?._embedded?.prices?.[0]
+    const base = num(price?.basePrice)
+    const final = num(price?.finalPrice)
+    const pct = base && final !== null && base > final ? Math.round((1 - final / base) * 1000) / 10 : 0
+    return {
+      id: Number(row?._embedded?.product?.id ?? price?.product?.id ?? 0),
+      base_usd: base,
+      final_usd: final,
+      discount_pct: final !== null ? pct : null,
+    }
+  })
+}
+
+export async function priceCheck(args: { ids: string }): Promise<string> {
+  const ids = String(args?.ids ?? "")
+    .split(/[,\s]+/)
+    .map((s) => s.trim())
+    .filter((s) => /^\d+$/.test(s))
+    .slice(0, 20)
+  if (!ids.length) return "Provide one or more numeric product ids, comma separated (search_games and games_by_ids return them)."
+  const d = await getJson<any>(`${PRICES}?ids=${ids.join(",")}&countryCode=US&currency=USD`)
+  const rows = priceRows(d?._embedded?.items ?? []).filter((r) => r.id)
+  if (!rows.length) return `No GOG prices for ids ${ids.join(", ")}.`
+  const missing = ids.filter((id) => !rows.some((r) => r.id === Number(id)))
+  const onSale = rows.filter((r) => (r.discount_pct ?? 0) > 0)
+  const priced = rows.map((r) => r.final_usd).filter((v): v is number => v !== null)
+  return [
+    `GOG prices for ${rows.length} product(s), USD (${onSale.length} on sale):`,
+    "",
+    ...rows.map((r) =>
+      `  ${r.id}  $${(r.final_usd ?? 0).toFixed(2)}` +
+      `${r.base_usd && r.final_usd !== null && r.base_usd > r.final_usd ? ` (was $${r.base_usd.toFixed(2)}, ${r.discount_pct}% off)` : ""}`
+    ),
+    "",
+    priced.length ? `Cheapest: $${Math.min(...priced).toFixed(2)} | most expensive: $${Math.max(...priced).toFixed(2)}` : "",
+    missing.length ? `No price returned for: ${missing.join(", ")} - some ids are region-locked or retired.` : "",
+    "Prices are US storefront asks in USD; game_details shows the same figures on the product page.",
+  ].filter((line) => line !== "").join("\n")
+}
+
+export async function browseByType(args: { product_type?: string; limit?: number; order?: Order }): Promise<string> {
+  const raw = String(args?.product_type ?? "dlc").trim().toLowerCase()
+  const type = PRODUCT_TYPES[raw]
+  if (!type) {
+    return `Unknown product type "${raw}". Use one of: ${[...new Set(Object.values(PRODUCT_TYPES))].join(", ")}.`
+  }
+  const limit = clamp(args?.limit, 10, 20)
+  const order = ORDERS[args?.order ?? "newest"] ?? ORDERS.newest
+  const d = await getJson<CatalogResponse & { pages?: number }>(
+    `${CATALOG}?limit=${limit}&productType=${type}&order=${order}&${LOCALE}`
+  )
+  const items = d.products ?? []
+  if (!items.length) return `No GOG ${type} products returned.`
+  return (
+    `GOG ${type} listing (${(d.productCount ?? items.length).toLocaleString()} in catalog, ` +
+    `${(d.pages ?? 1).toLocaleString()} page(s) of ${d.currentlyShownProductCount ?? limit}):\n\n` +
+    items.map((p, i) => fmtProduct(p, i)).join("\n\n")
+  )
+}

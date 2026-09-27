@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { browseGames, deals, gameDetails, gamesByIds, searchGames, topRated } from "./api.js"
-
+import { browseGames, deals, gameDetails, gamesByIds, searchGames, topRated, priceCheck, browseByType, errorMessage } from "./api.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -97,5 +96,37 @@ export function createServer(): McpServer {
       try { return text(await gamesByIds(args)) } catch (e) { return textError(error(e)) }
     }
   )
+  server.registerTool(
+    "price_check",
+    {
+      title: "Price check",
+      description: "Batch prices for up to 20 product ids: current USD price, list price and discount.",
+      inputSchema: z.object({
+        ids: z.string().describe("Numeric GOG product ids, comma separated."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await priceCheck(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "browse_by_type",
+    {
+      title: "Browse by type",
+      description: "Browse one product kind (game, dlc or pack) with the real catalog total for that kind.",
+      inputSchema: z.object({
+        product_type: z.string().describe("game, dlc or pack (default dlc).").optional(),
+        limit: z.number().describe("Items to list (default 10, max 20).").optional(),
+        order: z.enum(["trending", "newest", "discount", "cheapest", "rating"]).describe("Sort order (default newest).").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await browseByType(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
   return server
 }

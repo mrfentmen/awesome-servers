@@ -20,6 +20,8 @@ Games
 - Top rated: Highest-rated games on GOG, by user review score.
 - Game details: Full details for one GOG product by numeric ID: price, platforms, developer, genres and description.
 - Games by IDs: Look up several GOG products at once from a comma-separated list of product IDs.
+- Price check: Batch prices for up to 20 product ids: current USD price, list price and discount.
+- Browse by type: Browse one product kind (game, dlc or pack) with the real catalog total for that kind.
 
 ## Getting Started
 
@@ -30,6 +32,8 @@ Games
 - Tool: top_rated — Highest-rated games on GOG, by user review score.
 - Tool: game_details — Full details for one GOG product by numeric ID: price, platforms, developer, genres and description.
 - Tool: games_by_ids — Look up several GOG products at once from a comma-separated list of product IDs.
+- Tool: price_check — Batch prices for up to 20 product ids: current USD price, list price and discount.
+- Tool: browse_by_type — Browse one product kind (game, dlc or pack) with the real catalog total for that kind.
 
 ## Tags
 gog, mcp, shopping, keyless

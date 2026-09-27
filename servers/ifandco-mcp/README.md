@@ -10,6 +10,9 @@ Query the IF & Co. catalog (ifandco.com, NYC): search custom pendants, chains, r
 - `price_overview` — Ask-price distribution (min/p25/median/p75/max).
 - `find_deals` — Available products priced below the median.
 - `list_categories` — Product-type counts in the catalog sample.
+- `list_collections` — Collections with handle, product count and URL, longest first.
+- `collection_products` — Every product in one collection with live price and stock, sortable.
+- `restock_check` — Stock and price for specific product handles: what is buyable right now and which options are left.
 
 ## Source
 

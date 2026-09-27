@@ -20,6 +20,9 @@ Ecommerce
 - Price overview: Ask-price distribution (min/p25/median/p75/max).
 - Find deals: Available products priced below the median.
 - Categories: Product-type counts in the catalog sample.
+- List collections: Collections with handle, product count and URL, longest first.
+- Collection products: Every product in one collection with live price and stock, sortable.
+- Restock check: Stock and price for specific product handles: what is buyable right now and which options are left.
 
 ## Getting Started
 
@@ -30,6 +33,9 @@ Ecommerce
 - Tool: price_overview — Ask-price distribution (min/p25/median/p75/max).
 - Tool: find_deals — Available products priced below the median.
 - Tool: list_categories — Product-type counts in the catalog sample.
+- Tool: list_collections — Collections with handle, product count and URL, longest first.
+- Tool: collection_products — Every product in one collection with live price and stock, sortable.
+- Tool: restock_check — Stock and price for specific product handles: what is buyable right now and which options are left.
 
 ## Tags
 glossier, mcp, shopping, keyless

@@ -13,6 +13,8 @@ This file is self contained. It reads public data only and never writes to the m
 * `top_rated` — Highest-rated games on GOG, by user review score.
 * `game_details` — Full details for one GOG product by numeric ID: price, platforms, developer, genres and description.
 * `games_by_ids` — Look up several GOG products at once from a comma-separated list of product IDs.
+* `price_check` — Batch prices for up to 20 product ids: current USD price, list price and discount.
+* `browse_by_type` — Browse one product kind (game, dlc or pack) with the real catalog total for that kind.
 
 ## Usage
 

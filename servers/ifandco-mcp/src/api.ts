@@ -183,3 +183,84 @@ export async function listCategories(): Promise<string> {
   }
   return pretty({ store: "IF & Co.", sample: Object.values(counts).reduce((a, b) => a + b, 0), categories: counts })
 }
+// ---- batch-4 tools: collections and stock (2026-09-27) ----
+const COLLECTIONS = "https://ifandco.com/collections"
+
+export async function listCollections(limit?: string): Promise<string> {
+  const n = Math.min(Number(limit ?? 40) || 40, 250)
+  const data = await getJson(`${COLLECTIONS}.json`)
+  const rows = (Array.isArray(data.collections) ? data.collections : [])
+    .filter((c: any) => typeof c?.handle === "string" && c.handle)
+    .map((c: any) => ({
+      title: String(c.title ?? c.handle),
+      handle: c.handle,
+      products_count: typeof c.products_count === "number" ? c.products_count : null,
+      url: `${COLLECTIONS}/${c.handle}`,
+    }))
+    .sort((a: any, b: any) => (b.products_count ?? 0) - (a.products_count ?? 0))
+  if (!rows.length) throw new IfAndCoError("The store returned no collections.")
+  return pretty({
+    store: "IF & Co.", collections: rows.length, returned: Math.min(rows.length, n),
+    listings: rows.slice(0, n),
+    note: "Longest collections first; call collection_products with a handle.",
+  })
+}
+
+export async function collectionProducts(handle: string, limit?: string, sort?: string): Promise<string> {
+  const clean = String(handle ?? "").trim()
+  if (!clean) throw new IfAndCoError("Provide a collection handle - call list_collections first.")
+  const n = Math.min(Number(limit ?? 20) || 20, 50)
+  const data = await getJson(`${COLLECTIONS}/${encodeURIComponent(clean)}/products.json?limit=250`)
+  const items = Array.isArray(data.products) ? data.products : []
+  if (!items.length) throw new IfAndCoError(`Collection "${clean}" is empty or unknown - call list_collections.`)
+  const rows: Slim[] = items.map((p: any) => slim(p))
+  const order = String(sort ?? "featured").toLowerCase()
+  if (order === "price_low") rows.sort((a, b) => (a.price_usd ?? Infinity) - (b.price_usd ?? Infinity))
+  else if (order === "price_high") rows.sort((a, b) => (b.price_usd ?? -Infinity) - (a.price_usd ?? -Infinity))
+  else if (order === "newest") rows.sort((a, b) => String(b.published_at ?? "").localeCompare(String(a.published_at ?? "")))
+  const inStock = rows.filter((r) => r.available).length
+  const priced = rows.map((r) => r.price_usd).filter((p): p is number => p !== null)
+  return pretty({
+    store: "IF & Co.", collection: clean, sort: order, products: rows.length, in_stock: inStock,
+    price_usd: priced.length ? { min: Math.min(...priced), max: Math.max(...priced) } : null,
+    returned: Math.min(rows.length, n), listings: rows.slice(0, n),
+  })
+}
+
+export async function restockCheck(handles: string): Promise<string> {
+  const list = String(handles ?? "")
+    .split(/[,\s]+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 10)
+  if (!list.length) throw new IfAndCoError("Provide up to 10 product handles, comma separated.")
+  const rows: any[] = []
+  const problems: string[] = []
+  // One handle at a time: the storefront rejects bursts of .js requests.
+  for (const h of list) {
+    try {
+      const p = await getJson(`${PRODUCT_BASE}/${encodeURIComponent(h)}.js`)
+      const variants = Array.isArray(p.variants) ? p.variants : []
+      const live = variants.filter((v: any) => v.available === true)
+      const prices = variants.map((v: any) => Math.round(Number(v.price)) / 100).filter((n: number) => Number.isFinite(n) && n > 0)
+      rows.push({
+        handle: h,
+        title: p.title ?? h,
+        in_stock: live.length > 0,
+        variants: variants.length,
+        variants_in_stock: live.length,
+        min_price_usd: prices.length ? Math.min(...prices) : null,
+        options_in_stock: live.slice(0, 6).map((v: any) => String(v.title ?? "").trim()).filter(Boolean),
+        url: `${PRODUCT_BASE}/${h}`,
+      })
+    } catch (e) {
+      problems.push(`${h}: ${errorMessage(e)}`)
+    }
+  }
+  if (!rows.length) throw new IfAndCoError(`No handle could be read. ${problems.join("; ")}`)
+  return pretty({
+    store: "IF & Co.", checked: rows.length, in_stock: rows.filter((r) => r.in_stock).length,
+    listings: rows, problems,
+    note: "Availability is the storefront's own flag, read at request time.",
+  })
+}

@@ -21,6 +21,9 @@ Other
 - Convert: Value an amount of one asset in USD, or in another tracked asset, using live prices. Example: 2 ounces of gold in USD, or 100 grams of silver in gold.
 - Portfolio value: Value a list of metal and crypto holdings in USD at live prices, with each holding's share of the total. Example: XAU:2, XAG:100, BTC:0.5.
 - Asset ratios: Live ratios traders watch — gold/silver, gold/platinum, gold/palladium, gold/copper and bitcoin/gold — both sides quoted at once.
+- Melt value: Metal content value of a weight in any bullion unit (g, troy oz, dwt, tola, kg) at any purity.
+- Premium check: What you paid versus live melt value: premium in dollars and percent, with a plain reading.
+- Price trend: Daily close trend for a metal over 5d to 1y: change, range and the last ten closes.
 
 ## Getting Started
 
@@ -32,6 +35,9 @@ Other
 - Tool: convert — Value an amount of one asset in USD, or in another tracked asset, using live prices. Example: 2 ounces of gold in USD, or 100 grams of silver in gold.
 - Tool: portfolio_value — Value a list of metal and crypto holdings in USD at live prices, with each holding's share of the total. Example: XAU:2, XAG:100, BTC:0.5.
 - Tool: metal_ratios — Live ratios traders watch — gold/silver, gold/platinum, gold/palladium, gold/copper and bitcoin/gold — both sides quoted at once.
+- Tool: melt_value — Metal content value of a weight in any bullion unit (g, troy oz, dwt, tola, kg) at any purity.
+- Tool: premium_check — What you paid versus live melt value: premium in dollars and percent, with a plain reading.
+- Tool: price_trend — Daily close trend for a metal over 5d to 1y: change, range and the last ten closes.
 
 ## Tags
 gold prices, mcp, shopping, keyless
