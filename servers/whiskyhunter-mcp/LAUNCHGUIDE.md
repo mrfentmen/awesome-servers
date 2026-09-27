@@ -21,6 +21,9 @@ Ecommerce
 - Market trend: Mean winning bid per month over time, for one auction house or the whole market.
 - Auction seasonality: Show which calendar months historically fetch the highest mean winning bid and volume, averaged across every year in the dataset.
 - Compare auctions: Compare two or more auction houses side by side: record counts, date range, mean and highest winning bid, total volume and their latest months.
+- Market momentum: Compare the most recent months of whisky auction results against the months before them: mean winning bid, trading volume and lots, with the percent change.
+- Monthly leaderboard: Rank auction houses over the last few recorded months by trading volume, lots sold or mean winning bid, including each house's share of the volume traded.
+- Head to head: Two auction houses month by month on volume, lots or winning bid: which one won each month, the tally, and the all-time totals.
 
 ## Getting Started
 
@@ -32,6 +35,9 @@ Ecommerce
 - Tool: market_trend — Mean winning bid per month over time, for one auction house or the whole market.
 - Tool: seasonality — Show which calendar months historically fetch the highest mean winning bid and volume, averaged across every year in the dataset.
 - Tool: auction_compare — Compare two or more auction houses side by side: record counts, date range, mean and highest winning bid, total volume and their latest months.
+- Tool: market_momentum — Compare the most recent months of whisky auction results against the months before them: mean winning bid, trading volume and lots, with the percent change.
+- Tool: auction_leaderboard — Rank auction houses over the last few recorded months by trading volume, lots sold or mean winning bid, including each house's share of the volume traded.
+- Tool: slug_head_to_head — Two auction houses month by month on volume, lots or winning bid: which one won each month, the tally, and the all-time totals.
 
 ## Tags
 whiskyhunter, mcp, data, keyless

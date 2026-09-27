@@ -79,6 +79,24 @@ export async function searchStore(query: string): Promise<StoreItem[]> {
     .map((i) => ({ ...i, appid: i.id }))
 }
 
+/**
+ * Steam keys an appdetails response by an id of its own choosing, which is not
+ * always the appid that was asked for: requesting 620 comes back under the key
+ * 323180, with the real appid inside data.steam_appid. So the entry is matched
+ * on steam_appid first, then on the requested key, then taken as the only entry.
+ */
+function pickApp(
+  payload: Record<string, { success?: boolean; data?: any }>,
+  appid: number
+): any | null {
+  const direct = payload?.[String(appid)]
+  if (direct?.success && direct.data) return direct.data
+  const entries = Object.values(payload ?? {}).filter((entry) => entry?.success && entry.data)
+  const matched = entries.find((entry) => Number(entry.data?.steam_appid) === appid)
+  if (matched) return matched.data
+  return entries.length === 1 ? entries[0].data : null
+}
+
 export async function getAppDetail(appid: number): Promise<AppDetail | null> {
   const filters = [
     "basic",
@@ -90,12 +108,11 @@ export async function getAppDetail(appid: number): Promise<AppDetail | null> {
     "short_description",
     "header_image",
   ].join(",")
-  const data = await getJson<Record<string, { success: boolean; data?: any }>>(
+  const payload = await getJson<Record<string, { success: boolean; data?: any }>>(
     `${STORE}/appdetails?appids=${appid}&cc=US&l=en&filters=${filters}`
   )
-  const entry = data[String(appid)]
-  if (!entry?.success || !entry.data) return null
-  const d = entry.data
+  const d = pickApp(payload, appid)
+  if (!d) return null
   const price = d.price_overview
   return {
     appid,
@@ -225,4 +242,129 @@ export async function getTopSellers(count: number): Promise<TopSeller[]> {
     id: i.id, name: i.name, final_price: i.final_price,
     currency: i.currency, discount_percent: i.discount_percent,
   }));
+}
+// ---- batch-5 tools: store highlights, sale check, live player rank (2026-09-27) ----
+
+interface FeaturedItem {
+  id?: number
+  name?: string
+  final_price?: number
+  original_price?: number
+  currency?: string
+  discount_percent?: number
+}
+
+interface FeaturedSlices {
+  specials?: { items?: FeaturedItem[] }
+  new_releases?: { items?: FeaturedItem[] }
+  coming_soon?: { items?: FeaturedItem[] }
+}
+
+const usd = (cents?: number) => (typeof cents === "number" ? `$${(cents / 100).toFixed(2)}` : "n/a")
+
+/**
+ * The front page of the Store: what is discounted right now, what released
+ * this week and what is coming. top_sellers is a separate tool; these three
+ * slices were never read.
+ */
+export async function storeHighlights(args: { limit?: number }): Promise<string> {
+  const limit = Math.min(Math.max(Math.trunc(args.limit ?? 6), 1), 20)
+  const d = await getJson<FeaturedSlices>(`${STORE}/featuredcategories/?cc=US&l=en`)
+  const section = (title: string, items: FeaturedItem[] | undefined) => {
+    const rows = (items ?? []).slice(0, limit)
+    if (!rows.length) return ""
+    return [
+      `${title} (${rows.length} of ${(items ?? []).length})`,
+      ...rows.map((item, i) => {
+        const cut = item.discount_percent ? `-${item.discount_percent}%` : ""
+        const was = item.original_price && item.final_price ? ` (was ${usd(item.original_price)})` : ""
+        return `  ${i + 1}. ${item.name ?? "?"} — ${usd(item.final_price)}${cut ? ` ${cut}` : ""}${was}${item.id ? ` [${item.id}]` : ""}`
+      }),
+      "",
+    ].filter((line) => line !== "")
+  }
+  const blocks = [
+    section("On sale now", d.specials?.items),
+    section("New releases", d.new_releases?.items),
+    section("Coming soon", d.coming_soon?.items),
+  ].filter((block) => block.length)
+  if (!blocks.length) throw new Error("Steam returned no featured categories. It is a public endpoint; try again shortly.")
+  return [`Steam store highlights (US store, USD)`, "", ...blocks.flat()].join("\n")
+}
+
+/**
+ * Checks a list of app ids for a discount, one request each, which is how a
+ * wishlist is reviewed before a sale ends. Steam rejects a multi-id request.
+ */
+export async function salesCheck(args: { appids: number[] }): Promise<string> {
+  const ids = [...new Set((args.appids ?? []).map((id) => Math.trunc(Number(id))).filter((id) => Number.isFinite(id) && id > 0))]
+  if (!ids.length) throw new Error("Give at least one Steam app id, e.g. [620, 440].")
+  if (ids.length > 15) throw new Error("Check at most 15 app ids per call; each one is a request to Steam.")
+  const rows: { appid: number; name: string; price?: number; original?: number; discount?: number }[] = []
+  const failed: number[] = []
+  for (const appid of ids) {
+    const d = await getJson<Record<string, { success?: boolean; data?: { name?: string; steam_appid?: number; is_free?: boolean; price_overview?: { final?: number; initial?: number; discount_percent?: number } } }>>(
+      `${STORE}/appdetails?appids=${appid}&cc=US&l=en&filters=price_overview,basic`
+    )
+    const entry = pickApp(d, appid)
+    if (!entry?.name) {
+      failed.push(appid)
+      continue
+    }
+    rows.push({
+      appid,
+      name: entry.name,
+      // Steam omits price_overview for free-to-play titles, so is_free is the
+      // only signal that a 0 is real and not missing data.
+      price: entry.price_overview?.final ?? (entry.is_free ? 0 : undefined),
+      original: entry.price_overview?.initial,
+      discount: entry.price_overview?.discount_percent,
+    })
+  }
+  const discounted = rows.filter((row) => (row.discount ?? 0) > 0)
+  const free = rows.filter((row) => row.price === 0)
+  const best = [...discounted].sort((a, b) => (b.discount ?? 0) - (a.discount ?? 0))[0]
+  return [
+    `Steam sale check: ${ids.length} app id(s)`,
+    `  ${discounted.length} discounted, ${free.length} free to play, ${rows.length - discounted.length - free.length} at full price`,
+    "",
+    ...rows.map((row) => {
+      const cut = row.discount ? `-${row.discount}%` : "no discount"
+      const price = row.price === 0 ? "free" : usd(row.price)
+      return `  ${row.name} [${row.appid}] — ${price} (${cut})${row.original && row.original !== row.price ? ` | full price ${usd(row.original)}` : ""}`
+    }),
+    best ? `\nBiggest discount: ${best.name} at -${best.discount}%.` : "\nNothing in this list is on sale.",
+    failed.length ? `\nSteam returned no price data for: ${failed.join(", ")} — the id may be a package, a delisted app or region-locked.` : "",
+  ].filter((line) => line !== "").join("\n")
+}
+
+/**
+ * Live player counts for several games at once, ranked, which is the honest
+ * measure of what is actually being played right now.
+ */
+export async function playerCountRank(args: { appids: number[] }): Promise<string> {
+  const ids = [...new Set((args.appids ?? []).map((id) => Math.trunc(Number(id))).filter((id) => Number.isFinite(id) && id > 0))]
+  if (!ids.length) throw new Error("Give at least one Steam app id, e.g. [730, 570].")
+  if (ids.length > 15) throw new Error("Rank at most 15 app ids per call; each one is a request to Steam.")
+  const rows: { appid: number; players: number }[] = []
+  const failed: number[] = []
+  for (const appid of ids) {
+    try {
+      const players = await getPlayerCount(appid)
+      rows.push({ appid, players })
+    } catch {
+      failed.push(appid)
+    }
+  }
+  if (!rows.length) throw new Error("Steam returned no live player counts for those app ids.")
+  const ranked = [...rows].sort((a, b) => b.players - a.players)
+  const total = ranked.reduce((sum, row) => sum + row.players, 0)
+  return [
+    `Live player counts (ranked, ${ranked.length} game(s), ${total.toLocaleString()} players together)`,
+    "",
+    ...ranked.map((row, i) => `  ${i + 1}. app ${row.appid} — ${row.players.toLocaleString()} playing now${total ? ` (${Math.round((row.players / total) * 100)}% of the sample)` : ""}`),
+    "",
+    "Counts are concurrent players, not owners, and they move hour to hour.",
+    failed.length ? `No count returned for: ${failed.join(", ")} (the id may not be a game with a public player counter).` : "",
+  ].filter((line) => line !== "").join("\n")
 }

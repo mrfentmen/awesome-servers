@@ -1,15 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  WaybackError,
-  domainSnapshots,
-  formatSnapshot,
-  getAvailability,
-  getSnapshots,
-  getSnapshotText,
-  siteHistory,
-} from "./api.js"
-
+import { WaybackError, domainSnapshots, formatSnapshot, getAvailability, getSnapshots, getSnapshotText, siteHistory, statusHistory, captureGaps, snapshotDiff, brokenPages } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -170,6 +161,92 @@ export function createServer(): McpServer {
           blocks.push(`=== ${year} (captured ${snaps[0].timestamp})\n${content || "no readable text"}`)
         }
         return text(`How ${url} changed:\n\n${blocks.join("\n\n")}`)
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "status_history",
+    {
+      title: "Status history",
+      description:
+        "One row per archived month with the HTTP status recorded then, so a page that started redirecting or failing can be dated.",
+      inputSchema: z.object({
+        url: z.string().describe("URL to look up, e.g. 'example.com/page.html'"),
+        limit: z.number().int().min(1).max(120).default(24).describe("How many recent months to show"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ url, limit }) => {
+      try {
+        return text(await statusHistory(url, limit))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "capture_gaps",
+    {
+      title: "Capture gaps",
+      description:
+        "How much of a period is actually archived for a URL: captured months, missing months, coverage percent and the longest gap.",
+      inputSchema: z.object({
+        url: z.string().describe("URL to check, e.g. 'example.com/page.html'"),
+        since: z.string().describe("Optional start year, e.g. '2016'").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ url, since }) => {
+      try {
+        return text(await captureGaps(url, since))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "snapshot_diff",
+    {
+      title: "Diff two snapshots",
+      description:
+        "Compare the same page in two archived years and list the wording that appeared and the wording that vanished.",
+      inputSchema: z.object({
+        url: z.string().describe("URL to compare"),
+        yearA: z.string().describe("Earlier year, e.g. '2015'"),
+        yearB: z.string().describe("Later year, e.g. '2024'"),
+        maxChars: z.number().int().min(1000).max(50000).default(12000).describe("Characters read per year"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ url, yearA, yearB, maxChars }) => {
+      try {
+        return text(await snapshotDiff({ url, yearA, yearB, maxChars }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "broken_pages",
+    {
+      title: "Broken archived pages",
+      description:
+        "Archived captures across a domain that were not HTTP 200 - redirects and dead pages, which is what link rot looks like.",
+      inputSchema: z.object({
+        url: z.string().describe("Domain to scan, e.g. 'example.com'"),
+        limit: z.number().int().min(1).max(50).default(15).describe("How many captures to show"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ url, limit }) => {
+      try {
+        return text(await brokenPages(url, limit))
       } catch (e) {
         return textError(errorMessage(e))
       }

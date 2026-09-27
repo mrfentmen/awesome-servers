@@ -13,6 +13,9 @@ A merged MCP server that consolidates duplicate single-purpose servers in this m
 - `losers` — Equities with the greatest losses today with price and percent change.
 - `actives` — Most actively traded equities with price and percent change.
 - `trending` — Trending US ticker symbols. Use quote for prices.
+- `dividend_history` — Every dividend payment in the range with the total paid per share, the latest payment and its change, and a year by year breakdown.
+- `volume_spike` — Latest trading volume against the average of the days before it, with the ratio, a plain verdict and the heaviest days in the window.
+- `benchmark_compare` — Compare two to five symbols over the same range by percent return, ranked, with the spread between the best and the worst.
 
 ## Run
 

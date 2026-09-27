@@ -20,6 +20,10 @@ Other
 - Get availability: Check whether a page is archived and get its closest snapshot.
 - Read snapshot: Read the text content of an archived page — useful for reading dead or changed sites.
 - Compare years: Read the same URL as it looked in several different years, to see how a page changed.
+- Status history: One row per archived month with the HTTP status recorded then, so a page that started redirecting or failing can be dated.
+- Capture gaps: How much of a period is actually archived for a URL: captured months, missing months, coverage percent and the longest gap.
+- Diff two snapshots: Compare the same page in two archived years and list the wording that appeared and the wording that vanished.
+- Broken archived pages: Archived captures across a domain that were not HTTP 200 - redirects and dead pages, which is what link rot looks like.
 
 ## Getting Started
 
@@ -30,6 +34,10 @@ Other
 - Tool: get_availability — Check whether a page is archived and get its closest snapshot.
 - Tool: read_snapshot — Read the text content of an archived page — useful for reading dead or changed sites.
 - Tool: compare_years — Read the same URL as it looked in several different years, to see how a page changed.
+- Tool: status_history — One row per archived month with the HTTP status recorded then, so a page that started redirecting or failing can be dated.
+- Tool: capture_gaps — How much of a period is actually archived for a URL: captured months, missing months, coverage percent and the longest gap.
+- Tool: snapshot_diff — Compare the same page in two archived years and list the wording that appeared and the wording that vanished.
+- Tool: broken_pages — Archived captures across a domain that were not HTTP 200 - redirects and dead pages, which is what link rot looks like.
 
 ## Tags
 wayback, archive, web-history, keyless

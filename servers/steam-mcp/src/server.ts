@@ -1,18 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  SteamError,
-  fmtPrice,
-  formatAppDetail,
-  formatStoreItem,
-  getAppDetail,
-  getNews,
-  getPlayerCount,
-  getReviewSummary,
-  getTopSellers,
-  searchStore,
-} from "./api.js"
-
+import { SteamError, fmtPrice, formatAppDetail, formatStoreItem, getAppDetail, getNews, getPlayerCount, getReviewSummary, getTopSellers, searchStore, storeHighlights, salesCheck, playerCountRank } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -163,6 +151,66 @@ export function createServer(): McpServer {
       }
     }
   )
+  server.registerTool(
+    "store_highlights",
+    {
+      title: "Store highlights",
+      description:
+        "What Steam is pushing today: everything on sale with its discount, this week's new releases and the coming-soon list, in one call.",
+      inputSchema: z.object({
+        limit: z.number().describe("Items per section, 1-20. Defaults to 6.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ limit }) => {
+      try {
+        return text(await storeHighlights({ limit }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "sales_check",
+    {
+      title: "Check a wishlist for sales",
+      description:
+        "Check up to 15 app ids for a current discount and report the biggest one - how a wishlist is reviewed before a sale ends.",
+      inputSchema: z.object({
+        appids: z.array(z.number()).describe('Steam app ids, e.g. [620, 440, 730]'),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ appids }) => {
+      try {
+        return text(await salesCheck({ appids }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "player_count_rank",
+    {
+      title: "Rank by live players",
+      description:
+        "Live concurrent player counts for up to 15 games, ranked, so a shortlist can be compared on what is actually being played now.",
+      inputSchema: z.object({
+        appids: z.array(z.number()).describe('Steam app ids, e.g. [730, 570, 440]'),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ appids }) => {
+      try {
+        return text(await playerCountRank({ appids }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
   return server
 }
 

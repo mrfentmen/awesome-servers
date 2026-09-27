@@ -266,3 +266,216 @@ export async function auctionCompare(args: { auctions: string; limit?: number })
     .filter(Boolean)
     .join("\n")
 }
+// ---- batch-5 tools: market momentum, monthly leaderboard, head to head (2026-09-27) ----
+
+type MomentumMetric = "volume" | "mean_bid" | "lots"
+
+const metricOf = (records: AuctionRecord[], metric: MomentumMetric): number => {
+  const values = records.map((r) =>
+    metric === "volume" ? Number(r.auction_trading_volume) : metric === "lots" ? Number(r.auction_lots_count) : Number(r.winning_bid_mean)
+  ).filter(Number.isFinite)
+  if (!values.length) return NaN
+  // Volume and lots are totals for the month; the winning bid is an average.
+  return metric === "mean_bid" ? values.reduce((s, x) => s + x, 0) / values.length : values.reduce((s, x) => s + x, 0)
+}
+
+const metricLabel: Record<MomentumMetric, string> = {
+  volume: "trading volume",
+  mean_bid: "mean winning bid",
+  lots: "lots sold",
+}
+
+const pctChange = (previous: number, recent: number): string => {
+  if (!Number.isFinite(previous) || !Number.isFinite(recent)) return "n/a"
+  if (previous === 0) return recent === 0 ? "0%" : "new activity"
+  const pct = ((recent - previous) / previous) * 100
+  return `${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%`
+}
+
+/**
+ * Compares the most recent months against the months immediately before them,
+ * so a direction ("the market is cooling") comes with a number behind it.
+ */
+export async function marketMomentum(args: { auction?: string; months?: number }): Promise<string> {
+  const slug = (args.auction ?? "").trim()
+  const months = Math.min(Math.max(Math.trunc(Number(args.months) || 6), 1), 24)
+  const all = await allRecords()
+  const list = all.filter((a) => bySlug(a, slug || undefined))
+  if (!list.length) {
+    return slug ? `No auction data for "${slug}".` : "No auction data returned."
+  }
+  const byMonth = new Map<string, AuctionRecord[]>()
+  for (const record of list) {
+    const dt = String(record.dt ?? "")
+    if (!/^\d{4}-\d{2}/.test(dt)) continue
+    byMonth.set(dt, [...(byMonth.get(dt) ?? []), record])
+  }
+  const dates = [...byMonth.keys()].sort()
+  if (!dates.length) return "No dated records for that selection."
+
+  const recentDates = dates.slice(-months)
+  const priorDates = dates.slice(-months * 2, -months)
+  const gather = (keys: string[]) => keys.flatMap((key) => byMonth.get(key) ?? [])
+  const recent = gather(recentDates)
+  const prior = gather(priorDates)
+
+  const metricOn = (metric: MomentumMetric, records: AuctionRecord[]) => metricOf(records, metric)
+  const lines = (["mean_bid", "volume", "lots"] as MomentumMetric[]).map((metric) => {
+    const now = metricOn(metric, recent)
+    const before = prior.length ? metricOn(metric, prior) : NaN
+    const direction = !Number.isFinite(before)
+      ? "no earlier window to compare"
+      : now > before
+        ? "up"
+        : now < before
+          ? "down"
+          : "flat"
+    return `  ${metricLabel[metric]}: ${metric === "lots" ? num(now) : money(now)} vs ${Number.isFinite(before) ? (metric === "lots" ? num(before) : money(before)) : "—"} → ${pctChange(before, now)} (${direction})`
+  })
+
+  const label = slug || "all whisky auctions"
+  return [
+    `Whisky market momentum — ${label}`,
+    `Recent window: ${recentDates[0]} to ${recentDates[recentDates.length - 1]} (${recentDates.length} month(s))`,
+    priorDates.length
+      ? `Compare window: ${priorDates[0]} to ${priorDates[priorDates.length - 1]} (${priorDates.length} month(s))`
+      : "Compare window: not enough earlier records in the dataset",
+    "",
+    ...lines,
+    "",
+    priorDates.length
+      ? "Each metric is the recent window against the window before it, so the direction is a change in the market, not a single month's noise."
+      : "Only one window of records exists for this selection, so no change can be measured yet.",
+  ].join("\n")
+}
+
+/**
+ * Who led the market in the last few months, on volume, lots or winning bid,
+ * with each house's share of the volume traded in that window.
+ */
+export async function auctionLeaderboard(args: {
+  months?: number
+  metric?: MomentumMetric
+  limit?: number
+}): Promise<string> {
+  const months = Math.min(Math.max(Math.trunc(Number(args.months) || 3), 1), 12)
+  const metric: MomentumMetric = args.metric === "lots" || args.metric === "mean_bid" ? args.metric : "volume"
+  const limit = Math.min(Math.max(Math.trunc(Number(args.limit) || 10), 1), 31)
+  const all = await allRecords()
+  if (!all.length) return "No auction data returned."
+
+  const dates = [...new Set(all.map((a) => String(a.dt ?? "")).filter((dt) => /^\d{4}-\d{2}/.test(dt)))].sort()
+  if (!dates.length) return "No dated records in the dataset."
+  const window = new Set(dates.slice(-months))
+  const inWindow = all.filter((a) => window.has(String(a.dt ?? "")))
+  if (!inWindow.length) return `No records in the last ${months} recorded month(s).`
+
+  const groups = new Map<string, AuctionRecord[]>()
+  for (const record of inWindow) {
+    const key = record.auction_slug ?? record.auction_name ?? "?"
+    groups.set(key, [...(groups.get(key) ?? []), record])
+  }
+  const rows = [...groups.entries()].map(([slug, records]) => ({
+    slug,
+    name: records[0]?.auction_name ?? slug,
+    value: metricOf(records, metric),
+    volume: metricOf(records, "volume"),
+    lots: metricOf(records, "lots"),
+    months: new Set(records.map((r) => String(r.dt ?? ""))).size,
+  }))
+  rows.sort((a, b) => (Number.isFinite(b.value) ? b.value : -Infinity) - (Number.isFinite(a.value) ? a.value : -Infinity))
+  const totalVolume = rows.reduce((sum, row) => sum + (Number.isFinite(row.volume) ? row.volume : 0), 0)
+
+  return [
+    `Whisky auction leaderboard — last ${window.size} recorded month(s) (${[...window].sort()[0]} to ${[...window].sort().pop()}), ranked by ${metricLabel[metric]}`,
+    "",
+    ...rows.slice(0, limit).map((row, i) => {
+      const share = totalVolume > 0 && Number.isFinite(row.volume) ? ` | ${Math.round((row.volume / totalVolume) * 100)}% of volume` : ""
+      const value = metric === "lots" ? `${num(row.value)} lot(s)` : money(row.value)
+      return `  ${i + 1}. ${row.name} (${row.slug}) — ${value} | volume ${money(row.volume)}${share} | ${row.months} month(s) in window`
+    }),
+    "",
+    `${rows.length} auction house(s) traded in this window; combined volume ${money(totalVolume)}.`,
+    rows.length > limit ? `Showing the top ${limit}.` : "",
+  ]
+    .filter((line) => line !== "")
+    .join("\n")
+}
+
+/**
+ * Two auction houses, month by month: who took more volume, more lots or the
+ * higher winning bid, and the running tally.
+ */
+export async function slugHeadToHead(args: {
+  a: string
+  b: string
+  months?: number
+  metric?: MomentumMetric
+}): Promise<string> {
+  const first = (args.a ?? "").trim()
+  const second = (args.b ?? "").trim()
+  if (!first || !second) return "Provide two auction slugs, e.g. a='whiskyauctioneer', b='scotchwhiskyauctions'."
+  if (first.toLowerCase() === second.toLowerCase()) return "Give two different auction slugs to compare."
+  const months = Math.min(Math.max(Math.trunc(Number(args.months) || 12), 1), 40)
+  const metric: MomentumMetric = args.metric === "lots" || args.metric === "mean_bid" ? args.metric : "volume"
+  const all = await allRecords()
+  const left = all.filter((a) => bySlug(a, first))
+  const right = all.filter((a) => bySlug(a, second))
+  if (!left.length || !right.length) {
+    const known = [...new Set(all.map((a) => a.auction_slug))].filter(Boolean).slice(0, 12)
+    const missing = !left.length ? first : second
+    return `No auction data for "${missing}". Known slugs include: ${known.join(", ")}`
+  }
+
+  const common = [...new Set([...left, ...right].map((r) => String(r.dt ?? "")))]
+    .filter((dt) => /^\d{4}-\d{2}/.test(dt))
+    .sort()
+    .slice(-months)
+
+  let leftWins = 0
+  let rightWins = 0
+  let ties = 0
+  const lines: string[] = []
+  for (const dt of common) {
+    const leftValue = metricOf(left.filter((r) => String(r.dt ?? "") === dt), metric)
+    const rightValue = metricOf(right.filter((r) => String(r.dt ?? "") === dt), metric)
+    const show = (value: number) => (Number.isFinite(value) ? (metric === "lots" ? num(value) : money(value)) : "—")
+    let verdict = "tie"
+    if (Number.isFinite(leftValue) && Number.isFinite(rightValue)) {
+      if (leftValue > rightValue) {
+        leftWins += 1
+        verdict = first
+      } else if (rightValue > leftValue) {
+        rightWins += 1
+        verdict = second
+      } else {
+        ties += 1
+      }
+    } else {
+      ties += 1
+    }
+    lines.push(`  ${dt} | ${first} ${show(leftValue)} | ${second} ${show(rightValue)} → ${verdict}`)
+  }
+
+  const total = (records: AuctionRecord[]) => metricOf(records, metric)
+  const leftTotal = total(left)
+  const rightTotal = total(right)
+  const overall = !Number.isFinite(leftTotal) || !Number.isFinite(rightTotal)
+    ? "not comparable"
+    : leftTotal > rightTotal
+      ? first
+      : rightTotal > leftTotal
+        ? second
+        : "tie"
+  const showTotal = (value: number) => (Number.isFinite(value) ? (metric === "lots" ? num(value) : money(value)) : "—")
+
+  return [
+    `Head to head on ${metricLabel[metric]} — ${first} vs ${second}`,
+    `Months compared: ${common.length}${common.length ? ` (${common[0]} to ${common[common.length - 1]})` : ""}`,
+    "",
+    ...lines,
+    "",
+    `Monthly wins: ${first} ${leftWins}, ${second} ${rightWins}, ties ${ties}.`,
+    `All-time totals in the dataset: ${first} ${showTotal(leftTotal)} vs ${second} ${showTotal(rightTotal)} → ${overall}.`,
+  ].join("\n")
+}

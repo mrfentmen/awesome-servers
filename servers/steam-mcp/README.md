@@ -11,6 +11,9 @@ Uses Steam's keyless store + news endpoints.
 - `reviews`, Review totals for a game: total, positive and negative counts plus the summary label.
 - `players`, How many players are in a game right now.
 - `topsellers`, Current Steam top sellers with prices and discounts.
+- `store_highlights`, What Steam is pushing today: everything on sale with its discount, this week's new releases and the coming-soon list, in one call.
+- `sales_check`, Check up to 15 app ids for a current discount and report the biggest one - how a wishlist is reviewed before a sale ends.
+- `player_count_rank`, Live concurrent player counts for up to 15 games, ranked, so a shortlist can be compared on what is actually being played now.
 
 ## Run
 

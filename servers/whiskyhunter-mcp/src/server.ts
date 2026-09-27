@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { auctionByDate, auctionCompare, auctionSummary, auctions, marketTrend, seasonality, topAuctions } from "./api.js"
-
+import { auctionByDate, auctionCompare, auctionSummary, auctions, marketTrend, seasonality, topAuctions, marketMomentum, auctionLeaderboard, slugHeadToHead } from "./api.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -113,5 +112,59 @@ export function createServer(): McpServer {
       try { return text(await auctionCompare(args)) } catch (e) { return textError(error(e)) }
     }
   )
+  server.registerTool(
+    "market_momentum",
+    {
+      title: "Market momentum",
+      description:
+        "Compare the most recent months of whisky auction results against the months before them: mean winning bid, trading volume and lots, with the percent change.",
+      inputSchema: z.object({
+        auction: z.string().describe("Auction slug, e.g. 'whiskyauctioneer'. Omit for the whole market.").optional(),
+        months: z.number().describe("Months in each window (default 6, max 24).").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await marketMomentum(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
+  server.registerTool(
+    "auction_leaderboard",
+    {
+      title: "Monthly leaderboard",
+      description:
+        "Rank auction houses over the last few recorded months by trading volume, lots sold or mean winning bid, including each house's share of the volume traded.",
+      inputSchema: z.object({
+        months: z.number().describe("How many recent months to rank over (default 3, max 12).").optional(),
+        metric: z.enum(["volume", "lots", "mean_bid"]).describe("Ranking metric (default volume).").optional(),
+        limit: z.number().describe("Max auction houses to show (default 10, max 31).").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await auctionLeaderboard(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
+  server.registerTool(
+    "slug_head_to_head",
+    {
+      title: "Head to head",
+      description:
+        "Two auction houses month by month on volume, lots or winning bid: which one won each month, the tally, and the all-time totals.",
+      inputSchema: z.object({
+        a: z.string().describe("First auction slug, e.g. 'whiskyauctioneer'."),
+        b: z.string().describe("Second auction slug, e.g. 'scotchwhiskyauctions'."),
+        months: z.number().describe("How many recent months to compare (default 12, max 40).").optional(),
+        metric: z.enum(["volume", "lots", "mean_bid"]).describe("Metric to compare on (default volume).").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await slugHeadToHead(args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
   return server
 }
