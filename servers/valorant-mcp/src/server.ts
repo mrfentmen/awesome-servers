@@ -1,10 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { agent } from "./api.js"
-import { agents } from "./api.js"
-import { maps } from "./api.js"
-import { weapons } from "./api.js"
 
+import { agent, agents, maps, weapons, gameModes } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -60,5 +58,34 @@ export function createServer(): McpServer {
     try { return text(await weapons(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "map_detail",
+    {
+      title: "Map detail",
+      description: "One Valorant map in full: its layout, splash art, and every location the map data names (callouts, grouped by region).",
+      inputSchema: z.object( { map: z.string().describe("Map name or UUID, e.g. 'Ascent' or '7eaecc1b-4337-bbf6-6ab9-04b8f06b3319'.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: map_detail ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_valorant_map_detail", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "game_modes",
+    {
+      title: "Game modes",
+      description: "Every Valorant game mode with its description and the rules it is played under (economy, rounds per half, time limit, orbs).",
+      inputSchema: z.object( {}),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await gameModes(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

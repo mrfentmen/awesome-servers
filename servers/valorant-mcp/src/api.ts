@@ -59,3 +59,69 @@ export async function weapons(_args?: unknown): Promise<string> {
     return `${i + 1}. ${w?.displayName ?? "n/a"} | ${w?.category ?? ""}${cost != null ? ` | ${cost} credits` : ""}`
   }).join("\n")
 }
+
+// ---- gap2d tools:
+
+// The two routes below are ones the server never reached: the single-map record
+// (which carries the named callouts, not just the map's name) and the game-mode
+// roster (which no existing tool touches at all).
+
+interface ValorantMapDetail {
+  uuid?: string
+  displayName?: string
+  tacticalDescription?: string | null
+  narrativeDescription?: string | null
+  coordinates?: string | null
+  splash?: string | null
+  listViewIcon?: string | null
+  callouts?: Array<{ regionName?: string | null; superRegionName?: string | null }> | null
+}
+
+interface ValorantGameMode {
+  uuid?: string
+  displayName?: string
+  description?: string | null
+  duration?: number | null
+  roundsPerHalf?: number | null
+  economyType?: string | null
+  orbCount?: number | null
+  allowsMatchTimeouts?: boolean
+  isMinimapHidden?: boolean
+}
+
+/** The game-mode roster, with the rules each mode is played under. */
+export async function gameModes(_args?: unknown): Promise<string> {
+  const d = await get<{ data?: ValorantGameMode[] }>(`${BASE}/gamemodes`)
+  const list = d.data ?? []
+  if (!list.length) return 'No game modes found'
+  return `Valorant game modes (${list.length}):\n` +
+    list
+      .map((m, i) => {
+        // The API uses -1 for "this rule does not apply to this mode", so a
+        // truthiness check is not enough: only positive values are reported.
+        const rounds = Number(m.roundsPerHalf)
+        const minutes = Number(m.duration) / 60000
+        const orbs = Number(m.orbCount)
+        const rules = [
+          m.economyType ? `economy ${m.economyType}` : '',
+          Number.isFinite(rounds) && rounds > 0 ? `${rounds} rounds per half` : '',
+          Number.isFinite(minutes) && minutes > 0 ? `${Math.round(minutes)} min limit` : '',
+          Number.isFinite(orbs) && orbs > 0 ? `${orbs} orbs` : '',
+        ]
+          .filter(Boolean)
+          .join(', ')
+        const flags = [
+          m.isMinimapHidden ? 'minimap hidden' : '',
+          m.allowsMatchTimeouts ? 'timeouts allowed' : '',
+        ]
+          .filter(Boolean)
+          .join(', ')
+        const detail = [rules, flags].filter(Boolean).join(' | ')
+        return (
+          `${i + 1}. ${m.displayName ?? 'unnamed'} — uuid ${m.uuid ?? 'not reported'}\n` +
+          `   ${(m.description ?? 'no description reported').slice(0, 200)}` +
+          (detail ? `\n   ${detail}` : '')
+        )
+      })
+      .join('\n')
+}
