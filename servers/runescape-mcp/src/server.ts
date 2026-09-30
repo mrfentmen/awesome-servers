@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_hiscore, m1_OsrsError, m1_formatStats, m1_getHotItems, m1_getItemPrice, m1_getPlayerStats } from './api.js'
 
+import { m0_hiscore, m1_OsrsError, m1_formatStats, m1_getHotItems, m1_getItemPrice, m1_getPlayerStats, wikiOutline } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -99,5 +100,34 @@ server.registerTool(
       }
     }
   )
+  server.registerTool(
+    "wiki_article",
+    {
+      title: "Wiki article",
+      description: "The introduction of an Old School RuneScape Wiki article, with its categories and URL. Resolves a loose topic to the right page.",
+      inputSchema: z.object( { topic: z.string().describe("Item, NPC, quest or mechanic to look up, e.g. 'Fire cape'."), maxChars: z.number().int().describe("Max characters of introduction to return.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: wiki_article ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_runescape_wiki_article", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "wiki_outline",
+    {
+      title: "Wiki outline",
+      description: "The section headings of an Old School RuneScape Wiki article, with each section's index — use it to see how a long page is structured before fetching it.",
+      inputSchema: z.object( { topic: z.string().describe("Item, NPC, quest or mechanic to look up, e.g. 'Fire cape'."), limit: z.number().int().describe("Max section headings to return.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await wikiOutline(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
   return server
 }

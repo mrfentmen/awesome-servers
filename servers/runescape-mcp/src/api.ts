@@ -50,7 +50,6 @@ export interface m1_HotItem {
 const m0 = (() => {
 const UA = 'mrfentmen-runescape-mcp/1.0';
 
-
 async function hiscore(args: m0_HiscoreArgs): Promise<string> {
   const player = (args.player ?? '').trim();
   if (!player) return 'Provide a player name.';
@@ -128,9 +127,6 @@ const SKILLS = [
   "runecraft", "hunter", "construction",
 ]
 
-
-
-
 const ACTIVITIES = [
   "League Points", "Deadman Points", "Bounty Hunter - Hunter", "Bounty Hunter - Rogue",
   "Bounty Hunter (Legacy) - Hunter", "Bounty Hunter (Legacy) - Rogue",
@@ -186,7 +182,6 @@ async function getPlayerStats(
 // Grand Exchange
 // ---------------------------------------------------------------------------
 
-
 let mappingCache: m1_MappingEntry[] | null = null
 
 async function mapping(): Promise<m1_MappingEntry[]> {
@@ -195,7 +190,6 @@ async function mapping(): Promise<m1_MappingEntry[]> {
   }
   return mappingCache
 }
-
 
 async function getItemPrice(name: string): Promise<m1_PriceInfo | null> {
   const map = await mapping()
@@ -217,7 +211,6 @@ async function getItemPrice(name: string): Promise<m1_PriceInfo | null> {
     members: entry.members,
   }
 }
-
 
 /**
  * Hottest items on the GE right now, ranked by trade volume in the last
@@ -305,3 +298,79 @@ export const m1_getPlayerStats = m1.getPlayerStats;
 export const m1_OsrsError = m1.OsrsError;
 export const m1_getItemPrice = m1.getItemPrice;
 export const m1_formatStats = m1.formatStats;
+
+// ---- gap2d tools:
+
+// The Old School RuneScape Wiki is an open MediaWiki instance, so it answers the
+// same api.php the rest of the wiki family does. Nothing here touches the
+// hiscore or Grand Exchange services: this is the encyclopaedic side, which the
+// server had no way to reach before.
+
+const RS_WIKI_API = 'https://oldschool.runescape.wiki/api.php'
+const RS_WIKI_PAGE = 'https://oldschool.runescape.wiki/wiki/'
+const RS_WIKI_UA = 'mrfentmen-runescape-mcp/1.0 (https://github.com/mrfentmen)'
+
+interface RsWikiPage {
+  pageid?: number
+  title?: string
+  extract?: string
+  missing?: boolean
+  categories?: Array<{ title?: string }>
+}
+
+async function rsWikiGet<T>(params: Record<string, string>): Promise<T> {
+  const qs = new URLSearchParams({ format: 'json', formatversion: '2', ...params })
+  const res = await fetch(`${RS_WIKI_API}?${qs.toString()}`, {
+    headers: { 'User-Agent': RS_WIKI_UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(20000),
+  })
+  if (!res.ok) throw new Error(`The OSRS Wiki returned ${res.status}`)
+  return (await res.json()) as T
+}
+
+function rsWikiUrl(title: string): string {
+  return `${RS_WIKI_PAGE}${encodeURIComponent(title.replace(/ /g, '_'))}`
+}
+
+/** Resolve a free-text topic to a wiki page title, preferring an exact title. */
+async function rsWikiResolve(topic: string): Promise<string> {
+  const want = topic.trim()
+  const found = await rsWikiGet<{ query?: { search?: Array<{ title?: string }> } }>({
+    action: 'query',
+    list: 'search',
+    srsearch: want,
+    srlimit: '5',
+  })
+  const hits = found.query?.search ?? []
+  const exact = hits.find((h) => (h.title ?? '').toLowerCase() === want.toLowerCase())
+  const best = exact ?? hits[0]
+  if (!best?.title) throw new Error(`The OSRS Wiki has no page matching "${want}".`)
+  return best.title
+}
+
+/** The section headings of a wiki article, so a long page can be navigated. */
+export async function wikiOutline(args: { topic: string; limit?: number }): Promise<string> {
+  const topic = (args.topic ?? '').trim()
+  if (!topic) return 'Provide a topic to look up on the OSRS Wiki.'
+  const limit = Math.max(1, Math.min(Number(args.limit ?? 30) || 30, 100))
+  const title = await rsWikiResolve(topic)
+  const data = await rsWikiGet<{
+    parse?: { title?: string; sections?: Array<{ line?: string; level?: string; index?: string }> }
+  }>({
+    action: 'parse',
+    page: title,
+    prop: 'sections',
+  })
+  const sections = data.parse?.sections ?? []
+  const pageUrl = rsWikiUrl(data.parse?.title ?? title)
+  if (!sections.length) return `"${title}" has no section headings on the OSRS Wiki.`
+  const shown = sections.slice(0, limit)
+  const rows = shown.map((s) => {
+    const depth = s.level === '3' ? '   ' : s.level === '4' ? '      ' : '  '
+    return `${depth}${s.line ?? 'untitled'}  (#${s.index ?? '?'})`
+  })
+  const tail = sections.length > shown.length
+    ? `\n…and ${sections.length - shown.length} more section(s).`
+    : ''
+  return `Sections of "${title}" (${sections.length}, showing ${shown.length}) — ${pageUrl}\n${rows.join('\n')}${tail}`
+}
