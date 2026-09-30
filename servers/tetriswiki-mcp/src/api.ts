@@ -72,3 +72,69 @@ export function wikiTextToPlain(wt: string, maxChars = 12000): string {
     .trim()
     .slice(0, maxChars)
 }
+
+// ---- muxB tools:
+
+interface TwQueryPage {
+  pageid?: number
+  title?: string
+  revisions?: Array<{ revid?: number; timestamp?: string; user?: string; comment?: string; size?: number; minor?: string }>
+  categories?: Array<{ title?: string }>
+  links?: Array<{ title?: string }>
+  missing?: string
+}
+
+interface TwQuery {
+  query?: {
+    pages?: Record<string, TwQueryPage>
+    categorymembers?: Array<{ pageid?: number; title?: string; ns?: number }>
+    allpages?: Array<{ pageid?: number; title?: string }>
+  }
+  categorymembers?: Array<{ pageid?: number; title?: string; ns?: number }>
+  allpages?: Array<{ pageid?: number; title?: string }>
+  searchinfo?: { totalhits?: number }
+  error?: { info?: string; code?: string }
+}
+
+interface TwApi {
+  pages: Record<string, TwQueryPage>
+  categorymembers: Array<{ pageid?: number; title?: string; ns?: number }>
+}
+
+export interface PageHistoryArgs {
+  title: string;
+  limit?: number;
+}
+
+export interface BrowseCategoryArgs {
+  category: string;
+  limit?: number;
+}
+
+// ---- gap3a tools:
+
+export interface RecentChangesArgs {
+  limit?: number;
+}
+
+export interface OutlinksArgs {
+  title: string;
+  limit?: number;
+}
+
+interface RecentChange {
+  type?: string;
+  ns?: number;
+  title?: string;
+  pageid?: number;
+  revid?: number;
+  user?: string;
+  timestamp?: string;
+  comment?: string;
+}
+
+// twQuery keeps pages and category members, so the templates a page uses are
+// read through a wider view of the same row rather than by changing the shape
+// the other tools already read.
+type LinkedPage = TwQueryPage & { templates?: Array<{ title?: string }> };
+

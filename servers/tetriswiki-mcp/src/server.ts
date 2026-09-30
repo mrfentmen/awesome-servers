@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { TetrisError, getPage, searchPages, wikiTextToPlain } from "./api.js"
 
+import { TetrisError, getPage, searchPages, wikiTextToPlain } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -62,6 +63,72 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "page_history",
+    {
+      title: "Page history",
+      description: "Revision history for one Tetris wiki page: revision id, timestamp, editor, byte size, minor flag and edit summary.",
+      inputSchema: z.object(
+    { title: z.string().describe("Exact page title from search_pages"), limit: z.number().int().min(1).max(50).default(10) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: page_history ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_tetriswiki_page_history", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "browse_category",
+    {
+      title: "Browse category",
+      description: "List the pages in a Tetris wiki category such as Category:Pieces or Category:Games, with each page's url.",
+      inputSchema: z.object(
+    { category: z.string().describe("Category name, with or without the Category: prefix"), limit: z.number().int().min(1).max(100).default(20) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: browse_category ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_tetriswiki_browse_category", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "recent_changes",
+    {
+      title: "Recent changes",
+      description: "The most recent edits anywhere in the Tetris wiki's article namespace: which page changed, when, by whom, by how many bytes and with what edit summary, plus the spread of editors. page_history reads one named page's whole revision list instead.",
+      inputSchema: z.object({ limit: z.number().int().min(1).max(100).optional().describe("How many recent edits to read. Default 20.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: recent_changes ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_tetriswiki_recent_changes", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "page_outlinks",
+    {
+      title: "Page outlinks",
+      description: "The pages one Tetris wiki article points at, split into article links and namespace links, with the templates the article is built from and a link for each page. get_page returns the article text and browse_category lists a category's members; neither shows what an article links out to.",
+      inputSchema: z.object({ title: z.string().describe("Exact page title, e.g. 'T-Spin'."), limit: z.number().int().min(1).max(200).optional().describe("Max links to list, 1-200. Default 40.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: page_outlinks ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_tetriswiki_page_outlinks", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server
