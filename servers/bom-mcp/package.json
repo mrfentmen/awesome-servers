@@ -1,6 +1,6 @@
 {
   "name": "bom-mcp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Keyless Australian Bureau of Meteorology forecasts by coordinates plus classic station observations.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/bom-mcp",
