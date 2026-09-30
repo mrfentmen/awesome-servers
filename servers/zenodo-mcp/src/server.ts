@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { record } from "./api.js"
-import { search } from "./api.js"
 
+import { record, search, record_versions } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,73 @@ export function createServer(): McpServer {
     try { return text(await record(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "record_files",
+    {
+      title: "Record files",
+      description: "List the files in a Zenodo record with their size, checksum and download link, plus the total size, the licence, the access right with a warning when a record is under embargo, and the share the largest file takes. This is the data a dataset is judged on, and the existing record tool shows none of it, so a record's contents and size are invisible through it.",
+      inputSchema: z.object({
+        id: z.number().int().positive().describe("Zenodo record ID, from a search result."),
+        limit: z.number().int().min(1).max(50).optional().describe("How many files to list, largest first. Default 25."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: record_files ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_zenodo_record_files", args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
+  server.registerTool(
+    "record_impact",
+    {
+      title: "Record impact",
+      description: "Report the download and view statistics a Zenodo record has accumulated, with the ratio of unique to total downloads read as broad use against one group refetching, downloads per view, downloads a day since deposit, and the difference between the all-time and per-version counts, which appears exactly when an earlier version absorbed some of the traffic. The existing tools read none of the statistics block, so an unused dataset and a heavily used one print identically.",
+      inputSchema: z.object({
+        id: z.number().int().positive().describe("Zenodo record ID."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: record_impact ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_zenodo_record_impact", args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
+  server.registerTool(
+    "record_versions",
+    {
+      title: "Record versions",
+      description: "Walk the version history of a Zenodo record, showing each version's id, DOI, concept DOI, dates, file count and total size, noting when the title changed between versions, and warning explicitly when the record you asked about is not the newest so a DOI copied from it points at superseded content. The existing record tool reports no version at all.",
+      inputSchema: z.object({
+        id: z.number().int().positive().describe("Zenodo record ID."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ id }) => {
+      try { return text(await record_versions({ id })) } catch (e) { return textError(error(e)) }
+    }
+  )
+
+  server.registerTool(
+    "search_facets",
+    {
+      title: "Search facets",
+      description: "Read Zenodo's own bucket counts for a query: resource types, access status, file types, subjects and publication years across the whole result set, with each bucket's share of the total. search prints titles from the first page of results and reports none of this, so it cannot say what a query is actually made of. Zenodo returns only the leading buckets of each facet, so the counts are the top of each distribution and are reported as such.",
+      inputSchema: z.object({ query: z.string().describe("Search query, for instance 'cancer' or 'paleontology'."), facet: z.string().describe("One facet to show: resource_type, access_status, file_type, subject or publication_date. Optional, all five by default.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: search_facets ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_zenodo_search_facets", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }
