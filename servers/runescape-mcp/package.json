@@ -1,6 +1,6 @@
 {
   "name": "runescape-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "RuneScape hiscores, OSRS stats, and Grand Exchange prices.",
   "type": "module",
   "main": "dist/index.js",
