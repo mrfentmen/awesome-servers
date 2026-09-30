@@ -126,4 +126,46 @@ export function formatWord(w: WordResult, index = 0): string {
   return lines.join("\n")
 }
 
+// ---- muxB tools:
+
+interface JishoSense {
+  english_definitions?: string[]
+  parts_of_speech?: string[]
+  tags?: string[]
+  restrictions?: string[]
+  see_also?: string[]
+  antonyms?: string[]
+  links?: Array<{ text?: string; url?: string }>
+}
+
+interface JishoEntry {
+  slug?: string
+  is_common?: boolean
+  jlpt?: string[]
+  tags?: string[]
+  japanese?: Array<{ word?: string; reading?: string }>
+  senses?: JishoSense[]
+}
+
+export interface AllSensesArgs {
+  keyword: string;
+  limit?: number;
+}
+
+export interface WordsByReadingArgs {
+  reading: string;
+  limit?: number;
+}
+
+// ---- gap3b tools:
+
+export interface NetworkArgs {
+  keyword: string;
+  limit?: number;
+}
+
+export interface KanjiArgs {
+  keyword: string;
+  limit?: number;
+}
 

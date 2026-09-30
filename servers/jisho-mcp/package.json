@@ -1,6 +1,6 @@
 {
   "name": "jisho-mcp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Use this MCP server to Jisho, the Japanese English dictionary. Words, kanji, readings, and example sentences",
   "type": "module",
   "mcpName": "io.github.mrfentmen/jisho-mcp",
