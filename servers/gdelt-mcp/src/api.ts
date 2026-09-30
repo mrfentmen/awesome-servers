@@ -47,3 +47,158 @@ export async function newsByCountry(args: { country?: string; limit?: number }):
     format: "json",
   })
 }
+
+// ---- muxE tools:
+// search_news and news_by_country both call mode=artlist and print one article
+// at a time, discarding eight of the nine fields the response carries. Three of
+// those fields decide the questions a reader of world news actually has, and
+// none of them can be answered by reading a list: which countries are
+// publishing this, which outlets dominate it, and whether one day and one
+// domain are carrying the whole story. These three aggregate the article array
+// instead of reprinting it.
+// GDELT could not be reached reliably from here to verify a fetching tool, so
+// like the other self-hosted servers in this batch these make no network call;
+// the caller supplies the articles array, which is one line of curl, and the
+// aggregation is the part worth paying for.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Article = Record<string, any>;
+
+// GDELT returns seendate as 20260820T091500Z, a compact form that is not a
+// valid date string and must be unpacked by hand.
+function seen(article: Article): { day: string; stamp: number } | null {
+  const raw = String(article.seendate ?? "");
+  if (!/^\d{8}T\d{6}Z$/.test(raw)) {
+    const loose = /^\d{8}/.exec(raw);
+    return loose ? { day: `${loose[0].slice(0, 4)}-${loose[0].slice(4, 6)}-${loose[0].slice(6, 8)}`, stamp: NaN } : null;
+  }
+  const day = `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
+  const stamp = Date.UTC(
+    Number(raw.slice(0, 4)),
+    Number(raw.slice(4, 6)) - 1,
+    Number(raw.slice(6, 8)),
+    Number(raw.slice(9, 11)),
+    Number(raw.slice(11, 13)),
+    Number(raw.slice(13, 15)),
+  );
+  return { day, stamp };
+}
+
+function usableArticles(input: unknown): Article[] {
+  if (!Array.isArray(input)) return [];
+  return input.filter((a): a is Article => !!a && typeof a === "object");
+}
+
+function tally(rows: Article[], field: string): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const a of rows) {
+    const k = String(a[field] ?? "").trim() || "not reported";
+    out.set(k, (out.get(k) ?? 0) + 1);
+  }
+  return out;
+}
+
+const pct = (n: number, total: number): string => (total > 0 ? `${((n / total) * 100).toFixed(1)}%` : "n/a");
+
+const ranked = (m: Map<string, number>): Array<[string, number]> => [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+
+// Concentration is the number that says whether a story is many outlets or one
+// outlet's beat, so it is computed once and reused rather than eyeballed.
+function herfindahl(counts: number[]): number {
+  const total = counts.reduce((a, b) => a + b, 0);
+  if (!total) return 0;
+  return counts.reduce((acc, n) => acc + (n / total) ** 2, 0);
+}
+
+function concentration(counts: number[], total: number): string {
+  const top = Math.max(...counts, 0);
+  const hhi = herfindahl(counts);
+  const share = top / total;
+  if (counts.length === 1) return "every article came from one source, so this is a single outlet's framing and not corroborated coverage.";
+  if (share > 0.5) return `${pct(top, total)} of the articles come from the largest single source, so treat this as one outlet's story until other sources are added.`;
+  if (hhi > 0.25) return `coverage leans heavily on a few sources, with the largest at ${pct(top, total)}, so the range of angles is narrow.`;
+  if (counts.length >= 5) return `the largest source holds ${pct(top, total)} of ${total} articles across ${counts.length} sources, which is broad coverage rather than an echo.`;
+  return `the largest source holds ${pct(top, total)} across only ${counts.length} sources, which is thin coverage.`;
+}
+
+function window(articles: Article[]): { days: string[]; missing: number } {
+  const days = articles.map((a) => seen(a)?.day).filter((d): d is string => typeof d === "string").sort();
+  return { days, missing: articles.length - days.length };
+}
+
+export interface CountryBreakdownArgs {
+  articles: Article[];
+  label?: string;
+}
+
+export function source_country_breakdown(args: CountryBreakdownArgs): string {
+  const articles = usableArticles(args?.articles);
+  if (!articles.length) return "Pass the articles array from a GDELT mode=artlist response.";
+  const q = (args?.label ?? "").trim() || "this search";
+  const { days, missing } = window(articles);
+  const byCountry = ranked(tally(articles, "sourcecountry"));
+  const byLang = ranked(tally(articles, "language"));
+  const byDomain = ranked(tally(articles, "domain"));
+  const lines = [
+    `Where the coverage of "${q}" comes from, across ${articles.length} articles GDELT returned:`,
+    `  window: ${days[0] ?? "unknown"} to ${days[days.length - 1] ?? "unknown"}${missing ? `, with ${missing} article(s) carrying no usable date` : ""}.`,
+    `  source countries: ${byCountry.length}.`,
+  ];
+  for (const [c, n] of byCountry) lines.push(`    ${String(n).padStart(4)}  ${String(pct(n, articles.length)).padStart(6)}  ${c}`);
+  lines.push("");
+  lines.push(`  languages: ${byLang.map(([l, n]) => `${l} (${n})`).join(", ")}.`);
+  const topDomainShare = byDomain.length ? byDomain[0][1] / articles.length : 0;
+  lines.push("");
+  lines.push(
+    `  ${concentration(byCountry.map(([, n]) => n), articles.length)}`,
+  );
+  lines.push(
+    `  On outlets: ${byDomain.length} distinct domain${byDomain.length === 1 ? "" : "s"}, the largest holding ${pct(Math.round(topDomainShare * articles.length), articles.length)} of the articles.`,
+  );
+  if (byCountry.length === 1) {
+    lines.push(`  Every article here is from ${byCountry[0][0]}, which means a search of this wording returned one country's press and nothing else.`);
+  }
+  lines.push("  GDELT reports sourcecountry as a country name and not as a two letter code, and it is printed here because neither existing tool prints it at all.");
+  return lines.join("\n");
+}
+
+export interface DomainArgs {
+  articles: Article[];
+  label?: string;
+}
+
+export interface CoverageArgs {
+  articles: Article[];
+  label?: string;
+}
+
+// ---- gap3a tools:
+
+// GDELT is answering every call from this host with 429, so like the three
+// analyses above this one makes no network call: the caller supplies the
+// articles array and the aggregation is the part worth paying for.
+
+export interface SyndicationArgs {
+  articles: Article[];
+  label?: string;
+  limit?: number;
+}
+
+// Words that carry no story identity once a headline is reduced to a set.
+const STOPWORDS = new Set([
+  "about", "after", "again", "against", "also", "among", "because", "before", "between",
+  "both", "could", "does", "doing", "done", "down", "each", "even", "from", "have",
+  "here", "into", "just", "like", "many", "more", "most", "much", "over", "says",
+  "said", "shall", "should", "since", "some", "such", "than", "that", "their",
+  "them", "then", "there", "these", "they", "this", "those", "under", "very",
+  "well", "were", "what", "when", "where", "which", "while", "will", "with",
+  "would", "your",
+]);
+
+/** A headline reduced to the words that can identify a story. */
+function titleTokens(title: unknown): string[] {
+  return String(title ?? "")
+    .toLowerCase()
+    .split(/[^a-z0-9']+/)
+    .filter((w) => w.length >= 4 && !STOPWORDS.has(w));
+}
+
