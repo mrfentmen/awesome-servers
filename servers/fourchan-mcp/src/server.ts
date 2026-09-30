@@ -1,14 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  ChanError,
-  formatPost,
-  formatThreadSummary,
-  getCatalog,
-  getThread,
-  listBoards,
-} from "./api.js"
 
+import { ChanError, formatPost, formatThreadSummary, getCatalog, getThread, listBoards, boardConfig } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -88,6 +82,60 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "board_thread_index",
+    {
+      title: "Board thread index",
+      description: "Compact live-thread index for a 4chan board: every thread's number, bump time and reply/image counts, newest first.",
+      inputSchema: z.object({
+    board: z.string().describe("Board, e.g. 'g', 'biz', 'pol'"),
+    limit: z.number().int().min(1).max(200).default(20).describe("Max threads"),
+  }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: board_thread_index ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_fourchan_board_thread_index", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "board_config",
+    {
+      title: "Board configuration",
+      description: "The limits 4chan publishes for one board: pages, threads per page, bump and image caps, upload ceilings, cooldowns, archived state.",
+      inputSchema: z.object({
+    board: z.string().describe("Board, e.g. 'g'"),
+  }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await boardConfig(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "thread_media_gallery",
+    {
+      title: "Thread media gallery",
+      description: "Every media attachment in a 4chan thread with dimensions, thumbnail size, md5 and a live check of whether the file is still on the CDN.",
+      inputSchema: z.object({
+    board: z.string().describe("Board, e.g. 'g'"),
+    threadNo: z.number().int().describe("Thread number from board_thread_index"),
+    limit: z.number().int().min(1).max(20).default(15).describe("Max files"),
+  }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: thread_media_gallery ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_fourchan_thread_media_gallery", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server
