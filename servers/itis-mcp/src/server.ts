@@ -133,7 +133,7 @@ export function createServer(): McpServer {
     {
       title: "Taxon range",
       description: "Where ITIS records a taxon: every geographic division and jurisdictional origin on the record, each with its recorded date, plus the parent chain checked for coverage the taxon inherits. taxon_profile only counts these fields, so the list itself is not otherwise reachable.",
-      inputSchema: z.object( { tsn: z.string().describe("Numeric TSN, e.g. '180596'."), limit: z.number().describe("Max divisions to print, 1-60.").optional(), ancestors: z.number().describe("How many parent levels to check for inherited coverage, 0-10.").optional() }),
+      inputSchema: z.object( { tsn: z.string().describe("Numeric TSN, e.g. '180596'."), limit: z.number().describe("Max divisions to print, 1-60.").optional(), ancestors: z.number().describe("Parent levels to check for inherited coverage, 0-3. Default 0, because each level costs another full ITIS record.").optional() }),
       annotations: READ_ONLY,
     },
     async (args) => {
