@@ -1,6 +1,6 @@
 {
   "name": "reactome-mcp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Keyless MCP server for Reactome: search biological pathways, get pathway details, species, hierarchy.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/reactome-mcp",

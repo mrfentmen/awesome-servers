@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatHit, formatPathway, getPathway, ReactomeError, searchPathways } from "./api.js"
 
+import { formatHit, formatPathway, getPathway, ReactomeError, searchPathways, pathway_structure } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -54,6 +55,79 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "pathway_structure",
+    {
+      title: "Pathway structure",
+      description: "Read what is inside a Reactome pathway: how many chemical reactions, nested sub-pathways and black box events it contains, how many of those events are computationally inferred rather than curated, which are flagged as disease related, and the bare database ids Reactome declines to expand. get_pathway reports the pathway's own name, species and summary and says nothing about its contents.",
+      inputSchema: z.object({
+        stId: z.string().describe("Reactome stable id, e.g. 'R-HSA-109581'. Find one with search_pathways."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ stId }) => {
+      try { return text(await pathway_structure({ stId })) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "pathway_participants",
+    {
+      title: "Pathway participants",
+      description: "Read the molecules taking part in a Reactome pathway: how many complexes, free proteins and sets, how many distinct accessions sit behind them, which accessions are reused across several participants, and the largest complexes by accession count with a median for comparison. Prints the full accession list so the result can be carried to another service. No existing tool looks at participants at all.",
+      inputSchema: z.object({
+        stId: z.string().describe("Reactome stable id, e.g. 'R-HSA-109581'."),
+        limit: z.number().int().min(1).max(40).optional().describe("How many shared accessions and largest complexes to list. Default 12."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: pathway_participants ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_reactome_pathway_participants", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "pathway_tree",
+    {
+      title: "Sub-pathway tree",
+      description: "Walk a Reactome pathway's sub-pathway hierarchy to a chosen depth and draw it, reporting the number of immediate children, the deepest level Reactome records beneath it, how many nodes carry a diagram, and whether the walk was cut short by the depth limit. The existing tools can only describe one pathway at a time and cannot show how it sits inside the larger structure.",
+      inputSchema: z.object({
+        stId: z.string().describe("Reactome stable id, e.g. 'R-HSA-109581'."),
+        maxDepth: z.number().int().min(1).max(6).optional().describe("How many levels to walk. Default 3, which is four requests."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: pathway_tree ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_reactome_pathway_tree", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "identifier_pathways",
+    {
+      title: "Pathways for an identifier",
+      description: "Look a database identifier up in Reactome's own mapping index and list every pathway that identifier takes part in, with the pathway's level in the hierarchy and its disease, inferred and diagram flags. None of the other tools start from an accession: search_pathways searches text, and the rest start from a stable id you already have.",
+      inputSchema: z.object({
+        resource: z.string().describe("Source database name as Reactome knows it, e.g. UniProt, ENSEMBL or CHEBI."),
+        identifier: z.string().describe("The bare accession, e.g. P04637."),
+        limit: z.number().int().min(1).max(40).optional().describe("How many pathways to list. Default 20."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: identifier_pathways ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_reactome_identifier_pathways", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server
