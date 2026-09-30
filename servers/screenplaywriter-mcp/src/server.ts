@@ -4,7 +4,10 @@ import { writeFile, mkdir, readFile } from "node:fs/promises"
 import { dirname } from "node:path"
 import { astToFountain, estimateRuntime, getSceneBreakdown, parseFountain, sceneToFountain } from "./parser.js"
 import type { SceneNode, ScreenplayAST } from "./types.js"
+import { premiumTool } from "./gateway.js"
+const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
+const errorMessage = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
 const WRITE = { readOnlyHint: false, openWorldHint: true } as const
 
@@ -423,6 +426,22 @@ export function createServer(): McpServer {
     })
 
     return { content: [{ type: "text" as const, text: `# Loaded Screenplays\n\n${lines.join("\n")}` }] }
+  }
+  )
+
+  server.registerTool(
+    "source_material_reference",
+    {
+      title: "Source material reference",
+      description: "Look up a novel or other source material on Open Library and get what you need before adapting it: author, first publication date, description, subject index (people, places, periods), and whether a full-text scan is catalogued.",
+      inputSchema: z.object( { title: z.string().min(1).describe("Work title, e.g. 'The Stranger'."), author: z.string().optional().describe("Author surname, to disambiguate, e.g. 'Camus'.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: source_material_reference ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_screenplaywriter_source_material_reference", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
