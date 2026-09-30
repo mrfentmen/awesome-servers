@@ -1,6 +1,6 @@
 {
   "name": "oyez-mcp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Keyless MCP server for Oyez: Supreme Court cases, decisions, opinions, oral-argument audio.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/oyez-mcp",
