@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { many } from "./api.js"
-import { random } from "./api.js"
 
+import { many, random, randomAdvice, adviceById } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,63 @@ export function createServer(): McpServer {
     try { return text(await many(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "quote_of_the_day",
+    {
+      title: "Quote of the day",
+      description: "Today's ZenQuotes quote with its date and attributed author, the same one for everyone on a given day.",
+      inputSchema: z.object( {  }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: quote_of_the_day ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_affirmations_quote_of_the_day", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "random_advice",
+    {
+      title: "Random advice slip",
+      description: "One advice slip from Advice Slip, with the slip id so the same one can be read again by id.",
+      inputSchema: z.object( {  }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await randomAdvice(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "advice_by_id",
+    {
+      title: "Advice slip by id",
+      description: "One specific advice slip from Advice Slip, fetched by its numeric id.",
+      inputSchema: z.object( { id: z.number().describe("Advice slip id, a positive whole number.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await adviceById(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "advice_search",
+    {
+      title: "Search advice slips",
+      description: "Advice slips mentioning a word, with the slip id and the date each slip was published.",
+      inputSchema: z.object( { term: z.string().describe("Word to look for, e.g. life."), limit: z.number().describe("Max slips to show, 1-25.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: advice_search ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_affirmations_advice_search", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }
