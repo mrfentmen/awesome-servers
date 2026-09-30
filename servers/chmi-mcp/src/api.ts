@@ -11,12 +11,6 @@ export function errorMessage(e: unknown): string {
 
 const UA = { "User-Agent": "awesome-mcps/1.0" }
 
-function envStrict(name: string): string {
-  const v = process.env[name]
-  if (!v) throw new ChmiError(`Set the ${name} environment variable.`)
-  return v
-}
-
 async function authHeaders(): Promise<Record<string, string>> {
   return {}
 }
@@ -95,3 +89,83 @@ export async function getLatestAlert(): Promise<string> {
   if (/^%PDF|^PK|^\x89PNG/.test(ftxt)) return `Latest alert file ${latest.href} is binary — use browse() for text alternatives.`;
   return pretty(ftxt);
 }
+
+// ---- muxB tools:
+
+type ChmiEntry = { name: string; href: string; modified?: string; size?: string }
+
+const CHMI_MONTHS: Record<string, number> = {
+  jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+  jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+}
+
+/** "27-Sep-2026 11:00" as used by the Apache indexes, as a sortable number. */
+function chmiStamp(value?: string): number {
+  if (!value) return 0
+  const m = value.match(/^(\d{2})-([A-Za-z]{3})-(\d{4})\s+(\d{2}):(\d{2})$/)
+  if (!m) return 0
+  const month = CHMI_MONTHS[m[2].toLowerCase()]
+  if (month === undefined) return 0
+  return Date.UTC(Number(m[3]), month, Number(m[1]), Number(m[4]), Number(m[5]))
+}
+
+function chmiBytes(size?: string): number {
+  if (!size) return 0
+  const m = size.match(/^([\d.]+)([KMG]?)$/i)
+  if (!m) return 0
+  const scale = { "": 1, K: 1024, M: 1024 * 1024, G: 1024 * 1024 * 1024 }[m[2].toUpperCase()] ?? 1
+  return Math.round(Number(m[1]) * scale)
+}
+
+function chmiHuman(bytes: number): string {
+  if (bytes >= 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GiB`
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MiB`
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KiB`
+  return `${bytes} B`
+}
+
+async function chmiList(path: string): Promise<ChmiEntry[]> {
+  const url = new URL(`https://opendata.chmi.cz/${String(path).replace(/^\/+/, "")}`, "https://opendata.chmi.cz/")
+  const res = await fetch(url.toString(), { headers: { ...UA, ...(await authHeaders()) } })
+  if (!res.ok) throw new ChmiError(`HTTP ${res.status} listing ${path}`)
+  return parseApacheIndex(await res.text())
+}
+
+function chmiNormalise(path?: string): string {
+  const clean = String(path ?? "/").trim().replace(/^\/+/, "")
+  return clean === "" ? "/" : clean
+}
+
+export interface DirectoryStatsArgs {
+  path?: string
+  top?: number
+}
+
+export interface DirectoryTreeArgs {
+  path?: string
+  depth?: number
+  limit?: number
+}
+
+// ---- gap3d tools:
+
+// The CHMI open-data site is a plain Apache index, so "find a file" means
+// walking the index. browse lists one directory, directory_tree walks
+// directories only, directory_stats summarises one directory - and nothing
+// searches. A hazardous-materials library with nested dated folders needs one.
+
+export interface FindDocumentsArgs {
+  query: string
+  path?: string
+  depth?: number
+  limit?: number
+}
+
+/** Split a query into the words that must all appear, lowercased. */
+function findTerms(query: string): string[] {
+  return query
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w.length >= 2)
+}
+

@@ -1,12 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  errorMessage,
-  browse,
-  getFile,
-  getLatestAlert,
-} from "./api.js"
 
+import { errorMessage, browse, getFile, getLatestAlert } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -72,6 +68,61 @@ export function createServer(): McpServer {
         return textError(errorMessage(e));
       }
     }
+  )
+
+  server.registerTool(
+    "directory_stats",
+    {
+      title: "Directory stats",
+      description: "Summarise a CHMI open-data directory: entry counts, total listed size, date range, subdirectories, file type breakdown and the most recently modified files.",
+      inputSchema: z.object({
+        path: z.string().default("/").describe("Directory path"),
+        top: z.number().int().min(1).max(20).default(5).describe("How many recent files to list"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: directory_stats ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_chmi_directory_stats", args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "directory_tree",
+    {
+      title: "Directory tree",
+      description: "Walk CHMI open-data subdirectories to a given depth, showing each directory and the date the index reports for it.",
+      inputSchema: z.object({
+        path: z.string().default("/").describe("Directory path to start from"),
+        depth: z.number().int().min(1).max(3).default(2).describe("Levels to descend"),
+        limit: z.number().int().min(1).max(300).default(60).describe("Max directories to list"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: directory_tree ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_chmi_directory_tree", args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "find_documents",
+    {
+      title: "Find documents",
+      description: "Search the CHMI open-data file names under a path for all the given words at once, reporting each match with its size and date. browse lists one directory and directory_tree walks directories only, so nothing on this server could search for a file.",
+      inputSchema: z.object( { query: z.string().describe("Words that must all appear in a file name, e.g. 'chemical' or 'alert'."), path: z.string().optional().describe("Directory to search under, e.g. '/' or 'meteorology/weather/'. Default '/'."), depth: z.number().int().describe("How many directory levels to walk, 1-5.").optional(), limit: z.number().int().describe("Max matches to return, 1-200.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: find_documents ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_chmi_find_documents", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

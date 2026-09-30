@@ -1,6 +1,6 @@
 {
   "name": "eccc-mcp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Keyless Environment Canada weather/climate/water data via MSC GeoMet OGC APIs.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/eccc-mcp",

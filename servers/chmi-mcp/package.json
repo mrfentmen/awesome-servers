@@ -1,6 +1,6 @@
 {
   "name": "chmi-mcp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Keyless Czech CHMI open data browser: warnings, forecasts, radar, climate files and downloads.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/chmi-mcp",
