@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatHit, formatTarget, getTarget, OpenTargetsError, searchEntities } from "./api.js"
 
+import { formatHit, formatTarget, getTarget, OpenTargetsError, searchEntities, target_evidence } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -55,6 +56,75 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "target_druggability",
+    {
+      title: "Target druggability",
+      description: "Judge whether a gene is a sensible drug target from the fields that bear on it: whether loss of function is essential and what that means for the therapeutic window, which tractability buckets are true and across which modalities, and the genetic constraint measurements with the observed over expected ratio and a plain reading of how badly the gene tolerates being lost. The existing get_target lists drugs that already act on a gene, which says nothing about whether a new one could.",
+      inputSchema: z.object({
+        ensemblId: z.string().describe("Ensembl gene id, e.g. 'ENSG00000012048' for BRCA1. Use search first."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: target_druggability ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_opentargets_target_druggability", args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "target_pathways",
+    {
+      title: "Target pathways",
+      description: "Report every Reactome pathway a gene sits in, grouped by top level pathway with Reactome links, and every cancer hallmark it is linked to with the role given, promoting or suppressing, and the PubMed id behind it. Says when a target is in no pathway at all or annotated with no hallmark. The existing get_target returns function descriptions and associated diseases and touches neither pathways nor hallmarks.",
+      inputSchema: z.object({
+        ensemblId: z.string().describe("Ensembl gene id, e.g. 'ENSG00000012048'."),
+        limit: z.number().int().min(1).max(60).optional().describe("How many pathways to list. Default 20."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: target_pathways ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_opentargets_target_pathways", args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "target_evidence",
+    {
+      title: "Target evidence volume",
+      description: "Report how much evidence a target has by volume: the linked publication count and earliest year, and every cross-reference Open Targets holds broken down by source with example identifiers, separating structural records such as PDB and ChEMBL from indexing references, and flagging when one source holds most of them. The existing tools report neither, so a target with three links and one with three hundred look identical.",
+      inputSchema: z.object({
+        ensemblId: z.string().describe("Ensembl gene id, e.g. 'ENSG00000012048'."),
+        limit: z.number().int().min(5).max(60).optional().describe("Reserved for list length. Default 30."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ ensemblId, limit }) => {
+      try { return text(await target_evidence({ ensemblId, limit })) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "drug_profile",
+    {
+      title: "Drug profile",
+      description: "A ChEMBL drug from Open Targets: its type, maximum clinical stage, trade names and the targets its mechanism of action points at. search can find a drug, but no existing tool reports what that drug is or what it acts on.",
+      inputSchema: z.object( { chemblId: z.string().describe("ChEMBL drug id, e.g. 'CHEMBL25' for aspirin."), limit: z.number().int().describe("Max mechanism rows and targets to list.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: drug_profile ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_opentargets_drug_profile", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server
