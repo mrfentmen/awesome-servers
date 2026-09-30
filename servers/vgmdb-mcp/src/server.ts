@@ -1,17 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  VgmdbError,
-  formatAlbumDetail,
-  formatAlbumSearch,
-  formatArtistDetail,
-  formatArtistSearch,
-  getAlbum,
-  getArtist,
-  searchAlbums,
-  searchArtists,
-} from "./api.js"
 
+import { VgmdbError, formatAlbumDetail, formatAlbumSearch, formatArtistDetail, formatArtistSearch, getAlbum, getArtist, searchAlbums, searchArtists, trackSearch } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -107,6 +98,71 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "album_census",
+    {
+      title: "Album census",
+      description: "The shape of a soundtrack album's tracklist from the iTunes timings: total runtime, shortest, median, mean and longest track, how many tracks run over five minutes, the runtime per disc, the explicit count, the release years seen across the tracks, and the longest and shortest tracks by name.",
+      inputSchema: z.object( { id: z.string().describe("Numeric album id from search_albums.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: album_census ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_vgmdb_album_census", args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "composer_survey",
+    {
+      title: "Composer survey",
+      description: "A composer's catalogue as a survey across the iTunes album entity: how many albums, their total and mean track counts, the release year span, the genre and storefront mix, the oldest and newest releases, the widest and narrowest, and every album id ranked by track count.",
+      inputSchema: z.object( { query: z.string().describe("Composer or album search term, e.g. Yasunori Mitsuda."), limit: z.number().describe("Albums to fetch and list, 5-50.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: composer_survey ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_vgmdb_composer_survey", args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "track_search",
+    {
+      title: "Track search",
+      description: "Find a track by name and the album it sits on, with its track and disc number, length, release date, genre and explicitness, plus the distinct collection ids behind the matches. The album and artist searches cannot do this.",
+      inputSchema: z.object( { query: z.string().describe("Track name to look for."), limit: z.number().describe("Matches to print, 3-25.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try {
+        return text(await trackSearch(args))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "storefront_availability",
+    {
+      title: "Storefront availability",
+      description: "Where a soundtrack album is carried across iTunes country storefronts, with the price and currency in each: which storefronts list it at all, and how much the price moves between them. No other tool passes the iTunes country parameter or reads a price.",
+      inputSchema: z.object( { id: z.string().describe("Numeric id from search_albums or search_artists."), storefronts: z.string().optional().describe("Two-letter codes to check, e.g. 'us gb jp'. Default: eight storefronts."), entity: z.enum(["album", "artist"]).optional().describe("What the id is. Default album.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: storefront_availability ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_vgmdb_storefront_availability", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

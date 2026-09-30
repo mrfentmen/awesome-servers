@@ -204,3 +204,145 @@ export function formatArtistDetail(a: ArtistDetail): string {
   }
   return lines.join("\n")
 }
+
+// ---- muxF tools:
+const ITUNES = "https://itunes.apple.com"
+
+interface TuneRow {
+  wrapperType?: string
+  collectionId?: number
+  collectionName?: string
+  artistId?: number
+  artistName?: string
+  trackId?: number
+  trackName?: string
+  trackNumber?: number
+  trackTimeMillis?: number
+  discNumber?: number
+  discCount?: number
+  trackCount?: number
+  releaseDate?: string
+  primaryGenreName?: string
+  country?: string
+  trackExplicitness?: string
+  genres?: string[] | null
+  collectionViewUrl?: string
+}
+
+async function itunes<T>(params: Record<string, string>): Promise<T> {
+  const qs = new URLSearchParams(params)
+  const res = await fetch(`${ITUNES}/${params.path ?? 'search'}?${qs}`, {
+    headers: { Accept: 'application/json', 'User-Agent': 'vgmdb-mcp/1.0' },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (!res.ok) throw new VgmdbError(`iTunes API error ${res.status}: ${res.statusText}`)
+  return (await res.json()) as T
+}
+
+function bound(value: unknown, min: number, max: number, fallback: number): number {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return fallback
+  return Math.max(min, Math.min(Math.floor(n), max))
+}
+
+function clock(ms: number): string {
+  const total = Math.max(0, Math.round(ms / 1000))
+  const h = Math.floor(total / 3600)
+  const m = Math.floor((total % 3600) / 60)
+  const s = total % 60
+  return h > 0 ? `${h}h ${m}m ${s}s` : m > 0 ? `${m}m ${s}s` : `${s}s`
+}
+
+function median(values: number[]): number | null {
+  if (!values.length) return null
+  const sorted = [...values].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
+}
+
+function tally<T>(map: Map<T, number>, cap: number): string {
+  if (!map.size) return 'not reported'
+  return [...map.entries()]
+    .sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0])))
+    .slice(0, cap)
+    .map(([k, n]) => `${k} ${n}`)
+    .join(', ')
+}
+
+function num0(value: unknown): number {
+  const n = Number(value)
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0
+}
+
+/** Find a track and the album it sits on, which the album and artist searches cannot do. */
+export async function trackSearch(args: { query?: string; limit?: number }) {
+  const query = (args.query ?? '').trim()
+  if (!query) return 'Provide a track name to look for.'
+  const limit = bound(args.limit, 3, 25, 8)
+  const data = await itunes<{ resultCount?: number; results?: TuneRow[] }>({
+    path: 'search',
+    term: query,
+    entity: 'song',
+    limit: String(limit),
+  })
+  const tracks = (data.results ?? []).filter((r) => r.trackName)
+  if (!tracks.length) return `The iTunes catalog holds no track matching "${query}".`
+  const albums = new Map<number, string>()
+  for (const t of tracks) if (t.collectionId) albums.set(t.collectionId, t.collectionName ?? 'album not reported')
+  return [
+    `Track matches for "${query}": ${tracks.length} shown of ${data.resultCount ?? tracks.length} the search reported`,
+    ...tracks.map((t, i) =>
+      [
+        `${i + 1}. ${t.trackName ?? 'title not reported'}`,
+        `   by ${t.artistName ?? 'artist not reported'}`,
+        `   on ${t.collectionName ?? 'album not reported'} (collection id ${t.collectionId ?? 'not reported'})`,
+        `   track ${t.trackNumber ?? '?'}${t.discNumber ? `, disc ${t.discNumber}` : ''}, ${t.trackTimeMillis ? clock(Number(t.trackTimeMillis)) : 'length not reported'}`,
+        `   ${String(t.releaseDate ?? '').slice(0, 10)} | ${t.primaryGenreName ?? 'genre not reported'} | ${t.trackExplicitness ?? 'explicitness not reported'}`,
+      ].join('\n'),
+    ),
+    `Distinct albums behind these matches (${albums.size}): ${[...albums.entries()].slice(0, 8).map(([id, name]) => `${id} ${name}`).join('; ')}`,
+    'Feed a collection id to get_album for the full tracklist, and an album id to album_census for the runtime shape.',
+  ].join('\n')
+}
+
+// ---- gap3d tools:
+
+// Every other tool on this server reads the iTunes catalogue as though it were
+// one flat list. It is not: iTunes has per-country storefronts, and a soundtrack
+// release is one of the things most often not carried in all of them. The
+// `country` request parameter and the price fields had no tool reaching them.
+
+interface StoreRow {
+  wrapperType?: string
+  collectionId?: number
+  collectionName?: string
+  artistId?: number
+  artistName?: string
+  trackId?: number
+  trackName?: string
+  trackCount?: number
+  collectionExplicitness?: string
+  primaryGenreName?: string
+  country?: string
+  currency?: string
+  collectionPrice?: number
+  trackPrice?: number
+}
+
+const STOREFRONTS: Array<{ code: string; name: string }> = [
+  { code: 'us', name: 'United States' },
+  { code: 'gb', name: 'United Kingdom' },
+  { code: 'de', name: 'Germany' },
+  { code: 'fr', name: 'France' },
+  { code: 'jp', name: 'Japan' },
+  { code: 'au', name: 'Australia' },
+  { code: 'ca', name: 'Canada' },
+  { code: 'br', name: 'Brazil' },
+]
+
+export interface StorefrontArgs {
+  id: string
+  storefronts?: string
+  entity?: 'album' | 'artist'
+}
+
