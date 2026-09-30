@@ -1,15 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  AudiusError,
-  formatTrack,
-  formatUser,
-  getUserTracks,
-  searchTracks,
-  searchUsers,
-  trendingTracks,
-} from "./api.js"
 
+import { AudiusError, formatTrack, formatUser, getUserTracks, searchTracks, searchUsers, trendingTracks, artistFollowers } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -105,6 +98,71 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "trending_playlists",
+    {
+      title: "Trending playlists",
+      description: "Trending playlists and albums on Audius, with the curator and play counts.",
+      inputSchema: z.object( { limit: z.number().describe("Max playlists.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: trending_playlists ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_audius_trending_playlists", args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "track_comments",
+    {
+      title: "Track comments",
+      description: "Comments left on an Audius track, with timestamped notes, reply and reaction counts.",
+      inputSchema: z.object( { track_id: z.string().describe("Track id."), limit: z.number().describe("Max comments.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: track_comments ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_audius_track_comments", args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "artist_followers",
+    {
+      title: "Artist followers",
+      description: "Who follows an Audius artist, with each follower's own follower and track counts.",
+      inputSchema: z.object( { user_id: z.string().describe("Audius user id."), limit: z.number().describe("Max followers.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try {
+        return text(await artistFollowers(args))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "track_detail",
+    {
+      title: "Track detail",
+      description: "One Audius track in full: BPM, musical key, tags, ISRC, rights and artwork, none of which the list tools return.",
+      inputSchema: z.object( { track_id: z.string().describe("Track id from trending_tracks or search_tracks.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: track_detail ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_audius_track_detail", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

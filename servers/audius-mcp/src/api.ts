@@ -107,3 +107,56 @@ export function formatUser(u: AudiusUser, index?: number): string {
   const lines = [head, meta, u.bio ? u.bio.slice(0, 200) : "", `https://audius.co/${u.handle}`].filter(Boolean)
   return lines.join("\n")
 }
+
+// ---- muxA tools:
+
+function bound(value: number | undefined, fallback: number, max: number): number {
+  return Math.max(1, Math.min(Math.round(value ?? fallback), max));
+}
+
+function clean(value: unknown): string {
+  return value != null ? String(value) : '';
+}
+
+export interface PlaylistArgs {
+  limit?: number;
+}
+
+export interface CommentArgs {
+  track_id: string;
+  limit?: number;
+}
+
+export interface FollowerArgs {
+  user_id: string;
+  limit?: number;
+}
+
+export async function artistFollowers(args: FollowerArgs): Promise<string> {
+  const id = (args.user_id ?? '').trim()
+  if (!id) return 'Provide an artist user id.'
+  const limit = bound(args.limit, 10, 50)
+  const rows = await getJson<Array<Record<string, unknown>>>(`/users/${encodeURIComponent(id)}/followers?limit=${limit}`)
+  if (!rows?.length) return `Audius returned no followers for user ${id}, or the id is not a current user.`
+  return `Followers of Audius user ${id} (${rows.length} shown):\n` +
+    rows
+      .map((u, i) => {
+        const followers = Number(u.follower_count) || 0
+        const tracks = Number(u.track_count) || 0
+        return [
+          `${i + 1}. ${clean(u.name) || 'unnamed'}${u.is_verified ? ' ✓' : ''} (@${clean(u.handle) || 'no handle'})`,
+          `   ${followers ? `${followers.toLocaleString('en-US')} followers` : 'follower count not reported'}${tracks ? ` · ${tracks} tracks` : ''}`,
+          `   https://audius.co/${clean(u.handle)}`,
+        ]
+          .filter(Boolean)
+          .join('\n')
+      })
+      .join('\n')
+}
+
+// ---- gap3b tools:
+
+export interface TrackArgs {
+  track_id: string;
+}
+
