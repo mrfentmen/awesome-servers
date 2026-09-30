@@ -1,3 +1,4 @@
+import { premiumTool } from "./gateway.js"
 // @ts-nocheck
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
@@ -19,7 +20,9 @@ import {
   verifyChecksum,
 } from "./romdb.js"
 import type { RomSearchResult } from "./types.js"
+const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
+const errorMessage = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
 const WRITE = { readOnlyHint: false, openWorldHint: true } as const
 
@@ -444,6 +447,22 @@ export function createServer(): McpServer {
       const text = detectConsoleFromPath(args.filepath)
       return { content: [{ type: "text", text }] }
     }
+  )
+
+  server.registerTool(
+    "archive_item_files",
+    {
+      title: "Archive item files",
+      description: "Full Internet Archive item manifest: every file with its size, format and md5/sha1/crc32, plus which entries are ROM or save content. Use it to check a set is complete before or after download.",
+      inputSchema: z.object( { identifier: z.string().describe("Internet Archive item identifier, e.g. 'cursed-village'."), limit: z.number().int().describe("Max file rows to list.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: archive_item_files ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_rom_archive_item_files", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server
