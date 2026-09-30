@@ -10,7 +10,7 @@ export class AlphaFoldError extends Error {}
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Raw = Record<string, any>
 
-async function getJson<T>(path: string): Promise<T> {
+export async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     headers: { "User-Agent": "alphafold-mcp/1.0", Accept: "application/json" },
     signal: AbortSignal.timeout(20000),
@@ -72,3 +72,117 @@ export function formatPrediction(p: Prediction): string {
   ].filter(Boolean)
   return lines.join("\n")
 }
+
+// ---- muxE tools:
+// get_prediction reads six of the forty-four fields the API returns and says
+// nothing about which protein it is, how its confidence is distributed, or
+// which model versions exist. model_files then guesses four URLs from a version
+// string the caller supplies. These three read the fields that were left on the
+// table and take the file URLs from the API rather than constructing them.
+// This block is spliced into the same module, so Raw, AlphaFoldError and
+// getJson are already in scope here and are not redeclared or imported again.
+
+async function rows(accession: string): Promise<{ clean: string; rows: Raw[] }> {
+  const clean = (accession ?? "").trim().toUpperCase();
+  if (!/^[A-Z0-9]{6,10}$/.test(clean)) {
+    throw new AlphaFoldError(`Not a UniProt accession: "${accession}". Find one with uniprot-mcp first.`);
+  }
+  let data: Raw[];
+  try {
+    data = await getJson<Raw[]>(`/${clean}`);
+  } catch (e) {
+    // Verified against the live API: this route answers a 400 with the plain
+    // body "Invalid identifier format" for anything that is not a UniProt
+    // accession or a supported AlphaFold DB id, and getJson reduces that to a
+    // bare status, so the status is turned back into the meaning it has here.
+    if (e instanceof AlphaFoldError && /\berror 400\b/.test(e.message)) {
+      throw new AlphaFoldError(
+        `AlphaFold's route rejected "${clean}" as an invalid identifier. It wants a UniProt accession or a supported AlphaFold DB id. Find one with uniprot-mcp first.`,
+      );
+    }
+    throw e;
+  }
+  if (!Array.isArray(data) || !data.length) throw new AlphaFoldError("The AlphaFold API returned no rows for this accession.");
+  return { clean, rows: data };
+}
+
+const asNumber = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
+const pct = (v: unknown): string => {
+  const n = asNumber(v);
+  return n === null ? "unknown" : `${(n * 100).toFixed(1)}%`;
+};
+
+export interface ProteinIdentityArgs {
+  accession: string;
+}
+
+export async function proteinIdentity(args: ProteinIdentityArgs): Promise<string> {
+  const { clean, rows: data } = await rows(args.accession);
+  const first = data[0];
+  const lines = [
+    `What ${clean} is, straight from the AlphaFold record:`,
+    `  description: ${first.uniprotDescription ?? "not given"}`,
+    `  gene: ${first.gene ?? "not given"}`,
+    `  organism: ${first.organismScientificName ?? "not given"}${first.taxId ? ` (taxId ${first.taxId})` : ""}`,
+    `  UniProt status: ${first.isReviewed ? "reviewed" : "unreviewed"}${first.isReferenceProteome ? ", part of the reference proteome" : ", not in the reference proteome"}`,
+  ];
+  const seq = typeof first.sequence === "string" ? first.sequence.length : null;
+  lines.push(`  sequence length modelled: ${seq ?? "unknown"} residues`);
+  // A complex entry is several chains of several entities under one accession,
+  // and a caller who has only seen the model id cannot tell which is which. The
+  // record's own isComplex flag and the number of rows it returned are separate
+  // facts, since an accession can return several models without being flagged
+  // as a complex, so both are reported rather than one being inferred.
+  lines.push(
+    `  entry type: ${first.isComplex ? "flagged as a complex" : "flagged as a single entity"}` +
+      (data.length > 1 ? `, and the API returned ${data.length} models for it` : ", with a single model returned"),
+  );
+  if (data.length > 1) {
+    lines.push(`  ${data.length} separate models came back, so any confidence figure has to be read per model and not averaged:`);
+    for (const r of data) {
+      lines.push(
+        `    ${r.modelEntityId ?? "?"} chain ${r.chainId ?? "?"} residues ${r.sequenceStart ?? "?"}-${r.sequenceEnd ?? "?"}` +
+          ` mean pLDDT ${asNumber(r.globalMetricValue)?.toFixed(2) ?? "?"} very high ${pct(r.fractionPlddtVeryHigh)}`,
+      );
+    }
+  } else if (first.chainId) {
+    lines.push(`  chain: ${first.chainId}`);
+  }
+  const start = asNumber(first.sequenceStart);
+  const end = asNumber(first.sequenceEnd);
+  if (start !== null && end !== null) {
+    const span = end - start + 1;
+    lines.push(`  modelled residue range of the first model: ${start}-${end}, which is ${span} residue(s)`);
+    if (seq && span !== seq) lines.push(`  note: that range is ${Math.abs(seq - span)} residue(s) ${seq > span ? "shorter" : "longer"} than the ${seq} residue sequence in the same record, so the model covers a fragment rather than the whole chain.`);
+  }
+  if (typeof first.sequenceChecksum === "string" && first.sequenceChecksum) {
+    lines.push(`  sequence checksum: ${first.sequenceChecksum}, so two runs can be compared without holding either sequence`);
+  }
+  lines.push(`  modelled by: ${String(first.toolUsed ?? "unknown").replace(" pipeline", "")}, entity type ${first.entityType ?? "unknown"}`);
+  return lines.join("\n");
+}
+
+export interface ConfidenceProfileArgs {
+  accession: string;
+}
+
+export interface ModelVersionsArgs {
+  accession: string;
+}
+
+// ---- gap3c tools:
+
+// model_versions lists the PAE file the record carries but never opens it, and
+// confidence_profile reports per-residue pLDDT out of the same record, which is a
+// different question: how far apart two residues are placed relative to each
+// other. This reads the PAE file itself, from the URL the record hands out, and
+// reports the two numbers that file exists to give.
+//
+// This block is spliced into the same module, so BASE, Raw, AlphaFoldError,
+// getJson and rows are already in scope here and are not redeclared.
+
+export interface PaeSummaryArgs {
+  accession: string;
+  model?: number;
+}
+

@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { AlphaFoldError, formatPrediction, getPrediction, modelFiles } from "./api.js"
 
+import { AlphaFoldError, formatPrediction, getPrediction, modelFiles, proteinIdentity } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -53,6 +54,73 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "protein_identity",
+    {
+      title: "Protein identity",
+      description: "Say what a UniProt accession actually is, read from the AlphaFold record: the description, gene name, organism and taxId, whether the entry is reviewed, how long the modelled sequence is, whether the entry is a complex with several models, which chain and residue range each model covers, and the sequence checksum. get_prediction returns an accession with confidence figures and never says which protein that is.",
+      inputSchema: z.object({
+        accession: z.string().describe("UniProt accession, e.g. 'P69905'"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ accession }) => {
+      try { return text(await proteinIdentity({ accession })) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "confidence_profile",
+    {
+      title: "Confidence profile",
+      description: "Break a prediction's confidence into the four pLDDT bands, very high, confident, low and very low, as fractions of the model, and say how much of the structure is trustworthy and how much is not. get_prediction prints the mean pLDDT and the two bad bands only, so it cannot distinguish a uniformly good model from one that is excellent in part and badly guessed in the rest.",
+      inputSchema: z.object({
+        accession: z.string().describe("UniProt accession, e.g. 'P69905'"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: confidence_profile ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_alphafold_confidence_profile", args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "model_versions",
+    {
+      title: "Model versions",
+      description: "List which AlphaFold model versions exist for an accession, which the API names as latest, and every file the record actually offers: mmCIF, PDB, BinaryCIF, the PAE JSON and image, the per-residue confidence JSON, the MSA, and the three AlphaMissense annotation files. model_files builds four links by string substitution from a version you type, so it can return URLs that do not exist.",
+      inputSchema: z.object({
+        accession: z.string().describe("UniProt accession, e.g. 'P69905'"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: model_versions ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_alphafold_model_versions", args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "pae_summary",
+    {
+      title: "Predicted aligned error summary",
+      description: "Open the PAE file the AlphaFold record names and report what it actually says: the matrix size, the mean PAE along the diagonal, the mean PAE between all other residue pairs, and the residues the model places least confidently against the rest of the chain. confidence_profile reports per-residue pLDDT out of the same record, which is how well each residue is modelled, not how the residues sit relative to each other, and model_versions lists the PAE file without opening it.",
+      inputSchema: z.object({ accession: z.string().describe("UniProt accession, e.g. 'P69905'"), model: z.number().int().min(0).optional().describe("Which returned model to open, when the accession returns several. Default 0.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: pae_summary ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_alphafold_pae_summary", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server
