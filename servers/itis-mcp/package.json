@@ -1,6 +1,6 @@
 {
   "name": "itis-mcp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Keyless MCP server for ITIS taxonomy: scientific names, TSNs, hierarchy, common names.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/itis-mcp",
