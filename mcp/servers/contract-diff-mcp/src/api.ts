@@ -213,3 +213,12 @@ export async function contractRisk(args: ContractRiskArgs): Promise<string> {
   lines.push(`  ${WARNING}`);
   return lines.join("\n");
 }
+
+// ---- gap4e2 tools:
+
+async function contractDirectory(): Promise<Record<string, { preferred?: string; versions?: Record<string, { info?: { title?: string }; updated?: string; openapiVer?: string; swaggerUrl?: string }> }>> {
+  const res = await fetch('https://api.apis.guru/v2/list.json', { headers: { 'User-Agent': 'mrfentmen-contract-diff-mcp/1.0', Accept: 'application/json' }, signal: AbortSignal.timeout(20000) });
+  if (!res.ok) throw new Error(`APIs.guru returned ${res.status}`);
+  return await res.json();
+}
+

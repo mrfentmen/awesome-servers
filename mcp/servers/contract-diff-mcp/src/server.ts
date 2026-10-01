@@ -1,8 +1,9 @@
+import { contractShape, contractRisk } from "./api.js"
+import { premiumTool } from "./gateway.js"
+const error = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { compareSnapshots, format } from "./diff.js"
-import { contractShape, contractRisk } from "./api.js"
-import { premiumRequired } from "./license.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -41,11 +42,39 @@ export function createServer() { const server = new McpServer({ name: "contract-
       annotations: READ_ONLY,
     },
     async ({ before, after }) => {
-      // ---- paywall: contract_risk ----
-      const paywallMessage = await premiumRequired("contract_risk")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try { return text(await contractRisk({ before, after })) } catch (error) { return errorText(error) }
     }
   )
+  server.registerTool(
+    "public_api_versions",
+    {
+      title: "Public api versions",
+      description: "Look up published API contract versions, specification format and update dates in the public APIs.guru directory.",
+      inputSchema: z.object({ api: z.string().max(200).optional(), limit: z.number().int().min(1).max(30).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: public_api_versions ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_contract_diff_public_api_versions", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "public_api_operations",
+    {
+      title: "Public api operations",
+      description: "Inspect the operation surface and documented response codes of a public OpenAPI contract hosted by APIs.guru. Does not call the described API or resolve external references.",
+      inputSchema: z.object({ api: z.string().max(200).optional(), version: z.string().max(100).optional(), limit: z.number().int().min(1).max(40).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: public_api_operations ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_contract_diff_public_api_operations", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server }
