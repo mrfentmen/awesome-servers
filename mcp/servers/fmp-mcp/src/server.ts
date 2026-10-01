@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { companyProfile, FmpError, incomeStatement, stockQuote, currencyRates, fxHistory, priceHistory } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { companyProfile, FmpError, incomeStatement, stockQuote } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -85,10 +85,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: currency_rates ----
-      const paywallMessage = await premiumRequired("currency_rates")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await currencyRates(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_fmp_currency_rates", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -107,10 +106,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: fx_history ----
-      const paywallMessage = await premiumRequired("fx_history")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await fxHistory(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_fmp_fx_history", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -129,10 +127,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: price_history ----
-      const paywallMessage = await premiumRequired("price_history")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await priceHistory(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_fmp_price_history", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
