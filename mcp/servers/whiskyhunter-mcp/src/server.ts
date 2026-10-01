@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { auctionByDate, auctionCompare, auctionSummary, auctions, marketTrend, seasonality, topAuctions, marketMomentum, auctionLeaderboard, slugHeadToHead, liquidityProfile, marketStructure } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { auctionByDate, auctionCompare, auctionSummary, auctions, marketTrend, seasonality, topAuctions, marketMomentum, auctionLeaderboard, slugHeadToHead, marketStructure } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -181,10 +181,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: liquidity_profile ----
-    const paywallMessage = await premiumRequired("liquidity_profile")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await liquidityProfile(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_whiskyhunter_liquidity_profile", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
