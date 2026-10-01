@@ -13,6 +13,8 @@ import queue
 import sys
 import threading
 import unittest
+import os
+from unittest.mock import patch, Mock
 from pathlib import Path
 
 AGENT_DIR = Path(__file__).resolve().parents[1]
@@ -236,12 +238,12 @@ def connected_pair():
 
 
 class TurnTests(unittest.TestCase):
-    def turn(self, text: str, permission: str = "allow-once", **kw):
+    def turn(self, text: str, permission: str = "allow-once", gateway=None, **kw):
         from agent import CryptoAgent
 
         agent_conn, client_conn = connected_pair()
         data, feed = make_data(**kw)
-        agent = CryptoAgent(agent_conn, data)
+        agent = CryptoAgent(agent_conn, data, gateway=gateway)
         threading.Thread(target=agent_conn.serve, daemon=True).start()
         client = AcpClient(connection=client_conn, permission=permission)
         client.start()
@@ -290,6 +292,57 @@ class TurnTests(unittest.TestCase):
         result, _, _ = self.turn("price of bitcoin", fail="/coins/markets")
         self.assertIn("I could not read the market", result["text"])
 
+
+
+class PremiumTests(unittest.TestCase):
+    turn = TurnTests.turn
+    def gateway(self, key, payload=None):
+        from acp_kit import GatewayClient
+        def fetch(url, request, headers):
+            if key == "lic_live_but_rejected":
+                return {"result": {"isError": True, "content": [{"type": "text", "text": "Gateway says this licence is revoked."}],
+                                   "structuredContent": {"licenceRefusal": True, "reason": "revoked"}}}
+            self.assertEqual(headers["Authorization"], "Bearer lic_good")
+            return {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
+        with patch.dict(os.environ, {}, clear=True):
+            gateway = GatewayClient(key=key, fetch=fetch)
+        gateway.call = Mock(wraps=gateway.call)
+        return gateway
+
+    def test_premium_no_key(self):
+        gateway = self.gateway(None)
+        result, _, feed = self.turn('crypto market board top 2', gateway=gateway)
+        self.assertIn("MCP_LICENSE_KEY", result["text"])
+        self.assertIn("is a premium skill and no licence key is set", result["text"])
+        gateway.call.assert_called_once_with('crypto_market_board', {'limit': 2})
+        self.assertEqual(feed.calls, [])
+
+    def test_premium_rejected_key(self):
+        gateway = self.gateway("lic_live_but_rejected")
+        result, _, feed = self.turn('crypto market board top 2', gateway=gateway)
+        self.assertIn("Gateway says this licence is revoked.", result["text"])
+        gateway.call.assert_called_once_with('crypto_market_board', {'limit': 2})
+        self.assertEqual(feed.calls, [])
+
+    def test_premium_good_key(self):
+        gateway = self.gateway("lic_good", {'coins': [{'name': 'Bitcoin', 'marketCapUsd': 1000, 'changes': {'24h': 2, '7d': -3, '30d': 5}}], 'chains': [{'name': 'Ethereum', 'tvlUsd': 700}], 'breadth': {'7d': {'declining': 1}}, 'selectedMarketCapUsd': 1000, 'reportedChainTvlUsd': 750})
+        result, _, feed = self.turn('crypto market board top 2', gateway=gateway)
+        self.assertIn('7d: -3%', result["text"])
+        gateway.call.assert_called_once_with('crypto_market_board', {'limit': 2})
+        self.assertEqual(feed.calls, [])
+
+    def test_premium_free_question_never_calls_gateway(self):
+        gateway = self.gateway("lic_good")
+        self.turn('top 2 coins', gateway=gateway)
+        gateway.call.assert_not_called()
+
+    def test_premium_empty_payload(self):
+        from agent import CryptoAgent
+        gateway = self.gateway("lic_good", {})
+        answer, artifact = CryptoAgent(gateway=gateway)._board({'limit': 2})
+        self.assertTrue(artifact["failed"])
+        self.assertTrue(artifact["premium"])
+        self.assertIn("no readable", answer)
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

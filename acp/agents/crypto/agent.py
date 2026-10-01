@@ -19,7 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text, GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
 
 from data import DATASET, DEFI_DATASET, CryptoData, CryptoError, money  # noqa: E402
 
@@ -29,6 +29,7 @@ HELP = (
     "  - price of ethereum in EUR\n"
     "  - how much is doge?\n"
     "  - top 5 coins\n"
+    "  - crypto market board top 10 (premium)\n"
     "  - top defi protocols\n"
     "  - how big is defi in total?\n"
     "Every price comes with the 24 hour range, the 24 hour change and the time the market "
@@ -37,7 +38,7 @@ HELP = (
 
 PERMISSION_KEY = "crypto-read-markets"
 
-SKILLS = ("crypto-price", "crypto-top", "defi-top", "help")
+SKILLS = ("crypto-price", "crypto-top", "defi-top", "crypto-board", "help")
 
 _COIN_RE = re.compile(r"\b(?:price|worth|value|cost)\s+(?:of\s+)?(?:a\s+)?(?:one\s+)?"
                       r"([a-z][a-z0-9 .\-]{1,24}?)(?=\s+(?:in|right now|now|today|usd|eur|"
@@ -84,6 +85,9 @@ def route(text: str) -> tuple[str, dict]:
     stripped = str(text or "").strip()
     if not stripped or re.search(r"\b(help|what can you do|commands?)\b", stripped, re.IGNORECASE):
         return "help", {}
+    if re.search(r"\bmarket board\b", stripped, re.IGNORECASE):
+        limit = _LIMIT_RE.search(stripped)
+        return "crypto-board", {"limit": int(limit.group(1) or limit.group(2)) if limit else 10}
     if not _CRYPTO_WORDS.search(stripped):
         return "help", {}
     limit = _LIMIT_RE.search(stripped)
@@ -138,9 +142,11 @@ class CryptoAgent(AcpAgent):
     title = "Crypto - coin prices and DeFi totals, keyless"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: CryptoData | None = None) -> None:
+    def __init__(self, connection=None, data: CryptoData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or CryptoData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -174,6 +180,11 @@ class CryptoAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
 
         try:
+            if skill == "crypto-board":
+                body, artifact = self._board(params)
+                ctx.tool_call_update(tool, status="completed", content=ctx.text_content(artifact["summary"]))
+                ctx.stream_text(body + "\n")
+                return STOP_END_TURN
             if skill == "crypto-price":
                 reading = self.data.price(params["coin"], params.get("vs") or "usd")
                 body = render_price(reading)
@@ -197,7 +208,7 @@ class CryptoAgent(AcpAgent):
                     body = (f"DeFi total value locked across {reading['protocols']} protocols: "
                             f"{money(reading['total'], 'USD')}\n" + body)
                 summary = f"{reading['protocols']} protocols, TVL {money(reading['total'], 'USD')}"
-        except (CryptoError, ValueError) as exc:
+        except (CryptoError, GatewayError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the market: {exc}")
             return STOP_END_TURN
@@ -207,6 +218,40 @@ class CryptoAgent(AcpAgent):
         ctx.message(f"\nSource: {DATASET if skill != 'defi-top' else DEFI_DATASET}, read live. "
                     "Crypto trades 24/7 and this is a market price, not advice.")
         return STOP_END_TURN
+
+    def _board(self, params: dict) -> tuple[str, dict]:
+        """Render the market and chain comparison computed by the gateway."""
+        data, refused = premium_call(self.gateway, "crypto_market_board",
+                                     {"limit": params.get("limit", 10)},
+                                     {"agent": "crypto", "skill": "crypto-board"})
+        if refused:
+            return refused
+        if (not isinstance(data, dict) or not isinstance(data.get("coins"), list)
+                or not data["coins"] or not isinstance(data.get("chains"), list)
+                or not data["chains"] or not isinstance(data.get("breadth"), dict)
+                or any(not isinstance(r, dict) or not r.get("name")
+                       or not isinstance(r.get("changes"), dict) for r in data["coins"])
+                or any(not isinstance(r, dict) or not r.get("name") for r in data["chains"])):
+            return empty_premium_answer("The gateway returned no readable market board.",
+                                        {"agent": "crypto", "skill": "crypto-board"})
+        def shown(value):
+            return "not reported" if value is None else str(value)
+        lines = ["Premium crypto market board (USD):"]
+        for row in data["coins"]:
+            moves = ", ".join(f"{h}: {shown(row['changes'].get(h))}%" for h in ("24h", "7d", "30d"))
+            lines.append(f"  {row['name']}: cap {shown(row.get('marketCapUsd'))}; {moves}; "
+                         f"updated {shown(row.get('updatedAt'))}")
+        lines.append(f"Selected market cap: {shown(data.get('selectedMarketCapUsd'))} USD")
+        for horizon, counts in data["breadth"].items():
+            lines.append(f"  {horizon} movement counts: {counts}")
+        lines.append("DeFi chain TVL (separate from market cap):")
+        for row in data["chains"]:
+            lines.append(f"  {row['name']}: {shown(row.get('tvlUsd'))} USD; "
+                         f"coin {shown(row.get('matchedCoinId'))}")
+        lines.append(f"All reported chain TVL: {shown(data.get('reportedChainTvlUsd'))} USD")
+        lines.append("Source: CoinGecko + DefiLlama. " + str(data.get("note", "")))
+        return "\n".join(lines), {"summary": "premium crypto market board", "premium": True,
+                                   "agent": "crypto", "skill": "crypto-board", "data": data}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer
