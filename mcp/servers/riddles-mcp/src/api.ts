@@ -60,78 +60,25 @@ type TriviaResult = {
   incorrect_answers?: string[];
 }
 
-export async function triviaQuestions(args: { amount?: number; category?: string; difficulty?: string; type?: string }): Promise<string> {
-  const amount = Math.max(1, Math.min(Math.trunc(Number(args.amount ?? 5) || 5), 20))
-  const pick = (raw: string | undefined, allowed: readonly string[], fallback: string, label: string): string => {
-    const v = (raw ?? fallback).trim().toLowerCase()
-    if (!(allowed as readonly string[]).includes(v)) throw new Error(`Unknown ${label} "${raw}". Use one of ${allowed.join(', ')}.`)
-    return v
-  }
-  const categoryKey = (args.category ?? 'any').trim().toLowerCase()
-  const known = ['any', ...Object.keys(CATEGORY_IDS)]
-  if (!known.includes(categoryKey)) {
-    throw new Error(`Unknown category "${args.category}". Use one of ${known.join(', ')}.`)
-  }
-  const categoryId = categoryKey === 'any' ? null : CATEGORY_IDS[categoryKey]
-  const difficulty = pick(args.difficulty, DIFFICULTIES, 'any', 'difficulty')
-  const type = pick(args.type, TYPES, 'any', 'type')
-  const params = new URLSearchParams({ amount: String(amount) })
-  if (categoryId !== null) params.set('category', String(categoryId))
-  if (difficulty !== 'any') params.set('difficulty', difficulty)
-  if (type !== 'any') params.set('type', type)
-  const res = await fetch(`${TRIVIA}?${params.toString()}`, {
-    headers: { 'User-Agent': 'mrfentmen-riddles-mcp/1.0', Accept: 'application/json' },
-    signal: AbortSignal.timeout(25000),
-  })
-  if (!res.ok) throw new Error(`Open Trivia DB returned ${res.status}`)
-  const d = (await res.json()) as { response_code?: number; results?: TriviaResult[] }
-  if (d.response_code !== 0) throw new Error(`Open Trivia DB response code ${d.response_code} (not enough questions for that combination).`)
-  const results = d.results ?? []
-  if (!results.length) throw new Error('Open Trivia DB returned no questions.')
-  const blocks = results.map((r, i) => {
-    const wrong = (r.incorrect_answers ?? []).map(tr).slice(0, 4)
-    return [
-      `${i + 1}. ${tr(r.question)}`,
-      `   category ${r.category ?? 'not reported'} | difficulty ${r.difficulty ?? 'not reported'} | type ${r.type ?? 'not reported'}`,
-      `   answer: ${tr(r.correct_answer) || 'not reported'}`,
-      wrong.length ? `   distractors: ${wrong.join(' | ')}` : '   distractors: not reported',
-    ].join('\n')
-  })
-  return `Trivia questions from Open Trivia DB (${results.length} returned):\n${blocks.join('\n\n')}`
-}
-
 type WkSection = { line?: string }
 
-export async function wordEntry(args: { word: string }): Promise<string> {
-  const word = (args.word ?? '').trim().replace(/\s+/g, '_')
-  if (!word) throw new Error('Provide a word to look up.')
-  const params = new URLSearchParams({
-    action: 'query',
-    prop: 'extracts',
-    explaintext: '1',
-    format: 'json',
-    redirects: '1',
-    titles: word,
-  })
-  const res = await fetch(`${WIKTIONARY}?${params.toString()}`, {
+// ---- gap4b2 tools:
+
+async function puzzleWords(params: URLSearchParams): Promise<Array<{ word?: string; numSyllables?: number }>> {
+  const res = await fetch(`https://api.datamuse.com/words?${params}`, {
     headers: { 'User-Agent': 'mrfentmen-riddles-mcp/1.0', Accept: 'application/json' },
-    signal: AbortSignal.timeout(25000),
+    signal: AbortSignal.timeout(20000),
   })
-  if (!res.ok) throw new Error(`Wiktionary returned ${res.status}`)
-  const d = (await res.json()) as { query?: { pages?: Record<string, { title?: string; extract?: string; missing?: string }> } }
-  const pages = Object.values(d.query?.pages ?? {})
-  const page = pages[0]
-  if (!page || page.missing !== undefined) throw new Error(`Wiktionary has no entry for "${word}".`)
-  const body = (page.extract ?? '').replace(/\n{2,}/g, '\n').trim()
-  if (!body) throw new Error(`The Wiktionary entry for ${page.title ?? word} came back empty.`)
-  const sections = body
-    .split('\n')
-    .map((l) => l.trim())
-    .filter((l) => l && l.length > 2)
-  const keep = sections
-    .slice(0, 25)
-    .map((l) => l.replace(/^=+\s*|\s*=+$/g, '').replace(/'''?/g, '').replace(/^\*\s*/, '').trim())
-    .filter(Boolean)
-    .map((l) => (l.length > 200 ? `${l.slice(0, 200)}...` : l))
-  return `Wiktionary entry for ${page.title ?? word}:\n${keep.join('\n')}`
+  if (!res.ok) throw new Error(`Datamuse returned ${res.status}`)
+  return await res.json() as Array<{ word?: string; numSyllables?: number }>
+}
+
+export async function triviaCategories(_args: Record<string, never>): Promise<string> {
+  const res = await fetch('https://opentdb.com/api_category.php', {
+    headers: { 'User-Agent': 'mrfentmen-riddles-mcp/1.0', Accept: 'application/json' },
+    signal: AbortSignal.timeout(20000),
+  })
+  if (!res.ok) throw new Error(`Open Trivia DB returned ${res.status}`)
+  const d = await res.json() as { trivia_categories?: Array<{ id?: number; name?: string }> }
+  return 'Open Trivia DB categories:\n' + ((d.trivia_categories ?? []).slice(0, 50).map((row) => `${row.id ?? 'not reported'}: ${(row.name ?? 'not reported').slice(0, 120)}`).join('\n') || 'No categories returned.')
 }
