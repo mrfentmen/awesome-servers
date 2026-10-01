@@ -4,6 +4,7 @@ ACP's whole point is that the editor launches the agent next to your code, and y
 agent on the vendors' list is a chat that writes code and never once looks at the machine it
 is running on. This one reads what the editor already knows: the session's working directory.
 
+Its free machine skills are read-only. The premium OSV lookup sends only explicit package triples.
 It is read-only, on purpose and by construction. The only commands it can run are `git`
 (reporting) and `lsof` (listing), and it never writes, stages, commits, or kills anything. The
 one question it asks permission for is reading your machine at all, and the answer is bound to
@@ -20,6 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer
 from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
 
 from data import (  # noqa: E402
@@ -33,6 +35,7 @@ from data import (  # noqa: E402
 
 HELP = (
     "I read this machine, read-only. Ask me:\n"
+    "  • OSV advisories for requests 2.19.0 PyPI (premium)\n"
     "  • how much disk space is left?\n"
     "  • what is going on in this repo?\n"
     "  • what am I running on port 3000?\n"
@@ -43,7 +46,7 @@ HELP = (
 
 PERMISSION_KEY = "local-read-this-machine"
 
-SKILLS = ("disk", "git", "ports", "help")
+SKILLS = ("disk", "git", "ports", "osv-advisories", "help")
 
 _PATH_RE = re.compile(r"(~?/[^\s\"',;]+|\.\.?/[^\s\"',;]+)")
 
@@ -61,6 +64,17 @@ def route(text: str) -> tuple[str, dict]:
     """Deterministic intent routing: (skill, params). Pure function, easy to test."""
     if not text.strip() or re.search(r"\b(help|what can you do|commands?)\b", text, re.IGNORECASE):
         return "help", {}
+
+    advisory = re.search(r"\bosv advisories for\s+(.+)$", text, re.IGNORECASE)
+    if advisory:
+        ecosystems = {value.lower(): value for value in ("PyPI", "npm", "Maven", "Go", "crates.io", "NuGet", "Packagist")}
+        packages = []
+        for raw in advisory.group(1).strip().split(","):
+            parts = raw.strip().split()
+            if len(parts) != 3 or parts[2].lower() not in ecosystems:
+                return "osv-advisories", {"packages": []}
+            packages.append({"name": parts[0], "version": parts[1], "ecosystem": ecosystems[parts[2].lower()]})
+        return "osv-advisories", {"packages": packages}
 
     params: dict = {}
     port = port_filter(text)
@@ -88,9 +102,11 @@ class LocalAgent(AcpAgent):
     title = "Local — disk, git and ports on this machine"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: LocalData | None = None) -> None:
+    def __init__(self, connection=None, data: LocalData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or LocalData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -101,31 +117,33 @@ class LocalAgent(AcpAgent):
     def prompt(self, ctx: SessionContext, prompt: list[dict]) -> str:
         text = prompt_text(prompt)
         skill, params = route(text)
+        remote = skill == "osv-advisories"
         ctx.plan([
             (f"Route the request ({skill})", "high"),
-            ("Resolve the folder (the session's own working directory unless you named one)", "medium"),
-            ("Read it locally, read-only", "medium"),
+            ("Read OSV advisories for explicit packages" if remote else "Resolve the folder (the session's own working directory unless you named one)", "medium"),
+            ("Compare advisory records on the gateway" if remote else "Read it locally, read-only", "medium"),
         ])
 
         if skill == "help":
             ctx.stream_text(HELP)
-            ctx.message("I only look at the machine this editor launched me on, and only "
-                        "through `git` and `lsof`.")
+            ctx.message("Free machine reads stay local. OSV looks up only package triples you explicitly supply.")
             return STOP_END_TURN
 
         tool = f"call_{skill}"
-        ctx.tool_call(tool, f"Read the local {skill} state", kind="read", name=skill,
+        ctx.tool_call(tool, "Look up explicit packages in OSV" if remote else f"Read the local {skill} state",
+                      kind="fetch" if remote else "read", name=skill,
                       raw_input={"skill": skill, **params})
-        if not ctx.ask_permission(tool, "Allow Local to read this machine (disk space, git status, listening ports)?",
-                                  remember_key=PERMISSION_KEY):
+        if not ctx.ask_permission(tool, "Allow Local to send these explicit package names, versions and ecosystems to OSV through the licence gateway?" if remote else
+                                  "Allow Local to read this machine (disk space, git status, listening ports)?",
+                                  remember_key="local-osv-explicit-packages" if remote else PERMISSION_KEY):
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content("permission denied"))
-            ctx.message("I need permission to look at this machine before I can answer.")
+            ctx.message("I need permission to look up these explicit packages." if remote else "I need permission to look at this machine before I can answer.")
             return STOP_REFUSAL
 
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params, ctx)
-        except (LocalError, ValueError) as exc:
+        except (LocalError, ValueError, GatewayError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read that: {exc}")
             return STOP_END_TURN
@@ -141,6 +159,8 @@ class LocalAgent(AcpAgent):
     # -- skills ------------------------------------------------------------
 
     def _run_skill(self, skill: str, params: dict, ctx: SessionContext) -> tuple[str, dict]:
+        if skill == "osv-advisories":
+            return self._osv(params)
         if skill == "disk":
             return self._disk(params, ctx)
         if skill == "git":
@@ -148,6 +168,37 @@ class LocalAgent(AcpAgent):
         if skill == "ports":
             return self._ports(params)
         return HELP, {"summary": "help", "dataset": None}
+
+    def _osv(self, params: dict) -> tuple[str, dict]:
+        packages = params.get("packages") or []
+        if (not isinstance(packages, list) or not 1 <= len(packages) <= 5 or
+                any(not isinstance(pkg, dict) or set(pkg) != {"name", "version", "ecosystem"} or
+                    any(not isinstance(pkg[key], str) for key in pkg) or
+                    not re.fullmatch(r"[A-Za-z0-9_.@+:/-]{1,100}", pkg["name"]) or
+                    pkg["name"].startswith("/") or ".." in pkg["name"] for pkg in packages)):
+            raise ValueError("Supply 1 to 5 explicit package triples: OSV advisories for requests 2.19.0 PyPI, lodash 4.17.21 npm")
+        arguments = {"packages": [{key: pkg[key] for key in ("name", "version", "ecosystem")} for pkg in packages]}
+        data, refused = premium_call(self.gateway, "osv_advisory_board", arguments,
+                                     {"agent": "local", "skill": "osv-advisories"})
+        if refused:
+            return refused
+        rows = data.get("packages") if isinstance(data, dict) else None
+        if (not isinstance(rows, list) or not rows or type(data.get("package_count")) is not int or
+                type(data.get("vulnerable_packages")) is not int or type(data.get("total_advisories")) is not int or any(not isinstance(row, dict) or
+                not isinstance(row.get("name"), str) or not isinstance(row.get("version"), str) or
+                not isinstance(row.get("ecosystem"), str) or type(row.get("advisory_count")) is not int or
+                not isinstance(row.get("advisories"), list) or any(not isinstance(item, dict) or
+                not isinstance(item.get("id"), str) for item in row["advisories"]) for row in rows)):
+            return empty_premium_answer("The gateway returned no readable OSV advisory board.",
+                                        {"agent": "local", "skill": "osv-advisories"})
+        lines = [f"Premium OSV advisory board: {data['vulnerable_packages']} of {data['package_count']} explicit packages have advisories ({data['total_advisories']} total)."]
+        for row in rows:
+            ids = ", ".join(str(item.get("id")) for item in row["advisories"][:5]) or "none"
+            lines.append(f"  {row['name']} {row['version']} ({row['ecosystem']}): {row['advisory_count']} advisories; IDs: {ids}.")
+        if data.get("truncated"):
+            lines.append("Results are truncated; counts are lower bounds.")
+        lines.append(str(data.get("note", "")))
+        return "\n".join(lines), {**data, "summary": lines[0], "premium": True}
 
     @staticmethod
     def _where(params: dict, ctx: SessionContext) -> str:
