@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections, browseCollection, find_by_size, sizeMatrix, priceDistribution, catalogueHealth } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections, browseCollection, find_by_size, priceDistribution } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -207,10 +207,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: size_matrix ----
-    const paywallMessage = await premiumRequired("size_matrix")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await sizeMatrix(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_traxnyc_size_matrix", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -240,10 +239,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: catalogue_health ----
-    const paywallMessage = await premiumRequired("catalogue_health")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await catalogueHealth(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_traxnyc_catalogue_health", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 

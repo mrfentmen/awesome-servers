@@ -126,7 +126,7 @@ export async function getProduct(handle: string): Promise<string> {
   const dollar = variants.length && Number.isFinite(variants[0].price_usd) ? variants[0].price_usd : (sl.price_usd !== null ? Math.round(sl.price_usd) / 100 : null)
   return pretty({
     store: "TraxNYC", ...sl, price_usd: dollar, variants, images,
-    description: html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 1500) || null,
+    description: html.replace(new RegExp("<[^>]+>", "g"), " ").replace(new RegExp("\\s+", "g"), " ").trim().slice(0, 1500) || null,
     tags: p.tags,
   })
 }
@@ -181,7 +181,6 @@ export async function listCategories(): Promise<string> {
   }
   return pretty({ store: "TraxNYC", sample: Object.values(counts).reduce((a, b) => a + b, 0), categories: counts })
 }
-
 
 // --- catalog tools: collections + attribute/size filters ---
 function collectionsOrigin(): string {
@@ -267,7 +266,6 @@ export async function find_by_size(size: string, limit?: string, maxPrice?: stri
 
 // ---- muxG tools:
 const TX_CATALOG = "https://traxnyc.com/products.json"
-const TX_LIST_CAP = 12
 
 interface TxVariant {
   title?: string
@@ -331,91 +329,6 @@ function txPrices(products: TxProduct[]): number[] {
 function txQuantile(sorted: number[], q: number): number {
   if (!sorted.length) return 0
   return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * q))]
-}
-
-/** The whole size curve of the catalogue, and where it has holes. */
-export async function sizeMatrix(args: { pages?: number; threshold?: number }): Promise<string> {
-  const pages = txBound(args?.pages, 1, 3, 1)
-  const threshold = txBound(args?.threshold, 0, 50, 0)
-  const products = await txCatalog(pages)
-
-  interface Cell { total: number; available: number }
-  const numeric = new Map<string, Cell>()
-  const inches = new Map<string, Cell>()
-  const other = new Map<string, Cell>()
-
-  const bump = (m: Map<string, Cell>, key: string, available: boolean): void => {
-    const cell = m.get(key) ?? { total: 0, available: 0 }
-    cell.total += 1
-    if (available) cell.available += 1
-    m.set(key, cell)
-  }
-  let variants = 0
-  let defaultOnly = 0
-  for (const p of products) {
-    const values = (p.options ?? []).flatMap((o) => (o.name === "Title" ? [] : o.values ?? []))
-    const allDefault = values.length === 0
-    for (const v of p.variants ?? []) {
-      variants += 1
-      if (allDefault) defaultOnly += 1
-      const size = v.option1 && v.option1 !== "Default Title" ? v.option1 : undefined
-      if (!size) continue
-      if (/^\d+(\.\d+)?$/.test(size)) bump(numeric, size, v.available === true)
-      else if (/^\d+(\.\d+)?\s*(in|inch|inches|")$/i.test(size.trim())) bump(inches, size.trim().toLowerCase(), v.available === true)
-      else bump(other, size.trim(), v.available === true)
-    }
-  }
-
-  const lines: string[] = [
-    `Size matrix over ${products.length} product(s) and ${variants} variant(s) from ${pages} page(s) of the public catalogue`,
-    `${defaultOnly} variant(s) are a single "Default Title" with no size choice at all`,
-    "",
-  ]
-
-  const numericSorted = [...numeric.entries()].map(([k, v]) => [Number(k), v] as [number, Cell]).sort((a, b) => a[0] - b[0])
-  if (numericSorted.length) {
-    const min = numericSorted[0][0]
-    const max = numericSorted[numericSorted.length - 1][0]
-    lines.push(`Numeric sizes, ${min} to ${max} (ring or band sizing):`)
-    for (const [size, cell] of numericSorted) {
-      const gap = cell.total - cell.available
-      lines.push(`  ${String(size).padStart(6)}  ${String(cell.total).padStart(3)} variant(s), ${String(cell.available).padStart(3)} in stock${gap > 0 ? `, ${gap} sold out` : ""}${cell.available === 0 ? "   <- nothing buyable in this size" : ""}`)
-    }
-    if (max - min + 1 > numericSorted.length) {
-      const present = new Set(numericSorted.map(([s]) => s))
-      const missing: string[] = []
-      for (let s = min; s <= max; s += 1) if (!present.has(s)) missing.push(String(s))
-      lines.push(`  missing entirely between ${min} and ${max}: ${missing.join(", ")}`)
-    }
-    lines.push("")
-  }
-
-  const inchSorted = [...inches.entries()].sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))
-  if (inchSorted.length) {
-    lines.push("Length sizes in inches (chains and bracelets):")
-    for (const [size, cell] of inchSorted) {
-      lines.push(`  ${size.padStart(12)}  ${String(cell.total).padStart(3)} variant(s), ${String(cell.available).padStart(3)} in stock${cell.available === 0 ? "   <- nothing buyable at this length" : ""}`)
-    }
-    lines.push("")
-  }
-
-  if (other.size) {
-    lines.push(`Other size or material values (${other.size}), most stocked first:`)
-    for (const [size, cell] of [...other.entries()].sort((a, b) => b[1].total - a[1].total).slice(0, TX_LIST_CAP)) {
-      lines.push(`  ${size.slice(0, 46).padEnd(46)}  ${String(cell.total).padStart(3)} variant(s), ${String(cell.available).padStart(3)} in stock`)
-    }
-    lines.push("")
-  }
-
-  const soldOut = [...numeric.values(), ...inches.values(), ...other.values()].filter((c) => c.available === 0)
-  const totalCells = numeric.size + inches.size + other.size
-  lines.push(
-    `Size values seen: ${totalCells}, of which ${soldOut.length} have no buyable variant at all${totalCells ? ` (${((soldOut.length / totalCells) * 100).toFixed(0)}%)` : ""}`,
-    threshold > 0 ? `Size values with at least ${threshold} in-stock variant(s): ${[...numeric.values(), ...inches.values(), ...other.values()].filter((c) => c.available >= threshold).length} of ${totalCells}` : "",
-    "",
-    "The existing find-by-size tool answers 'is my size in stock', which is one cell of this table. What a table shows that a filter cannot is the shape of the curve: a catalogue can carry sizes 6 to 13 and still be unusable if 7, 9 and 11 are sold out, and a length that exists on the page is not a length you can buy.",
-  )
-  return lines.filter(Boolean).join("\n")
 }
 
 /** Where the money sits in the catalogue, by product type. */
@@ -484,90 +397,3 @@ export async function priceDistribution(args: { pages?: number; buckets?: number
     .join("\n")
 }
 
-/** What is wrong with the catalogue data itself, which is what breaks a storefront. */
-export async function catalogueHealth(args: { pages?: number }): Promise<string> {
-  const pages = txBound(args?.pages, 1, 3, 1)
-  const products = await txCatalog(pages)
-
-  let noType = 0
-  let noTags = 0
-  let noImage = 0
-  let noVariants = 0
-  let singleVariant = 0
-  let allSoldOut = 0
-  let onSale = 0
-  let withCompareAt = 0
-  let badPrice = 0
-  let noHandle = 0
-  let deepDiscounts = 0
-  const tagCount = new Map<string, number>()
-  const noPriceProducts: string[] = []
-
-  for (const p of products) {
-    if (!p.product_type?.trim()) noType += 1
-    if (!p.handle) noHandle += 1
-    if (!p.tags?.length) noTags += 1
-    if (!p.images?.length) noImage += 1
-    for (const t of p.tags ?? []) tagCount.set(t, (tagCount.get(t) ?? 0) + 1)
-
-    const variants = p.variants ?? []
-    if (!variants.length) {
-      noVariants += 1
-      continue
-    }
-    if (variants.length === 1) singleVariant += 1
-    if (variants.every((v) => v.available !== true)) allSoldOut += 1
-
-    let anyPrice = false
-    for (const v of variants) {
-      const price = Number(v.price)
-      if (!Number.isFinite(price) || price <= 0) {
-        badPrice += 1
-        continue
-      }
-      anyPrice = true
-      const compare = v.compare_at_price === null || v.compare_at_price === undefined ? null : Number(v.compare_at_price)
-      if (compare !== null && Number.isFinite(compare) && compare > 0) {
-        withCompareAt += 1
-        if (v.available === true) onSale += 1
-        if (compare > 0 && price / compare < 0.7) deepDiscounts += 1
-      }
-    }
-    if (!anyPrice) noPriceProducts.push(p.title ?? "(untitled)")
-  }
-
-  const total = products.length
-  const topTags = [...tagCount.entries()].sort((a, b) => b[1] - a[1])
-  const singletons = topTags.filter(([, n]) => n === 1).length
-  const pct = (n: number): string => `${((n / total) * 100).toFixed(0)}%`;
-
-  return [
-    `Catalogue health over ${total} product(s) from ${pages} page(s) of the public catalogue`,
-    "",
-    "Data completeness:",
-    `  no product_type set: ${noType} (${pct(noType)}) — these fall into no filter and are hard to find`,
-    `  no tags at all: ${noTags} (${pct(noTags)})`,
-    `  no image: ${noImage} (${pct(noImage)})`,
-    `  no variants: ${noVariants}`,
-    `  no usable handle: ${noHandle}`,
-    `  variants with a missing or non-positive price: ${badPrice}`,
-    noPriceProducts.length ? `  products with no priceable variant: ${noPriceProducts.slice(0, 3).join("; ")}${noPriceProducts.length > 3 ? `, and ${noPriceProducts.length - 3} more` : ""}` : "",
-    "",
-    "Structure:",
-    `  single-variant products (no size or material choice): ${singleVariant} (${pct(singleVariant)})`,
-    `  products where every variant is unavailable: ${allSoldOut} (${pct(allSoldOut)})${allSoldOut ? ", which are dead pages that still rank" : ""}`,
-    "",
-    "Pricing:",
-    `  variants carrying a compare-at price: ${withCompareAt}${onSale ? `, of which ${onSale} are actually purchasable` : ""}`,
-    `  markdowns deeper than 30%: ${deepDiscounts}`,
-    "",
-    `Tagging: ${tagCount.size} distinct tag(s) across ${total} products, of which ${singletons} are used exactly once`,
-    "  most used:",
-    ...topTags.slice(0, TX_LIST_CAP).map(([t, n]) => `    ${String(n).padStart(4)}  ${t.slice(0, 50)}`),
-    "",
-    "A product with no product_type, no tags and no image is invisible in every filter and unreachable in search, and nothing on the storefront will tell you it is there. A product whose variants are all unavailable still returns 200 and still appears in a sitemap, which is the combination that quietly costs a store its crawl budget.",
-    "A large count of single-use tags is usually a symptom rather than a problem: it means the tagging is being used as free-form notes instead of as a facet, so nothing groups.",
-  ]
-    .filter(Boolean)
-    .join("\n")
-}

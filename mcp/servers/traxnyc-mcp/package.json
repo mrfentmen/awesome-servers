@@ -1,6 +1,6 @@
 {
   "name": "traxnyc-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "TraxNYC jewelry and watches: search, products, prices. Keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/traxnyc-mcp",
