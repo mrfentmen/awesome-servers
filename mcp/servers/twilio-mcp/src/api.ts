@@ -1,9 +1,10 @@
 // ---- muxH tools:
-// The nine tools in server.ts all call the account-scoped Twilio REST API, which
-// needs an account SID and auth token. These two read Twilio's own public status
-// service instead, which needs no credentials at all, and answer the question a
-// developer asks when a message will not send: is Twilio itself broken, and if so
-// where and how badly.
+// The nine account tools in server.ts all call the account-scoped Twilio REST API,
+// which needs an account SID and auth token. component_reliability reads Twilio's
+// own public status service instead, which needs no credentials at all, and
+// answers the question a developer asks when a message will not send: is Twilio
+// itself broken, and if so where and how badly. incident_history moved to the
+// licence gateway (src/gateway.ts).
 
 const TW_STATUS = "https://status.twilio.com/api/v2";
 const TW_UA = "mcfentmen-twilio-mcp/1.1 (https://github.com/mcfentmen/twilio-mcp)";
@@ -74,83 +75,6 @@ const twSpan = (minutes: number): string => {
   if (minutes < 1440) return `${(minutes / 60).toFixed(1)} h`;
   return `${(minutes / 1440).toFixed(1)} days`;
 };
-const twClean = (raw?: string): string =>
-  String(raw ?? "")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\s+/g, " ")
-    .trim();
-
-/**
- * Twilio's published incident record, filtered to a product or region: what
- * broke, when it was reported, how long it lasted, which components it touched,
- * and what the last update said. A delivery failure that matches an entry here
- * was Twilio's, not the caller's.
- */
-export async function incidentHistory(args: { product?: string; impact?: string; limit?: number }): Promise<string> {
-  const needle = String(args?.product ?? "").trim().toLowerCase();
-  const impact = String(args?.impact ?? "").trim().toLowerCase();
-  const limit = Math.min(Math.max(Number(args?.limit ?? 8) || 8, 1), 30);
-
-  const payload = await twStatusGet<TwIncidentsResponse>("incidents.json");
-  const all = payload.incidents ?? [];
-  if (!all.length) throw new Error("Twilio's status service returned no incidents.");
-
-  const hit = all.filter((incident) => {
-    if (impact && String(incident.impact ?? "").toLowerCase() !== impact) return false;
-    if (!needle) return true;
-    const hay = `${incident.name ?? ""} ${(incident.components ?? []).map((c) => c.name ?? "").join(" ")}`.toLowerCase();
-    return hay.includes(needle);
-  });
-
-  const page = payload.page ?? {};
-  if (!hit.length) {
-    const impacts = [...new Set(all.map((i) => i.impact ?? "not reported"))].sort();
-    return `No incident among Twilio's ${all.length} published incidents matches product "${args?.product ?? ""}"${impact ? ` with impact "${impact}"` : ""}. Impacts present in the record: ${impacts.join(", ")}.`;
-  }
-
-  const unresolved = hit.filter((i) => i.status !== "resolved").length;
-  const durations = hit.map((i) => twMinutes(i.created_at, i.resolved_at ?? undefined)).filter((n): n is number => n !== null);
-  const meanDuration = durations.length ? durations.reduce((a, b) => a + b, 0) / durations.length : null;
-
-  const lines = [
-    `Twilio incident record${needle ? ` matching "${args?.product}"` : ""}${impact ? `, impact ${impact}` : ""}`,
-    `  ${hit.length} of ${all.length} published incident(s)${unresolved ? `, ${unresolved} not yet resolved` : ", all resolved"}`,
-    `  record last updated ${page.updated_at ?? "not reported"} (${page.time_zone ?? "timezone not reported"})`,
-    durations.length
-      ? `  resolved incidents ran for a mean of ${twSpan(Math.round(meanDuration as number))}, shortest ${twSpan(Math.min(...durations))}, longest ${twSpan(Math.max(...durations))}`
-      : "  no incident in this selection has a resolution time yet",
-    "",
-  ];
-
-  for (const incident of hit.slice(0, limit)) {
-    const updates = incident.incident_updates ?? [];
-    const last = updates.length ? updates[updates.length - 1] : null;
-    const components = (incident.components ?? []).map((c) => c.name ?? "?").join(", ");
-    const open = twMinutes(incident.created_at, undefined);
-    lines.push(`  - ${incident.name ?? "untitled incident"}`);
-    lines.push(
-      `    ${incident.status ?? "status not reported"} | impact ${incident.impact ?? "not reported"} | reported ${String(incident.created_at ?? "").slice(0, 16).replace("T", " ")}` +
-        (incident.resolved_at
-          ? ` | resolved ${String(incident.resolved_at).slice(0, 16).replace("T", " ")} after ${twSpan(twMinutes(incident.created_at, incident.resolved_at) ?? 0)}`
-          : ` | still open ${open !== null ? `for ${twSpan(open)}` : ""}`),
-    );
-    lines.push(`    components: ${components || "none listed"} | ${updates.length} status update(s)`);
-    if (last) lines.push(`    latest (${last.status ?? "no status"}, ${String(last.created_at ?? "").slice(0, 16).replace("T", " ")}): ${twClean(last.body).slice(0, 200) || "empty note"}`);
-    if (incident.shortlink) lines.push(`    ${incident.shortlink}`);
-  }
-  if (hit.length > limit) lines.push("", `  (+${hit.length - limit} more matching incident(s) not shown)`);
-  lines.push(
-    "",
-    "Matching is on the incident title and its component names, which is how Twilio labels a product such as SMS, Voice or Verify and a region such as APAC or Latin America. An empty result is not evidence that a product is healthy, since Twilio publishes only incidents above its own reporting threshold.",
-  );
-  return lines.join("\n");
-}
-
 /**
  * Which parts of Twilio break most often. This reads the same published record but
  * asks the aggregate question: how many incidents named each component, how long

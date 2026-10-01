@@ -1,8 +1,8 @@
 // @ts-nocheck
+import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { incidentHistory, componentReliability } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { componentReliability } from "./api.js"
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
 const WRITE = { readOnlyHint: false, openWorldHint: true } as const
 
@@ -370,11 +370,10 @@ export function createServer(): McpServer {
     },
     async (args: any) => {
       // ---- paywall: incident_history ----
-      const paywallMessage = await premiumRequired("incident_history")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        const value = await incidentHistory(args)
+        const value = await premiumTool("mcp_twilio_incident_history", args)
         return { content: [{ type: "text", text: value }] }
       } catch (err) {
         return { content: [{ type: "text", text: `Error: ${(err as Error).message}` }] , isError: true }
