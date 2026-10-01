@@ -10,6 +10,8 @@ No network: the payloads are injected, shaped like the live ones read on 2026-09
 from __future__ import annotations
 
 import json
+import os
+from unittest.mock import patch
 import queue
 import sys
 import threading
@@ -22,9 +24,9 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import GatewayClient, AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
 
-from agent import allergen_word, route, shown  # noqa: E402
+from agent import FoodAgent, allergen_word, route, shown  # noqa: E402
 from data import (FoodData, FoodError, barcode_from_text, clean_name,  # noqa: E402
                   nutrient_from_text)
 
@@ -259,12 +261,12 @@ def connected_pair():
 
 
 class TurnTests(unittest.TestCase):
-    def turn(self, text: str, permission: str = "allow-once", **kw):
+    def turn(self, text: str, permission: str = "allow-once", gateway=None, **kw):
         from agent import FoodAgent
 
         agent_conn, client_conn = connected_pair()
         data, feed = make_data(**kw)
-        agent = FoodAgent(agent_conn, data)
+        agent = FoodAgent(agent_conn, data, gateway)
         threading.Thread(target=agent_conn.serve, daemon=True).start()
         client = AcpClient(connection=client_conn, permission=permission)
         client.start()
@@ -326,6 +328,76 @@ class TurnTests(unittest.TestCase):
         result, _, _ = self.turn("how much sugar is in Nutella?",
                                  fail="search.openfoodfacts.org")
         self.assertIn("I could not read Open Food Facts", result["text"])
+
+
+BOARD_PAYLOAD = {
+    "products": [
+        {"barcode": "3017620422003", "name": "Nutella", "nutri_score": "E",
+         "sugars_g_per_100g": 56.3, "salt_g_per_100g": 0.107,
+         "additives_count": 2, "additives": ["en:e322"]},
+        {"barcode": "5449000000996", "name": "Coca-Cola", "nutri_score": "E",
+         "sugars_g_per_100g": 10.6, "salt_g_per_100g": 0,
+         "additives_count": 2, "additives": ["en:e150d"]},
+    ],
+    "sugar": {"spread": 45.7, "lowest": ["5449000000996"], "reported": 2},
+    "salt": {"spread": 0.107, "lowest": ["5449000000996"], "reported": 2},
+    "best_recorded_grade": "E",
+}
+BOARD_QUESTION = "nutrition board for 3017620422003 and 5449000000996"
+BOARD_ARGS = {"barcodes": ["3017620422003", "5449000000996"]}
+
+
+class PremiumTests(unittest.TestCase):
+    def gateway(self, key, payload=BOARD_PAYLOAD, refused=False):
+        self.calls = []
+        def fetch(url, body, headers):
+            self.calls.append((body["params"], headers))
+            result = {"content": [{"type": "text", "text": payload if refused else json.dumps(payload)}]}
+            if refused:
+                result.update(isError=True, structuredContent={"licenceRefusal": True, "reason": "denied"})
+            return {"jsonrpc": "2.0", "id": 1, "result": result}
+        return GatewayClient(key=key, fetch=fetch)
+
+    def test_no_key_attempts_call_without_authorization(self):
+        with patch.dict(os.environ, {}, clear=True):
+            gateway = self.gateway(None)
+            with patch.object(gateway, "call", wraps=gateway.call) as attempted:
+                result, _, _ = TurnTests().turn(BOARD_QUESTION, gateway=gateway)
+            attempted.assert_called_once_with("food_nutrition_board", BOARD_ARGS)
+        self.assertIn("MCP_LICENSE_KEY", result["text"])
+        self.assertEqual(self.calls, [])
+
+    def test_rejected_key_preserves_wording(self):
+        wording = "This premium tool needs a valid license key; key revoked."
+        gateway = self.gateway("lic_live_but_rejected", wording, True)
+        result, _, feed = TurnTests().turn(BOARD_QUESTION, gateway=gateway)
+        self.assertEqual(result["text"], wording)
+        self.assertEqual(feed.calls, [])
+        self.assertEqual(len(self.calls), 1)
+
+    def test_good_key_returns_board_numbers(self):
+        gateway = self.gateway("lic_granted")
+        result, _, feed = TurnTests().turn(BOARD_QUESTION, gateway=gateway)
+        for value in ("56.3 g", "0.107 g", "45.7 g", "Nutri-Score E", "en:e322"):
+            self.assertIn(value, result["text"])
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(self.calls[0][0], {"name": "food_nutrition_board", "arguments": BOARD_ARGS})
+        self.assertEqual(self.calls[0][1]["Authorization"], "Bearer lic_granted")
+        self.assertEqual(feed.calls, [])
+
+    def test_free_questions_never_call_gateway(self):
+        gateway = self.gateway("lic_granted")
+        with patch.object(gateway, "call", wraps=gateway.call) as attempted:
+            for question in ("how much sugar is in Nutella?", "is there milk in Oreos?",
+                             "what is in barcode 3017620422003?"):
+                TurnTests().turn(question, gateway=gateway)
+            attempted.assert_not_called()
+
+    def test_empty_payload_is_honest(self):
+        gateway = self.gateway("lic_granted", {})
+        text, artifact = FoodAgent(data=make_data()[0], gateway=gateway)._board(BOARD_ARGS)
+        self.assertIn("no readable nutrition comparison", text)
+        self.assertTrue(artifact["failed"])
 
 
 if __name__ == "__main__":
