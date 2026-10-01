@@ -16,6 +16,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer
 from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
 
 from data import (CHEM_WORDS, DATASET, DRUG_WORDS, ChemData, ChemError,  # noqa: E402
@@ -27,6 +28,7 @@ HELP = (
     "  - what is the formula for ibuprofen?\n"
     "  - molecular weight of caffeine\n"
     "  - what is aspirin made of?\n"
+    "  - compare ibuprofen and aspirin (premium)\n"
     "  - what is Lipitor (the generic name)?\n"
     "  - is Advil the same as ibuprofen?\n"
     "  - what is the formula for sodium bicarbonate?\n"
@@ -37,7 +39,7 @@ HELP = (
 
 PERMISSION_KEY = "chem-read-pubchem-rxnorm"
 
-SKILLS = ("chem-compound", "chem-drug", "help")
+SKILLS = ("chem-compound", "chem-drug", "chem-board", "help")
 
 _LIMIT_RE = re.compile(r"\b(?:top|first|show|list)\s+(\d{1,2})\b|\b(\d{1,2})\s+"
                        r"(?:products?|brands?|names?)\b", re.IGNORECASE)
@@ -52,6 +54,9 @@ def route(text: str) -> tuple[str, dict]:
     stripped = str(text or "").strip()
     if not stripped or re.search(r"\b(help|what can you do|commands?)\b", stripped, re.IGNORECASE):
         return "help", {}
+    board = re.fullmatch(r"compare (.+?)[?.!]?", stripped, re.IGNORECASE)
+    if board and re.search(r"\s+and\s+|;", board[1], re.IGNORECASE):
+        return "chem-board", {"drugs": [p.strip() for p in re.split(r"\s+and\s+|;", board[1], flags=re.IGNORECASE)]}
     chem_word = word_from(stripped, CHEM_WORDS)
     drug_word = word_from(stripped, DRUG_WORDS)
     target = clean_name(stripped)
@@ -126,9 +131,10 @@ class ChemAgent(AcpAgent):
     title = "Chem - compound formulas from PubChem, drug names from RxNorm"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: ChemData | None = None) -> None:
+    def __init__(self, connection=None, data: ChemData | None = None, gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or ChemData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -161,11 +167,17 @@ class ChemAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
 
         try:
-            if skill == "chem-compound":
+            if skill == "chem-board":
+                body, artifact = self._board(params)
+                ctx.check_cancelled()
+                ctx.tool_call_update(tool, status="completed", content=ctx.text_content(artifact["summary"]))
+                ctx.stream_text(body)
+                return STOP_END_TURN
+            elif skill == "chem-compound":
                 body, summary = self._compound_or_drug(params)
             else:
                 body, summary = self._drug_or_compound(params)
-        except (ChemError, ValueError) as exc:
+        except (ChemError, ValueError, GatewayError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the database: {exc}")
             return STOP_END_TURN
@@ -213,6 +225,38 @@ class ChemAgent(AcpAgent):
                    + (", ".join(drug["ingredients"]) if drug["ingredients"]
                       else "no ingredient listed"))
         return render_drug(drug, limit=params.get("limit") or 6), summary
+
+    def _board(self, params: dict) -> tuple[str, dict]:
+        """Compare drug records on the licence gateway."""
+        context = {"agent": "chem", "skill": "chem-board"}
+        data, refused = premium_call(self.gateway, "chem_drug_board", {"drugs": params["drugs"]}, context)
+        if refused:
+            return refused
+        rows = data.get("drugs") if isinstance(data, dict) else None
+        if not isinstance(rows, list) or not rows or not all(
+                isinstance(r, dict) and isinstance(r.get("query"), str)
+                and isinstance(r.get("classes"), list)
+                and all(isinstance(c, dict) and isinstance(c.get("name"), str) for c in r["classes"])
+                and (r.get("rxnorm") is None or (isinstance(r["rxnorm"], dict) and isinstance(r["rxnorm"].get("name"), str)))
+                and (r.get("molecularWeight") is None or isinstance(r["molecularWeight"], (int, float)))
+                for r in rows):
+            return empty_premium_answer("The gateway returned no readable drug comparison board.", context)
+        def shown(value):
+            return "not reported" if value is None else str(value)
+        lines = ["Premium drug comparison board (PubChem + RxNorm):"]
+        for row in rows:
+            classes = ", ".join(c.get("name", c.get("id", "")) for c in row.get("classes", [])) or "not reported"
+            lines.append(f"  • {row['query']}: {row.get('title') or 'no PubChem title'}; CID {shown(row.get('cid'))}; "
+                         f"formula {shown(row.get('formula'))}; weight {shown(row.get('molecularWeight'))} g/mol; "
+                         f"RxNorm {(row.get('rxnorm') or {}).get('name', 'unresolved')} "
+                         f"(RxCUI {(row.get('rxnorm') or {}).get('rxcui', 'not reported')}); classes {classes}")
+        shared = data.get("sharedClasses") or []
+        if not isinstance(shared, list) or not all(isinstance(x, dict) for x in shared):
+            return empty_premium_answer("The gateway returned no readable shared drug classes.", context)
+        if shared:
+            lines.append("Shared classes: " + ", ".join(f"{x.get('name')} ({x.get('count')})" for x in shared) + ".")
+        lines.append(str(data.get("note") or "Source: PubChem and RxNorm."))
+        return "\n".join(lines), {**context, "premium": True, "summary": f"compared {len(rows)} drugs", "drugs": rows}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer
