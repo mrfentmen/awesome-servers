@@ -1,6 +1,6 @@
 {
   "name": "nutritionix-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "MCP server for Nutritionix: food search, nutrients. Needs free app keys.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nutritionix-mcp",

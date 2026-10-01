@@ -1,7 +1,7 @@
+import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { analyzeMeal, formatFood, NutritionixError, searchFoods, nutrientFoodSearch, nutrientFoodProfile } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { analyzeMeal, formatFood, NutritionixError, searchFoods } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -70,13 +70,12 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ query, limit, branded }) => {
+    async (args) => {
       // ---- paywall: nutrient_food_search ----
-      const paywallMessage = await premiumRequired("nutrient_food_search")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await nutrientFoodSearch({ query, limit, branded }))
+        return text(await premiumTool("mcp_nutritionix_nutrient_food_search", args))
       } catch (e) {
         return textError(errorMessage(e))
       }
@@ -93,13 +92,12 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ fdcId }) => {
+    async (args) => {
       // ---- paywall: nutrient_food_profile ----
-      const paywallMessage = await premiumRequired("nutrient_food_profile")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await nutrientFoodProfile({ fdcId }))
+        return text(await premiumTool("mcp_nutritionix_nutrient_food_profile", args))
       } catch (e) {
         return textError(errorMessage(e))
       }
