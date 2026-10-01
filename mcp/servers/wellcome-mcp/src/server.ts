@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { search, searchImages, searchByFormat } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { search, workDetail } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -32,10 +32,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: search_images ----
-    const paywallMessage = await premiumRequired("search_images")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await searchImages(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wellcome_search_images", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -49,10 +48,54 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: search_by_format ----
-    const paywallMessage = await premiumRequired("search_by_format")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await searchByFormat(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wellcome_search_by_format", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "work_detail",
+    {
+      title: "Work detail",
+      description: "Retrieve a Wellcome catalogue work by id with contributors, production, subjects and bibliographic notes.",
+      inputSchema: z.object( { id: z.string().regex(/^[a-z0-9]{8}$/).describe("Eight-character work id.") } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await workDetail(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "work_items",
+    {
+      title: "Work holdings",
+      description: "Retrieve physical shelfmarks, digital locations, licences and access conditions for a Wellcome work.",
+      inputSchema: z.object( { id: z.string().regex(/^[a-z0-9]{8}$/).describe("Eight-character work id."), limit: z.number().int().min(1).max(25).optional() } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: work_items ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_wellcome_work_items", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "catalogue_facets",
+    {
+      title: "Catalogue facets",
+      description: "Summarize a Wellcome search by format and subject counts using catalogue aggregations.",
+      inputSchema: z.object( { query: z.string().min(1).max(200).describe("Catalogue search terms."), limit: z.number().int().min(1).max(20).optional() } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: catalogue_facets ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_wellcome_catalogue_facets", args)) } catch (e) { return textError(error(e)) }
   }
   )
 

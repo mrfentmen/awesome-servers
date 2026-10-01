@@ -61,58 +61,38 @@ export interface SearchImagesArgs {
   limit?: number
 }
 
-export async function searchImages(args: SearchImagesArgs): Promise<string> {
-  const query = (args.query ?? '').trim()
-  if (!query) return 'Provide search terms.'
-  const limit = Math.max(1, Math.min(args.limit ?? 10, 50))
-  const d = await wcGet<{ totalResults?: number; results?: Array<Record<string, unknown>> }>('/images', {
-    query,
-    pageSize: String(limit),
-  })
-  const rows = (d.results ?? []).slice(0, limit)
-  if (!rows.length) return `No digitised images found for "${query}".`
-  return `Wellcome digitised images for "${query}" (${wcText(d.totalResults)} total, showing ${rows.length}):\n` +
-    rows.map((r, i) => {
-      const src = (r.source ?? {}) as Record<string, unknown>
-      const thumb = (r.thumbnail ?? {}) as Record<string, unknown>
-      const license = (thumb.license ?? {}) as Record<string, unknown>
-      const locs = Array.isArray(r.locations) ? (r.locations as Array<Record<string, unknown>>) : []
-      const first = (locs[0] ?? {}) as Record<string, unknown>
-      return [
-        `${i + 1}. ${wcText(src.title)}`,
-        `   from work ${wcText(src.id)} | licence: ${wcText(license.label)}`,
-        `   image: ${wcText(first.url)}`,
-        `   aspect ratio: ${r.aspectRatio != null ? String(r.aspectRatio) : 'not reported'}`,
-      ].join('\n')
-    }).join('\n')
-}
-
 export interface SearchByFormatArgs {
   query?: string
   format?: string
   limit?: number
 }
 
-export async function searchByFormat(args: SearchByFormatArgs): Promise<string> {
-  const query = (args.query ?? '').trim()
-  if (!query) return 'Provide search terms.'
-  const key = (args.format ?? 'a').trim().toLowerCase()
-  if (!WC_FORMATS[key]) {
-    return `Unknown format "${args.format}". Supported: ${Object.entries(WC_FORMATS).map(([k, v]) => `${k} (${v})`).join(', ')}.`
-  }
-  const limit = Math.max(1, Math.min(args.limit ?? 10, 50))
-  const d = await wcGet<{ totalResults?: number; results?: Array<Record<string, unknown>> }>('/works', {
-    query,
-    workType: key,
-    pageSize: String(limit),
-  })
-  const rows = (d.results ?? []).slice(0, limit)
-  if (!rows.length) return `No ${WC_FORMATS[key]} found for "${query}".`
-  const avail = (r: Record<string, unknown>): string => {
-    const list = Array.isArray(r.availabilities) ? (r.availabilities as Array<Record<string, unknown>>) : []
-    const labels = list.map((a) => String(a.label ?? '')).filter(Boolean)
-    return labels.length ? labels.join(', ') : 'not reported'
-  }
-  return `Wellcome ${WC_FORMATS[key]} for "${query}" (${wcText(d.totalResults)} total, showing ${rows.length}):\n` +
-    rows.map((r, i) => `${i + 1}. ${wcText(r.title)} | ${wcText(r.id)} | availability: ${avail(r)}`).join('\n')
+// ---- gap4c3 tools:
+
+const wcField = (v: unknown): string => v == null || v === '' ? 'not reported' : String(v).replace(/\s+/g, ' ').slice(0, 500)
+
+function wcWorkPath(id: string): string {
+  if (!/^[a-z0-9]{8}$/.test(id)) throw new Error('Provide an eight-character Wellcome work id.')
+  return `/works/${encodeURIComponent(id)}`
 }
+
+export async function workDetail(args: { id: string }): Promise<string> {
+  const d = await wcGet<{
+    id?: string; title?: string; description?: string; physicalDescription?: string;
+    workType?: { label?: string }; production?: Array<{ label?: string }>;
+    contributors?: Array<{ agent?: { label?: string }; roles?: Array<{ label?: string }> }>;
+    subjects?: Array<{ label?: string }>; genres?: Array<{ label?: string }>;
+    notes?: Array<{ noteType?: { label?: string }; contents?: string[] }>;
+  }>(wcWorkPath(args.id), { include: 'subjects,contributors,production,notes,genres' })
+  return [
+    `${wcField(d.title)} | work ${wcField(d.id)} | ${wcField(d.workType?.label)}`,
+    `Description: ${wcField(d.description)}`,
+    `Physical description: ${wcField(d.physicalDescription)}`,
+    `Production: ${(d.production ?? []).slice(0, 5).map(p => wcField(p.label)).join('; ') || 'not reported'}`,
+    `Contributors: ${(d.contributors ?? []).slice(0, 10).map(c => `${wcField(c.agent?.label)} (${(c.roles ?? []).slice(0, 4).map(r => wcField(r.label)).join(', ') || 'role not reported'})`).join('; ') || 'not reported'}`,
+    `Subjects: ${(d.subjects ?? []).slice(0, 15).map(s => wcField(s.label)).join('; ') || 'not reported'}`,
+    `Genres: ${(d.genres ?? []).slice(0, 10).map(g => wcField(g.label)).join('; ') || 'not reported'}`,
+    ...(d.notes ?? []).slice(0, 8).map(n => `${wcField(n.noteType?.label)}: ${(n.contents ?? []).slice(0, 3).map(wcField).join('; ') || 'not reported'}`),
+  ].join('\n')
+}
+
