@@ -1,9 +1,8 @@
+import { premiumTool } from "./gateway.js"
 // @ts-nocheck
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import * as Invoice from "./invoice.js"
-import { vatNumberCheck, ibanCheck, currencyReference } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -140,10 +139,9 @@ export function createServer(): McpServer {
     },
     async (args: any) => {
       // ---- paywall: vat_number_check ----
-      const paywallMessage = await premiumRequired("vat_number_check")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await vatNumberCheck(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_invoice_vat_number_check", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -156,10 +154,9 @@ export function createServer(): McpServer {
     },
     async (args: any) => {
       // ---- paywall: iban_check ----
-      const paywallMessage = await premiumRequired("iban_check")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await ibanCheck(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_invoice_iban_check", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -172,10 +169,9 @@ export function createServer(): McpServer {
     },
     async (args: any) => {
       // ---- paywall: currency_reference ----
-      const paywallMessage = await premiumRequired("currency_reference")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await currencyReference(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_invoice_currency_reference", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
