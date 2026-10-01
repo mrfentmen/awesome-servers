@@ -1,9 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { findInText, LEXICON, lookupExact, searchLexicon } from "./lexicon.js"
-import { originTimeline, relatedTerms, similarTerms } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { originTimeline } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -155,10 +155,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: related_terms ----
-      const paywallMessage = await premiumRequired("related_terms")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await relatedTerms({ term: args.term })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_brainrot_related_terms", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
   server.registerTool(
@@ -171,10 +170,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: similar_terms ----
-    const paywallMessage = await premiumRequired("similar_terms")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await similarTerms(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_brainrot_similar_terms", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 

@@ -64,60 +64,8 @@ export async function originTimeline(_args: Record<string, never> = {}): Promise
   return lines.join("\n");
 }
 
-const normalise = (value: string): string =>
-  value
-    .toLowerCase()
-    .replace(/[^a-z0-9 ]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-/** every other lexicon term that appears in this entry's own prose */
-function mentionsIn(entry: SlangEntry): string[] {
-  const haystack = normalise(`${entry.meaning} ${entry.origin} ${entry.example}`);
-  const out: string[] = [];
-  for (const other of LEXICON) {
-    if (other.term === entry.term) continue;
-    const needle = normalise(other.term);
-    if (!needle) continue;
-    const pattern = new RegExp(`(^| )${needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}($| )`);
-    if (pattern.test(haystack)) out.push(other.term);
-  }
-  return out;
-}
-
 export interface RelatedTermsArgs {
   term: string;
-}
-
-export async function relatedTerms(args: RelatedTermsArgs): Promise<string> {
-  const wanted = (args?.term ?? "").trim().toLowerCase();
-  if (!wanted) return "Provide a term to map, for example skibidi.";
-  const entry =
-    LEXICON.find((e) => e.term.toLowerCase() === wanted) ??
-    LEXICON.find((e) => e.term.toLowerCase().replace(/\s+/g, "") === wanted.replace(/\s+/g, ""));
-  if (!entry) {
-    const near = LEXICON.filter((e) => e.term.toLowerCase().includes(wanted)).map((e) => e.term);
-    return near.length
-      ? `The lexicon has no term called "${args?.term}". Close by: ${near.slice(0, 10).join(", ")}.`
-      : `The lexicon has no term called "${args?.term}".`;
-  }
-  const outgoing = mentionsIn(entry);
-  const incoming = LEXICON.filter((e) => e.term !== entry.term && mentionsIn(e).includes(entry.term));
-  const vibeWords = entry.vibe.split("/").map((v) => v.trim()).filter(Boolean);
-  const sameVibe = LEXICON.filter((e) => e.term !== entry.term && vibeWords.some((v) => e.vibe.toLowerCase().includes(v.toLowerCase())));
-  const lines = [
-    `Terms connected to ${entry.term}:`,
-    `  its own entry mentions: ${outgoing.length}${outgoing.length ? ` (${outgoing.join(", ")})` : " (it names no other lexicon term)"}`,
-    `  entries that mention it: ${incoming.length}${incoming.length ? ` (${incoming.map((e) => e.term).join(", ")})` : " (none)"}`,
-    `  sharing a vibe word: ${sameVibe.length}${sameVibe.length ? ` (${sameVibe.slice(0, 15).map((e) => e.term).join(", ")}${sameVibe.length > 15 ? `, and ${sameVibe.length - 15} more` : ""})` : " (none)"}`,
-    `  its vibe field: ${entry.vibe}`,
-  ];
-  for (const term of outgoing.slice(0, 12)) {
-    const mutual = mentionsIn(LEXICON.find((e) => e.term === term) as SlangEntry).includes(entry.term);
-    lines.push(`  ${entry.term} -> ${term}: ${mutual ? "mentioned both ways" : "one way only, that entry does not mention it back"}`);
-  }
-  lines.push("  a link is counted when the other term's text appears in this entry's meaning, origin or example, and the count is exact rather than a fuzzy match.");
-  return lines.join("\n");
 }
 
 // ---- gap3d tools:
@@ -149,64 +97,8 @@ function simTokens(entry: SlangEntry): Map<string, number> {
   return out
 }
 
-/** Cosine similarity over the term-frequency maps, 0 when they share nothing. */
-function termSimilarity(a: Map<string, number>, b: Map<string, number>): number {
-  if (!a.size || !b.size) return 0
-  let dot = 0
-  let na = 0
-  let nb = 0
-  for (const n of a.values()) na += n * n
-  for (const n of b.values()) nb += n * n
-  for (const [key, count] of a) {
-    const other = b.get(key)
-    if (other) dot += count * other
-  }
-  if (na === 0 || nb === 0) return 0
-  return dot / (Math.sqrt(na) * Math.sqrt(nb))
-}
-
 export interface SimilarTermsArgs {
   term: string
   limit?: number
 }
 
-export async function similarTerms(args: SimilarTermsArgs): Promise<string> {
-  const wanted = (args?.term ?? '').trim().toLowerCase()
-  if (!wanted) return 'Provide a term to compare, for example skibidi.'
-  const limit = Math.max(1, Math.min(Math.floor(Number(args?.limit ?? 8) || 8), 25))
-  const entry =
-    LEXICON.find((e) => e.term.toLowerCase() === wanted) ??
-    LEXICON.find((e) => e.term.toLowerCase().replace(/\s+/g, '') === wanted.replace(/\s+/g, ''))
-  if (!entry) {
-    const near = LEXICON.filter((e) => e.term.toLowerCase().includes(wanted)).map((e) => e.term)
-    return near.length
-      ? `The lexicon has no term called "${args?.term}". Close by: ${near.slice(0, 10).join(', ')}.`
-      : `The lexicon has no term called "${args?.term}".`
-  }
-  const mine = simTokens(entry)
-  const scored = LEXICON
-    .filter((e) => e.term !== entry.term)
-    .map((e) => {
-      const theirs = simTokens(e)
-      const shared: string[] = []
-      for (const key of mine.keys()) if (theirs.has(key)) shared.push(key)
-      return { entry: e, score: termSimilarity(mine, theirs), shared }
-    })
-    .filter((row) => row.shared.length > 0)
-    .sort((a, b) => b.score - a.score || a.entry.term.localeCompare(b.entry.term))
-  const shown = scored.slice(0, limit)
-  const lines = [
-    `Lexicon entries worded most like ${entry.term} (${LEXICON.length} entries compared):`,
-    `  terms sharing at least one content word with it: ${scored.length}`,
-  ]
-  for (const row of shown) {
-    lines.push(
-      `  ${row.entry.term} — similarity ${row.score.toFixed(3)}, ${row.shared.length} shared word(s): ${row.shared.slice(0, 10).join(', ')}`,
-    )
-    lines.push(`     ${row.entry.meaning.slice(0, 120)}`)
-  }
-  if (!shown.length) lines.push('  no other entry shares a content word with it.')
-  if (scored.length > shown.length) lines.push(`  ...and ${scored.length - shown.length} more with a lower score.`)
-  lines.push('  similarity is cosine over content-word frequency in the term, meaning, origin and example, with a crude suffix fold; it measures shared wording, not meaning.')
-  return lines.join('\n')
-}
