@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, searchGames, getGame, steamStoreInfo, steamReach } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, searchGames, getGame } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -66,10 +66,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: steam_store_info ----
-    const paywallMessage = await premiumRequired("steam_store_info")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await steamStoreInfo(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_rawg_steam_store_info", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -86,10 +85,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: steam_reach ----
-    const paywallMessage = await premiumRequired("steam_reach")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await steamReach(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_rawg_steam_reach", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
