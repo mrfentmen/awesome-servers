@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatArticle, getPage, randomPage, searchWiki, StardewError, categoryMembers, pageLinks, pageSections } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { formatArticle, getPage, randomPage, searchWiki, StardewError } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -92,14 +92,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: category_members ----
-      const paywallMessage = await premiumRequired("category_members")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await categoryMembers(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_stardew_wiki_category_members", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -116,14 +111,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: page_links ----
-      const paywallMessage = await premiumRequired("page_links")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await pageLinks(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_stardew_wiki_page_links", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -139,14 +129,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: page_sections ----
-      const paywallMessage = await premiumRequired("page_sections")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await pageSections(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_stardew_wiki_page_sections", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
