@@ -1,6 +1,6 @@
 {
   "name": "dadjoke-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Keyless MCP server for icanhazdadjoke: random dad jokes, search, lookup by id.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/dadjoke-mcp",

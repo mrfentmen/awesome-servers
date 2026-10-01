@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { DadJokeError, getJoke, randomJoke, searchJokes, typedJoke, chuckFact, comicStrip } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { DadJokeError, getJoke, randomJoke, searchJokes } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -84,14 +84,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: typed_joke ----
-      const paywallMessage = await premiumRequired("typed_joke")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await typedJoke(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_dadjoke_typed_joke", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -107,14 +102,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: chuck_fact ----
-      const paywallMessage = await premiumRequired("chuck_fact")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await chuckFact(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_dadjoke_chuck_fact", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -130,14 +120,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: comic_strip ----
-      const paywallMessage = await premiumRequired("comic_strip")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await comicStrip(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_dadjoke_comic_strip", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
