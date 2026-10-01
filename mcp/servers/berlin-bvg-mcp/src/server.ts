@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { departures } from "./api.js"
-import { stops, stopPunctuality, lineDepartures, stopBoardByMode, journeyPlan } from "./api.js"
 
+import { departures, stops, stopBoardByMode, journeyPlan } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -46,7 +46,10 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await stopPunctuality(args)) } catch (e) { return textError(error(e)) }
+      // ---- paywall: stop_punctuality ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_berlin_bvg_stop_punctuality", args)) } catch (e) { return textError(error(e)) }
     }
   )
 
@@ -63,7 +66,10 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await lineDepartures(args)) } catch (e) { return textError(error(e)) }
+      // ---- paywall: line_departures ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_berlin_bvg_line_departures", args)) } catch (e) { return textError(error(e)) }
     }
   )
 

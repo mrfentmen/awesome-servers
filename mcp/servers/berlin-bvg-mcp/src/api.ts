@@ -52,6 +52,8 @@ export async function departures(args: DeparturesArgs): Promise<string> {
  * another, with its legs, platforms, delays and interchanges.
  */
 interface BjPoint {
+  name?: string;
+  id?: string;
   location?: { type?: string; id?: string; name?: string; latitude?: number; longitude?: number };
   point?: { type?: string; name?: string; location?: { id?: string } };
   plannedDeparture?: string;
@@ -83,7 +85,8 @@ interface BjLeg {
   arrivalDelay?: number;
   tripId?: string;
   trip?: BjTrip | null;
-  line?: { name?: string; productName?: string; productIcon?: string };
+  line?: { name?: string; productName?: string; productIcon?: string; operator?: { name?: string } };
+  walking?: boolean;
   direction?: string;
   departurePlatform?: string;
   plannedDeparturePlatform?: string;
@@ -135,9 +138,9 @@ const bjDate = (iso: unknown): string => {
 };
 
 const bjPlace = (p: BjPoint | undefined): string => {
-  const point = p?.point?.name ?? p?.location?.name;
+  const point = p?.name ?? p?.point?.name ?? p?.location?.name;
   if (point) return String(point);
-  const id = p?.point?.location?.id ?? p?.location?.id;
+  const id = p?.id ?? p?.point?.location?.id ?? p?.location?.id;
   return id ? `stop ${id}` : 'not reported';
 };
 
@@ -189,7 +192,7 @@ export async function journeyPlan(args: {
 
   const lines: string[] = [
     `BVG journeys from ${from} to ${to}, ${journeys.length} of ${limit} requested${stopovers ? ', interchanges included' : ''}`,
-    `  realtime data updated: ${d.realtimeDataUpdatedAt ? `${bjDate(new Date(d.realtimeDataUpdatedAt).toISOString())} ${bjWhen(new Date(d.realtimeDataUpdatedAt).toISOString())} UTC` : 'not reported'}`,
+    `  realtime data updated: ${d.realtimeDataUpdatedAt ? `${bjDate(new Date(d.realtimeDataUpdatedAt * 1000).toISOString())} ${bjWhen(new Date(d.realtimeDataUpdatedAt * 1000).toISOString())} UTC` : 'not reported'}`,
     d.earlierRef ? '  an earlier departure is available from the same result' : '',
     d.laterRef ? '  a later departure is available from the same result' : '',
   ].filter(Boolean);
@@ -206,24 +209,25 @@ export async function journeyPlan(args: {
     const arrive = Date.parse(String(last.arrival ?? last.plannedArrival ?? ''));
     const minutes = Number.isFinite(depart) && Number.isFinite(arrive) ? (arrive - depart) / 60000 : NaN;
     const transfers = legs.filter((l) => l.transfer && Number(l.transfer.duration ?? 0) > 0).length;
-    const changes = legs.length - 1;
+    const changes = Math.max(0, legs.filter(l => l.line || l.tripId).length - 1);
     lines.push('');
     lines.push(
-      `  ${i + 1}. ${bjDate(first.departure ?? first.plannedDeparture)} ${bjWhen(first.departure ?? first.plannedDeparture)} to ${bjWhen(last.arrival ?? last.plannedArrival)}, ${bjDuration(minutes)}` +
+      `  ${i + 1}. ${bjDate(first.departure ?? first.plannedDeparture)} ${bjWhen(first.departure ?? first.plannedDeparture)} to ${bjWhen(last.arrival ?? last.plannedArrival)} UTC, ${bjDuration(minutes)}` +
         (changes ? `, ${changes} change${changes === 1 ? '' : 's'}` : ', direct') +
         (transfers ? ` (${transfers} interchange wait(s) reported)` : ''),
     );
     legs.forEach((l, k) => {
       const route = l.line?.name ?? l.trip?.route?.shortName ?? l.trip?.route?.name ?? null;
       const platform = l.departurePlatform ?? l.plannedDeparturePlatform ?? null;
-      const delay = Number(l.departureDelay ?? 0);
-      const kind = l.walk ? 'walk' : l.trip ? 'ride' : 'leg';
+      const delay = l.departureDelay;
+      const kind = l.walking || l.walk ? 'walk' : l.line || l.tripId || l.trip ? 'ride' : 'leg';
+      const operator = l.line?.operator?.name ?? l.trip?.route?.operator?.name;
       lines.push(
         `     ${k + 1}. ${kind} ${bjPlace(l.origin)} -> ${bjPlace(l.destination)}` +
           (route ? ` on ${route}${l.direction ? ` towards ${l.direction}` : ''}` : '') +
           (platform ? ` from platform ${platform}` : '') +
-          (l.trip?.route?.operator?.name ? ` (${l.trip.route.operator.name})` : '') +
-          (delay ? `, departure ${bjDuration(Math.abs(delay))} ${delay > 0 ? 'late' : 'early'}` : ''),
+          (operator ? ` (${operator})` : '') +
+          (delay == null ? ', departure delay not reported' : delay === 0 ? ', departure on time' : `, departure ${bjDuration(Math.abs(delay) / 60)} ${delay > 0 ? 'late' : 'early'}`),
       );
       if (l.transfer && Number(l.transfer.duration ?? 0) > 0) {
         const t = l.transfer;
@@ -238,4 +242,44 @@ export async function journeyPlan(args: {
   lines.push('');
   lines.push('  Departure and arrival times are what transport.rest reports for the requested day; the realtime leg is only present when the day is today.');
   return lines.join('\n');
+}
+
+// ---- gap4c4 tools:
+
+interface BvgBoardRow {
+  when?: string | null;
+  plannedWhen?: string;
+  delay?: number | null;
+  cancelled?: boolean;
+  direction?: string;
+  line?: { name?: string; product?: string; mode?: string };
+  occupancy?: string | null;
+  remarks?: { text?: string }[];
+}
+
+async function bvgBoard(id: string): Promise<BvgBoardRow[]> {
+  if (!/^[\w-]{1,32}$/.test(id)) throw new Error('Provide a stop id from stops.')
+  const res = await fetch(`${BASE}/stops/${encodeURIComponent(id)}/departures?duration=60&results=100&remarks=true`, {
+    headers: { 'User-Agent': UA, Accept: 'application/json' }, signal: AbortSignal.timeout(25000),
+  })
+  if (!res.ok) throw new Error(`transport.rest returned ${res.status}`)
+  const d = await res.json() as { departures?: BvgBoardRow[] }
+  if (!Array.isArray(d.departures)) throw new Error('transport.rest did not return a departure board.')
+  return d.departures.slice(0, 100)
+}
+
+export async function stopBoardByMode(args: { id: string }): Promise<string> {
+  const rows = await bvgBoard(args.id.trim())
+  if (!rows.length) return `No departures reported at ${args.id} in the next hour.`
+  const groups = new Map<string,BvgBoardRow[]>()
+  for (const row of rows) {
+    const key=row.line?.product??row.line?.mode??'transport not reported'
+    groups.set(key,[...(groups.get(key)??[]),row])
+  }
+  return [`Transport at ${args.id}: next-hour sample of ${rows.length} departures, capped at 100`, ...[...groups].slice(0,15).map(([mode,group])=> {
+    const times=group.filter(r=>!r.cancelled).map(r=>r.when??r.plannedWhen).filter((s):s is string=>!!s && Number.isFinite(Date.parse(s))).sort((a,b)=>Date.parse(a)-Date.parse(b))
+    const lines=[...new Set(group.map(r=>r.line?.name).filter(Boolean))].slice(0,20)
+    const loads=[...new Set(group.map(r=>r.occupancy).filter(Boolean))].slice(0,10)
+    return `${mode}: ${group.length} departures | lines ${lines.join(', ')||'not reported'} | soonest ${times[0]??'not reported'} | reported occupancy ${loads.join(', ')||'not reported'}`
+  })].join('\n')
 }
