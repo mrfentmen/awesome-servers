@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { answer, siteUp, domainTaken, personAlive } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { answer, wikipediaPageExists } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -32,10 +32,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: is_site_up ----
-    const paywallMessage = await premiumRequired("is_site_up")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await siteUp(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_yesno_is_site_up", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -49,10 +48,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: is_domain_taken ----
-    const paywallMessage = await premiumRequired("is_domain_taken")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await domainTaken(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_yesno_is_domain_taken", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -66,10 +64,38 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: is_person_alive ----
-    const paywallMessage = await premiumRequired("is_person_alive")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await personAlive(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_yesno_is_person_alive", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "domain_accepts_mail",
+    {
+      title: "Domain accepts mail",
+      description: "Check explicit DNS MX records, including null MX; does not test delivery.",
+      inputSchema: z.object({ domain: z.string().describe("Domain to check.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: domain_accepts_mail ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_yesno_domain_accepts_mail", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "wikipedia_page_exists",
+    {
+      title: "Wikipedia page exists",
+      description: "Check whether an English Wikipedia page exists, following redirects.",
+      inputSchema: z.object({ title: z.string().describe("Title to check.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await wikipediaPageExists(args)) } catch (e) { return textError(error(e)) }
   }
   )
 
