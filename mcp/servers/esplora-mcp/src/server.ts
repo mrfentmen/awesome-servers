@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { EsploraError, feeEstimates, getAddress, getBlock, getTx, mempoolFees, tipHeight, recentBlocks, recentMempool } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { EsploraError, feeEstimates, getAddress, getBlock, getTx, mempoolFees, tipHeight, recentBlocks, recentMempool } from "./local-api.js"
 
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -117,10 +117,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ height, limit }) => {
-      // ---- paywall: recent_blocks ----
-      const paywallMessage = await premiumRequired("recent_blocks")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try {
         return text(await recentBlocks(height, limit))
       } catch (e) {
@@ -140,15 +136,27 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ limit }) => {
-      // ---- paywall: recent_mempool ----
-      const paywallMessage = await premiumRequired("recent_mempool")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try {
         return text(await recentMempool(limit))
       } catch (e) {
         return textError(errorMessage(e))
       }
+    }
+  )
+
+  server.registerTool(
+    "difficulty_adjustment",
+    {
+      title: "Difficulty adjustment",
+      description: "Current Bitcoin mining difficulty adjustment progress and projected retarget from mempool.space.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: difficulty_adjustment ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_esplora_difficulty_adjustment", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
