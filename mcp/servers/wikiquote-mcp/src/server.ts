@@ -1,9 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { pageQuotes } from "./api.js"
-import { searchQuotes, randomQuotePage, pageLanguages } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { pageQuotes, searchQuotes, pageBacklinks } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -45,10 +44,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: random_quote_page ----
-    const paywallMessage = await premiumRequired("random_quote_page")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await randomQuotePage()) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wikiquote_random_quote_page", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -62,10 +60,38 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: page_languages ----
-    const paywallMessage = await premiumRequired("page_languages")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await pageLanguages(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wikiquote_page_languages", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "page_history",
+    {
+      title: "Page history",
+      description: "Inspect recent revisions of a page, including revision IDs, editors, timestamps and edit summaries.",
+      inputSchema: z.object( { title: z.string().describe("Exact page title."), limit: z.number().describe("Maximum results, 1-30.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: page_history ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_wikiquote_page_history", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "backlinks",
+    {
+      title: "Page backlinks",
+      description: "Find pages that link to an exact wiki page.",
+      inputSchema: z.object( { title: z.string().describe("Exact target page title."), limit: z.number().describe("Maximum results, 1-30.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await pageBacklinks(args)) } catch (e) { return textError(error(e)) }
   }
   )
 

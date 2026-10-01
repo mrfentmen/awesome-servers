@@ -37,40 +37,25 @@ export async function pageQuotes(args: { page?: string; limit?: number }): Promi
 
 // ---- muxB tools:
 
-const WQ_REST = "https://en.wikiquote.org/api/rest_v1"
+// ---- gap4a4 tools:
 
-export async function randomQuotePage(): Promise<string> {
-  const res = await fetch(`${WQ_REST}/page/random/summary`, {
-    headers: { "User-Agent": UA, Accept: "application/json" },
-    redirect: "follow",
-    signal: AbortSignal.timeout(25000),
-  })
-  if (res.status === 429) throw new WikiquoteError("Wikiquote rate limit hit, wait and retry")
-  if (!res.ok) throw new WikiquoteError(`Wikiquote error ${res.status}`)
-  const d = (await res.json()) as { title?: string; description?: string; extract?: string; timestamp?: string; content_urls?: { desktop?: { page?: string } } }
-  const page = d.content_urls?.desktop?.page ?? "URL not reported"
-  return [
-    `Random Wikiquote page: ${d.title ?? "title not reported"}`,
-    `Description: ${d.description && d.description.trim() ? d.description.trim() : "not reported"}`,
-    `Last edited: ${d.timestamp ?? "not reported"}`,
-    `Page: ${page}`,
-    "",
-    String(d.extract ?? "").replace(/\s+/g, " ").trim().slice(0, 900) || "No extract reported",
-  ].join("\n")
+async function gapQuery(params: Record<string, string>): Promise<any> {
+  const query = new URLSearchParams({action: 'query', format: 'json', ...params});
+  const res = await fetch(`https://en.wikiquote.org/w/api.php?${query}`, {
+    headers: {'User-Agent': 'mrfentmen-wikiquote-mcp/1.0', Accept: 'application/json'},
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error(`Wiki API returned ${res.status}`);
+  const data = await res.json() as any;
+  if (data.error) throw new Error(data.error.info ?? 'Wiki API error');
+  return data;
 }
 
-export async function pageLanguages(args: { page?: string; limit?: number }): Promise<string> {
-  const page = (args.page ?? "").trim()
-  if (!page) throw new WikiquoteError("Provide a page title")
-  const limit = Math.max(1, Math.min(Number(args.limit ?? 20) || 20, 100))
-  const d = await get<any>(
-    `${BASE}?action=query&prop=langlinks&titles=${encodeURIComponent(page)}&lllimit=200&llprop=url%7Clangname&format=json&origin=*`,
-  )
-  const pages = d?.query?.pages ?? {}
-  const first = Object.values(pages)[0] as any
-  if (!first || first.missing !== undefined) return `No Wikiquote page titled "${page}".`
-  const links = Array.isArray(first.langlinks) ? first.langlinks : []
-  if (!links.length) return `No other-language Wikiquote pages link to "${page}".`
-  return `Wikiquote pages for "${first.title ?? page}" in other languages (${links.length} total, showing ${Math.min(limit, links.length)}):\n` +
-    links.slice(0, limit).map((l: any, i: number) => `${i + 1}. ${l.lang ?? "?"} (${l.langname ?? "name not reported"}): ${l.url ?? "URL not reported"}`).join("\n")
+export async function pageBacklinks(args: { title: string; limit?: number }): Promise<string> {
+  const limit = Math.max(1, Math.min(Math.round(args.limit ?? 10), 30));
+  const title = args.title.trim();
+  if (!title) throw new Error('Provide a page title.');
+  const data = await gapQuery({list: 'backlinks', bltitle: title, bllimit: String(limit)});
+  const rows = data.query?.backlinks ?? [];
+  return rows.length ? rows.slice(0, limit).map((r: any, i: number) => `${i + 1}. ${String(r.title ?? 'not reported').slice(0, 250)} | page ${r.pageid ?? 'not reported'} | namespace ${r.ns ?? 'not reported'}`).join('\n') : 'No backlinks returned.';
 }
