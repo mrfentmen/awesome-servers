@@ -89,3 +89,39 @@ export function formatRelease(name: string, r: HexRelease): string {
   ].filter(Boolean)
   return lines.join("\n")
 }
+
+// ---- muxB tools:
+
+export interface SearchPackagesArgs {
+  query: string;
+  sort?: string;
+  limit?: number;
+}
+
+// ---- gap4d1 tools:
+
+function hexSegment(value: string, label: string): string {
+  const clean = value.trim()
+  if (!clean || clean.length > 200) throw new HexError(`Provide a ${label} of 1-200 characters.`)
+  return encodeURIComponent(clean)
+}
+
+function hexField(value: unknown, max = 180): string {
+  return value === null || value === undefined || value === '' ? 'not reported' : String(value).replace(/\s+/g, ' ').slice(0, max)
+}
+
+function hexLimit(value: number | undefined): number {
+  return Math.max(1, Math.min(Math.trunc(Number.isFinite(value) ? value! : 20), 50))
+}
+
+export async function packageOwners(args: { name: string; limit?: number }): Promise<string> {
+  const rows = await getJson<Array<{ username?: string; full_name?: string | null; level?: string }>>(`/packages/${hexSegment(args.name, 'package name')}/owners`)
+  if (!Array.isArray(rows)) throw new HexError('Hex did not return an owner list.')
+  const shown = rows.slice(0, hexLimit(args.limit))
+  return `Owners of ${hexField(args.name)} (${shown.length} of ${rows.length} shown):\n` +
+    (shown.map((owner, i) => `${i + 1}. ${hexField(owner.username)} | name: ${hexField(owner.full_name)} | permission: ${hexField(owner.level)}`).join('\n') || 'No owners reported.')
+}
+
+type HexRequirement = { requirement?: string; optional?: boolean; app?: string; repository?: string }
+type HexDependencyRelease = { meta?: { elixir?: string }; requirements?: Record<string, HexRequirement> }
+
