@@ -13,6 +13,8 @@ No network: the registry's answer is injected, shaped like the live payload read
 from __future__ import annotations
 
 import io
+import os
+from unittest.mock import patch
 import json
 import queue
 import sys
@@ -381,11 +383,11 @@ def connected_pair():
 
 
 class TurnTests(unittest.TestCase):
-    def turn(self, text, permission="allow-once", feed=None):
+    def turn(self, text, permission="allow-once", feed=None, gateway=None):
         from agent import TrialsAgent
 
         agent_conn, client_conn = connected_pair()
-        agent = TrialsAgent(agent_conn, TrialsData(fetch=feed or FakeRegistry()))
+        agent = TrialsAgent(agent_conn, TrialsData(fetch=feed or FakeRegistry()), gateway=gateway)
         threading.Thread(target=agent_conn.serve, daemon=True).start()
         client = AcpClient(connection=client_conn, permission=permission)
         client.start()
@@ -453,6 +455,78 @@ class TurnTests(unittest.TestCase):
         self.assertIn(f"showing {MAX_STUDIES} of them", result["text"])
         self.assertEqual(result["text"].count("https://clinicaltrials.gov/study/"), MAX_STUDIES)
         self.assertIn("30 more row(s) than one answer shows", result["text"])
+
+
+
+class PremiumTests(unittest.TestCase):
+    args = {"condition": "melanoma", "location": "Boston", "start": "2025-01-01", "end": "2025-12-31"}
+    question = "trial landscape for melanoma in Boston from 2025-01-01 to 2025-12-31"
+    payload = {"scanned": 17, "totalMatching": 17, "complete": True,
+               "byPhase": {"PHASE2": 9}, "byStatus": {"RECRUITING": 17},
+               "bySponsorClass": {"INDUSTRY": 12}}
+
+    def gateway(self, key=None, payload=None, rejected=False):
+        from acp_kit import GatewayClient
+        calls = []
+        def fetch(url, body, headers):
+            calls.append((body, headers))
+            if rejected:
+                return {"result": {"isError": True, "structuredContent": {
+                    "licenceRefusal": True, "reason": "revoked"},
+                    "content": [{"type": "text", "text": "Gateway says this licence is revoked."}]}}
+            return {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
+        return GatewayClient(fetch=fetch, key=key), calls
+
+    def test_missing_key_attempts_premium_call(self):
+        from agent import TrialsAgent
+        with patch.dict(os.environ, {}, clear=True):
+            gateway, calls = self.gateway()
+            with patch.object(gateway, "call", wraps=gateway.call) as attempted:
+                answer, artifact = TrialsAgent(gateway=gateway)._landscape(self.args)
+            attempted.assert_called_once_with("clinical_trial_landscape", self.args)
+        self.assertIn("MCP_LICENSE_KEY", answer)
+        self.assertEqual(artifact["reason"], "missing_key")
+        self.assertEqual(calls, [])
+
+    def test_rejected_key_preserves_gateway_words(self):
+        from agent import TrialsAgent
+        gateway, calls = self.gateway("lic_live_but_rejected", rejected=True)
+        answer, artifact = TrialsAgent(gateway=gateway)._landscape(self.args)
+        self.assertEqual(answer, "Gateway says this licence is revoked.")
+        self.assertEqual(artifact["reason"], "denied")
+        self.assertEqual(len(calls), 1)
+
+    def test_good_key_routes_and_displays_real_counts(self):
+        from agent import TrialsAgent
+        gateway, calls = self.gateway("lic_good", self.payload)
+        self.assertEqual(route(self.question), ("trials-landscape", self.args))
+        answer, artifact = TrialsAgent(gateway=gateway)._landscape(self.args)
+        self.assertIn("17 studies counted of 17", answer)
+        self.assertIn("PHASE2 9", answer)
+        self.assertIn("INDUSTRY 12", answer)
+        self.assertTrue(artifact["premium"])
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][0]["params"], {"name": "clinical_trial_landscape", "arguments": self.args})
+        self.assertEqual(calls[0][1]["Authorization"], "Bearer lic_good")
+
+    def test_free_question_never_calls_gateway(self):
+        gateway, calls = self.gateway("lic_good", self.payload)
+        with patch.object(gateway, "call", side_effect=AssertionError("free question used gateway")) as attempted:
+            result, _ = TurnTests().turn("trials for melanoma in Boston", gateway=gateway)
+        attempted.assert_not_called()
+        self.assertEqual(calls, [])
+        self.assertIn("396 study(ies) match", result["text"])
+
+    def test_premium_turn_and_unreadable_payload(self):
+        from agent import TrialsAgent
+        gateway, _ = self.gateway("lic_good", self.payload)
+        result, _ = TurnTests().turn(self.question, gateway=gateway)
+        self.assertIn("17 studies counted", result["text"])
+        for payload in ({}, [], {**self.payload, "byPhase": []}):
+            gateway, _ = self.gateway("lic_good", payload)
+            answer, artifact = TrialsAgent(gateway=gateway)._landscape(self.args)
+            self.assertTrue(artifact["failed"])
+            self.assertIn("no readable trial landscape", answer)
 
 
 if __name__ == "__main__":
