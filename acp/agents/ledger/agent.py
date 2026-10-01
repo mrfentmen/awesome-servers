@@ -14,6 +14,7 @@ summary of the dataset it read.
 from __future__ import annotations
 
 import re
+from datetime import datetime, timezone
 import sys
 from pathlib import Path
 
@@ -21,6 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer
 from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
 
 from data import (  # noqa: E402
@@ -32,6 +34,7 @@ from data import (  # noqa: E402
 
 HELP = (
     "I read the US Treasury's Fiscal Data API. Ask me:\n"
+    "  • debt movement board from 2026-09-01 for 30 days (premium)\n"
     "  • how big is the national debt right now?\n"
     "  • what is the average interest rate on Treasury bills?\n"
     "  • what exchange rate does the Treasury use for Japan?\n"
@@ -43,7 +46,7 @@ HELP = (
 
 PERMISSION_KEY = "ledger-read-public-treasury"
 
-SKILLS = ("debt-outstanding", "interest-rates", "exchange-rates", "cash-balance", "auctions", "help")
+SKILLS = ("debt-outstanding", "interest-rates", "exchange-rates", "cash-balance", "auctions", "debt-movement-board", "help")
 
 #: Words the router recognises and the name the Treasury dataset uses.
 SECURITY_WORDS = {
@@ -93,6 +96,11 @@ def route(text: str) -> tuple[str, dict]:
     """Deterministic intent routing: (skill, params). Pure function, easy to test."""
     if not text.strip() or re.search(r"\b(help|what can you do|commands?)\b", text, re.IGNORECASE):
         return "help", {}
+
+    if re.search(r"debt movement board", text, re.IGNORECASE):
+        date = re.search(r"\b\d{4}-\d{2}-\d{2}\b", text)
+        days = re.search(r"\b(?:for|over)\s+(\d{1,3})\s+days?\b", text, re.IGNORECASE)
+        return "debt-movement-board", {"start": date.group() if date else datetime.now(timezone.utc).date().isoformat(), "days": int(days.group(1)) if days else 30}
 
     security_match = _SECURITY_RE.search(text)
     security = security_match.group(1).lower().replace("-", " ") if security_match else None
@@ -193,9 +201,11 @@ class LedgerAgent(AcpAgent):
     title = "Ledger — US Treasury fiscal data"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: LedgerData | None = None) -> None:
+    def __init__(self, connection=None, data: LedgerData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or LedgerData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -229,7 +239,7 @@ class LedgerAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (LedgerError, ValueError) as exc:
+        except (LedgerError, ValueError, GatewayError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the Treasury dataset: {exc}")
             return STOP_END_TURN
@@ -245,6 +255,8 @@ class LedgerAgent(AcpAgent):
     # -- skills ------------------------------------------------------------
 
     def _run_skill(self, skill: str, params: dict) -> tuple[str, dict]:
+        if skill == "debt-movement-board":
+            return self._movement(params)
         if skill == "debt-outstanding":
             return self._debt()
         if skill == "interest-rates":
@@ -256,6 +268,35 @@ class LedgerAgent(AcpAgent):
         if skill == "auctions":
             return self._auctions(params.get("security_type"), params.get("limit"))
         return HELP, {"summary": "help", "dataset": None}
+
+    def _movement(self, params: dict) -> tuple[str, dict]:
+        arguments = {"start": params.get("start"), "days": params.get("days")}
+        data, refused = premium_call(self.gateway, "debt_movement_board", arguments,
+                                     {"agent": "ledger", "skill": "debt-movement-board"})
+        if refused:
+            return refused
+        if (not isinstance(data, dict) or not isinstance(data.get("movements"), list) or
+                not isinstance(data.get("month_totals"), list) or not isinstance(data.get("biggest_daily_moves"), list) or
+                type(data.get("records")) is not int or type(data.get("requested_days")) is not int):
+            return empty_premium_answer("The gateway returned no readable debt movement board.",
+                                        {"agent": "ledger", "skill": "debt-movement-board"})
+        money_fields = ("delta_total", "delta_public", "delta_intragov")
+        if (any(not isinstance(row, dict) or any(value is not None and
+                (not isinstance(value, str) or not re.fullmatch(r"-?\d+\.\d{2}", value))
+                for value in [row.get(key) for key in money_fields]) for row in data["biggest_daily_moves"]) or
+                any(not isinstance(row, dict) or row.get("total_delta") is not None and
+                    (not isinstance(row["total_delta"], str) or not re.fullmatch(r"-?\d+\.\d{2}", row["total_delta"]))
+                    for row in data["month_totals"])):
+            return empty_premium_answer("The gateway returned unreadable debt movements.",
+                                        {"agent": "ledger", "skill": "debt-movement-board"})
+        def amount(value):
+            return "$" + value if value is not None else "unknown"
+        lines = [f"Premium debt movement board from {data.get('start')} to {data.get('end_exclusive')} (exclusive): {data['records']} Treasury records, {data.get('dates_without_records')} dates without records."]
+        for row in data["biggest_daily_moves"][:5]:
+            lines.append(f"  {row.get('date')}: {amount(row.get('delta_total'))} total debt change (public {amount(row.get('delta_public'))}, intragovernmental {amount(row.get('delta_intragov'))})")
+        lines.append("Month totals: " + "; ".join(f"{row.get('month')} {amount(row.get('total_delta'))}" for row in data["month_totals"]))
+        lines.append(str(data.get("note", "")))
+        return "\n".join(lines), {**data, "summary": lines[0], "premium": True}
 
     def _debt(self) -> tuple[str, dict]:
         result = self.data.debt_to_penny()

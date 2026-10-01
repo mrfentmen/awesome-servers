@@ -502,5 +502,61 @@ class TurnTests(unittest.TestCase):
         self.assertIn("Try Bills, Notes, Bonds, TIPS, FRN or total", result["text"])
 
 
+
+class PremiumGateTests(unittest.TestCase):
+    def gateway(self, key, payload=None):
+        from acp_kit import GatewayClient
+        import json
+        self.calls = []
+        def fetch(url, body, headers):
+            self.calls.append((body, headers))
+            if key == "lic_live_but_rejected":
+                return {"result": {"isError": True, "content": [{"type": "text", "text": "Gateway says this licence is revoked."}],
+                                   "structuredContent": {"licenceRefusal": True, "reason": "revoked"}}}
+            return {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
+        return GatewayClient(key=key, fetch=fetch)
+
+    def test_premium_no_key_attempts_gate(self):
+        import os
+        from unittest.mock import patch
+        with patch.dict(os.environ, {}, clear=True):
+            gateway = self.gateway(None)
+            with patch.object(gateway, "call", wraps=gateway.call) as call:
+                answer, artifact = LedgerAgent(data=FakeData(), gateway=gateway)._run_skill(*route('debt movement board from 2026-09-01 for 30 days'))
+            call.assert_called_once_with('debt_movement_board', {'start': '2026-09-01', 'days': 30})
+        self.assertIn("MCP_LICENSE_KEY", answer)
+        self.assertEqual(artifact["reason"], "missing_key")
+        self.assertEqual(self.calls, [])
+
+    def test_premium_rejected_preserves_gateway_wording(self):
+        gateway = self.gateway("lic_live_but_rejected")
+        answer, artifact = LedgerAgent(data=FakeData(), gateway=gateway)._run_skill(*route('debt movement board from 2026-09-01 for 30 days'))
+        self.assertEqual(answer, "Gateway says this licence is revoked.")
+        self.assertEqual(artifact["reason"], "denied")
+        self.assertEqual(len(self.calls), 1)
+
+    def test_premium_good_key_preserves_numbers_and_arguments(self):
+        gateway = self.gateway("lic_good", {'start': '2026-09-01', 'end_exclusive': '2026-10-01', 'requested_days': 30, 'records': 20, 'dates_without_records': 10, 'movements': [], 'biggest_daily_moves': [{'date': '2026-09-03', 'delta_total': '8157048561.59', 'delta_public': '8157048560.59', 'delta_intragov': '1.00'}], 'month_totals': [{'month': '2026-09', 'total_delta': '9876543210.12'}]})
+        answer, artifact = LedgerAgent(data=FakeData(), gateway=gateway)._run_skill(*route('debt movement board from 2026-09-01 for 30 days'))
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(self.calls[0][0]["params"], {"name": 'debt_movement_board', "arguments": {'start': '2026-09-01', 'days': 30}})
+        self.assertIn('$8157048561.59', answer)
+        self.assertTrue(artifact["premium"])
+        self.assertEqual(route('debt movement board from 2026-09-01 for 30 days')[0], 'debt-movement-board')
+
+    def test_free_question_never_calls_gateway(self):
+        from unittest.mock import patch
+        gateway = self.gateway("lic_good")
+        with patch.object(gateway, "call", side_effect=AssertionError("free question reached gateway")) as call:
+            LedgerAgent(data=FakeData(), gateway=gateway)._run_skill(*route('how big is the national debt right now?'))
+        call.assert_not_called()
+
+    def test_premium_unreadable_payload(self):
+        for payload in (None, {}, {"unexpected": 42}):
+            gateway = self.gateway("lic_good", payload)
+            answer, artifact = LedgerAgent(data=FakeData(), gateway=gateway)._run_skill(*route('debt movement board from 2026-09-01 for 30 days'))
+            self.assertTrue(artifact["failed"])
+
+
 if __name__ == "__main__":
     unittest.main()
