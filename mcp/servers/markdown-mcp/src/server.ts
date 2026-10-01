@@ -1,9 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { headings } from "./api.js"
-import { toHtml, tableToMarkdown, checkDocument } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { headings, toHtml, emojiShortcodes } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -45,10 +44,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: table_to_markdown ----
-    const paywallMessage = await premiumRequired("table_to_markdown")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await tableToMarkdown(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_markdown_table_to_markdown", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -62,10 +60,35 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: check_document ----
-    const paywallMessage = await premiumRequired("check_document")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await checkDocument(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_markdown_check_document", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "repository_readme",
+    {
+      title: "Repository README",
+      description: "Retrieve the current Markdown README of a public GitHub repository, with its source URL.",
+      inputSchema: z.object({ owner: z.string().describe("GitHub owner."), repo: z.string().describe("Repository name.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await premiumTool("mcp_markdown_repository_readme", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "emoji_shortcodes",
+    {
+      title: "Emoji shortcodes",
+      description: "Find supported GitHub Markdown emoji shortcodes and image URLs from GitHub's live emoji catalog.",
+      inputSchema: z.object({ query: z.string().optional(), limit: z.number().optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await emojiShortcodes(args)) } catch (e) { return textError(error(e)) }
   }
   )
 
