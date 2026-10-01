@@ -12,6 +12,9 @@ import queue
 import sys
 import threading
 import unittest
+import os
+import json
+from unittest.mock import patch, Mock
 from pathlib import Path
 
 AGENT_DIR = Path(__file__).resolve().parents[1]
@@ -213,12 +216,12 @@ def connected_pair():
 
 
 class TurnTests(unittest.TestCase):
-    def turn(self, text: str, permission: str = "allow-once", **kw):
+    def turn(self, text: str, permission: str = "allow-once", gateway=None, **kw):
         from agent import DroughtAgent
 
         agent_conn, client_conn = connected_pair()
         data, feed = make_data(**kw)
-        agent = DroughtAgent(agent_conn, data)
+        agent = DroughtAgent(agent_conn, data, gateway=gateway)
         threading.Thread(target=agent_conn.serve, daemon=True).start()
         client = AcpClient(connection=client_conn, permission=permission)
         client.start()
@@ -266,6 +269,57 @@ class TurnTests(unittest.TestCase):
         result, _, _ = self.turn("how dry is California?", fail=True)
         self.assertIn("I could not read the Drought Monitor", result["text"])
 
+
+
+class PremiumTests(unittest.TestCase):
+    turn = TurnTests.turn
+    def gateway(self, key, payload=None):
+        from acp_kit import GatewayClient
+        def fetch(url, request, headers):
+            if key == "lic_live_but_rejected":
+                return {"result": {"isError": True, "content": [{"type": "text", "text": "Gateway says this licence is revoked."}],
+                                   "structuredContent": {"licenceRefusal": True, "reason": "revoked"}}}
+            self.assertEqual(headers["Authorization"], "Bearer lic_good")
+            return {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
+        with patch.dict(os.environ, {}, clear=True):
+            gateway = GatewayClient(key=key, fetch=fetch)
+        gateway.call = Mock(wraps=gateway.call)
+        return gateway
+
+    def test_premium_no_key(self):
+        gateway = self.gateway(None)
+        result, _, feed = self.turn('drought index for CA over the last 3 weeks ending 2026-09-22', gateway=gateway)
+        self.assertIn("MCP_LICENSE_KEY", result["text"])
+        self.assertIn("is a premium skill and no licence key is set", result["text"])
+        gateway.call.assert_called_once_with('drought_weekly_index', {'state': 'CA', 'weeks': 3, 'end_date': '2026-09-22'})
+        self.assertEqual(feed.calls, [])
+
+    def test_premium_rejected_key(self):
+        gateway = self.gateway("lic_live_but_rejected")
+        result, _, feed = self.turn('drought index for CA over the last 3 weeks ending 2026-09-22', gateway=gateway)
+        self.assertIn("Gateway says this licence is revoked.", result["text"])
+        gateway.call.assert_called_once_with('drought_weekly_index', {'state': 'CA', 'weeks': 3, 'end_date': '2026-09-22'})
+        self.assertEqual(feed.calls, [])
+
+    def test_premium_good_key(self):
+        gateway = self.gateway("lic_good", {'state': 'CA', 'rows': [{'date': '2026-09-15', 'dsci': 88, 'exact': {'d0': 43}}, {'date': '2026-09-22', 'dsci': 96, 'exact': {'d0': 45}}], 'changes': [{'direction': 'worsening', 'dsciChange': 8}], 'shiftCounts': {'worsening': 1}, 'categoryWeekCounts': {'d0': 2}})
+        result, _, feed = self.turn('drought index for CA over the last 3 weeks ending 2026-09-22', gateway=gateway)
+        self.assertIn('DSCI 96', result["text"])
+        gateway.call.assert_called_once_with('drought_weekly_index', {'state': 'CA', 'weeks': 3, 'end_date': '2026-09-22'})
+        self.assertEqual(feed.calls, [])
+
+    def test_premium_free_question_never_calls_gateway(self):
+        gateway = self.gateway("lic_good")
+        self.turn('drought in CA over the last 8 weeks', gateway=gateway)
+        gateway.call.assert_not_called()
+
+    def test_premium_empty_payload(self):
+        from agent import DroughtAgent
+        gateway = self.gateway("lic_good", {})
+        answer, artifact = DroughtAgent(gateway=gateway)._index({'state': 'CA', 'weeks': 3, 'end_date': '2026-09-22'})
+        self.assertTrue(artifact["failed"])
+        self.assertTrue(artifact["premium"])
+        self.assertIn("no readable", answer)
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

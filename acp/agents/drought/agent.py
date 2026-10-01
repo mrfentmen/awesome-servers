@@ -9,6 +9,7 @@ D1 is "moderate drought or worse" - and that is said plainly, because "22% in D1
 from __future__ import annotations
 
 import re
+import datetime
 import sys
 from pathlib import Path
 
@@ -16,7 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text, GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
 
 from data import CATEGORIES, DATASET, STATE_CODES, STATE_FIPS, DroughtData, DroughtError  # noqa: E402
 
@@ -27,6 +28,7 @@ HELP = (
     "  - is Texas in drought right now?\n"
     "  - drought in CA over the last 8 weeks\n"
     "  - how dry is county 48201?\n"
+    "  - drought index for CA over the last 6 weeks ending 2026-09-22 (premium)\n"
     "I report the categories as they are published - D1 means moderate drought *or worse*, so the\n"
     "numbers are cumulative - and I name the week they cover, because the monitor updates weekly.\n"
     "A whole-country figure is not available: the monitor has no national endpoint, and I do not\n"
@@ -35,7 +37,7 @@ HELP = (
 
 PERMISSION_KEY = "drought-read-us-drought-monitor"
 
-SKILLS = ("drought-place", "help")
+SKILLS = ("drought-place", "drought-index", "help")
 
 _WEEKS_RE = re.compile(r"\b(?:last|past|over the last|for|since)\s+(\d{1,2})\s+weeks?\b",
                        re.IGNORECASE)
@@ -73,6 +75,15 @@ def route(text: str) -> tuple[str, dict]:
     if not stripped or re.search(r"\b(help|what can you do|commands?)\b", stripped, re.IGNORECASE):
         return "help", {}
     place = place_from_text(stripped)
+    if re.search(r"\b(?:drought index|severity index|dsci)\b", stripped, re.IGNORECASE):
+        params = {"place": place or ""}
+        weeks = _WEEKS_RE.search(stripped)
+        end = re.search(r"\bending\s+(\d{4}-\d{2}-\d{2})\b", stripped)
+        if weeks:
+            params["weeks"] = int(weeks.group(1))
+        if end:
+            params["end_date"] = end.group(1)
+        return "drought-index", params
     if place and _DROUGHT_WORDS.search(stripped):
         params: dict = {"place": place}
         weeks = _WEEKS_RE.search(stripped)
@@ -122,9 +133,11 @@ class DroughtAgent(AcpAgent):
     title = "Drought - weekly drought area for a US state or county"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: DroughtData | None = None) -> None:
+    def __init__(self, connection=None, data: DroughtData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or DroughtData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -146,9 +159,9 @@ class DroughtAgent(AcpAgent):
             ctx.message("These figures come from the Drought Monitor's own weekly statistics.")
             return STOP_END_TURN
 
-        tool = "call_drought_place"
+        tool = "call_" + skill.replace("-", "_")
         ctx.tool_call(tool, "Read the US Drought Monitor", kind="fetch",
-                      name="drought-place", raw_input=dict(params))
+                      name=skill, raw_input=dict(params))
         if not ctx.ask_permission(tool, "Allow Drought to read the US Drought Monitor's public "
                                         "statistics?", remember_key=PERMISSION_KEY):
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content("permission denied"))
@@ -157,8 +170,13 @@ class DroughtAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
 
         try:
+            if skill == "drought-index":
+                body, artifact = self._index(params)
+                ctx.tool_call_update(tool, status="completed", content=ctx.text_content(artifact["summary"]))
+                ctx.stream_text(body + "\n")
+                return STOP_END_TURN
             reading = self.data.read(params["place"], weeks=params.get("weeks") or 6)
-        except (DroughtError, ValueError) as exc:
+        except (DroughtError, GatewayError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the Drought Monitor: {exc}")
             return STOP_END_TURN
@@ -174,6 +192,44 @@ class DroughtAgent(AcpAgent):
                     "D1 means moderate drought or worse, not exactly moderate - and the monitor is "
                     "published weekly, on Thursdays, so the newest week ends a few days ago.")
         return STOP_END_TURN
+
+    def _index(self, params: dict) -> tuple[str, dict]:
+        """Render the gateway's severity index and exact-category comparisons."""
+        place = str(params.get("place", params.get("state", ""))).lower()
+        code = STATE_FIPS.get(place) or STATE_CODES.get(place)
+        if not code:
+            raise ValueError("The drought index needs a US state name or two-letter code.")
+        state = next(k.upper() for k, v in STATE_CODES.items() if v == code)
+        arguments = {"state": state, "weeks": params.get("weeks", 6),
+                     "end_date": params.get("end_date", datetime.date.today().isoformat())}
+        data, refused = premium_call(self.gateway, "drought_weekly_index", arguments,
+                                     {"agent": "drought", "skill": "drought-index"})
+        if refused:
+            return refused
+        if (not isinstance(data, dict) or not isinstance(data.get("rows"), list)
+                or len(data["rows"]) < 2 or not isinstance(data.get("changes"), list)
+                or not isinstance(data.get("shiftCounts"), dict)
+                or not isinstance(data.get("categoryWeekCounts"), dict)
+                or any(not isinstance(r, dict) or not r.get("date")
+                       or not isinstance(r.get("dsci"), (int, float))
+                       or not isinstance(r.get("exact"), dict) for r in data["rows"])
+                or any(not isinstance(r, dict) or not r.get("direction") for r in data["changes"])):
+            return empty_premium_answer("The gateway returned no readable drought index.",
+                                        {"agent": "drought", "skill": "drought-index"})
+        lines = [f"Premium drought severity index for {data.get('state', state)} (0-500):"]
+        for row in data["rows"]:
+            lines.append(f"  {row['date']}: DSCI {row['dsci']}; exact category area %: {row['exact']}")
+        for change in data["changes"]:
+            delta = change.get("dsciChange")
+            lines.append(f"  {change.get('from')} to {change.get('to')}: {change['direction']}; "
+                         f"index change {delta if delta is not None else 'not computed across a gap'}")
+            if change.get("categoryChanges"):
+                lines.append(f"    Exact-category shifts (percentage points): {change['categoryChanges']}")
+        lines.append(f"Weekly shift counts: {data['shiftCounts']}")
+        lines.append(f"Weeks with nonzero exact category area: {data['categoryWeekCounts']}")
+        lines.append("Source: US Drought Monitor. " + str(data.get("note", "")))
+        return "\n".join(lines), {"summary": "premium drought severity index", "premium": True,
+                                   "agent": "drought", "skill": "drought-index", "data": data}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer
