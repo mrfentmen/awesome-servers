@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { TcgError, formatCardDetail, formatCardSummary, formatSet, getCard, getSet, listSets, searchCards, cardsByRarity, cardRarities } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { TcgError, formatCardDetail, formatCardSummary, formatSet, getCard, getSet, listSets, searchCards, cardRarities } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -124,14 +124,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: cards_by_rarity ----
-      const paywallMessage = await premiumRequired("cards_by_rarity")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await cardsByRarity(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_pokemon_tcg_cards_by_rarity", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
