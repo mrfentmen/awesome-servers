@@ -1,6 +1,6 @@
 {
   "name": "arweave-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Keyless MCP server for Arweave: network info, transactions, wallet balances, storage price.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/arweave-mcp",

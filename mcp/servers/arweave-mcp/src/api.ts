@@ -232,21 +232,3 @@ export async function blockDetail(args: { height?: string }): Promise<string> {
       : "Empty block: nothing was mined into it but the reward, which happens on a quiet network.",
   ].join("\n")
 }
-
-// ---- muxC tools:
-
-/** The cost of storing a range of sizes at once, which is how you price an upload. */
-export async function priceTable(args: { sizesMb?: number[] }): Promise<string> {
-  const sizes = (args.sizesMb ?? [1, 5, 10, 100, 1024]).map((n) => Number(n))
-  if (!sizes.length || sizes.some((n) => !Number.isFinite(n) || n <= 0)) throw new ArweaveError("Provide sizes in megabytes as positive numbers")
-  if (sizes.length > 20) throw new ArweaveError("Price at most 20 sizes per call")
-  const rows: string[] = []
-  for (const mb of sizes) {
-    const bytes = Math.round(mb * 1024 * 1024)
-    const res = await fetch(`${BASE}/price/${bytes}`, { headers: { "User-Agent": "arweave-mcp/1.0" }, signal: AbortSignal.timeout(20000) })
-    if (!res.ok) throw new ArweaveError(`The Arweave gateway answered ${res.status} for /price/${bytes}`)
-    const winston = Number(await res.text())
-    rows.push(`  ${mb} MB (${bytes.toLocaleString("en-US")} bytes) -> ${winston.toLocaleString("en-US")} winston = ${(winston / 1e12).toFixed(8)} AR`)
-  }
-  return `Arweave storage prices from ${BASE} (${rows.length} sizes):\n${rows.join("\n")}`
-}

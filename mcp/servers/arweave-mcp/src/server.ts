@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { ArweaveError, networkInfo, storagePrice, txStatus, walletBalance, searchByTag, addressTransactions, blockDetail, priceTable } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { ArweaveError, networkInfo, storagePrice, txStatus, walletBalance, searchByTag, addressTransactions, blockDetail } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -160,10 +160,7 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: price_table ----
-    const paywallMessage = await premiumRequired("price_table")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await priceTable(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_arweave_price_table", { ...args, gatewayUrl: process.env.ARWEAVE_URL })) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
