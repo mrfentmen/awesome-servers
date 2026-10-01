@@ -2,3 +2,6 @@
 *.db
 *.db-journal
 __pycache__/
+
+# Scratch file the paywall batches leave behind
+_probe.mjs
