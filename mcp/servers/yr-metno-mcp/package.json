@@ -1,6 +1,6 @@
 {
   "name": "yr-metno-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Norwegian Meteorological Institute forecasts.",
   "type": "module",
   "main": "dist/index.js",

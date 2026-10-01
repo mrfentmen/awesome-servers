@@ -1,8 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_forecast, m0_nowcast, sunTimes } from './api.js'
-import { premiumRequired } from "./license.js"
 
+import { m0_forecast, m0_nowcast, moonEvents } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -45,10 +45,54 @@ server.registerTool(
     },
     async (args) => {
     // ---- paywall: sun_times ----
-    const paywallMessage = await premiumRequired("sun_times")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await sunTimes(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_yr_metno_sun_times", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "moon_events",
+    {
+      title: "Moon events",
+      description: "Moon rise, set, phase angle and upper/lower transit from MET Norway.",
+      inputSchema: z.object({ lat: z.number().min(-90).max(90).describe("Latitude."), lon: z.number().min(-180).max(180).describe("Longitude."), date: z.string().optional().describe("YYYY-MM-DD; defaults to today.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await moonEvents(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "ocean_conditions",
+    {
+      title: "Ocean conditions",
+      description: "Wave height/direction, water temperature and currents for Nordic waters from MET Norway.",
+      inputSchema: z.object({ lat: z.number().min(-90).max(90).describe("Latitude."), lon: z.number().min(-180).max(180).describe("Longitude."), limit: z.number().optional().describe("Forecast periods, 1-48; default 12.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: ocean_conditions ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_yr_metno_ocean_conditions", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "weather_alerts",
+    {
+      title: "Weather alerts",
+      description: "Current official MET Norway alerts, severity and advice; optional area-name filter.",
+      inputSchema: z.object({ area: z.string().optional().describe("Substring of the reported area name."), limit: z.number().optional().describe("Alerts, 1-30; default 10.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: weather_alerts ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_yr_metno_weather_alerts", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
