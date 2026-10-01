@@ -15,6 +15,7 @@ permission before its first read.
 from __future__ import annotations
 
 import re
+import math
 import sys
 from pathlib import Path
 
@@ -22,7 +23,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text,
+                     GatewayClient, GatewayError, premium_call, empty_premium_answer)  # noqa: E402
 
 from data import (  # noqa: E402
     DATASET,
@@ -44,13 +46,14 @@ HELP = (
     "  • the tide table for Portland, Maine\n"
     "  • what tide stations are near Miami?\n"
     "  • tides in Florida\n"
+    "  • tide extremes table for 8518750 in 2026-10 (premium)\n"
     "I report NOAA's own predictions and the gauge's own reading, both in station local time, "
     f"heights above {DATUM}, and I say 'prediction' when a number is a prediction."
 )
 
 PERMISSION_KEY = "tides-read-public-noaa"
 
-SKILLS = ("tide-next", "tide-now", "tide-stations", "help")
+SKILLS = ("tide-next", "tide-now", "tide-stations", "tide-extremes", "help")
 
 _NOW_WORDS = re.compile(r"\b(right now|currently|current|observed|observation|how high|how low|"
                         r"what is the level|level now|actual)\b", re.IGNORECASE)
@@ -107,6 +110,14 @@ def route(text: str) -> tuple[str, dict]:
         params["station"] = station_id(text)
     except ValueError:
         pass
+    if re.search(r"\btide[- ]extremes(?:[- ]table)?\b", text, re.IGNORECASE):
+        month = re.search(r"\b(\d{4}-\d{2})(?!-\d)", text)
+        if month:
+            params["month"] = month.group(1)
+        anchor = re.search(r"\b(?:as of|from)\s+(\d{4}-\d{2}-\d{2})\b", text, re.IGNORECASE)
+        if anchor:
+            params["as_of"] = anchor.group(1)
+        return "tide-extremes", params
     coords = coords_from_text(text)
     if coords:
         params["latitude"], params["longitude"] = coords
@@ -159,9 +170,11 @@ class TidesAgent(AcpAgent):
     title = "Tides - NOAA tide predictions and live gauges"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: TidesData | None = None) -> None:
+    def __init__(self, connection=None, data: TidesData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or TidesData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -196,7 +209,7 @@ class TidesAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (TidesError, ValueError) as exc:
+        except (TidesError, GatewayError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the NOAA feed: {exc}")
             return STOP_END_TURN
@@ -211,6 +224,8 @@ class TidesAgent(AcpAgent):
     # -- skills ------------------------------------------------------------
 
     def _run_skill(self, skill: str, params: dict) -> tuple[str, dict]:
+        if skill == "tide-extremes":
+            return self._extremes(params)
         if skill == "tide-next":
             return self._next(params)
         if skill == "tide-now":
@@ -218,6 +233,46 @@ class TidesAgent(AcpAgent):
         if skill == "tide-stations":
             return self._stations(params)
         return HELP, {"summary": "help", "dataset": None}
+
+    def _extremes(self, params: dict) -> tuple[str, dict]:
+        """Display monthly extremes computed by the licence gateway."""
+        if not params.get("station"):
+            return ("Give me a station id, e.g. tide extremes table for 8518750 in 2026-10.",
+                    {"summary": "station id required", "dataset": DATASET})
+        arguments = {"station": station_id(params["station"])}
+        for key in ("month", "as_of"):
+            if params.get(key):
+                arguments[key] = params[key]
+        data, refused = premium_call(self.gateway, "tide_extremes_table", arguments,
+                                     {"agent": "tides", "skill": "tide-extremes"})
+        if refused:
+            return refused
+        def numeric(value):
+            return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+        def event(row):
+            return isinstance(row, dict) and isinstance(row.get("time"), str) and numeric(row.get("heightFt"))
+        daily = data.get("daily") if isinstance(data, dict) else None
+        if (not isinstance(daily, list) or not daily or
+                not event(data.get("highest")) or not event(data.get("lowest")) or
+                any(not isinstance(row, dict) or not isinstance(row.get("date"), str) or
+                    (row.get("rangeFt") is not None and not numeric(row.get("rangeFt"))) for row in daily) or
+                any(data.get(key) is not None and (not isinstance(data[key], dict) or
+                    not isinstance(data[key].get("date"), str) or not numeric(data[key].get("rangeFt")))
+                    for key in ("biggestRangeDay", "nextBigRangeDay"))):
+            return empty_premium_answer("The gateway returned no readable monthly tide extremes.",
+                                        {"agent": "tides", "skill": "tide-extremes"})
+        high, low = data["highest"], data["lowest"]
+        lines = [f"Premium tide extremes for {arguments['station']}, {data.get('month')}:",
+                 f"Highest: {high['heightFt']} ft at {high['time']}; lowest: {low['heightFt']} ft at {low['time']}."]
+        for row in daily:
+            lines.append(f"  • {row['date']}: range {row['rangeFt']} ft" if row.get("rangeFt") is not None
+                         else f"  • {row['date']}: no complete high/low pair")
+        for key, label in (("biggestRangeDay", "Largest range"), ("nextBigRangeDay", "Next big-range day")):
+            row = data.get(key)
+            lines.append(f"{label}: {row['date']}, {row['rangeFt']} ft." if row else f"{label}: none in this window.")
+        lines.append(str(data.get("note") or "Harmonic predictions, not observations."))
+        lines.append("NOAA predictions: feet above MLLW, station local time.")
+        return "\n".join(lines), {"summary": lines[0], "premium": True, "dataset": DATASET, "extremes": data}
 
     def _resolve(self, params: dict) -> tuple[dict | None, tuple[str, dict] | None]:
         """(station row, None) or (None, an answer to send instead)."""
