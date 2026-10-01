@@ -69,49 +69,12 @@ const stripTags = (v: string | null | undefined, max: number): string => {
   return t.length > max ? `${t.slice(0, max)}...` : t;
 };
 
-export async function showInfo(args: { show?: string }): Promise<string> {
-  const term = (args.show ?? '').trim();
-  if (!term) return 'Provide a show name, for example "The Office".';
-  const show = await tvmazeGet<TvShow>(`/singlesearch/shows?q=${encodeURIComponent(term)}&embed=cast`);
-  if (!show.name) throw new OfficeError(`TVmaze found no show called "${term}".`);
-  const cast = (show._embedded?.cast ?? []).slice(0, 12).map((c) =>
-    `${c.person?.name ?? '?'}${c.character?.name ? ` as ${c.character.name}` : ''}`,
-  );
-  const run = show.premiered
-    ? `${show.premiered.slice(0, 10)}${show.ended ? ` to ${show.ended.slice(0, 10)}` : ' onwards'}`
-    : 'not reported';
-  return [
-    `${show.name} - TVmaze show id ${show.id ?? 'not reported'}`,
-    `  status ${show.status ?? 'not reported'} | premiered ${run}`,
-    `  ${show.averageRuntime ?? '?'} minute episodes | genres ${show.genres?.length ? show.genres.join(', ') : 'not reported'}`,
-    `  network ${show.network?.name ?? show.webChannel?.name ?? 'not reported'} | site ${show.officialSite ?? 'not reported'}`,
-    `  summary: ${stripTags(show.summary, 300)}`,
-    `  cast (${cast.length} shown): ${cast.length ? cast.join(' | ') : 'not reported'}`,
-  ].join('\n');
+// ---- gap4a2 tools:
+
+export async function showSeasons(args: { show_id: number; limit?: number }): Promise<string> {
+  const id = Math.max(1, Math.min(Math.trunc(args.show_id), 10000000))
+  const limit = Math.max(1, Math.min(Math.trunc(args.limit ?? 15), 50))
+  const rows = await tvmazeGet<Array<{ number?: number; episodeOrder?: number | null; premiereDate?: string | null; endDate?: string | null; summary?: string | null }>>(`/shows/${id}/seasons`)
+  return `TVmaze seasons for show ${id} (${rows.length} total):\n` + rows.slice(0, limit).map(s => `Season ${s.number ?? 'not reported'} | episodes ordered ${s.episodeOrder ?? 'not reported'} | ${s.premiereDate ?? 'not reported'} to ${s.endDate ?? 'not reported'}\n${stripTags(s.summary, 250)}`).join('\n')
 }
 
-export async function episodeList(args: { show?: string; season?: number; limit?: number }): Promise<string> {
-  const term = (args.show ?? '').trim();
-  if (!term) return 'Provide a show name, for example "The Office".';
-  const limit = Math.max(1, Math.min(Math.trunc(Number(args.limit ?? 20) || 20), 60));
-  const onlySeason = args.season === undefined ? null : Math.max(0, Math.trunc(Number(args.season)))
-  const show = await tvmazeGet<TvShow>(`/singlesearch/shows?q=${encodeURIComponent(term)}`)
-  if (!show.id) throw new OfficeError(`TVmaze found no show called "${term}".`)
-  const all = await tvmazeGet<TvEpisode[]>(`/shows/${show.id}/episodes?specials=1`)
-  const rows = (onlySeason === null ? all : all.filter((e) => e.season === onlySeason)).slice(0, limit)
-  if (!rows.length) {
-    return onlySeason === null
-      ? `${show.name} has no episodes listed on TVmaze.`
-      : `${show.name} has no season ${onlySeason} episodes listed on TVmaze.`
-  }
-  const lines = rows.map((e, i) => {
-    const rating = e.rating?.average != null ? ` | TVmaze rating ${e.rating.average.toFixed(1)}` : ''
-    return [
-      `${i + 1}. S${String(e.season ?? '?').padStart(2, '0')}E${e.number === null || e.number === undefined ? '  ?' : String(e.number).padStart(2, '0')} ${e.name ?? 'untitled'}`,
-      `   aired ${(e.airdate ?? 'not reported')}${e.runtime ? ` | ${e.runtime} min` : ''}${rating}`,
-      `   ${stripTags(e.summary, 160)}`,
-    ].join('\n')
-  })
-  const scope = onlySeason === null ? 'all seasons' : `season ${onlySeason}`
-  return `${show.name} episodes from TVmaze (${scope}, ${all.length} total listed, showing ${rows.length}):\n${lines.join('\n')}`
-}

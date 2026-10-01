@@ -1,8 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { randomQuote, quoteById, showInfo, episodeList } from './api.js'
-import { premiumRequired } from "./license.js"
 
+import { randomQuote, quoteById, showSeasons } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -43,11 +43,10 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: showInfo ----
-    const paywallMessage = await premiumRequired("showInfo")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: show_info ----
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await showInfo(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_office_quotes_show_info", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -60,11 +59,39 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: episodeList ----
-    const paywallMessage = await premiumRequired("episodeList")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: episode_list ----
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await episodeList(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_office_quotes_episode_list", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "show_seasons",
+    {
+      title: "Show seasons",
+      description: "Season run dates, ordered episode counts and summaries from TVmaze.",
+      inputSchema: z.object({ show_id: z.number().int().min(1).max(10000000).describe("TVmaze show id, e.g. 526 for The Office."), limit: z.number().int().min(1).max(50).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await showSeasons(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "show_crew",
+    {
+      title: "Show crew",
+      description: "Production crew names and their credited roles from TVmaze.",
+      inputSchema: z.object({ show_id: z.number().int().min(1).max(10000000).describe("TVmaze show id, e.g. 526 for The Office."), limit: z.number().int().min(1).max(50).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: show_crew ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_office_quotes_show_crew", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
