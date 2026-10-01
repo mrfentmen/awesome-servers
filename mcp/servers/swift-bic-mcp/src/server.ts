@@ -1,8 +1,8 @@
+import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { search } from "./api.js"
-import { validate, analyseBic, countryDirectory } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { validate } from "./api.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -45,10 +45,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: analyse_bic ----
-    const paywallMessage = await premiumRequired("analyse_bic")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await analyseBic(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_swift_bic_analyse_bic", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -60,13 +59,12 @@ export function createServer(): McpServer {
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
-    async () => {
+    async (args) => {
     // ---- paywall: country_directory ----
-    const paywallMessage = await premiumRequired("country_directory")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
     try {
-      return text(await countryDirectory());
+      return text(await premiumTool("mcp_swift_bic_country_directory", args));
     } catch (e) {
       return textError(error(e));
     }
