@@ -1,7 +1,7 @@
+import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatRecipe, getRecipe, guessNutrition, searchRecipes, SpoonacularError, productSearch, barcodeLookup } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { formatRecipe, getRecipe, guessNutrition, searchRecipes, SpoonacularError } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -85,13 +85,12 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ query, limit }) => {
+    async (args) => {
       // ---- paywall: product_search ----
-      const paywallMessage = await premiumRequired("product_search")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await productSearch({ query, limit }))
+        return text(await premiumTool("mcp_spoonacular_product_search", args))
       } catch (e) {
         return textError(errorMessage(e))
       }
@@ -108,13 +107,12 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ barcode }) => {
+    async (args) => {
       // ---- paywall: barcode_lookup ----
-      const paywallMessage = await premiumRequired("barcode_lookup")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await barcodeLookup({ barcode }))
+        return text(await premiumTool("mcp_spoonacular_barcode_lookup", args))
       } catch (e) {
         return textError(errorMessage(e))
       }
