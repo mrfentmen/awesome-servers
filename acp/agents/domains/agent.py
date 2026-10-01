@@ -23,7 +23,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text, GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
 
 from data import (  # noqa: E402
     DATASET,
@@ -41,13 +41,14 @@ HELP = (
     "  - is popsnax.com taken?\n"
     "  - is this-domain-is-free-12345.net registered?\n"
     "  - who owns 8.8.8.8?\n"
+    "  - portfolio report for github.com, example.org (premium)\n"
     "A 404 from a registry means no registration was found; I will not call that 'available', "
     "because only a registrar can promise that."
 )
 
 PERMISSION_KEY = "domains-read-public-rdap"
 
-SKILLS = ("domain-info", "domain-available", "ip-info", "help")
+SKILLS = ("domain-info", "domain-available", "ip-info", "domain-portfolio", "help")
 
 _DOMAIN_RE = re.compile(r"\b((?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,24})\b", re.IGNORECASE)
 _IP_RE = re.compile(r"\b(\d{1,3}(?:\.\d{1,3}){3})\b")
@@ -91,6 +92,9 @@ def route(text: str) -> tuple[str, dict]:
     if not stripped or re.search(r"\b(help|what can you do|commands?)\b", stripped, re.IGNORECASE):
         return "help", {}
 
+    if re.search(r"\bportfolio(?: report)?\b", stripped, re.IGNORECASE):
+        domains = list(dict.fromkeys(m.group(1).lower() for m in _DOMAIN_RE.finditer(stripped)))
+        return "domain-portfolio", {"domains": domains}
     domain = domain_from_text(stripped)
     address = ip_from_text(stripped)
 
@@ -111,9 +115,11 @@ class DomainsAgent(AcpAgent):
     title = "Domains - RDAP registration, expiry and IP owners"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: RdapData | None = None) -> None:
+    def __init__(self, connection=None, data: RdapData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or RdapData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -148,7 +154,7 @@ class DomainsAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (DomainsError, ValueError) as exc:
+        except (DomainsError, GatewayError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read RDAP: {exc}")
             return STOP_END_TURN
@@ -163,6 +169,8 @@ class DomainsAgent(AcpAgent):
     # -- skills ------------------------------------------------------------
 
     def _run_skill(self, skill: str, params: dict) -> tuple[str, dict]:
+        if skill == "domain-portfolio":
+            return self._portfolio(params)
         if skill == "domain-info":
             return self._info(params)
         if skill == "domain-available":
@@ -170,6 +178,33 @@ class DomainsAgent(AcpAgent):
         if skill == "ip-info":
             return self._ip(params)
         return HELP, {"summary": "help", "dataset": None}
+
+    def _portfolio(self, params: dict) -> tuple[str, dict]:
+        """Render an expiry-ordered portfolio assembled on the gateway."""
+        data, refused = premium_call(self.gateway, "rdap_domain_portfolio",
+                                     {"domains": params.get("domains", [])},
+                                     {"agent": "domains", "skill": "domain-portfolio"})
+        if refused:
+            return refused
+        if (not isinstance(data, dict) or not isinstance(data.get("domains"), list)
+                or not data["domains"] or any(not isinstance(r, dict)
+                    or not r.get("domain") or not isinstance(r.get("registered"), bool)
+                    or not isinstance(r.get("status"), list) for r in data["domains"])):
+            return empty_premium_answer("The gateway returned no readable RDAP portfolio.",
+                                        {"agent": "domains", "skill": "domain-portfolio"})
+        lines = ["Premium RDAP portfolio, soonest expiry first (unknown dates last):"]
+        for row in data["domains"]:
+            if not row["registered"]:
+                lines.append(f"  {row['domain']}: no registration found (404); availability unconfirmed")
+                continue
+            lines.append(f"  {row['domain']}: expires {row.get('expiration') or 'not published'}; "
+                         f"registrar {row.get('registrar') or 'not published'}; "
+                         f"status {', '.join(row['status']) or 'not published'}")
+        lines.append(f"Registered: {data.get('registeredCount', 'not reported')}; "
+                     f"no record: {data.get('missingCount', 'not reported')}")
+        lines.append("Source: RDAP via rdap.org. " + str(data.get("note", "")))
+        return "\n".join(lines), {"summary": "premium RDAP portfolio", "premium": True,
+                                   "agent": "domains", "skill": "domain-portfolio", "data": data}
 
     def _info(self, params: dict) -> tuple[str, dict]:
         record = self.data.domain(params["domain"])
