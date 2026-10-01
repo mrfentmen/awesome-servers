@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, viewer, listPosts, showHnLaunches, githubFootprint, competitiveScan } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, viewer, listPosts } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -65,10 +65,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: show_hn_launches ----
-    const paywallMessage = await premiumRequired("show_hn_launches")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await showHnLaunches(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_producthunt_show_hn_launches", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -85,10 +84,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: github_footprint ----
-    const paywallMessage = await premiumRequired("github_footprint")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await githubFootprint(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_producthunt_github_footprint", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -107,10 +105,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: competitive_scan ----
-    const paywallMessage = await premiumRequired("competitive_scan")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await competitiveScan(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_producthunt_competitive_scan", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
