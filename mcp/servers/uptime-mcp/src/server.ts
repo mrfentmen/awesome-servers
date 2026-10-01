@@ -1,9 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { cert } from "./api.js"
-import { check, dnsRecords, serviceStatus } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { cert } from "./local.js"
 
+import { check, maintenanceWindows } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -45,10 +45,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: dns_records ----
-    const paywallMessage = await premiumRequired("dns_records")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await dnsRecords(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_uptime_dns_records", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -62,10 +61,38 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: service_status ----
-    const paywallMessage = await premiumRequired("service_status")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await serviceStatus(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_uptime_service_status", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "incident_history",
+    {
+      title: "Incident history",
+      description: "Recent GitHub incidents, including resolved outages, timestamps and the latest published update.",
+      inputSchema: z.object({ limit: z.number().int().min(1).max(20).optional().describe("Maximum events, defaults to 5.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: incident_history ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_uptime_incident_history", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "maintenance_windows",
+    {
+      title: "Maintenance windows",
+      description: "Published GitHub maintenance windows with start and end times, state and latest update; includes completed work.",
+      inputSchema: z.object({ limit: z.number().int().min(1).max(20).optional().describe("Maximum events, defaults to 5.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await maintenanceWindows(args)) } catch (e) { return textError(error(e)) }
   }
   )
 
