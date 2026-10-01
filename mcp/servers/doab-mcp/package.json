@@ -1,6 +1,6 @@
 {
   "name": "doab-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Keyless Directory of Open Access Books: search open monographs and chapters.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/doab-mcp",

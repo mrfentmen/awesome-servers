@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, searchBooks, getItem, browseDirectory, itemMetadata } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, searchBooks, getItem, collectionItems } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -63,14 +63,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: browse_directory ----
-    const paywallMessage = await premiumRequired("browse_directory")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try {
-      return text(await browseDirectory(args));
-    } catch (e) {
-      return textError(errorMessage(e));
-    }
+    try { return text(await premiumTool("mcp_doab_browse_directory", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   );
 
@@ -84,16 +79,40 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: item_metadata ----
-    const paywallMessage = await premiumRequired("item_metadata")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try {
-      return text(await itemMetadata(args));
-    } catch (e) {
-      return textError(errorMessage(e));
-    }
+    try { return text(await premiumTool("mcp_doab_item_metadata", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   );
+
+  server.registerTool(
+    "collection_items",
+    {
+      title: "Collection items",
+      description: "Page through records in a DOAB collection using its UUID, with handles and modification dates.",
+      inputSchema: z.object({ collection: z.string().describe("Collection UUID from DOAB, e.g. 5f10d8e9-bb77-4dc7-b144-0cf4382176fb."), limit: z.number().int().optional(), offset: z.number().int().optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await collectionItems(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "item_files",
+    {
+      title: "Item files",
+      description: "Find downloadable files and bibliographic exports attached to a DOAB item, including MIME types, byte sizes and download URLs.",
+      inputSchema: z.object({ item: z.string().describe("Item UUID from DOAB metadata."), limit: z.number().int().optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: item_files ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_doab_item_files", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
 
   return server
 }
