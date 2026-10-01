@@ -1,8 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_file, m0_search, m1_random, fileCategories, fileThumbnail, categoryFiles } from './api.js'
-import { premiumRequired } from "./license.js"
 
+import { m0_file, m0_search, m1_random, categoryFiles } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -57,10 +57,9 @@ server.registerTool(
     },
     async (args) => {
     // ---- paywall: file_categories ----
-    const paywallMessage = await premiumRequired("file_categories")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await fileCategories(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wikimedia_commons_file_categories", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -74,10 +73,9 @@ server.registerTool(
     },
     async (args) => {
     // ---- paywall: file_thumbnail ----
-    const paywallMessage = await premiumRequired("file_thumbnail")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await fileThumbnail(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wikimedia_commons_file_thumbnail", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
