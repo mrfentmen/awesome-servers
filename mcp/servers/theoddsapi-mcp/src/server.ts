@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatGame, gameOdds, listSports, OddsError, impliedProbability, expectedValue, fixtureForm } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { formatGame, gameOdds, listSports, OddsError, fixtureForm } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -68,10 +68,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: implied_probability ----
-    const paywallMessage = await premiumRequired("implied_probability")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await impliedProbability(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_theoddsapi_implied_probability", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -89,10 +88,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: expected_value ----
-    const paywallMessage = await premiumRequired("expected_value")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await expectedValue(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_theoddsapi_expected_value", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
