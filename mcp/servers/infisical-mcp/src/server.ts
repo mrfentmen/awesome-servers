@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, listSecrets, getSecret, createSecret, updateSecret, deleteSecret, secretEntropyAudit, secretNameHygiene, secretSetDiff } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, listSecrets, getSecret, createSecret, updateSecret, deleteSecret, secretNameHygiene } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -139,10 +139,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: secret_entropy_audit ----
-    const paywallMessage = await premiumRequired("secret_entropy_audit")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await secretEntropyAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_infisical_secret_entropy_audit", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -177,10 +176,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: secret_set_diff ----
-    const paywallMessage = await premiumRequired("secret_set_diff")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await secretSetDiff(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_infisical_secret_set_diff", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 

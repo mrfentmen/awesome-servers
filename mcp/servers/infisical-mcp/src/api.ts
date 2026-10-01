@@ -243,45 +243,6 @@ export interface InfisicalEntropyArgs {
   label?: string
 }
 
-export async function secretEntropyAudit(args: InfisicalEntropyArgs): Promise<string> {
-  const pairs = infParsePairs(args.secrets ?? "")
-  if (pairs.length === 0) {
-    return "Send the secret material to audit as KEY=value lines (or a JSON object), e.g. STRIPE_KEY=sk_live_9fJ2kQp81x."
-  }
-  const seen = infValueIndex(pairs)
-  const rows = pairs.map((p) => {
-    const pool = infPool(p.value)
-    const bits = p.value.length > 0 && pool > 1 ? p.value.length * Math.log2(pool) : 0
-    return {
-      key: p.key,
-      value: p.value,
-      bits,
-      perChar: p.value.length > 0 ? infEntropyPerChar(p.value) : 0,
-      flags: infFlags(p.key, p.value, seen),
-    }
-  })
-  const risky = rows.filter((r) => r.flags.length > 0)
-  const weak = rows.filter((r) => r.bits < 60).sort((a, b) => a.bits - b.bits)
-  const lines = [
-    `${rows.length} secret(s) audited${args.label ? ` from ${args.label}` : ""}. Values are measured, never printed.`,
-    "",
-    "bits = length x log2(charset size), the standard estimate of brute-force search space.",
-    ...rows.map((r) => {
-      const head = `${r.key}: ${r.bits.toFixed(1)} bits (${r.perChar.toFixed(2)} bits/char, ${infStrength(r.bits, r.value)})`
-      return r.flags.length ? `${head}\n   - ${r.flags.join("\n   - ")}` : head
-    }),
-    "",
-    `Flagged: ${risky.length} of ${rows.length}.`,
-  ]
-  if (weak.length) {
-    lines.push(
-      `Weakest first: ${weak.slice(0, 5).map((r) => `${r.key} (${r.bits.toFixed(0)} bits)`).join(", ")}.`
-    )
-  }
-  if (!risky.length && !weak.length) lines.push("No placeholder, reuse, sequence or charset problems found.")
-  return lines.join("\n")
-}
-
 export interface InfisicalNamesArgs {
   names: string
   style?: string
@@ -363,52 +324,3 @@ function infNormalise(value: string): string {
   return value.trim().toLowerCase()
 }
 
-export async function secretSetDiff(args: InfisicalDiffArgs): Promise<string> {
-  const leftName = (args.left_label ?? "left set").trim() || "left set"
-  const rightName = (args.right_label ?? "right set").trim() || "right set"
-  const left = infParsePairs(args.left ?? "")
-  const right = infParsePairs(args.right ?? "")
-  if (left.length === 0 && right.length === 0) {
-    return "Send both sets as KEY=value lines. Fill in at least one of them."
-  }
-  const leftMap = new Map(left.map((p) => [p.key, p.value]))
-  const rightMap = new Map(right.map((p) => [p.key, p.value]))
-  const onlyLeft = [...leftMap.keys()].filter((k) => !rightMap.has(k))
-  const onlyRight = [...rightMap.keys()].filter((k) => !leftMap.has(k))
-  const shared = [...leftMap.keys()].filter((k) => rightMap.has(k))
-  const changed: string[] = []
-  const caseOnly: string[] = []
-  for (const k of shared) {
-    const a = leftMap.get(k) as string
-    const b = rightMap.get(k) as string
-    if (a === b) continue
-    if (infNormalise(a) === infNormalise(b)) caseOnly.push(k)
-    else changed.push(k)
-  }
-  const leftDupes = infValueIndex(left)
-  const rightDupes = infValueIndex(right)
-  const rightValues = new Set(right.map((p) => p.value).filter(Boolean))
-  const crossShared = left.filter((p) => p.value && rightValues.has(p.value)).length
-  const dupeNote = (name: string, index: Map<string, string[]>) =>
-    [...index.entries()]
-      .filter(([, keys]) => keys.length > 1)
-      .map(([value, keys]) => `${name}: ${keys.join(", ")} share one value (${value.length} chars)`)
-      .slice(0, 5)
-  return [
-    `${leftName}: ${left.length} key(s). ${rightName}: ${right.length} key(s). ${shared.length} in both. Values are never printed.`,
-    "",
-    onlyLeft.length ? `Only in ${leftName} (${onlyLeft.length}): ${onlyLeft.slice(0, 20).join(", ")}` : `Only in ${leftName}: none.`,
-    onlyRight.length ? `Only in ${rightName} (${onlyRight.length}): ${onlyRight.slice(0, 20).join(", ")}` : `Only in ${rightName}: none.`,
-    changed.length
-      ? `Different values (${changed.length}): ${changed.slice(0, 20).join(", ")}`
-      : "Different values: none.",
-    caseOnly.length
-      ? `Differ only by case/whitespace (${caseOnly.length}): ${caseOnly.slice(0, 10).join(", ")}`
-      : "Differ only by case/whitespace: none.",
-    ...dupeNote(leftName, leftDupes),
-    ...dupeNote(rightName, rightDupes),
-    crossShared > 0 ? `${crossShared} value(s) are reused across the two sets.` : "No values reused across the two sets.",
-  ]
-    .filter(Boolean)
-    .join("\n")
-}

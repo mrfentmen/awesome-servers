@@ -1,6 +1,6 @@
 {
   "name": "infisical-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Infisical API: list, read, create, update and delete secrets via universal auth.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/infisical-mcp",
