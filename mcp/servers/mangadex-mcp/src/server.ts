@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { MangaDexError, formatChapter, formatManga, getChapters, getManga, getTags, searchAuthor, searchManga, mangaStatistics, mangaByTag } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { MangaDexError, formatChapter, formatManga, getChapters, getManga, getTags, searchAuthor, searchManga } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -154,16 +154,11 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ id }) => {
+    async (args) => {
       // ---- paywall: manga_statistics ----
-      const paywallMessage = await premiumRequired("manga_statistics")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await mangaStatistics(id))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_mangadex_manga_statistics", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -180,14 +175,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: manga_by_tag ----
-      const paywallMessage = await premiumRequired("manga_by_tag")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await mangaByTag(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_mangadex_manga_by_tag", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
