@@ -22,6 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer
 from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
 
 import render  # noqa: E402  (the agent's own directory is on sys.path when it runs)
@@ -32,6 +33,7 @@ HELP = (
     "Ask me:\n"
     "  - chart the temperature in Seattle for the next 24 hours\n"
     "  - chart the rain in Tokyo tomorrow\n"
+    "  - compare temperature in Seattle and Tokyo from 2026-10-01 to 2026-10-02 (premium)\n"
     "  - chart the air quality in Delhi\n"
     "  - chart the national debt for the last 90 days\n"
     "  - chart the earthquakes in the past 12 hours\n"
@@ -41,7 +43,7 @@ HELP = (
 
 PERMISSION_KEY = "chart-read-public-data"
 
-SKILLS = ("chart-temperature", "chart-rain", "chart-air", "chart-debt", "chart-quakes", "help")
+SKILLS = ("chart-temperature", "chart-rain", "chart-air", "chart-debt", "chart-quakes", "chart-digest", "help")
 
 _METRIC_WORDS = (
     ("rain", re.compile(r"\b(rain|rainfall|precip\w*|showers?|wet)\b", re.IGNORECASE)),
@@ -91,6 +93,12 @@ def route(text: str) -> tuple[str, dict]:
     stripped = str(text or "").strip()
     if not stripped or re.search(r"\b(help|what can you do|commands?)\b", stripped, re.IGNORECASE):
         return "help", {}
+
+    digest = re.fullmatch(r"compare temperature in (.+?) from (\d{4}-\d{2}-\d{2}) to (\d{4}-\d{2}-\d{2})[?.!]?", stripped, re.IGNORECASE)
+    if digest:
+        return "chart-digest", {"kind": "temperature digest",
+                                "places": [p.strip() for p in re.split(r"\s+and\s+|;", digest[1], flags=re.IGNORECASE)],
+                                "startDate": digest[2], "endDate": digest[3]}
 
     kind = None
     for name, pattern in _METRIC_WORDS:
@@ -176,9 +184,10 @@ class ChartAgent(AcpAgent):
     title = "Chart - answers with a chart, not just text"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: ChartData | None = None) -> None:
+    def __init__(self, connection=None, data: ChartData | None = None, gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or ChartData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -212,10 +221,16 @@ class ChartAgent(AcpAgent):
 
         ctx.tool_call_update(tool, status="in_progress")
         try:
+            if skill == "chart-digest":
+                answer, artifact = self._digest(params)
+                ctx.check_cancelled()
+                ctx.tool_call_update(tool, status="completed", content=ctx.text_content(artifact["summary"]))
+                ctx.stream_text(answer)
+                return STOP_END_TURN
             series = self.data.series(params["kind"], place=params.get("place"),
                                       hours=params.get("hours") or 24,
                                       days=params.get("days") or 30)
-        except (ChartError, ValueError) as exc:
+        except (ChartError, ValueError, GatewayError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the data for that chart: {exc}")
             return STOP_END_TURN
@@ -247,6 +262,31 @@ class ChartAgent(AcpAgent):
         ctx.stream_text("\n".join(lines))
         ctx.image(blob, "image/png")
         return STOP_END_TURN
+
+    def _digest(self, params: dict) -> tuple[str, dict]:
+        """Compare dated temperature series on the licence gateway."""
+        arguments = {key: params[key] for key in ("places", "startDate", "endDate")}
+        context = {"agent": "chart", "skill": "chart-digest"}
+        data, refused = premium_call(self.gateway, "chart_series_digest", arguments, context)
+        if refused:
+            return refused
+        rows = data.get("series") if isinstance(data, dict) else None
+        if not isinstance(rows, list) or not rows or not all(
+                isinstance(r, dict) and isinstance(r.get("name"), str)
+                and all(r.get(k) is None or (isinstance(r[k], (int, float)) and not isinstance(r[k], bool))
+                        for k in ("min", "max", "mean", "change", "reportedHours", "missingHours")) for r in rows):
+            return empty_premium_answer("The gateway returned no readable temperature series digest.", context)
+        def shown(value):
+            return "not reported" if value is None else str(value)
+        lines = [f"Premium temperature digest: {data.get('startDate')} to {data.get('endDate')} (UTC, °C)"]
+        for row in rows:
+            lines.append(f"  - {row['name']}: min {shown(row.get('min'))}; max {shown(row.get('max'))}; "
+                         f"mean {shown(row.get('mean'))}; change {shown(row.get('change'))} "
+                         f"({row.get('trend') or 'unknown'}); {shown(row.get('missingHours'))} missing hours")
+        lines.append(f"Warmest complete mean: {data.get('warmest') or 'not available'}; "
+                     f"coolest: {data.get('coolest') or 'not available'}.")
+        lines.append(str(data.get("note") or "Source: Open-Meteo."))
+        return "\n".join(lines), {**context, "premium": True, "summary": f"compared {len(rows)} temperature series", "series": rows}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one draw
