@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, searchGames, getGame, steamGameProfile, steamSpecialsCensus } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, searchGames, getGame } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -63,10 +63,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: steam_game_profile ----
-      const paywallMessage = await premiumRequired("steam_game_profile")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await steamGameProfile(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_mobygames_steam_game_profile", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -80,10 +79,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: steam_specials_census ----
-      const paywallMessage = await premiumRequired("steam_specials_census")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await steamSpecialsCensus(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_mobygames_steam_specials_census", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
