@@ -25,6 +25,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
 from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
 
 from data import (  # noqa: E402
@@ -39,6 +40,7 @@ from data import (  # noqa: E402
 HELP = (
     "I read NHTSA's public safety data — the agency that tracks recalls and owner complaints.\n"
     "Ask me:\n"
+    "  • recall board for Honda Civic years 2015 and 2016 (premium)\n"
     "  • does a 2020 Honda Civic have recalls?\n"
     "  • what do owners complain about on a 2018 Ford F-150?\n"
     "  • what models did Toyota sell in 2024?\n"
@@ -49,7 +51,7 @@ HELP = (
 
 PERMISSION_KEY = "vehicles-read-public-nhtsa"
 
-SKILLS = ("vehicle-recalls", "vehicle-complaints", "vehicle-models", "decode-vin", "help")
+SKILLS = ("vehicle-recall-board", "vehicle-recalls", "vehicle-complaints", "vehicle-models", "decode-vin", "help")
 
 _YEAR_RE = re.compile(r"\b(19[4-9]\d|20\d{2})\b")
 _VIN_RE = re.compile(r"\b[A-HJ-NPR-Z0-9*]{11,17}\b", re.IGNORECASE)
@@ -126,6 +128,21 @@ def route(text: str) -> tuple[str, dict]:
     if not text.strip() or re.search(r"\b(help|what can you do|commands?)\b", text, re.IGNORECASE):
         return "help", {}
 
+    if re.search(r"\brecall board\b", text, re.I):
+        match = re.search(r"recall board\s+(?:for\s+)?(.+?)\s+years?\s+(.+?)[?.!]*$", text, re.I)
+        if not match:
+            return "vehicle-recall-board", {}
+        names = match.group(1).split(maxsplit=1)
+        # Quoted makes support multiword names: "Land Rover" Discovery.
+        quoted = re.fullmatch(r'"([^"\n]+)"\s+(.+)', match.group(1))
+        if quoted:
+            names = [quoted.group(1), quoted.group(2)]
+        years_text = match.group(2).strip("?.! ")
+        if len(names) != 2 or not re.fullmatch(r"\d{4}\s*(?:,|and|vs\.?)\s*\d{4}", years_text, re.I):
+            return "vehicle-recall-board", {}
+        return "vehicle-recall-board", {"make": names[0], "model": names[1],
+                                         "years": [int(y) for y in re.findall(r"\d{4}", years_text)]}
+
     make, model = _vehicle_words(text)
     year = _year(text)
     params: dict = {}
@@ -176,9 +193,11 @@ class VehiclesAgent(AcpAgent):
     title = "Vehicles — NHTSA safety recalls"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: VehicleData | None = None) -> None:
+    def __init__(self, connection=None, data: VehicleData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or VehicleData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -212,7 +231,7 @@ class VehiclesAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (VehicleError, ValueError) as exc:
+        except (VehicleError, ValueError, GatewayError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the NHTSA dataset: {exc}")
             return STOP_END_TURN
@@ -228,6 +247,8 @@ class VehiclesAgent(AcpAgent):
     # -- skills ------------------------------------------------------------
 
     def _run_skill(self, skill: str, params: dict) -> tuple[str, dict]:
+        if skill == "vehicle-recall-board":
+            return self._recall_board(params)
         if skill == "vehicle-recalls":
             return self._recalls(params)
         if skill == "vehicle-complaints":
@@ -237,6 +258,37 @@ class VehiclesAgent(AcpAgent):
         if skill == "decode-vin":
             return self._decode(params)
         return HELP, {"summary": "help", "dataset": None}
+
+    def _recall_board(self, params: dict) -> tuple[str, dict]:
+        """Compare two explicitly named model years on the gateway."""
+        context = {"agent": "vehicles", "skill": "vehicle-recall-board"}
+        if not params.get("make") or not params.get("model") or not isinstance(params.get("years"), list):
+            return ("Use: recall board for Honda Civic years 2015 and 2016. "
+                    'Quote multiword makes, e.g. "Land Rover" Discovery.',
+                    {**context, "summary": "explicit make, model and two years required"})
+        args = {"make": str(params["make"]).strip(), "model": str(params["model"]).strip(),
+                "years": [VehicleData.check_year(y) for y in params["years"]]}
+        data, refused = premium_call(self.gateway, "vehicle_recall_year_board", args, context)
+        if refused:
+            return refused
+        rows = data.get("years") if isinstance(data, dict) else None
+        comparison = data.get("comparison") if isinstance(data, dict) else None
+        if (not isinstance(rows, list) or len(rows) != 2 or
+                any(not isinstance(row, dict) or any(type(row.get(k)) is not int or row[k] < 0
+                    for k in ("year", "recallCount", "complaintCount")) for row in rows) or
+                not isinstance(comparison, dict) or
+                any(type(comparison.get(k)) is not int for k in ("recallChange", "complaintChange"))):
+            return empty_premium_answer("The gateway returned no readable two-year recall comparison.", context)
+        lines = [f"NHTSA recall board: {args['make']} {args['model']}"]
+        for row in rows:
+            lines.append(f"{row['year']}: {row['recallCount']} recall record(s), "
+                         f"{row['complaintCount']} complaint(s).")
+        lines.append(f"Later minus earlier year: {comparison['recallChange']:+d} recalls, "
+                     f"{comparison['complaintChange']:+d} complaints.")
+        lines.append(data.get("note") or "Counts are records, not safety rates or VIN-specific open recalls.")
+        lines.append("Source: NHTSA recalls and complaints, compared on the licence gateway.")
+        return "\n".join(lines), {**context, "premium": True, "summary": "premium two-year recall board",
+                                  "board": data}
 
     def _missing_vehicle(self, make: str | None) -> tuple[str, dict]:
         """No model given: read NHTSA's own model list and ask, instead of guessing."""

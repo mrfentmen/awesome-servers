@@ -467,5 +467,81 @@ class TurnTests(unittest.TestCase):
         self.assertEqual(data.calls[-1], {"kind": "vin", "vin": "5UXWX7C5*BA"})
 
 
+
+class PremiumGateTests(unittest.TestCase):
+    def gateway(self, key="lic_good", payload=None):
+        import json
+        from acp_kit import GatewayClient
+        from unittest.mock import Mock
+        def fetch(url, request, headers):
+            self.transport.append(request)
+            if key == "lic_live_but_rejected":
+                return {"result": {"isError": True, "content": [{"type": "text", "text": "Gateway says this licence is revoked."}],
+                                   "structuredContent": {"licenceRefusal": True, "reason": "revoked"}}}
+            return {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
+        self.transport = []
+        gateway = GatewayClient(fetch=fetch, key=key)
+        gateway.call = Mock(wraps=gateway.call)
+        return gateway
+
+    def test_no_key_attempts_premium_call_and_uses_client_refusal(self):
+        import os
+        from unittest.mock import patch
+        from acp_kit import GatewayError
+        from agent import VehiclesAgent
+        with patch.dict(os.environ, {}, clear=True):
+            gateway = self.gateway(key=None)
+            with self.assertRaises(GatewayError) as caught:
+                gateway.call("vehicle_recall_year_board", {'make': 'Honda', 'model': 'Civic', 'years': [2015, 2016]})
+            gateway.call.reset_mock()
+            answer, artifact = VehiclesAgent(gateway=gateway)._recall_board({'make': 'Honda', 'model': 'Civic', 'years': [2015, 2016]})
+        self.assertEqual(answer, str(caught.exception))
+        self.assertIn("MCP_LICENSE_KEY", answer)
+        self.assertEqual(artifact["reason"], "missing_key")
+        gateway.call.assert_called_once_with("vehicle_recall_year_board", {'make': 'Honda', 'model': 'Civic', 'years': [2015, 2016]})
+        self.assertEqual(self.transport, [])
+
+    def test_rejected_key_preserves_gateway_wording(self):
+        from agent import VehiclesAgent
+        gateway = self.gateway("lic_live_but_rejected")
+        answer, artifact = VehiclesAgent(gateway=gateway)._recall_board({'make': 'Honda', 'model': 'Civic', 'years': [2015, 2016]})
+        self.assertEqual(answer, "Gateway says this licence is revoked.")
+        self.assertEqual(artifact["reason"], "denied")
+        self.assertEqual(len(self.transport), 1)
+
+    def test_good_key_calls_once_with_arguments_and_real_numbers(self):
+        from agent import VehiclesAgent
+        gateway = self.gateway(payload={'years': [{'year': 2015, 'recallCount': 1, 'complaintCount': 380}, {'year': 2016, 'recallCount': 4, 'complaintCount': 612}], 'comparison': {'recallChange': 3, 'complaintChange': 232}})
+        answer, artifact = VehiclesAgent(gateway=gateway)._recall_board({'make': 'Honda', 'model': 'Civic', 'years': [2015, 2016]})
+        gateway.call.assert_called_once_with("vehicle_recall_year_board", {'make': 'Honda', 'model': 'Civic', 'years': [2015, 2016]})
+        self.assertEqual(len(self.transport), 1)
+        self.assertIn('612 complaint(s)', answer)
+        self.assertTrue(artifact["premium"])
+        self.assertEqual(route('recall board for Honda Civic years 2015 and 2016'), ('vehicle-recall-board', {'make': 'Honda', 'model': 'Civic', 'years': [2015, 2016]}))
+
+    def test_empty_payload_is_not_a_success(self):
+        from agent import VehiclesAgent
+        for payload in ({}, {"bulletins": [{}]}, {"years": [{}]}, {"daily": [{}]}):
+            answer, artifact = VehiclesAgent(gateway=self.gateway(payload=payload))._recall_board({'make': 'Honda', 'model': 'Civic', 'years': [2015, 2016]})
+            self.assertTrue(artifact.get("failed"), answer)
+
+    def test_free_turn_never_calls_gateway(self):
+        from agent import VehiclesAgent
+        gateway = self.gateway()
+        data = FakeData()
+        agent_conn, client_conn = connected_pair()
+        agent = VehiclesAgent(agent_conn, data, gateway=gateway)
+        threading.Thread(target=agent_conn.serve, daemon=True).start()
+        client = AcpClient(connection=client_conn, permission="allow-once")
+        client.start(); client.initialize()
+        session_id = client.new_session(cwd="/tmp")
+        try:
+            result = client.prompt('does a 2020 honda civic have recalls?', session_id)
+            self.assertEqual(result["stopReason"], STOP_END_TURN)
+            gateway.call.assert_not_called()
+        finally:
+            client.stop()
+
+
 if __name__ == "__main__":
     unittest.main()
