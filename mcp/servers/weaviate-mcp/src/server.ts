@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatObject, graphqlQuery, listClasses, listObjects, WeaviateError, schemaHealth, schemaDiff } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { formatObject, graphqlQuery, listClasses, listObjects, WeaviateError, schemaDiff } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -86,10 +86,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: schema_health ----
-    const paywallMessage = await premiumRequired("schema_health")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await schemaHealth(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_weaviate_schema_health", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 

@@ -113,18 +113,6 @@ type SchClass = {
   properties?: SchProp[]
 }
 
-const WV_PRIMITIVES = new Set([
-  "text", "string", "int", "number", "boolean", "date", "uuid", "blob",
-  "text[]", "string[]", "int[]", "number[]", "boolean[]", "date[]", "uuid[]", "blob[]",
-  "object",
-])
-
-const WV_TOKENIZATIONS = new Set([
-  "word", "lowercase", "whitespace", "field", "trigram", "gse", "kagome_kr", "kagome_ja", "gse_ch",
-])
-
-const WV_CAMEL = /^[A-Z][A-Za-z0-9]*$/
-
 function wvClasses(text: string): SchClass[] {
   const raw = String(text ?? "").trim()
   if (!raw) throw new WeaviateError("Nothing to read. Paste the schema JSON from GET /v1/schema.")
@@ -143,120 +131,8 @@ function wvClasses(text: string): SchClass[] {
   return list as SchClass[]
 }
 
-function wvProblems(cls: SchClass, known: Set<string>): string[] {
-  const out: string[] = []
-  const name = cls.class ?? "(unnamed)"
-  if (!cls.class) out.push("class has no name")
-  else if (!WV_CAMEL.test(cls.class)) {
-    out.push(`"${cls.class}" is not CamelCase; Weaviate asks for concatenated CamelCase class names such as ArticleAuthor`)
-  }
-  const named = cls.vectorConfig !== undefined
-  if (named && (cls.vectorizer !== undefined || cls.vectorIndexType !== undefined || cls.vectorIndexConfig !== undefined)) {
-    out.push("uses both vectorConfig and the class-level vectorizer/vectorIndexType fields; Weaviate says to use one or the other")
-  }
-  if (named) {
-    for (const [vName, cfg] of Object.entries(cls.vectorConfig ?? {})) {
-      if (!cfg || typeof cfg !== "object") out.push(`named vector "${vName}" has no config object`)
-      else if (!cfg.vectorIndexType) out.push(`named vector "${vName}" has no vectorIndexType, so it falls back to the server default`)
-    }
-  }
-  if (cls.vectorizer !== undefined && cls.vectorizer !== "none") {
-    const mods = Object.keys(cls.moduleConfig ?? {})
-    if (!mods.includes(cls.vectorizer)) {
-      out.push(`vectorizer is "${cls.vectorizer}" but moduleConfig has no "${cls.vectorizer}" block, so module defaults apply`)
-    }
-    for (const mod of mods) {
-      if (mod !== cls.vectorizer) out.push(`moduleConfig has "${mod}" but the collection vectorizer is "${cls.vectorizer}"; the other module is configured but not used`)
-    }
-  }
-  if (cls.vectorizer === "none" && !named) {
-    out.push("vectorizer is none, so every object has to be imported with its own vector")
-  }
-  const inv = cls.invertedIndexConfig
-  if (inv) {
-    const b = inv.bm25
-    if (b) {
-      if (typeof b.k1 === "number" && b.k1 <= 0) out.push(`invertedIndexConfig.bm25.k1 is ${b.k1}; it controls term-frequency saturation and should be positive`)
-      if (typeof b.b === "number" && (b.b < 0 || b.b > 1)) out.push(`invertedIndexConfig.bm25.b is ${b.b}; it is a length-normalisation weight and belongs between 0 and 1`)
-    }
-    if (inv.stopwords?.preset && inv.stopwordPresets && inv.stopwordPresets.length > 0) {
-      out.push("invertedIndexConfig sets both stopwords.preset and stopwordPresets; pick one so the list is unambiguous")
-    }
-    if (inv.indexNullState) out.push("invertedIndexConfig.indexNullState is on; modern Weaviate uses indexFilterable for null filters")
-  }
-  const props = Array.isArray(cls.properties) ? cls.properties : []
-  if (props.length === 0) out.push("collection has no properties, so there is nothing for BM25 to match or filter on")
-  const seen = new Set<string>()
-  let textProps = 0
-  let dateProps = 0
-  for (const p of props) {
-    const label = p.name ?? "(unnamed)"
-    if (!p.name) out.push("a property has no name")
-    else if (seen.has(p.name)) out.push(`property "${p.name}" is defined twice`)
-    else seen.add(p.name)
-    const types = Array.isArray(p.dataType) ? p.dataType : []
-    if (types.length === 0) out.push(`property "${label}" has no dataType, and Weaviate requires one`)
-    for (const t of types) {
-      if (WV_PRIMITIVES.has(t)) {
-        if (t === "text" || t === "string") textProps++
-        if (t === "date") dateProps++
-      } else if (!known.has(t)) {
-        out.push(`property "${label}" has dataType "${t}", which is neither a built-in type nor a collection defined in this schema`)
-      }
-    }
-    if (p.tokenization !== undefined) {
-      if (!WV_TOKENIZATIONS.has(p.tokenization)) {
-        out.push(`property "${label}" has tokenization "${p.tokenization}", which is not one of ${[...WV_TOKENIZATIONS].join(", ")}`)
-      } else if (p.tokenization === "field" && types.length > 0 && !types.every((t) => t === "text" || t === "string")) {
-        out.push(`property "${label}" uses field tokenization but is not a text property, which field tokenization only applies to`)
-      }
-    }
-    for (const n of p.nestedProperties ?? []) {
-      if (!Array.isArray(n.dataType) || n.dataType.length === 0) out.push(`nested property "${n.name ?? "(unnamed)"}" under "${label}" has no dataType`)
-    }
-  }
-  if (inv?.indexTimestamps && dateProps === 0) {
-    out.push("invertedIndexConfig.indexTimestamps is on but no property is a date, so there is nothing to timestamp-index")
-  }
-  if (inv?.indexTimestamps && textProps > 0) {
-    out.push("invertedIndexConfig.indexTimestamps is on; the docs describe it for date properties and text for change tracking, worth confirming it is what you want")
-  }
-  return out.map((p) => `${name}: ${p}`)
-}
-
 export interface WeaviateSchemaArgs {
   schema: string
-}
-
-export async function schemaHealth(args: WeaviateSchemaArgs): Promise<string> {
-  const classes = wvClasses(args.schema ?? "")
-  if (classes.length === 0) return "The schema has no collections in it."
-  const known = new Set(classes.map((c) => String(c.class ?? "")))
-  const lines: string[] = []
-  const all: string[] = []
-  for (const c of classes) all.push(...wvProblems(c, known))
-  const vec = new Map<string, number>()
-  const types = new Map<string, number>()
-  let propCount = 0
-  for (const c of classes) {
-    const key = c.vectorizer ?? (c.vectorConfig ? "named vectors" : "not reported")
-    vec.set(key, (vec.get(key) ?? 0) + 1)
-    for (const p of c.properties ?? []) {
-      propCount++
-      for (const t of p.dataType ?? []) types.set(t, (types.get(t) ?? 0) + 1)
-    }
-  }
-  lines.push(`${classes.length} collection(s), ${propCount} propert${propCount === 1 ? "y" : "ies"} checked locally against the Weaviate schema definition.`)
-  lines.push(`Vectorizers: ${[...vec.entries()].map(([k, v]) => `${k} (${v})`).join(", ")}`)
-  lines.push(`Data types: ${[...types.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([k, v]) => `${k} (${v})`).join(", ")}`)
-  lines.push("")
-  if (all.length === 0) {
-    lines.push("No problems found: every property has a dataType, every cross-reference resolves, the vectorizer and moduleConfig agree, and BM25 settings are in range.")
-  } else {
-    lines.push(`${all.length} thing(s) to look at:`)
-    lines.push(...all.map((p) => `  - ${p}`))
-  }
-  return lines.join("\n")
 }
 
 export interface WeaviateDiffArgs {
