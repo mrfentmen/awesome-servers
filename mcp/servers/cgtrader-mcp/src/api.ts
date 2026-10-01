@@ -100,47 +100,6 @@ export interface TreeArgs {
   min_children?: number;
 }
 
-/**
- * GET /v1/categories, rebuilt into a tree. The endpoint ignores a
- * parent_category_id filter and always returns the whole list, so the
- * hierarchy is assembled here.
- */
-export async function categoryTree(args: TreeArgs): Promise<string> {
-  const rows = await allCategories();
-  const byId = new Map(rows.map((r) => [r.id, r]));
-  const maxDepth = Math.max(1, Math.min(Math.floor(Number(args.depth ?? 2) || 2), 5));
-  const minChildren = Math.max(Number(args.min_children ?? 0) || 0, 0);
-
-  const roots = args.parent_id !== undefined
-    ? [byId.get(args.parent_id) ?? ({ id: args.parent_id, title: `category ${args.parent_id} (not in the list)` } as Category)]
-    : rows.filter((r) => r.parent_category_id === null || r.parent_category_id === undefined);
-
-  const lines = [
-    args.parent_id !== undefined
-      ? `CGTrader category tree under id ${args.parent_id}`
-      : `CGTrader category tree: ${rows.length} categories, ${roots.length} root(s)`,
-    "",
-  ];
-  const walk = (row: Category, depth: number, seen: Set<number>) => {
-    if (depth > maxDepth) return;
-    const kids = childrenOf(rows, row.id);
-    if (minChildren > 0 && kids.length < minChildren && depth > 0) return;
-    const dangling = row.parent_category_id !== null && row.parent_category_id !== undefined && !byId.has(row.parent_category_id);
-    lines.push(`${"  ".repeat(depth)}- [${row.id}] ${row.title ?? "(untitled)"} (${kids.length} child${kids.length === 1 ? "" : "ren"})${row.type ? ` | type ${row.type}` : ""}${dangling ? " | parent id is not in the list" : ""}`);
-    if (seen.has(row.id)) {
-      lines.push(`${"  ".repeat(depth + 1)}(cycle, not descending further)`);
-      return;
-    }
-    const next = new Set(seen);
-    next.add(row.id);
-    for (const k of kids) walk(k, depth + 1, next);
-  };
-  const visited = new Set<number>();
-  for (const r of roots) walk(r, 0, visited);
-  if (!lines[2]) lines.push("(no categories matched that parent id)");
-  return lines.join("\n");
-}
-
 export interface PathArgs {
   category: string;
 }
@@ -199,61 +158,3 @@ export interface ProfileArgs {
   min_descendants?: number;
 }
 
-/** Shape of the whole CGTrader taxonomy: roots, breadth, depth and dangling parents. */
-export async function taxonomyProfile(args: ProfileArgs): Promise<string> {
-  const minDesc = Math.max(Number(args.min_descendants ?? 1) || 1, 1);
-  const rows = await allCategories();
-  const byId = new Map(rows.map((r) => [r.id, r]));
-  const kids = new Map<number, number>();
-  for (const r of rows) {
-    if (r.parent_category_id !== null && r.parent_category_id !== undefined) {
-      kids.set(r.parent_category_id, (kids.get(r.parent_category_id) ?? 0) + 1);
-    }
-  }
-  const countDescendants = (id: number, seen = new Set<number>()): number => {
-    if (seen.has(id)) return 0;
-    const next = new Set(seen);
-    next.add(id);
-    let n = 0;
-    for (const c of rows) {
-      if (c.parent_category_id === id) n += 1 + countDescendants(c.id, next);
-    }
-    return n;
-  };
-  const roots = rows.filter((r) => r.parent_category_id === null || r.parent_category_id === undefined);
-  const dangling = rows.filter(
-    (r) => r.parent_category_id !== null && r.parent_category_id !== undefined && !byId.has(r.parent_category_id),
-  );
-  const leaves = rows.filter((r) => (kids.get(r.id) ?? 0) === 0);
-  const depths = rows.map((r) => pathOf(byId, r).length - 1);
-  const maxDepth = depths.length ? Math.max(...depths) : 0;
-  const types = new Map<string, number>();
-  for (const r of rows) {
-    const k = r.type ?? "type not reported";
-    types.set(k, (types.get(k) ?? 0) + 1);
-  }
-  const breadth = [...roots]
-    .map((r) => ({ root: r, descendants: countDescendants(r.id) }))
-    .filter((r) => r.descendants >= minDesc)
-    .sort((a, b) => b.descendants - a.descendants);
-
-  const lines = [
-    `CGTrader taxonomy: ${rows.length} categories`,
-    `Roots: ${roots.length} | leaf categories: ${leaves.length} | max depth below a root: ${maxDepth}`,
-    `Roots shown have at least ${minDesc} descendant(s).`,
-    "",
-    "By type:",
-    ...[...types.entries()].sort((a, b) => b[1] - a[1]).map(([t, n]) => `  ${t}: ${n}`),
-    "",
-    "Root categories by how much sits underneath them:",
-  ];
-  if (!breadth.length) lines.push(`  (no root category reaches ${minDesc} descendant(s))`);
-  for (const { root, descendants } of breadth) {
-    lines.push(`  [${root.id}] ${root.title} — ${descendants} descendant(s), ${kids.get(root.id) ?? 0} direct child(ren)`);
-  }
-  if (dangling.length) {
-    lines.push("", `Categories pointing at a parent id that is not in the list (${dangling.length}):`);
-    for (const d of dangling.slice(0, 10)) lines.push(`  [${d.id}] ${d.title} claims parent ${d.parent_category_id}`);
-  }
-  return lines.join("\n");
-}

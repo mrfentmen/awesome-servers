@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, listModels, getModel, listModelFiles, getMe, categoryTree, categoryPath, taxonomyProfile } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, listModels, getModel, listModelFiles, getMe, categoryPath } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -102,10 +102,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: category_tree ----
-    const paywallMessage = await premiumRequired("category_tree")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await categoryTree(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_cgtrader_category_tree", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -136,10 +135,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: taxonomy_profile ----
-    const paywallMessage = await premiumRequired("taxonomy_profile")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await taxonomyProfile(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_cgtrader_taxonomy_profile", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
