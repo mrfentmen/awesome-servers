@@ -1,9 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { filter } from "./api.js"
-import { suggest, patternWords, rhymingWords, wordFacts } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { filter, suggest } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -45,10 +44,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: pattern_words ----
-    const paywallMessage = await premiumRequired("pattern_words")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await patternWords(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wordle_helper_pattern_words", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -62,10 +60,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: rhyming_words ----
-    const paywallMessage = await premiumRequired("rhyming_words")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await rhymingWords(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wordle_helper_rhyming_words", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -79,10 +76,25 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: word_facts ----
-    const paywallMessage = await premiumRequired("word_facts")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await wordFacts(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wordle_helper_word_facts", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "related_words",
+    {
+      title: "Related words",
+      description: "Find real dictionary words commonly modified by a given word, with corpus frequency.",
+      inputSchema: z.object( { word: z.string().describe("Word to look up."), limit: z.number().optional() } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: related_words ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_wordle_helper_related_words", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
