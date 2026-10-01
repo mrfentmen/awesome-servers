@@ -121,68 +121,6 @@ const avBn = (raw: unknown): string => {
   if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
   return n.toLocaleString();
 };
-const avMoney = (raw: unknown, currency: string): string => {
-  const n = avNum(raw);
-  if (!n) return "not reported";
-  return `${currency === "USD" ? "$" : ""}${n.toLocaleString(undefined, { maximumFractionDigits: 3 })}`;
-};
-
-/**
- * A company's own fundamentals as Alpha Vantage reports them: sector, industry,
- * market capitalisation, the profitability and balance-sheet ratios, the
- * dividend, earnings dates and its description. The four existing tools all read a
- * live price, and none of them says what the company is.
- */
-export async function companyProfile(args: { symbol: string }): Promise<string> {
-  const symbol = String(args?.symbol ?? "").trim().toUpperCase();
-  if (!symbol) throw new AlphaVantageError("Give a symbol, e.g. IBM or AAPL.");
-  const d = await avQuery<Record<string, string>>({ function: "OVERVIEW", symbol }, `The OVERVIEW call for ${symbol}`);
-  if (!d.Symbol) throw new AlphaVantageError(`Alpha Vantage returned no OVERVIEW record for ${symbol}.`);
-
-  const currency = d.Currency || "not reported";
-  const ratio = (label: string, value?: string, suffix = ""): string =>
-    value ? `  ${label.padEnd(26)}${value}${suffix}` : "";
-
-  return [
-    `Company profile for ${d.Name ?? symbol} (${d.Symbol})`,
-    `  ${d.AssetType ?? "asset type not reported"} | ${d.Exchange ?? "exchange not reported"} | ${d.Currency ?? "not reported"}`,
-    `  ${d.Sector ?? "sector not reported"} / ${d.Industry ?? "industry not reported"} | ${d.Country ?? "country not reported"}`,
-    d.CIK ? `  CIK ${d.CIK} | fiscal year ends ${d.FiscalYearEnd ?? "not reported"} | latest quarter ${d.LatestQuarter ?? "not reported"}` : "  CIK not reported",
-    "",
-    "Size and valuation:",
-    ratio("market capitalisation", d.MarketCapitalization ? avMoney(d.MarketCapitalization, currency) : undefined),
-    ratio("EBITDA", d.EBITITDA ? avMoney(d.EBITITDA, currency) : undefined),
-    ratio("P/E ratio", d.PERatio),
-    ratio("PEG ratio", d.PEGRatio),
-    ratio("price to book", d.PriceToBookRatio),
-    ratio("book value per share", d.BookValue ? avMoney(d.BookValue, currency) : undefined),
-    "",
-    "Per share:",
-    ratio("EPS", d.EPS ? avMoney(d.EPS, currency) : undefined),
-    ratio("dividend per share", d.DividendPerShare ? avMoney(d.DividendPerShare, currency) : undefined),
-    ratio("dividend yield", d.DividendYield ? `${d.DividendYield}%` : undefined),
-    "",
-    "Profitability and health:",
-    ratio("profit margin", d.ProfitMargin ? `${d.ProfitMargin}%` : undefined),
-    ratio("operating margin", d.OperatingMarginTTM ? `${d.OperatingMarginTTM}%` : undefined),
-    ratio("return on assets", d.ReturnOnAssetsTTM ? `${d.ReturnOnAssetsTTM}%` : undefined),
-    ratio("return on equity", d.ReturnOnEquityTTM ? `${d.ReturnOnEquityTTM}%` : undefined),
-    ratio("revenue TTM", d.RevenueTTM ? avMoney(d.RevenueTTM, currency) : undefined),
-    ratio("gross profit TTM", d.GrossProfitTTM ? avMoney(d.GrossProfitTTM, currency) : undefined),
-    ratio("debt / equity", d.DebtToEquity),
-    ratio("current ratio", d.CurrentRatio),
-    ratio("quick ratio", d.QuickRatio),
-    ratio("52-week high", d.FiftyTwoWeekHigh ? avMoney(d.FiftyTwoWeekHigh, currency) : undefined),
-    ratio("52-week low", d.FiftyTwoWeekLow ? avMoney(d.FiftyTwoWeekLow, currency) : undefined),
-    "",
-    d.Description ? `Description: ${String(d.Description).replace(/\s+/g, " ").slice(0, 420)}${String(d.Description).length > 420 ? " …" : ""}` : "Description: not published",
-    d.OfficialSite ? `Site: ${d.OfficialSite} | ${d.Address ?? "address not reported"}` : "",
-    "",
-    "These are Alpha Vantage's own derived figures, refreshed on its schedule rather than at the moment of this call, and several of them are undefined for most companies rather than zero, which is why an absent line is printed as absent. Percentages are given as the service writes them, so a negative margin carries its own sign. A market capitalisation here is not a price you can trade at.",
-  ]
-    .filter(Boolean)
-    .join("\n");
-}
 
 /**
  * A symbol's own price history, read from the daily or intraday series: the
