@@ -44,21 +44,6 @@ async function wikiGet<T>(params: Record<string, string>): Promise<T> {
   return (await res.json()) as T
 }
 
-/** The plain-text opening of a travel guide, with its coordinates if mapped. */
-export async function guideArticle(args: { title?: string }): Promise<string> {
-  const title = (args.title ?? "").trim()
-  if (!title) throw new Error("Provide a page title, e.g. Tokyo or Lisbon")
-  const d = await wikiGet<{
-    query?: { pages?: Record<string, { title?: string; missing?: string; extract?: string; pageid?: number }> }
-  }>({ action: "query", prop: "extracts|pageimages|coordinates", exintro: "1", explaintext: "1", redirects: "1", piprop: "name", titles: title })
-  const pages = d.query?.pages ?? {}
-  const page = Object.values(pages)[0]
-  if (!page || page.missing !== undefined) return `Wikivoyage has no page titled "${title}".`
-  const extract = (page.extract ?? "").trim()
-  if (!extract) return `"${page.title}" has no plain-text extract.`
-  return `# ${page.title}\n${extract.slice(0, 1800)}${extract.length > 1800 ? "\n…(truncated)" : ""}`
-}
-
 /** The table of contents of a guide, with per-section line numbers. */
 export async function guideSections(args: { title?: string }): Promise<string> {
   const title = (args.title ?? "").trim()
@@ -74,21 +59,25 @@ export async function guideSections(args: { title?: string }): Promise<string> {
     body.map((s) => `  ${"  ".repeat(Math.max(0, Number(s.level ?? 1) - 1))}# ${(s.line ?? "").trim()}`).join("\n")
 }
 
-/** Wikivoyage pages near a coordinate, nearest first, with the distance. */
-export async function nearbyGuides(args: { lat?: number; lon?: number; limit?: number }): Promise<string> {
-  const lat = Number(args.lat)
-  const lon = Number(args.lon)
-  if (!Number.isFinite(lat) || lat < -90 || lat > 90) throw new Error("Provide lat between -90 and 90")
-  if (!Number.isFinite(lon) || lon < -180 || lon > 180) throw new Error("Provide lon between -180 and 180")
-  const limit = Math.max(1, Math.min(args.limit ?? 8, 25))
-  const d = await wikiGet<{ query?: { geosearch?: Array<{ title?: string; lat?: number; lon?: number; dist?: number; primary?: string }> } }>({
-    action: "query",
-    list: "geosearch",
-    gscoord: `${lat}|${lon}`,
-    gslimit: String(limit),
-  })
-  const rows = d.query?.geosearch ?? []
-  if (!rows.length) return `No Wikivoyage guides mapped near ${lat}, ${lon}.`
-  return `Wikivoyage guides near ${lat}, ${lon} (${rows.length} found):\n` +
-    rows.map((r, i) => `${i + 1}. ${r.title ?? "?"} - ${r.lat}, ${r.lon} (${r.dist ?? "?"} m away)${r.primary ? ` [${r.primary}]` : ""}`).join("\n")
+// ---- gap4a4 tools:
+
+async function gapQuery(params: Record<string, string>): Promise<any> {
+  const query = new URLSearchParams({action: 'query', format: 'json', ...params});
+  const res = await fetch(`https://en.wikivoyage.org/w/api.php?${query}`, {
+    headers: {'User-Agent': 'mrfentmen-wikivoyage-mcp/1.0', Accept: 'application/json'},
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error(`Wiki API returned ${res.status}`);
+  const data = await res.json() as any;
+  if (data.error) throw new Error(data.error.info ?? 'Wiki API error');
+  return data;
+}
+
+export async function pageBacklinks(args: { title: string; limit?: number }): Promise<string> {
+  const limit = Math.max(1, Math.min(Math.round(args.limit ?? 10), 30));
+  const title = args.title.trim();
+  if (!title) throw new Error('Provide a page title.');
+  const data = await gapQuery({list: 'backlinks', bltitle: title, bllimit: String(limit)});
+  const rows = data.query?.backlinks ?? [];
+  return rows.length ? rows.slice(0, limit).map((r: any, i: number) => `${i + 1}. ${String(r.title ?? 'not reported').slice(0, 250)} | page ${r.pageid ?? 'not reported'} | namespace ${r.ns ?? 'not reported'}`).join('\n') : 'No backlinks returned.';
 }
