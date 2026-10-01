@@ -1,8 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatPin, listPins, pinJson, PinataError, unpin, decodeCidTool, compareCids, convertCid } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { formatPin, listPins, pinJson, unpin } from "./vendor-api.js"
 
+import { PinataError, convertCid } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -89,10 +90,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: decode_cid ----
-    const paywallMessage = await premiumRequired("decode_cid")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await decodeCidTool(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_pinata_decode_cid", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -109,10 +109,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: compare_cids ----
-    const paywallMessage = await premiumRequired("compare_cids")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await compareCids(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_pinata_compare_cids", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
