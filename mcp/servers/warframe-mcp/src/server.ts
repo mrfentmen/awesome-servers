@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { state, invasions, nightwave } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { state, nightwave, dailyDeals } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -32,10 +32,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: invasions ----
-    const paywallMessage = await premiumRequired("invasions")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await invasions(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_warframe_invasions", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -49,6 +48,51 @@ export function createServer(): McpServer {
     },
     async (args) => {
     try { return text(await nightwave(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "sortie",
+    {
+      title: "Sortie",
+      description: "Current Warframe sortie boss, faction and three mission modifiers.",
+      inputSchema: z.object( {} ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: sortie ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_warframe_sortie", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "archon_hunt",
+    {
+      title: "Archon hunt",
+      description: "Current Warframe Archon hunt boss and mission sequence.",
+      inputSchema: z.object( {} ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: archon_hunt ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_warframe_archon_hunt", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "daily_deals",
+    {
+      title: "Daily deals",
+      description: "Current Warframe Darvo daily deals with prices, discount and stock.",
+      inputSchema: z.object( { limit: z.number().int().min(1).max(25).optional() } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await dailyDeals(args)) } catch (e) { return textError(error(e)) }
   }
   )
 

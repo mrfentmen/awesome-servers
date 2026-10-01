@@ -27,7 +27,7 @@ export async function state(_args?: unknown): Promise<string> {
 }
 
 // ---- muxB tools:
-const INVASIONS_URL = 'https://api.warframestat.us/pc/invasions?language=en';
+
 const NIGHTWAVE_URL = 'https://api.warframestat.us/pc/nightwave?language=en';
 
 async function warframeJson<T>(url: string): Promise<T> {
@@ -45,26 +45,6 @@ export interface InvasionsArgs {
 
 export interface NightwaveArgs {
   limit?: number;
-}
-
-export async function invasions(args: InvasionsArgs = {}): Promise<string> {
-  const limit = Math.max(1, Math.min(args.limit ?? 5, 15));
-  const rows = await warframeJson<Array<{
-    node?: string;
-    desc?: string;
-    activation?: string;
-    attacker?: { faction?: string; reward?: { countedItems?: Array<{ key?: string; count?: number }> } };
-    defender?: { faction?: string; reward?: { countedItems?: Array<{ key?: string; count?: number }> } };
-  }>>(INVASIONS_URL);
-  if (!rows.length) return 'No invasions reported right now.';
-  const line = (side: { faction?: string; reward?: { countedItems?: Array<{ key?: string; count?: number }> } } | undefined) => {
-    const loot = (side?.reward?.countedItems ?? []).slice(0, 2).map((i) => `${i.key ?? '?'} x${i.count ?? 0}`).join(', ');
-    return `${side?.faction ?? '?'} (${loot || 'no item reward reported'})`;
-  };
-  return `Ongoing Warframe invasions (${Math.min(limit, rows.length)} of ${rows.length} shown):\n` +
-    rows.slice(0, limit)
-      .map((r, i) => `${i + 1}. ${r.node ?? '?'} — ${r.desc ?? 'not reported'} (started ${r.activation ?? 'not reported'})\n   Attacker: ${line(r.attacker)}\n   Defender: ${line(r.defender)}`)
-      .join('\n');
 }
 
 export async function nightwave(args: NightwaveArgs = {}): Promise<string> {
@@ -85,4 +65,13 @@ export async function nightwave(args: NightwaveArgs = {}): Promise<string> {
       .slice(0, limit)
       .map((c, i) => `${i + 1}. ${c.title ?? 'untitled'} | ${c.reputation ?? 0} rep | ${c.desc ?? 'no description'}${c.isElite ? ' | elite' : ''}${c.isPermanent ? ' | permanent' : ''}`),
   ].join('\n');
+}
+
+// ---- gap4c3 tools:
+
+export async function dailyDeals(args: { limit?: number } = {}): Promise<string> {
+  const limit = Math.max(1, Math.min(Math.trunc(args.limit ?? 10), 25));
+  const rows = await warframeJson<Array<{ item?: string; originalPrice?: number; salePrice?: number; discount?: number; sold?: number; total?: number; expiry?: string }>>('https://api.warframestat.us/pc/dailyDeals');
+  if (!rows.length) return 'No daily deals reported.';
+  return `Daily deals (${Math.min(limit, rows.length)} shown):\n` + rows.slice(0, limit).map((r, i) => `${i + 1}. ${r.item ?? 'not reported'} | ${r.salePrice ?? 'not reported'} plat (was ${r.originalPrice ?? 'not reported'}) | ${r.discount ?? 'not reported'}% off | ${r.sold ?? 'not reported'}/${r.total ?? 'not reported'} sold | expires ${r.expiry ?? 'not reported'}`).join('\n');
 }
