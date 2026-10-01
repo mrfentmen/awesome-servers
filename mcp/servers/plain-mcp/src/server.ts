@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, listCustomers, listThreads, getThread, emailDeliverability, responseTimeReport } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, listCustomers, listThreads, getThread } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -84,10 +84,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: email_deliverability ----
-    const paywallMessage = await premiumRequired("email_deliverability")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await emailDeliverability(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_plain_email_deliverability", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -109,10 +108,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: response_time_report ----
-    const paywallMessage = await premiumRequired("response_time_report")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await responseTimeReport(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_plain_response_time_report", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
