@@ -414,95 +414,11 @@ function checkAppid(raw: unknown): number {
 //   <strong>Minimum:</strong><br><ul class="bb_ul"><li>Requires a 64-bit ...
 // so the tags become line breaks before the tags are dropped, or the whole
 // thing collapses into one run of text.
-function requirementLines(s: unknown): string[] {
-  if (typeof s !== "string" || !s) return [];
-  return s
-    .replace(/<\s*br\s*\/?\s*>/gi, "\n")
-    .replace(/<\s*\/\s*(li|p|ul|ol|h[1-6])\s*>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .split("\n")
-    .map((x) => x.replace(/\s+/g, " ").trim())
-    .filter((x) => x.length > 0);
-}
 
 const str = (v: unknown): string => (typeof v === "string" ? v : "");
 
 export interface GameRequirementsArgs {
   appid: number;
-}
-
-export function game_requirements(args: GameRequirementsArgs): Promise<string> {
-  const appid = checkAppid(args?.appid);
-  return appDetails(appid).then((data) => {
-    if (!data) return `Steam has no store entry for appid ${appid}, so there are no requirements to report.`;
-    const name = str(data.name) || `appid ${appid}`;
-    const lines = [`What "${name}" (appid ${appid}) needs to run:`];
-    let anyPlatform = false;
-    for (const [key, label] of [
-      ["pc_requirements", "Windows"],
-      ["mac_requirements", "macOS"],
-      ["linux_requirements", "Linux"],
-    ] as const) {
-      const block = data[key] as Json | undefined;
-      if (!block) continue;
-      const minimum = requirementLines(block.minimum);
-      const recommended = requirementLines(block.recommended);
-      if (!minimum.length && !recommended.length) continue;
-      anyPlatform = true;
-      lines.push(`  ${label}:`);
-      if (minimum.length) {
-        lines.push("    minimum:");
-        for (const l of minimum) lines.push(`      ${l}`);
-      }
-      if (recommended.length) {
-        lines.push("    recommended:");
-        for (const l of recommended) lines.push(`      ${l}`);
-      }
-    }
-    if (!anyPlatform) {
-      lines.push("  Steam lists no minimum or recommended requirements for this title, which usually means it has no desktop requirements rather than that any machine will do.");
-    }
-    const platforms = (data.platforms as Json | undefined) ?? null;
-    if (platforms) {
-      const on = Object.entries(platforms)
-        .filter(([, v]) => v === true)
-        .map(([k]) => k);
-      lines.push("");
-      lines.push(`  Steam Deck and desktop support flags: ${on.length ? on.join(", ") : "none of windows, mac or linux"}.`);
-    }
-    const age = data.required_age;
-    if (age !== undefined && age !== null && age !== 0) {
-      lines.push(`  Steam's recommended minimum age is ${age}.`);
-    }
-    const desc = data.content_descriptors as Json | string[] | undefined;
-    if (desc) {
-      // The live API returns this as an object with ids and notes, not as the
-      // list of {description} objects the field is documented as.
-      const notes = Array.isArray(desc) ? (desc as string[]) : Array.isArray(desc.notes) ? (desc.notes as string[]) : [];
-      if (notes.length) {
-        lines.push(`  user-defined content notes: ${notes.join("; ")}`);
-      } else {
-        const ids = Array.isArray(desc) ? [] : Array.isArray(desc.ids) ? (desc.ids as number[]) : [];
-        if (ids.length) lines.push(`  Steam flags content descriptor id(s) ${ids.join(", ")}, which cover violence, language and sexual content ratings.`);
-      }
-    }
-    const langs = data.supported_languages;
-    if (typeof langs === "string") {
-      // The list is comma separated but carries footnote markup, as in
-      // "English<strong>*</strong>, French", so the tags come out first.
-      const list = requirementLines(langs.replace(/,/g, "<br>"));
-      const others = list.filter((x) => x && !/^English/i.test(x));
-      lines.push(`  interface languages: ${others.length ? `${others.length} besides English, including ${others.slice(0, 6).join(", ")}` : "English only"}.`);
-    }
-    lines.push("");
-    lines.push("  The existing game details tool reports name, price, developers and description, none of which is any of the above.");
-    return lines.join("\n");
-  });
 }
 
 function cents(data: Json): number | null {
@@ -521,84 +437,6 @@ function cents(data: Json): number | null {
 
 export interface GameDlcCostArgs {
   appid: number;
-}
-
-export function game_dlc_cost(args: GameDlcCostArgs): Promise<string> {
-  const appid = checkAppid(args?.appid);
-  return appDetails(appid).then(async (data) => {
-    if (!data) return `Steam has no store entry for appid ${appid}, so there is no price to total.`;
-    const name = str(data.name) || `appid ${appid}`;
-    const ids = Array.isArray(data.dlc) ? (data.dlc as unknown[]).filter((x) => Number.isFinite(Number(x))).map(Number) : [];
-    const base = data.is_free === true ? 0 : cents(data);
-    const lines = [`Cost of owning "${name}" (appid ${appid}) completely:`];
-    lines.push(
-      base === null
-        ? "  the base game has no price in this region"
-        : base === 0
-          ? "  base game: free"
-          : `  base game: ${str((data.price_overview as Json)?.final_formatted) || "$0.00"}`
-    );
-    if (!ids.length) {
-      lines.push("  this title has no downloadable content, so the base game is the whole thing.");
-      lines.push("");
-      lines.push("  Steam does not sell this as a package, so there is no edition to compare against.");
-      return lines.join("\n");
-    }
-    lines.push(`  ${ids.length} downloadable item(s), each priced on its own:`);
-    // appdetails takes one id per call, so this is one request per DLC. They
-    // are sequential rather than parallel to stay gentle on the store.
-    let total = base ?? 0;
-    let priced = 0;
-    let missing = 0;
-    for (const id of ids.slice(0, 25)) {
-      const d = await appDetails(id);
-      if (!d) {
-        missing++;
-        lines.push(`    appid ${id}: no store entry`);
-        continue;
-      }
-      const dn = str(d.name) || `appid ${id}`;
-      const isFree = d.is_free === true;
-      const c = isFree ? 0 : cents(d);
-      if (c === null) missing++;
-      else {
-        total += c;
-        priced++;
-      }
-      lines.push(`    ${str((d.price_overview as Json)?.final_formatted).padEnd(10)} ${dn.slice(0, 64)}`);
-    }
-    if (ids.length > 25) lines.push(`    and ${ids.length - 25} more not listed.`);
-    lines.push("");
-    if (priced > 0) {
-      lines.push(`  owning the base game and all ${priced} priced item(s) comes to about ${(total / 100).toFixed(2)} in this region's currency.`);
-    }
-    if (missing) lines.push(`  ${missing} item(s) had no readable price, so that figure is a floor rather than a total.`);
-    if (base !== null && priced > 0) {
-      const each = (total - base) / 100;
-      lines.push(`  the downloadable content on its own accounts for ${each.toFixed(2)}, which is ${((each / (base / 100)) * 100).toFixed(0)}% of the base game.`);
-    }
-    // Editions are the usual way this gets cheaper, so they are reported too.
-    const groups = Array.isArray(data.package_groups) ? (data.package_groups as Json[]) : [];
-    const subs: Json[] = [];
-    for (const g of groups) if (Array.isArray(g.subs)) subs.push(...(g.subs as Json[]));
-    if (subs.length) {
-      lines.push("");
-      lines.push("  editions, which may be cheaper than the sum above:");
-      const pricedSubs = subs
-        .map((s) => ({ text: str(s.option_text), cents: Number(s.price_in_cents_with_discount) }))
-        .filter((s) => s.cents > 0);
-      const cheapest = pricedSubs.reduce<number | null>((a, s) => (a === null || s.cents < a ? s.cents : a), null);
-      for (const s of pricedSubs.slice(0, 6)) lines.push(`    ${(s.cents / 100).toFixed(2).padStart(8)}  ${s.text.slice(0, 60)}`);
-      if (cheapest !== null && base !== null && cheapest >= total) {
-        lines.push(`    buying every item separately is cheaper than the cheapest edition, at ${(total / 100).toFixed(2)} against ${(cheapest / 100).toFixed(2)}.`);
-      } else if (cheapest !== null && base !== null) {
-        lines.push(`    the cheapest edition at ${(cheapest / 100).toFixed(2)} is above the base game alone, so it bundles content you may not want.`);
-      }
-    }
-    lines.push("");
-    lines.push("  The existing game details tool reports the base price only, so neither the DLC total nor the edition comparison is reachable with it.");
-    return lines.join("\n");
-  });
 }
 
 export interface GameAchievementsArgs {

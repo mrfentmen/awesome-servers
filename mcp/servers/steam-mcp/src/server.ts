@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { SteamError, fmtPrice, formatAppDetail, formatStoreItem, getAppDetail, getNews, getPlayerCount, getReviewSummary, getTopSellers, searchStore, storeHighlights, salesCheck, playerCountRank, game_requirements, game_dlc_cost, game_achievements } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { SteamError, fmtPrice, formatAppDetail, formatStoreItem, getAppDetail, getNews, getPlayerCount, getReviewSummary, getTopSellers, searchStore, storeHighlights, salesCheck, playerCountRank, game_achievements } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -222,16 +222,11 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ appid }) => {
+    async (args) => {
       // ---- paywall: game_requirements ----
-      const paywallMessage = await premiumRequired("game_requirements")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await game_requirements({ appid }))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_steam_game_requirements", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -245,16 +240,11 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ appid }) => {
+    async (args) => {
       // ---- paywall: game_dlc_cost ----
-      const paywallMessage = await premiumRequired("game_dlc_cost")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await game_dlc_cost({ appid }))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_steam_game_dlc_cost", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
