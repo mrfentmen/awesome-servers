@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { companyJobs, findJobs, job, jobInsights, jobs, MUSE_LEVELS, searchJobs, listCompanies, companySearch, compareCompanies, postingAgeCensus, marketConcentration, requirementsScan } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { companyJobs, findJobs, job, jobInsights, jobs, MUSE_LEVELS, searchJobs, listCompanies, companySearch, compareCompanies, marketConcentration } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -189,10 +189,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: posting_age_census ----
-    const paywallMessage = await premiumRequired("posting_age_census")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await postingAgeCensus(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_themuse_posting_age_census", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -222,10 +221,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: requirements_scan ----
-    const paywallMessage = await premiumRequired("requirements_scan")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await requirementsScan(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_themuse_requirements_scan", args)) } catch (e) { return textError(error(e)) }
   }
   )
 

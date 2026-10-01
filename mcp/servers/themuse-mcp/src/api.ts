@@ -25,7 +25,7 @@ const clamp = (value: number | undefined, fallback: number, max: number) =>
   Math.min(Math.max(Number(value ?? fallback) || fallback, 1), max);
 
 const plain = (html?: string) =>
-  String(html ?? '').replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+  String(html ?? '').replace(new RegExp("<[^>]+>", "g"), ' ').replace(new RegExp("&[a-z#0-9]+;", "gi"), ' ').replace(new RegExp("\\s+", "g"), ' ').trim();
 
 const names = (list?: Array<{ name?: string }>) =>
   (list ?? []).map((entry) => entry.name).filter(Boolean).join(', ') || 'n/a';
@@ -363,19 +363,6 @@ function tmBound(value: unknown, min: number, max: number, fallback: number): nu
   return Math.max(min, Math.min(Math.floor(n), max))
 }
 
-function tmText(html: string): string {
-  return html
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&#0?39;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/\s+/g, " ")
-    .trim()
-}
-
 async function tmPages(pages: number): Promise<{ jobs: TmJob[]; meta: TmPage }> {
   const out: TmJob[] = []
   let meta: TmPage = {}
@@ -395,76 +382,8 @@ async function tmPages(pages: number): Promise<{ jobs: TmJob[]; meta: TmPage }> 
   return { jobs: out, meta }
 }
 
-function tmDays(iso: string | undefined, now: number): number | null {
-  if (!iso) return null
-  const t = Date.parse(iso)
-  return Number.isNaN(t) ? null : Math.round((now - t) / 86400000)
-}
-
 function tmRank<K>(m: Map<K, number>, n: number): [K, number][] {
   return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, n)
-}
-
-/** How fresh the listings are, which a job board never tells you as a number. */
-export async function postingAgeCensus(args: { pages?: number }): Promise<string> {
-  const pages = tmBound(args?.pages, 1, 5, 2)
-  const { jobs, meta } = await tmPages(pages)
-  const now = Date.now()
-
-  const buckets: [string, (d: number) => boolean][] = [
-    ["under 7 days", (d) => d < 7],
-    ["7 to 30 days", (d) => d >= 7 && d < 30],
-    ["1 to 3 months", (d) => d >= 30 && d < 90],
-    ["3 to 6 months", (d) => d >= 90 && d < 180],
-    ["6 to 12 months", (d) => d >= 180 && d < 365],
-    ["over a year", (d) => d >= 365],
-  ]
-  const counts = new Map<string, number>()
-  const ages: number[] = []
-  const undated = jobs.filter((j) => !j.publication_date).length
-  const byCompany = new Map<string, number[]>()
-  for (const j of jobs) {
-    const d = tmDays(j.publication_date, now)
-    if (d === null) continue
-    ages.push(d)
-    for (const [label, test] of buckets) if (test(d)) counts.set(label, (counts.get(label) ?? 0) + 1)
-    const c = j.company?.name ?? "not reported"
-    if (!byCompany.has(c)) byCompany.set(c, [])
-    byCompany.get(c)!.push(d)
-  }
-  ages.sort((a, b) => a - b)
-  const median = ages.length ? ages[Math.floor(ages.length / 2)] : 0
-  const over30 = ages.filter((d) => d >= 30).length
-  const over90 = ages.filter((d) => d >= 90).length
-
-  const stales = [...byCompany.entries()]
-    .filter(([, ds]) => ds.length >= 2)
-    .map(([c, ds]) => ({ company: c, n: ds.length, median: ds.slice().sort((a, b) => a - b)[Math.floor(ds.length / 2)] }))
-    .sort((a, b) => b.median - a.median)
-
-  return [
-    `Posting age census over ${jobs.length} live listing(s) from ${pages} page(s) of the Muse public API`,
-    `The API reports ${(meta.total ?? 0).toLocaleString("en-US")} total postings across ${(meta.page_count ?? 0).toLocaleString("en-US")} pages, so this is a small, recent slice of the index.`,
-    "",
-    `Median age of a live listing: ${median} day(s)`,
-    `Newest: ${ages.length ? Math.min(...ages) : "?"} day(s) | oldest: ${ages.length ? Math.max(...ages) : "?"} day(s)`,
-    `${undated ? `${undated} listing(s) carry no publication_date and are excluded from the ages. ` : ""}${over30} (${ages.length ? ((over30 / ages.length) * 100).toFixed(0) : 0}%) are more than a month old and ${over90} are more than three months old.`,
-    "",
-    "Age distribution:",
-    ...buckets.map(([label]) => {
-      const n = counts.get(label) ?? 0
-      return `  ${String(n).padStart(4)}  ${label.padEnd(14)} ${"#".repeat(Math.min(50, Math.round((n / Math.max(1, ages.length)) * 50)))}`
-    }),
-    "",
-    "Companies whose listings look stalest:",
-    ...(stales.length
-      ? stales.slice(0, TM_LIST_CAP).map((s) => `  ${String(s.median).padStart(5)} day(s) median over ${s.n} listing(s)  ${s.company}`)
-      : ["  not enough listings per company in this sample to say"]),
-    "",
-    "A listing on a job board is not a job opening. A long tail of postings months old usually means the employer left the advert up after the role was filled or put on hold, so a median age far above 30 days should make you discount the volume on the site.",
-  ]
-    .filter(Boolean)
-    .join("\n")
 }
 
 /** Who is actually hiring in a slice, and how concentrated the market is. */
@@ -492,7 +411,7 @@ export async function marketConcentration(args: { pages?: number }): Promise<str
   const hhi = ranked.reduce((s, [, n]) => s + (n / jobs.length) ** 2, 0)
   const single = ranked[0]
   const multi = ranked.filter(([, n]) => n === 1).length
-  const remote = [...locations.keys()].filter((l) => /remote/i.test(l)).reduce((s, l) => s + (locations.get(l) ?? 0), 0)
+  const remote = [...locations.keys()].filter((l) => new RegExp("remote", "i").test(l)).reduce((s, l) => s + (locations.get(l) ?? 0), 0)
 
   return [
     `Hiring concentration across ${jobs.length} listing(s) from ${pages} page(s) of the Muse public API`,
@@ -523,76 +442,3 @@ export async function marketConcentration(args: { pages?: number }): Promise<str
     .join("\n")
 }
 
-const TM_STOP = new Set([
-  "the", "and", "for", "with", "that", "this", "from", "you", "your", "our", "are", "will", "have", "has", "not",
-  "all", "can", "who", "job", "role", "team", "work", "working", "about", "their", "they", "them", "his", "her",
-  "but", "was", "were", "been", "being", "would", "should", "could", "may", "more", "than", "into", "over", "such",
-  "we", "us", "at", "in", "on", "of", "to", "is", "it", "as", "an", "or", "be", "by", "we're", "us.", "a", "if",
-])
-
-/** What the postings on a slice of the board actually ask for, read out of the description text. */
-export async function requirementsScan(args: { pages?: number; location?: string }): Promise<string> {
-  const pages = tmBound(args?.pages, 1, 4, 1)
-  const location = String(args?.location ?? "").trim()
-  const { jobs } = await tmPages(pages)
-  const sample = location
-    ? jobs.filter((j) => (j.locations ?? []).some((l) => new RegExp(location, "i").test(l.name ?? "")))
-    : jobs
-  if (!sample.length) throw new MuseError(`No listing in this sample matches the location "${location}".`)
-
-  const salaryTiers = new Map<string, number>()
-  const withSalary: string[] = []
-  const withoutSalary: string[] = []
-  const terms = new Map<string, number>()
-  const withLevel = new Map<string, number>()
-
-  for (const j of sample) {
-    const text = tmText(j.contents ?? "")
-    const found = new Set<string>()
-    for (const m of text.matchAll(/\$\s?(\d{1,3}(?:,\d{3})+(?:\.\d{2})?|\d{2,6}(?:\.\d{2})?)/g)) {
-      const raw = m[0].replace(/\s/g, "")
-      const n = Number(raw.replace(/[$,]/g, ""))
-      if (n >= 20000 && n <= 2000000) {
-        const bucket = `$${Math.round(n / 5000) * 5000}`
-        salaryTiers.set(bucket, (salaryTiers.get(bucket) ?? 0) + 1)
-        found.add(bucket)
-      }
-    }
-    if (found.size) withSalary.push(j.name ?? "(unnamed)")
-    else withoutSalary.push(j.name ?? "(unnamed)")
-
-    const words = text.toLowerCase().match(/[a-z][a-z'+#.-]{2,}/g) ?? []
-    for (const w of words) {
-      const clean = w.replace(/[.'-]+$/g, "")
-      if (clean.length < 4 || TM_STOP.has(clean) || /^\d/.test(clean)) continue
-      terms.set(clean, (terms.get(clean) ?? 0) + 1)
-    }
-    for (const l of j.levels ?? []) withLevel.set(l.name ?? "?", (withLevel.get(l.name ?? "?") ?? 0) + 1)
-  }
-
-  const descriptions = sample.map((j) => tmText(j.contents ?? "").length)
-  const withDesc = descriptions.filter((n) => n > 200).length
-  const topTerms = [...terms.entries()].sort((a, b) => b[1] - a[1]).slice(0, TM_LIST_CAP * 2)
-
-  return [
-    `Requirements scan over ${sample.length} listing(s)${location ? ` matching "${location}"` : ""} from ${pages} page(s) of the Muse public API`,
-    "",
-    `Compensation stated: ${withSalary.length} of ${sample.length} (${((withSalary.length / sample.length) * 100).toFixed(0)}%)`,
-    withoutSalary.length ? `  no figure in the text for: ${withoutSalary.slice(0, 5).join("; ")}${withoutSalary.length > 5 ? `, and ${withoutSalary.length - 5} more` : ""}` : "",
-    withSalary.length ? `  with a figure, e.g. ${withSalary.slice(0, 5).join("; ")}` : "",
-    salaryTiers.size
-      ? `Figures seen, bucketed to the nearest $5,000: ${[...salaryTiers.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([k, n]) => `${k} x${n}`).join(", ")}`
-      : "  no salary figure in the range $20,000 to $2,000,000 was found in this sample",
-    "",
-    `Descriptions over 200 characters of actual text: ${withDesc} of ${sample.length}`,
-    withLevel.size ? `Seniority tags: ${[...withLevel.entries()].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} (${n})`).join(", ")}` : "No seniority tags in this sample.",
-    "",
-    "Most frequent significant words across the description text:",
-    ...topTerms.map(([k, n]) => `  ${String(n).padStart(4)}  ${k}`),
-    "",
-    "A salary figure here is whatever number appears in the text, so an equity range, a bonus target and a base salary are all counted the same, and a figure for a different role at the same employer is indistinguishable. Read it as 'a number was published', not as 'this is the pay'.",
-    "The word list is frequency over stripped HTML, so it picks up boilerplate from the employer's own template as readily as the requirements, which is why the same handful of phrases dominates a real scan.",
-  ]
-    .filter(Boolean)
-    .join("\n")
-}
