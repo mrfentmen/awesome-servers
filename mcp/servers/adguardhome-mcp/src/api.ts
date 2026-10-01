@@ -9,49 +9,6 @@ export function errorMessage(e: unknown): string {
   return e instanceof Error ? e.message : String(e)
 }
 
-const UA = { "User-Agent": "awesome-mcps/1.0" };
-
-function base(): string {
-  const b = process.env.ADGUARD_URL;
-  if (!b) throw new AdGuardError("Set ADGUARD_URL (your AdGuard Home URL).");
-  return b.replace(/\/$/, "");
-}
-
-function headers(): Record<string, string> {
-  const h: Record<string, string> = { ...UA, Accept: "application/json" };
-  const u = process.env.ADGUARD_USER;
-  const p = process.env.ADGUARD_PASS;
-  if (u && p) h.Authorization = `Basic ${Buffer.from(`${u}:${p}`).toString("base64")}`;
-  return h;
-}
-
-async function get(path: string, maxChars: number): Promise<string> {
-  let res: Response;
-  try {
-    res = await fetch(base() + path, { signal: AbortSignal.timeout(30000), headers: headers() });
-  } catch (e) {
-    throw new AdGuardError(`Network error: ${(e as Error).message}`);
-  }
-  if (!res.ok) {
-    const body = (await res.text()).slice(0, 300);
-    throw new AdGuardError(`HTTP ${res.status}: ${body}`);
-  }
-  return (await res.text()).slice(0, maxChars);
-}
-
-export function getStatus(): Promise<string> {
-  return get("/control/status", 2000);
-}
-
-export function getStats(): Promise<string> {
-  return get("/control/stats", 4000);
-}
-
-export function getQueryLog(limit?: string): Promise<string> {
-  const n = Math.min(Number(limit ?? 20) || 20, 100);
-  return get(`/control/querylog?limit=${n}`, 12000);
-}
-
 // ---- muxI tools:
 const AG_REGISTRY = "https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt"
 const AG_LIST_CAP = 12
@@ -91,7 +48,7 @@ function agBound(value: unknown, min: number, max: number, fallback: number): nu
 async function agFetchList(url: string): Promise<AgList> {
   let target = String(url ?? "").trim()
   if (!target) target = AG_REGISTRY
-  if (!/^https:\/\/[a-z0-9.-]+\//i.test(target)) {
+  if (!new RegExp("^https://[a-z0-9.-]+/", "i").test(target)) {
     throw new AdGuardError(`"${target}" is not an https URL, so it will not be fetched. Pass a full https URL to a plain-text filter list.`)
   }
   const res = await fetch(target, { headers: { "User-Agent": "awesome-mcps/1.0", Accept: "text/plain" }, signal: AbortSignal.timeout(60000) })
@@ -233,36 +190,5 @@ export async function filterRuleAudit(args: { url?: string }): Promise<string> {
     .join("\n")
 }
 
-/** Is one domain actually covered by a list, and by which rule syntax. */
-export async function domainCoverage(args: { domain?: string; url?: string }): Promise<string> {
-  const raw = String(args?.domain ?? "").trim().toLowerCase().replace(/^https?:\/\//, "").split("/")[0] ?? ""
-  const domain = raw.replace(/\.$/, "")
-  if (!domain || !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(domain)) {
-    throw new AdGuardError(`"${args.domain}" is not a domain, for example ads.example.com.`)
-  }
-  const l = await agFetchList(String(args?.url ?? AG_REGISTRY))
+// ---- gap4a1 tools:
 
-  const exact = l.listDomains.has(domain)
-  const parents: string[] = []
-  const parts = domain.split(".")
-  for (let i = 1; i <= parts.length - 2; i += 1) parents.push(parts.slice(i).join("."))
-  const parentHit = parents.find((p) => l.listDomains.has(p))
-  const exceptions = l.domains.filter((d) => d === domain || domain.endsWith(`.${d}`)).slice(0, AG_LIST_CAP)
-
-  return [
-    `Is ${domain} covered by the list?`,
-    ...agDescribe(l),
-    "",
-    exact
-      ? `Yes, exactly. The domain appears in its own right in this list.`
-      : parentHit
-        ? `Not exactly, but ${parentHit} is listed, and an AdGuard domain rule for ${parentHit} also covers every subdomain including ${domain}.`
-        : `No. Neither ${domain} nor any parent of it up to the registrable domain appears in the ${l.listDomains.size.toLocaleString("en-US")} domain(s) this list names.`,
-    `Exception rules that would re-admit it: ${exceptions.length ? exceptions.join(", ") : "none found"}`,
-    "",
-    `Parents checked, shortest to longest: ${parents.join(", ")}`,
-    "",
-    "Absence from the list is not permission: a DNS filter only blocks what it names, so an unlisted domain is simply not covered rather than verified clean. A wildcard subdomain rule covers far more than the domains it spells out, which is why a plain text search of the file is not the same question this tool answers.",
-  ]
-    .join("\n")
-}

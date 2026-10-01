@@ -1,8 +1,9 @@
+import { getStatus, getStats, getQueryLog } from "./instance.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, getStatus, getStats, getQueryLog, filterRuleAudit, domainCoverage } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, filterRuleAudit } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -93,10 +94,25 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: domain_coverage ----
-    const paywallMessage = await premiumRequired("domain_coverage")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await domainCoverage(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_adguardhome_domain_coverage", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "filter_catalog",
+    {
+      title: "Filter catalog",
+      description: "Discover published AdGuard DNS filter lists by name or description, with registry versions, update dates and download URLs.",
+      inputSchema: z.object({ query: z.string().max(200).optional(), limit: z.number().describe("Maximum lists, 1-30; default 10.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: filter_catalog ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_adguardhome_filter_catalog", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
