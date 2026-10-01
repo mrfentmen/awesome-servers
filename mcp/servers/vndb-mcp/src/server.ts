@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { VndbApiError, formatCharacter, formatRelease, formatVn, getReleases, getVn, searchCharacters, searchVns, producerSearch, staffSearch } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { VndbApiError, formatCharacter, formatRelease, formatVn, getReleases, getVn, searchCharacters, searchVns } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -121,10 +121,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: producer_search ----
-    const paywallMessage = await premiumRequired("producer_search")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await producerSearch(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_vndb_producer_search", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -138,10 +137,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: staff_search ----
-    const paywallMessage = await premiumRequired("staff_search")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await staffSearch(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_vndb_staff_search", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
