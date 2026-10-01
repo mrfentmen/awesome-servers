@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, listProvinces, listDistricts, getDaily, getHourly, currentConditions, provinceBoard } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, listProvinces, listDistricts, getDaily, getHourly } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -100,16 +100,11 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ istno }) => {
+    async (args) => {
       // ---- paywall: current_conditions ----
-      const paywallMessage = await premiumRequired("current_conditions")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await currentConditions({ istno }));
-      } catch (e) {
-        return textError(errorMessage(e));
-      }
+      try { return text(await premiumTool("mcp_mgm_current_conditions", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -125,16 +120,11 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ il, days, limit }) => {
+    async (args) => {
       // ---- paywall: province_board ----
-      const paywallMessage = await premiumRequired("province_board")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await provinceBoard({ il, days, limit }));
-      } catch (e) {
-        return textError(errorMessage(e));
-      }
+      try { return text(await premiumTool("mcp_mgm_province_board", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
