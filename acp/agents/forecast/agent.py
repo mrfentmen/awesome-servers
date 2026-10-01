@@ -20,6 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer
 from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
 
 from data import DATASET, ForecastData, ForecastError  # noqa: E402
@@ -29,6 +30,7 @@ HELP = (
     "  • what is the weather in London right now?\n"
     "  • when will it rain in Seattle today?\n"
     "  • what does the week look like in Nairobi?\n"
+    "  • grade the week in Seattle (premium)\n"
     "The rain answer is the useful one: I turn the hourly probabilities into the actual "
     "hours rain is expected, with the peak percentage and the millimetres. I read a model, "
     "not a station - and I am not a severe weather warning service."
@@ -36,7 +38,7 @@ HELP = (
 
 PERMISSION_KEY = "forecast-read-public-weather"
 
-SKILLS = ("weather-now", "weather-rain", "weather-daily", "help")
+SKILLS = ("weather-now", "weather-rain", "weather-daily", "weather-week-grade", "help")
 
 _POINT_RE = re.compile(r"\b(-?\d{1,2}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)\b")
 _RAIN_WORDS = re.compile(r"\b(rain|rains|raining|showers?|drizzle|downpour|precipitation|wet|umbrella|storm)",
@@ -101,6 +103,9 @@ def route(text: str) -> tuple[str, dict]:
         except ValueError:
             pass
 
+    if re.search(r"\b(grade (?:the |this |next )?week|week grade|graded week)\b", text, re.IGNORECASE):
+        return "weather-week-grade", params
+
     if _RAIN_WORDS.search(text):
         params.setdefault("hours", 24)
         return "weather-rain", params
@@ -115,9 +120,11 @@ class ForecastAgent(AcpAgent):
     title = "Forecast — Open-Meteo weather and rain windows"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: ForecastData | None = None) -> None:
+    def __init__(self, connection=None, data: ForecastData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or ForecastData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -153,7 +160,7 @@ class ForecastAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (ForecastError, ValueError) as exc:
+        except (ForecastError, GatewayError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the weather feed: {exc}")
             return STOP_END_TURN
@@ -169,6 +176,8 @@ class ForecastAgent(AcpAgent):
     # -- skills ------------------------------------------------------------
 
     def _run_skill(self, skill: str, params: dict) -> tuple[str, dict]:
+        if skill == "weather-week-grade":
+            return self._week_grade(params)
         if skill == "weather-rain":
             return self._rain(params)
         if skill == "weather-daily":
@@ -195,6 +204,40 @@ class ForecastAgent(AcpAgent):
             "city name from my list (London, New York, Seattle, Nairobi, Tokyo, Sydney and so on).",
             {"summary": "no place given", "dataset": DATASET, "known": False},
         )
+
+    def _week_grade(self, params: dict) -> tuple[str, dict]:
+        """Render the seven-day comparison performed by the gateway."""
+        point, ask = self._point_or_ask(params)
+        if ask:
+            return ask
+        context = {"agent": "forecast", "skill": "weather-week-grade"}
+        data, refused = premium_call(self.gateway, "forecast_week_grade", {"point": point}, context)
+        if refused:
+            return refused
+        days = data.get("days") if isinstance(data, dict) else None
+        if (not isinstance(days, list) or len(days) != 7 or
+                any(not isinstance(day, dict) or not day.get("date") for day in days) or
+                any(data.get(key) is not None and not isinstance(data[key], dict)
+                    for key in ("worst_day", "cleanest_day"))):
+            return empty_premium_answer("The gateway returned no readable seven-day grade.", context)
+        def shown(value):
+            return "not reported" if value is None else str(value)
+        lines = [f"Premium week grade for {point} ({data.get('timezone') or 'timezone not reported'}):"]
+        for day in days:
+            lines.append(f"  - {day['date']}: grade {shown(day.get('grade'))}, "
+                         f"score {shown(day.get('score'))}; "
+                         f"{shown(day.get('temperature_2m_min'))} to {shown(day.get('temperature_2m_max'))} C; "
+                         f"precipitation {shown(day.get('precipitation_sum'))} mm "
+                         f"(peak {shown(day.get('precipitation_probability_max'))}%); "
+                         f"wind {shown(day.get('wind_speed_10m_max'))} km/h.")
+        for label, field in (("Worst day", "worst_day"), ("Cleanest day", "cleanest_day")):
+            day = data.get(field) or {}
+            lines.append(f"{label}: {shown(day.get('date'))}, grade {shown(day.get('grade'))}, "
+                         f"score {shown(day.get('score'))}.")
+        lines.append(str(data.get("scoring") or "Scoring rule not reported."))
+        lines.append(str(data.get("note") or "Model output; missing fields remain unknown."))
+        lines.append(f"Source: {data.get('source') or DATASET}.")
+        return "\n".join(lines), {**data, **context, "premium": True, "summary": "premium seven-day weather grade"}
 
     def _now(self, params: dict) -> tuple[str, dict]:
         point, ask = self._point_or_ask(params)

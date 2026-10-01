@@ -5,6 +5,9 @@
 
 from __future__ import annotations
 
+import json
+import os
+from unittest.mock import patch
 import queue
 import sys
 import threading
@@ -17,7 +20,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import GatewayClient, AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
 
 from agent import ForecastAgent, route  # noqa: E402
 from data import DATASET, WMO_CODES, ForecastData, ForecastError  # noqa: E402
@@ -264,9 +267,9 @@ class RouteTests(unittest.TestCase):
 
 
 class TurnTests(unittest.TestCase):
-    def turn(self, text: str, data: FakeData | None = None, permission: str = "allow-once"):
+    def turn(self, text: str, data: FakeData | None = None, permission: str = "allow-once", gateway=None):
         agent_conn, client_conn = connected_pair()
-        agent = ForecastAgent(agent_conn, data or FakeData())
+        agent = ForecastAgent(agent_conn, data or FakeData(), gateway)
         threading.Thread(target=agent_conn.serve, daemon=True).start()
         client = AcpClient(connection=client_conn, permission=permission)
         client.start()
@@ -340,6 +343,78 @@ class TurnTests(unittest.TestCase):
 
         result, _ = self.turn("when will it rain in Seattle?", data=DryData())
         self.assertIn("No rain is expected", result["text"])
+
+
+WEEK_DAYS = [{"date": f"2026-10-{day:02d}", "temperature_2m_min": -2.5,
+              "temperature_2m_max": 12.2, "precipitation_sum": 0.0,
+              "precipitation_probability_max": 5, "wind_speed_10m_max": 10,
+              "score": 1.0, "grade": "A"} for day in range(1, 8)]
+WEEK_DAYS[2] = {**WEEK_DAYS[2], "precipitation_sum": 12.5, "score": 38.5, "grade": "C"}
+WEEK_PAYLOAD = {"days": WEEK_DAYS, "worst_day": WEEK_DAYS[2], "cleanest_day": WEEK_DAYS[0],
+                "timezone": "America/Los_Angeles", "graded_days": 7}
+
+
+class PremiumTests(unittest.TestCase):
+    def gateway(self, key, payload=WEEK_PAYLOAD, refused=False):
+        self.calls = []
+        def fetch(url, body, headers):
+            self.calls.append((body["params"], headers))
+            result = {"content": [{"type": "text", "text": payload if refused else json.dumps(payload)}]}
+            if refused:
+                result.update(isError=True, structuredContent={"licenceRefusal": True, "reason": "denied"})
+            return {"jsonrpc": "2.0", "id": 1, "result": result}
+        return GatewayClient(key=key, fetch=fetch)
+
+    def test_no_key_attempts_call_without_authorization(self):
+        with patch.dict(os.environ, {}, clear=True):
+            gateway = self.gateway(None)
+            with patch.object(gateway, "call", wraps=gateway.call) as attempted:
+                result, _ = TurnTests().turn("grade the week in Seattle", gateway=gateway)
+            attempted.assert_called_once_with("forecast_week_grade", {"point": "47.61,-122.33"})
+        self.assertIn("MCP_LICENSE_KEY", result["text"])
+        self.assertEqual(self.calls, [])
+
+    def test_rejected_key_preserves_wording(self):
+        wording = "This premium tool needs a valid license key; key revoked."
+        gateway = self.gateway("lic_live_but_rejected", wording, True)
+        result, _ = TurnTests().turn("grade the week in Seattle", gateway=gateway)
+        self.assertEqual(result["text"], wording)
+        self.assertEqual(len(self.calls), 1)
+
+    def test_good_key_returns_gateway_grades(self):
+        gateway = self.gateway("lic_granted")
+        data = FakeData()
+        result, _ = TurnTests().turn("grade the week in Seattle", data=data, gateway=gateway)
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(self.calls[0][0], {"name": "forecast_week_grade", "arguments": {"point": "47.61,-122.33"}})
+        self.assertEqual(self.calls[0][1]["Authorization"], "Bearer lic_granted")
+        self.assertIn("Worst day: 2026-10-03, grade C, score 38.5", result["text"])
+        self.assertIn("Cleanest day: 2026-10-01, grade A, score 1.0", result["text"])
+        self.assertIn("-2.5 to 12.2 C", result["text"])
+        self.assertIn("12.5 mm", result["text"])
+        self.assertEqual(data.calls, [])
+
+    def test_free_questions_never_call_gateway(self):
+        gateway = self.gateway("lic_granted")
+        with patch.object(gateway, "call", wraps=gateway.call) as attempted:
+            for question in ("weather in London?", "when will it rain in Seattle today?",
+                             "what does the week look like in Nairobi?", "forecast for the next 7 days in Tokyo?"):
+                TurnTests().turn(question, gateway=gateway)
+            attempted.assert_not_called()
+
+    def test_empty_payload_is_honest(self):
+        gateway = self.gateway("lic_granted", {})
+        text, artifact = ForecastAgent(data=FakeData(), gateway=gateway)._week_grade({"point": "47.61,-122.33"})
+        self.assertIn("no readable seven-day grade", text)
+        self.assertTrue(artifact["failed"])
+
+    def test_thin_day_stays_unknown(self):
+        payload = {"days": [{"date": day["date"]} for day in WEEK_DAYS]}
+        gateway = self.gateway("lic_granted", payload)
+        text, artifact = ForecastAgent(data=FakeData(), gateway=gateway)._week_grade({"point": "47.61,-122.33"})
+        self.assertIn("grade not reported", text)
+        self.assertIn("Worst day: not reported", text)
+        self.assertTrue(artifact["premium"])
 
 
 if __name__ == "__main__":
