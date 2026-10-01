@@ -1,4 +1,4 @@
-const UA = "mrfentmen-text-tools-mcp/1.0"
+
 export class TextError extends Error {}
 
 export async function slugify(args: { text?: string }): Promise<string> {
@@ -7,10 +7,10 @@ export async function slugify(args: { text?: string }): Promise<string> {
   const slug = text
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(new RegExp("[\\u0300-\\u036f]", "g"), "")
+    .replace(new RegExp("[^a-z0-9\\s-]", "g"), "")
     .trim()
-    .replace(/[\s_-]+/g, "-")
+    .replace(new RegExp("[\\s_-]+", "g"), "-")
   return slug || "empty-slug"
 }
 
@@ -18,7 +18,7 @@ export async function toCase(args: { text?: string; style?: string }): Promise<s
   const text = (args.text ?? "").trim()
   if (!text) throw new TextError("Provide input text")
   const style = (args.style ?? "camel").toLowerCase()
-  const words = text.toLowerCase().match(/[a-z0-9]+/g) ?? []
+  const words = text.toLowerCase().match(new RegExp("[a-z0-9]+", "g")) ?? []
   if (!words.length) throw new TextError("No words found")
   const cap = (w: string) => w[0].toUpperCase() + w.slice(1)
   switch (style) {
@@ -51,66 +51,6 @@ export async function base64(args: { text?: string; decode?: boolean }): Promise
 }
 
 // ---- muxB tools:
-const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" })
-
-/** Vowel-group syllable estimate, the standard cheap heuristic. */
-function countSyllables(word: string): number {
-  const letters = word.toLowerCase().replace(/[^a-z]/g, "")
-  if (!letters) return 0
-  if (letters.length <= 3) return 1
-  const trimmed = letters
-    .replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, "")
-    .replace(/^y/, "")
-  const groups = trimmed.match(/[aeiouy]{1,2}/g)
-  return Math.max(1, groups ? groups.length : 1)
-}
-
-const round1 = (value: number) => Math.round(value * 10) / 10
-
-export async function textMetrics(args: { text?: string }): Promise<string> {
-  const raw = args.text ?? ""
-  if (!raw.trim()) throw new TextError("Provide some text to measure")
-  if (raw.length > 200000) throw new TextError("Keep the text under 200,000 characters")
-
-  const graphemes = [...segmenter.segment(raw)].length
-  const words = raw.match(/[\p{L}\p{N}'-]+/gu) ?? []
-  const sentences = raw.split(/[.!?]+(?:\s|$)/).filter((part) => part.trim().length > 0)
-  const syllables = words.reduce((total, word) => total + countSyllables(word), 0)
-  const nonAscii = [...raw].filter((char) => char.codePointAt(0)! > 127).length
-  const letters = (raw.match(/\p{L}/gu) ?? []).length
-  const wordLengths = words.map((word) => word.length)
-  const longest = words.reduce((a, b) => (b.length > a.length ? b : a), "")
-  const unique = new Set(words.map((word) => word.toLowerCase())).size
-
-  // Flesch reading ease and Flesch-Kincaid grade, from the same counts.
-  const wordCount = words.length
-  const sentenceCount = Math.max(sentences.length, 1)
-  const readingEase = wordCount
-    ? round1(206.835 - 1.015 * (wordCount / sentenceCount) - 84.6 * (syllables / wordCount))
-    : 0
-  const grade = wordCount
-    ? round1(0.39 * (wordCount / sentenceCount) + 11.8 * (syllables / wordCount) - 15.59)
-    : 0
-  const ease =
-    readingEase >= 90 ? "very easy (5th grade)"
-    : readingEase >= 80 ? "easy (6th grade)"
-    : readingEase >= 70 ? "fairly easy (7th grade)"
-    : readingEase >= 60 ? "plain English (8th-9th grade)"
-    : readingEase >= 50 ? "fairly difficult (10th-12th grade)"
-    : readingEase >= 30 ? "difficult (college)"
-    : "very difficult (graduate)"
-
-  return [
-    `characters: ${raw.length} | without whitespace: ${raw.replace(/\s/g, "").length} | graphemes: ${graphemes} | non-ASCII characters: ${nonAscii}`,
-    `letters: ${letters} | digits: ${(raw.match(/[0-9]/g) ?? []).length}`,
-    `words: ${wordCount} (${unique} unique) | sentences: ${sentences.length} | lines: ${raw.split("\n").length} | paragraphs: ${raw.split(/\n\s*\n/).filter((part) => part.trim()).length}`,
-    `average word length: ${wordCount ? round1(wordLengths.reduce((a, b) => a + b, 0) / wordCount) : 0} characters | longest word: ${longest ? `${longest} (${longest.length})` : "not reported"}`,
-    `estimated syllables: ${syllables} | average ${wordCount ? round1(syllables / wordCount) : 0} per word`,
-    `Flesch reading ease: ${readingEase} - ${ease}`,
-    `Flesch-Kincaid grade level: ${grade}`,
-    `reading time at 200 words a minute: ${wordCount ? round1(wordCount / 200) : 0} minutes`,
-  ].join("\n")
-}
 
 type DiffOp = { tag: "=" | "-" | "+"; line: string }
 
@@ -203,3 +143,6 @@ export async function diffText(args: { before?: string; after?: string; context?
     ...(lines.length > CAP ? [`   ... ${lines.length - CAP} more diff lines not shown`] : []),
   ].join("\n")
 }
+
+// ---- gap4a3 tools:
+

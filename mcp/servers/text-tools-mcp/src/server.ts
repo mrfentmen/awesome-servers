@@ -1,10 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { base64 } from "./api.js"
-import { slugify } from "./api.js"
-import { toCase, textMetrics, diffText } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { base64, slugify, toCase, diffText } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -58,10 +56,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: text_metrics ----
-    const paywallMessage = await premiumRequired("text_metrics")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await textMetrics(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_text_tools_text_metrics", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -79,6 +76,22 @@ export function createServer(): McpServer {
     },
     async (args) => {
     try { return text(await diffText(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "dictionary_lookup",
+    {
+      title: "Dictionary lookup",
+      description: "Look up English definitions, pronunciation, parts of speech and usage examples in the public Free Dictionary API.",
+      inputSchema: z.object( { word: z.string().min(1).max(100).describe("English word to look up."), limit: z.number().int().min(1).max(12).optional().describe("Maximum definitions; default 5.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: dictionary_lookup ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_text_tools_dictionary_lookup", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
