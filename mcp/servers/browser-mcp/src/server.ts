@@ -1,9 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { openPage } from "./api.js"
-import { screenshotPage, pageLinks, pageHeadings, runScript } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { openPage, screenshotPage, pageLinks, pageHeadings, runScript } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -44,10 +43,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: page_links ----
-    const paywallMessage = await premiumRequired("page_links")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await pageLinks(args)) } catch (e) { return textError(error(e)) }
   }
   )
@@ -74,11 +69,23 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: run_script ----
-    const paywallMessage = await premiumRequired("run_script")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await runScript(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "dns_records",
+    {
+      title: "Public DNS records",
+      description: "Resolve a domain through Google DNS over HTTPS and report records, TTLs, DNS response code and authenticated-data status for website troubleshooting.",
+      inputSchema: z.object({ domain: z.string().describe("DNS name; defaults to example.com.").optional(), type: z.string().describe("A, AAAA, MX, TXT, NS, CNAME or CAA; defaults to A.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: dns_records ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_browser_dns_records", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
