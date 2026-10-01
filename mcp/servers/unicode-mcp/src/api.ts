@@ -62,17 +62,16 @@ export async function emojiSearch(query: string) {
 export function format(value: unknown): string { return JSON.stringify(value, null, 2).slice(0, 14000) }
 
 // ---- muxB tools:
-let ageLines: string[] | null = null
-let normLines: string[] | null = null
+const extraLines: { age: string[] | null; norm: string[] | null } = { age: null, norm: null }
 
 async function dataLines(url: string, slot: "age" | "norm"): Promise<string[]> {
-  const cached = slot === "age" ? ageLines : normLines
+  const cached = slot === "age" ? extraLines.age : extraLines.norm
   if (cached) return cached
   const response = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(60000) })
   if (!response.ok) throw new UnicodeError(`Unicode data error ${response.status} for ${url}`)
   const value = (await response.text()).split(/\r?\n/)
-  if (slot === "age") ageLines = value
-  else normLines = value
+  if (slot === "age") extraLines.age = value
+  else extraLines.norm = value
   return value
 }
 
@@ -82,51 +81,5 @@ function parsePoint(value: string): number {
   return parsed
 }
 
-export async function characterAge(value: string): Promise<string> {
-  const codePoint = parsePoint(value)
-  const key = codePoint.toString(16).toUpperCase().padStart(4, "0")
-  const rows = await dataLines(`${ROOT}/DerivedAge.txt`, "age")
-  let hit: string | null = null
-  for (let i = 0; i < rows.length; i += 1) {
-    const line = rows[i]
-    if (!line || line.startsWith("#")) continue
-    const [range, age, comment] = line.split(";").map((p) => (p ?? "").split("#")[0].trim())
-    if (!range) continue
-    const bounds = range.split("..")
-    const start = parsePoint(bounds[0])
-    const end = bounds.length > 1 ? parsePoint(bounds[1]) : start
-    if (codePoint < start || codePoint > end) continue
-    hit = `U+${key} was first assigned in Unicode ${age || "not reported"}${comment ? ` - ${comment}` : ""}` +
-      (bounds.length > 1 ? `\nIt falls in the range ${range} (${bounds.length > 1 ? `${bounds[0]} to ${bounds[1]}` : bounds[0]}).` : "")
-    break
-  }
-  if (!hit) return `No DerivedAge record for U+${key}, so Unicode has not reported it as assigned.`
-  return hit
-}
+// ---- gap4b3 tools:
 
-export async function checkNormalization(value: string): Promise<string> {
-  const codePoint = parsePoint(value)
-  const key = codePoint.toString(16).toUpperCase().padStart(4, "0")
-  const rows = await dataLines(`${ROOT}/NormalizationTest.txt`, "norm")
-  const found: string[] = []
-  for (const line of rows) {
-    if (!line || line.startsWith("#") || line.startsWith("@")) continue
-    const parts = line.split(";").map((p) => p.split("#")[0].trim())
-    if (parts.length < 5) continue
-    if (parts[0].toUpperCase() !== key) continue
-    found.push(line.split("#")[0].trim())
-    if (found.length >= 5) break
-  }
-  if (!found.length) return `U+${key} is not listed as a source character in NormalizationTest.txt, so the official test data reports no normal forms for it.`
-  const forms = found[0].split(";")
-  const show = (label: string, value2: string) => `${label}: ${value2 ? value2.toUpperCase().split(" ").map((c) => `U+${c}`).join(" ") : "no decomposition"}`
-  return [
-    `Normalisation forms for U+${key} from the official NormalizationTest.txt`,
-    show("source", forms[0]),
-    show("NFC", forms[1]),
-    show("NFD", forms[2]),
-    show("NFKC", forms[3]),
-    show("NFKD", forms[4]),
-    found.length > 1 ? `Also appears ${found.length - 1} more time(s) in the conformance test rows.` : "One conformance test row matched.",
-  ].join("\n")
-}

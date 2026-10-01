@@ -1,6 +1,6 @@
 {
   "name": "unicode-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Use this MCP server to Unicode characters, blocks, names, scripts, and properties. Tools include get character, search blocks, search emoji",
   "type": "module",
   "mcpName": "io.github.mrfentmen/unicode-mcp",

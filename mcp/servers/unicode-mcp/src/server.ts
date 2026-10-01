@@ -1,11 +1,12 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { character, emojiSearch, format, searchBlocks, characterAge, checkNormalization } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { character, emojiSearch, format, searchBlocks } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
+const errorMessage = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
 const errorText = (error: unknown) => text(`Error: ${error instanceof Error ? error.message : String(error)}`)
 
 export function createServer() {
@@ -54,12 +55,11 @@ export function createServer() {
       inputSchema: z.object({ codePoint: z.string().min(1).max(12).describe("Code point such as U+1F600, 1F600 or 0041.") }),
       annotations: READ_ONLY,
     },
-    async ({ codePoint }) => {
+    async (args) => {
     // ---- paywall: get_character_age ----
-    const paywallMessage = await premiumRequired("get_character_age")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await characterAge(codePoint)) } catch (error) { return errorText(error) }
+    try { return text(await premiumTool("mcp_unicode_get_character_age", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -71,12 +71,27 @@ export function createServer() {
       inputSchema: z.object({ codePoint: z.string().min(1).max(12).describe("Code point such as U+00C5, 00C5 or 1E9B.") }),
       annotations: READ_ONLY,
     },
-    async ({ codePoint }) => {
+    async (args) => {
     // ---- paywall: check_normalization ----
-    const paywallMessage = await premiumRequired("check_normalization")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await checkNormalization(codePoint)) } catch (error) { return errorText(error) }
+    try { return text(await premiumTool("mcp_unicode_check_normalization", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "search_named_sequences",
+    {
+      title: "Search named sequences",
+      description: "Find official Unicode names for sequences of multiple code points, with their constituent code points.",
+      inputSchema: z.object({ query: z.string().min(1).max(100).describe("Part of a sequence name, such as LATIN."), limit: z.number().int().min(1).max(30).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: search_named_sequences ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_unicode_search_named_sequences", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
