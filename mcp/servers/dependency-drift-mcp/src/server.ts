@@ -1,7 +1,8 @@
+import { premiumTool } from "./gateway.js"
+const error = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { format, inspectDependencyDrift, inspectInstallScripts, inspectLockIntegrity } from "./drift.js"
-import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -34,10 +35,6 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async ({ project }) => {
-      // ---- paywall: inspect_install_scripts ----
-      const paywallMessage = await premiumRequired("inspect_install_scripts")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try { return text(format(await inspectInstallScripts(project))) }
       catch (error) { return errorText(error) }
     }
@@ -52,13 +49,41 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async ({ project }) => {
-      // ---- paywall: inspect_lock_integrity ----
-      const paywallMessage = await premiumRequired("inspect_lock_integrity")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try { return text(format(await inspectLockIntegrity(project))) }
       catch (error) { return errorText(error) }
     }
   )
+  server.registerTool(
+    "npm_release_metadata",
+    {
+      title: "Npm release metadata",
+      description: "Fetch the current npm latest-tag release, engine constraints, dependencies and distribution integrity without reading a local manifest. Defaults to zod.",
+      inputSchema: z.object({ package: z.string().max(214).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: npm_release_metadata ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_dependency_drift_npm_release_metadata", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "npm_version_advisories",
+    {
+      title: "Npm version advisories",
+      description: "Query OSV for vulnerabilities affecting an exact npm package version, including reported fixed versions. Defaults to lodash 4.17.20; reads no local files.",
+      inputSchema: z.object({ package: z.string().max(214).optional(), version: z.string().max(100).optional(), limit: z.number().int().min(1).max(30).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: npm_version_advisories ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_dependency_drift_npm_version_advisories", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }
