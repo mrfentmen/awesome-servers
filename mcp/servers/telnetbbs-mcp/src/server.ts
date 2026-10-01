@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { BbsError, formatBbs, listAll, softwareCensus, bbsStats } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { BbsError, formatBbs, listAll } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -103,15 +103,10 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: software_census ----
-      const paywallMessage = await premiumRequired("software_census")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try {
-        return text(await softwareCensus(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+    // ---- paywall: software_census ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_telnetbbs_software_census", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -125,16 +120,27 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: bbs_stats ----
-      const paywallMessage = await premiumRequired("bbs_stats")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try {
-        return text(await bbsStats(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+    // ---- paywall: bbs_stats ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_telnetbbs_bbs_stats", args)) } catch (e) { return textError(errorMessage(e)) }
     }
+  )
+
+  server.registerTool(
+    "ssh_bbses",
+    {
+      title: "SSH BBSes",
+      description: "Find BBSes that publish SSH addresses, with connection details and software.",
+      inputSchema: z.object( { limit: z.number().int().min(1).max(50).default(15) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: ssh_bbses ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_telnetbbs_ssh_bbses", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server
