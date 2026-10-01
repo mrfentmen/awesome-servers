@@ -1,9 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { describe } from "./api.js"
-import { next, previousRuns, validate } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { describe, next, previousRuns, validate } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -44,10 +43,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: previous_runs ----
-    const paywallMessage = await premiumRequired("previous_runs")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await previousRuns(args)) } catch (e) { return textError(error(e)) }
   }
   )
@@ -61,11 +56,39 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: validate ----
-    const paywallMessage = await premiumRequired("validate")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await validate(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "schedule_holidays",
+    {
+      title: "Schedule holidays",
+      description: "Look up national and regional public holidays from Nager.Date for planning cron exclusions. Defaults to the current year and US; regional records are explicitly marked.",
+      inputSchema: z.object({ country: z.string().length(2).optional(), year: z.number().int().min(1970).max(2100).optional(), limit: z.number().int().min(1).max(50).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: schedule_holidays ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_cron_schedule_holidays", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "solar_schedule",
+    {
+      title: "Solar schedule",
+      description: "Fetch sunrise, sunset, solar noon and civil twilight UTC times for scheduling daylight tasks. Defaults to New York City today; source Sunrise-Sunset.org.",
+      inputSchema: z.object({ latitude: z.number().min(-90).max(90).optional(), longitude: z.number().min(-180).max(180).optional(), date: z.string().max(10).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: solar_schedule ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_cron_solar_schedule", args)) } catch (e) { return textError(error(e)) }
   }
   )
 

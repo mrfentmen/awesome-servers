@@ -116,3 +116,6 @@ export async function validate(args: { expression?: string }): Promise<string> {
   for (let i = 0; i < 3; i++) upcoming.push(cron.next().toISOString().replace("T", " ").slice(0, 16))
   return [`"${expr}" is a valid cron expression.`, `next three runs: ${upcoming.join(", ")}`, `checked at ${started.slice(0, 19).replace("T", " ")} UTC`].join("\n")
 }
+
+// ---- gap4e2 tools:
+
