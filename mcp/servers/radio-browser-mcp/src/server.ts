@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { RadioError, formatStation, searchStations, stationsByCountry, stationsByTag, topVoted, listTags, listCountries, stationsByLanguage } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { RadioError, formatStation, searchStations, stationsByCountry, stationsByTag, topVoted } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -104,15 +104,10 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: list_tags ----
-      const paywallMessage = await premiumRequired("list_tags")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try {
-        return text(await listTags(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+    // ---- paywall: list_tags ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_radio_browser_list_tags", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -128,15 +123,10 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: list_countries ----
-      const paywallMessage = await premiumRequired("list_countries")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try {
-        return text(await listCountries(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+    // ---- paywall: list_countries ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_radio_browser_list_countries", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -152,15 +142,10 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: stations_by_language ----
-      const paywallMessage = await premiumRequired("stations_by_language")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try {
-        return text(await stationsByLanguage(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+    // ---- paywall: stations_by_language ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_radio_browser_stations_by_language", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
