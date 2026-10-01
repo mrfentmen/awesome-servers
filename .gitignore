@@ -5,3 +5,6 @@ __pycache__/
 
 # Scratch file the paywall batches leave behind
 _probe.mjs
+
+# Built TypeScript output (npm packages build before publishing; dist is never committed)
+dist/
