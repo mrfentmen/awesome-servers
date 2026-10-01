@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, listDatasets, getRecords, dayAheadPrices, bestCheapWindow } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, listDatasets, getRecords, dayAheadPrices } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -86,10 +86,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: best_cheap_window ----
-    const paywallMessage = await premiumRequired("best_cheap_window")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await bestCheapWindow(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_fingrid_best_cheap_window", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
