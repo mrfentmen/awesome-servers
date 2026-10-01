@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { deviceStatus, formatDevice, HubitatError, listDevices, sendCommand, communitySearch, threadDigest, categoryRoadmap } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { deviceStatus, formatDevice, HubitatError, listDevices, sendCommand, communitySearch } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -97,10 +97,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: thread_digest ----
-    const paywallMessage = await premiumRequired("thread_digest")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await threadDigest(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_hubitat_thread_digest", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -114,10 +113,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: category_roadmap ----
-    const paywallMessage = await premiumRequired("category_roadmap")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await categoryRoadmap(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_hubitat_category_roadmap", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
