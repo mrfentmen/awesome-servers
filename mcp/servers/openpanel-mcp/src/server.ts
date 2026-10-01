@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, getMetrics, getLive, getPages, getReferrer, trackerSdkMatrix, projectHealth, referrerTaxonomy } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, getMetrics, getLive, getPages, getReferrer, referrerTaxonomy } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -101,10 +101,9 @@ export function createServer(): McpServer {
     },
     async (_args) => {
     // ---- paywall: tracker_sdk_matrix ----
-    const paywallMessage = await premiumRequired("tracker_sdk_matrix")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await trackerSdkMatrix(_args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_openpanel_tracker_sdk_matrix", _args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -118,10 +117,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: project_health ----
-    const paywallMessage = await premiumRequired("project_health")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await projectHealth(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_openpanel_project_health", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 

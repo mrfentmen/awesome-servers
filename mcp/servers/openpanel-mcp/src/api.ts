@@ -69,133 +69,13 @@ export async function getReferrer(projectId: string): Promise<string> {
 }
 
 // ---- muxG tools:
-const OP_NPM = "https://registry.npmjs.org"
-const OP_DOWNLOADS = "https://api.npmjs.org/downloads/point/last-week"
-const OP_GITHUB = "https://api.github.com/repos/Openpanel-dev/openpanel"
-const OP_SDKS = ["@openpanel/sdk", "@openpanel/web", "@openpanel/nextjs", "@openpanel/react-native", "openpanel"]
+
 const OP_LIST_CAP = 10
-
-async function opJson<T>(url: string, accept = "application/json"): Promise<T> {
-  const res = await fetch(url, {
-    headers: { "User-Agent": "awesome-mcps/1.0", Accept: accept },
-    signal: AbortSignal.timeout(30000),
-  })
-  if (res.status === 404) throw new OpenpanelError(`Not found: ${url.replace(/^https:\/\//, "")}`)
-  if (res.status === 403) throw new OpenpanelError("GitHub or npm is rate limiting this IP. Wait a minute and try again.")
-  if (!res.ok) throw new OpenpanelError(`Returned ${res.status} for ${url.replace(/^https:\/\//, "")}`)
-  return (await res.json()) as T
-}
-
-async function opWeeklyDownloads(pkg: string): Promise<number | null> {
-  try {
-    const d = await opJson<{ downloads?: number }>(`${OP_DOWNLOADS}/${encodeURIComponent(pkg)}`)
-    return typeof d.downloads === "number" ? d.downloads : null
-  } catch {
-    return null
-  }
-}
 
 function opBound(value: unknown, min: number, max: number, fallback: number): number {
   const n = Number(value)
   if (!Number.isFinite(n)) return fallback
   return Math.max(min, Math.min(Math.floor(n), max))
-}
-
-/** Which Openpanel SDK to install, and how much of each one is actually in use. */
-export async function trackerSdkMatrix(_args: Record<string, never>): Promise<string> {
-  const rows = await Promise.all(
-    OP_SDKS.map(async (pkg) => {
-      const [doc, downloads] = await Promise.all([
-        opJson<{
-          name?: string
-          description?: string
-          "dist-tags"?: Record<string, string>
-          versions?: Record<string, { dependencies?: Record<string, string>; peerDependencies?: Record<string, string> }>
-          maintainers?: { name?: string }[]
-        }>(`${OP_NPM}/${encodeURIComponent(pkg)}`, "application/vnd.npm.install-v1+json"),
-        opWeeklyDownloads(pkg),
-      ])
-      const latest = doc["dist-tags"]?.latest
-      const manifest = latest ? doc.versions?.[latest] : undefined
-      return {
-        pkg,
-        latest,
-        versions: Object.keys(doc.versions ?? {}).length,
-        downloads,
-        deps: Object.keys(manifest?.dependencies ?? {}).length,
-        peers: Object.keys(manifest?.peerDependencies ?? {}).length,
-        description: doc.description,
-        maintainers: doc.maintainers?.length ?? 0,
-      }
-    })
-  )
-  const total = rows.reduce((s, r) => s + (r.downloads ?? 0), 0)
-
-  return [
-    "Openpanel SDK matrix, from the npm registry and the public download counter",
-    ...rows.map((r) => [
-      `${r.pkg} — ${r.latest ?? "no latest tag"}, ${r.versions} version(s)`,
-      r.downloads !== null ? `  weekly downloads: ${r.downloads.toLocaleString("en-US")}${total ? ` (${((r.downloads / total) * 100).toFixed(1)}% of the five)` : ""}` : "  weekly downloads: not reported",
-      `  dependencies on latest: ${r.deps} runtime, ${r.peers} peer`,
-      r.description ? `  ${r.description.slice(0, 120)}` : "",
-    ].filter(Boolean).join("\n")),
-    "",
-    `Combined weekly downloads: ${total.toLocaleString("en-US")}`,
-    "A package with a high peer count is coupling itself to your framework version, so a major bump there is a breaking change for you. A package with no downloads may be new rather than unused.",
-  ].join("\n")
-}
-
-/** The project's own health from GitHub: activity, contributors, open work and licence. */
-export async function projectHealth(args: { limit?: number }): Promise<string> {
-  const limit = opBound(args?.limit, 1, OP_LIST_CAP, 5)
-  const [repo, contributors, tags, commits] = await Promise.all([
-    opJson<{
-      full_name?: string
-      description?: string
-      stargazers_count?: number
-      forks_count?: number
-      open_issues_count?: number
-      subscribers_count?: number
-      license?: { spdx_id?: string; name?: string }
-      created_at?: string
-      pushed_at?: string
-      updated_at?: string
-      default_branch?: string
-      topics?: string[]
-      archived?: boolean
-    }>(OP_GITHUB),
-    opJson<{ login?: string; contributions?: number; type?: string }[]>(`${OP_GITHUB}/contributors?per_page=${limit}`),
-    opJson<{ name?: string; commit?: { sha?: string } }[]>(`${OP_GITHUB}/tags?per_page=${limit}`),
-    opJson<{ sha?: string; commit?: { author?: { name?: string; date?: string }; message?: string } }[]>(`${OP_GITHUB}/commits?per_page=${limit}`),
-  ])
-
-  const lastPush = repo.pushed_at ? Date.parse(repo.pushed_at) : 0
-  const daysSincePush = lastPush ? Math.round((Date.now() - lastPush) / 86400000) : null
-  const ageDays = repo.created_at ? Math.round((Date.now() - Date.parse(repo.created_at)) / 86400000) : null
-
-  return [
-    `${repo.full_name ?? "Openpanel-dev/openpanel"}${repo.archived ? " (ARCHIVED)" : ""}`,
-    repo.description ?? "",
-    `Licence: ${repo.license?.spdx_id ?? "not reported"}`,
-    `Stars: ${repo.stargazers_count?.toLocaleString("en-US") ?? "not reported"}, forks ${repo.forks_count ?? "not reported"}, watchers ${repo.subscribers_count ?? "not reported"}`,
-    `Open issues and pull requests: ${repo.open_issues_count ?? "not reported"} (GitHub counts both together)`,
-    `Created ${String(repo.created_at ?? "?").slice(0, 10)}${ageDays !== null ? `, ${(ageDays / 365).toFixed(1)} year(s) old` : ""}`,
-    `Last push ${String(repo.pushed_at ?? "?").slice(0, 10)}${daysSincePush !== null ? `, ${daysSincePush} day(s) ago` : ""}${daysSincePush !== null && daysSincePush > 60 ? " — that is a slow release cadence for a hosted service" : ""}`,
-    repo.topics?.length ? `Topics: ${repo.topics.join(", ")}` : "",
-    "",
-    `Contributors by commits (top ${Math.min(limit, contributors.length)}):`,
-    ...contributors.slice(0, limit).map((c) => `  ${String(c.contributions ?? 0).padStart(6)}  ${c.login ?? "?"}${c.type === "Bot" ? " (bot)" : ""}`),
-    "",
-    `Most recent tags: ${tags.map((t) => t.name ?? "?").join(", ") || "none reported"}`,
-    "",
-    `Latest ${Math.min(limit, commits.length)} commit(s) on ${repo.default_branch ?? "the default branch"}:`,
-    ...commits.slice(0, limit).map((c) => {
-      const msg = String(c.commit?.message ?? "").split("\n")[0]
-      return `  ${String(c.commit?.author?.date ?? "?").slice(0, 10)}  ${msg.slice(0, 90)}`
-    }),
-    "",
-    "The repository has tags but may publish no GitHub releases, so the release history is in the image tags and the changelog rather than in release notes.",
-  ].filter(Boolean).join("\n")
 }
 
 const OP_SEARCH_ENGINES = [

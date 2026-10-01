@@ -1,6 +1,6 @@
 {
   "name": "openpanel-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "OpenPanel analytics: metrics, live visitors, top pages, referrers. Needs client credentials.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/openpanel-mcp",
