@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, searchBooks, getVolume, isbnLookup, authorWorks } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, searchBooks, getVolume } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -65,10 +65,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: isbn_lookup ----
-      const paywallMessage = await premiumRequired("isbn_lookup")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await isbnLookup(args.isbn)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_google_books_isbn_lookup", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -85,10 +84,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: author_works ----
-      const paywallMessage = await premiumRequired("author_works")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await authorWorks(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_google_books_author_works", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
