@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, listProjects, listItems, getItem, dependencyAudit, advisoryDetail } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, listProjects, listItems, getItem } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -86,10 +86,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: dependency_audit ----
-    const paywallMessage = await premiumRequired("dependency_audit")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await dependencyAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_rollbar_dependency_audit", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -106,10 +105,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: advisory_detail ----
-    const paywallMessage = await premiumRequired("advisory_detail")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await advisoryDetail(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_rollbar_advisory_detail", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
