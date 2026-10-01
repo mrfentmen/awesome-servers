@@ -1,6 +1,6 @@
 {
   "name": "shootproof-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Query the ShootProof Studio API: service description, authenticated user, brands, brand galleries (events) and orders.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/shootproof-mcp",
