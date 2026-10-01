@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections, browseCollection, find_by_size, shopInfo, listPages } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections, browseCollection, find_by_size } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -202,16 +202,11 @@ export function createServer(): McpServer {
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
-    async () => {
+    async (args) => {
     // ---- paywall: shop_info ----
-    const paywallMessage = await premiumRequired("shop_info")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try {
-      return text(await shopInfo());
-    } catch (e) {
-      return textError(errorMessage(e));
-    }
+    try { return text(await premiumTool("mcp_aimeleondore_shop_info", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   );
 
@@ -225,14 +220,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: list_pages ----
-    const paywallMessage = await premiumRequired("list_pages")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try {
-      return text(await listPages(args));
-    } catch (e) {
-      return textError(errorMessage(e));
-    }
+    try { return text(await premiumTool("mcp_aimeleondore_list_pages", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   );
 
