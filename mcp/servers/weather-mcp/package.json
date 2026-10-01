@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/weather-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Unified weather server: NWS forecasts and alerts, USGS earthquakes, and FEMA disasters.",
   "type": "module",
   "main": "dist/index.js",

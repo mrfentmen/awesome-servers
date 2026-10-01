@@ -1,8 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_earthquakes, m0_femaDisasters, m0_forecast, m1_activeAlerts, m1_alertsForPoint, alertsForArea, disastersByState } from './api.js'
-import { premiumRequired } from "./license.js"
 
+import { m0_earthquakes, m0_femaDisasters, m0_forecast, m1_activeAlerts, m1_alertsForPoint } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -81,10 +81,9 @@ server.registerTool(
     },
     async (args) => {
     // ---- paywall: alerts_for_area ----
-    const paywallMessage = await premiumRequired("alerts_for_area")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await alertsForArea(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_weather_alerts_for_area", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -98,10 +97,9 @@ server.registerTool(
     },
     async (args) => {
     // ---- paywall: disasters_by_state ----
-    const paywallMessage = await premiumRequired("disasters_by_state")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await disastersByState(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_weather_disasters_by_state", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
