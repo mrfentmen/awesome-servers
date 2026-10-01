@@ -5,12 +5,14 @@ times every article was read, so "what is trending?" is a real question with a r
 
 Two honest details ride along. The metrics lag by a day - the newest day available is
 yesterday, UTC - and the raw top list is topped by `Main_Page` and `Special:Search`, which are
-navigation rather than reading, so they are dropped and the number dropped is reported.
+navigation rather than reading, so the free top list drops them and reports the count.
+The premium board compares explicit article histories and project rankings on the gateway.
 """
 
 from __future__ import annotations
 
 import re
+import math
 import sys
 from pathlib import Path
 
@@ -18,7 +20,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text,
+                     GatewayClient, GatewayError, premium_call, empty_premium_answer)  # noqa: E402
 
 from data import DATASET, PROJECTS, TrendingData, TrendingError  # noqa: E402
 
@@ -29,13 +32,14 @@ HELP = (
     "  - what is Germany reading today?\n"
     "  - how many people read the Lizzie Borden article this week?\n"
     "  - pageviews for Ada Lovelace over the last 30 days\n"
+    "  - compare pageviews for Ada Lovelace and Lizzie Borden this week (premium)\n"
     "The numbers are yesterday's (they lag a day), and I leave out the front page and search "
     "titles - and say how many I left out."
 )
 
 PERMISSION_KEY = "trending-read-wikimedia-metrics"
 
-SKILLS = ("trending-top", "trending-article", "help")
+SKILLS = ("trending-top", "trending-article", "trending-board", "help")
 
 _LIMIT_RE = re.compile(r"\b(?:top|first|biggest|most read)\s+(\d{1,2})\b|\b(\d{1,2})\s+"
                        r"(?:articles?|pages?|top)\b", re.IGNORECASE)
@@ -76,11 +80,36 @@ def article_from_text(text: str) -> str | None:
     return phrase[:60] if phrase else None
 
 
+def articles_from_text(text: str) -> list[str]:
+    """Explicit titles: quote names containing punctuation or the word 'and'."""
+    quoted = re.findall(r'"([^"\n]+)"', text)
+    if quoted:
+        return quoted
+    match = re.search(r"\b(?:compare pageviews|pageview board)\s+(?:for\s+)?(.+?)(?=\s+(?:over the last|in (?:german|french|spanish|japanese|chinese|russian|italian|portuguese|arabic|dutch|polish|ukrainian)|on [a-z-]+\.wikipedia|this week|this month|last week|last month|ending)\b|[?!]|$)", text, re.IGNORECASE)
+    if not match:
+        return []
+    return [part.strip() for part in re.split(r"\s+(?:and|versus|vs\.?)\s+|\s*;\s*", match.group(1)) if part.strip()]
+
+
 def route(text: str) -> tuple[str, dict]:
     """Deterministic intent routing: (skill, params). Pure function, easy to test."""
     stripped = str(text or "").strip()
     if not stripped or re.search(r"\b(help|what can you do|commands?)\b", stripped, re.IGNORECASE):
         return "help", {}
+    if re.search(r"\b(?:compare pageviews|pageview board)\b", stripped, re.IGNORECASE):
+        params = {"articles": articles_from_text(stripped)}
+        project = project_from_text(stripped)
+        explicit_project = re.search(r"\b([a-z-]{2,12}\.wikipedia)\b", stripped, re.IGNORECASE)
+        if explicit_project:
+            project = explicit_project.group(1).lower()
+        if project:
+            params["project"] = project
+        days = _DAYS_RE.search(stripped)
+        params["days"] = int(days.group(1)) if days else (30 if re.search(r"\b(?:this|last) month\b", stripped, re.IGNORECASE) else 7)
+        end = re.search(r"\bending\s+(\d{4}-\d{2}-\d{2})\b", stripped, re.IGNORECASE)
+        if end:
+            params["end_date"] = end.group(1)
+        return "trending-board", params
     article = article_from_text(stripped)
     if article and _ARTICLE_WORDS.search(stripped):
         params: dict = {"article": article}
@@ -134,9 +163,11 @@ class TrendingAgent(AcpAgent):
     title = "Trending - what the world is reading, from Wikipedia pageviews"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: TrendingData | None = None) -> None:
+    def __init__(self, connection=None, data: TrendingData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or TrendingData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -170,7 +201,10 @@ class TrendingAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
 
         try:
-            if skill == "trending-article":
+            if skill == "trending-board":
+                body, artifact = self._board(params)
+                summary = artifact["summary"]
+            elif skill == "trending-article":
                 reading = self.data.article(params["article"], project=params.get("project"),
                                             days=params.get("days") or 7)
                 body = render_article(reading)
@@ -180,16 +214,60 @@ class TrendingAgent(AcpAgent):
                                         limit=params.get("limit") or 10)
                 body = render_top(reading)
                 summary = f"top {len(reading['rows'])} for {reading['date']}"
-        except (TrendingError, ValueError) as exc:
+        except (TrendingError, GatewayError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the metrics: {exc}")
             return STOP_END_TURN
 
         ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
         ctx.stream_text(body + "\n")
+        if skill == "trending-board":
+            return STOP_END_TURN
         ctx.message(f"\nSource: {DATASET}, read live. These metrics lag by a day (UTC), so the "
                     "newest day that exists is yesterday - I do not report a partial today.")
         return STOP_END_TURN
+
+    def _board(self, params: dict) -> tuple[str, dict]:
+        """Render article comparisons and project rankings from the gateway."""
+        articles = params.get("articles") or []
+        if len(articles) < 2:
+            return "Name at least two articles to compare.", {"summary": "two articles required"}
+        arguments = {"articles": articles, "days": int(params.get("days") or 7)}
+        for key in ("project", "end_date"):
+            if params.get(key):
+                arguments[key] = params[key]
+        data, refused = premium_call(self.gateway, "pageview_board", arguments,
+                                     {"agent": "trending", "skill": "trending-board"})
+        if refused:
+            return refused
+        rows = data.get("articles") if isinstance(data, dict) else None
+        top = data.get("topArticles") if isinstance(data, dict) else None
+        def numeric(value):
+            return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+        if (not isinstance(rows, list) or not rows or
+                any(not isinstance(row, dict) or not isinstance(row.get("title"), str) or
+                    not numeric(row.get("total")) or not numeric(row.get("average")) or
+                    not isinstance(row.get("peak"), dict) or not numeric(row["peak"].get("views"))
+                    for row in rows) or
+                not isinstance(top, list) or not top or
+                any(not isinstance(row, dict) or not isinstance(row.get("article"), str) or
+                    not numeric(row.get("views")) or not numeric(row.get("rank")) for row in top) or
+                not isinstance(data.get("leader"), dict) or not isinstance(data["leader"].get("title"), str)):
+            return empty_premium_answer("The gateway returned no readable pageview comparison.",
+                                        {"agent": "trending", "skill": "trending-board"})
+        lines = [f"Premium pageview comparison on {data.get('project')} ({data.get('from')} to {data.get('to')}):"]
+        for row in rows:
+            lines.append(f"  - {row['title']}: {row['total']:,} total, {row['average']:,} daily average, peak {row['peak']['views']:,} on {row['peak'].get('date')}")
+            if row.get("missingDays"):
+                lines.append(f"    {row['missingDays']} day(s) missing; total covers reported days only.")
+            if row.get("topRank") is not None:
+                lines.append(f"    End-date project rank: {row['topRank']} ({row.get('topDayViews')} top-list views).")
+        lines.append(f"Leader by reported total: {data['leader']['title']}.")
+        lines.append("Project top articles on the end date:")
+        for row in top:
+            lines.append(f"  - #{row['rank']} {row['article']}: {row['views']:,} views")
+        lines.append(str(data.get("note") or "Wikimedia metrics lag by a day (UTC)."))
+        return "\n".join(lines), {"summary": lines[0], "premium": True, "dataset": DATASET, "comparison": data}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer
