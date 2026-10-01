@@ -20,7 +20,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text,
+                     GatewayClient, GatewayError, premium_call, empty_premium_answer)  # noqa: E402
 
 from data import (  # noqa: E402
     DATASET,
@@ -36,6 +37,7 @@ HELP = (
     "  - who is flying over Denver?\n"
     "  - how many aircraft are within 50 km of Heathrow?\n"
     "  - what is aircraft a487ef?\n"
+    "  - premium: traffic board box 40.4,-74.3,41.0,-73.6 (south,west,north,east)\n"
     "I answer with the nearest aircraft first: distance, altitude, speed, heading and whether it "
     "is climbing or descending, plus what OpenSky says is left of the day's allowance. These are "
     "positions broadcast by the aircraft, so one that is not broadcasting is absent - an empty "
@@ -44,7 +46,7 @@ HELP = (
 
 PERMISSION_KEY = "flights-read-opensky"
 
-SKILLS = ("flights-overhead", "flights-aircraft", "flights-help")
+SKILLS = ("flights-overhead", "flights-aircraft", "flights-board", "flights-help")
 
 #: A place, as people write it after 'over' / 'above' / 'near'.
 _PLACE_IN = re.compile(
@@ -116,6 +118,9 @@ def route(text: str) -> tuple[str, dict]:
     stripped = str(text or "").strip()
     if not stripped or re.search(r"\b(help|what can you do|commands?)\b", stripped, re.IGNORECASE):
         return "flights-help", {}
+    if re.search(r"\btraffic board\b", stripped, re.IGNORECASE):
+        box = re.search(r"\bbox\s+(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)", stripped, re.IGNORECASE)
+        return "flights-board", dict(zip(("lamin", "lomin", "lamax", "lomax"), map(float, box.groups()))) if box else {}
     place = place_from_text(stripped)
     address = address_from_text(stripped)
     if address and not place:
@@ -204,9 +209,11 @@ class FlightsAgent(AcpAgent):
     title = "Flights - live aircraft over a place"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: FlightsData | None = None) -> None:
+    def __init__(self, connection=None, data: FlightsData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or FlightsData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -217,6 +224,18 @@ class FlightsAgent(AcpAgent):
     def prompt(self, ctx: SessionContext, prompt: list[dict]) -> str:
         text = prompt_text(prompt)
         skill, params = route(text)
+        if skill == "flights-board":
+            tool = "call_flights_board"
+            ctx.tool_call(tool, "Aggregate regional aircraft", kind="fetch", name=skill, raw_input=params)
+            try:
+                body, artifact = self._board(params)
+            except (GatewayError, ValueError) as exc:
+                ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
+                ctx.message(str(exc))
+                return STOP_END_TURN
+            ctx.tool_call_update(tool, status="completed", content=ctx.text_content(artifact))
+            ctx.stream_text(body + "\n")
+            return STOP_END_TURN
         ctx.plan([
             (f"Route the request ({skill})", "high"),
             ("Find the place, then read the live aircraft in that box", "medium"),
@@ -298,6 +317,30 @@ class FlightsAgent(AcpAgent):
         if reading["remaining"] is not None:
             lines.append(f"  - OpenSky's anonymous allowance left today: {reading['remaining']}")
         return "\n".join(lines)
+
+    def _board(self, params: dict) -> tuple[str, dict]:
+        """Render regional aggregates computed on the gateway."""
+        if any(key not in params for key in ("lamin", "lomin", "lamax", "lomax")):
+            raise ValueError("Give a box as south,west,north,east: traffic board box 40.4,-74.3,41.0,-73.6.")
+        arguments = {key: float(params[key]) for key in ("lamin", "lomin", "lamax", "lomax")}
+        context = {"agent": "flights", "skill": "flights-board"}
+        data, refused = premium_call(self.gateway, "opensky_region_traffic_board", arguments, context)
+        if refused:
+            return refused
+        if (not isinstance(data, dict) or type(data.get("total")) is not int
+                or not isinstance(data.get("altitudeBands"), dict)
+                or not isinstance(data.get("categories"), dict)
+                or not isinstance(data.get("busiestCallsigns"), list)
+                or any(not isinstance(row, dict) or not isinstance(row.get("name"), str)
+                       or type(row.get("count")) is not int for row in data["busiestCallsigns"])):
+            return empty_premium_answer("The gateway returned no readable traffic board.", context)
+        lines = [f"Regional traffic board: {data['total']} aircraft at snapshot {data.get('snapshotTime')}.",
+                 f"Altitude bands (barometric metres): {data['altitudeBands']}.",
+                 f"OpenSky category counts (0 = no information): {data['categories']}."]
+        for row in data["busiestCallsigns"]:
+            lines.append(f"  {row['name']}: {row['count']} aircraft.")
+        lines.append(str(data.get("note") or "OpenSky ADS-B coverage can omit aircraft."))
+        return "\n".join(lines), {**data, **context, "premium": True}
 
     def on_cancel(self, session) -> None:
         return None  # one snapshot, one answer
