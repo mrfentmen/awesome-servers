@@ -1,6 +1,6 @@
 {
   "name": "blizzard-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "MCP server for Blizzard games: WoW token price, achievements, Diablo seasons. Needs free API client.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/blizzard-mcp",

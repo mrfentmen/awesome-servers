@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { BlizzardError, diabloSeasons, wowAchievements, wowTokenPrice, resetCalendar, statWeights } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { BlizzardError, diabloSeasons, wowAchievements, wowTokenPrice, resetCalendar } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -109,10 +109,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: stat_weights ----
-    const paywallMessage = await premiumRequired("stat_weights")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await statWeights(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_blizzard_stat_weights", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
