@@ -1,7 +1,8 @@
+import { premiumTool } from "./gateway.js"
+const error = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { eventText, languageBreakdown, load, petExport, petProgressReport, safeEvent, save, statePath, type PetState } from "./state.js"
-import { premiumRequired } from "./license.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -59,10 +60,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async () => {
-      // ---- paywall: pet_progress_report ----
-      const paywallMessage = await premiumRequired("pet_progress_report")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try {
         return text(await petProgressReport())
       } catch (error) {
@@ -79,10 +76,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async () => {
-      // ---- paywall: language_breakdown ----
-      const paywallMessage = await premiumRequired("language_breakdown")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try {
         return text(await languageBreakdown())
       } catch (error) {
@@ -106,5 +99,21 @@ export function createServer(): McpServer {
       }
     }
   )
+  server.registerTool(
+    "find_coding_quests",
+    {
+      title: "Find coding quests",
+      description: "Find real open GitHub issues labeled good first issue for a programming language, with links, comment counts and update dates. These are public contribution opportunities, independent of local pet quests.",
+      inputSchema: z.object({ language: z.string().max(40).optional(), limit: z.number().int().min(1).max(15).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: find_coding_quests ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_codepet_find_coding_quests", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }
