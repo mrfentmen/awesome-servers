@@ -1,10 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { exercise } from "./api.js"
-import { exercises } from "./api.js"
-import { muscles, equipmentList, exerciseDetail } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { exercise, exercises, muscles } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -58,10 +56,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: equipment_list ----
-    const paywallMessage = await premiumRequired("equipment_list")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await equipmentList(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wger_equipment_list", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -75,10 +72,25 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: exercise_detail ----
-    const paywallMessage = await premiumRequired("exercise_detail")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await exerciseDetail(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wger_exercise_detail", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "exercise_categories",
+    {
+      title: "Exercise categories",
+      description: "List the exercise category IDs and names used to classify wger exercises.",
+      inputSchema: z.object( { limit: z.number().describe("Maximum categories, 1-100.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: exercise_categories ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_wger_exercise_categories", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
