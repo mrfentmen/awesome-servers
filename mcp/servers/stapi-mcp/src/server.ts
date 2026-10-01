@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatCharacter, getCharacter, searchCharacters, StapiError, searchSpecies, searchLocations, searchOrganizations, listSeries } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { formatCharacter, getCharacter, searchCharacters, StapiError } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -25,11 +25,11 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ name, limit }) => {
+    async (args) => {
       try {
-        const results = await searchCharacters(name, limit)
-        if (results.length === 0) return text(`No Star Trek characters match "${name}".`)
-        return text(`Star Trek characters for "${name}":\n\n${results.map((c, i) => formatCharacter(c, i)).join("\n")}`)
+        const results = await searchCharacters(args.name, args.limit)
+        if (results.length === 0) return text(`No Star Trek characters match "${args.name}".`)
+        return text(`Star Trek characters for "${args.name}":\n\n${results.map((c, i) => formatCharacter(c, i)).join("\n")}`)
       } catch (e) {
         return textError(errorMessage(e))
       }
@@ -68,16 +68,11 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ name, limit }) => {
+    async (args) => {
       // ---- paywall: search_species ----
-      const paywallMessage = await premiumRequired("search_species")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await searchSpecies(name, limit))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_stapi_search_species", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -92,16 +87,11 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ name, limit }) => {
+    async (args) => {
       // ---- paywall: search_locations ----
-      const paywallMessage = await premiumRequired("search_locations")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await searchLocations(name, limit))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_stapi_search_locations", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -116,16 +106,11 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ name, limit }) => {
+    async (args) => {
       // ---- paywall: search_organizations ----
-      const paywallMessage = await premiumRequired("search_organizations")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await searchOrganizations(name, limit))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_stapi_search_organizations", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -137,16 +122,11 @@ export function createServer(): McpServer {
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
-    async () => {
+    async (args) => {
       // ---- paywall: list_series ----
-      const paywallMessage = await premiumRequired("list_series")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await listSeries())
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_stapi_list_series", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
