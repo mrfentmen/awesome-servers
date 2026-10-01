@@ -1,9 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { hashFile } from "./api.js"
-import { hashText, verifyChecksum, directoryManifest, hmacDigest } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { hashFile, hashText, verifyChecksum, directoryManifest, hmacDigest } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -44,10 +43,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: verify_checksum ----
-    const paywallMessage = await premiumRequired("verify_checksum")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await verifyChecksum(args)) } catch (e) { return textError(e instanceof Error ? `Error: ${e.message}` : String(e)) }
   }
   )
@@ -61,10 +56,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: directory_manifest ----
-    const paywallMessage = await premiumRequired("directory_manifest")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await directoryManifest(args)) } catch (e) { return textError(e instanceof Error ? `Error: ${e.message}` : String(e)) }
   }
   )
@@ -79,6 +70,22 @@ export function createServer(): McpServer {
     },
     async (args) => {
     try { return text(await hmacDigest(args)) } catch (e) { return textError(e instanceof Error ? `Error: ${e.message}` : String(e)) }
+  }
+  )
+
+  server.registerTool(
+    "npm_integrity",
+    {
+      title: "npm package integrity",
+      description: "Read the npm registry's current tarball integrity, legacy shasum and tarball URL for a package.",
+      inputSchema: z.object({ package: z.string().describe("npm package name; defaults to typescript.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: npm_integrity ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_checksum_npm_integrity", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
