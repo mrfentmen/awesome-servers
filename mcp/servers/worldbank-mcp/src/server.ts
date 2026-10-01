@@ -1,8 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_countries, m0_indicator, m1_eiaSeries, m1_worldbankIndicator, countryProfile, indicatorCatalog } from './api.js'
-import { premiumRequired } from "./license.js"
 
+import { m0_countries, m0_indicator, m1_eiaSeries, m1_worldbankIndicator } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -69,10 +69,9 @@ server.registerTool(
     },
     async (args) => {
     // ---- paywall: country_profile ----
-    const paywallMessage = await premiumRequired("country_profile")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await countryProfile(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_worldbank_country_profile", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -86,10 +85,9 @@ server.registerTool(
     },
     async (args) => {
     // ---- paywall: indicator_catalog ----
-    const paywallMessage = await premiumRequired("indicator_catalog")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await indicatorCatalog(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_worldbank_indicator_catalog", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
