@@ -1,9 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { analyzeHistory, format } from "./history.js"
-import { historyCohortSpread, historyFlapPatterns } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { historyCohortSpread, historyFlapPatterns } from "./local-api.js"
 
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,10 +34,6 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: history_cohort_spread ----
-    const paywallMessage = await premiumRequired("history_cohort_spread")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await historyCohortSpread(args)) } catch (error) { return errorText(error) }
   }
   )
@@ -56,5 +52,39 @@ export function createServer() {
   }
   )
 
+  server.registerTool(
+    "public_workflow_history",
+    {
+      title: "Public workflow history",
+      description: "Summarize recent public GitHub Actions workflow conclusions and rerun attempt counts.",
+      inputSchema: z.object({ owner: z.string().min(1).max(100).default("microsoft"), repo: z.string().min(1).max(100).default("TypeScript"), limit: z.number().optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: public_workflow_history ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_flaky_history_public_workflow_history", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "public_run_bottlenecks",
+    {
+      title: "Public run bottlenecks",
+      description: "Find the longest elapsed jobs and failed-step counts in a public GitHub Actions run; defaults to a recent completed run.",
+      inputSchema: z.object({ owner: z.string().min(1).max(100).default("microsoft"), repo: z.string().min(1).max(100).default("TypeScript"), limit: z.number().optional(), run_id: z.string().regex(/^\d{1,20}$/).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: public_run_bottlenecks ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_flaky_history_public_run_bottlenecks", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }
+
+function error(e: unknown): string { return e instanceof Error ? e.message : String(e) }
