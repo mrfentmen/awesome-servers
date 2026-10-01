@@ -39,3 +39,21 @@ export async function getJoke(id: string): Promise<Joke> {
   const j = await getJson<Raw>(`/j/${encodeURIComponent(id.trim())}`)
   return { id: String(j.id), joke: String(j.joke) }
 }
+
+// ---- muxB tools:
+
+type JokeApiResult = {
+  error?: boolean;
+  category?: string;
+  type?: string;
+  joke?: string;
+  setup?: string;
+  delivery?: string;
+  id?: number;
+  flags?: Record<string, boolean>;
+  message?: string;
+  additionalInfo?: string;
+}
+
+type ChuckJoke = { id?: string; value?: string; categories?: string[]; created_at?: string; updated_at?: string; url?: string }
+

@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { DadJokeError, getJoke, randomJoke, searchJokes } from "./api.js"
 
+import { DadJokeError, getJoke, randomJoke, searchJokes } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -68,6 +69,60 @@ export function createServer(): McpServer {
       } catch (e) {
         return textError(errorMessage(e))
       }
+    }
+  )
+
+  server.registerTool(
+    "typed_joke",
+    {
+      title: "Typed joke",
+      description: "Get a two part joke from the JokeAPI in a category you choose: Programming, Pun, Dark, Spooky, Christmas, Misc or Any. Reports the content flags it sets.",
+      inputSchema: z.object({
+        category: z.string().describe("Category: Programming, Pun, Dark, Spooky, Christmas, Misc or Any. Defaults to Any.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: typed_joke ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_dadjoke_typed_joke", args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "chuck_fact",
+    {
+      title: "Chuck fact",
+      description: "Get a Chuck Norris fact, optionally from one category such as dev, food, science, money or travel.",
+      inputSchema: z.object({
+        category: z.string().describe("Category name, for example dev. Omit for any category.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: chuck_fact ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_dadjoke_chuck_fact", args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "comic_strip",
+    {
+      title: "Comic strip",
+      description: "Get an xkcd comic by number, or the latest one when no number is given, with its image link and alt text.",
+      inputSchema: z.object({
+        number: z.number().describe("Comic number, 1-4000. Omit for the latest.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: comic_strip ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_dadjoke_comic_strip", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
