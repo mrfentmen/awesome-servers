@@ -50,34 +50,6 @@ export interface GravatarArgs {
   format?: string;
 }
 
-export async function gravatar(args: GravatarArgs): Promise<string> {
-  const email = normaliseEmail(args.email);
-  if (!email) return 'Provide an email address.';
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return `"${email}" does not look like an email address.`;
-  const size = Math.max(16, Math.min(Number(args.size ?? 200) || 200, 2048));
-  const fallback = (args.default ?? 'identicon').trim().toLowerCase();
-  if (!FALLBACKS.includes(fallback as (typeof FALLBACKS)[number])) {
-    return `Unknown default "${fallback}". Use one of: ${FALLBACKS.join(', ')}.`;
-  }
-  const rating = (args.rating ?? 'g').trim().toLowerCase();
-  if (!RATINGS.includes(rating as (typeof RATINGS)[number])) {
-    return `Unknown rating "${rating}". Use one of: ${RATINGS.join(', ')}.`;
-  }
-  const format = (args.format ?? 'png').trim().toLowerCase();
-  if (!FORMATS.includes(format as (typeof FORMATS)[number])) {
-    return `Unknown format "${format}". Use one of: ${FORMATS.join(', ')}.`;
-  }
-  const hash = gravatarHash(email);
-  const url = `${GRAVATAR_ROOT}/${hash}?s=${size}&d=${encodeURIComponent(fallback)}&r=${rating}&f=${format}`;
-  return [
-    `Gravatar for ${email}:`,
-    `URL: ${url}`,
-    `MD5 of the trimmed lowercase address: ${hash}`,
-    `Size ${size}px, fallback "${fallback}", rating "${rating}", format ${format}.`,
-    'No request was made: Gravatar derives the image from the hash alone.',
-  ].join('\n');
-}
-
 interface GravatarProfile {
   hash?: string;
   profileUrl?: string;

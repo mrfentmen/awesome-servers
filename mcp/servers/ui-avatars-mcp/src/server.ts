@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { avatar, gravatar, gravatarProfile } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { avatar, gravatarProfile } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -32,10 +32,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: gravatar ----
-    const paywallMessage = await premiumRequired("gravatar")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await gravatar(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_ui_avatars_gravatar", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
