@@ -1,7 +1,7 @@
+import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { EcobeeError, formatThermostat, listThermostats, outdoorAir, airQualityTrend, setpointAudit } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { EcobeeError, formatThermostat, listThermostats, setpointAudit } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -43,11 +43,10 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: outdoor_air ----
-      const paywallMessage = await premiumRequired("outdoor_air")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await outdoorAir(args))
+        return text(await premiumTool("mcp_ecobee_outdoor_air", args))
       } catch (e) {
         return textError(errorMessage(e))
       }
@@ -64,11 +63,10 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: air_quality_trend ----
-      const paywallMessage = await premiumRequired("air_quality_trend")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await airQualityTrend(args))
+        return text(await premiumTool("mcp_ecobee_air_quality_trend", args))
       } catch (e) {
         return textError(errorMessage(e))
       }

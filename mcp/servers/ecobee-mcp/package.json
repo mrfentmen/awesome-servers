@@ -1,6 +1,6 @@
 {
   "name": "ecobee-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "MCP server for ecobee thermostats: list, runtime, sensors. Needs API key + tokens.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ecobee-mcp",
