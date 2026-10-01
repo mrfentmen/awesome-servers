@@ -114,12 +114,6 @@ export function formatPin(p: Pin, index?: number): string {
 const OPENVERSE = "https://api.openverse.org/v1"
 const OPENVERSE_UA = "pinterest-mcp/1.1 (https://github.com/mrfentmen/pinterest-mcp)"
 
-const OPENVERSE_SOURCES = [
-  "flickr", "wikimedia", "stocksnap", "rawpixel", "nappy", "smithsonian",
-  "met", "sciencemuseum", "spacex", "nasa", "animaldiversity", "aucklandmuseum",
-  "phylopic", "sciencemuseum", "floraon", "mccordmuseum", "iNaturalist",
-]
-
 interface OvResult {
   id?: string
   title?: string
@@ -173,76 +167,6 @@ const ovSize = (w?: number, h?: number): string =>
 
 const ovPixelCount = (r: OvResult): number =>
   typeof r.width === "number" && typeof r.height === "number" ? r.width * r.height : 0
-
-/**
- * Find openly licensed images for a board, with the licence each one carries,
- * so a pin can point at something that is actually allowed to be reused.
- */
-export async function findLicensedImages(args: { query: string; limit?: number; source?: string; commercialOnly?: boolean }): Promise<string> {
-  const q = (args.query ?? "").trim()
-  if (!q) throw new PinterestError("Give something to search for, e.g. 'mountain landscape'.")
-  const size = Math.min(Math.max(Math.trunc(args.limit ?? 8), 1), 20)
-  const source = (args.source ?? "").trim().toLowerCase()
-  if (source && !OPENVERSE_SOURCES.includes(source)) {
-    throw new PinterestError(`source must be one of: ${OPENVERSE_SOURCES.slice(0, 12).join(", ")}...`)
-  }
-
-  const params = new URLSearchParams({ q, page_size: String(size) })
-  if (source) params.set("source", source)
-  if (args.commercialOnly) params.set("license_type", "commercial")
-  const data = await ovGet<OvSearch>(`/images/?${params}`)
-  const rows = Array.isArray(data.results) ? data.results : []
-  if (!rows.length) throw new PinterestError(`Openverse found no openly licensed image for "${q}".`)
-
-  const byLicense = new Map<string, number>()
-  for (const row of rows) byLicense.set(row.license ?? "not reported", (byLicense.get(row.license ?? "not reported") ?? 0) + 1)
-
-  return [
-    `Openly licensed images for "${q}"`,
-    `  ${data.result_count ?? rows.length} match(es) in the index, showing ${rows.length}${source ? ` from ${source}` : ""}${args.commercialOnly ? ", commercial-use licences only" : ""}`,
-    "",
-    ...rows.map((r, i) =>
-      [
-        `${String(i + 1).padStart(2)}. ${r.title ?? "(untitled)"}`,
-        `    by ${r.creator ?? "creator not reported"}${r.source ? `, on ${r.source}` : ""}`,
-        `    licence ${r.license ?? "not reported"}${r.license_version ? ` ${r.license_version}` : ""} | ${ovSize(r.width, r.height)} | ${typeof r.filesize === "number" ? `${Math.round(r.filesize / 1024)} KB` : "size not reported"}`,
-        `    ${r.foreign_landing_url ?? "source page not reported"}`,
-      ].join("\n")
-    ),
-    "",
-    `Licences in this page: ${[...byLicense.entries()].map(([licence, n]) => `${licence} x${n}`).join(", ")}`,
-    "Openverse (openverse.org) aggregates openly licensed media. Check each licence before republishing.",
-  ].join("\n")
-}
-
-/**
- * The licence and attribution behind a single Openverse image, which is what a
- * repin has to carry to stay legal.
- */
-export async function imageLicence(args: { id: string }): Promise<string> {
-  const id = (args.id ?? "").trim()
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
-    throw new PinterestError("Give the Openverse image id (a UUID), not a Pinterest pin id.")
-  }
-  const data = await ovGet<OvResult & { url?: string }>(`/images/${encodeURIComponent(id)}/`)
-  const tags = (data.tags ?? []).map((t) => t.name).filter((n): n is string => typeof n === "string")
-  return [
-    `Openverse image ${data.id ?? id}`,
-    `  title: ${data.title ?? "not reported"}`,
-    `  creator: ${data.creator ?? "not reported"}${data.creator_url ? ` (${data.creator_url})` : ""}`,
-    `  licence: ${data.license ?? "not reported"}${data.license_version ? ` ${data.license_version}` : ""}`,
-    `  licence terms: ${data.license_url ?? "not reported"}`,
-    `  source: ${data.source ?? "not reported"}`,
-    `  original page: ${data.foreign_landing_url ?? "not reported"}`,
-    `  full file: ${data.url ?? "not reported"}`,
-    `  dimensions: ${ovSize(data.width, data.height)}`,
-    `  category: ${data.category ?? "not reported"} | flagged mature: ${data.mature === true ? "yes" : "no"}`,
-    tags.length ? `  tags: ${tags.slice(0, 12).join(", ")}` : "  tags: none recorded",
-    "",
-    data.attribution ? `Attribution string Openverse builds: ${String(data.attribution).slice(0, 200)}` : "Openverse records no attribution string for this item.",
-    "Licence text is Openverse's record, not legal advice.",
-  ].join("\n")
-}
 
 /**
  * How the openly licensed image index is made up: which source holds how much,

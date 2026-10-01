@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { boardPins, formatBoard, formatPin, getBoard, getPin, listBoards, myAccount, PinterestError, findLicensedImages, imageLicence, imageSources } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { boardPins, formatBoard, formatPin, getBoard, getPin, listBoards, myAccount, PinterestError, imageSources } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -110,10 +110,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: find_licensed_images ----
-    const paywallMessage = await premiumRequired("find_licensed_images")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await findLicensedImages({ ...args, commercialOnly: args.commercial_only })) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_pinterest_find_licensed_images", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -130,10 +129,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: image_licence ----
-    const paywallMessage = await premiumRequired("image_licence")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await imageLicence(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_pinterest_image_licence", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/pinterest-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "MCP server for Pinterest: account, boards, pins. Needs a free Pinterest access token.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/pinterest-mcp",
