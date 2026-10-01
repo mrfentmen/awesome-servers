@@ -1,6 +1,6 @@
 {
   "name": "marketstack-mcp",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Marketstack API: end-of-day prices, historical EOD, ticker search, exchanges, dividends.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/marketstack-mcp",

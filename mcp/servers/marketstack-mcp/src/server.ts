@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, getLatestEod, getEodOnDate, searchTickers, listExchanges, getDividends, symbolDividendLedger, priceWindowReview } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, getLatestEod, getEodOnDate, searchTickers, listExchanges, getDividends } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -119,10 +119,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: symbol_dividend_ledger ----
-      const paywallMessage = await premiumRequired("symbol_dividend_ledger")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await symbolDividendLedger(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_marketstack_symbol_dividend_ledger", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -136,10 +135,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: price_window_review ----
-      const paywallMessage = await premiumRequired("price_window_review")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await priceWindowReview(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_marketstack_price_window_review", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
