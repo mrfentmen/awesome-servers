@@ -335,5 +335,81 @@ class TurnTests(unittest.TestCase):
         self.assertIn("I could not read the bulletins", result["text"])
 
 
+
+class PremiumGateTests(unittest.TestCase):
+    def gateway(self, key="lic_good", payload=None):
+        import json
+        from acp_kit import GatewayClient
+        from unittest.mock import Mock
+        def fetch(url, request, headers):
+            self.transport.append(request)
+            if key == "lic_live_but_rejected":
+                return {"result": {"isError": True, "content": [{"type": "text", "text": "Gateway says this licence is revoked."}],
+                                   "structuredContent": {"licenceRefusal": True, "reason": "revoked"}}}
+            return {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
+        self.transport = []
+        gateway = GatewayClient(fetch=fetch, key=key)
+        gateway.call = Mock(wraps=gateway.call)
+        return gateway
+
+    def test_no_key_attempts_premium_call_and_uses_client_refusal(self):
+        import os
+        from unittest.mock import patch
+        from acp_kit import GatewayError
+        from agent import TsunamiAgent
+        with patch.dict(os.environ, {}, clear=True):
+            gateway = self.gateway(key=None)
+            with self.assertRaises(GatewayError) as caught:
+                gateway.call("tsunami_quake_context_board", {})
+            gateway.call.reset_mock()
+            answer, artifact = TsunamiAgent(gateway=gateway)._context({})
+        self.assertEqual(answer, str(caught.exception))
+        self.assertIn("MCP_LICENSE_KEY", answer)
+        self.assertEqual(artifact["reason"], "missing_key")
+        gateway.call.assert_called_once_with("tsunami_quake_context_board", {})
+        self.assertEqual(self.transport, [])
+
+    def test_rejected_key_preserves_gateway_wording(self):
+        from agent import TsunamiAgent
+        gateway = self.gateway("lic_live_but_rejected")
+        answer, artifact = TsunamiAgent(gateway=gateway)._context({})
+        self.assertEqual(answer, "Gateway says this licence is revoked.")
+        self.assertEqual(artifact["reason"], "denied")
+        self.assertEqual(len(self.transport), 1)
+
+    def test_good_key_calls_once_with_arguments_and_real_numbers(self):
+        from agent import TsunamiAgent
+        gateway = self.gateway(payload={'bulletins': [{'centre': 'PAAQ', 'event': 'Tsunami Information', 'sent': '2026-09-29T21:09:56Z', 'contextStatus': 'candidate found', 'closest': {'id': 'uw-test', 'magnitude': 4.15, 'magnitudeDifference': 0.15, 'distanceKm': 2, 'originOffsetSeconds': 1}}]})
+        answer, artifact = TsunamiAgent(gateway=gateway)._context({})
+        gateway.call.assert_called_once_with("tsunami_quake_context_board", {})
+        self.assertEqual(len(self.transport), 1)
+        self.assertIn('M4.15', answer)
+        self.assertTrue(artifact["premium"])
+        self.assertEqual(route('tsunami quake context board'), ('tsunami-context', {}))
+
+    def test_empty_payload_is_not_a_success(self):
+        from agent import TsunamiAgent
+        for payload in ({}, {"bulletins": [{}]}, {"years": [{}]}, {"daily": [{}]}):
+            answer, artifact = TsunamiAgent(gateway=self.gateway(payload=payload))._context({})
+            self.assertTrue(artifact.get("failed"), answer)
+
+    def test_free_turn_never_calls_gateway(self):
+        from agent import TsunamiAgent
+        gateway = self.gateway()
+        data, feed = make_data()
+        agent_conn, client_conn = connected_pair()
+        agent = TsunamiAgent(agent_conn, data, gateway=gateway)
+        threading.Thread(target=agent_conn.serve, daemon=True).start()
+        client = AcpClient(connection=client_conn, permission="allow-once")
+        client.start(); client.initialize()
+        session_id = client.new_session(cwd="/tmp")
+        try:
+            result = client.prompt('is there a tsunami warning right now?', session_id)
+            self.assertEqual(result["stopReason"], STOP_END_TURN)
+            gateway.call.assert_not_called()
+        finally:
+            client.stop()
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

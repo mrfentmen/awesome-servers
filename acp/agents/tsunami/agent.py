@@ -16,6 +16,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
 from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
 
 from data import CENTRES, DATASET, TsunamiData, TsunamiError  # noqa: E402
@@ -23,6 +24,7 @@ from data import CENTRES, DATASET, TsunamiData, TsunamiError  # noqa: E402
 HELP = (
     "I read both US tsunami warning centres' live CAP bulletins (keyless): NTWC in Palmer, Alaska\n"
     "and PTWC in Honolulu. Ask me:\n"
+    "  - tsunami quake context board (premium)\n"
     "  - is there a tsunami warning right now?\n"
     "  - any tsunami advisory for the west coast?\n"
     "  - what was the last tsunami bulletin?\n"
@@ -34,7 +36,7 @@ HELP = (
 
 PERMISSION_KEY = "tsunami-read-warning-centre-bulletins"
 
-SKILLS = ("tsunami-status", "tsunami-place", "help")
+SKILLS = ("tsunami-context", "tsunami-status", "tsunami-place", "help")
 
 _PLACE_RE = re.compile(r"\b(?:for|near|at|around|affect(?:ing)?)\s+([A-Za-z][A-Za-z .'\-]{2,40})",
                        re.IGNORECASE)
@@ -66,6 +68,8 @@ def route(text: str) -> tuple[str, dict]:
     stripped = str(text or "").strip()
     if not stripped or re.search(r"\b(help|what can you do|commands?)\b", stripped, re.IGNORECASE):
         return "help", {}
+    if re.search(r"\b(?:context board|quake context|bulletin board)\b", stripped, re.I):
+        return "tsunami-context", {}
     if not _STATUS_WORDS.search(stripped) and "tsunami" not in stripped.lower():
         return "help", {}
     place = place_from_text(stripped)
@@ -176,9 +180,11 @@ class TsunamiAgent(AcpAgent):
     title = "Tsunami - whether a bulletin is in force, and what the last one said"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: TsunamiData | None = None) -> None:
+    def __init__(self, connection=None, data: TsunamiData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or TsunamiData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -212,6 +218,11 @@ class TsunamiAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
 
         try:
+            if skill == "tsunami-context":
+                body, artifact = self._context(params)
+                ctx.tool_call_update(tool, status="completed", content=ctx.text_content(artifact["summary"]))
+                ctx.stream_text(body)
+                return STOP_END_TURN
             if skill == "tsunami-place":
                 found = self.data.place(params["place"])
                 body = render_place(found)
@@ -226,7 +237,7 @@ class TsunamiAgent(AcpAgent):
                     body = render_status(found) + "\n\n" + render_bulletin(found["newest"])
                 summary = (f"{len(found['active'])} bulletin(s) in force; newest is "
                            f"{found['newest']['event']}")
-        except (TsunamiError, ValueError) as exc:
+        except (TsunamiError, ValueError, GatewayError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the bulletins: {exc}")
             return STOP_END_TURN
@@ -238,6 +249,39 @@ class TsunamiAgent(AcpAgent):
                     "this does not read. A bulletin left on the web after its expiry is still "
                     "shown here, marked expired, because it is the last thing that was said.")
         return STOP_END_TURN
+
+    def _context(self, params: dict) -> tuple[str, dict]:
+        """Compare retained CAP bulletins with USGS candidates on the gateway."""
+        context = {"agent": "tsunami", "skill": "tsunami-context"}
+        data, refused = premium_call(self.gateway, "tsunami_quake_context_board", {}, context)
+        if refused:
+            return refused
+        rows = data.get("bulletins") if isinstance(data, dict) else None
+        if (not isinstance(rows, list) or not rows or
+                any(not isinstance(row, dict) or not row.get("centre") or not row.get("sent")
+                    or not row.get("event") or not isinstance(row.get("contextStatus"), str)
+                    or (row.get("closest") is not None and
+                        (not isinstance(row["closest"], dict) or
+                         not isinstance(row["closest"].get("magnitude"), (int, float))))
+                    for row in rows)):
+            return empty_premium_answer("The gateway returned no readable bulletin/context board.", context)
+        lines = ["Latest retained tsunami bulletins with USGS quake context:"]
+        for row in rows:
+            lines.append(f"{row['centre']}: {row['event']}, sent {row['sent']}; "
+                         f"expires {row.get('expires') or 'not reported'}.")
+            quake = row.get("closest")
+            if quake:
+                lines.append(f"  USGS candidate {quake.get('id')}: M{quake['magnitude']} "
+                             f"({quake.get('magnitudeType') or 'scale not reported'}), "
+                             f"{quake.get('distanceKm')} km away; "
+                             f"origin offset {quake.get('originOffsetSeconds')} seconds; "
+                             f"magnitude difference {quake.get('magnitudeDifference')}.")
+            else:
+                lines.append(f"  {row['contextStatus']}.")
+        lines.append(data.get("note") or "Candidates are unconfirmed; retained bulletins may be expired.")
+        lines.append("Source: tsunami.gov CAP + USGS, compared on the licence gateway.")
+        return "\n".join(lines), {**context, "premium": True, "summary": "premium tsunami context board",
+                                  "board": data}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer
