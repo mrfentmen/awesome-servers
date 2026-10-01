@@ -17,77 +17,77 @@ ACP client, straight from a public dataset, with no API key and nothing invented
 | [`air`](./agents/air) | "how is the air quality in Delhi right now?", "when does it get worse today?", "how is the air in Delhi this week?" (premium) | Open-Meteo air quality (CAMS) |
 | [`alert`](./agents/alert) | "alert me when the air quality in Delhi passes 200", "tell me when gauge 07010000 reaches flood stage" (silent until it happens), "will the air quality in Delhi pass 200 tomorrow?" (premium) | Open-Meteo + USGS + NWPS + Treasury |
 | [`apod`](./agents/apod) | "show me NASA's picture of the day" (sends the picture itself), "the apod for 1996-01-01", "every APOD between 2022-07-12 and 2022-07-16" (premium) | NASA APOD (api.nasa.gov) |
-| [`art`](./agents/art) | "paintings by Monet", "surprise me with a piece" | Art Institute of Chicago, Cleveland, The Met |
-| [`aurora`](./agents/aurora) | "how are the geomagnetic conditions?", "odds of seeing the aurora in Tromso?" | NOAA SWPC (Kp, OVATION, alerts) |
+| [`art`](./agents/art) | "paintings by Monet", "surprise me with a piece", "movement index: Impressionism and Baroque" (premium) | Art Institute of Chicago, Cleveland, The Met |
+| [`aurora`](./agents/aurora) | "how are the geomagnetic conditions?", "odds of seeing the aurora in Tromso?", "storm digest for recent history and the next 3 days" (premium) | NOAA SWPC (Kp, OVATION, alerts; 30-day daily geomagnetic table + JSON forecast) |
 | [`archive`](./agents/archive) | "find Apollo 11 recordings", "what is in the item Apollo11Audio?" | Internet Archive |
 | [`attach`](./agents/attach) | "what is in this file?" (reads the file your editor attached and profiles it) | the attached file itself — no feed, no network |
 | [`asteroids`](./agents/asteroids) | "which asteroids pass Earth this week?", "any hazardous asteroids passing this month?", "has 523934 ever come this close before?" (premium) | NASA Near-Earth Object feed |
 | [`bayarea`](./agents/bayarea) | "next BART trains from Embarcadero", "which BART trains from Milpitas take bikes?", "if I need to be somewhere in 25 minutes, which train should I get on from Embarcadero?" (premium) | BART public API (real-time departure board) |
-| [`bikes`](./agents/bikes) | "how many citibikes are available right now?", "nearest station to 40.71,-74.01?" | Citi Bike GBFS (NYC) |
-| [`books`](./agents/books) | "find books about urban foxes", "what has Ursula K. Le Guin written?" | Open Library |
+| [`bikes`](./agents/bikes) | "how many citibikes are available right now?", "nearest station to 40.71,-74.01?", "Citi Bike capacity board" (premium) | Citi Bike GBFS (NYC) |
+| [`books`](./agents/books) | "find books about urban foxes", "what has Ursula K. Le Guin written?", "catalogue digest for Ursula K. Le Guin" (premium) | Open Library |
 | [`boston`](./agents/boston) | "when is the next Red Line train from Park Street?", "any alerts on the Red Line right now?", "how long do I actually wait at Park Street at 8am?" (premium) | MBTA API v3 (Red Line arrivals, alerts, timetable) |
-| [`brief`](./agents/brief) | "brief me on Denver" (asks, then writes `BRIEFING.md` into your workspace) | Open-Meteo + NWS + USGS + open-notify |
-| [`buoys`](./agents/buoys) | "what are the conditions at buoy 41025?", "which buoys are near Hawaii?" | NOAA NDBC realtime |
-| [`chart`](./agents/chart) | "chart the temperature in Seattle for the next 24 hours" (answers with a real PNG) | Open-Meteo + Treasury + USGS |
-| [`chem`](./agents/chem) | "what is the formula for ibuprofen?", "what is Lipitor's generic name?" | PubChem + RxNorm |
+| [`brief`](./agents/brief) | "brief me on Denver" (asks, then writes `BRIEFING.md` into your workspace), "outlook for Denver next 3 days" (premium; US places) | Open-Meteo + NWS + USGS + open-notify |
+| [`buoys`](./agents/buoys) | "what are the conditions at buoy 41025?", "which buoys are near Hawaii?", "compare nearest 3 buoys at 36.6,-122.0" (premium) | NOAA NDBC realtime |
+| [`chart`](./agents/chart) | "chart the temperature in Seattle for the next 24 hours", "chart the national debt for the last 90 days", "compare temperature in Seattle and Tokyo from 2026-10-01 to 2026-10-02" (premium) | Open-Meteo + Treasury + USGS |
+| [`chem`](./agents/chem) | "what is the formula for ibuprofen?", "what is Lipitor's generic name?", "compare ibuprofen and aspirin" (premium) | PubChem + RxNorm |
 | [`chess`](./agents/chess) | "what is thibault's blitz rating?", "show me thibault's last 10 games", "tell me about game JNUpaHZT", "what openings does thibault play?" (premium) | Lichess (ratings, public game PGNs) |
-| [`civic`](./agents/civic) | "did complaint 70483808 get fixed?", "complaints near 11235" | NYC Open Data |
-| [`clinicaltrials`](./agents/clinicaltrials) | "trials for melanoma in Boston", "what is trial NCT01065467?" | ClinicalTrials.gov API v2 |
+| [`civic`](./agents/civic) | "did complaint 70483808 get fixed?", "complaints near 11235", "agency resolution profile for DOT last 3 months" (premium) | NYC Open Data |
+| [`clinicaltrials`](./agents/clinicaltrials) | "trials for melanoma in Boston", "what is trial NCT01065467?", "trial landscape for melanoma in Boston from 2025-01-01 to 2025-12-31" (premium) | ClinicalTrials.gov API v2 |
 | [`clock`](./agents/clock) | "what time is it in Tokyo?", "what time is it in London and Santiago?", "find a 45 minute slot this week that works for London, Tokyo and New York" (premium) | timeapi.io + IANA timezone database |
 | [`comics`](./agents/comics) | "show me the latest xkcd", "tell me about xkcd 3000", "show me the last 5 comics", "what does xkcd keep coming back to around 2900-2910?" (premium) | xkcd (xkcd.com/info.0.json) |
 | [`companies`](./agents/companies) | "what is Apple's LEI?", "who owns Bank of America National Association?", "which Apple is it, and how many are there?" (premium) | GLEIF Legal Entity Identifier registry |
-| [`company`](./agents/company) | "Microsoft's last 10-K", "who filed a 10-K yesterday?" | SEC EDGAR (tickers, submissions, daily index) |
+| [`company`](./agents/company) | "Microsoft's last 10-K", "who filed a 10-K yesterday?", "filing cadence for CIK 320193 from 2010 to 2025" (premium) | SEC EDGAR (tickers, submissions, daily index) |
 | [`courts`](./agents/courts) | "find court opinions about privacy", "which court decided Brown v. Board of Education?", "which courts rule most on privacy?" (premium) | CourtListener opinion search |
-| [`crypto`](./agents/crypto) | "what is the price of bitcoin?", "how much is locked in DeFi?" | CoinGecko + DefiLlama |
+| [`crypto`](./agents/crypto) | "what is the price of bitcoin?", "how much is locked in DeFi?", "crypto market board top 10" (premium) | CoinGecko + DefiLlama |
 | [`dailymed`](./agents/dailymed) | "show me the official label for LIPITOR", "what does the LIPITOR label say about drug interactions?", "compare the LIPITOR labels across manufacturers" (premium) | DailyMed drug labels |
-| [`domains`](./agents/domains) | "when does github.com expire?", "who is the registrar for example.org?" | RDAP (rdap.org) |
-| [`drought`](./agents/drought) | "how dry is California?", "drought in Texas over the last 8 weeks" | US Drought Monitor |
+| [`domains`](./agents/domains) | "when does github.com expire?", "who is the registrar for example.org?", "portfolio report for github.com, example.org" (premium) | RDAP (rdap.org) |
+| [`drought`](./agents/drought) | "how dry is California?", "drought in Texas over the last 8 weeks", "drought index for CA over the last 6 weeks ending 2026-09-22" (premium) | US Drought Monitor |
 | [`f1`](./agents/f1) | "when is the next F1 race?", "who won the last race?", "what are the driver standings?", "who will win the 2026 title?" (premium) | Jolpica/Ergast F1 (api.jolpi.ca) |
 | [`films`](./agents/films) | "who directed inception", "films by fritz lang", "1940s noir I can watch for free", "what is in scarlet_street_1945", "which decade has the most noir films?" (premium) | Wikidata film items + Internet Archive `feature_films` shelf |
-| [`firehose`](./agents/firehose) | "watch the wiki firehose for 10 edits" (a push stream, not a poll) | Wikimedia EventStreams (SSE) |
-| [`flights`](./agents/flights) | "what planes are over Bryant Park, New York right now?", "what is aircraft a487ef?" | OpenSky state vectors (ADS-B) |
-| [`floodwatch`](./agents/floodwatch) | "is the Mississippi at St. Louis flooding?", "what is gauge EADM7 doing?" | NWS NWPS gauge + USGS site search |
-| [`food`](./agents/food) | "how much sugar is in Nutella?", "is there milk in Oreos?" | Open Food Facts |
-| [`forecast`](./agents/forecast) | "when will it rain in Seattle today?", "what does the week look like?" | Open-Meteo forecast |
-| [`fx`](./agents/fx) | "what is 100 USD in EUR?", "how did USD-EUR move this month?" | ECB reference rates (Frankfurter) |
+| [`firehose`](./agents/firehose) | "watch the wiki firehose for 10 edits" (a push stream, not a poll), "wiki digest on en from 2026-10-01T07:40:00Z to 2026-10-01T07:45:00Z" (premium) | Wikimedia EventStreams (SSE) + MediaWiki recentchanges digest |
+| [`flights`](./agents/flights) | "what planes are over Bryant Park, New York right now?", "what is aircraft a487ef?", "traffic board box 40.4,-74.3,41.0,-73.6" (premium) | OpenSky state vectors (ADS-B) |
+| [`floodwatch`](./agents/floodwatch) | "is the Mississippi at St. Louis flooding?", "what is gauge EADM7 doing?", "flood risk board near 38.63,-90.18 within 25 km" (premium) | NWS NWPS gauge + USGS site search + USGS stage trends |
+| [`food`](./agents/food) | "how much sugar is in Nutella?", "is there milk in Oreos?", "nutrition board for 3017620422003 and 5449000000996" (premium) | Open Food Facts |
+| [`forecast`](./agents/forecast) | "when will it rain in Seattle today?", "what does the week look like?", "grade the week in Seattle" (premium) | Open-Meteo forecast |
+| [`fx`](./agents/fx) | "what is 100 USD in EUR?", "how did USD-EUR move this month?", "rate history board USD EUR GBP JPY over the last 30 days" (premium) | ECB reference rates (Frankfurter) |
 | [`games`](./agents/games) | "how much is portal 2 on steam", "how many people play rust right now", "is hades well reviewed", "what is free on epic this week", "compare elden ring and dark souls 3" (premium) | Steam store + SteamSpy + Epic free promotions |
 | [`grid`](./agents/grid) | "how green is the UK grid right now?", "which region of the UK is the dirtiest right now?", "when is the cleanest window in the next two days?" (premium) | UK National Grid carbon intensity API |
 | [`groundwater`](./agents/groundwater) | "how deep is the water table in Kansas?", "water level at site 395847084085500", "what is the trend at OH015-395847084085500?" (premium) | USGS Water Data (OGC) |
 | [`hazards`](./agents/hazards) | "any weather alerts in NY?", "earthquakes above M4.5 today?", "were those Tokyo quakes an aftershock sequence, and what is the b-value?" (premium) | NWS alerts + USGS quakes |
-| [`iss`](./agents/iss) | "where is the ISS right now?", "could I see it from Denver tonight?" | open-notify position + sunset + cloud cover |
-| [`labels`](./agents/labels) | "what is lipitor?", "warnings for metformin" | openFDA drug labels |
-| [`launches`](./agents/launches) | "what is the next launch?", "when is the next Starlink launch?" | Launch Library 2 |
-| [`ledger`](./agents/ledger) | "what is the national debt right now?", "how much interest is paid?" | US Treasury Fiscal Data |
+| [`iss`](./agents/iss) | "where is the ISS right now?", "could I see it from Denver tonight?", "estimate the ISS pass over Denver in the next 90 minutes" (premium) | open-notify position + sunset + cloud cover; premium orbit estimate via wheretheiss.at |
+| [`labels`](./agents/labels) | "what is lipitor?", "warnings for metformin", "compare label safety for lipitor, metformin" (premium) | openFDA drug labels |
+| [`launches`](./agents/launches) | "what is the next launch?", "when is the next Starlink launch?", "launch cadence board from 2026-10-01" (premium) | Launch Library 2 |
+| [`ledger`](./agents/ledger) | "how big is the national debt right now?", "what is the average interest rate on Treasury bills?", "debt movement board from 2026-09-01 for 30 days" (premium) | US Treasury Fiscal Data |
 | [`lobbying`](./agents/lobbying) | "what did Microsoft file with the Senate in 2023?", "how many lobbying filings were there in 2024?", "how much did Microsoft spend on lobbying in total from 2021 to 2023?" (premium) | Senate Lobbying Disclosure Act filings |
-| [`local`](./agents/local) | "how much disk space is left?", "what is going on in this repo?", "what is on port 3000?" | this machine, read-only (`git`, `lsof`) |
+| [`local`](./agents/local) | "how much disk space is left?", "what is going on in this repo?", "OSV advisories for requests 2.19.0 PyPI" (premium) | this machine, read-only (`git`, `lsof`); OSV.dev for explicit package triples |
 | [`moon`](./agents/moon) | "when is the next full moon?", "when does it get dark in Denver?" | USNO + sunrise-sunset.org |
 | [`music`](./agents/music) | "find songs by Radiohead", "tell me about Radiohead", "what is on Kid A?", "build me a 45 minute Radiohead set" (premium) | Deezer (api.deezer.com) |
 | [`nasamedia`](./agents/nasamedia) | "find NASA images of the Apollo 11 landing", "what media is in collection Apollo 11", "how many apollo 11 images are there, by decade?" (premium) | NASA Image and Video Library |
-| [`nature`](./agents/nature) | "how many monarch butterflies are recorded in Canada?", "what is seen near 40.71,-74.01?" | GBIF occurrence records |
+| [`nature`](./agents/nature) | "how many monarch butterflies are recorded in Canada?", "what is seen near 40.71,-74.01?", "trend for Danaus plexippus in Canada from 2020 to 2024" (premium) | GBIF occurrence records |
 | [`nonprofit`](./agents/nonprofit) | "what does the Red Cross report as revenue?", "compare the Red Cross and Habitat for Humanity", "how big is the Red Cross compared to other charities?" (premium) | ProPublica Nonprofit Explorer (IRS Business Master File) |
-| [`osm`](./agents/osm) | "nearest drinking water to Bryant Park, New York", "pharmacies near Miami Beach" | OpenStreetMap (Nominatim + Overpass) |
-| [`papers`](./agents/papers) | "papers about CRISPR sickle cell", "what is DOI 10.1038/nature12373?" | PubMed + arXiv + Crossref |
-| [`pollen`](./agents/pollen) | "how bad is the pollen today in Denver?", "grass pollen this week in Berlin" | Open-Meteo air quality (pollen) |
+| [`osm`](./agents/osm) | "nearest drinking water to Bryant Park, New York", "pharmacies near Miami Beach", "area profile within 300 m of 40.7536,-73.9832" (premium) | OpenStreetMap (Nominatim + Overpass) |
+| [`papers`](./agents/papers) | "papers about CRISPR sickle cell", "what is DOI 10.1038/nature12373?", "topic board for CRISPR from 2022 to 2024" (premium) | PubMed + arXiv + Crossref |
+| [`pollen`](./agents/pollen) | "how bad is the pollen today in Denver?", "grass pollen this week in Berlin", "pollen week grade at 52.52,13.41" (premium) | Open-Meteo air quality (pollen) |
 | [`radiation`](./agents/radiation) | "what is the radiation level near Fukushima?", "what has device 100422 been reading?", "is the radiation near Chernobyl rising?" (premium) | Safecast measurements |
 | [`recipes`](./agents/recipes) | "how do I cook chicken handi?", "what can I make with chicken breast?", "what do Italians eat?", "I have chicken, rice and coconut milk, what can I make?" (premium) | TheMealDB (themealdb.com) |
 | [`resale`](./agents/resale) | "what does a chanel flap cost", "what is the chanel market like right now", "pull the listing handbags-hermes-maxibox-bag-294167871", "compare chanel, gucci and prada" (premium) | Fashionphile + Rebag resale catalogues |
-| [`rivers`](./agents/rivers) | "what is gauge 06730500 doing?", "which gauges are near 40.71,-74.01?" | USGS water data (OGC API) |
+| [`rivers`](./agents/rivers) | "what is gauge 06730500 doing?", "which gauges are near 40.71,-74.01?", "gauge board near 38.97,-77.13" (premium) | USGS water data (OGC API) + NWPS |
 | [`satellites`](./agents/satellites) | "what satellites are overhead?", "tell me about the ISS", "which orbital shell is the ISS in?" (premium) | Celestrak GP elements |
-| [`snowpack`](./agents/snowpack) | "how much water is in the California snowpack?", "snow depth in Colorado" | NRCS snow network (SNOTEL) |
-| [`species`](./agents/species) | "how many monarch butterflies are there?", "what has been seen near 40.71,-74.01?" | iNaturalist |
+| [`snowpack`](./agents/snowpack) | "how much water is in the California snowpack?", "snow depth in Colorado", "snow basin board 10190005 on 2026-04-01" (premium) | NRCS snow network (SNOTEL) |
+| [`species`](./agents/species) | "how many monarch butterflies are there?", "what has been seen near 40.71,-74.01?", "region board place 1 taxon 47158 observer 1 from 2024-01 to 2024-03" (premium) | iNaturalist |
 | [`spending`](./agents/spending) | "what did the federal government spend on semiconductors in 2024?", "biggest awards to Lockheed Martin", "profile Microsoft's federal awards in 2025" (premium) | USAspending |
 | [`stargazing`](./agents/stargazing) | "is tonight good for stargazing in New York?", "compare stargazing in New York and Los Angeles tonight", "when is the best time to stargaze in New York?" (premium) | 7Timer astronomical forecast |
-| [`stocks`](./agents/stocks) | "what is AAPL doing right now?", "how did NVDA move this month?" | Yahoo Finance chart |
-| [`surf`](./agents/surf) | "how are the waves at Pipeline?", "when is it worth surfing at Nazare?" | Open-Meteo marine + wind |
-| [`tides`](./agents/tides) | "when is the next high tide in Boston?", "the tide table for Portland, Maine" | NOAA Tides and Currents |
-| [`trending`](./agents/trending) | "what is trending on Wikipedia today?", "how many people read the Lizzie Borden article?" | Wikimedia pageviews |
-| [`tsunami`](./agents/tsunami) | "is there a tsunami warning right now?", "any bulletin naming Hawaii?" | tsunami.gov CAP (NTWC + PTWC) |
+| [`stocks`](./agents/stocks) | "what is AAPL doing right now?", "how did NVDA move this month?", "compare AAPL, MSFT from 2026-04-01 to 2026-04-30" (premium) | Yahoo Finance chart |
+| [`surf`](./agents/surf) | "how are the waves at Pipeline?", "when is it worth surfing at Nazare?", "surf window board at Santa Cruz" (premium) | Open-Meteo marine + wind |
+| [`tides`](./agents/tides) | "when is the next high tide in Boston?", "the tide table for Portland, Maine", "tide extremes table for 8518750 in 2026-10" (premium) | NOAA Tides and Currents |
+| [`trending`](./agents/trending) | "what is trending on Wikipedia today?", "how many people read the Lizzie Borden article?", "compare pageviews for Ada Lovelace and Lizzie Borden this week" (premium) | Wikimedia pageviews |
+| [`tsunami`](./agents/tsunami) | "is there a tsunami warning right now?", "any bulletin naming Hawaii?", "tsunami quake context board" (premium) | tsunami.gov CAP (NTWC + PTWC) + USGS event catalogue |
 | [`tv`](./agents/tv) | "what is the next episode of Severance?", "when did season 2 of Severance air?", "tell me about Severance", "how long will it take to catch up on Severance?" (premium) | TVMaze (api.tvmaze.com) |
 | [`uk-postcode`](./agents/uk-postcode) | "where is SW1A 1AA?", "which NHS region is EC1A 1BB in?", "which postcodes are near EC1A 1BB, and which of them fall in a different district?" (premium) | postcodes.io (ONS Postcodes Directory) |
-| [`vehicles`](./agents/vehicles) | "recalls for the 2015 Honda Civic", "complaints about a VIN" | NHTSA |
-| [`watch`](./agents/watch) | "watch the earthquakes", "watch the aurora for 4 rounds every 30s" (pushes until cancelled) | USGS quakes + NOAA Kp + open-notify |
-| [`wiki`](./agents/wiki) | "who was Ada Lovelace?", "what happened on this day?" | Wikipedia + Wikidata |
-| [`wildfire`](./agents/wildfire) | "what is burning in California?", "any fires within 150 miles of Denver?" | NIFC WFIGS incidents |
+| [`vehicles`](./agents/vehicles) | "recalls for the 2015 Honda Civic", "complaints about a VIN", "recall board for Honda Civic years 2015 and 2016" (premium) | NHTSA recalls + complaints |
+| [`watch`](./agents/watch) | "watch the earthquakes", "watch the aurora for 4 rounds every 30s" (pushes until cancelled), "week event digest at 37.77,-122.42 magnitude 4" (premium) | USGS quakes + NOAA Kp + open-notify |
+| [`wiki`](./agents/wiki) | "who was Ada Lovelace?", "what happened on this day?", "deep dive for Ada Lovelace from 2026-09-23 to 2026-09-29" (premium) | Wikipedia + Wikidata + Wikimedia pageviews |
+| [`wildfire`](./agents/wildfire) | "what is burning in California?", "any fires within 150 miles of Denver?", "season board in CA from 2026-09-01 to 2026-09-30" (premium) | NIFC WFIGS incidents |
 | [`worldbank`](./agents/worldbank) | "what is Nigeria's GDP?", "compare GDP per capita in Kenya versus Ghana", "how fast is Nigeria's GDP per capita growing, and where does it rank?" (premium) | World Bank Open Data |
 | [`zip`](./agents/zip) | "what places are in ZIP 11235?", "where is 100-0001 in Japan?", "how far is ZIP 11235 from ZIP 10001?" (premium) | Zippopotam postal code directory |
 | [`a2a_bridge`](./agents/a2a_bridge) | "nyc311: did complaint 70483808 get fixed?" | any A2A server you point it at |
