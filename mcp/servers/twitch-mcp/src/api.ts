@@ -114,8 +114,6 @@ export function formatUser(u: TwitchUser): string {
 
 const TW_STATUS = "https://status.twitch.tv/api/v2";
 const TW_UA = "mcfentmen-twitch-mcp/1.1 (https://github.com/mcfentmen/twitch-mcp)";
-const TW_STEAM_CHARTS = "https://api.steampowered.com/ISteamChartsService/GetMostPlayedGames/v1/";
-const TW_STEAMSPY = "https://steamspy.com/api.php?request=appdetails&appid=";
 
 interface TwComponent {
   id?: string;
@@ -179,8 +177,6 @@ async function twGet<T>(url: string, label: string): Promise<T> {
   if (!res.ok) throw new TwitchError(`${label} returned HTTP ${res.status}.`);
   return (await res.json()) as T;
 }
-
-const twWait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const twClean = (raw?: string): string =>
   String(raw ?? "")
@@ -263,68 +259,3 @@ export async function serviceStatus(): Promise<string> {
   ].join("\n");
 }
 
-/**
- * What is actually being played, from Steam's public most-played chart enriched
- * with SteamSpy's record of each title: genre, developer, review split, price and
- * owner estimate, plus how each game's rank moved in a week. A streamer's choice of
- * what to play is a demand question, and no Twitch endpoint answers it.
- */
-export async function gameDemand(args: { limit?: number }): Promise<string> {
-  const limit = Math.min(Math.max(Number(args?.limit ?? 6) || 6, 1), 12);
-  const chart = await twGet<{ response?: { ranks?: SteamRank[] } }>(TW_STEAM_CHARTS, "Steam's charts service");
-  const ranks = chart.response?.ranks ?? [];
-  if (!ranks.length) throw new TwitchError("Steam's charts service returned no ranked games.");
-
-  const top = ranks.slice(0, limit);
-  const lines: string[] = [];
-  let resolved = 0;
-  for (const entry of top) {
-    if (entry.appid === undefined) continue;
-    // SteamSpy asks for no more than one call a second and a half, so these are paced.
-    let detail: SteamSpyApp | null = null;
-    try {
-      detail = await twGet<SteamSpyApp>(`${TW_STEAMSPY}${entry.appid}`, "SteamSpy");
-    } catch {
-      detail = null;
-    }
-    if (detail?.name) resolved += 1;
-    const tags = detail?.tags
-      ? Object.entries(detail.tags as Record<string, number>)
-          .sort((a, b) => (b[1] as number) - (a[1] as number))
-          .slice(0, 4)
-          .map(([tag]) => tag)
-          .join(", ")
-      : "";
-    const totalReviews = (detail?.positive ?? 0) + (detail?.negative ?? 0);
-    const positivePct = totalReviews ? ((detail!.positive ?? 0) / totalReviews) * 100 : null;
-    const weekDelta = entry.last_week_rank ? entry.last_week_rank - (entry.rank ?? 0) : null;
-    lines.push(
-      `  ${String(entry.rank ?? "?").padStart(2)}. ${(detail?.name ?? `app ${entry.appid}`).slice(0, 42).padEnd(42)} peak ${(entry.peak_in_game ?? 0).toLocaleString().padStart(9)} concurrent` +
-        `  week rank ${entry.last_week_rank ?? "new"}${weekDelta !== null ? ` (${weekDelta > 0 ? "up" : "down"} ${Math.abs(weekDelta)})` : ""}`,
-    );
-    lines.push(
-      `      ${(detail?.developer ?? "developer not reported").slice(0, 40)} | ${(detail?.genre ?? "genre not reported").slice(0, 40)}` +
-        `  ${detail?.price ?? "price not reported"}` +
-        `  ${positivePct !== null ? `reviews ${positivePct.toFixed(0)}% positive of ${totalReviews.toLocaleString()}` : "review split not reported"}` +
-        `  owners ${detail?.owners ?? "not reported"}`,
-    );
-    if (tags) lines.push(`      tags: ${tags}`);
-    await twWait(1600);
-  }
-
-  const climbers = top
-    .filter((r) => r.last_week_rank !== null && r.last_week_rank !== undefined && r.rank !== undefined && r.last_week_rank > r.rank)
-    .map((r) => `#${r.rank} (was #${r.last_week_rank})`);
-  const peak = top.reduce((sum, r) => sum + (r.peak_in_game ?? 0), 0);
-
-  return [
-    "What is being played right now, from Steam's public most-played chart",
-    `  ${ranks.length} game(s) ranked by the service; the top ${top.length} shown, ${resolved} enriched with SteamSpy's record`,
-    `  combined peak concurrent players in the top ${top.length}: ${peak.toLocaleString()}`,
-    climbers.length ? `  climbing since last week: ${climbers.join(", ")}` : "  nothing in this selection has climbed since last week",
-    "",
-    ...lines,
-    "",
-    "Concurrent player counts are a twenty-four hour peak reported by Steam, not a live count, and a game's audience on Twitch is a different population that partly overlaps. Review percentages come from Steam's own store reviews and owner figures are SteamSpy's estimate band, not a number Steam publishes. This reads two public services and neither is affiliated with Twitch.",
-  ].join("\n");
-}

@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatStream, formatUser, getUser, topGames, topStreams, TwitchError, serviceStatus, gameDemand } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { formatStream, formatUser, getUser, topGames, topStreams, TwitchError, serviceStatus } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -105,10 +105,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: game_demand ----
-    const paywallMessage = await premiumRequired("game_demand")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await gameDemand(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_twitch_game_demand", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 

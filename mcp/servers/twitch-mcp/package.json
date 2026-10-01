@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/twitch-mcp",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "MCP server for Twitch: top games, live streams, users. Needs free API credentials.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/twitch-mcp",
