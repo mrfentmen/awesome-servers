@@ -274,5 +274,69 @@ class TurnTests(unittest.TestCase):
         self.assertIn("failed", statuses)
 
 
+# Premium transport uses the real client, with an offline MCP response.
+import json
+import os
+from unittest.mock import patch
+from acp_kit import GatewayClient
+
+BOARD_ROW = {"name": "Grand Central", "bikes": 12, "ebikes": 3, "docks": 25,
+             "ebikeSharePct": 25, "occupancyPct": 30}
+PREMIUM_PAYLOAD = {"eligibleStations": 2345, "ranked": [BOARD_ROW],
+                   "emptiest": [BOARD_ROW], "fullest": [BOARD_ROW]}
+
+class PremiumTests(unittest.TestCase):
+    def gateway(self, key, payload=PREMIUM_PAYLOAD, refused=False):
+        calls = []
+        def fetch(url, body, headers):
+            calls.append((body["params"], headers))
+            result = {"content": [{"type": "text", "text": json.dumps(payload)}]}
+            if refused:
+                result.update(isError=True, structuredContent={"licenceRefusal": True})
+            return {"result": result}
+        gateway = GatewayClient(key=key, fetch=fetch)
+        gateway.calls = calls
+        return gateway
+
+    def test_no_key_attempts_premium_client_call(self):
+        with patch.dict(os.environ, {}, clear=True):
+            gateway = self.gateway("")
+            with patch.object(gateway, "call", wraps=gateway.call) as call:
+                answer, artifact = BikesAgent(data=FakeData(), gateway=gateway)._run_skill(*route("Citi Bike capacity board"))
+            call.assert_called_once_with("bikes_capacity_board", {"limit": 5})
+            self.assertIn("MCP_LICENSE_KEY", answer)
+            self.assertEqual(artifact["reason"], "missing_key")
+            self.assertEqual(gateway.calls, [])
+
+    def test_rejected_key_preserves_gateway_wording(self):
+        wording = "Revoked by the gateway. Set MCP_LICENSE_KEY."
+        gateway = self.gateway("lic_live_but_rejected", wording, True)
+        answer, artifact = BikesAgent(data=FakeData(), gateway=gateway)._capacity({})
+        self.assertEqual(answer, json.dumps(wording))
+        self.assertEqual(artifact["reason"], "denied")
+
+    def test_good_key_uses_gateway_numbers(self):
+        gateway = self.gateway("lic_granted")
+        answer, artifact = BikesAgent(data=FakeData(), gateway=gateway)._run_skill(*route("Citi Bike capacity board"))
+        self.assertIn("2345 operational stations", answer)
+        self.assertIn("12 bikes, 3 e-bikes", answer)
+        self.assertTrue(artifact["premium"])
+        self.assertEqual(len(gateway.calls), 1)
+        self.assertEqual(gateway.calls[0][0], {"name": "bikes_capacity_board", "arguments": {"limit": 5}})
+        self.assertEqual(gateway.calls[0][1]["Authorization"], "Bearer lic_granted")
+
+    def test_free_questions_never_call_gateway(self):
+        gateway = self.gateway("lic_granted")
+        agent = BikesAgent(data=FakeData(), gateway=gateway)
+        for question in ("how many citibikes are available right now?", "what is at Grand Central?", "nearest stations to 40.71,-74.01?"):
+            agent._run_skill(*route(question))
+        self.assertEqual(gateway.calls, [])
+
+    def test_empty_payload_is_not_a_made_up_board(self):
+        answer, artifact = BikesAgent(data=FakeData(), gateway=self.gateway("lic_granted", {}))._capacity({})
+        self.assertIn("no readable capacity board", answer)
+        self.assertTrue(artifact["failed"])
+
+
 if __name__ == "__main__":
     unittest.main()

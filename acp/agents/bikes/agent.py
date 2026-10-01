@@ -21,6 +21,8 @@ if str(REPO_ROOT) not in sys.path:
 
 from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
 
+from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer
+
 from data import DATASET, BikesData, BikesError  # noqa: E402
 
 HELP = (
@@ -28,12 +30,13 @@ HELP = (
     "  • how many citibikes are available right now?\n"
     "  • what is at the Grand Central station?\n"
     "  • nearest citibike stations to 40.71,-74.01?\n"
+    "  • Citi Bike capacity board (premium)\n"
     "Citi Bike covers New York City, Jersey City and Hoboken; I do not speak for other systems."
 )
 
 PERMISSION_KEY = "bikes-read-public-gbfs"
 
-SKILLS = ("bikes-station", "bikes-near", "bikes-status", "help")
+SKILLS = ("bikes-station", "bikes-near", "bikes-status", "bikes-capacity", "help")
 
 _POINT_RE = re.compile(r"\b(-?\d{1,2}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)\b")
 _STATUS_RE = re.compile(
@@ -68,6 +71,9 @@ def route(text: str) -> tuple[str, dict]:
     """Deterministic intent routing: (skill, params). Pure function, easy to test."""
     if not text.strip() or re.search(r"\b(help|what can you do|commands?)\b", text, re.IGNORECASE):
         return "help", {}
+
+    if re.search(r"\bcapacity board\b", text, re.IGNORECASE):
+        return "bikes-capacity", {"limit": 5}
 
     params: dict = {}
     match = _POINT_RE.search(text)
@@ -109,9 +115,11 @@ class BikesAgent(AcpAgent):
     title = "Bikes — Citi Bike live availability"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: BikesData | None = None) -> None:
+    def __init__(self, connection=None, data: BikesData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or BikesData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -147,7 +155,7 @@ class BikesAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (BikesError, ValueError) as exc:
+        except (BikesError, GatewayError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the GBFS feed: {exc}")
             return STOP_END_TURN
@@ -163,6 +171,8 @@ class BikesAgent(AcpAgent):
     # -- skills ------------------------------------------------------------
 
     def _run_skill(self, skill: str, params: dict) -> tuple[str, dict]:
+        if skill == "bikes-capacity":
+            return self._capacity(params)
         if skill == "bikes-station":
             return self._station(params)
         if skill == "bikes-near":
@@ -170,6 +180,34 @@ class BikesAgent(AcpAgent):
         if skill == "bikes-status":
             return self._status()
         return HELP, {"summary": "help", "dataset": None}
+
+    def _capacity(self, params: dict) -> tuple[str, dict]:
+        """Render the station rankings computed on the licence gateway."""
+        data, refused = premium_call(self.gateway, "bikes_capacity_board",
+                                     {"limit": int(params.get("limit", 5))},
+                                     {"agent": "bikes", "skill": "bikes-capacity"})
+        if refused:
+            return refused
+        groups = ("ranked", "emptiest", "fullest")
+        if (not isinstance(data, dict) or not isinstance(data.get("eligibleStations"), int)
+                or any(not isinstance(data.get(k), list) or not data[k]
+                       or any(not isinstance(row, dict) or not row.get("name")
+                              or any(not isinstance(row.get(n), (int, float))
+                                     for n in ("bikes", "ebikes", "docks", "occupancyPct"))
+                              for row in data[k]) for k in groups)):
+            return empty_premium_answer("The gateway returned no readable capacity board.",
+                                        {"agent": "bikes", "skill": "bikes-capacity"})
+        lines = [f"Premium Citi Bike capacity board: {data['eligibleStations']} operational stations."]
+        for key, label in (("ranked", "Highest e-bike share"), ("emptiest", "Emptiest"),
+                           ("fullest", "Fullest")):
+            lines.append(label + ":")
+            for row in data[key]:
+                share = row.get("ebikeSharePct")
+                lines.append(f"  • {row['name']}: {row['bikes']} bikes, {row['ebikes']} e-bikes "
+                             f"(share {share if share is not None else 'not reported'}%), "
+                             f"{row['docks']} docks; occupancy {row['occupancyPct']}%")
+        lines.append(str(data.get("note") or "Source: Citi Bike GBFS."))
+        return "\n".join(lines), {**data, "summary": lines[0], "premium": True}
 
     def _status(self) -> tuple[str, dict]:
         system = self.data.system()
