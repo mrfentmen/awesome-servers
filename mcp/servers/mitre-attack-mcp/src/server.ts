@@ -1,9 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { search } from "./api.js"
-import { technique, groupList, softwareList, tacticList } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { search, technique } from "./free-api.js"
 
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -45,10 +44,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: group_list ----
-    const paywallMessage = await premiumRequired("group_list")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await groupList(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_mitre_attack_group_list", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -62,10 +60,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: software_list ----
-    const paywallMessage = await premiumRequired("software_list")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await softwareList(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_mitre_attack_software_list", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -79,10 +76,25 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: tactic_list ----
-    const paywallMessage = await premiumRequired("tactic_list")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await tacticList()) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_mitre_attack_tactic_list", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "technique_mitigations",
+    {
+      title: "Technique mitigations",
+      description: "Resolve active ATT&CK mitigation relationships for a technique, with mitigation IDs and technique-specific defensive guidance.",
+      inputSchema: z.object({ id: z.string().describe("Technique ID, for example T1059."), limit: z.number().optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: technique_mitigations ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_mitre_attack_technique_mitigations", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
