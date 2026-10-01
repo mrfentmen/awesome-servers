@@ -9,6 +9,7 @@ forecast, minor at 30 ft), and the USGS fixture like its monitoring-locations Ge
 
 from __future__ import annotations
 
+import json
 import queue
 import re
 import sys
@@ -424,6 +425,65 @@ class TurnTests(unittest.TestCase):
         statuses = [u.get("status") for u in result["updates"] if u.get("sessionUpdate") == "tool_call_update"]
         self.assertIn("failed", statuses)
 
+
+
+class PremiumGateTests(unittest.TestCase):
+    def gateway(self, key, payload=None):
+        from acp_kit import GatewayClient
+        from unittest.mock import Mock
+        def fetch(url, request, headers):
+            if key == "lic_live_but_rejected":
+                return {"result": {"isError": True, "content": [{"type": "text", "text": "Gateway says revoked."}],
+                        "structuredContent": {"licenceRefusal": True, "reason": "revoked"}}}
+            return {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
+        gateway = GatewayClient(key=key, fetch=fetch)
+        gateway.call = Mock(wraps=gateway.call)
+        return gateway
+
+    def test_no_key_attempts_premium_call(self):
+        import os
+        from unittest.mock import patch
+        from agent import FloodwatchAgent
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("MCP_LICENSE_KEY", None)
+            gateway = self.gateway(None)
+            answer, artifact = FloodwatchAgent(gateway=gateway)._board({'latitude': 38.63, 'longitude': -90.18, 'radius_km': 25.0})
+        gateway.call.assert_called_once_with('flood_gauge_risk_board', {'latitude': 38.63, 'longitude': -90.18, 'radius_km': 25.0})
+        self.assertIn("MCP_LICENSE_KEY", answer)
+        self.assertEqual(artifact["reason"], "missing_key")
+        self.assertEqual(answer, artifact["summary"])
+
+    def test_rejected_key_keeps_gateway_wording(self):
+        from agent import FloodwatchAgent
+        gateway = self.gateway("lic_live_but_rejected")
+        answer, artifact = FloodwatchAgent(gateway=gateway)._board({'latitude': 38.63, 'longitude': -90.18, 'radius_km': 25.0})
+        self.assertEqual(answer, "Gateway says revoked.")
+        self.assertEqual(artifact["reason"], "denied")
+        gateway.call.assert_called_once()
+
+    def test_good_key_uses_real_gateway_numbers(self):
+        from agent import FloodwatchAgent
+        gateway = self.gateway("lic_good", {'gauges': [{'site': '07010000', 'observedStage': 13.08, 'nwpsAvailable': True}], 'comparableGauges': 1})
+        answer, artifact = FloodwatchAgent(gateway=gateway)._board({'latitude': 38.63, 'longitude': -90.18, 'radius_km': 25.0})
+        gateway.call.assert_called_once_with('flood_gauge_risk_board', {'latitude': 38.63, 'longitude': -90.18, 'radius_km': 25.0})
+        self.assertIn('13.08', answer)
+        self.assertTrue(artifact["premium"])
+        self.assertEqual(route('flood risk board near 38.63,-90.18 within 25 km'), ('flood-board', {'latitude': 38.63, 'longitude': -90.18, 'radius_km': 25.0}))
+
+    def test_empty_payload_is_not_an_invented_reading(self):
+        from agent import FloodwatchAgent
+        answer, artifact = FloodwatchAgent(gateway=self.gateway("lic_good", {}))._board({'latitude': 38.63, 'longitude': -90.18, 'radius_km': 25.0})
+        self.assertTrue(artifact["failed"])
+
+    def test_free_question_never_calls_gateway(self):
+        from agent import FloodwatchAgent
+        from unittest.mock import Mock
+        gateway = self.gateway("lic_good")
+        ctx = Mock()
+        ctx.ask_permission.return_value = True
+        agent = FloodwatchAgent(data=FloodData(fetch=FakeFeed()), gateway=gateway)
+        agent.prompt(ctx, [{"type": "text", "text": 'is the Mississippi at St. Louis flooding?'}])
+        gateway.call.assert_not_called()
 
 if __name__ == "__main__":
     unittest.main()

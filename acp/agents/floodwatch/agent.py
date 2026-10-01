@@ -21,7 +21,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text,
+                     GatewayClient, GatewayError, premium_call, empty_premium_answer)  # noqa: E402
 
 from data import (  # noqa: E402
     CATEGORY_LABELS,
@@ -40,13 +41,14 @@ HELP = (
     "  • how high is the water at gauge EADM7?\n"
     "  • is the Colorado River at Austin flooding?\n"
     "  • which gauges do you have for the Willamette River?\n"
+    "  • premium: flood risk board near 38.63,-90.18 within 25 km\n"
     "I give you the observed stage, the forecast stage and the published action, minor,\n"
     "moderate and major flood stages for that gauge - not a guess about your street."
 )
 
 PERMISSION_KEY = "floodwatch-read-public-nwps"
 
-SKILLS = ("flood-status", "flood-find", "help")
+SKILLS = ("flood-status", "flood-find", "flood-board", "help")
 
 _FIND_WORDS = re.compile(r"\b(which|what|list|show|find|any)\b.{0,24}\bgauges?\b|"
                          r"\bgauges? (?:do you|are there|for)\b", re.IGNORECASE)
@@ -68,6 +70,11 @@ def route(text: str) -> tuple[str, dict]:
     """Deterministic intent routing: (skill, params). Pure function, easy to test."""
     if not text.strip() or re.search(r"\b(help|what can you do|commands?)\b", text, re.IGNORECASE):
         return "help", {}
+
+    if re.search(r"\bflood risk board\b", text, re.IGNORECASE):
+        point = re.search(r"(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)", text)
+        radius = re.search(r"\b(?:within|radius)\s+(\d+(?:\.\d+)?)\s*km", text, re.IGNORECASE)
+        return "flood-board", {"latitude": float(point.group(1)), "longitude": float(point.group(2)), "radius_km": float(radius.group(1)) if radius else 25.0} if point else {}
 
     params: dict = {}
     gid = gauge_id_from_text(text)
@@ -91,9 +98,11 @@ class FloodwatchAgent(AcpAgent):
     title = "Floodwatch — river levels and flood stages"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: FloodData | None = None) -> None:
+    def __init__(self, connection=None, data: FloodData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or FloodData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -104,6 +113,18 @@ class FloodwatchAgent(AcpAgent):
     def prompt(self, ctx: SessionContext, prompt: list[dict]) -> str:
         text = prompt_text(prompt)
         skill, params = route(text)
+        if skill == "flood-board":
+            tool = "call_flood_board"
+            ctx.tool_call(tool, "Aggregate nearby gauge risk", kind="fetch", name=skill, raw_input=params)
+            try:
+                body, artifact = self._board(params)
+            except (GatewayError, ValueError) as exc:
+                ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
+                ctx.message(str(exc))
+                return STOP_END_TURN
+            ctx.tool_call_update(tool, status="completed", content=ctx.text_content(artifact))
+            ctx.stream_text(body + "\n")
+            return STOP_END_TURN
         ctx.plan([
             (f"Route the request ({skill})", "high"),
             ("Resolve the gauge (id, or river name through USGS)", "medium"),
@@ -137,6 +158,44 @@ class FloodwatchAgent(AcpAgent):
         ctx.tool_call_update(tool, status="completed", content=ctx.text_content(artifact["summary"]))
         ctx.stream_text(answer)
         return STOP_END_TURN
+
+    def _board(self, params: dict) -> tuple[str, dict]:
+        """Render NWPS stage margins with the gateway's USGS trend comparison."""
+        if "latitude" not in params or "longitude" not in params:
+            raise ValueError("Give a center as latitude,longitude: flood risk board near 38.63,-90.18.")
+        arguments = {"latitude": float(params["latitude"]), "longitude": float(params["longitude"]),
+                     "radius_km": float(params.get("radius_km", 25))}
+        context = {"agent": "floodwatch", "skill": "flood-board"}
+        data, refused = premium_call(self.gateway, "flood_gauge_risk_board", arguments, context)
+        if refused:
+            return refused
+        if (not isinstance(data, dict) or not isinstance(data.get("gauges"), list)
+                or type(data.get("comparableGauges")) is not int
+                or any(not isinstance(row, dict) or not isinstance(row.get("site"), str)
+                       or type(row.get("nwpsAvailable")) is not bool
+                       or (row.get("trend") is not None and not isinstance(row["trend"], dict))
+                       for row in data["gauges"])):
+            return empty_premium_answer("The gateway returned no readable gauge risk board.", context)
+        lines = [f"Gauge risk board: {len(data['gauges'])} nearby sites checked; "
+                 f"{data['comparableGauges']} comparable flood margins."]
+        for row in data["gauges"]:
+            if row["nwpsAvailable"]:
+                lines.append(f"  {row['site']} {row.get('name')}: observed {_number(row.get('observedStage'))} "
+                             f"{row.get('unit') or 'unknown units'}, minor flood stage {_number(row.get('floodStage'))} "
+                             f"{row.get('floodUnit') or 'unknown units'}; "
+                             f"feet above flood stage {_number(row.get('aboveFloodFt'))} (negative means below), "
+                             f"as of {row.get('observedAt') or 'unpublished time'}.")
+            else:
+                lines.append(f"  {row['site']} {row.get('name')}: no NWPS gauge returned.")
+            trend = row.get("trend")
+            if trend and trend.get("changeFt") is not None:
+                lines.append(f"    USGS: {trend.get('direction')}, {_number(trend['changeFt'])} ft "
+                             f"over {_number(trend.get('elapsedHours'))} hours "
+                             f"({trend.get('start')} to {trend.get('end')}).")
+            else:
+                lines.append("    USGS stage trend unavailable.")
+        lines.append(str(data.get("note") or "Source: USGS and NWPS."))
+        return "\n".join(lines), {**data, **context, "premium": True}
 
     def on_cancel(self, session) -> None:
         # Every skill is a single read; nothing long-running to interrupt.
