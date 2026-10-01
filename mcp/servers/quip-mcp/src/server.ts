@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, searchThreads, getThread, listFolders, getUser, wikiArticle, wikiOutline, documentProfile } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, searchThreads, getThread, listFolders, getUser, documentProfile } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -101,10 +101,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: wiki_article ----
-    const paywallMessage = await premiumRequired("wiki_article")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await wikiArticle(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_quip_wiki_article", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -122,10 +121,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: wiki_outline ----
-    const paywallMessage = await premiumRequired("wiki_outline")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await wikiOutline(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_quip_wiki_outline", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 

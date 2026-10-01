@@ -70,9 +70,6 @@ export async function getUser(): Promise<string> {
 // measure documents without one: an article as a document, with its structure,
 // its provenance and the knowledge item behind it.
 
-const WIKI_API = "https://en.wikipedia.org/w/api.php"
-const WIKI_UA = "quip-mcp/1.2 (https://github.com/mcfentmen/quip-mcp)"
-
 interface WikiSection {
   level?: string
   line?: string
@@ -95,117 +92,6 @@ interface WikiPage {
 interface WikiResponse {
   query?: { pages?: Record<string, WikiPage> }
   parse?: { title?: string; pageid?: number; sections?: WikiSection[] }
-}
-
-async function wikiGet<T>(params: Record<string, string>): Promise<T> {
-  const url = `${WIKI_API}?${new URLSearchParams({ format: "json", formatversion: "2", ...params })}`
-  const res = await fetch(url, {
-    headers: { Accept: "application/json", "User-Agent": WIKI_UA },
-    signal: AbortSignal.timeout(25000),
-  })
-  if (res.status === 429) throw new QuipError("Wikipedia rate-limited this host. Try again shortly.")
-  if (!res.ok) throw new QuipError(`Wikipedia API error ${res.status}: ${res.statusText}`)
-  const body = (await res.json()) as T & { error?: { info?: string } }
-  if (body?.error) throw new QuipError(`Wikipedia rejected the query: ${body.error.info ?? "unknown reason"}`)
-  return body
-}
-
-const tidy = (value: string | undefined, limit: number): string =>
-  String(value ?? "").replace(/\s+/g, " ").trim().slice(0, limit)
-
-/**
- * One encyclopedia article as a document: its lead, its metadata, the revision it
- * was read at, the knowledge item behind it, and how it is classified. This is
- * the record Quip would otherwise have to be told.
- */
-export async function wikiArticle(args: { title: string }): Promise<string> {
-  const title = (args.title ?? "").trim()
-  if (!title) throw new QuipError("Give an article title, e.g. 'Bitcoin' or 'Rust (programming language)'.")
-
-  const data = await wikiGet<WikiResponse>({
-    action: "query",
-    prop: "extracts|pageprops|revisions|info",
-    exintro: "1",
-    explaintext: "1",
-    rvprop: "timestamp|user|ids",
-    rvlimit: "1",
-    titles: title,
-  })
-  const page = Object.values(data.query?.pages ?? {})[0]
-  if (!page || page.missing !== undefined) {
-    throw new QuipError(`No English Wikipedia article titled "${title}".`)
-  }
-
-  const revision = page.revisions?.[0]
-  const props = page.pageprops ?? {}
-  const extract = String(page.extract ?? "").trim()
-  if (!extract) {
-    throw new QuipError(`The article "${page.title}" has no lead section to quote.`)
-  }
-
-  return [
-    `${page.title}`,
-    `  page id ${page.pageid ?? "not reported"} | wikitext length ${page.length?.toLocaleString() ?? "not reported"} bytes`,
-    `  knowledge item: ${props.wikibase_item ?? "not reported"} | short description: ${tidy(props["wikibase-shortdesc"], 120) || "not reported"}`,
-    `  lead image: ${props.page_image_free ?? "not reported"}`,
-    "",
-    `Revision this was read at:`,
-    `  ${revision?.revid ?? "not reported"} by ${tidy(revision?.user, 60) || "not reported"} on ${String(revision?.timestamp ?? "not reported").slice(0, 19).replace("T", " ")} UTC`,
-    `  last touched ${String(page.touched ?? "not reported").slice(0, 10)}`,
-    "",
-    "Lead:",
-    extract.length > 1400 ? `${extract.slice(0, 1400)}…` : extract,
-    "",
-    `The lead is ${extract.split(/\s+/).length} words of the ${Math.round(page.length ? (extract.length / page.length) * 100 : 0)}% of the article's wikitext that the lead represents.`,
-    "Source: the public English Wikipedia API. Text is CC BY-SA 4.0.",
-  ].join("\n")
-}
-
-/**
- * The skeleton of an article: every section heading with its level and anchor,
- * which is the shape a document has before anyone writes a word of it.
- */
-export async function wikiOutline(args: { title: string; maxDepth?: number }): Promise<string> {
-  const title = (args.title ?? "").trim()
-  if (!title) throw new QuipError("Give an article title to outline.")
-  const depth = Math.min(Math.max(Math.trunc(args.maxDepth ?? 3), 1), 6)
-
-  const data = await wikiGet<WikiResponse>({
-    action: "parse",
-    page: title,
-    prop: "sections",
-    disabletoc: "1",
-  })
-  const parsed = data.parse
-  if (!parsed) throw new QuipError(`No English Wikipedia article titled "${title}".`)
-  const sections = (parsed.sections ?? []).filter((s) => Number(s.level) <= depth && s.line)
-  if (!sections.length) throw new QuipError(`"${parsed.title}" has no section headings.`)
-
-  const all = parsed.sections ?? []
-  const levels = new Map<number, number>()
-  for (const section of all) {
-    const level = Number(section.level ?? 0)
-    if (section.line) levels.set(level, (levels.get(level) ?? 0) + 1)
-  }
-  const perLevel = [...levels.entries()].sort((a, b) => a[0] - b[0]).map(([l, n]) => `H${l} x${n}`).join(", ")
-  const shown = sections.slice(0, 60)
-
-  return [
-    `Outline of ${parsed.title} (page id ${parsed.pageid ?? "not reported"})`,
-    `  ${all.length} heading(s) in the whole article, ${sections.length} at level ${depth} or shallower`,
-    `  by heading level: ${perLevel}`,
-    "",
-    ...shown.map((section) => {
-      const level = Number(section.level ?? 1)
-      const indent = "  ".repeat(Math.max(level - 1, 0))
-      return `${indent}H${level} ${section.line}${section.anchor ? `   #${section.anchor}` : ""}`
-    }),
-    sections.length > shown.length ? `  (+${sections.length - shown.length} more at this depth)` : "",
-    "",
-    "Source: the public English Wikipedia API, section structure of the live article.",
-  ]
-    .filter((line) => line !== "")
-    .join("\n")
 }
 
 interface DocStats {
