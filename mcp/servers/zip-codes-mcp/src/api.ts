@@ -32,47 +32,28 @@ export async function cityLookup(args: { city?: string; state?: string }): Promi
 
 // ---- muxB tools:
 
-const NOMINATIM = "https://nominatim.openstreetmap.org/reverse";
-
 export interface ReverseGeocodeArgs {
   latitude: number;
   longitude: number;
 }
 
-export async function reverseGeocode(args: ReverseGeocodeArgs): Promise<string> {
-  const lat = Number(args.latitude);
-  const lon = Number(args.longitude);
-  if (!Number.isFinite(lat) || lat < -90 || lat > 90) throw new ZipError("Provide a latitude between -90 and 90");
-  if (!Number.isFinite(lon) || lon < -180 || lon > 180) throw new ZipError("Provide a longitude between -180 and 180");
-  const params = new URLSearchParams({ format: "jsonv2", lat: String(lat), lon: String(lon), zoom: "14" });
-  const res = await fetch(`${NOMINATIM}?${params.toString()}`, {
-    headers: { "User-Agent": UA, Accept: "application/json" },
-    signal: AbortSignal.timeout(25000),
-  });
-  if (res.status === 429) throw new ZipError("Reverse geocoder rate limit hit, wait and retry")
-  if (!res.ok) throw new ZipError(`Reverse geocoder error ${res.status}`);
-  const d = (await res.json()) as {
-    display_name?: string;
-    address?: Record<string, string>;
-    type?: string;
-    lat?: string;
-    lon?: string;
-  };
-  const a = d.address ?? {};
-  const field = (keys: string[]) => {
-    for (const k of keys) {
-      const v = a[k];
-      if (v) return v;
-    }
-    return "not reported";
-  };
-  return [
-    `Reverse geocode of ${lat}, ${lon} (OpenStreetMap Nominatim)`,
-    `Post code: ${field(["postcode"])}`,
-    `City or town: ${field(["city", "town", "village", "municipality", "hamlet", "suburb"])}`,
-    `State or region: ${field(["state", "region", "province"])}`,
-    `Country: ${field(["country"])} (${field(["country_code"])})`,
-    `Matched feature: ${d.type ?? "not reported"}`,
-    `Full address: ${d.display_name ?? "not reported"}`,
-  ].join("\n");
+// ---- gap4c4 tools:
+
+export async function nearbyPostcodes(args: { latitude: number; longitude: number; radius?: number; limit?: number }): Promise<string> {
+  const lat=Number(args.latitude), lon=Number(args.longitude); if (!Number.isFinite(lat)||lat < -90||lat>90||!Number.isFinite(lon)||lon < -180||lon>180) throw new ZipError('Provide valid latitude and longitude.')
+  const radius=Math.max(100,Math.min(Math.round(args.radius??5000),10000)), limit=Math.max(1,Math.min(Math.round(args.limit??10),100))
+  const res=await fetch(`https://api.postcodes.io/postcodes?lon=${lon}&lat=${lat}&radius=${radius}&limit=${limit}`,{headers:{'User-Agent':UA,Accept:'application/json'},signal:AbortSignal.timeout(20000)})
+  if(!res.ok) throw new ZipError(`postcodes.io returned ${res.status}`)
+  const d=await res.json() as {result?:{postcode?:string;distance?:number;admin_district?:string;country?:string;latitude?:number;longitude?:number}[]}
+  const rows=d.result??[]; if(!rows.length)return `No postcodes reported near ${lat},${lon}.`
+  return `Postcodes within ${radius}m of ${lat},${lon}:\n`+rows.slice(0,limit).map((r,i)=>`${i+1}. ${r.postcode??'?'} | ${r.distance!=null?`${Math.round(r.distance)}m`: 'distance not reported'} | ${r.admin_district??'not reported'}, ${r.country??'not reported'} | ${r.latitude??'?'},${r.longitude??'?'}`).join('\n')
+}
+
+export async function postcodeAutocomplete(args: { postcode: string; limit?: number }): Promise<string> {
+  const postcode=(args.postcode??'').trim(); if(!postcode) throw new ZipError('Provide a postcode prefix.')
+  const limit=Math.max(1,Math.min(Math.round(args.limit??10),20))
+  const res=await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}/autocomplete?limit=${limit}`,{headers:{'User-Agent':UA,Accept:'application/json'},signal:AbortSignal.timeout(20000)})
+  if(!res.ok) throw new ZipError(`postcodes.io returned ${res.status}`)
+  const d=await res.json() as {result?:string[]}; const rows=d.result??[]; if(!rows.length)return `No postcode completions for "${postcode}".`
+  return `Postcode completions for "${postcode}":\n`+rows.slice(0,limit).join('\n')
 }

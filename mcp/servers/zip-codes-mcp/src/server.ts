@@ -1,9 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { cityLookup } from "./api.js"
-import { zipLookup, reverseGeocode } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { cityLookup, zipLookup, nearbyPostcodes, postcodeAutocomplete } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -45,10 +44,51 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: reverse_geocode ----
-    const paywallMessage = await premiumRequired("reverse_geocode")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await reverseGeocode(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_zip_codes_reverse_geocode", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "address_search",
+    {
+      title: "Address search",
+      description: "Search worldwide addresses and places through OpenStreetMap Nominatim.",
+      inputSchema: z.object({ query: z.string().describe("Address or place query."), limit: z.number().optional().describe("Results, 1-10; default 5.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: address_search ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_zip_codes_address_search", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "nearby_postcodes",
+    {
+      title: "Nearby postcodes",
+      description: "Find UK postcodes near coordinates through postcodes.io.",
+      inputSchema: z.object({ latitude: z.number().describe("Latitude."), longitude: z.number().describe("Longitude."), radius: z.number().optional().describe("Radius in metres, 100-10000; default 5000."), limit: z.number().optional().describe("Results, 1-100; default 10.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await nearbyPostcodes(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "postcode_autocomplete",
+    {
+      title: "Postcode autocomplete",
+      description: "Complete a UK postcode prefix through postcodes.io.",
+      inputSchema: z.object({ postcode: z.string().describe("Postcode or prefix, e.g. SW1A."), limit: z.number().optional().describe("Completions, 1-20; default 10.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await postcodeAutocomplete(args)) } catch (e) { return textError(error(e)) }
   }
   )
 
