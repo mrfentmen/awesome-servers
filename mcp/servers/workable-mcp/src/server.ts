@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { companies, companyJobs, jobDetail, marketSummary, recentJobs, remoteJobs, searchJobs, compareQueries, companyOpenings, workplaceSplit, remoteMarket, remoteSalary } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { companies, companyJobs, jobDetail, marketSummary, recentJobs, remoteJobs, searchJobs, compareQueries, companyOpenings, workplaceSplit, remoteSalary } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -201,10 +201,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: remote_market ----
-    const paywallMessage = await premiumRequired("remote_market")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await remoteMarket(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_workable_remote_market", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
