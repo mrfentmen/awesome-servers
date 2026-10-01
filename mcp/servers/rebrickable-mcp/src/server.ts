@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatSet, getSet, RebrickableError, searchSets, setParts, eraCensus, themeTree, colorRoster } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { formatSet, getSet, RebrickableError, searchSets, setParts, colorRoster } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -91,10 +91,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: era_census ----
-    const paywallMessage = await premiumRequired("era_census")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await eraCensus(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_rebrickable_era_census", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -112,10 +111,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: theme_tree ----
-    const paywallMessage = await premiumRequired("theme_tree")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await themeTree(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_rebrickable_theme_tree", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
