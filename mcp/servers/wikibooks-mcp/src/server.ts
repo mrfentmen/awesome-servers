@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { search, book, browseCategories } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { search, pageSections } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -32,10 +32,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: book ----
-    const paywallMessage = await premiumRequired("book")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await book(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wikibooks_book", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -49,10 +48,54 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: browse_categories ----
-    const paywallMessage = await premiumRequired("browse_categories")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await browseCategories(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wikibooks_browse_categories", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "page_history",
+    {
+      title: "Page revision history",
+      description: "Recent revisions with timestamps, editors and edit comments.",
+      inputSchema: z.object( { title: z.string().describe("Exact page title, e.g. Python Programming."), limit: z.number().describe("Maximum revisions, 1-30.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: page_history ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_wikibooks_page_history", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "page_sections",
+    {
+      title: "Page sections",
+      description: "Table of contents headings and anchors for a Wikibooks page.",
+      inputSchema: z.object( { title: z.string().describe("Exact page title, e.g. Python Programming."), limit: z.number().describe("Maximum headings, 1-50.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await pageSections(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "category_members",
+    {
+      title: "Category members",
+      description: "Pages and subcategories inside a named Wikibooks category.",
+      inputSchema: z.object( { category: z.string().describe("Category name, e.g. Subject:Computer science."), limit: z.number().describe("Maximum members, 1-50.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: category_members ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_wikibooks_category_members", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
