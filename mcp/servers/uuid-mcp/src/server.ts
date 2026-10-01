@@ -1,10 +1,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { generateMany } from "./api.js"
-import { generateUuid } from "./api.js"
-import { validateUuid, uuidInfo } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { generateMany } from "./local.js"
+import { generateUuid } from "./local.js"
 
+import { validateUuid, timeUuid } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -58,10 +58,38 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: uuid_info ----
-    const paywallMessage = await premiumRequired("uuid_info")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await uuidInfo(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_uuid_uuid_info", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "generate_time_uuid",
+    {
+      title: "Generate time-based UUID",
+      description: "Generate a version 1 UUID through UUIDTools, with a timestamp and remote node identifier.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await timeUuid(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "generate_name_uuid",
+    {
+      title: "Generate name-based UUID",
+      description: "Generate a deterministic version 5 UUID through UUIDTools from a namespace and name.",
+      inputSchema: z.object({ namespace: z.string().min(1).max(36).describe("ns:dns, ns:url, ns:oid, ns:x500 or a namespace UUID."), name: z.string().min(1).max(200).describe("Exact name to hash in the namespace.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: generate_name_uuid ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_uuid_generate_name_uuid", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
