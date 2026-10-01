@@ -2,20 +2,12 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import type { ResourceType } from "./types.js"
 import { RESOURCES } from "./types.js"
-import {
-  crossReference,
-  downloadAsset,
-  getAssetDetail,
-  getConsoles,
-  getDownloadUrl,
-  getGameAssets,
-  getGames,
-  getLatestAssets,
-  getPopularAssets,
-  getRandomAsset,
-  searchAssets,
-} from "./scraper.js"
+import { crossReference, downloadAsset, getAssetDetail, getConsoles, getDownloadUrl, getGameAssets, getGames, getLatestAssets, getPopularAssets, getRandomAsset, searchAssets } from "./scraper.js"
+import { getSiteStats } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
+const text = textResult
+const error = (e: unknown) => e instanceof Error ? e.message : String(e)
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
 const WRITE = { readOnlyHint: false, openWorldHint: true } as const
 
@@ -340,6 +332,35 @@ export function createServer(): McpServer {
       const text = await handleBatchDownload(args.asset_page_urls, args.dest_dir)
       return textResult(text)
     }
+  )
+
+  server.registerTool(
+    "get_site_stats",
+    {
+      title: "Archive statistics",
+      description: "Current VG Resource archive totals: assets, pending assets, games, consoles, updates, users and comments.",
+      inputSchema: z.object({ resource: resourceEnum.optional().describe("Resource archive. Defaults to sprites.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await getSiteStats(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "search_tags",
+    {
+      title: "Find asset tags",
+      description: "Find VG Resource tag IDs and categories by name, including characters and franchises, for precise asset discovery.",
+      inputSchema: z.object({ query: z.string().min(1).max(100).optional().describe("Tag search text. Defaults to mario."), limit: z.number().int().min(1).max(30).optional().describe("Maximum tags. Defaults to 10.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: search_tags ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_vg_resource_search_tags", args)) } catch (e) { return textError(error(e)) }
+  }
   )
 
   return server
