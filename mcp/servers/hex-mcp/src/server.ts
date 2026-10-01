@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatPackage, formatRelease, getPackage, getRelease, HexError, searchPackages } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { formatPackage, formatRelease, getPackage, getRelease, HexError, packageOwners } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -67,15 +67,55 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: search_packages ----
-      const paywallMessage = await premiumRequired("search_packages")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await searchPackages(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_hex_search_packages", args)) } catch (e) { return textError(errorMessage(e)) }
     }
+  )
+
+  server.registerTool(
+    "package_owners",
+    {
+      title: "Package owners",
+      description: "List a Hex package's owners with their public names and permission levels.",
+      inputSchema: z.object({ name: z.string().min(1).max(200).describe("Hex package name, e.g. phoenix."), limit: z.number().int().min(1).max(50).optional().describe("Maximum owners, default 20.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await packageOwners(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "maintainer_packages",
+    {
+      title: "Maintainer packages",
+      description: "List the public packages owned by a Hex maintainer, with their repositories and package links.",
+      inputSchema: z.object({ username: z.string().min(1).max(200).describe("Hex username, e.g. ericmj."), limit: z.number().int().min(1).max(50).optional().describe("Maximum packages, default 20.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: maintainer_packages ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_hex_maintainer_packages", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "dependency_changes",
+    {
+      title: "Dependency changes",
+      description: "Compare two Hex releases for added, removed and changed direct dependency requirements, optional flags, applications, repositories and Elixir requirements.",
+      inputSchema: z.object({ name: z.string().min(1).max(200).describe("Hex package name, e.g. phoenix."), before: z.string().min(1).max(200).describe("Earlier release, e.g. 1.7.0."), after: z.string().min(1).max(200).describe("Later release, e.g. 1.8.0."), limit: z.number().int().min(1).max(50).optional().describe("Maximum changes, default 20.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: dependency_changes ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_hex_dependency_changes", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

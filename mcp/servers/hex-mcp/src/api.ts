@@ -92,39 +92,36 @@ export function formatRelease(name: string, r: HexRelease): string {
 
 // ---- muxB tools:
 
-const SORTS = ["downloads", "recent_downloads", "name", "updated_at"] as const;
-
 export interface SearchPackagesArgs {
   query: string;
   sort?: string;
   limit?: number;
 }
 
-export async function searchPackages(args: SearchPackagesArgs): Promise<string> {
-  const query = (args.query ?? "").trim()
-  if (!query) throw new HexError("Provide a search term, e.g. json")
-  const sort = (args.sort ?? "downloads").trim()
-  if (!SORTS.includes(sort as (typeof SORTS)[number])) {
-    throw new HexError(`Unknown sort "${sort}". Use one of: ${SORTS.join(", ")}.`)
-  }
-  const limit = Math.max(1, Math.min(args.limit ?? 10, 50))
-  const res = await getJson<Raw[]>(`/packages?search=${encodeURIComponent(query)}&sort=${encodeURIComponent(sort)}`)
-  const rows = (Array.isArray(res) ? res : []).slice(0, limit)
-  if (!rows.length) return `No Hex packages match "${query}".`
-  return `Hex packages matching "${query}" sorted by ${sort} (${rows.length} shown):\n` +
-    rows
-      .map((p, i) => {
-        const dl: unknown = p.downloads
-        const all = typeof dl === "number" ? dl : Number((dl as Raw)?.all ?? NaN)
-        const licenses = Array.isArray(p.meta?.licenses) ? p.meta.licenses.map(String).join(", ") : ""
-        return [
-          `${i + 1}. ${p.name ?? "?"}${p.latest_version ? ` ${p.latest_version}` : ""}`,
-          `   ${String(p.meta?.description ?? "").slice(0, 140)}`,
-          `   downloads: ${Number.isFinite(all) ? all.toLocaleString() : "not reported"}${licenses ? ` | licenses: ${licenses}` : ""} | updated: ${p.updated_at ? String(p.updated_at).slice(0, 10) : "not reported"}`,
-          p.url ? `   ${p.url}` : "",
-        ]
-          .filter((l) => l !== "")
-          .join("\n")
-      })
-      .join("\n")
+// ---- gap4d1 tools:
+
+function hexSegment(value: string, label: string): string {
+  const clean = value.trim()
+  if (!clean || clean.length > 200) throw new HexError(`Provide a ${label} of 1-200 characters.`)
+  return encodeURIComponent(clean)
 }
+
+function hexField(value: unknown, max = 180): string {
+  return value === null || value === undefined || value === '' ? 'not reported' : String(value).replace(/\s+/g, ' ').slice(0, max)
+}
+
+function hexLimit(value: number | undefined): number {
+  return Math.max(1, Math.min(Math.trunc(Number.isFinite(value) ? value! : 20), 50))
+}
+
+export async function packageOwners(args: { name: string; limit?: number }): Promise<string> {
+  const rows = await getJson<Array<{ username?: string; full_name?: string | null; level?: string }>>(`/packages/${hexSegment(args.name, 'package name')}/owners`)
+  if (!Array.isArray(rows)) throw new HexError('Hex did not return an owner list.')
+  const shown = rows.slice(0, hexLimit(args.limit))
+  return `Owners of ${hexField(args.name)} (${shown.length} of ${rows.length} shown):\n` +
+    (shown.map((owner, i) => `${i + 1}. ${hexField(owner.username)} | name: ${hexField(owner.full_name)} | permission: ${hexField(owner.level)}`).join('\n') || 'No owners reported.')
+}
+
+type HexRequirement = { requirement?: string; optional?: boolean; app?: string; repository?: string }
+type HexDependencyRelease = { meta?: { elixir?: string }; requirements?: Record<string, HexRequirement> }
+
