@@ -50,8 +50,6 @@ export function searchIssues(term: string, limit?: string): Promise<string> {
   );
 }
 
-
-
 export function getIssue(issueId: string): Promise<string> {
   return gql("query($id: String!) { issue(id: $id) { id identifier title description state { name } } }", { id: issueId });
 }
@@ -95,9 +93,6 @@ export function updateIssueTitle(issueId: string, title: string): Promise<string
 }
 
 // ---- muxG tools:
-const NPM_DOWNLOADS = "https://api.npmjs.org/downloads"
-const NPM_REGISTRY = "https://registry.npmjs.org"
-const SCORECARD = "https://api.securityscorecards.dev/projects"
 
 interface NpmDownloads {
   downloads?: number;
@@ -136,93 +131,6 @@ interface Scorecard {
   checks?: ScorecardCheck[];
 }
 
-const npmName = (input: string): string => {
-  const name = String(input ?? "").trim();
-  if (!/^(@?[a-z0-9][a-z0-9._-]{0,213})$/i.test(name) || name.includes("..")) {
-    throw new Error(`"${input}" is not an npm package name.`);
-  }
-  return name;
-};
-
-async function linearJson<T>(url: string): Promise<T> {
-  const res = await fetch(url, { headers: { ...UA, Accept: "application/json" }, signal: AbortSignal.timeout(25000) });
-  if (res.status === 404) throw new Error(`Upstream returned 404 for ${new URL(url).pathname}`);
-  if (!res.ok) throw new Error(`Upstream returned ${res.status}`);
-  const text = await res.text();
-  if (!text.trim()) throw new Error("Upstream returned an empty body.");
-  return JSON.parse(text) as T;
-}
-
-/** How much a package is actually used, and how recently it shipped: the adoption signal a tracker cannot see. */
-export async function packageAdoption(args: { package: string }): Promise<string> {
-  const name = npmName(args?.package);
-  const [registry, downloads] = await Promise.all([
-    linearJson<NpmRegistry>(`${NPM_REGISTRY}/${encodeURIComponent(name)}`),
-    linearJson<NpmDownloads>(`${NPM_DOWNLOADS}/point/last-month/${encodeURIComponent(name)}`).catch(() => ({ downloads: undefined })),
-  ]);
-  const tags = registry["dist-tags"] ?? {};
-  const latest = tags.latest ?? Object.keys(registry.versions ?? {}).pop();
-  const times = registry.time ?? {};
-  const published = latest ? times[latest] : undefined;
-  const ageDays = published ? Math.round((Date.now() - Date.parse(published)) / 86_400_000) : null;
-  const versions = Object.keys(registry.versions ?? {});
-  const deprecated = versions.filter((version) => Boolean(registry.versions?.[version]?.deprecated));
-  const releases = Object.entries(times)
-    .filter(([version]) => /^\d+\.\d+\.\d+$/.test(version) && times[version])
-    .sort((a, b) => Date.parse(a[1]) - Date.parse(b[1]));
-
-  const lines = [
-    `${name} on npm`,
-    registry.description ? `  ${String(registry.description).slice(0, 200)}` : "  no description published",
-    `  latest tag ${latest ?? "not reported"}${published ? `, published ${published.slice(0, 10)}${ageDays !== null ? ` (${ageDays} day(s) ago)` : ""}` : ""}`,
-    `  dist-tags: ${Object.entries(tags).map(([tag, version]) => `${tag}=${version}`).join(", ") || "none published"}`,
-    `  versions published: ${versions.length}${releases.length > 1 ? `, first ${releases[0][0]} on ${String(releases[0][1]).slice(0, 10)}, most recent before latest on ${String(releases[releases.length - 1][0] === latest ? releases[releases.length - 2][1] : releases[releases.length - 1][1]).slice(0, 10)}` : ""}`,
-  ];
-  if (typeof downloads.downloads === "number") {
-    const perDay = downloads.downloads / 30;
-    lines.push(`  npm downloads in the month to ${downloads.end ?? "not reported"}: ${downloads.downloads.toLocaleString("en-US")} (about ${Math.round(perDay).toLocaleString("en-US")} a day)`);
-  } else {
-    lines.push("  npm download count: not reported by the registry for this package");
-  }
-  if (deprecated.length) {
-    lines.push(`  deprecated versions: ${deprecated.length}${deprecated.length <= 5 ? ` (${deprecated.join(", ")})` : ""}`);
-  }
-  if (registry.maintainers?.length) lines.push(`  maintainers: ${registry.maintainers.slice(0, 5).map((m) => m.name ?? "?").join(", ")}`);
-  if (registry.homepage) lines.push(`  homepage: ${String(registry.homepage).slice(0, 120)}`);
-  return lines.join("\n");
-}
-
 // The scorecard path includes the forge host, so github.com/owner/repo is the
 // default and a full repository URL is accepted as written.
-const scorecardPath = (input: string): string => {
-  const value = String(input ?? "").trim().replace(/^https?:\/\//, "").replace(/\/$/, "");
-  if (/^[\w.-]+\/[\w.-]+$/.test(value)) return `github.com/${value}`;
-  if (/^[\w.-]+\/[\w.-]+\/[\w.-]+$/.test(value)) return value;
-  throw new Error(`"${input}" is not an owner/repository pair, or a repository URL on a forge host.`);
-};
 
-/** The OpenSSF scorecard for a repository: an aggregate supply-chain score and the checks behind it. */
-export async function projectScorecard(args: { repo: string; limit?: number }): Promise<string> {
-  const path = scorecardPath(args?.repo);
-  const repo = path.split("/").slice(1).join("/");
-  const n = Math.min(Math.max(Number(args?.limit ?? 8) || 8, 1), 25);
-  const data = await linearJson<Scorecard>(`${SCORECARD}/${path}`);
-  const checks = Array.isArray(data.checks) ? data.checks : [];
-  if (!checks.length) throw new Error(`The OpenSSF scorecard has no checks for ${repo}.`);
-  const ranked = [...checks].sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
-  const failing = ranked.filter((check) => (check.score ?? 0) < 5);
-
-  const lines = [
-    `OpenSSF scorecard for ${data.repo?.name ?? repo}: ${data.score ?? "not reported"} out of 10, scored ${String(data.date ?? "date not reported").slice(0, 10)}`,
-    `${failing.length} of ${checks.length} check(s) score below 5, so those are the ones to read first.`,
-    "",
-  ];
-  for (const check of ranked.slice(0, n)) {
-    lines.push(`  ${check.name ?? "unnamed check"}: ${check.score ?? "not reported"}/10`);
-    if (check.reason) lines.push(`     ${String(check.reason).slice(0, 200)}`);
-  }
-  if (ranked.length > n) lines.push(`  ...and ${ranked.length - n} more check(s).`);
-  lines.push("");
-  lines.push("The scorecard is automated, so a low check score means a missing control, not a hostile maintainer. Read the reasons before drawing a conclusion.");
-  return lines.join("\n");
-}
