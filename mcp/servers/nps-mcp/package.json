@@ -1,6 +1,6 @@
 {
   "name": "nps-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "MCP server for U.S. National Parks: parks, alerts, campgrounds. Free key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nps-mcp",

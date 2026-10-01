@@ -1,7 +1,7 @@
+import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatPark, NpsError, parkAlerts, parkCampgrounds, searchParks, parksByState, parkThingsToDo } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { formatPark, NpsError, parkAlerts, parkCampgrounds, searchParks } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -90,13 +90,12 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ state, limit }) => {
+    async (args) => {
       // ---- paywall: parks_by_state ----
-      const paywallMessage = await premiumRequired("parks_by_state")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await parksByState({ state, limit }))
+        return text(await premiumTool("mcp_nps_parks_by_state", args))
       } catch (e) {
         return textError(errorMessage(e))
       }
@@ -114,13 +113,12 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ code, limit }) => {
+    async (args) => {
       // ---- paywall: park_things_to_do ----
-      const paywallMessage = await premiumRequired("park_things_to_do")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await parkThingsToDo({ code, limit }))
+        return text(await premiumTool("mcp_nps_park_things_to_do", args))
       } catch (e) {
         return textError(errorMessage(e))
       }
