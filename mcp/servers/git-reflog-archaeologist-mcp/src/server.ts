@@ -1,13 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { format, recoverySignals, reflogSignals, stashSignals } from "./archaeology.js"
-import { recoverableObjectWindow, reflogActivityProfile } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { recoverableObjectWindow, reflogActivityProfile } from "./local-api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
 const errorText = (error: unknown) => text(`Error: ${error instanceof Error ? error.message : "Local Git archaeology failed"}`)
-export function createServer() { const server = new McpServer({ name: "git-reflog-archaeologist-mcp", version: "1.0.0" }); const cwd = z.string().min(1).max(1000).default(".").describe("Local Git repository path; no network access is used."); server.registerTool(
+export function createServer() { const server = new McpServer({ name: "git-reflog-archaeologist-mcp", version: "1.0.0" }); const cwd = z.string().min(1).max(1000).default(".").describe("Local Git repository path; no network access is used.");
+  server.registerTool(
     "reflog_signals",
     {
       title: "Reflog signals",
@@ -16,7 +17,8 @@ export function createServer() { const server = new McpServer({ name: "git-reflo
       annotations: READ_ONLY,
     },
     async ({ cwd: directory }) => { try { return text(format(await reflogSignals(directory))) } catch (error) { return errorText(error) } }
-  ); server.registerTool(
+  );
+  server.registerTool(
     "recovery_signals",
     {
       title: "Recovery signals",
@@ -25,7 +27,8 @@ export function createServer() { const server = new McpServer({ name: "git-reflo
       annotations: READ_ONLY,
     },
     async ({ cwd: directory }) => { try { return text(format(await recoverySignals(directory))) } catch (error) { return errorText(error) } }
-  ); server.registerTool(
+  );
+  server.registerTool(
     "stash_signals",
     {
       title: "Stash signals",
@@ -34,7 +37,8 @@ export function createServer() { const server = new McpServer({ name: "git-reflo
       annotations: READ_ONLY,
     },
     async ({ cwd: directory }) => { try { return text(format(await stashSignals(directory))) } catch (error) { return errorText(error) } }
-  ); server.registerTool(
+  );
+  server.registerTool(
     "reflog_activity_profile",
     {
       title: "Reflog activity profile",
@@ -43,13 +47,10 @@ export function createServer() { const server = new McpServer({ name: "git-reflo
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: reflog_activity_profile ----
-    const paywallMessage = await premiumRequired("reflog_activity_profile")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await reflogActivityProfile(args)) } catch (error) { return errorText(error) }
   }
-  ); server.registerTool(
+  );
+  server.registerTool(
     "recoverable_object_window",
     {
       title: "Recoverable object window",
@@ -60,4 +61,24 @@ export function createServer() { const server = new McpServer({ name: "git-reflo
     async (args) => {
     try { return text(await recoverableObjectWindow(args)) } catch (error) { return errorText(error) }
   }
-  ); return server }
+  );
+  server.registerTool(
+    "public_commit_provenance",
+    {
+      title: "Public commit provenance",
+      description: "Inspect GitHub-reported commit signature verification, author and committer dates, parent count and change totals for a public revision.",
+      inputSchema: z.object({ owner: z.string().min(1).max(100).default("microsoft"), repo: z.string().min(1).max(100).default("TypeScript"), ref: z.string().min(1).max(200).default("main") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: public_commit_provenance ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_git_reflog_archaeologist_public_commit_provenance", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  return server
+}
+
+function error(e: unknown): string { return e instanceof Error ? e.message : String(e) }
