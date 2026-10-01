@@ -55,7 +55,7 @@ export function getMovie(idOrTitle: string): Promise<string> {
 
 // ---- muxG tools:
 const OMDB_WIKIDATA_API = "https://www.wikidata.org/w/api.php"
-const OMDB_CINEMETA_URL = "https://v3-cinemeta.strem.io/meta/movie"
+
 const OMDB_LIST_CAP = 12
 
 async function omdbWikiJson<T>(params: Record<string, string>): Promise<T> {
@@ -75,27 +75,6 @@ interface OmdbSearchHit {
   label: string
   description?: string
   match?: { type?: string; text?: string }
-}
-
-async function omdbWikiLabels(ids: string[]): Promise<Map<string, string>> {
-  const wanted = [...new Set(ids.filter(Boolean))].slice(0, OMDB_LIST_CAP * 2)
-  if (!wanted.length) return new Map()
-  try {
-    const d = await omdbWikiJson<{ entities?: Record<string, { labels?: Record<string, { value?: string }> }> }>({
-      action: "wbgetentities",
-      ids: wanted.join("|"),
-      props: "labels",
-      languages: "en",
-    })
-    const out = new Map<string, string>()
-    for (const [id, e] of Object.entries(d.entities ?? {})) {
-      const label = e.labels?.en?.value
-      out.set(id, label ?? "not reported")
-    }
-    return out
-  } catch {
-    return new Map()
-  }
 }
 
 function omdbClaimValue(
@@ -161,139 +140,3 @@ export async function findFilmIds(args: { title?: string; limit?: number }): Pro
   ].join("\n")
 }
 
-/** The community-curated facts Wikidata holds for a film, with the sources it names. */
-export async function wikidataFacts(args: { id?: string; title?: string }): Promise<string> {
-  let qid = String(args.id ?? "").trim().toUpperCase()
-  const title = String(args.title ?? "").trim()
-  if (!qid && !title) throw new OmdbError("Give a Wikidata Q-id such as Q184843, or a title to search for first.")
-  if (!qid) {
-    const d = await omdbWikiJson<{ search?: OmdbSearchHit[] }>({
-      action: "wbsearchentities",
-      search: title,
-      language: "en",
-      uselang: "en",
-      type: "item",
-      limit: "1",
-    })
-    const hit = d.search?.[0]
-    if (!hit) throw new OmdbError(`Wikidata has no item for "${title}".`)
-    qid = hit.id
-  }
-  if (!/^Q\d+$/.test(qid)) throw new OmdbError(`"${qid}" is not a Wikidata Q-id, which looks like Q followed by digits.`)
-
-  const d = await omdbWikiJson<{
-    entities?: Record<string, {
-      labels?: Record<string, { value?: string }>
-      descriptions?: Record<string, { value?: string }>
-      claims?: Record<string, { mainsnak?: { datavalue?: { value?: unknown } } }[]>
-      sitelinks?: Record<string, unknown>
-    }>
-  }>({ action: "wbgetentities", ids: qid, props: "labels|descriptions|claims|sitelinks" })
-  const e = d.entities?.[qid]
-  if (!e) throw new OmdbError(`Wikidata has no item ${qid}.`)
-  const claims = e.claims ?? {}
-  const enLabel = e.labels?.en?.value ?? "not reported"
-
-  const itemIds: string[] = []
-  const collectItems = (p: string): string[] => {
-    return (claims[p] ?? []).map((c) => {
-      const v = c.mainsnak?.datavalue?.value as { id?: string } | undefined
-      if (v?.id) itemIds.push(v.id)
-      return v?.id ?? ""
-    }).filter(Boolean)
-  }
-  const directors = collectItems("P57")
-  const cast = collectItems("P161")
-  const production = collectItems("P272")
-  const country = collectItems("P495")
-  const language = collectItems("P364")
-  const instance = collectItems("P31")
-  const labels = await omdbWikiLabels([...directors, ...cast, ...production, ...country, ...language, ...instance])
-
-  const published = omdbClaimValue(claims, "P577") as { time?: string; precision?: number } | undefined
-  const runtime = omdbClaimValue(claims, "P2047") as { amount?: string } | undefined
-  const imdb = omdbClaimValue(claims, "P345")
-  const tmdb = omdbClaimValue(claims, "P4947")
-
-  const nameList = (ids: string[], cap: number): string[] =>
-    ids.slice(0, cap).map((id) => `${labels.get(id) ?? "not reported"} (${id})`)
-
-  return [
-    `Wikidata ${qid}: ${enLabel}`,
-    e.descriptions?.en?.value ? `Description: ${e.descriptions.en.value}` : "",
-    `Instance of: ${nameList(instance, 3).join(", ") || "not reported"}`,
-    `Release date: ${published?.time ? published.time.replace(/^\+/, "").replace(/T.*$/, "") : "not reported"}`,
-    `Running time: ${runtime?.amount ? `${Number(runtime.amount)} minutes` : "not reported"}`,
-    `Country: ${nameList(country, 3).join(", ") || "not reported"}`,
-    `Original language: ${nameList(language, 3).join(", ") || "not reported"}`,
-    `IMDb id: ${typeof imdb === "string" ? imdb : "not reported"}`,
-    `TMDb id: ${typeof tmdb === "string" ? tmdb : "not reported"}`,
-    `Directors: ${nameList(directors, 4).join(", ") || "not reported"}`,
-    `Cast (${cast.length} credited on Wikidata, first ${Math.min(6, cast.length)}): ${nameList(cast, 6).join(", ") || "not reported"}`,
-    `Production company: ${nameList(production, 3).join(", ") || "not reported"}`,
-    `Wikipedia sitelinks: ${Object.keys(e.sitelinks ?? {}).length}`,
-    "",
-    "Wikidata is edited by hand, so a missing fact usually means nobody has added it yet rather than that the fact is false. Dates carry a precision: a year-only value is stored as 2026-00-00T00:00:00Z.",
-  ].filter(Boolean).join("\n")
-}
-
-/** A second provider's view of the same film, including where it can be streamed. */
-export async function cinemetaDetails(args: { imdb_id?: string }): Promise<string> {
-  const raw = String(args.imdb_id ?? "").trim()
-  const imdb = raw.toLowerCase().startsWith("tt") ? raw.toLowerCase() : `tt${raw.replace(/^\D+/, "")}`
-  if (!/^tt\d{5,9}$/.test(imdb)) {
-    throw new OmdbError(`"${raw}" is not an IMDb id, which looks like tt followed by digits, for example tt0083658.`)
-  }
-
-  const res = await fetch(`${OMDB_CINEMETA_URL}/${encodeURIComponent(imdb)}.json`, {
-    headers: { "User-Agent": "awesome-mcps/1.0 (film metadata)", Accept: "application/json" },
-    signal: AbortSignal.timeout(25000),
-  })
-  if (res.status === 404) throw new OmdbError(`Cinemeta has no entry for ${imdb}.`)
-  if (!res.ok) throw new OmdbError(`Cinemeta returned ${res.status}`)
-  const d = (await res.json()) as {
-    meta?: {
-      id?: string
-      name?: string
-      year?: string
-      runtime?: string
-      genres?: string[]
-      director?: string[]
-      cast?: string[]
-      description?: string
-      imdbRating?: string
-      imdb_id?: string
-      country?: string
-      awards?: string
-      dvdRelease?: string
-      background?: string
-      links?: { imdb?: string; wikidata?: string }
-    }
-    streams?: Record<string, { title?: string; name?: string }[]>
-  }
-  const m = d.meta
-  if (!m) throw new OmdbError(`Cinemeta returned no metadata for ${imdb}.`)
-
-  const streams = Object.entries(d.streams ?? {})
-  const awards = String(m.awards ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
-
-  return [
-    `Cinemeta for ${imdb}: ${m.name ?? "not reported"}${m.year ? ` (${m.year})` : ""}`,
-    m.description ? `Synopsis: ${String(m.description).replace(/<[^>]+>/g, "").trim()}` : "",
-    `Runtime: ${m.runtime ?? "not reported"}`,
-    `Genres: ${m.genres?.length ? m.genres.join(", ") : "not reported"}`,
-    `Country: ${m.country ?? "not reported"}`,
-    `Director: ${m.director?.length ? m.director.join(", ") : "not reported"}`,
-    `Cast (${m.cast?.length ?? 0} listed, first ${Math.min(8, m.cast?.length ?? 0)}): ${m.cast?.slice(0, 8).join(", ") ?? "not reported"}`,
-    `Community IMDb rating: ${m.imdbRating ?? "not reported"}`,
-    `DVD release: ${m.dvdRelease ?? "not reported"}`,
-    awards ? `Awards: ${awards.slice(0, 300)}` : "",
-    m.links?.wikidata ? `Wikidata: ${m.links.wikidata}` : "",
-    "",
-    streams.length
-      ? `Where to stream it (${streams.length} source(s)): ${streams.map(([k, v]) => `${k}: ${v.map((x) => x.title ?? x.name ?? "?").slice(0, 3).join(" / ")}`).join("; ").slice(0, 400)}`
-      : "No streaming source is listed for this title right now.",
-    "",
-    "Cinemeta aggregates community and open data, so its numbers can differ from OMDb's; treat a disagreement as a signal to check both rather than picking one.",
-  ].filter(Boolean).join("\n")
-}

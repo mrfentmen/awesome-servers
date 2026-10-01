@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, searchMovies, getMovie, findFilmIds, wikidataFacts, cinemetaDetails } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, searchMovies, getMovie, findFilmIds } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -82,10 +82,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: wikidata_facts ----
-    const paywallMessage = await premiumRequired("wikidata_facts")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await wikidataFacts(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_omdb_wikidata_facts", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -99,10 +98,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: cinemeta_details ----
-    const paywallMessage = await premiumRequired("cinemeta_details")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await cinemetaDetails(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_omdb_cinemeta_details", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
