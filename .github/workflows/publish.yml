@@ -19,7 +19,7 @@ on:
   # Automatic: publish only servers changed by a push to main
   push:
     branches: [main]
-    paths: ["servers/**"]
+    paths: ["mcp/servers/**"]
 
 jobs:
   publish:
@@ -54,17 +54,17 @@ jobs:
               START="${{ inputs.start }}"
               END="${{ inputs.end }}"
               if [ "$END" = "0" ]; then
-                ls -d servers/*/ | sed 's|servers/||;s|/||' | sort | sed -n "${START},\$p" > /tmp/todo.txt
+                ls -d mcp/servers/*/ | sed 's|mcp/servers/||;s|/||' | sort | sed -n "${START},\$p" > /tmp/todo.txt
               else
-                ls -d servers/*/ | sed 's|servers/||;s|/||' | sort | sed -n "${START},${END}p" > /tmp/todo.txt
+                ls -d mcp/servers/*/ | sed 's|mcp/servers/||;s|/||' | sort | sed -n "${START},${END}p" > /tmp/todo.txt
               fi
             fi
           else
-            git diff --name-only HEAD~1 -- servers/ | cut -d/ -f2 | sort -u > /tmp/todo.txt
+            git diff --name-only HEAD~1 -- mcp/servers/ | cut -d/ -f3 | sort -u > /tmp/todo.txt
           fi
           wc -l /tmp/todo.txt
 
       - name: Publish batch
-        run: bash scripts/publish-batch-list.sh /tmp/todo.txt
+        run: cd mcp && bash scripts/publish-batch-list.sh /tmp/todo.txt
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

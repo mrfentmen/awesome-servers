@@ -19,7 +19,7 @@ ACP client, straight from a public dataset, with no API key and nothing invented
 | [`apod`](./agents/apod) | "show me NASA's picture of the day" (sends the picture itself), "the apod for 1996-01-01", "every APOD between 2022-07-12 and 2022-07-16" (premium) | NASA APOD (api.nasa.gov) |
 | [`art`](./agents/art) | "paintings by Monet", "surprise me with a piece", "movement index: Impressionism and Baroque" (premium) | Art Institute of Chicago, Cleveland, The Met |
 | [`aurora`](./agents/aurora) | "how are the geomagnetic conditions?", "odds of seeing the aurora in Tromso?", "storm digest for recent history and the next 3 days" (premium) | NOAA SWPC (Kp, OVATION, alerts; 30-day daily geomagnetic table + JSON forecast) |
-| [`archive`](./agents/archive) | "find Apollo 11 recordings", "what is in the item Apollo11Audio?" | Internet Archive |
+| [`archive`](./agents/archive) | "find Apollo 11 recordings", "what is in the item Apollo11Audio?", "profile: find Apollo 11 recordings" (premium) | Internet Archive |
 | [`attach`](./agents/attach) | "what is in this file?" (reads the file your editor attached and profiles it) | the attached file itself — no feed, no network |
 | [`asteroids`](./agents/asteroids) | "which asteroids pass Earth this week?", "any hazardous asteroids passing this month?", "has 523934 ever come this close before?" (premium) | NASA Near-Earth Object feed |
 | [`bayarea`](./agents/bayarea) | "next BART trains from Embarcadero", "which BART trains from Milpitas take bikes?", "if I need to be somewhere in 25 minutes, which train should I get on from Embarcadero?" (premium) | BART public API (real-time departure board) |
