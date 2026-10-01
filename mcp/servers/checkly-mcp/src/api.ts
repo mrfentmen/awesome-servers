@@ -100,7 +100,7 @@ function statusMatcher(expected: string): (status: number) => boolean {
   const tests: Array<(status: number) => boolean> = []
   for (const part of parts) {
     const family = part.match(/^(\d)xx$/i)
-    const range = part.match(/^(\d{3})\s*-\s*(\d{3})$/)
+    const range = part.match(new RegExp("^(\\d{3})\\s*-\\s*(\\d{3})$", ""))
     if (family) {
       const hundreds = Number(family[1])
       tests.push((status) => Math.floor(status / 100) === hundreds)
@@ -108,7 +108,7 @@ function statusMatcher(expected: string): (status: number) => boolean {
       const low = Number(range[1])
       const high = Number(range[2])
       tests.push((status) => status >= low && status <= high)
-    } else if (/^\d{3}$/.test(part)) {
+    } else if (new RegExp("^\\d{3}$", "").test(part)) {
       const exact = Number(part)
       tests.push((status) => status === exact)
     } else {
@@ -251,7 +251,7 @@ export async function brokenLinks(args: { url: string; limit?: number }): Promis
   const limit = Math.min(Math.max(Number(args.limit ?? 15) || 15, 1), 40)
   const page = await fetchChain(base.toString(), 20000)
 
-  const hrefs = [...page.html.matchAll(/<a[^>]+href=["']([^"'#]+)["']/gi)]
+  const hrefs = [...page.html.matchAll(new RegExp("<a[^>]+href=[\"']([^\"'#]+)[\"']", "gi"))]
     .map((m) => m[1])
     .filter((href) => !/^(mailto:|tel:|javascript:|data:)/i.test(href))
 
@@ -441,11 +441,11 @@ function tagsMissingAttr(html: string, tag: string, attr: string): { total: numb
 function metaContent(html: string, key: string, mode: "name" | "property"): string {
   const re = new RegExp(`<meta[^>]*\\b${mode}\\s*=\\s*["']${key}["'][^>]*>`, "i");
   const tag = html.match(re)?.[0] ?? "";
-  return tag.match(/\bcontent\s*=\s*["']([^"']*)["']/i)?.[1]?.trim() ?? "";
+  return tag.match(new RegExp("\\bcontent\\s*=\\s*[\"']([^\"']*)[\"']", "i"))?.[1]?.trim() ?? "";
 }
 
 function ldJsonBlocks(html: string): { total: number; valid: number } {
-  const blocks = [...html.matchAll(/<script[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)]
+  const blocks = [...html.matchAll(new RegExp("<script[^>]*type\\s*=\\s*[\"']application\\/ld\\+json[\"'][^>]*>([\\s\\S]*?)<\\/script>", "gi"))]
     .map((m) => m[1].trim())
     .filter(Boolean);
   let valid = 0;
@@ -465,61 +465,6 @@ export interface HttpSecurityArgs {
   method?: string;
 }
 
-/** Transport and browser-side security headers, cookie flags and mixed content. */
-export async function httpSecurityReport(args: HttpSecurityArgs): Promise<string> {
-  const r = await fetchChain(args.url, 20000, methodOf(args.method))
-  const h = r.headers
-  const insecureStart = r.hops[0]?.url.startsWith("http://") ?? false
-  const checks: Assertion[] = [
-    { name: "https", passed: r.finalUrl.startsWith("https://"), detail: insecureStart ? `chain started on plain HTTP and ${r.finalUrl.startsWith("https://") ? "upgraded" : "never upgraded"}` : `fetched over TLS (${r.finalUrl})` },
-  ]
-
-  const headerChecks: Array<[string, string]> = [
-    ["strict-transport-security", "HSTS"],
-    ["content-security-policy", "CSP"],
-    ["x-content-type-options", "nosniff"],
-    ["referrer-policy", "referrer policy"],
-    ["permissions-policy", "permissions policy"],
-    ["cross-origin-opener-policy", "COOP"],
-  ]
-  for (const [header, label] of headerChecks) {
-    const value = h.get(header)
-    checks.push({
-      name: label,
-      passed: Boolean(value),
-      detail: value ? value.slice(0, 150) : `${header} not sent`,
-    })
-  }
-
-  const cookies = typeof h.getSetCookie === "function" ? h.getSetCookie() : []
-  const insecureCookies = cookies.filter((c) => !/\bsecure\b/i.test(c))
-  checks.push({
-    name: "cookies secure",
-    passed: cookies.length > 0 ? insecureCookies.length === 0 : true,
-    detail: cookies.length
-      ? `${cookies.length - insecureCookies.length}/${cookies.length} cookie(s) carry Secure${insecureCookies.length ? ` — leaked without it: ${insecureCookies.map((c) => c.split("=")[0]).join(", ").slice(0, 120)}` : ""}`
-      : "no cookies set on this response, so nothing to leak",
-  })
-  const noHttpOnly = cookies.filter((c) => !/\bhttponly\b/i.test(c))
-  checks.push({
-    name: "cookies httpOnly",
-    passed: cookies.length > 0 ? noHttpOnly.length === 0 : true,
-    detail: cookies.length
-      ? `${cookies.length - noHttpOnly.length}/${cookies.length} carry HttpOnly (a session cookie may legitimately be readable by script, so this is informational)`
-      : "no cookies set on this response",
-  })
-
-  const mixed = (r.html.match(/(?:src|href)\s*=\s*["']http:\/\/[^"']+/gi) ?? []).length
-  checks.push({
-    name: "no mixed content",
-    passed: mixed === 0,
-    detail: mixed ? `${mixed} plain-HTTP resource reference(s) in the HTML` : "every resource reference on the page is https or relative",
-  })
-
-  const score = checks.filter((c) => c.passed).length
-  return summarise(`Transport security for ${r.finalUrl} (HTTP ${r.status}, ${score} of ${checks.length} checks)`, checks)
-}
-
 export interface A11yArgs {
   url: string;
   max_images?: number;
@@ -532,7 +477,7 @@ export async function a11yBasics(args: A11yArgs): Promise<string> {
   const maxImages = Math.min(Math.max(Number(args.max_images ?? 50) || 50, 1), 300)
   const checks: Assertion[] = []
 
-  const lang = html.match(/<html[^>]*\blang\s*=\s*["']([^"']*)["']/i)?.[1]?.trim() ?? ""
+  const lang = html.match(new RegExp("<html[^>]*\\blang\\s*=\\s*[\"']([^\"']*)[\"']", "i"))?.[1]?.trim() ?? ""
   checks.push({ name: "html lang", passed: Boolean(lang), detail: lang ? `lang="${lang}"` : "no lang attribute on <html>, so screen readers cannot pick a voice" })
 
   const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.trim() ?? ""
@@ -552,7 +497,7 @@ export async function a11yBasics(args: A11yArgs): Promise<string> {
     passed: img.missing === 0,
     detail: img.total ? `${scoped}/${scoped} of the first ${scoped} <img> carry an alt attribute (${img.missing} missing; ${img.total} images on the page)` : "no images on the page to describe",
   })
-  const emptyAlt = (html.match(/<img\b[^>]*\balt\s*=\s*["']\s*["']/gi) ?? []).length
+  const emptyAlt = (html.match(new RegExp("<img\\b[^>]*\\balt\\s*=\\s*[\"']\\s*[\"']", "gi")) ?? []).length
   checks.push({
     name: "alt text not blank",
     passed: emptyAlt === 0,
@@ -563,10 +508,10 @@ export async function a11yBasics(args: A11yArgs): Promise<string> {
   const zoomBlocked = /user-scalable\s*=\s*no|maximum-scale\s*=\s*1\b/i.test(viewport)
   checks.push({ name: "viewport zoom", passed: Boolean(viewport) && !zoomBlocked, detail: viewport ? `"${viewport}"${zoomBlocked ? " — zoom is locked out, which WCAG 1.4.4 treats as a failure" : " and pinch-zoom is allowed"}` : "no viewport meta, so the page renders at desktop width on a phone" })
 
-  const hasLandmark = /<main\b/i.test(html) || /role\s*=\s*["']main["']/i.test(html) || /<nav\b/i.test(html) || /<header\b/i.test(html)
+  const hasLandmark = /<main\b/i.test(html) || new RegExp("role\\s*=\\s*[\"']main[\"']", "i").test(html) || /<nav\b/i.test(html) || /<header\b/i.test(html)
   checks.push({ name: "landmarks", passed: hasLandmark, detail: hasLandmark ? `landmarks present: ${["main", "nav", "header", "footer", "aside"].filter((t) => new RegExp(`<${t}\\b`, "i").test(html)).join(", ") || "role-based"}` : "no main, nav, header or footer landmark in the markup" })
 
-  const skipLink = /class\s*=\s*["'][^"']*skip[-_ ]?link/i.test(html) || /href\s*=\s*["']#(main|content|main-content)["']/i.test(html)
+  const skipLink = new RegExp("class\\s*=\\s*[\"'][^\"']*skip[-_ ]?link", "i").test(html) || new RegExp("href\\s*=\\s*[\"']#(main|content|main-content)[\"']", "i").test(html)
   checks.push({ name: "skip link", passed: skipLink, detail: skipLink ? "a skip-to-content link is present, so keyboard users can bypass repeated navigation" : "no skip link found, so keyboard users tab through the whole nav on every page" })
 
   return summarise(`Accessibility basics for ${r.finalUrl} (HTTP ${r.status})`, checks)
@@ -578,56 +523,3 @@ export interface SeoArgs {
   max_title?: number;
 }
 
-/** Title, description, canonical, Open Graph, hreflang and JSON-LD as actually served. */
-export async function seoMeta(args: SeoArgs): Promise<string> {
-  const r = await fetchChain(args.url, 20000)
-  const html = r.html
-  const minTitle = Math.max(Number(args.min_title ?? 10) || 10, 1)
-  const maxTitle = Math.max(Number(args.max_title ?? 70) || 70, minTitle)
-  const checks: Assertion[] = []
-
-  const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.trim() ?? ""
-  checks.push({
-    name: "title length",
-    passed: title.length >= minTitle && title.length <= maxTitle,
-    detail: title ? `${title.length} char(s) (target ${minTitle}-${maxTitle}): "${title.slice(0, 90)}"${title.length > maxTitle ? " — gets truncated in most result listings" : ""}` : "no <title>, so search listings fall back to scraped text",
-  })
-
-  const desc = metaContent(html, "description", "name")
-  checks.push({
-    name: "meta description",
-    passed: desc.length >= 50,
-    detail: desc ? `${desc.length} char(s): "${desc.slice(0, 140)}"` : "no meta description, so the snippet is assembled by the search engine from page text",
-  })
-
-  const canonical = html.match(/<link[^>]*\brel\s*=\s*["']canonical["'][^>]*>/i)?.[0] ?? ""
-  const canonicalHref = canonical.match(/\bhref\s*=\s*["']([^"']*)["']/i)?.[1] ?? ""
-  checks.push({ name: "canonical", passed: Boolean(canonicalHref), detail: canonicalHref ? canonicalHref : "no rel=canonical, so duplicate URLs can split ranking signals" })
-
-  const og = ["og:title", "og:description", "og:image", "og:url"].map((k) => [k, metaContent(html, k, "property")] as const)
-  const ogPresent = og.filter(([, v]) => v).length
-  checks.push({ name: "open graph", passed: ogPresent >= 3, detail: `${ogPresent}/4 present — ${og.map(([k, v]) => `${k}${v ? "" : " missing"}`).join(", ")}` })
-
-  const twitter = metaContent(html, "twitter:card", "name")
-  checks.push({ name: "twitter card", passed: Boolean(twitter), detail: twitter ? `twitter:card="${twitter}"` : "no twitter:card, so links render as a bare URL on X" })
-
-  const robots = metaContent(html, "robots", "name")
-  const noindex = /\bnoindex\b/i.test(robots)
-  checks.push({
-    name: "robots meta",
-    passed: Boolean(robots) && !noindex,
-    detail: robots ? `robots="${robots}"${noindex ? " — this page asks search engines to drop it" : ""}` : "no robots meta (defaults to index, follow)",
-  })
-
-  const hreflang = (html.match(/<link[^>]*\brel\s*=\s*["']alternate["'][^>]*\bhreflang\b/gi) ?? []).length
-  checks.push({ name: "hreflang", passed: hreflang > 0, detail: hreflang ? `${hreflang} hreflang alternate(s), so the page can rank in more than one language` : "no hreflang alternates" })
-
-  const ld = ldJsonBlocks(html)
-  checks.push({
-    name: "json-ld",
-    passed: ld.total > 0 && ld.valid === ld.total,
-    detail: ld.total ? `${ld.valid}/${ld.total} JSON-LD block(s) parse as valid JSON` : "no application/ld+json, so no rich result is eligible",
-  })
-
-  return summarise(`Search metadata for ${r.finalUrl} (HTTP ${r.status})`, checks)
-}

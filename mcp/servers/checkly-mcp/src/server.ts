@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { assertContent, assertHeaders, assertStatus, brokenLinks, checkRedirects, checkUrl, errorMessage, assertResponseTime, assertJson, assertRedirect, httpSecurityReport, a11yBasics, seoMeta } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { assertContent, assertHeaders, assertStatus, brokenLinks, checkRedirects, checkUrl, errorMessage, assertResponseTime, assertJson, assertRedirect, a11yBasics } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -173,10 +173,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: http_security_report ----
-    const paywallMessage = await premiumRequired("http_security_report")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await httpSecurityReport(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_checkly_http_security_report", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -210,10 +209,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: seo_meta ----
-    const paywallMessage = await premiumRequired("seo_meta")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await seoMeta(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_checkly_seo_meta", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
