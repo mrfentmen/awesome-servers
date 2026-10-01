@@ -39,6 +39,7 @@ HELP = (
     "  - search the archive for old radio dramas\n"
     "  - is there anything about the 1918 flu in the archive?\n"
     "  - how many films about the moon landing exist?\n"
+    "  - premium: profile: find Apollo 11 recordings\n"
     "  - what is in the item Apollo11Audio?\n"
     "  - list the files in the item MisharyRasyidPerJuz\n"
     "Searches come back most-downloaded first and tell you the archive-wide total, not just the\n"
@@ -298,7 +299,7 @@ class ArchiveAgent(AcpAgent):
 
     # -- premium: the shape of a shelf, not a list of it -------------------
 
-    def _profile(self, params: dict) -> tuple[str, str]:
+    def _profile(self, params: dict) -> tuple[str, dict]:
         """How much of a topic the archive holds, and in what shape.
 
         The aggregation happens on the licence gateway. A missing or rejected key is a
@@ -354,7 +355,8 @@ class ArchiveAgent(AcpAgent):
                          f"{shown(row.get('year'))}, {shown(row.get('downloads'), '0')} downloads"
                          + (f"\n      {row['url']}" if row.get("url") else ""))
         summary = (f"premium profile {data.get('query')!r}: {total} match(es), {kinds}")
-        return "\n".join(lines), summary
+        return "\n".join(lines), {"summary": summary, "premium": True,
+                                  "agent": "archive", "skill": "archive-profile", "data": data}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

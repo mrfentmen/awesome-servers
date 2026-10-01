@@ -9,10 +9,12 @@ No network: the payloads are injected, shaped like the live ones read on 2026-09
 from __future__ import annotations
 
 import json
+import os
 import queue
 import sys
 import threading
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 AGENT_DIR = Path(__file__).resolve().parents[1]
@@ -21,7 +23,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, GatewayClient, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
 
 from agent import clean_query, item_from_text, query_from_text, route  # noqa: E402
 from data import (ArchiveData, ArchiveError, human_size, mediatype_from_text,  # noqa: E402
@@ -313,6 +315,69 @@ class TurnTests(unittest.TestCase):
     def test_a_dead_archive(self):
         result, _, _ = self.turn("find Apollo 11 recordings", fail="advancedsearch")
         self.assertIn("I could not read the archive", result["text"])
+
+
+class PremiumProfileTests(unittest.TestCase):
+    payload = {"query": "Apollo 11", "totalMatching": 112, "sampled": 2,
+               "sampledIsWholeShelf": False, "byMediatype": {"audio": 2},
+               "byDecade": {"1960s": 2}, "topCreators": {"NASA": 2},
+               "yearSpan": {"first": 1969, "last": 1969, "datedItems": 2, "undatedItems": 0},
+               "downloadsAcrossSample": 320940,
+               "topItems": [{"title": "Apollo 11", "mediatype": "audio", "year": "1969", "downloads": 295358, "url": "https://archive.org/details/Apollo11Audio"}]}
+
+    def gateway(self, key, result):
+        calls = []
+        def fetch(url, payload, headers):
+            calls.append({"tool": payload["params"]["name"], "arguments": payload["params"]["arguments"],
+                          "authorized": "Authorization" in headers})
+            return result
+        client = GatewayClient(fetch=fetch, url="http://gateway.test", key=key)
+        client.calls = calls
+        return client
+
+    def turn(self, gateway, text="profile: find Apollo 11 recordings"):
+        agent_conn, client_conn = connected_pair()
+        agent = __import__("agent", fromlist=["ArchiveAgent"]).ArchiveAgent(agent_conn, make_data()[0], gateway)
+        threading.Thread(target=agent_conn.serve, daemon=True).start()
+        client = AcpClient(connection=client_conn, permission="allow-once")
+        client.start(); client.initialize(); sid = client.new_session(cwd="/tmp")
+        try: return client.prompt(text, sid), gateway
+        finally: client.stop()
+
+    def test_no_key_attempts_premium_call_without_authorization(self):
+        with patch.dict(os.environ):
+            os.environ.pop("MCP_LICENSE_KEY", None)
+            gateway = self.gateway(None, {})
+            with patch.object(gateway, "call", wraps=gateway.call) as attempted:
+                result, _ = self.turn(gateway)
+                attempted.assert_called_once_with("archive_topic_profile", {"query": "Apollo 11", "mediatype": "audio"})
+        self.assertIn("`archive_topic_profile` is a premium skill and no licence key is set. Put a Polar key in MCP_LICENSE_KEY and ask again.", result["text"])
+        self.assertNotIn("Authorization", gateway.headers())
+        self.assertEqual(gateway.calls, [])
+
+    def test_rejected_key_preserves_gateway_wording(self):
+        wording = "Gateway says revoked: set MCP_LICENSE_KEY to a valid key."
+        refused = {"result": {"isError": True, "content": [{"type": "text", "text": wording}], "structuredContent": {"licenceRefusal": True, "reason": "denied"}}}
+        result, gateway = self.turn(self.gateway("lic_live_but_rejected", refused))
+        self.assertIn(wording, result["text"])
+        self.assertEqual(len(gateway.calls), 1)
+
+    def test_good_key_returns_real_profile_fields(self):
+        gateway = self.gateway("lic_granted", {"result": {"content": [{"type": "text", "text": json.dumps(self.payload)}]}})
+        result, _ = self.turn(gateway)
+        for value in ("112 item(s) match", "2 audio", "2 1960s", "320940", "295358", "1969 to 1969"):
+            self.assertIn(value, result["text"])
+        self.assertEqual(gateway.calls, [{"tool": "archive_topic_profile", "arguments": {"query": "Apollo 11", "mediatype": "audio"}, "authorized": True}])
+        from agent import ArchiveAgent
+        _, artifact = ArchiveAgent(gateway=gateway)._profile({"query": "Apollo 11"})
+        self.assertTrue(artifact["premium"])
+
+    def test_free_question_never_reaches_gateway(self):
+        gateway = self.gateway("lic_granted", {})
+        with patch.object(gateway, "call", side_effect=AssertionError("free question reached gateway")) as attempted:
+            result, _ = self.turn(gateway, "find Apollo 11 recordings")
+            attempted.assert_not_called()
+        self.assertIn("1,626", result["text"])
 
 
 if __name__ == "__main__":
