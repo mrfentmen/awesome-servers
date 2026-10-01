@@ -1,6 +1,6 @@
 {
   "name": "wikisource-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Use this MCP server to searching and reading public-domain texts on Wikisource. Tools include search texts, read text",
   "type": "module",
   "mcpName": "io.github.mrfentmen/wikisource-mcp",
