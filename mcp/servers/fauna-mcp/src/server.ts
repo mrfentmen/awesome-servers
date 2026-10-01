@@ -1,7 +1,7 @@
+import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { FaunaError, listCollections, runQuery, fqlLint, fqlCompare } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { FaunaError, listCollections, runQuery, fqlCompare } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -61,13 +61,12 @@ export function createServer(): McpServer {
       inputSchema: z.object({ fql: z.string().describe("FQL to check, e.g. 'Product.all().where(.price > 10).take(5)'") }),
       annotations: READ_ONLY,
     },
-    async ({ fql }) => {
+    async (args) => {
       // ---- paywall: fql_lint ----
-      const paywallMessage = await premiumRequired("fql_lint")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await fqlLint({ fql }))
+        return text(await premiumTool("mcp_fauna_fql_lint", args))
       } catch (e) {
         return textError(errorMessage(e))
       }
