@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { checkText, formatResult, LanguageToolError, listLanguages, translateText, wordLookup } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { checkText, formatResult, LanguageToolError, listLanguages, usageExamples } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -66,14 +66,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: translate_text ----
-      const paywallMessage = await premiumRequired("translate_text")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await translateText(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_languagetool_translate_text", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -91,15 +86,39 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: word_lookup ----
-      const paywallMessage = await premiumRequired("word_lookup")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await wordLookup(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_languagetool_word_lookup", args)) } catch (e) { return textError(errorMessage(e)) }
     }
+  )
+
+  server.registerTool(
+    "word_pronunciation",
+    {
+      title: "Word pronunciation",
+      description: "English IPA transcriptions and recorded pronunciation links with source and license from Free Dictionary API.",
+      inputSchema: z.object({ word: z.string().min(1).max(80).describe("English word."),  }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: word_pronunciation ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_languagetool_word_pronunciation", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "usage_examples",
+    {
+      title: "Usage examples",
+      description: "Real dictionary example sentences grouped with the part of speech and sense they illustrate.",
+      inputSchema: z.object({ word: z.string().min(1).max(80).describe("English word."), limit: z.number().int().min(1).max(15).optional(), }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await usageExamples(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

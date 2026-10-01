@@ -1,6 +1,6 @@
 {
   "name": "languagetool-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Keyless MCP server for LanguageTool: grammar, spelling and style checking in 30+ languages.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/languagetool-mcp",

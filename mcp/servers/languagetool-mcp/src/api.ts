@@ -88,49 +88,10 @@ export function formatResult(r: CheckResult): string {
 
 // ---- muxB tools:
 
-const MEM_BASE = "https://api.mymemory.translated.net/get"
-const DM_BASE = "https://api.datamuse.com/words"
-
 export interface TranslateTextArgs {
   text: string
   from: string
   to: string
-}
-
-export async function translateText(args: TranslateTextArgs): Promise<string> {
-  const q = (args.text ?? "").trim()
-  if (!q) throw new LanguageToolError("Text is empty.")
-  if (q.length > 500) throw new LanguageToolError("Text too long (max 500 chars for the MyMemory public API).")
-  const from = (args.from ?? "").trim() || "en"
-  const to = (args.to ?? "").trim()
-  if (!to) throw new LanguageToolError("Provide a target language code, e.g. \"de\".")
-  const url = new URL(MEM_BASE)
-  url.searchParams.set("q", q)
-  url.searchParams.set("langpair", `${from}|${to}`)
-  const res = await fetch(url, {
-    headers: { "User-Agent": "languagetool-mcp/1.0", Accept: "application/json" },
-    signal: AbortSignal.timeout(25000),
-  })
-  if (!res.ok) throw new LanguageToolError(`MyMemory error ${res.status}`)
-  const data = (await res.json()) as {
-    responseData?: { translatedText?: string; match?: number }
-    responseStatus?: number
-    responseDetails?: string
-    matches?: Array<{ quality?: string; match?: number; translation?: string }>
-  }
-  if (typeof data.responseStatus === "number" && data.responseStatus >= 400) {
-    throw new LanguageToolError(`MyMemory error ${data.responseStatus}: ${data.responseDetails || "request rejected"}`)
-  }
-  const translated = data.responseData?.translatedText
-  if (!translated) throw new LanguageToolError("MyMemory returned no translation")
-  const lines = [`${from} -> ${to}`, `"${q}"`, `Translation: ${translated}`]
-  if (data.responseData?.match != null) lines.push(`Match quality: ${data.responseData.match}`)
-  const alts = (data.matches ?? []).filter((m) => m.translation).slice(0, 3)
-  if (alts.length) {
-    lines.push("Other matched translations:")
-    alts.forEach((m, i) => lines.push(`${i + 1}. quality ${m.quality ?? "not reported"}, match ${m.match ?? "not reported"}`))
-  }
-  return lines.join("\n")
 }
 
 export interface WordLookupArgs {
@@ -139,34 +100,33 @@ export interface WordLookupArgs {
   limit?: number
 }
 
-export async function wordLookup(args: WordLookupArgs): Promise<string> {
-  const word = (args.word ?? "").trim().toLowerCase()
-  if (!word) throw new LanguageToolError("Provide a word to look up.")
-  const limit = Math.max(1, Math.min(args.limit ?? 8, 25))
-  const param = { spelling: "sp", match: "ml", rhyme: "rel_rhy", define: "def" }[args.relation]
-  const url = new URL(DM_BASE)
-  url.searchParams.set(param, word)
-  url.searchParams.set("max", String(limit))
-  const res = await fetch(url, {
-    headers: { "User-Agent": "languagetool-mcp/1.0", Accept: "application/json" },
+// ---- gap4c1 tools:
+
+interface DictionaryEntry {
+  word?: string;
+  phonetics?: Array<{ text?: string; audio?: string; sourceUrl?: string; license?: { name?: string } }>;
+  meanings?: Array<{ partOfSpeech?: string; definitions?: Array<{ definition?: string; example?: string }> }>;
+}
+
+async function dictionaryEntries(word: string): Promise<DictionaryEntry[]> {
+  const clean = word.trim();
+  if (!clean || clean.length > 80) throw new LanguageToolError('Provide an English word of 1–80 characters.');
+  const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(clean)}`, {
+    headers: { 'User-Agent': 'mrfentmen-languagetool-mcp/1.0', Accept: 'application/json' },
     signal: AbortSignal.timeout(20000),
-  })
-  if (!res.ok) throw new LanguageToolError(`Datamuse error ${res.status}`)
-  const rows = (await res.json()) as Array<{ word?: string; score?: number; tags?: string[]; defs?: string[] }>
-  if (!Array.isArray(rows) || !rows.length) return `No ${args.relation} result for "${word}".`
-  const head = {
-    spelling: `Words that look like "${word}":`,
-    match: `Words matching "${word}":`,
-    rhyme: `Words rhyming with "${word}":`,
-    define: `Definitions of "${word}":`,
-  }[args.relation]
-  const lines = [`${head} (${rows.length} shown)`]
-  rows.slice(0, limit).forEach((r, i) => {
-    const bits = [`${i + 1}. ${r.word ?? "not reported"}`]
-    if (r.score != null) bits.push(`score ${r.score}`)
-    if (r.tags?.length) bits.push(`tags ${r.tags.slice(0, 5).join(", ")}`)
-    if (r.defs?.length) bits.push(`definition ${String(r.defs[0]).slice(0, 160)}`)
-    lines.push(bits.join(" | "))
-  })
-  return lines.join("\n")
+  });
+  if (!res.ok) throw new LanguageToolError(`Dictionary API returned ${res.status}`);
+  return await res.json() as DictionaryEntry[];
+}
+
+export async function usageExamples(args: { word: string; limit?: number }): Promise<string> {
+  const limit = Math.max(1, Math.min(Math.round(args.limit ?? 5), 15));
+  const entries = await dictionaryEntries(args.word);
+  const rows = entries.flatMap(e => (e.meanings ?? []).flatMap(m => (m.definitions ?? [])
+    .filter(d => typeof d.example === 'string' && d.example.trim())
+    .map(d => ({ example: d.example!, sense: d.definition, pos: m.partOfSpeech })))).slice(0, limit);
+  if (!rows.length) return `Usage examples not reported for ${args.word}.`;
+  return `Dictionary usage examples for ${args.word}:\n` + rows.map((r, i) =>
+    `${i + 1}. ${r.example.slice(0, 400)}\n   ${r.pos ?? 'part of speech not reported'}: ${(r.sense ?? 'sense not reported').slice(0, 250)}`
+  ).join('\n');
 }
