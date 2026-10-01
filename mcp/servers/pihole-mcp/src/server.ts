@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { blockingStatus, PiholeError, setBlocking, summaryStats, communitySearch, blocklistAudit, ruleMatchTest } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { blockingStatus, PiholeError, setBlocking, summaryStats, communitySearch } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -81,10 +81,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: blocklist_audit ----
-    const paywallMessage = await premiumRequired("blocklist_audit")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await blocklistAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_pihole_blocklist_audit", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -101,10 +100,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: rule_match_test ----
-    const paywallMessage = await premiumRequired("rule_match_test")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await ruleMatchTest(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_pihole_rule_match_test", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
