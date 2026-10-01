@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, listStores, listProducts, getProduct, feeBreakdown, payoutSchedule } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, listStores, listProducts, getProduct } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -79,10 +79,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: fee_breakdown ----
-      const paywallMessage = await premiumRequired("fee_breakdown")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await feeBreakdown(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_lemonsqueezy_fee_breakdown", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -96,10 +95,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: payout_schedule ----
-      const paywallMessage = await premiumRequired("payout_schedule")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await payoutSchedule(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_lemonsqueezy_payout_schedule", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
