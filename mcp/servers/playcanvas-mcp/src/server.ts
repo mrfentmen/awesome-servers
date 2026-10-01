@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, listProjectAssets, getAsset, getRateLimits, engineReleaseChannels, engineReleaseNotes } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, listProjectAssets, getAsset, getRateLimits } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -85,10 +85,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: engine_release_channels ----
-    const paywallMessage = await premiumRequired("engine_release_channels")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await engineReleaseChannels({ includePrerelease: args.include_prerelease })) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_playcanvas_engine_release_channels", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -106,10 +105,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: engine_release_notes ----
-    const paywallMessage = await premiumRequired("engine_release_notes")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await engineReleaseNotes(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_playcanvas_engine_release_notes", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
