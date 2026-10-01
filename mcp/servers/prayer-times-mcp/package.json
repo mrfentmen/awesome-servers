@@ -1,0 +1,44 @@
+{
+  "version": "1.0.1",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/prayer-times-mcp.git"
+  },
+  "bin": {
+    "prayer-times-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "name": "prayer-times-mcp",
+  "description": "Islamic prayer times for a city from AlAdhan. No key required.",
+  "mcpName": "io.github.mrfentmen/prayer-times-mcp",
+  "keywords": [
+    "mcp",
+    "prayer",
+    "islam",
+    "times",
+    "calendar"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

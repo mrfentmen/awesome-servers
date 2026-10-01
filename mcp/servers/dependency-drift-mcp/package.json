@@ -1,0 +1,45 @@
+{
+  "name": "dependency-drift-mcp",
+  "version": "1.0.2",
+  "description": "Read-only local dependency manifest and lockfile drift summaries without package names or file contents",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/dependency-drift-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/dependency-drift-mcp.git"
+  },
+  "bin": {
+    "dependency-drift-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js",
+    "test": "npm run build && node test-drift.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "dependencies",
+    "lockfile",
+    "reproducibility",
+    "local-first"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

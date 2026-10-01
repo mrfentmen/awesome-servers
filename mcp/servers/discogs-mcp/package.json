@@ -1,0 +1,44 @@
+{
+  "version": "1.0.2",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/discogs-mcp.git"
+  },
+  "bin": {
+    "discogs-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "name": "@mrfentmen/discogs-mcp",
+  "description": "Music releases from Discogs. No key required.",
+  "mcpName": "io.github.mrfentmen/discogs-mcp",
+  "keywords": [
+    "mcp",
+    "discogs",
+    "music",
+    "records",
+    "vinyl"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

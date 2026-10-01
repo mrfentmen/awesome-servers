@@ -1,0 +1,44 @@
+{
+  "version": "1.0.1",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/mac-lookup-mcp.git"
+  },
+  "bin": {
+    "mac-lookup-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "name": "mac-lookup-mcp",
+  "description": "Look up the vendor of a MAC address from the MAC Vendors database. No key required.",
+  "mcpName": "io.github.mrfentmen/mac-lookup-mcp",
+  "keywords": [
+    "mcp",
+    "mac",
+    "network",
+    "hardware",
+    "vendor"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

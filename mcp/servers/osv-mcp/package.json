@@ -1,0 +1,43 @@
+{
+  "name": "osv-mcp",
+  "version": "1.0.1",
+  "description": "Use this MCP server to OSV open source vulnerability data and package security checks. Tools include check package, scan packages, get vulnerability",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/osv-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/osv-mcp.git"
+  },
+  "bin": {
+    "osv-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "security",
+    "osv",
+    "vulnerability"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

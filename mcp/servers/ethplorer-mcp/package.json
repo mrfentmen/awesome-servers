@@ -1,0 +1,45 @@
+{
+  "version": "1.0.4",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
+  },
+  "bin": {
+    "ethplorer-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "name": "ethplorer-mcp",
+  "description": "Ethereum token explorer: token info, address holdings, transaction history. No key required for low volume.",
+  "keywords": [
+    "mcp",
+    "ethplorer",
+    "ethereum",
+    "token",
+    "erc20",
+    "wallet"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "mcpName": "io.github.mrfentmen/ethplorer-mcp"
+}

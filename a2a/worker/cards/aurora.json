@@ -1,0 +1,113 @@
+{
+  "protocolVersion": "0.3.0",
+  "name": "Aurora Space Weather Agent",
+  "description": "Read-only agent over NOAA's Space Weather Prediction Center: current geomagnetic conditions and the 24-hour peak, NOAA's predicted planetary Kp for the next days, the OVATION model's aurora probability at a place or latitude/longitude point, recent SWPC watches and warnings parsed into fields, and a watch skill that POSTs to your webhook when geomagnetic activity shifts. Every number is read live from swpc.noaa.gov, and the answers say which product it came from. This hosted endpoint answers aurora-now, aurora-forecast, aurora-visibility; the local server additionally implements aurora-messages, aurora-watch.",
+  "url": "https://mrfentmen-a2a.contactae2000.workers.dev/agents/aurora/",
+  "preferredTransport": "JSONRPC",
+  "additionalInterfaces": [
+    {
+      "url": "https://mrfentmen-a2a.contactae2000.workers.dev/agents/aurora/",
+      "transport": "JSONRPC"
+    }
+  ],
+  "version": "1.0.0",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/plain"
+  ],
+  "provider": {
+    "organization": "mrfentmen",
+    "url": "https://github.com/mrfentmen/a2a"
+  },
+  "skills": [
+    {
+      "id": "aurora-now",
+      "name": "Current space weather",
+      "description": "Geomagnetic conditions right now: NOAA's estimated planetary Kp, the plain-language activity band, the peak of the last 24 hours, and the newest SWPC message headline.",
+      "tags": [
+        "space-weather",
+        "aurora",
+        "kp-index",
+        "geomagnetic",
+        "noaa"
+      ],
+      "examples": [
+        "How are the geomagnetic conditions right now?",
+        "{\"skill\": \"aurora-now\"}"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/plain"
+      ]
+    },
+    {
+      "id": "aurora-forecast",
+      "name": "Kp forecast",
+      "description": "NOAA's 3-hourly predicted planetary Kp for the next days, grouped by UTC day with the days own peak, the storm grade that peak would reach, and any storm watch in force.",
+      "tags": [
+        "space-weather",
+        "aurora",
+        "forecast",
+        "kp-index",
+        "storm"
+      ],
+      "examples": [
+        "What is the aurora forecast for the next 3 days?",
+        "{\"skill\": \"aurora-forecast\", \"days\": 3}"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/plain"
+      ]
+    },
+    {
+      "id": "aurora-visibility",
+      "name": "Aurora probability at a place",
+      "description": "NOAA's OVATION model gives the probability of aurora overhead at a latitude/longitude, or at a named city from this server's built-in list. Reports the model run time and the best probability within a couple of degrees of the point.",
+      "tags": [
+        "aurora",
+        "visibility",
+        "ovation",
+        "probability",
+        "latitude"
+      ],
+      "examples": [
+        "What are the odds of seeing the aurora in Fairbanks tonight?",
+        "{\"skill\": \"aurora-visibility\", \"point\": \"64.84,-147.72\"}"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/plain"
+      ]
+    }
+  ],
+  "metadata": {
+    "registryIdentityProvider": "github",
+    "registryIdentity": "mrfentmen",
+    "registryPackageName": "github.mrfentmen.aurora",
+    "sourceRepository": "https://github.com/mrfentmen/a2a",
+    "localServer": "servers/aurora/server.py",
+    "hostedBy": "cloudflare-worker",
+    "note": "The local Python server implements every skill on its own card, including watch loops and push notifications. This hosted card lists only the skills the hosted endpoint answers."
+  }
+}

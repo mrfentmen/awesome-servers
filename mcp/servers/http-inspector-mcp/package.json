@@ -1,0 +1,44 @@
+{
+  "version": "1.0.1",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/http-inspector-mcp.git"
+  },
+  "bin": {
+    "http-inspector-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "name": "http-inspector-mcp",
+  "description": "Fetch a URL and report its status, headers, and size. Runs locally.",
+  "mcpName": "io.github.mrfentmen/http-inspector-mcp",
+  "keywords": [
+    "mcp",
+    "http",
+    "headers",
+    "status",
+    "inspect"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

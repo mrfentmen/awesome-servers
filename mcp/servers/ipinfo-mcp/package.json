@@ -1,0 +1,44 @@
+{
+  "version": "1.0.1",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/ipinfo-mcp.git"
+  },
+  "bin": {
+    "ipinfo-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "name": "ipinfo-mcp",
+  "description": "IPinfo.io IP address details: geolocation, ASN, org, carrier.",
+  "keywords": [
+    "mcp",
+    "ipinfo",
+    "ip",
+    "geolocation",
+    "asn"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "mcpName": "io.github.mrfentmen/ipinfo-mcp"
+}

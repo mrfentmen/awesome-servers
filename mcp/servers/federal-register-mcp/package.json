@@ -1,0 +1,42 @@
+{
+  "name": "@mrfentmen/federal-register-mcp",
+  "version": "1.0.2",
+  "description": "Use this MCP server to Federal Register documents, rules, notices, and agencies. Tools include search documents, get document, list agencies",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/federal-register-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/federal-register-mcp.git"
+  },
+  "bin": {
+    "federal-register-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "public-data",
+    "federal-register"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "name": "migration-map-mcp",
+  "version": "1.0.1",
+  "description": "Find local migration numbering gaps and rollback pairing signals without returning SQL, paths, or migration names.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/migration-map-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/migration-map-mcp.git"
+  },
+  "bin": {
+    "migration-map-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "npm run build && node test.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "local-first",
+    "read-only"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

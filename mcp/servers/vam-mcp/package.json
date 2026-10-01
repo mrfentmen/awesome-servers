@@ -1,0 +1,44 @@
+{
+  "version": "1.0.3",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/vam-mcp.git"
+  },
+  "bin": {
+    "vam-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "name": "vam-mcp",
+  "description": "Victoria and Albert Museum collection search. No key required.",
+  "mcpName": "io.github.mrfentmen/vam-mcp",
+  "keywords": [
+    "mcp",
+    "vam",
+    "victoria-albert",
+    "museum",
+    "art"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

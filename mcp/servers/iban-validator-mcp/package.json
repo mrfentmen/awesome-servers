@@ -1,0 +1,47 @@
+{
+  "version": "1.0.1",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/iban-validator-mcp.git"
+  },
+  "bin": {
+    "iban-validator-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "iban": "^0.0.14",
+    "jose": "^5.9.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/iban": "^0.0.35",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "name": "iban-validator-mcp",
+  "description": "Validate and format IBAN bank account numbers locally. No network and no key.",
+  "mcpName": "io.github.mrfentmen/iban-validator-mcp",
+  "keywords": [
+    "mcp",
+    "iban",
+    "bank",
+    "finance",
+    "validator"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

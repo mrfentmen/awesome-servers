@@ -1,0 +1,90 @@
+{
+  "protocolVersion": "0.3.0",
+  "name": "Air Quality Agent",
+  "description": "Read-only agent over Open-Meteo's keyless air-quality model: current US AQI with its EPA band and what it means, PM2.5, PM10, ozone, nitrogen and sulphur dioxide, carbon monoxide, UV and pollen at any point or known city; an hourly AQI outlook up to 72 hours; one-request comparisons across cities; and a watch that POSTs to your webhook when the AQI band changes or a threshold is crossed. Every answer says which model grid it came from. This hosted endpoint answers air-now, air-forecast; the local server additionally implements air-ranking, air-watch.",
+  "url": "https://mrfentmen-a2a.contactae2000.workers.dev/agents/air/",
+  "preferredTransport": "JSONRPC",
+  "additionalInterfaces": [
+    {
+      "url": "https://mrfentmen-a2a.contactae2000.workers.dev/agents/air/",
+      "transport": "JSONRPC"
+    }
+  ],
+  "version": "1.0.0",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/plain"
+  ],
+  "provider": {
+    "organization": "mrfentmen",
+    "url": "https://github.com/mrfentmen/a2a"
+  },
+  "skills": [
+    {
+      "id": "air-now",
+      "name": "Air quality right now",
+      "description": "Current air quality at a latitude/longitude point or a known place: US AQI with its EPA band and what that band means, PM2.5, PM10, ozone, nitrogen and sulphur dioxide, carbon monoxide, UV index, and pollen where the model publishes it.",
+      "tags": [
+        "air",
+        "air quality",
+        "aqi",
+        "pm2.5",
+        "smoke",
+        "pollen"
+      ],
+      "examples": [
+        "How bad is the air in Delhi right now?",
+        "{\"skill\": \"air-now\", \"point\": \"39.74,-104.99\"}"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/plain"
+      ]
+    },
+    {
+      "id": "air-forecast",
+      "name": "Air quality forecast",
+      "description": "Hourly US AQI and PM2.5 from the current hour forward for up to 72 hours, with the peak hour in the window and the cleanest hour. Model output, read live.",
+      "tags": [
+        "air",
+        "air quality",
+        "aqi",
+        "forecast",
+        "outlook"
+      ],
+      "examples": [
+        "What will the air quality be like in Denver for the next 48 hours?",
+        "{\"skill\": \"air-forecast\", \"place\": \"Los Angeles\", \"hours\": 48}"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/plain"
+      ]
+    }
+  ],
+  "metadata": {
+    "registryIdentityProvider": "github",
+    "registryIdentity": "mrfentmen",
+    "registryPackageName": "github.mrfentmen.air",
+    "sourceRepository": "https://github.com/mrfentmen/a2a",
+    "localServer": "servers/air/server.py",
+    "hostedBy": "cloudflare-worker",
+    "note": "The local Python server implements every skill on its own card, including watch loops and push notifications. This hosted card lists only the skills the hosted endpoint answers."
+  }
+}

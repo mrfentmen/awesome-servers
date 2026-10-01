@@ -1,0 +1,43 @@
+{
+  "name": "codepet-mcp",
+  "version": "1.0.2",
+  "description": "Local MCP companion for CodePet status, quests, and source-free coding events. Tools include get pet status, record coding event, list quests",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/codepet-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/codepet-mcp.git"
+  },
+  "bin": {
+    "codepet-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "codepet",
+    "developer-tools",
+    "local"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

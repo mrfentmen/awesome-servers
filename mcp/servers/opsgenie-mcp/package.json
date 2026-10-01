@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/opsgenie-mcp",
+  "version": "1.0.1",
+  "description": "Query the Opsgenie API (free tier key; set OPSGENIE_API_KEY, sent as GenieKey): alerts, alert details, on-calls.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/opsgenie-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
+  },
+  "bin": {
+    "opsgenie-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "opsgenie",
+    "alerts",
+    "oncall",
+    "incidents"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

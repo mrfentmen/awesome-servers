@@ -1,0 +1,44 @@
+# Jellyfin MCP
+
+MCP server for Jellyfin: server info, users, libraries. Works with any self-hosted instance.
+
+## Setup
+
+```bash
+export JELLYFIN_URL=http://localhost:8096
+export JELLYFIN_API_KEY=your_key_here  # Dashboard > API Keys (only for users/libraries)
+npm install
+npm run build
+node dist/index.js
+```
+
+The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code, MCP Inspector, or another compatible MCP client.
+
+## Tools at a glance
+
+- `server_info`: Public name and version (no key).
+- `list_users`: Users, admins, activity (needs key).
+- `list_libraries`: Media libraries and types (needs key).
+
+## Limits and privacy
+
+This project is intentionally narrow. It should be treated as a practical helper, not a complete certification or security audit. Check the implementation and the returned data before using it with sensitive material. Credentials stay local and go only to your server.
+
+<!-- paywall -->
+## Premium tools
+
+These tools need a license key:
+
+* `audit_users`
+* `access_audit`
+
+Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-jellyfin-mcp and set it in your MCP client config:
+
+```json
+"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
+```
+
+The key is checked against MCP Marketplace, cached for 24 hours, and keeps
+working offline once one check has succeeded. Every other tool on this server
+stays free.
+<!-- /paywall -->

@@ -1,0 +1,40 @@
+# infisical-mcp
+
+Infisical API: list, read, create, update and delete secrets via universal auth.
+
+## Setup
+
+```bash
+export INFISICAL_CLIENT_ID=...
+```
+
+Needs an Infisical machine identity (client id + secret). Optional INFISICAL_SITE_URL for self-hosted instances.
+
+## Tools
+
+- `list_secrets` — Secrets in an Infisical project environment and path.
+- `get_secret` — Single Infisical secret value by key.
+- `create_secret` — Create an Infisical secret. Fails if the key already exists (use update).
+- `update_secret` — Change an existing Infisical secret value.
+- `delete_secret` — Delete an Infisical secret by key.
+
+Part of [awesome-mcps](https://github.com/mrfentmen/awesome-mcps).
+
+<!-- paywall -->
+## Premium tools
+
+These tools need a license key:
+
+* `secret_entropy_audit`
+* `secret_set_diff`
+
+Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-infisical-mcp and set it in your MCP client config:
+
+```json
+"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
+```
+
+The key is checked against MCP Marketplace, cached for 24 hours, and keeps
+working offline once one check has succeeded. Every other tool on this server
+stays free.
+<!-- /paywall -->

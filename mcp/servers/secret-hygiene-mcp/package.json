@@ -1,0 +1,42 @@
+{
+  "name": "secret-hygiene-mcp",
+  "version": "1.0.1",
+  "description": "Count secret-like patterns in bounded local files without returning values, keys, paths, filenames, or matches.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/secret-hygiene-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/secret-hygiene-mcp.git"
+  },
+  "bin": {
+    "secret-hygiene-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "npm run build && node test.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "local-first",
+    "read-only"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

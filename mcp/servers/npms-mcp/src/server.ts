@@ -1,0 +1,97 @@
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
+import { z } from "zod"
+
+import { formatScored, getPackage, NpmsError, searchPackages } from "./api.js"
+import { premiumTool } from "./gateway.js"
+const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
+
+const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
+
+export function createServer(): McpServer {
+  const server = new McpServer({
+    name: "npms-mcp",
+    version: "1.0.0",
+  })
+
+  server.registerTool(
+    "search_packages",
+    {
+      title: "Search scored packages",
+      description: "Search npm packages with quality, popularity and maintenance scores. Use before adding a dependency.",
+      inputSchema: z.object({
+        query: z.string().describe("Search text, e.g. 'markdown parser'"),
+        limit: z.number().int().min(1).max(25).default(5),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, limit }) => {
+      try {
+        const results = await searchPackages(query, limit)
+        if (results.length === 0) return text(`No packages match "${query}".`)
+        return text(`Scored packages for "${query}":\n\n${results.map((p, i) => formatScored(p, i)).join("\n\n")}`)
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "get_package",
+    {
+      title: "Get package score",
+      description: "Quality, popularity and maintenance scores for one npm package.",
+      inputSchema: z.object({
+        name: z.string().describe("Package name, e.g. 'express'"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ name }) => {
+      try {
+        return text(formatScored(await getPackage(name)))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "package_downloads",
+    {
+      title: "Package downloads",
+      description: "The download windows npms.io tracked for an npm package: last day, week, month, quarter, half year and year.",
+      inputSchema: z.object( { name: z.string().describe("Package name, e.g. 'express'.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: package_downloads ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_npms_package_downloads", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "package_health",
+    {
+      title: "Package health",
+      description: "Maintenance signals for an npm package: GitHub stars and forks, open issue count and arrival rate, test coverage, linters and outdated dependencies.",
+      inputSchema: z.object( { name: z.string().describe("Package name, e.g. 'express'.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: package_health ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_npms_package_health", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  return server
+}
+
+function errorMessage(e: unknown): string {
+  if (e instanceof NpmsError) return `Error: ${e.message}`
+  if (e instanceof Error) return `Error: ${e.message}`
+  return `Error: ${String(e)}`
+}

@@ -1,0 +1,303 @@
+const BASE = 'https://api.lever.co/v0/postings';
+const UA = 'mrfentmen-lever-mcp/1.0';
+
+export interface PostingsArgs {
+  company: string;
+  limit?: number;
+}
+
+export interface PostingArgs {
+  company: string;
+  posting_id: string;
+}
+
+export interface SearchPostingsArgs {
+  company: string;
+  query: string;
+  limit?: number;
+}
+
+export interface CompanyArgs {
+  company: string;
+}
+
+interface LeverPosting {
+  id?: string;
+  text?: string;
+  hostedUrl?: string;
+  applyUrl?: string;
+  createdAt?: number;
+  workplaceType?: string;
+  descriptionPlain?: string;
+  openingPlain?: string;
+  additionalPlain?: string;
+  categories?: { commitment?: string; location?: string; team?: string; department?: string; allLocations?: string[] };
+}
+
+export class LeverError extends Error {}
+
+const clamp = (value: number | undefined, fallback: number, max: number) =>
+  Math.min(Math.max(Number(value ?? fallback) || fallback, 1), max);
+
+const companySlug = (company?: string) => {
+  const value = String(company ?? '').trim();
+  if (!value) throw new LeverError('Provide a company slug.');
+  return encodeURIComponent(value);
+};
+
+async function fetchPostings(company: string): Promise<LeverPosting[]> {
+  const slug = companySlug(company);
+  const res = await fetch(`${BASE}/${slug}?mode=json`, {
+    headers: { 'User-Agent': UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(20000),
+  });
+  // Lever answers unknown boards with 404/"Document not found", which is a
+  // wrong-slug problem, not a transient failure.
+  if (res.status === 404) {
+    throw new LeverError(`No Lever board named "${company}". Check the slug (Lever boards live at jobs.lever.co/<slug>).`);
+  }
+  if (!res.ok) throw new LeverError(`Lever returned ${res.status} for board "${company}".`);
+  const d = (await res.json()) as LeverPosting[];
+  return Array.isArray(d) ? d : [];
+}
+
+const posted = (epoch?: number) => {
+  if (!epoch) return '?';
+  const date = new Date(epoch);
+  return Number.isNaN(date.getTime()) ? '?' : date.toISOString().slice(0, 10);
+};
+
+const brief = (posting: LeverPosting, index: number) => {
+  const cat = posting.categories ?? {};
+  return `${index + 1}. ${posting.text ?? '?'} [${cat.commitment ?? '?'}] ${cat.location ?? '?'}` +
+    `${cat.team ? ` | team ${cat.team}` : ''}${posting.workplaceType ? ` | ${posting.workplaceType}` : ''}` +
+    `${posting.hostedUrl ? `\n   ${posting.hostedUrl}` : ''}`;
+};
+
+export async function postings(args: PostingsArgs): Promise<string> {
+  const limit = clamp(args?.limit, 15, 30);
+  const d = await fetchPostings(args.company);
+  if (!d.length) return `No postings for "${args.company}".`;
+  return `Lever postings for "${args.company}" (${d.length}):\n` + d.slice(0, limit).map(brief).join('\n');
+}
+
+export async function posting(args: PostingArgs): Promise<string> {
+  const id = String(args?.posting_id ?? '').trim();
+  if (!id) throw new Error('posting_id is required.');
+  const res = await fetch(`${BASE}/${companySlug(args.company)}/${encodeURIComponent(id)}?mode=json`, {
+    headers: { 'User-Agent': UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error(`Lever returned ${res.status}`);
+  const found = (await res.json()) as LeverPosting;
+  const cat = found.categories ?? {};
+  return `${found.text ?? '?'} at ${args.company}\n` +
+    `Commitment: ${cat.commitment ?? '?'} | Location: ${cat.location ?? '?'} | Team: ${cat.team ?? '?'}\n` +
+    `Workplace: ${found.workplaceType ?? '?'} | Posted: ${posted(found.createdAt)}\n` +
+    `Apply: ${found.applyUrl ?? found.hostedUrl ?? '?'}\n\n` +
+    String(found.descriptionPlain ?? '').replace(/\s+/g, ' ').trim().slice(0, 4000);
+}
+
+export async function searchPostings(args: SearchPostingsArgs): Promise<string> {
+  const query = String(args?.query ?? '').trim().toLowerCase();
+  if (!query) throw new Error('query is required.');
+  const limit = clamp(args?.limit, 15, 30);
+  const list = await fetchPostings(args.company);
+  const hits = list.filter((entry) => {
+    const cat = entry.categories ?? {};
+    return `${entry.text ?? ''} ${cat.team ?? ''} ${cat.department ?? ''} ${cat.location ?? ''} ${cat.commitment ?? ''}`
+      .toLowerCase()
+      .includes(query);
+  });
+  if (!hits.length) return `No postings for "${args.company}" match "${args.query}" (searched ${list.length}).`;
+  return `Lever postings at "${args.company}" matching "${args.query}" (${hits.length} of ${list.length}):\n` +
+    hits.slice(0, limit).map(brief).join('\n');
+}
+
+/** Newest postings first — Lever returns boards in an arbitrary order. */
+export async function recentPostings(args: PostingsArgs): Promise<string> {
+  const limit = clamp(args?.limit, 15, 30);
+  const list = await fetchPostings(args.company);
+  if (!list.length) return `No postings for "${args.company}".`;
+  const sorted = [...list].sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+  return (
+    `Newest Lever postings at "${args.company}" (${sorted.length} open, showing ${Math.min(limit, sorted.length)}):\n` +
+    sorted.slice(0, limit).map((p, i) => `${brief(p, i)}\n   posted ${posted(p.createdAt)}`).join('\n')
+  );
+}
+
+/** Postings grouped by department, the field separate from team. */
+export async function departments(args: CompanyArgs): Promise<string> {
+  const list = await fetchPostings(args.company);
+  if (!list.length) return `No postings for "${args.company}".`;
+  const counts = new Map<string, number>();
+  for (const entry of list) {
+    const key = entry.categories?.department ?? 'unassigned';
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  return (
+    `Lever departments at "${args.company}" (${ranked.length} hiring, ${list.length} postings):\n` +
+    ranked.map(([dept, count], i) => `${i + 1}. ${dept} - ${count} posting(s)`).join('\n')
+  );
+}
+
+export async function teams(args: CompanyArgs): Promise<string> {
+  const list = await fetchPostings(args.company);
+  if (!list.length) return `No postings for "${args.company}".`;
+  const counts = new Map<string, number>();
+  for (const entry of list) {
+    const team = entry.categories?.team ?? entry.categories?.department ?? 'unassigned';
+    counts.set(team, (counts.get(team) ?? 0) + 1);
+  }
+  const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  return `Lever teams at "${args.company}" (${ranked.length} hiring, ${list.length} postings):\n` +
+    ranked.map(([team, count], i) => `${i + 1}. ${team} - ${count} posting(s)`).join('\n');
+}
+
+export async function locations(args: CompanyArgs): Promise<string> {
+  const list = await fetchPostings(args.company);
+  if (!list.length) return `No postings for "${args.company}".`;
+  const counts = new Map<string, number>();
+  for (const entry of list) {
+    const place = entry.categories?.location ?? 'unlisted';
+    counts.set(place, (counts.get(place) ?? 0) + 1);
+  }
+  const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  return `Lever locations at "${args.company}" (${ranked.length} places, ${list.length} postings):\n` +
+    ranked.map(([place, count], i) => `${i + 1}. ${place} - ${count} posting(s)`).join('\n');
+}
+// ---- batch-4 tools: server-side grouping and recency filter (2026-09-27) ----
+const GROUP_FIELDS: Record<string, string> = {
+  team: "team",
+  department: "department",
+  location: "location",
+  commitment: "commitment",
+}
+
+/** Lever groups the board server-side with ?group=; this reads that structure. */
+export async function groupedPostings(args: { company: string; group_by?: string; samples?: number }): Promise<string> {
+  const wanted = String(args?.group_by ?? "team").trim().toLowerCase()
+  const field = GROUP_FIELDS[wanted]
+  if (!field) throw new LeverError(`Group by one of: ${Object.keys(GROUP_FIELDS).join(", ")}.`)
+  const samples = Math.min(Math.max(Math.round(Number(args?.samples ?? 3)) || 3, 1), 10)
+  const res = await fetch(`${BASE}/${companySlug(args.company)}?mode=json&group=${field}`, {
+    headers: { "User-Agent": UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (res.status === 404) {
+    throw new LeverError(`No Lever board named "${args.company}". Check the slug (Lever boards live at jobs.lever.co/<slug>).`)
+  }
+  if (!res.ok) throw new LeverError(`Lever returned ${res.status} for board "${args.company}".`)
+  const data = (await res.json()) as unknown
+  if (!Array.isArray(data)) {
+    throw new LeverError(`Lever did not group this board by ${field} - the board may be empty.`)
+  }
+  const groups = data
+    .map((row: any) => ({
+      title: String(row?.title ?? "unassigned"),
+      postings: Array.isArray(row?.postings) ? row.postings : [],
+    }))
+    .sort((a, b) => b.postings.length - a.postings.length)
+  const total = groups.reduce((sum, g) => sum + g.postings.length, 0)
+  if (!total) return `No postings for "${args.company}".`
+  const lines = groups.map((g, i) => {
+    const head = `${i + 1}. ${g.title} - ${g.postings.length} posting(s)`
+    const picks = g.postings.slice(0, samples).map((p: any) => {
+      const cat = p?.categories ?? {}
+      return `   · ${p?.text ?? "?"}${cat.location ? ` | ${cat.location}` : ""}${p?.workplaceType ? ` | ${p.workplaceType}` : ""}`
+    })
+    return [head, ...picks].join("\n")
+  })
+  return [
+    `Lever postings at "${args.company}" grouped by ${field} (${groups.length} group(s), ${total} postings):`,
+    "",
+    lines.join("\n"),
+    "",
+    `Grouped server-side by Lever; showing up to ${samples} posting(s) per group.`,
+  ].join("\n")
+}
+
+/** Postings that appeared on the board on or after a date - the "what is new" question. */
+export async function newestSince(args: { company: string; since: string; limit?: number }): Promise<string> {
+  const raw = String(args?.since ?? "").trim()
+  const cutoff = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? Date.parse(`${raw}T00:00:00Z`) : Date.parse(raw)
+  if (!Number.isFinite(cutoff)) {
+    throw new LeverError(`Could not read "${args?.since}" as a date - use YYYY-MM-DD, for example 2026-09-01.`)
+  }
+  const limit = clamp(args?.limit, 20, 40)
+  const list = await fetchPostings(args.company)
+  if (!list.length) return `No postings for "${args.company}".`
+  const fresh = list
+    .filter((p) => (p.createdAt ?? 0) >= cutoff)
+    .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
+  const oldest = list.reduce((min, p) => Math.min(min, p.createdAt ?? min), Number.POSITIVE_INFINITY)
+  const share = ((fresh.length / list.length) * 100).toFixed(1)
+  const head = [
+    `Lever postings at "${args.company}" created on or after ${raw}:`,
+    `${fresh.length} of ${list.length} open posting(s) (${share}% of the board)`,
+    Number.isFinite(oldest) ? `Oldest posting still open: ${posted(oldest)}` : "",
+  ].filter(Boolean)
+  if (!fresh.length) {
+    return [...head, "", `Nothing new since ${raw}. The board has not changed in that window.`].join("\n")
+  }
+  return [
+    ...head,
+    "",
+    fresh.slice(0, limit).map((p, i) => `${brief(p, i)}\n   posted ${posted(p.createdAt)}`).join("\n"),
+  ].join("\n")
+}
+
+// ---- muxG tools:
+interface LeverCell {
+  team: string;
+  commitment: string;
+  location: string;
+  level: string;
+  ageDays: number;
+  createdAt: string;
+  title: string;
+  workplaceType: string;
+}
+
+async function leverPostings(company: string): Promise<LeverPosting[]> {
+  const slug = companySlug(company);
+  const res = await fetch(`${BASE}/${slug}?mode=json`, {
+    headers: { 'User-Agent': UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!res.ok) throw new LeverError(`The Lever API returned ${res.status} for company "${company}".`);
+  const text = await res.text();
+  if (!text.trim()) throw new LeverError('The Lever API returned an empty body.');
+  const data = JSON.parse(text) as LeverPosting[];
+  if (!Array.isArray(data)) throw new LeverError('The Lever API did not return a posting list.');
+  return data;
+}
+
+const daysSince = (epoch: unknown): number => {
+  if (typeof epoch !== 'number' || epoch <= 0) return Number.NaN;
+  return Math.round((Date.now() - epoch) / 86_400_000);
+};
+
+const medianOf = (values: number[]): number | null => {
+  if (!values.length) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+};
+
+const cellOf = (posting: LeverPosting): LeverCell => {
+  const categories = (posting.categories ?? {}) as Record<string, unknown>;
+  const age = daysSince(posting.createdAt);
+  return {
+    team: String(categories.team ?? 'team not reported'),
+    commitment: String(categories.commitment ?? 'commitment not reported'),
+    location: String(categories.location ?? 'location not reported'),
+    level: String(categories.level ?? 'level not reported'),
+    ageDays: age,
+    createdAt: typeof posting.createdAt === 'number' ? new Date(posting.createdAt).toISOString().slice(0, 10) : 'not reported',
+    title: String(posting.text ?? 'untitled'),
+    workplaceType: String(posting.workplaceType ?? 'not reported'),
+  };
+};
+

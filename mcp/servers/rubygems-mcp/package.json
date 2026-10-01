@@ -1,0 +1,44 @@
+{
+  "version": "1.0.1",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/rubygems-mcp.git"
+  },
+  "bin": {
+    "rubygems-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "name": "rubygems-mcp",
+  "description": "Look up Ruby gems, versions, and downloads from RubyGems. No key required.",
+  "mcpName": "io.github.mrfentmen/rubygems-mcp",
+  "keywords": [
+    "mcp",
+    "ruby",
+    "gems",
+    "packages",
+    "bundler"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}
