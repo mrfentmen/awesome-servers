@@ -1,6 +1,6 @@
 {
   "name": "pusher-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Query the Pusher HTTP API (free tier; set PUSHER_APP_ID, PUSHER_KEY, PUSHER_SECRET, PUSHER_CLUSTER; requests HMAC-signed with node:crypto, stdlib only): channels, channel details, channel users.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/pusher-mcp",

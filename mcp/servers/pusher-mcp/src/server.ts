@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, listChannels, getChannel, getChannelUsers, websocketRoundTrip, websocketPayloadProbe } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, listChannels, getChannel, getChannelUsers } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -86,10 +86,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: websocket_round_trip ----
-    const paywallMessage = await premiumRequired("websocket_round_trip")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await websocketRoundTrip(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_pusher_websocket_round_trip", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -107,10 +106,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: websocket_payload_probe ----
-    const paywallMessage = await premiumRequired("websocket_payload_probe")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await websocketPayloadProbe(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_pusher_websocket_payload_probe", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
