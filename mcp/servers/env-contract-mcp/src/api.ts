@@ -138,3 +138,6 @@ export async function contractDiff(args: ContractDiffArgs): Promise<string> {
   lines.push(`  ${WARNING}`);
   return lines.join("\n");
 }
+
+// ---- gap4e2 tools:
+

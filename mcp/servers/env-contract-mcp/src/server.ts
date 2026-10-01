@@ -1,8 +1,9 @@
+import { contractSummary, contractDiff } from "./api.js"
+import { premiumTool } from "./gateway.js"
+const error = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { analyze, format } from "./contract.js"
-import { contractSummary, contractDiff } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -45,12 +46,40 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async ({ before, after }) => {
-      // ---- paywall: contract_diff ----
-      const paywallMessage = await premiumRequired("contract_diff")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try { return text(await contractDiff({ before, after })) } catch (error) { return errorText(error) }
     }
   )
+  server.registerTool(
+    "node_runtime_lifecycle",
+    {
+      title: "Node runtime lifecycle",
+      description: "Look up Node.js runtime release cycles, current patch releases, LTS dates and end-of-life dates to assess deployment runtime requirements. Source endoflife.date.",
+      inputSchema: z.object({ cycle: z.string().max(20).optional(), limit: z.number().int().min(1).max(30).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: node_runtime_lifecycle ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_env_contract_node_runtime_lifecycle", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "environment_dns_records",
+    {
+      title: "Environment dns records",
+      description: "Resolve a deployment hostname through Google Public DNS and report records, TTLs and authentication flags. Defaults to example.com A; does not read environment values.",
+      inputSchema: z.object({ hostname: z.string().max(253).optional(), type: z.enum(["A", "AAAA", "CNAME", "MX", "TXT", "NS", "CAA"]).optional(), limit: z.number().int().min(1).max(30).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: environment_dns_records ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_env_contract_environment_dns_records", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }
