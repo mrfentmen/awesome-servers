@@ -1,9 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { createDoc } from "./api.js"
-import { createReport, createTableDocument, createMarkdownDocument, extractDocxText } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { createDoc } from "./local-api.js"
+import { createReport, createTableDocument, createMarkdownDocument, extractDocxText } from "./local-api.js"
 
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -45,10 +45,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: create_table_document ----
-    const paywallMessage = await premiumRequired("create_table_document")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await createTableDocument(args)) } catch (e) { return textError(e instanceof Error ? `Error: ${e.message}` : String(e)) }
   }
   )
@@ -62,10 +58,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: create_markdown_document ----
-    const paywallMessage = await premiumRequired("create_markdown_document")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await createMarkdownDocument(args)) } catch (e) { return textError(e instanceof Error ? `Error: ${e.message}` : String(e)) }
   }
   )
@@ -80,6 +72,22 @@ export function createServer(): McpServer {
     },
     async (args) => {
     try { return text(await extractDocxText(args)) } catch (e) { return textError(e instanceof Error ? `Error: ${e.message}` : String(e)) }
+  }
+  )
+
+  server.registerTool(
+    "doi_citation",
+    {
+      title: "Doi citation",
+      description: "Retrieve authoritative Crossref bibliographic metadata for a DOI as a citation block for a document. Includes authors, publication date, journal, pages and DOI link; defaults to 10.1038/nphys1170.",
+      inputSchema: z.object({ doi: z.string().max(250).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: doi_citation ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_document_generator_doi_citation", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
