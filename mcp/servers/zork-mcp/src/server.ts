@@ -1,9 +1,9 @@
+import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { gameMap, gameRoutes } from "./api.js"
+import { gameMap } from "./api.js"
 import { Adventure } from "./engine.js"
 import { describeGames, GAMES } from "./games.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -159,11 +159,10 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: game_routes ----
-      const paywallMessage = await premiumRequired("game_routes")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await gameRoutes(args))
+        return text(await premiumTool("mcp_zork_game_routes", args))
       } catch (e) {
         return textError(`Error: ${(e as Error).message}`)
       }
