@@ -360,5 +360,70 @@ class TurnTests(unittest.TestCase):
         self.assertIn("no record matching 'zzzznotathing'", result["text"])
 
 
+# Premium transport uses the real client, with an offline MCP response.
+import json
+import os
+from unittest.mock import patch
+from acp_kit import GatewayClient
+
+PREMIUM_PAYLOAD = {"author": "Ursula K. Le Guin", "authorKey": "OL31353A",
+                   "uniqueWorks": 259, "worksFetched": 258, "searchFetched": 259,
+                   "unknownYears": 17, "withoutSubjects": 22,
+                   "decades": [{"decade": "1960s", "count": 28}],
+                   "topSubjects": [{"subject": "fiction", "count": 125}]}
+
+class PremiumTests(unittest.TestCase):
+    def gateway(self, key, payload=PREMIUM_PAYLOAD, refused=False):
+        calls = []
+        def fetch(url, body, headers):
+            calls.append((body["params"], headers))
+            result = {"content": [{"type": "text", "text": json.dumps(payload)}]}
+            if refused:
+                result.update(isError=True, structuredContent={"licenceRefusal": True})
+            return {"result": result}
+        gateway = GatewayClient(key=key, fetch=fetch)
+        gateway.calls = calls
+        return gateway
+
+    def test_no_key_attempts_premium_client_call(self):
+        with patch.dict(os.environ, {}, clear=True):
+            gateway = self.gateway("")
+            with patch.object(gateway, "call", wraps=gateway.call) as call:
+                answer, artifact = BooksAgent(data=FakeData(), gateway=gateway)._run_skill(*route("catalogue digest for Ursula K. Le Guin"))
+            call.assert_called_once_with("books_author_digest", {"author": "Ursula K. Le Guin"})
+            self.assertIn("MCP_LICENSE_KEY", answer)
+            self.assertEqual(artifact["reason"], "missing_key")
+            self.assertEqual(gateway.calls, [])
+
+    def test_rejected_key_preserves_gateway_wording(self):
+        wording = "Revoked by the gateway. Set MCP_LICENSE_KEY."
+        gateway = self.gateway("lic_live_but_rejected", wording, True)
+        answer, artifact = BooksAgent(data=FakeData(), gateway=gateway)._digest({"author": "Ursula K. Le Guin"})
+        self.assertEqual(answer, json.dumps(wording))
+        self.assertEqual(artifact["reason"], "denied")
+
+    def test_good_key_uses_gateway_numbers(self):
+        gateway = self.gateway("lic_granted")
+        answer, artifact = BooksAgent(data=FakeData(), gateway=gateway)._run_skill(*route("catalogue digest for Ursula K. Le Guin"))
+        self.assertIn("259 unique works", answer)
+        self.assertIn("1960s: 28 works", answer)
+        self.assertTrue(artifact["premium"])
+        self.assertEqual(len(gateway.calls), 1)
+        self.assertEqual(gateway.calls[0][0], {"name": "books_author_digest", "arguments": {"author": "Ursula K. Le Guin"}})
+        self.assertEqual(gateway.calls[0][1]["Authorization"], "Bearer lic_granted")
+
+    def test_free_questions_never_call_gateway(self):
+        gateway = self.gateway("lic_granted")
+        agent = BooksAgent(data=FakeData(), gateway=gateway)
+        for question in ("find books about urban foxes", "what has Ursula K. Le Guin written?", "what is OL893414W?", "what is popular on Open Library today?"):
+            agent._run_skill(*route(question))
+        self.assertEqual(gateway.calls, [])
+
+    def test_empty_payload_is_not_a_made_up_board(self):
+        answer, artifact = BooksAgent(data=FakeData(), gateway=self.gateway("lic_granted", {}))._digest({"author": "Ursula K. Le Guin"})
+        self.assertIn("no readable author digest", answer)
+        self.assertTrue(artifact["failed"])
+
+
 if __name__ == "__main__":
     unittest.main()

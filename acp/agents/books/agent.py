@@ -21,6 +21,8 @@ if str(REPO_ROOT) not in sys.path:
 
 from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
 
+from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer
+
 from data import (  # noqa: E402
     DATASET_AUTHOR,
     DATASET_SEARCH,
@@ -37,12 +39,13 @@ HELP = (
     "  • what is Dune about? (I will search, then read the work record)\n"
     "  • what has Ursula K. Le Guin written?\n"
     "  • what is OL893414W - or what is popular on Open Library today\n"
+    "  • catalogue digest for Ursula K. Le Guin (premium)\n"
     "Every answer carries the record id it came from. I only know what the catalog says."
 )
 
 PERMISSION_KEY = "books-read-public-openlibrary"
 
-SKILLS = ("books-search", "books-work", "books-author", "books-trending", "help")
+SKILLS = ("books-search", "books-work", "books-author", "books-trending", "books-digest", "help")
 
 _WORK_RE = re.compile(r"\b(OL\d+W)\b", re.IGNORECASE)
 _TRENDING_WORDS = re.compile(
@@ -91,6 +94,10 @@ def route(text: str) -> tuple[str, dict]:
     if not text.strip() or re.search(r"\b(help|what can you do|commands?)\b", text, re.IGNORECASE):
         return "help", {}
 
+    digest = re.search(r"\bcatalog(?:ue)? digest (?:for|by)\s+(.+)", text, re.IGNORECASE)
+    if digest:
+        return "books-digest", {"author": digest.group(1).strip(" ?.!")}
+
     params: dict = {}
     work = _WORK_RE.search(text)
     if work:
@@ -118,9 +125,11 @@ class BooksAgent(AcpAgent):
     title = "Books — Open Library"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: BooksData | None = None) -> None:
+    def __init__(self, connection=None, data: BooksData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or BooksData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -155,7 +164,7 @@ class BooksAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (BooksError, ValueError) as exc:
+        except (BooksError, GatewayError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read Open Library: {exc}")
             return STOP_END_TURN
@@ -171,6 +180,8 @@ class BooksAgent(AcpAgent):
     # -- skills ------------------------------------------------------------
 
     def _run_skill(self, skill: str, params: dict) -> tuple[str, dict]:
+        if skill == "books-digest":
+            return self._digest(params)
         if skill == "books-work":
             return self._work(params)
         if skill == "books-author":
@@ -180,6 +191,38 @@ class BooksAgent(AcpAgent):
         if skill == "books-search":
             return self._search(params)
         return HELP, {"summary": "help", "dataset": None}
+
+    def _digest(self, params: dict) -> tuple[str, dict]:
+        """Render the catalogue aggregation returned by the gateway."""
+        author = BooksData.check_query(params.get("author", ""))
+        data, refused = premium_call(self.gateway, "books_author_digest", {"author": author},
+                                     {"agent": "books", "skill": "books-digest"})
+        if refused:
+            return refused
+        if (not isinstance(data, dict) or not data.get("author")
+                or any(not isinstance(data.get(k), int) for k in
+                       ("uniqueWorks", "unknownYears", "withoutSubjects", "worksFetched", "searchFetched"))
+                or any(not isinstance(data.get(k), list) or any(not isinstance(r, dict)
+                       or not isinstance(r.get("count"), int) or not r.get(label) for r in data[k])
+                       for k, label in (("decades", "decade"), ("topSubjects", "subject")))):
+            return empty_premium_answer("The gateway returned no readable author digest.",
+                                        {"agent": "books", "skill": "books-digest"})
+        lines = [f"Premium catalogue digest for {data['author']} ({data.get('authorKey')}):",
+                 f"{data['uniqueWorks']} unique works; {data['worksFetched']} work records and "
+                 f"{data['searchFetched']} search records read.",
+                 f"Reported totals: works {data.get('reportedWorks')}, search {data.get('searchTotal')}."]
+        if data.get("truncated"):
+            lines.append("Partial catalogue: the gateway's record cap was reached.")
+        lines.append("By first-publication decade:")
+        for row in data["decades"]:
+            lines.append(f"  • {row['decade']}: {row['count']} works")
+        lines.append(f"Unknown publication year: {data['unknownYears']} works.")
+        lines.append("Top subjects:")
+        for row in data["topSubjects"]:
+            lines.append(f"  • {row['subject']}: {row['count']} works")
+        lines.append(f"Without subject metadata: {data['withoutSubjects']} works.")
+        lines.append(str(data.get("note") or "Source: Open Library."))
+        return "\n".join(lines), {**data, "summary": lines[0], "premium": True}
 
     def _work(self, params: dict) -> tuple[str, dict]:
         reference = str(params.get("work") or "")
