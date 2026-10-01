@@ -1,6 +1,6 @@
 {
   "name": "uptimerobot-mcp",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Uptime, port, TLS and DNS checks for any site - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/uptimerobot-mcp",

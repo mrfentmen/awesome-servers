@@ -1,8 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { checkEndpoints, checkUrl, dnsHealth, errorMessage, monitorReport, portMonitor, sslExpiry, multiRegionCheck, vendorUptime } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { checkEndpoints, checkUrl, dnsHealth, errorMessage, monitorReport, portMonitor, sslExpiry } from "./local.js"
 
+import { vendorUptime } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -115,10 +116,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: multi_region_check ----
-    const paywallMessage = await premiumRequired("multi_region_check")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await multiRegionCheck(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_uptimerobot_multi_region_check", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
