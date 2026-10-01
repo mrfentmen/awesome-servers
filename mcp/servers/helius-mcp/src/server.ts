@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, getBalances, getTransactions, getNfts, getTokenMetadata, parseTransactions, walletHoldings, tokenMarket } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, getBalances, getTransactions, getNfts, getTokenMetadata, parseTransactions } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -120,10 +120,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: wallet_holdings ----
-      const paywallMessage = await premiumRequired("wallet_holdings")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await walletHoldings(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_helius_wallet_holdings", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -137,10 +136,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: token_market ----
-      const paywallMessage = await premiumRequired("token_market")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await tokenMarket(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_helius_token_market", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 

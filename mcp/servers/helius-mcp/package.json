@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/helius-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Helius Solana API: balances, transactions, NFTs, token metadata, parsed transactions.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/helius-mcp",
