@@ -20,7 +20,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text,  # noqa: E402
+                     GatewayClient, GatewayError, premium_call, empty_premium_answer)
 
 from data import (  # noqa: E402
     DATASET_ONTHISDAY,
@@ -36,12 +37,13 @@ HELP = (
     "  • who was Ada Lovelace?\n"
     "  • what is the Wikidata entity for Douglas Adams?\n"
     "  • what happened on this day?\n"
+    "  • premium: deep dive for Ada Lovelace from 2026-09-23 to 2026-09-29\n"
     "Answers quote the article summary with a link back, or list Wikidata entities by id."
 )
 
 PERMISSION_KEY = "wiki-read-public-wikimedia"
 
-SKILLS = ("wiki-summary", "wiki-entity", "wiki-onthisday", "help")
+SKILLS = ("wiki-summary", "wiki-entity", "wiki-onthisday", "wiki-deep-dive", "help")
 
 _ONTHISDAY_RE = re.compile(r"\b(on this day|today in history|this day in history|anniversary|"
                            r"what happened (?:on this day|today))\b", re.IGNORECASE)
@@ -88,6 +90,19 @@ def route(text: str) -> tuple[str, dict]:
     if not text.strip() or re.search(r"\b(help|what can you do|commands?)\b", text, re.IGNORECASE):
         return "help", {}
 
+    deep = re.search(r"\bdeep dive\s+(?:for|on|about)\s+(.+?)(?:\s+from\s+(\d{4}-\d{2}-\d{2})\s+to\s+(\d{4}-\d{2}-\d{2}))?[?.!]*$", text, re.IGNORECASE)
+    if deep:
+        params = {"title": deep.group(1).strip()}
+        if deep.group(2):
+            try:
+                start = datetime.strptime(deep.group(2), "%Y-%m-%d")
+                end = datetime.strptime(deep.group(3), "%Y-%m-%d")
+                days = (end - start).days + 1
+            except ValueError:
+                days = 0
+            params.update(days=days, end_date=deep.group(3))
+        return "wiki-deep-dive", params
+
     if _ONTHISDAY_RE.search(text):
         return "wiki-onthisday", {}
 
@@ -109,9 +124,11 @@ class WikiAgent(AcpAgent):
     title = "Wiki — Wikipedia and Wikidata"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: WikiData | None = None) -> None:
+    def __init__(self, connection=None, data: WikiData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or WikiData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -151,6 +168,10 @@ class WikiAgent(AcpAgent):
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I found no page for that title: {exc}")
             return STOP_END_TURN
+        except GatewayError as exc:
+            ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
+            ctx.message(f"I could not finish the deep dive on the licence gateway: {exc}")
+            return STOP_END_TURN
         except (WikiError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the Wikimedia feed: {exc}")
@@ -161,12 +182,14 @@ class WikiAgent(AcpAgent):
         return STOP_END_TURN
 
     def on_cancel(self, session) -> None:
-        # Every skill is a single HTTP read; nothing long-running to interrupt.
+        # Reads are bounded; there is no background work.
         return None
 
     # -- skills ------------------------------------------------------------
 
     def _run_skill(self, skill: str, params: dict) -> tuple[str, dict]:
+        if skill == "wiki-deep-dive":
+            return self._deep_dive(params)
         if skill == "wiki-summary":
             return self._summary(params)
         if skill == "wiki-entity":
@@ -174,6 +197,42 @@ class WikiAgent(AcpAgent):
         if skill == "wiki-onthisday":
             return self._onthisday()
         return HELP, {"summary": "help", "dataset": None}
+
+    def _deep_dive(self, params: dict) -> tuple[str, dict]:
+        """Join claims and readership history on the licence gateway."""
+        arguments = {"title": params.get("title", "")}
+        for key in ("days", "end_date"):
+            if key in params:
+                arguments[key] = params[key]
+        data, refused = premium_call(self.gateway, "wiki_topic_deep_dive", arguments,
+                                     {"agent": "wiki", "skill": "wiki-deep-dive"})
+        if refused:
+            return refused
+        if (not isinstance(data, dict) or not isinstance(data.get("extract"), str)
+                or not data["extract"] or type(data.get("totalViews")) is not int
+                or not isinstance(data.get("claims"), list)
+                or not all(isinstance(row, dict) for row in data["claims"])
+                or not isinstance(data.get("trend"), dict)):
+            return empty_premium_answer("The gateway returned no readable topic deep dive.",
+                                        {"agent": "wiki", "skill": "wiki-deep-dive"})
+        lines = [f"Premium deep dive: {data.get('title')}", data["extract"],
+                 f"Pageviews {data.get('start')} to {data.get('end')}: {data['totalViews']} "
+                 f"across {data.get('reportedDays')} reported days; {data.get('missingDays')} missing."]
+        trend = data["trend"]
+        change = trend.get("changePercent")
+        lines.append(f"First/last {trend.get('spanDays')}-day means: {trend.get('firstMean')} / "
+                     f"{trend.get('lastMean')}; change: " +
+                     (f"{change:.2f}%." if type(change) in (int, float) else "not reported."))
+        for row in data["claims"]:
+            lines.append(f"Wikidata {row.get('label')} ({row.get('property')}): {row.get('value')} "
+                         f"[rank {row.get('rank')}, precision {row.get('precision')}, "
+                         f"point in time {row.get('pointInTime')}]")
+        if not data["claims"]:
+            lines.append("No selected population or date claims reported.")
+        lines.extend([str(data.get("articleUrl", "")), str(data.get("note", ""))])
+        summary = f"premium deep dive: {data['totalViews']} pageviews"
+        return "\n".join(lines), {"summary": summary, "premium": True, "data": data,
+                                   "agent": "wiki", "skill": "wiki-deep-dive"}
 
     def _summary(self, params: dict) -> tuple[str, dict]:
         title = params.get("title")

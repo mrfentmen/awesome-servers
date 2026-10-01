@@ -6,6 +6,9 @@
 from __future__ import annotations
 
 import queue
+import json
+import os
+from unittest.mock import patch
 import sys
 import threading
 import unittest
@@ -17,7 +20,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL, GatewayClient  # noqa: E402
 
 from agent import WikiAgent, route  # noqa: E402
 from data import (  # noqa: E402
@@ -247,9 +250,9 @@ class RouteTests(unittest.TestCase):
 
 
 class TurnTests(unittest.TestCase):
-    def turn(self, text: str, data: FakeData | None = None, permission: str = "allow-once"):
+    def turn(self, text: str, data: FakeData | None = None, permission: str = "allow-once", gateway=None):
         agent_conn, client_conn = connected_pair()
-        agent = WikiAgent(agent_conn, data or FakeData())
+        agent = WikiAgent(agent_conn, data or FakeData(), gateway=gateway)
         threading.Thread(target=agent_conn.serve, daemon=True).start()
         client = AcpClient(connection=client_conn, permission=permission)
         client.start()
@@ -301,6 +304,86 @@ class TurnTests(unittest.TestCase):
         statuses = [update.get("status") for update in result["updates"]
                     if update.get("sessionUpdate") == "tool_call_update"]
         self.assertIn("failed", statuses)
+
+
+DEEP_PAYLOAD = {
+    "title": "Ada Lovelace", "extract": "English mathematician.", "totalViews": 120,
+    "start": "2026-09-26", "end": "2026-09-29", "reportedDays": 4, "missingDays": 0,
+    "claims": [{"label": "birth", "property": "P569", "value": "+1815-12-10T00:00:00Z",
+                "rank": "normal", "precision": 11, "pointInTime": None}],
+    "trend": {"spanDays": 2, "firstMean": 15, "lastMean": 45, "changePercent": 200},
+}
+DEEP_QUESTION = "deep dive for Ada Lovelace from 2026-09-26 to 2026-09-29"
+
+
+class RecordingGateway(GatewayClient):
+    def __init__(self, key=None, payload=DEEP_PAYLOAD, refused=False):
+        self.attempts = []
+        self.transports = []
+        self.refusal = "Gateway says: this key was revoked. Set MCP_LICENSE_KEY."
+
+        def fetch(url, body, headers):
+            self.transports.append(body["params"])
+            result = {"content": [{"type": "text", "text":
+                       self.refusal if refused else json.dumps(payload)}]}
+            if refused:
+                result.update(isError=True, structuredContent={"licenceRefusal": True, "reason": "denied"})
+            return {"jsonrpc": "2.0", "id": 1, "result": result}
+        super().__init__(fetch=fetch, key=key, url="http://gateway.test/mcp")
+
+    def call(self, tool, arguments=None):
+        self.attempts.append((tool, arguments, bool(self.key)))
+        return super().call(tool, arguments)
+
+
+class PremiumTests(unittest.TestCase):
+    turn = TurnTests.turn
+
+    def test_no_key_attempts_premium_but_is_not_authorized(self):
+        with patch.dict(os.environ, {}, clear=True):
+            gateway = RecordingGateway()
+            result, _ = self.turn(DEEP_QUESTION, gateway=gateway)
+        self.assertIn("MCP_LICENSE_KEY", result["text"])
+        self.assertIn("`wiki_topic_deep_dive` is a premium skill", result["text"])
+        self.assertEqual(len(gateway.attempts), 1)
+        self.assertFalse(gateway.attempts[0][2])
+        self.assertEqual(gateway.transports, [])
+
+    def test_rejected_key_preserves_gateway_answer(self):
+        gateway = RecordingGateway("lic_live_but_rejected", refused=True)
+        result, _ = self.turn(DEEP_QUESTION, gateway=gateway)
+        self.assertEqual(result["text"], gateway.refusal)
+        self.assertEqual(len(gateway.attempts), 1)
+
+    def test_good_key_returns_numbers_and_exact_arguments(self):
+        gateway = RecordingGateway("lic_good")
+        result, _ = self.turn(DEEP_QUESTION, gateway=gateway)
+        self.assertIn("120 across 4 reported days", result["text"])
+        self.assertIn("200.00%", result["text"])
+        self.assertIn("+1815-12-10", result["text"])
+        self.assertEqual(gateway.attempts, [("wiki_topic_deep_dive", {
+            "title": "Ada Lovelace", "days": 4, "end_date": "2026-09-29"}, True)])
+        _, artifact = WikiAgent(data=FakeData(), gateway=gateway)._deep_dive({"title": "Ada Lovelace"})
+        self.assertTrue(artifact["premium"])
+
+    def test_free_question_never_reaches_gateway(self):
+        gateway = RecordingGateway("lic_good")
+        result, _ = self.turn("who was Ada Lovelace?", gateway=gateway)
+        self.assertIn("English mathematician", result["text"])
+        self.assertEqual(gateway.attempts, [])
+
+    def test_empty_payload_and_gateway_failure_are_answers(self):
+        result, _ = self.turn(DEEP_QUESTION, gateway=RecordingGateway("lic_good", payload={}))
+        self.assertIn("no readable topic deep dive", result["text"])
+        def broken(*args):
+            raise OSError("offline")
+        result, _ = self.turn(DEEP_QUESTION, gateway=GatewayClient(key="lic_good", fetch=broken))
+        self.assertIn("could not finish the deep dive", result["text"])
+
+    def test_route_defaults_and_invalid_dates(self):
+        self.assertEqual(route("deep dive for Ada Lovelace?"),
+                         ("wiki-deep-dive", {"title": "Ada Lovelace"}))
+        self.assertEqual(route("deep dive for Ada from 2026-02-30 to 2026-03-01")[1]["days"], 0)
 
 
 if __name__ == "__main__":
