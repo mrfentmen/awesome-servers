@@ -1,11 +1,12 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { artifactHints, directoryWeights, format, inspect, manifest, sizeBudget } from "./gauge.js"
-import { premiumRequired } from "./license.js"
 
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
+const error = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
 const errorText = (error: unknown) => text(`Error: ${error instanceof Error ? error.message : String(error)}`)
 
 export function createServer() {
@@ -39,10 +40,6 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async ({ project }) => {
-      // ---- paywall: inspect_directory_weights ----
-      const paywallMessage = await premiumRequired("inspect_directory_weights")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try { return text(format(await directoryWeights(project))) }
       catch (error) { return errorText(error) }
     }
@@ -56,10 +53,6 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async ({ project, budgetBytes }) => {
-      // ---- paywall: inspect_size_budget ----
-      const paywallMessage = await premiumRequired("inspect_size_budget")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try { return text(format(await sizeBudget(project, budgetBytes))) }
       catch (error) { return errorText(error) }
     }
@@ -77,5 +70,21 @@ export function createServer() {
       catch (error) { return errorText(error) }
     }
   )
+  server.registerTool(
+    "github_repo_stats",
+    {
+      title: "GitHub repository stats",
+      description: "Read live GitHub repository size, popularity, issue count, language, license and last push data.",
+      inputSchema: z.object({ owner: z.string().describe("GitHub owner; defaults to modelcontextprotocol.").optional(), repo: z.string().describe("GitHub repository; defaults to servers.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: github_repo_stats ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_artifact_gauge_github_repo_stats", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }
