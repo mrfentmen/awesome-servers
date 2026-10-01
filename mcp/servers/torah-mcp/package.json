@@ -1,6 +1,6 @@
 {
   "name": "torah-mcp",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Keyless MCP server for Torah study via Sefaria: weekly portion, Tanakh text in English and Hebrew, Rashi and other commentaries, verse connections, full-text search.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/torah-mcp",

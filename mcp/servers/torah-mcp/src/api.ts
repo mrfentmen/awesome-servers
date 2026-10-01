@@ -131,19 +131,6 @@ export async function searchTexts(query: string, size?: number): Promise<string>
 
 // ---- muxC tools:
 
-const SEFARIA_BASE = "https://www.sefaria.org/api"
-
-class SefariaLookupError extends Error {}
-
-async function sefariaGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${SEFARIA_BASE}${path}`, {
-    headers: { "User-Agent": "awesome-mcps/1.0", Accept: "application/json" },
-    signal: AbortSignal.timeout(25000),
-  })
-  if (!res.ok) throw new SefariaLookupError(`Sefaria returned ${res.status}`)
-  return (await res.json()) as T
-}
-
 interface SefariaIndex {
   title?: string
   heTitle?: string
@@ -156,32 +143,6 @@ interface SefariaIndex {
   pubPlace?: string
   sectionNames?: string[]
   depth?: number
-}
-
-/** The structure of a book: how Sefaria addresses it and who wrote it. */
-export async function bookIndex(args: { book?: string }): Promise<string> {
-  const book = (args.book ?? "").trim()
-  if (!book) throw new SefariaLookupError("Provide a book name, e.g. Genesis, Psalms or Mishnah")
-  let index: SefariaIndex
-  try {
-    index = await sefariaGet<SefariaIndex>(`/index/${encodeURIComponent(book)}`)
-  } catch (e) {
-    throw new SefariaLookupError(`Sefaria has no book index for "${book}": ${e instanceof Error ? e.message : String(e)}`)
-  }
-  const schema = index.schema ?? {}
-  const nodeTypes = (schema.nodeTypes ?? []).map((n) => `${n.name ?? "?"} (depth ${n.depth ?? "?"})`)
-  return [
-    `${index.title ?? book}${index.heTitle ? ` / ${index.heTitle}` : ""}`,
-    `Categories: ${index.categories?.length ? index.categories.join(", ") : "not reported"}`,
-    `Address scheme: ${schema.nodeType ?? "not reported"} at depth ${schema.depth ?? index.depth ?? "?"}${schema.addressTypes?.length ? `, address types: ${schema.addressTypes.join(", ")}` : ""}`,
-    nodeTypes.length ? `Node types: ${nodeTypes.slice(0, 10).join(", ")}` : null,
-    index.sectionNames?.length ? `Sections: ${index.sectionNames.slice(0, 12).join(", ")}` : null,
-    `Composition: ${index.compDate ?? "date not reported"}${index.compPlace ? `, ${index.compPlace}` : ""}`,
-    `Publication: ${index.pubDate ?? "date not reported"}${index.pubPlace ? `, ${index.pubPlace}` : ""}`,
-    index.enDesc ? `Description: ${index.enDesc.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").slice(0, 400)}` : null,
-  ]
-    .filter(Boolean)
-    .join("\n")
 }
 
 interface SefariaLexiconSense {
@@ -197,49 +158,3 @@ interface SefariaLexiconEntry {
   content?: { morphology?: string; senses?: SefariaLexiconSense[] }
 }
 
-function grammarText(grammar: SefariaLexiconSense["grammar"]): string {
-  if (!grammar) return ""
-  if (typeof grammar === "string") return ` (${grammar})`
-  const parts = Object.entries(grammar)
-    .map(([k, v]) => `${k.replace(/_/g, " ")} ${v}`)
-    .filter((s) => !s.endsWith(" "))
-  return parts.length ? ` (${parts.join(", ")})` : ""
-}
-
-function senseLine(sense: SefariaLexiconSense, depth = 0): string {
-  const text = String(sense.definition ?? "").replace(/\s+/g, " ").trim()
-  // A parent sense that only carries children is a grouping label, not a definition.
-  const nested = (sense.senses ?? []).map((s) => senseLine(s, depth + 1)).join("\n")
-  if (!text) return nested
-  const line = `${"  ".repeat(depth + 1)}- ${text}${grammarText(sense.grammar)}`
-  return nested ? `${line}\n${nested}` : line
-}
-
-/** Dictionary lookup for a Hebrew or Aramaic word, from Sefaria's lexicon. */
-export async function wordLookup(args: { word?: string; limit?: number }): Promise<string> {
-  const word = (args.word ?? "").trim()
-  if (!word) throw new SefariaLookupError("Provide a Hebrew or Aramaic word, URL-encoded if it contains a slash")
-  const limit = Math.max(1, Math.min(args.limit ?? 2, 10))
-  let entries: SefariaLexiconEntry[]
-  try {
-    entries = await sefariaGet<SefariaLexiconEntry[]>(`/words/${encodeURIComponent(word)}`)
-  } catch (e) {
-    throw new SefariaLookupError(`Sefaria lexicon lookup failed for "${word}": ${e instanceof Error ? e.message : String(e)}`)
-  }
-  if (!Array.isArray(entries) || !entries.length) {
-    return `Sefaria's lexicon has no entry for "${word}".`
-  }
-  const shown = entries.slice(0, limit)
-  return shown
-    .map((entry) => {
-      const content = entry.content ?? {}
-      const senses = content.senses ?? []
-      return [
-        `${entry.headword ?? word}${content.morphology ? ` (${content.morphology})` : ""} - ${entry.parent_lexicon ?? "lexicon not reported"}`,
-        senses.length
-          ? senses.map((s) => senseLine(s, 0)).join("\n")
-          : "  no senses published for this entry",
-      ].join("\n")
-    })
-    .join("\n\n")
-}

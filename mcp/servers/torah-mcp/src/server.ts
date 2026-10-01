@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, getCommentaries, getConnections, getTanakhText, getWeeklyPortion, searchTexts, bookIndex, wordLookup } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, getCommentaries, getConnections, getTanakhText, getWeeklyPortion, searchTexts } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -126,14 +126,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: book_index ----
-    const paywallMessage = await premiumRequired("book_index")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try {
-      return text(await bookIndex(args));
-    } catch (e) {
-      return textError(errorMessage(e));
-    }
+    try { return text(await premiumTool("mcp_torah_book_index", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   );
 
@@ -147,14 +142,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: word_lookup ----
-    const paywallMessage = await premiumRequired("word_lookup")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try {
-      return text(await wordLookup(args));
-    } catch (e) {
-      return textError(errorMessage(e));
-    }
+    try { return text(await premiumTool("mcp_torah_word_lookup", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   );
 
