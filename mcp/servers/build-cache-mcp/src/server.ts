@@ -1,10 +1,11 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { format, inspectBuildCache, artifactBreakdown, reclaimableCache } from "./core.js"
-import { premiumRequired } from "./license.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
+const error = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
 const errorText = (error: unknown) => text(`Error: ${error instanceof Error ? error.message : String(error)}`)
 export function createServer() {
   const server = new McpServer({ name: "build-cache-mcp", version: "1.0.0" })
@@ -27,10 +28,6 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (input) => {
-      // ---- paywall: artifact_breakdown ----
-      const paywallMessage = await premiumRequired("artifact_breakdown")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try { return text(await artifactBreakdown(input)) } catch (error) { return errorText(error) }
     }
   )
@@ -43,12 +40,40 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (input) => {
-      // ---- paywall: reclaimable_cache ----
-      const paywallMessage = await premiumRequired("reclaimable_cache")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try { return text(await reclaimableCache(input)) } catch (error) { return errorText(error) }
     }
   )
+  server.registerTool(
+    "npm_package_metadata",
+    {
+      title: "npm package metadata",
+      description: "Read live npm package tarball size, file count, integrity, engine requirements and modified time.",
+      inputSchema: z.object({ package: z.string().describe("npm package name; defaults to typescript.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: npm_package_metadata ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_build_cache_npm_package_metadata", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "github_latest_release",
+    {
+      title: "GitHub latest release",
+      description: "Read the latest GitHub release and bounded asset size and download counts.",
+      inputSchema: z.object({ owner: z.string().describe("GitHub owner; defaults to cli.").optional(), repo: z.string().describe("GitHub repository; defaults to cli.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: github_latest_release ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_build_cache_github_latest_release", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }
