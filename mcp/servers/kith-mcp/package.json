@@ -1,6 +1,6 @@
 {
   "name": "kith-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Query the KITH catalog (kith.com, NYC): search streetwear and sneakers, newest arrivals by type, enriched product details (sizes/colors), price stats, below-median deals, and category counts.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/kith-mcp",

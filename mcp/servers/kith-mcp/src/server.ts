@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections, browseCollection, find_by_size, sizeRunMatrix, collaborationCensus } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections, browseCollection, find_by_size } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -204,10 +204,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: size_run_matrix ----
-      const paywallMessage = await premiumRequired("size_run_matrix")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await sizeRunMatrix(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_kith_size_run_matrix", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -221,10 +220,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: collaboration_census ----
-      const paywallMessage = await premiumRequired("collaboration_census")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await collaborationCensus(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_kith_collaboration_census", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 

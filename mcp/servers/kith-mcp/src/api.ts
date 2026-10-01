@@ -183,7 +183,6 @@ export async function listCategories(): Promise<string> {
   return pretty({ store: "KITH", sample: Object.values(counts).reduce((a, b) => a + b, 0), categories: counts })
 }
 
-
 // --- catalog tools: collections + attribute/size filters ---
 function collectionsOrigin(): string {
   return new URL(CATALOG).origin
@@ -267,7 +266,6 @@ export async function find_by_size(size: string, limit?: string, maxPrice?: stri
 }
 
 // ---- muxG tools:
-const KITH_PAGES = [1, 2, 3, 4]
 
 interface KithAxis {
   name: string;
@@ -276,131 +274,3 @@ interface KithAxis {
   prices: number[];
 }
 
-const kithMedian = (values: number[]): number | null => {
-  if (!values.length) return null;
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
-};
-
-/**
- * A size run: for every option axis the store sells on, how many sizes exist, how
- * many are actually buyable right now, and the price each in-stock size carries.
- * The product tools only ever print the first variant.
- */
-export async function sizeRunMatrix(args: { sample?: string; limit?: string; axis?: string }): Promise<string> {
-  const max = Math.min(Math.max(Number(args.sample ?? 300) || 300, 20), 1500);
-  const n = Math.min(Math.max(Number(args.limit ?? 12) || 12, 1), 40);
-  const wanted = String(args.axis ?? "").trim().toLowerCase();
-  const pages = KITH_PAGES.slice(0, Math.max(1, Math.ceil(max / 250)));
-  const products = await sampleCatalog(max, pages);
-  if (!products.length) throw new Error("The KITH catalog returned no products.");
-
-  const axes = new Map<string, KithAxis>();
-  const typeTotals = new Map<string, { count: number; sizes: number }>();
-  let variantsSeen = 0;
-  let inStockSeen = 0;
-
-  for (const product of products) {
-    const type = String(product.product_type ?? "type not reported") || "type not reported";
-    const options = Array.isArray(product.options) ? product.options : [];
-    const variants = Array.isArray(product.variants) ? product.variants : [];
-    const sizeValues = options.flatMap((option: any) => (Array.isArray(option.values) ? option.values.map(String) : []));
-    const entry = typeTotals.get(type) ?? { count: 0, sizes: 0 };
-    entry.count += 1;
-    entry.sizes += sizeValues.length;
-    typeTotals.set(type, entry);
-
-    for (const [position, option] of options.entries()) {
-      const name = String(option?.name ?? `option ${position + 1}`);
-      const values = Array.isArray(option?.values) ? option.values.map(String) : [];
-      const axis = axes.get(name) ?? { name, values: 0, inStock: 0, prices: [] };
-      for (const value of values) {
-        axis.values += 1;
-        for (const variant of variants) {
-          const parts = String(variant?.title ?? "").split("/").map((part: string) => part.trim());
-          if (parts[position] !== value) continue;
-          variantsSeen += 1;
-          if (variant?.available === true) {
-            axis.inStock += 1;
-            inStockSeen += 1;
-            const price = Math.round(Number(variant.price));
-            if (Number.isFinite(price) && price > 0) axis.prices.push(price);
-          }
-          break;
-        }
-      }
-      axes.set(name, axis);
-    }
-  }
-
-  const ordered = Array.from(axes.values()).sort((a, b) => b.values - a.values);
-  const chosen = wanted ? ordered.filter((axis) => axis.name.toLowerCase().includes(wanted)) : ordered;
-  if (!chosen.length) {
-    return `No option axis matches "${args.axis}". This store uses: ${ordered.map((axis) => axis.name).join(", ") || "none"}.`;
-  }
-
-  const lines = [
-    `Size run across ${products.length} sampled KITH product(s): ${variantsSeen} size variant(s) matched, ${inStockSeen} of them buyable right now`,
-    `Product types in the sample: ${Array.from(typeTotals.entries()).sort((a, b) => b[1].sizes - a[1].sizes).slice(0, 8).map(([type, entry]) => `${type} (${entry.count} product(s), ${entry.sizes} size variant(s))`).join(", ")}`,
-    "",
-  ];
-  for (const axis of chosen) {
-    const median = kithMedian(axis.prices);
-    const coverage = axis.values ? ((axis.inStock / axis.values) * 100).toFixed(1) : "0.0";
-    lines.push(
-      `${axis.name}: ${axis.values} size variant(s) published, ${axis.inStock} in stock (${coverage}% coverage) · median in-stock price ${median === null ? "not reported" : `$${median.toLocaleString("en-US")}`}`,
-    );
-  }
-  return lines.join("\n");
-}
-
-const asText = (value: unknown): string => String(value ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-
-/** Which collaborations the shop is actually carrying, counted from the live catalog titles. */
-export async function collaborationCensus(args: { sample?: string; limit?: string }): Promise<string> {
-  const max = Math.min(Math.max(Number(args.sample ?? 300) || 300, 20), 1500);
-  const n = Math.min(Math.max(Number(args.limit ?? 15) || 15, 1), 40);
-  const pages = KITH_PAGES.slice(0, Math.max(1, Math.ceil(max / 250)));
-  const products = await sampleCatalog(max, pages);
-  if (!products.length) throw new Error("The KITH catalog returned no products.");
-
-  // KITH titles follow "Collab for Brand ..." or "Brand for KITH ..."
-  const partners = new Map<string, { products: number; sizes: number; prices: number[]; example: string }>();
-  let matched = 0;
-  for (const product of products) {
-    const title = asText(product.title);
-    // only look before the first colour dash, so "That's All Tee - Kindling" is not read
-    const head = title.split(" - ")[0];
-    const match = /^(?:(.+?)\s+for\s+(?:KITH|ASICS)|(.+?)\s+for\s+ASICS)(?:\s|$)/i.exec(head)
-      ?? /for\s+([A-Z][A-Za-z0-9&.'-]{1,24})\s/i.exec(head);
-    const partner = (match?.[1] ?? match?.[2] ?? "").trim();
-    const stop = new Set(["THE", "ALL", "NEW", "RELEASE", "KITH", "ASICS", "US", "AND", "OUR", "IT"]);
-    if (!partner || stop.has(partner.toUpperCase())) continue;
-    matched += 1;
-    const key = partner.toUpperCase();
-    const entry = partners.get(key) ?? { products: 0, sizes: 0, prices: [], example: title };
-    entry.products += 1;
-    const variants = Array.isArray(product.variants) ? product.variants : [];
-    entry.sizes += variants.length;
-    const price = Math.round(Number(variants[0]?.price));
-    if (Number.isFinite(price) && price > 0) entry.prices.push(price);
-    partners.set(key, entry);
-  }
-  if (!partners.size) throw new Error(`No collaboration name could be read out of ${products.length} KITH product titles.`);
-  const ranked = [...partners.entries()].sort((a, b) => b[1].products - a[1].products);
-  const lines = [
-    `Collaboration census from ${products.length} sampled KITH product(s): ${matched} title(s) named a partner, ${partners.size} distinct partner(s)`,
-    "",
-  ];
-  for (const [partner, entry] of ranked.slice(0, n)) {
-    const median = kithMedian(entry.prices);
-    lines.push(
-      `  ${partner}: ${entry.products} product(s), ${entry.sizes} size variant(s) · from ${median === null ? "price not reported" : `$${median.toLocaleString("en-US")}`} · e.g. ${entry.example.slice(0, 70)}`,
-    );
-  }
-  if (ranked.length > n) lines.push(`  ...and ${ranked.length - n} further partner name(s).`);
-  lines.push("");
-  lines.push("Partner names are read from product titles with a loose pattern; treat a stray word as a false positive.");
-  return lines.join("\n");
-}
