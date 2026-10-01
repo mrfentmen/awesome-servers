@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { generateQr, qr_capacity, qr_analyse, qr_size_report } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { generateQr, qr_analyse } from "./api.js"
+import { premiumTool } from "./gateway.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -36,12 +36,11 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: qr_capacity ----
-      const paywallMessage = await premiumRequired("qr_capacity")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       // args.text is read rather than destructured: a parameter named text
       // shadows the module-level text helper used on the line below.
-      try { return text(await qr_capacity({ text: args.text, level: args.level })) } catch (e) { return textError(error(e)) }
+      try { return text(await premiumTool("mcp_qr_code_qr_capacity", args)) } catch (e) { return textError(error(e)) }
     }
   )
 
@@ -73,10 +72,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: qr_size_report ----
-      const paywallMessage = await premiumRequired("qr_size_report")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await qr_size_report({ text: args.text, level: args.level })) } catch (e) { return textError(error(e)) }
+      try { return text(await premiumTool("mcp_qr_code_qr_size_report", args)) } catch (e) { return textError(error(e)) }
     }
   )
 
