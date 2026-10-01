@@ -1,9 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { createWorkbook } from "./api.js"
-import { readWorkbook, workbookProfile, formulaReport } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { createWorkbook } from "./local-api.js"
+import { readWorkbook, workbookProfile, formulaReport } from "./local-api.js"
 
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -45,10 +45,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: workbook_profile ----
-    const paywallMessage = await premiumRequired("workbook_profile")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await workbookProfile(args)) } catch (e) { return textError(error(e)) }
   }
   )
@@ -63,6 +59,38 @@ export function createServer(): McpServer {
     },
     async (args) => {
     try { return text(await formulaReport(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "exchange_rates",
+    {
+      title: "Exchange rates",
+      description: "Current keyless currency rates from Frankfurter, with a caller-selected base and symbols.",
+      inputSchema: z.object({ base: z.string().describe("Three-letter base currency.").optional(), symbols: z.string().describe("Comma-separated three-letter symbols.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: exchange_rates ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_excel_exchange_rates", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "economic_indicator",
+    {
+      title: "Economic indicator",
+      description: "Recent observations for a World Bank indicator and country code.",
+      inputSchema: z.object({ country: z.string().describe("World Bank country code.").optional(), indicator: z.string().describe("World Bank indicator id.").optional(), limit: z.number().describe("Maximum observations.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: economic_indicator ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_excel_economic_indicator", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
