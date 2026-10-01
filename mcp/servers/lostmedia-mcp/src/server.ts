@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatArticle, getArticle, LostMediaError, randomArticle, searchArticles, recentChanges, browseCategories } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { formatArticle, getArticle, LostMediaError, randomArticle, searchArticles } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -87,16 +87,11 @@ export function createServer(): McpServer {
       inputSchema: z.object({ limit: z.number().int().min(1).max(30).default(10) }),
       annotations: READ_ONLY,
     },
-    async ({ limit }) => {
+    async (args) => {
       // ---- paywall: recent_changes ----
-      const paywallMessage = await premiumRequired("recent_changes")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await recentChanges({ limit }))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_lostmedia_recent_changes", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -113,15 +108,26 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: browse_categories ----
-      const paywallMessage = await premiumRequired("browse_categories")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await browseCategories(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_lostmedia_browse_categories", args)) } catch (e) { return textError(errorMessage(e)) }
     }
+  )
+
+  server.registerTool(
+    "category_articles",
+    {
+      title: "Category articles",
+      description: "List members of a Lost Media Wiki category, with page IDs and namespaces, to find articles and subcategories.",
+      inputSchema: z.object({ category: z.string().min(1).max(200).describe("Category name, e.g. Lost films."), limit: z.number().int().min(1).max(30).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: category_articles ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_lostmedia_category_articles", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

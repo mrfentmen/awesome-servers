@@ -91,36 +91,10 @@ export interface RecentChangesArgs {
   limit?: number
 }
 
-export async function recentChanges(args: RecentChangesArgs): Promise<string> {
-  const limit = Math.max(1, Math.min(args.limit ?? 10, 30))
-  const data = await api({ action: "query", list: "recentchanges", rcnamespace: "0", rclimit: String(limit), rcprop: "title|user|comment|timestamp|flags" })
-  const rows: RawPage[] = data?.query?.recentchanges ?? []
-  if (!rows.length) return "The Lost Media Wiki has no recent article edits to show."
-  return `Latest Lost Media Wiki article edits (${rows.length} shown):\n` +
-    rows.map((r, i) => {
-      const when = String(r.timestamp ?? "?").slice(0, 16).replace("T", " ")
-      const who = String(r.user ?? "?").slice(0, 60)
-      const size = r.newlen !== undefined && r.oldlen !== undefined ? ` (${Number(r.oldlen)} -> ${Number(r.newlen)} bytes)` : ""
-      const comment = String(r.comment ?? "").replace(/\s+/g, " ").trim()
-      return [
-        `${i + 1}. ${String(r.title ?? "?")}`,
-        `   ${when} by ${who} [${String(r.type ?? "edit")}]${size}${r.minor ? " minor" : ""}`,
-        ...(comment ? [`   ${comment.slice(0, 140)}`] : []),
-      ].join("\n")
-    }).join("\n")
-}
-
 export interface BrowseCategoriesArgs {
   prefix?: string
   limit?: number
 }
 
-export async function browseCategories(args: BrowseCategoriesArgs): Promise<string> {
-  const prefix = (args.prefix ?? "").trim()
-  const limit = Math.max(1, Math.min(args.limit ?? 25, 50))
-  const data = await api({ action: "query", list: "allcategories", acprefix: prefix, aclimit: String(limit) })
-  const rows: RawPage[] = data?.query?.allcategories ?? []
-  if (!rows.length) return `The Lost Media Wiki has no categories starting with "${prefix}".`
-  return `Lost Media Wiki categories starting with "${prefix}" (${rows.length} shown):\n` +
-    rows.map((c, i) => `${i + 1}. ${String(c["*"] ?? "?")}${c.subcats ? "" : " (no subcategories)"}`).join("\n")
-}
+// ---- gap4c1 tools:
+

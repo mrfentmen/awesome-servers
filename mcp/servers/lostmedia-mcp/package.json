@@ -1,6 +1,6 @@
 {
   "name": "lostmedia-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Keyless MCP server for the Lost Media Wiki: search lost TV, film, music and games, track found / partially-found status.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/lostmedia-mcp",
