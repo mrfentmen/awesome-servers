@@ -5,6 +5,10 @@
 
 from __future__ import annotations
 
+import json
+import os
+from unittest.mock import patch
+
 import queue
 import sys
 import threading
@@ -17,6 +21,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
+from acp_kit import GatewayClient
 from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
 
 from agent import LabelsAgent, drug_from_text, route  # noqa: E402
@@ -199,9 +204,9 @@ class RouteTests(unittest.TestCase):
 
 
 class TurnTests(unittest.TestCase):
-    def turn(self, text: str, data: FakeData | None = None, permission: str = "allow-once"):
+    def turn(self, text: str, data: FakeData | None = None, permission: str = "allow-once", gateway=None):
         agent_conn, client_conn = connected_pair()
-        agent = LabelsAgent(agent_conn, data or FakeData())
+        agent = LabelsAgent(agent_conn, data or FakeData(), gateway=gateway)
         threading.Thread(target=agent_conn.serve, daemon=True).start()
         client = AcpClient(connection=client_conn, permission=permission)
         client.start()
@@ -252,6 +257,73 @@ class TurnTests(unittest.TestCase):
         statuses = [update.get("status") for update in result["updates"]
                     if update.get("sessionUpdate") == "tool_call_update"]
         self.assertIn("failed", statuses)
+
+
+BOARD_ARGS = {"drugs": ["lipitor", "metformin"]}
+BOARD_QUESTION = "compare label safety for lipitor, metformin"
+BOARD_PAYLOAD = {"found": 2, "drugs": [
+    {"query": drug, "brand": drug, "found": True, "effective_time": "20260909", "id": "real-id",
+     "sections": {"boxed_warning": drug == "metformin", "warnings": True, "drug_interactions": True},
+     "section_lengths": {"boxed_warning": 31 if drug == "metformin" else 0, "warnings": 78, "drug_interactions": 42}}
+    for drug in ("lipitor", "metformin")],
+    "section_totals": {key: {"present": 1 if key == "boxed_warning" else 2,
+                             "missing": 1 if key == "boxed_warning" else 0, "unknown": 0,
+                             "total_characters": 31 if key == "boxed_warning" else 156}
+                       for key in ("boxed_warning", "warnings", "drug_interactions")}}
+
+
+class PremiumTests(unittest.TestCase):
+    def gateway(self, key, payload=BOARD_PAYLOAD, refused=False):
+        self.calls = []
+        def fetch(url, body, headers):
+            self.calls.append((body["params"], headers))
+            result = {"content": [{"type": "text", "text": payload if refused else json.dumps(payload)}]}
+            if refused:
+                result.update(isError=True, structuredContent={"licenceRefusal": True, "reason": "denied"})
+            return {"jsonrpc": "2.0", "id": 1, "result": result}
+        return GatewayClient(key=key, fetch=fetch)
+
+    def test_no_key_attempts_call_without_authorization(self):
+        with patch.dict(os.environ, {}, clear=True):
+            gateway = self.gateway(None)
+            with patch.object(gateway, "call", wraps=gateway.call) as attempted:
+                result, _ = TurnTests().turn(BOARD_QUESTION, gateway=gateway)
+            attempted.assert_called_once_with("label_safety_board", BOARD_ARGS)
+        self.assertIn("MCP_LICENSE_KEY", result["text"])
+        self.assertEqual(self.calls, [])
+
+    def test_rejected_key_preserves_wording(self):
+        wording = "This premium tool needs a valid license key; key revoked."
+        result, _ = TurnTests().turn(BOARD_QUESTION, gateway=self.gateway("lic_live_but_rejected", wording, True))
+        self.assertEqual(result["text"], wording)
+        self.assertEqual(len(self.calls), 1)
+
+    def test_good_key_returns_gateway_numbers(self):
+        data = FakeData()
+        result, _ = TurnTests().turn(BOARD_QUESTION, data=data, gateway=self.gateway("lic_granted"))
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(self.calls[0][0], {"name": "label_safety_board", "arguments": BOARD_ARGS})
+        self.assertEqual(self.calls[0][1]["Authorization"], "Bearer lic_granted")
+        for value in ("2 of 2 labels matched", "boxed warning 1 present", "31 chars", "20260909"):
+            self.assertIn(value, result["text"])
+        self.assertEqual(data.calls, [])
+
+    def test_free_questions_never_call_gateway(self):
+        gateway = self.gateway("lic_granted")
+        with patch.object(gateway, "call", wraps=gateway.call) as attempted:
+            for question in ("what is lipitor?", "warnings for metformin", "which drugs are called lipitor?"):
+                TurnTests().turn(question, gateway=gateway)
+            attempted.assert_not_called()
+
+    def test_unreadable_payload_is_honest(self):
+        for payload in ({}, {"drugs": [None, None], "section_totals": {}}, {"drugs": [{"found": True}, {"found": True}], "section_totals": {}}):
+            answer, artifact = LabelsAgent(gateway=self.gateway("lic_granted", payload))._safety_board(BOARD_ARGS)
+            self.assertIn("no readable label safety board", answer)
+            self.assertTrue(artifact["failed"])
+
+    def test_artifact_marks_premium(self):
+        _, artifact = LabelsAgent(gateway=self.gateway("lic_granted"))._safety_board(BOARD_ARGS)
+        self.assertTrue(artifact["premium"])
 
 
 if __name__ == "__main__":

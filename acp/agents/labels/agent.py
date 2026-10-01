@@ -18,6 +18,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer
 from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
 
 from data import DATASET, SECTIONS, LabelsData, LabelsError  # noqa: E402
@@ -27,13 +28,14 @@ HELP = (
     "  • what is lipitor?\n"
     "  • warnings for metformin\n"
     "  • dosage for amoxicillin\n"
+    "  • compare label safety for lipitor, metformin (premium)\n"
     "I quote the manufacturer's filed label text and say which section it came from. "
     "I am not medical advice."
 )
 
 PERMISSION_KEY = "labels-read-public-openfda"
 
-SKILLS = ("label-info", "label-search", "help")
+SKILLS = ("label-info", "label-search", "label-safety-board", "help")
 
 _SEARCH_RE = re.compile(r"\b(which drugs?|list|search|brands?|generic names?|what drugs?)\b",
                         re.IGNORECASE)
@@ -91,6 +93,11 @@ def route(text: str) -> tuple[str, dict]:
     if not text.strip() or re.search(r"\b(help|what can you do|commands?)\b", text, re.IGNORECASE):
         return "help", {}
 
+    if re.search(r"\blabel safety\b|\bcompare .*labels?\b", text, re.IGNORECASE):
+        names = re.search(r"(?:for|of)\s+(.+)$", text, re.IGNORECASE)
+        drugs = [part.strip(" .?!'") for part in re.split(r",|\band\b", names.group(1) if names else "") if part.strip(" .?!'")]
+        return "label-safety-board", {"drugs": drugs}
+
     params: dict = {}
     drug = drug_from_text(text)
     if drug:
@@ -109,9 +116,11 @@ class LabelsAgent(AcpAgent):
     title = "Labels — openFDA drug labels"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: LabelsData | None = None) -> None:
+    def __init__(self, connection=None, data: LabelsData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or LabelsData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -148,7 +157,7 @@ class LabelsAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (LabelsError, ValueError) as exc:
+        except (LabelsError, GatewayError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the openFDA feed: {exc}")
             return STOP_END_TURN
@@ -158,17 +167,59 @@ class LabelsAgent(AcpAgent):
         return STOP_END_TURN
 
     def on_cancel(self, session) -> None:
-        # Every skill is a single HTTP read; nothing long-running to interrupt.
+        # Requests are bounded; no background work to interrupt.
         return None
 
     # -- skills ------------------------------------------------------------
 
     def _run_skill(self, skill: str, params: dict) -> tuple[str, dict]:
+        if skill == "label-safety-board":
+            return self._safety_board(params)
         if skill == "label-search":
             return self._search(params)
         if skill == "label-info":
             return self._info(params)
         return HELP, {"summary": "help", "dataset": None}
+
+    def _safety_board(self, params: dict) -> tuple[str, dict]:
+        arguments = {"drugs": params.get("drugs") or []}
+        data, refused = premium_call(self.gateway, "label_safety_board", arguments,
+                                     {"agent": "labels", "skill": "label-safety-board"})
+        if refused:
+            return refused
+        rows = data.get("drugs") if isinstance(data, dict) else None
+        totals = data.get("section_totals") if isinstance(data, dict) else None
+        keys = ("boxed_warning", "warnings", "drug_interactions")
+        if (not isinstance(rows, list) or len(rows) < 2 or not isinstance(totals, dict) or
+                not isinstance(data.get("found"), int) or
+                any(not isinstance(totals.get(key), dict) or
+                    any(not isinstance(totals[key].get(field), int) for field in
+                        ("present", "missing", "unknown", "total_characters")) for key in keys) or
+                any(not isinstance(row, dict) or not isinstance(row.get("found"), bool) or
+                    not isinstance(row.get("sections"), dict) or not isinstance(row.get("section_lengths"), dict)
+                    for row in rows)):
+            return empty_premium_answer("The gateway returned no readable label safety board.",
+                                        {"agent": "labels", "skill": "label-safety-board"})
+        lines = [f"Premium label safety board ({data['found']} of {len(rows)} labels matched):"]
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            if not row.get("found"):
+                lines.append(f"  {row.get('query', 'unknown')}: no matching label found.")
+                continue
+            sections = row.get("sections") or {}
+            lengths = row.get("section_lengths") or {}
+            flags = ", ".join(f"{key.replace('_', ' ')} {'present' if sections.get(key) is True else 'not reported'} ({lengths.get(key, 'not reported')} chars)"
+                               for key in ("boxed_warning", "warnings", "drug_interactions"))
+            title = row.get("brand") or row.get("generic") or row.get("query")
+            lines.append(f"  {title} ({row.get('effective_time') or 'date not reported'}): {flags}.")
+            lines.append(f"    Generic: {row.get('generic') or 'not reported'}; label ID: {row.get('id', 'not reported')}; "
+                         f"manufacturer: {row.get('manufacturer') or 'not reported'}; "
+                         f"{row.get('present_section_count', 'not reported')} of 3 sections present.")
+        lines.append("Section totals: " + "; ".join(f"{key.replace('_', ' ')} {value['present']} present / {value['missing']} not reported / {value['unknown']} unknown labels, {value['total_characters']} chars" for key in keys for value in [totals[key]]))
+        lines.append("Common present sections among matched labels: " + ", ".join(key for key in keys if key in (data.get("common_present_sections") or [])) + ".")
+        lines.append(str(data.get("note") or "Filed label sections are reference data, not medical advice."))
+        return "\n".join(lines), {**data, "summary": lines[0], "premium": True}
 
     @staticmethod
     def _title(openfda: dict, fallback: str) -> str:
