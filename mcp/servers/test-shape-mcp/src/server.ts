@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { format, inspectTestShape } from "./core.js"
-import { analyzeTestSource, checkTestConventions } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { checkTestConventions, ciWorkflows } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -29,10 +29,9 @@ export function createServer() {
     },
     async (args) => {
     // ---- paywall: analyze_test_source ----
-    const paywallMessage = await premiumRequired("analyze_test_source")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await analyzeTestSource(args)) } catch (error) { return errorText(error) }
+    try { return text(await premiumTool("mcp_test_shape_analyze_test_source", args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -46,6 +45,51 @@ export function createServer() {
     },
     async (args) => {
     try { return text(await checkTestConventions(args)) } catch (error) { return errorText(error) }
+  }
+  )
+
+  server.registerTool(
+    "ci_workflows",
+    {
+      title: "CI workflow inventory",
+      description: "Inventory the declared GitHub Actions workflows of a public repository and their enabled states.",
+      inputSchema: z.object( { owner: z.string().min(1).max(100).describe("Public GitHub owner."), repo: z.string().min(1).max(100).describe("Public repository."), limit: z.number().int().min(1).max(30).optional() } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await ciWorkflows(args)) } catch (error) { return errorText(error) }
+  }
+  )
+
+  server.registerTool(
+    "ci_run_history",
+    {
+      title: "CI run history",
+      description: "Inspect recent public GitHub Actions runs, triggers, outcomes and sampled conclusion counts.",
+      inputSchema: z.object( { owner: z.string().min(1).max(100).describe("Public GitHub owner."), repo: z.string().min(1).max(100).describe("Public repository."), limit: z.number().int().min(1).max(30).optional() } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: ci_run_history ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_test_shape_ci_run_history", args)) } catch (e) { return textError(String(e)) }
+  }
+  )
+
+  server.registerTool(
+    "commit_checks",
+    {
+      title: "Commit checks",
+      description: "Inspect check results and annotation counts on a public commit or branch, including checks from external test services.",
+      inputSchema: z.object( { owner: z.string().min(1).max(100).describe("Public GitHub owner."), repo: z.string().min(1).max(100).describe("Public repository."), limit: z.number().int().min(1).max(30).optional(), ref: z.string().min(1).max(200).optional().describe("Commit SHA or branch; default HEAD.") } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: commit_checks ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_test_shape_commit_checks", args)) } catch (e) { return textError(String(e)) }
   }
   )
 
