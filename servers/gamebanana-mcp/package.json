@@ -1,6 +1,6 @@
 {
   "name": "gamebanana-mcp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Use this MCP server to GameBanana, the game mods database. Search mods by game, browse mod feeds, read mod pages",
   "type": "module",
   "mcpName": "io.github.mrfentmen/gamebanana-mcp",

@@ -1,17 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  BananaError,
-  formatGame,
-  formatMod,
-  formatSearchResult,
-  getGame,
-  getGameMods,
-  getMod,
-  searchGames,
-  searchMods,
-} from "./api.js"
 
+import { BananaError, formatGame, formatMod, formatSearchResult, getGame, getGameMods, getMod, searchGames, searchMods } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -118,6 +109,54 @@ export function createServer(): McpServer {
       } catch (e) {
         return textError(errorMessage(e))
       }
+    }
+  )
+
+  server.registerTool(
+    "mod_files",
+    {
+      title: "Mod files",
+      description: "Every file attached to a GameBanana mod with its size, download count, archived flag and direct download link.",
+      inputSchema: z.object({ id: z.number().describe("Mod id from search_mods or get_game_mods."), }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: mod_files ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_gamebanana_mod_files", args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "mod_stats",
+    {
+      title: "Mod stats",
+      description: "Engagement statistics for a GameBanana mod: views, downloads, likes, comments, subscribers, version, dates, obsolete and ported flags and license.",
+      inputSchema: z.object({ id: z.number().describe("Mod id from search_mods or get_game_mods."), }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: mod_stats ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_gamebanana_mod_stats", args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "mod_previews",
+    {
+      title: "Mod previews",
+      description: "The preview and screenshot image URLs attached to a GameBanana mod, so you can see what a mod looks like before downloading it.",
+      inputSchema: z.object({ id: z.number().describe("Mod id from search_mods or get_game_mods."), limit: z.number().describe("Max images, 1-30, default 8.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: mod_previews ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_gamebanana_mod_previews", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 

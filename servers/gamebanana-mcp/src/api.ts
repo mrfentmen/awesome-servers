@@ -195,3 +195,39 @@ export function formatMod(m: ModInfo): string {
   if (m.downloadUrl) lines.push(`Download: ${m.downloadUrl}`)
   return lines.join("\n")
 }
+
+// ---- muxB tools:
+type GbFile = {
+  _sFile?: string;
+  _nFilesize?: number;
+  _sDownloadUrl?: string;
+  _bIsArchived?: boolean;
+  _nDownloadCount?: number;
+  _sAnalysisState?: string;
+}
+
+type GbImage = { _sType?: string; _sBaseUrl?: string; _sFile?: string; _sFile530?: string }
+type GbPreview = { _aImages?: GbImage[] }
+type GbModPage = {
+  _idRow?: number;
+  _sName?: string;
+  _sProfileUrl?: string;
+  _tsDateAdded?: number;
+  _aSubmitter?: { _sName?: string };
+  _aCategory?: { _sName?: string };
+  _aSuperCategory?: { _sName?: string };
+  _aGame?: { _idRow?: number; _sName?: string; _sAbbreviation?: string };
+  _aFiles?: GbFile[];
+  _aPreviewMedia?: GbPreview;
+  _nViewCount?: number;
+  _nDownloadCount?: number;
+  _nLikeCount?: number;
+  _nPostCount?: number;
+  _nSubscriberCount?: number;
+  _sVersion?: string;
+  _tsDateModified?: number;
+  _bIsObsolete?: boolean;
+  _bIsPorted?: boolean;
+  _sLicense?: string;
+}
+
