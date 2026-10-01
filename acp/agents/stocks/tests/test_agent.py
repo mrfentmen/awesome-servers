@@ -13,6 +13,7 @@ import queue
 import sys
 import threading
 import unittest
+import unittest.mock
 from pathlib import Path
 
 AGENT_DIR = Path(__file__).resolve().parents[1]
@@ -271,5 +272,84 @@ class TurnTests(unittest.TestCase):
         self.assertIn("I could not read that quote", result["text"])
 
 
-if __name__ == "__main__":
+
+class PremiumTests(unittest.TestCase):
+    args = {"tickers": ["AAPL", "MSFT"], "start_date": "2026-04-01", "end_date": "2026-04-30"}
+    payload = {"trading_days": 21, "board": [
+        {"ticker": ticker, "currency": "USD", "first_close": 100, "last_close": 114,
+         "return_percent": 14, "low": 98, "high": 115, "range_percent": 17.35,
+         "volume_change_percent": 25} for ticker in ("AAPL", "MSFT")]}
+
+    def run_premium(self, gateway):
+        from agent import StockAgent
+        skill, params = route('compare AAPL, MSFT from 2026-04-01 to 2026-04-30')
+        self.assertEqual(skill, 'stocks-board')
+        return StockAgent(gateway=gateway)._board(params)
+
+    def test_no_key(self):
+        from acp_kit import GatewayClient, GatewayError
+        with unittest.mock.patch.dict(__import__('os').environ, {}, clear=True):
+            fetch = unittest.mock.Mock()
+            gateway = GatewayClient(fetch=fetch)
+            with self.assertRaises(GatewayError) as expected:
+                gateway.call('stocks_window_board', self.args)
+            with unittest.mock.patch.object(gateway, 'call', wraps=gateway.call) as call:
+                answer, artifact = self.run_premium(gateway)
+                call.assert_called_once_with('stocks_window_board', self.args)
+            self.assertEqual(answer, str(expected.exception))
+            self.assertIn('MCP_LICENSE_KEY', answer)
+            self.assertEqual(artifact['reason'], 'missing_key')
+            fetch.assert_not_called()
+
+    def test_rejected_key(self):
+        from acp_kit import GatewayClient
+        fetch = unittest.mock.Mock(return_value={"result": {"isError": True,
+            "structuredContent": {"licenceRefusal": True, "reason": "revoked"},
+            "content": [{"type": "text", "text": "gateway says key revoked"}]}})
+        answer, artifact = self.run_premium(GatewayClient(key='lic_live_but_rejected', fetch=fetch))
+        self.assertEqual(answer, 'gateway says key revoked')
+        self.assertEqual(artifact['reason'], 'denied')
+        self.assertEqual(fetch.call_args.args[2]['Authorization'], 'Bearer lic_live_but_rejected')
+
+    def test_good_key_and_real_fields(self):
+        from acp_kit import GatewayClient
+        fetch = unittest.mock.Mock(return_value={"result": {"content": [
+            {"type": "text", "text": json.dumps(self.payload)}]}})
+        answer, artifact = self.run_premium(GatewayClient(key='good', fetch=fetch))
+        self.assertEqual(fetch.call_count, 1)
+        self.assertEqual(fetch.call_args.args[1]['params'], {'name': 'stocks_window_board', 'arguments': self.args})
+        self.assertIn('+14% price return', answer)
+        self.assertIn('+25% average daily volume', answer)
+        self.assertTrue(artifact['premium'])
+
+    def test_free_question_never_calls_gateway(self):
+        from agent import StockAgent
+        gateway = unittest.mock.Mock()
+        data, _ = make_data()
+        ctx = unittest.mock.Mock()
+        StockAgent(data=data, gateway=gateway).prompt(ctx, [{"type": "text", "text": "price of AAPL"}])
+        self.assertIn('339.75 USD', ctx.stream_text.call_args.args[0])
+        gateway.call.assert_not_called()
+
+    def test_unreadable_payload(self):
+        for payload in ({}, 'bad', {'board': [None]}, {'board': [{'ticker': 'AAPL'}]}):
+            gateway = unittest.mock.Mock()
+            gateway.call.return_value = payload
+            answer, artifact = self.run_premium(gateway)
+            self.assertIn('no readable', answer)
+            self.assertTrue(artifact['failed'])
+
+    def test_premium_prompt_reaches_gateway_and_zero_volume_is_valid(self):
+        from agent import StockAgent
+        gateway = unittest.mock.Mock()
+        payload = json.loads(json.dumps(self.payload))
+        payload['board'][0]['volume_change_percent'] = None
+        gateway.call.return_value = payload
+        ctx = unittest.mock.Mock()
+        StockAgent(gateway=gateway).prompt(ctx, [{"type": "text", "text":
+            "compare AAPL, MSFT from 2026-04-01 to 2026-04-30"}])
+        gateway.call.assert_called_once_with('stocks_window_board', self.args)
+        self.assertIn('volume change undefined', ctx.stream_text.call_args.args[0])
+
+if __name__ == '__main__':
     unittest.main(verbosity=2)
