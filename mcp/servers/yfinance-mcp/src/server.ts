@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_quote, m0_search, m1_quote, m1_searchSymbol, gainers, losers, actives, trending, dividendHistory, volumeSpike, benchmarkCompare, filingFundamentals, registrantProfile } from './api.js'
-import { premiumRequired } from "./license.js"
+import { m0_quote, m0_search, m1_quote, m1_searchSymbol, gainers, losers, actives, trending, dividendHistory, volumeSpike, benchmarkCompare, registrantProfile } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -170,10 +170,9 @@ server.registerTool(
     },
     async (args) => {
     // ---- paywall: filing_fundamentals ----
-    const paywallMessage = await premiumRequired("filing_fundamentals")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await filingFundamentals(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_yfinance_filing_fundamentals", args)) } catch (e) { return textError(error(e)) }
   }
   )
 

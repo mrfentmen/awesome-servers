@@ -10,8 +10,6 @@ export interface m0_SearchArgs {
 const m0 = (() => {
 const UA = 'mrfentmen-yfinance-mcp/1.0';
 
-
-
 async function quote(args: m0_QuoteArgs): Promise<string> {
   const symbol = String(args.symbol).trim().toUpperCase();
   const range = String(args?.range ?? '5d').trim();
@@ -469,84 +467,6 @@ async function yfResolve(tickerOrCik: string): Promise<{ cik: number; ticker: st
 }
 
 const yfPad = (n: number): string => (n >= 1e12 ? `${(n / 1e12).toFixed(2)}T` : n >= 1e9 ? `${(n / 1e9).toFixed(2)}B` : n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n.toLocaleString());
-
-/**
- * A company's reported annual figures, straight from its filings: the trend of one
- * concept across years, the growth between them, and the accession each number came
- * out of. A quote says what the share is doing today; this says what the business
- * reported, and it is the only one of these tools that does.
- */
-export async function filingFundamentals(args: { ticker: string; concept?: string; years?: number }) : Promise<string> {
-  const conceptKey = String(args?.concept ?? "net_income").trim().toLowerCase();
-  const gaapTag = YF_CONCEPTS[conceptKey];
-  if (!gaapTag) {
-    throw new Error(`Unknown concept "${args?.concept}". Available: ${Object.keys(YF_CONCEPTS).join(", ")}.`);
-  }
-  const years = Math.min(Math.max(Number(args?.years ?? 8) || 8, 2), 20);
-  const who = await yfResolve(args?.ticker ?? "");
-  const cikStr = String(who.cik).padStart(10, "0");
-  const facts = await yfSecGet<YfFacts>(`${YF_SEC}/api/xbrl/companyfacts/CIK${cikStr}.json`, "the SEC's company facts");
-
-  const gaap = facts.facts?.["us-gaap"] ?? {};
-  const fact = gaap[gaapTag];
-  if (!fact) {
-    const near = Object.keys(gaap).filter((k) => k.toLowerCase().includes(gaapTag.slice(0, 12).toLowerCase())).slice(0, 5);
-    throw new Error(
-      `${facts.entityName ?? who.title} does not report ${conceptKey} (${gaapTag}). ${near.length ? `Tags in its filing that are close: ${near.join(", ")}.` : "Its filing carries no us-gaap tags with a similar name."}`,
-    );
-  }
-
-  interface Row { end: string; val: number; unit: string; form: string; fy?: number; accn?: string; start?: string; filed?: string }
-  const rows: Row[] = [];
-  for (const [unit, points] of Object.entries(fact.units ?? {})) {
-    for (const p of points) {
-      if (p.form !== "10-K" || typeof p.val !== "number" || !p.end) continue;
-      // Annual duration facts carry a start; a point-in-time fact does not.
-      const months = p.start ? Math.round((Date.parse(p.end) - Date.parse(p.start)) / 86400000 / 30.44) : 0;
-      if (p.start && months < 11) continue;
-      rows.push({ end: p.end, val: p.val, unit, form: p.form, fy: p.fy, accn: p.accn, start: p.start, filed: p.filed });
-    }
-  }
-  if (!rows.length) {
-    throw new Error(`${facts.entityName ?? who.title} has ${fact.label ?? gaapTag} in its filing, but no annual 10-K duration figures to plot.`);
-  }
-  // One row per fiscal year end, keeping the most recently filed value.
-  const byEnd = new Map<string, Row>();
-  for (const r of rows) {
-    const held = byEnd.get(r.end);
-    if (!held || String(r.filed ?? "") > String(held.filed ?? "")) byEnd.set(r.end, r);
-  }
-  const series = [...byEnd.values()].sort((a, b) => (a.end < b.end ? -1 : 1)).slice(-years);
-  if (series.length < 2) {
-    throw new Error(`Only ${series.length} annual figure(s) available for ${conceptKey}, which is too few to show a trend.`);
-  }
-
-  const first = series[0];
-  const last = series[series.length - 1];
-  const netChange = ((last.val - first.val) / Math.abs(first.val)) * 100;
-  const cagr = Math.pow(last.val / first.val, 1 / (series.length - 1)) - 1;
-  const withGrowth = [...series].reverse().map((r, i, arr) => {
-    const prev = i < arr.length - 1 ? arr[i + 1] : null;
-    return { row: r, growth: prev && prev.val !== 0 ? ((r.val - prev.val) / Math.abs(prev.val)) * 100 : null };
-  });
-  const perShare = /Share|EarningsPerShare/i.test(gaapTag);
-  const show = (n: number): string => (perShare ? n.toFixed(2) : yfPad(n));
-
-  return [
-    `${facts.entityName ?? who.title} (${who.ticker}, CIK ${who.cik}) — ${fact.label ?? gaapTag}`,
-    `  ${conceptKey}, ${series.length} annual 10-K figure(s) from ${first.end} to ${last.end}`,
-    `  ${perShare ? "per share" : "reported amount in " + last.unit}: ${show(first.val)} -> ${show(last.val)}`,
-    `  change over the window ${netChange >= 0 ? "+" : ""}${netChange.toFixed(1)}%, a compound rate of ${cagr >= 0 ? "+" : ""}${(cagr * 100).toFixed(1)}% a year`,
-    `  most recent figure filed ${last.filed ?? "not reported"}${last.accn ? ` under accession ${last.accn}` : ""}`,
-    "",
-    "By fiscal year, newest first:",
-    ...withGrowth.map(({ row, growth }) =>
-      `  ${row.end}  ${show(row.val).padStart(12)}  ${growth === null ? "          -" : `${growth >= 0 ? "+" : ""}${growth.toFixed(1)}%`.padStart(10)}  ${"#".repeat(Math.min(40, Math.round(Math.abs(growth ?? 0) * 2)))}  ${row.form} ${row.accn ?? ""}`,
-    ),
-    "",
-    "Read as: these are the figures the company itself filed, restated only if it later restated them, so they are slower to change than a price and cannot be compared across companies without checking the accounting period each used. A company that changes tagging drops out here rather than showing a break, and a concept a registrant never reports is absent rather than zero.",
-  ].join("\n");
-}
 
 /**
  * Who a company is on the SEC's own register: the filer number behind a ticker,
