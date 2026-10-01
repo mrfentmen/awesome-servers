@@ -11,12 +11,6 @@ export function errorMessage(e: unknown): string {
 
 const UA = { "User-Agent": "awesome-mcps/1.0" }
 
-function envStrict(name: string): string {
-  const v = process.env[name]
-  if (!v) throw new EnerginetError(`Set the ${name} environment variable.`)
-  return v
-}
-
 async function authHeaders(): Promise<Record<string, string>> {
   return {};
 }
@@ -59,48 +53,32 @@ export async function getDataset(dataset: string, limit?: number): Promise<strin
 
 // ---- muxC tools:
 
-/**
- * The day-ahead dataset has a different shape from every other Energinet feed:
- * one row per price zone per hour. The generic dataset tool dumps it as JSON,
- * which makes it hard to answer the only question anyone has, which is where
- * power is cheap right now.
- */
-export async function dayAheadPrices(args: { hours?: number; zone?: string }): Promise<string> {
-  const hours = Math.max(1, Math.min(args.hours ?? 12, 48))
-  const data = (await req(`https://api.energidataservice.dk/dataset/DayAheadPrices?limit=200`)) as {
-    records?: Array<{ TimeUTC?: string; TimeDK?: string; PriceArea?: string; DayAheadPriceEUR?: number; DayAheadPriceDKK?: number }>
-  }
-  const records = data?.records ?? []
-  if (!records.length) throw new EnerginetError("Energinet returned no day-ahead price rows")
-  const zone = (args.zone ?? "").trim().toUpperCase()
-  const zones = [...new Set(records.map((r) => r.PriceArea ?? "?"))].sort()
-  const wanted = zone ? records.filter((r) => (r.PriceArea ?? "").toUpperCase() === zone) : records
-  if (zone && !wanted.length) {
-    throw new EnerginetError(`Energinet has no price area "${zone}". Available: ${zones.join(", ")}`)
-  }
-  const cheapest = [...wanted].sort((a, b) => (a.DayAheadPriceEUR ?? Infinity) - (b.DayAheadPriceEUR ?? Infinity))[0]
-  const dearest = [...wanted].sort((a, b) => (b.DayAheadPriceEUR ?? -Infinity) - (a.DayAheadPriceEUR ?? -Infinity))[0]
-  const byHour = new Map<string, typeof wanted>()
-  for (const r of wanted) {
-    const key = String(r.TimeDK ?? r.TimeUTC ?? "?").slice(0, 13)
-    const list = byHour.get(key) ?? []
-    list.push(r)
-    byHour.set(key, list)
-  }
-  const lines: string[] = []
-  for (const [hour, list] of [...byHour.entries()].sort()) {
-    const detail = list
-      .sort((a, b) => (a.DayAheadPriceEUR ?? 0) - (b.DayAheadPriceEUR ?? 0))
-      .map((r) => `${r.PriceArea ?? "?"} ${r.DayAheadPriceEUR != null ? `${r.DayAheadPriceEUR.toFixed(2)} EUR` : "not reported"}`)
-      .join(" | ")
-    lines.push(`  ${hour}:00 DK  ${detail}`)
-    if (lines.length >= hours) break
-  }
-  return [
-    `Energinet day-ahead electricity prices (${wanted.length} rows, ${zone || "all zones"}, first ${lines.length} hours)`,
-    `Price areas: ${zones.join(", ")}`,
-    `Cheapest row in this set: ${cheapest?.PriceArea ?? "?"} at ${cheapest?.DayAheadPriceEUR != null ? `${cheapest.DayAheadPriceEUR.toFixed(2)} EUR` : "not reported"} (${String(cheapest?.TimeDK ?? "").slice(0, 16)})`,
-    `Most expensive row: ${dearest?.PriceArea ?? "?"} at ${dearest?.DayAheadPriceEUR != null ? `${dearest.DayAheadPriceEUR.toFixed(2)} EUR` : "not reported"} (${String(dearest?.TimeDK ?? "").slice(0, 16)})`,
-    ...lines,
-  ].join("\n")
+// ---- gap4a1 tools:
+
+async function energyPublic<T>(path: string): Promise<T> {
+  const res = await fetch(`https://api.energidataservice.dk/${path}`, { headers: { ...UA, Accept: 'application/json' }, signal: AbortSignal.timeout(25000) })
+  if (!res.ok) throw new EnerginetError(`Energinet returned HTTP ${res.status}`)
+  return await res.json() as T
 }
+
+export async function datasetCatalog(args: { search?: string; limit?: number }): Promise<string> {
+  const rows = await energyPublic<Array<{ datasetName?: string; title?: string; description?: string; lastDataUpdate?: string; active?: boolean }>>('meta/dataset')
+  const q = (args.search ?? '').trim().toLowerCase()
+  const hits = rows.filter(r => !q || `${r.datasetName} ${r.title} ${r.description}`.toLowerCase().includes(q))
+  const limit = Math.max(1, Math.min(Math.trunc(args.limit ?? 10), 30))
+  return `Energinet datasets: ${hits.length} matching.\n` + (hits.slice(0, limit).map(r => `${r.datasetName ?? 'not reported'}: ${(r.title ?? 'not reported').slice(0, 200)}\n${(r.description ?? 'not reported').slice(0, 600)}\nLast data update: ${r.lastDataUpdate ?? 'not reported'} | active flag: ${r.active ?? 'not reported'}`).join('\n\n') || 'No matching datasets.')
+}
+
+export async function datasetSchema(args: { dataset: string; limit?: number }): Promise<string> {
+  if (!/^[A-Za-z0-9_]{1,100}$/.test(args.dataset)) throw new EnerginetError('Provide a dataset identifier from dataset_catalog.')
+  const d = await energyPublic<{ title?: string; description?: string; updateFrequency?: string; resolution?: string; columns?: Array<{ dbColumn?: string; dataType?: string; unit?: string; description?: string }> }>(`meta/dataset/${encodeURIComponent(args.dataset)}`)
+  const limit = Math.max(1, Math.min(Math.trunc(args.limit ?? 20), 60))
+  return [
+    `${args.dataset}: ${(d.title ?? 'not reported').slice(0, 200)}`,
+    (d.description ?? 'not reported').slice(0, 1000),
+    `Update frequency: ${d.updateFrequency ?? 'not reported'} | resolution: ${d.resolution ?? 'not reported'}`,
+    `Columns (${d.columns?.length ?? 'not reported'} total):`,
+    ...(d.columns ?? []).slice(0, limit).map(c => `${c.dbColumn ?? 'not reported'} | ${c.dataType ?? 'not reported'} | unit: ${c.unit || 'not reported'}\n${(c.description ?? 'not reported').slice(0, 400)}`),
+  ].join('\n')
+}
+
