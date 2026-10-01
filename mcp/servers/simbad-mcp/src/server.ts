@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { coneSearch, lookupObject, SimbadError, objectPhotometry, objectReferences, objectIdentifiers } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { coneSearch, lookupObject, SimbadError, objectIdentifiers } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -67,14 +67,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: object_photometry ----
-      const paywallMessage = await premiumRequired("object_photometry")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await objectPhotometry(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_simbad_object_photometry", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -90,14 +85,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: object_references ----
-      const paywallMessage = await premiumRequired("object_references")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await objectReferences(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_simbad_object_references", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -118,6 +108,22 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "object_kinematics",
+    {
+      title: "Object kinematics",
+      description: "SIMBAD spectral type, parallax, proper motion and radial velocity for an exact object identifier. Missing measurements are reported explicitly; no distance is inferred.",
+      inputSchema: z.object({ ident: z.string().min(1).max(200).describe("Object identifier, e.g. Vega or M31.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: object_kinematics ----
+    // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_simbad_object_kinematics", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server
