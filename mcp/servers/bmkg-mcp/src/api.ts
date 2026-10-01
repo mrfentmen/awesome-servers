@@ -11,12 +11,6 @@ export function errorMessage(e: unknown): string {
 
 const UA = { "User-Agent": "awesome-mcps/1.0" }
 
-function envStrict(name: string): string {
-  const v = process.env[name]
-  if (!v) throw new BmkgError(`Set the ${name} environment variable.`)
-  return v
-}
-
 async function authHeaders(): Promise<Record<string, string>> {
   return {}
 }
@@ -83,29 +77,35 @@ interface BmkgLatest {
   Dirasakan?: BmkgFeltReport[]
 }
 
-/**
- * autogempa.json is the single most recent earthquake with its full description
- * and felt reports. gempaterkini only covers M5 and above, and gempadirasakan
- * starts at magnitude 3, so neither reports the small events this does.
- */
-export async function latestEarthquake(): Promise<string> {
-  const data = (await req("https://data.bmkg.go.id/DataMKG/TEWS/autogempa.json")) as { Infogempa?: { gempa?: BmkgLatest } }
-  const g = data?.Infogempa?.gempa
-  if (!g) throw new BmkgError("BMKG returned no Infogempa.gempa record")
-  const felt = Array.isArray(g.Dirasakan) ? g.Dirasakan : []
-  const feltLine = (d: BmkgFeltReport): string =>
-    d.Wilayah ? `${d.Wilayah}: ${d.Feel ?? "not reported"}${d.Gempa ? ` (M${d.Gempa})` : ""}` : "not reported"
+// ---- gap4a1 tools:
+
+async function warningXml(url: string): Promise<string> {
+  const response = await fetch(url, { headers: { ...UA, Accept: 'application/xml' }, signal: AbortSignal.timeout(20000) })
+  if (!response.ok) throw new BmkgError(`BMKG warnings returned HTTP ${response.status}`)
+  const xml = await response.text()
+  if (!/<(?:rss|alert)\b/.test(xml)) throw new BmkgError('BMKG returned no warning XML')
+  return xml
+}
+
+function warningField(xml: string, name: string, max = 1200): string {
+  const value = new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)</${name}>`).exec(xml)?.[1]
+  if (!value) return 'not reported'
+  return value.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim().slice(0, max)
+}
+
+export async function warningDetail(args: { alertUrl: string }): Promise<string> {
+  const url = new URL(args.alertUrl)
+  if (url.origin !== 'https://www.bmkg.go.id' || !/^\/alerts\/nowcast\/id\/[A-Za-z0-9_-]+\.xml$/.test(url.pathname) || url.search || url.hash || url.username || url.password) throw new BmkgError('Provide a BMKG CAP URL from weather_warnings.')
+  const xml = await warningXml(url.href)
+  const areas = [...xml.matchAll(/<area>([\s\S]*?)<\/area>/g)].slice(0, 10)
   return [
-    `Latest BMKG earthquake: magnitude ${g.Magnitude ?? "not reported"}`,
-    // BMKG already puts WIB inside the Jam field, so do not repeat it.
-    `When: ${g.Tanggal ?? "?"} ${g.Jam || "(time not reported)"} (${g.DateTime ?? "?"})`,
-    `Where: ${g.Wilayah ?? "not reported"}`,
-    `Coordinates: ${g.Lintang ?? "?"} / ${g.Bujur ?? "?"} | depth ${g.Kedalaman ?? "not reported"}`,
-    g.Potensi ? `Tsunami potential: ${g.Potensi}` : null,
-    felt.length
-      ? `Felt in ${felt.length} places:\n${felt.slice(0, 10).map((f, i) => `  ${i + 1}. ${feltLine(f)}`).join("\n")}`
-      : "No felt reports.",
-  ]
-    .filter(Boolean)
-    .join("\n")
+    warningField(xml, 'headline', 200),
+    `ID: ${warningField(xml, 'identifier')} | status: ${warningField(xml, 'status')} | type: ${warningField(xml, 'msgType')}`,
+    `Event: ${warningField(xml, 'event')} | urgency: ${warningField(xml, 'urgency')} | severity: ${warningField(xml, 'severity')} | certainty: ${warningField(xml, 'certainty')}`,
+    `Sent: ${warningField(xml, 'sent')} | effective: ${warningField(xml, 'effective')} | expires: ${warningField(xml, 'expires')}`,
+    warningField(xml, 'description', 1600),
+    `Instructions: ${warningField(xml, 'instruction', 1000)}`,
+    ...areas.map(a => `Area: ${warningField(a[1], 'areaDesc', 400)}\nBoundary (latitude,longitude): ${warningField(a[1], 'polygon', 2000)}`),
+    `Source: ${url.href}`,
+  ].join('\n')
 }
