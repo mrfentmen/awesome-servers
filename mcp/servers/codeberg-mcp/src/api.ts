@@ -142,39 +142,57 @@ export async function repoBranches(args: RepoArgs): Promise<string> {
       .join('\n');
 }
 
-export async function repoCommits(args: LimitArgs): Promise<string> {
-  const limit = bound(args.limit, 10, 30);
-  const rows = await getJson<Array<{ sha?: string; commit?: { message?: string; author?: { name?: string; date?: string } } }>>(
-    `${repoPath(args)}/commits`,
-    new URLSearchParams({ limit: String(limit), stat: 'false', verification: 'false' }),
-  );
-  if (!rows.length) return `${repoName(args)} has no commits yet.`;
-  return `${rows.length} recent commit(s) in ${repoName(args)}:\n` +
-    rows
-      .map((c, i) => {
-        const subject = (c.commit?.message ?? '').split('\n')[0].slice(0, 90);
-        const who = c.commit?.author?.name ?? 'unknown';
-        const when = (c.commit?.author?.date ?? '').slice(0, 10);
-        return `${i + 1}. ${(c.sha ?? '').slice(0, 10)} ${when} ${who} | ${subject}`;
-      })
-      .join('\n');
+// ---- up1 tools:
+
+export interface ReleasesArgs {
+  owner: string;
+  repo: string;
+  limit?: number;
 }
 
-export async function repoIssues(args: LimitArgs): Promise<string> {
-  const wanted = (args.state ?? 'open').toLowerCase();
-  const state = ['open', 'closed', 'all'].includes(wanted) ? wanted : 'open';
-  const limit = bound(args.limit, 10, 30);
-  const rows = await getJson<Array<{ number?: number; title?: string; comments?: number; created_at?: string; user?: { login?: string }; labels?: Array<{ name?: string }> }>>(
-    `${repoPath(args)}/issues`,
-    new URLSearchParams({ state, type: 'issues', limit: String(limit) }),
+export async function repoReleases(args: ReleasesArgs): Promise<string> {
+  const limit = bound(args.limit, 5, 30);
+  const rows = await getJson<Array<{ tag_name?: string; name?: string; published_at?: string; prerelease?: boolean; draft?: boolean; html_url?: string }>>(
+    `${repoPath(args)}/releases`,
+    new URLSearchParams({ limit: String(limit) }),
   );
-  if (!rows.length) return `No ${state} issues in ${repoName(args)}.`;
-  return `${rows.length} ${state} issue(s) in ${repoName(args)}:\n` +
+  if (!rows.length) return `No releases in ${repoName(args)}.`;
+  return (
+    `Releases in ${repoName(args)} (${rows.length} shown):\n` +
     rows
       .map((r, i) => {
-        const labels = (r.labels ?? []).map((l) => l.name).filter(Boolean).join(', ');
-        const title = (r.title ?? '').slice(0, 80);
-        return `${i + 1}. #${r.number ?? '?'} ${title} | by ${r.user?.login ?? 'unknown'} | ${(r.created_at ?? '').slice(0, 10)} | ${r.comments ?? 0} comments${labels ? ` | ${labels}` : ''}`;
+        const flags = [r.prerelease ? "prerelease" : "", r.draft ? "draft" : ""].filter(Boolean).join(", ");
+        return `${i + 1}. ${r.tag_name ?? r.name ?? "untagged"}${flags ? ` (${flags})` : ""} - ${r.published_at ?? "not reported"}${r.html_url ? ` - ${r.html_url}` : ""}`;
       })
-      .join('\n');
+      .join("\n")
+  );
 }
+
+export interface UserArgs {
+  user: string;
+}
+
+export async function userOverview(args: UserArgs): Promise<string> {
+  const user = (args.user ?? "").trim();
+  if (!user) throw new Error("Provide a Codeberg user name.");
+  const u = await getJson<{ login?: string; full_name?: string; description?: string; location?: string; language?: string; followers_count?: number; following_count?: number; created?: string; html_url?: string }>(
+    `/users/${encodeURIComponent(user)}`,
+  );
+  const lines = [
+    `Codeberg user ${u.login ?? user}`,
+    u.full_name ? `Name: ${u.full_name}` : "Name: not reported",
+    u.description ? `Bio: ${u.description}` : "Bio: not reported",
+    `Followers: ${u.followers_count ?? "not reported"} | Following: ${u.following_count ?? "not reported"}`,
+    `Joined: ${u.created ?? "not reported"}`,
+  ];
+  if (u.location) lines.push(`Location: ${u.location}`);
+  if (u.html_url) lines.push(u.html_url);
+  return lines.join("\n");
+}
+
+export interface ContentsArgs {
+  owner: string;
+  repo: string;
+  path: string;
+}
+

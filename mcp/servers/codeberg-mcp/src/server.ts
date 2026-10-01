@@ -1,9 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { search } from "./api.js"
-import { version, repoDetail, repoBranches, repoCommits, repoIssues, repoReleases, userOverview, fileContents } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { search, version, repoDetail, repoBranches, repoReleases, userOverview } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -70,7 +69,10 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await repoCommits(args)) } catch (e) { return textError(error(e)) }
+    // ---- paywall: repo_commits ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_codeberg_repo_commits", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -83,7 +85,10 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await repoIssues(args)) } catch (e) { return textError(error(e)) }
+    // ---- paywall: repo_issues ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_codeberg_repo_issues", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -123,10 +128,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: file_contents ----
-    const paywallMessage = await premiumRequired("file_contents")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await fileContents(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_codeberg_file_contents", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
