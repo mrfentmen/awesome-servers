@@ -58,7 +58,6 @@ return { HolidaysError, countries, nextHolidays, openHolidays, publicHolidays };
 const m1 = (() => {
 const BASE = 'https://date.nager.at/api/v3/PublicHolidays';
 
-
 async function holidays(args: m1_HolidaysArgs): Promise<string> {
   const country = (args.country ?? '').trim().toUpperCase();
   const year = Math.max(2000, Math.min(Math.floor(args.year ?? 0), 2100));
@@ -95,30 +94,3 @@ export const m1_holidays = m1.holidays;
 
 // ---- muxC tools:
 
-const NAGER_COUNTRIES = "https://date.nager.at/api/v3/AvailableCountries"
-const HOLIDAYS_UA = "mrfentmen-holidays-mcp/1.0 (https://github.com/mrfentmen)"
-
-class CountryListError extends Error {}
-
-/**
- * Both backends only accept a two-letter code, and neither will tell you what
- * they accept, so this lists the codes the Nager backend actually serves.
- */
-export async function availableCountries(args: { search?: string }): Promise<string> {
-  const q = (args.search ?? "").trim().toLowerCase()
-  const res = await fetch(NAGER_COUNTRIES, {
-    headers: { "User-Agent": HOLIDAYS_UA, Accept: "application/json" },
-    signal: AbortSignal.timeout(25000),
-  })
-  if (!res.ok) throw new CountryListError(`Nager.at country list returned ${res.status}`)
-  const all = (await res.json()) as Array<{ countryCode?: string; name?: string }>
-  const list = Array.isArray(all) ? all : []
-  if (!list.length) throw new CountryListError("Nager.at returned an empty country list")
-  const hits = q ? list.filter((c) => String(c.name ?? "").toLowerCase().includes(q) || String(c.countryCode ?? "").toLowerCase() === q) : list
-  if (!hits.length) return `Nager.at has no country matching "${q}".`
-  const shown = hits.slice(0, 120)
-  return [
-    `Country codes the holidays API accepts (${hits.length}${hits.length > shown.length ? `, showing ${shown.length}` : ""}):`,
-    shown.map((c) => `${c.countryCode ?? "?"} - ${c.name ?? "name not reported"}`).join("\n"),
-  ].join("\n")
-}

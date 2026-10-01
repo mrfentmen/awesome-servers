@@ -1,8 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_publicHolidays, m0_nextHolidays, m0_countries, m0_openHolidays, m1_holidays, availableCountries } from './api.js'
-import { premiumRequired } from "./license.js"
 
+import { m0_publicHolidays, m0_nextHolidays, m0_countries, m0_openHolidays, m1_holidays } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -81,14 +81,9 @@ server.registerTool(
     },
     async (args) => {
     // ---- paywall: available_countries ----
-    const paywallMessage = await premiumRequired("available_countries")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try {
-      return text(await availableCountries(args));
-    } catch (e) {
-      return textError(errorMessage(e));
-    }
+    try { return text(await premiumTool("mcp_holidays_available_countries", args)) } catch (e) { return textError(error(e)) }
     }
   );
 
