@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { communities, recentPosts, instanceInfo } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { communities, searchCommunities } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -32,10 +32,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: recent_posts ----
-    const paywallMessage = await premiumRequired("recent_posts")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await recentPosts(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_lemmy_recent_posts", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -47,18 +46,58 @@ export function createServer(): McpServer {
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
-    async () => {
+    async (args) => {
     // ---- paywall: instance_info ----
-    const paywallMessage = await premiumRequired("instance_info")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try {
-      return text(await instanceInfo());
-    } catch (e) {
-      return textError(error(e));
-    }
+    try { return text(await premiumTool("mcp_lemmy_instance_info", args)) } catch (e) { return textError(error(e)) }
     }
   );
+
+  server.registerTool(
+    "search_communities",
+    {
+      title: "Search communities",
+      description: "Search for communities by keyword across the federation indexed by lemmy.world.",
+      inputSchema: z.object({ query: z.string().min(1).max(200), limit: z.number().int().min(1).max(20).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await searchCommunities(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "community_details",
+    {
+      title: "Community details",
+      description: "Community description, moderators, subscriber and activity counts.",
+      inputSchema: z.object({ name: z.string().min(1).max(200).describe("Community name, e.g. science.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: community_details ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_lemmy_community_details", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "recent_comments",
+    {
+      title: "Recent comments",
+      description: "Recent discussion comments in local communities with author, score and permalink.",
+      inputSchema: z.object({ limit: z.number().int().min(1).max(20).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: recent_comments ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_lemmy_recent_comments", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
 
   return server
 }
