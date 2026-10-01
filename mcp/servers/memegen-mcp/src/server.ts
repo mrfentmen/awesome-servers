@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { getTemplate, listTemplates, makeMeme, MemeError, listFonts, randomQuote } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { getTemplate, listTemplates, makeMeme, MemeError } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -84,16 +84,11 @@ export function createServer(): McpServer {
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
-    async () => {
+    async (args) => {
       // ---- paywall: list_caption_fonts ----
-      const paywallMessage = await premiumRequired("list_caption_fonts")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await listFonts())
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_memegen_list_caption_fonts", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -105,17 +100,28 @@ export function createServer(): McpServer {
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
-    async () => {
+    async (args) => {
       // ---- paywall: random_quote ----
-      const paywallMessage = await premiumRequired("random_quote")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await randomQuote())
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_memegen_random_quote", args)) } catch (e) { return textError(errorMessage(e)) }
     }
+  )
+
+  server.registerTool(
+    "template_styles",
+    {
+      title: "Template styles",
+      description: "Discover a meme template's alternate visual styles and overlay slots, with preview URLs for each style.",
+      inputSchema: z.object({ id: z.string().describe("Template id, for example drake.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: template_styles ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_memegen_template_styles", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server
