@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, searchClaims, searchChannel, videoDetails, channelProfile } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, searchClaims, searchChannel } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -64,10 +64,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: video_details ----
-    const paywallMessage = await premiumRequired("video_details")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await videoDetails(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_odysee_video_details", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -81,10 +80,41 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: channel_profile ----
-    const paywallMessage = await premiumRequired("channel_profile")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await channelProfile(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_odysee_channel_profile", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "recent_uploads",
+    {
+      title: "Recent uploads",
+      description: "Discover Odysee streams ordered by release time, optionally restricted to a channel claim ID.",
+      inputSchema: z.object({ channel_id: z.string().optional(), limit: z.number().optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: recent_uploads ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_odysee_recent_uploads", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "supported_channels",
+    {
+      title: "Supported channels",
+      description: "Discover channels ranked by effective LBC amount, with their reported upload count and canonical URLs. This is not a view or popularity ranking.",
+      inputSchema: z.object({ limit: z.number().optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: supported_channels ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_odysee_supported_channels", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
