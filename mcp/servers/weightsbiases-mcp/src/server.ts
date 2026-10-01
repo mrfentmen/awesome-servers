@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { listProjects, listRuns, myProfile, WandbError, modelCardAudit, datasetCatalogue } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { listProjects, listRuns, myProfile, WandbError, datasetCatalogue } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -91,10 +91,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: model_card_audit ----
-    const paywallMessage = await premiumRequired("model_card_audit")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await modelCardAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_weightsbiases_model_card_audit", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
