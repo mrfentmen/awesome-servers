@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { search, artistSearch, albumSearch } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { search, tagSearch } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -32,10 +32,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: artist_search ----
-    const paywallMessage = await premiumRequired("artist_search")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await artistSearch(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_vocadb_artist_search", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -49,10 +48,54 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: album_search ----
-    const paywallMessage = await premiumRequired("album_search")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await albumSearch(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_vocadb_album_search", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "song_detail",
+    {
+      title: "Song detail",
+      description: "Retrieve a song by id with duration, original version, tags and video links.",
+      inputSchema: z.object( { id: z.number().int().min(1).max(2147483647).describe("Song id from search.") } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: song_detail ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_vocadb_song_detail", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "artist_profile",
+    {
+      title: "Artist profile",
+      description: "Retrieve an artist biography, translated names, release date and reference links by id.",
+      inputSchema: z.object( { id: z.number().int().min(1).max(2147483647).describe("Artist id from artist search.") } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: artist_profile ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_vocadb_artist_profile", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "tag_search",
+    {
+      title: "Tag search",
+      description: "Discover VocaDB genre and subject tags, their descriptions and usage counts.",
+      inputSchema: z.object( { query: z.string().max(200).describe("Tag search terms."), limit: z.number().int().min(1).max(25).optional() } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await tagSearch(args)) } catch (e) { return textError(error(e)) }
   }
   )
 

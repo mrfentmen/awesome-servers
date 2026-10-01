@@ -30,9 +30,6 @@ export async function search(args: SearchArgs): Promise<string> {
 
 // ---- muxB tools:
 
-const ARTISTS = 'https://vocadb.net/api/artists';
-const ALBUMS = 'https://vocadb.net/api/albums';
-
 export interface VocadbEntityArgs {
   query: string;
   limit?: number;
@@ -47,39 +44,15 @@ async function vocadbGet<T>(url: string): Promise<T> {
   return (await res.json()) as T;
 }
 
-export async function artistSearch(args: VocadbEntityArgs): Promise<string> {
-  const q = (args.query ?? '').trim();
-  if (!q) return 'Provide an artist name.';
-  const limit = Math.max(1, Math.min(args.limit ?? 8, 25));
-  const params = new URLSearchParams({ query: q, maxResults: String(limit), fields: 'Names,MainPicture,Description' });
-  const d = await vocadbGet<{ items?: Array<Record<string, unknown>> }>(`${ARTISTS}?${params.toString()}`);
-  const rows = d.items ?? [];
-  if (!rows.length) return `No VocaDB artists found for "${q}".`;
-  return `VocaDB artists matching "${q}" (${rows.length} shown):\n` +
-    rows
-      .map((r, i) => {
-        const s = (k: string) => (r[k] != null ? String(r[k]) : '');
-        const desc = s('description').replace(/\s+/g, ' ').slice(0, 120);
-        return `${i + 1}. ${s('name') || 'not reported'}${s('artistType') ? ` | ${s('artistType')}` : ''}${r.mainPicture ? ' | has picture' : ' | no picture'}\n   ${desc || 'description not reported'}${r.id ? ` | artist id ${r.id}` : ''}`;
-      })
-      .join('\n');
-}
+// ---- gap4c3 tools:
 
-export async function albumSearch(args: VocadbEntityArgs): Promise<string> {
-  const q = (args.query ?? '').trim();
-  if (!q) return 'Provide an album name.';
-  const limit = Math.max(1, Math.min(args.limit ?? 8, 25));
-  const params = new URLSearchParams({ query: q, maxResults: String(limit), fields: 'Names,MainPicture' });
-  const d = await vocadbGet<{ items?: Array<Record<string, unknown>> }>(`${ALBUMS}?${params.toString()}`);
-  const rows = d.items ?? [];
-  if (!rows.length) return `No VocaDB albums found for "${q}".`;
-  return `VocaDB albums matching "${q}" (${rows.length} shown):\n` +
-    rows
-      .map((r, i) => {
-        const s = (k: string) => (r[k] != null ? String(r[k]) : '');
-        const rd = (r.releaseDate ?? null) as { year?: number; month?: number; day?: number } | null;
-        const date = rd && rd.year ? `${rd.year}-${String(rd.month ?? 1).padStart(2, '0')}-${String(rd.day ?? 1).padStart(2, '0')}` : 'date not reported';
-        return `${i + 1}. ${s('name') || 'not reported'}${s('artistString') ? ` | ${s('artistString')}` : ''}\n   ${s('discType') || 'type not reported'} | released ${date} | album id ${r.id ?? 'not reported'}`;
-      })
-      .join('\n');
+const vdValue = (value: unknown): string => value == null || value === '' ? 'not reported' : String(value).slice(0, 500);
+
+export async function tagSearch(args: { query: string; limit?: number }): Promise<string> {
+  const limit = Math.max(1, Math.min(Math.trunc(args.limit ?? 10), 25));
+  const params = new URLSearchParams({ query: args.query.trim(), maxResults: String(limit), fields: 'Description' });
+  const d = await vocadbGet<{ items?: Array<{ id?: number; name?: string; categoryName?: string; usageCount?: number; description?: string }> }>(`https://vocadb.net/api/tags?${params}`);
+  const rows = (d.items ?? []).slice(0, limit);
+  if (!rows.length) return 'No matching tags.';
+  return 'VocaDB tags:\n' + rows.map(t => `${vdValue(t.name)} | tag ${vdValue(t.id)} | ${vdValue(t.categoryName)} | uses ${vdValue(t.usageCount)}\n${vdValue(t.description)}`).join('\n\n');
 }
