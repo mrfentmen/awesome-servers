@@ -1,53 +1,5 @@
-import { connect } from "node:net"
-
 const UA = "mrfentmen-port-scanner-mcp/1.0"
 export class PortError extends Error {}
-
-function check(host: string, port: number, timeoutMs: number): Promise<boolean> {
-  return new Promise((resolve) => {
-    const sock = connect({ host, port })
-    let done = false
-    const finish = (open: boolean) => {
-      if (done) return
-      done = true
-      sock.destroy()
-      resolve(open)
-    }
-    sock.setTimeout(timeoutMs)
-    sock.once("connect", () => finish(true))
-    sock.once("timeout", () => finish(false))
-    sock.once("error", () => finish(false))
-  })
-}
-
-export async function scanHost(args: { host?: string; ports?: string; timeout_ms?: number }): Promise<string> {
-  const host = (args.host ?? "").trim()
-  if (!host) throw new PortError("Provide a host name or IP")
-  const timeoutMs = Math.min(Math.max(args.timeout_ms ?? 1000, 100), 2000)
-  const ports = (args.ports ?? "80,443,22,21,25,53,8080,3306,5432,6379")
-    .split(",").map((p) => parseInt(p.trim(), 10)).filter((p) => p >= 1 && p <= 65535).slice(0, 50)
-  if (!ports.length) throw new PortError("Provide a valid port list")
-  const results: string[] = []
-  for (const p of ports) {
-    const open = await check(host, p, timeoutMs)
-    results.push(`${p}: ${open ? "OPEN" : "closed"}`)
-  }
-  return `Scan of ${host}:\n${results.join("\n")}`
-}
-
-export async function scanCommon(args: { host?: string }): Promise<string> {
-  const host = (args.host ?? "").trim()
-  if (!host) throw new PortError("Provide a host name or IP")
-  const common = [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 993, 995, 1433, 1521, 3306, 3389, 5432, 5900, 6379, 8080, 8443, 9000, 27017]
-  const results: string[] = []
-  for (const p of common) {
-    const open = await check(host, p, 800)
-    if (open) results.push(`${p}: OPEN`)
-  }
-  return results.length
-    ? `Open ports on ${host}:\n${results.join("\n")}`
-    : `No common ports open on ${host}`
-}
 
 // ---- muxB tools:
 const MAX_PORTS = 4096
@@ -137,53 +89,18 @@ export async function parsePortSpec(args: { spec?: string; max_ports?: number })
   return out.join("\n")
 }
 
-export async function summarizeScanResults(args: { report?: string }): Promise<string> {
-  const report = args.report ?? ""
-  if (!report.trim()) throw new Error("Paste a scan report into report to summarise")
-  if (report.length > MAX_REPORT) throw new Error(`Keep report under ${MAX_REPORT} characters`)
-  const counts: Record<string, number> = Object.fromEntries(STATES.map((state) => [state, 0]))
-  const open: number[] = []
-  const all: number[] = []
-  let parsed = 0
-  let ignored = 0
-  for (const line of report.split(/\r?\n/)) {
-    const match = /(?:^|\s)(\d{1,5})\s*[:=\-]?\s*(open|closed|filtered|timeout|refused|unreachable)\b/i.exec(line)
-    if (!match) {
-      if (line.trim()) ignored += 1
-      continue
-    }
-    const port = Number(match[1])
-    if (port < 1 || port > 65535) {
-      ignored += 1
-      continue
-    }
-    const state = match[2].toLowerCase() as State
-    counts[state] += 1
-    parsed += 1
-    all.push(port)
-    if (state === "open") open.push(port)
-  }
-  const out: string[] = []
-  out.push(`Scan report summary (${report.length} characters pasted)`)
-  if (!parsed) {
-    out.push(`${pad("Result")}no "port: state" line was recognised, ${ignored} line${ignored === 1 ? "" : "s"} ignored`)
-    out.push("Expected lines look like \"8080: OPEN\" or \"443 closed\".")
-    return out.join("\n")
-  }
-  const total = parsed
-  const openSorted = [...open].sort((a, b) => a - b)
-  out.push(`${pad("Parsed")}${parsed} port lines, ${ignored} line${ignored === 1 ? "" : "s"} ignored`)
-  out.push(`${pad("States")}${STATES.filter((state) => counts[state] > 0).map((state) => `${state} ${counts[state]}`).join("  ")}`)
-  out.push(`${pad("Open ratio")}${((counts.open / total) * 100).toFixed(1)}% of ${total} probed ports answered`)
-  const runs = runsOf(openSorted)
-  out.push(`${pad("Open ports")}${openSorted.length ? formatRuns(runs, 30) : "none"}`)
-  out.push(`${pad("Highest open")}${openSorted.length ? openSorted[openSorted.length - 1] : "not reported - no port answered"}`)
-  out.push(`${pad("Contiguous runs")}${runs.length} run${runs.length === 1 ? "" : "s"}: ${formatRuns(runs, 12)}`)
-  const longest = runs.reduce((max, run) => Math.max(max, run[1] - run[0] + 1), 0)
-  const isolated = runs.filter(([from, to]) => from === to).length
-  out.push(`${pad("Pattern")}longest contiguous open run ${longest} port${longest === 1 ? "" : "s"}, ${isolated} isolated open port${isolated === 1 ? "" : "s"}`)
-  const sorted = [...new Set(all)].sort((a, b) => a - b)
-  out.push(`${pad("Coverage")}${new Set(all).size} distinct ports probed, spanning ${sorted.length ? `${sorted[0]} to ${sorted[sorted.length - 1]}` : "not reported"}`)
-  out.push(`${pad("Reading")}${counts.open === 0 ? "nothing answered, so either the host is down or every probed port is filtered" : longest >= 3 ? "a contiguous block answered, which usually means one service listening on a range" : counts.open <= 2 ? "only one or two ports answered, which is a small attack surface" : "several scattered ports answered, worth reviewing individually"}`)
-  return out.join("\n")
+// ---- gap4a2 tools:
+
+export async function dnsRecords(args: { name: string; type?: string; limit?: number }): Promise<string> {
+  const name = args.name.trim()
+  if (!name || name.length > 253) throw new PortError('Provide a DNS name up to 253 characters.')
+  const type = (args.type ?? 'A').toUpperCase()
+  if (!['A', 'AAAA', 'MX', 'NS', 'TXT', 'CNAME', 'SOA', 'PTR', 'CAA'].includes(type)) throw new PortError('Unsupported DNS record type.')
+  const limit = Math.max(1, Math.min(Math.trunc(args.limit ?? 10), 30))
+  const query = new URLSearchParams({ name, type })
+  const res = await fetch(`https://dns.google/resolve?${query}`, { headers: { 'User-Agent': UA, Accept: 'application/json' }, signal: AbortSignal.timeout(20000) })
+  if (!res.ok) throw new PortError(`Google Public DNS returned ${res.status}`)
+  const d = await res.json() as { Status?: number; AD?: boolean; Answer?: Array<{ name?: string; type?: number; TTL?: number; data?: string }> }
+  return [`DNS ${type} records for ${name} | response code ${d.Status ?? 'not reported'} | authenticated data ${d.AD === true ? 'yes' : d.AD === false ? 'no' : 'not reported'}`, ...(d.Answer?.length ? d.Answer.slice(0, limit).map(r => `${(r.name ?? 'not reported').slice(0,253)} | type ${r.type ?? 'not reported'} | TTL ${r.TTL ?? 'not reported'} seconds | ${(r.data ?? 'not reported').slice(0,500)}`) : ['No answer records reported.'])].join('\n')
 }
+

@@ -1,9 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { scanCommon } from "./api.js"
-import { scanHost, summarizeScanResults, parsePortSpec } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { scanCommon, scanHost } from "./scan.js"
 
+import { parsePortSpec, dnsRecords } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -45,10 +45,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: summarize_scan_results ----
-    const paywallMessage = await premiumRequired("summarize_scan_results")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await summarizeScanResults(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_port_scanner_summarize_scan_results", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -62,6 +61,35 @@ export function createServer(): McpServer {
     },
     async (args) => {
     try { return text(await parsePortSpec(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "dns_records",
+    {
+      title: "DNS records",
+      description: "Query Google Public DNS for address, mail, nameserver and other DNS records with TTL and response status.",
+      inputSchema: z.object({ name: z.string().min(1).max(253).describe("DNS name, e.g. example.com."), type: z.enum(["A","AAAA","MX","NS","TXT","CNAME","SOA","PTR","CAA"]).optional(), limit: z.number().int().min(1).max(30).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await dnsRecords(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "network_origin",
+    {
+      title: "Network origin",
+      description: "Find the containing IP prefix and originating autonomous system numbers from RIPEstat routing data.",
+      inputSchema: z.object({ ip: z.string().min(1).max(45).describe("IPv4 or IPv6 address, e.g. 1.1.1.1.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: network_origin ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_port_scanner_network_origin", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
