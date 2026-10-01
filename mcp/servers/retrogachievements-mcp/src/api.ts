@@ -115,63 +115,6 @@ function raRows(text: string): RaRow[] {
 
 const raEarned = (r: RaRow): number => (Number.isFinite(r.points) ? r.points * (r.owned / r.total) : NaN)
 
-export async function setScorecard(args: { games: string; set_name?: string }): Promise<string> {
-  const rows = raRows(args.games ?? "")
-  if (rows.length === 0) {
-    return "Paste one game per line as: title | console | percentage | achievements owned | achievements total | game points."
-  }
-  const notes: string[] = []
-  const scored = rows.filter((r) => Number.isFinite(raEarned(r)))
-  if (scored.length === 0) notes.push("No line carried a game points value, so only achievement counts are scored below.")
-  const totalEarned = scored.reduce((a, r) => a + raEarned(r), 0)
-  const totalAvailable = scored.reduce((a, r) => a + r.points, 0)
-  const left = scored.reduce((a, r) => a + (r.points - raEarned(r)), 0)
-  const done = rows.filter((r) => r.owned >= r.total)
-  const untouched = rows.filter((r) => r.owned === 0)
-  const oneAway = rows.filter((r) => r.owned > 0 && r.total - r.owned === 1)
-  const queue = scored
-    .filter((r) => r.total > r.owned)
-    .map((r) => {
-      const remaining = r.total - r.owned
-      const remainingPoints = r.points - raEarned(r)
-      return { r, remaining, remainingPoints, perAchievement: remainingPoints / remaining }
-    })
-    .sort((a, b) => b.perAchievement - a.perAchievement)
-  const out = [
-    `${rows.length} game(s)${args.set_name ? ` in ${args.set_name}` : ""}, ${scored.length} with a points value.`,
-    scored.length > 0
-      ? `Points so far ${Math.round(totalEarned)} of ${Math.round(totalAvailable)} available (${totalAvailable > 0 ? ((totalEarned / totalAvailable) * 100).toFixed(1) : "0"}%). ${Math.round(left)} points still on the table.`
-      : "Points not calculated.",
-    `Completed ${done.length}, untouched ${untouched.length}, one achievement away ${oneAway.length}.`,
-    "",
-    "Per game (points earned is the game's points scaled by the share you have):",
-    ...rows.map((r) => {
-      const bits = [`${r.title} [${r.console}]`]
-      if (Number.isFinite(raEarned(r))) {
-        bits.push(`${Math.round(raEarned(r))}/${Math.round(r.points)} pts`)
-      } else {
-        bits.push("points not reported")
-      }
-      bits.push(`${r.owned}/${r.total} ach (${r.pct.toFixed(1)}%)`)
-      return `  ${bits.join("  ")}`
-    }),
-  ]
-  if (queue.length > 0) {
-    out.push(
-      "",
-      "Best points per remaining achievement, i.e. what to grind first:",
-      ...queue.slice(0, 12).map((q, i) => `  ${i + 1}. ${q.r.title} - ${q.remaining} left, ${Math.round(q.remainingPoints)} pts, ${q.perAchievement.toFixed(1)} pts each`),
-      "",
-      "Scoring assumes linear credit, which is what the site does, so partial play already counts."
-    )
-  }
-  if (oneAway.length > 0) {
-    out.push("", `One achievement from done: ${oneAway.map((r) => r.title).join(", ")}.`)
-  }
-  if (notes.length > 0) out.push("", ...notes.map((n) => `- ${n}`))
-  return out.join("\n")
-}
-
 export async function libraryBreakdown(args: { games: string }): Promise<string> {
   const rows = raRows(args.games ?? "")
   if (rows.length === 0) {
