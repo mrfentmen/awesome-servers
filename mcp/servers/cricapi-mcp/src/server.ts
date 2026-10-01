@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { CricApiError, currentMatches, formatMatch, matchInfo, searchSeries, seriesFixtures, seriesStandings, matchScorecard } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { CricApiError, currentMatches, formatMatch, matchInfo, searchSeries, seriesFixtures, seriesStandings } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -121,10 +121,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: match_scorecard ----
-    const paywallMessage = await premiumRequired("match_scorecard")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await matchScorecard(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_cricapi_match_scorecard", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
