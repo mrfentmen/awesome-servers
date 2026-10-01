@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/wikidata-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Wikidata entity search, lookup, and bounded SPARQL.",
   "type": "module",
   "main": "dist/index.js",

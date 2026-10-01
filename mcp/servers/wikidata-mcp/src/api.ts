@@ -20,7 +20,6 @@ return { WikidataError, entity, format, search, sparql };
 const m1 = (() => {
 const BASE = 'https://www.wikidata.org/w/api.php';
 
-
 async function search(args: m1_SearchArgs): Promise<string> {
   const q = (args.query ?? '').trim();
   if (!q) return 'Provide search terms.';
@@ -63,52 +62,3 @@ export const m1_search = m1.search;
 
 // ---- muxC tools:
 
-const WD_UA = "mrfentmen-wikidata-mcp/1.0 (https://github.com/mrfentmen)"
-
-class WikidataToolError extends Error {}
-
-async function wd(params: Record<string, string>, ms = 25000): Promise<any> {
-  const p = new URLSearchParams({ format: "json", formatversion: "2", ...params })
-  const res = await fetch(`https://www.wikidata.org/w/api.php?${p.toString()}`, { headers: { "User-Agent": WD_UA, Accept: "application/json" }, signal: AbortSignal.timeout(ms) })
-  if (!res.ok) throw new WikidataToolError(`Wikidata's api returned ${res.status}`)
-  const d = (await res.json()) as any
-  if (d?.error) throw new WikidataToolError(`Wikidata: ${d.error.info ?? "error"}`)
-  return d
-}
-
-function qid(v: string | undefined): string {
-  const id = (v ?? "").trim().toUpperCase()
-  if (!id) throw new WikidataToolError("Provide a Wikidata Q id, e.g. Q64")
-  if (!/^Q\d+$/.test(id)) throw new WikidataToolError("A Wikidata item id looks like Q64")
-  return id
-}
-
-/** The Wikipedia editions an item sits in, which the label and claim views never show. */
-export async function entitySitelinks(args: { id?: string; limit?: number }): Promise<string> {
-  const id = qid(args.id)
-  const d = await wd({ action: "wbgetentities", ids: id, props: "sitelinks" })
-  const links = d?.entities?.[id]?.sitelinks
-  if (!links) return `Wikidata item ${id} has no sitelinks.`
-  const rows = Object.values(links) as any[]
-  const limit = Math.max(1, Math.min(args.limit ?? 20, 300))
-  const bySite = new Map<string, string[]>()
-  for (const l of rows) {
-    const key = String(l.site ?? "unknown")
-    if (!bySite.has(key)) bySite.set(key, [])
-    bySite.get(key)!.push(l.title)
-  }
-  return `${id} appears in ${bySite.size} wikis (${rows.length} sitelinks, ${limit} shown):\n` +
-    [...bySite].slice(0, limit).map(([site, titles]) => `  ${site}: ${titles.slice(0, 3).join(", ")}`).join("\n")
-}
-
-/** An item's revision history, which shows who changed it and when. */
-export async function entityHistory(args: { id?: string; limit?: number }): Promise<string> {
-  const id = qid(args.id)
-  const limit = Math.max(1, Math.min(args.limit ?? 10, 50))
-  const d = await wd({ action: "query", prop: "revisions", titles: id, rvlimit: String(limit), rvprop: "timestamp|user|comment|ids|size" })
-  const page = d?.query?.pages?.[0]
-  const revs: any[] = page?.revisions ?? []
-  if (!revs.length) return `Wikidata has no revision history for ${id}.`
-  return `Revision history of ${page.title ?? id} (${revs.length} shown, newest first):\n` +
-    revs.map((r, i) => `${i + 1}. ${String(r.timestamp ?? "").replace("T", " ").slice(0, 19)} by ${r.user ?? "anonymous"}\n   revision ${r.revid ?? "?"} | ${r.size != null ? `${r.size} bytes` : "size not reported"}${r.comment ? `\n   ${String(r.comment).replace(/\s+/g, " ").slice(0, 160)}` : ""}`).join("\n")
-}
