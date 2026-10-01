@@ -1,10 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { random } from "./api.js"
-import { search } from "./api.js"
-import { summary, articleOutline, translations } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { random, search, summary } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -58,10 +56,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: article_outline ----
-    const paywallMessage = await premiumRequired("article_outline")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await articleOutline(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wikipedia_article_outline", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -75,10 +72,25 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: translations ----
-    const paywallMessage = await premiumRequired("translations")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await translations(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wikipedia_translations", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "page_history",
+    {
+      title: "Page history",
+      description: "Inspect recent revisions of a page, including revision IDs, editors, timestamps and edit summaries.",
+      inputSchema: z.object( { title: z.string().describe("Exact page title."), limit: z.number().describe("Maximum results, 1-30.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: page_history ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_wikipedia_page_history", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
