@@ -1,7 +1,7 @@
+import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatHit, GovInfoError, listCollections, searchPublished, federalRegisterSearch, federalRegisterDocument, collectionStatistics } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { formatHit, GovInfoError, listCollections, searchPublished, collectionStatistics } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -70,13 +70,12 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ query, type, agency, publishedAfter, limit }) => {
+    async (args) => {
       // ---- paywall: federal_register_search ----
-      const paywallMessage = await premiumRequired("federal_register_search")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await federalRegisterSearch({ query, type, agency, publishedAfter, limit }))
+        return text(await premiumTool("mcp_govinfo_federal_register_search", args))
       } catch (e) {
         return textError(errorMessage(e))
       }
@@ -93,13 +92,12 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ documentNumber }) => {
+    async (args) => {
       // ---- paywall: federal_register_document ----
-      const paywallMessage = await premiumRequired("federal_register_document")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await federalRegisterDocument({ documentNumber }))
+        return text(await premiumTool("mcp_govinfo_federal_register_document", args))
       } catch (e) {
         return textError(errorMessage(e))
       }

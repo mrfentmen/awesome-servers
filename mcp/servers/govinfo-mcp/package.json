@@ -1,6 +1,6 @@
 {
   "name": "govinfo-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "MCP server for GovInfo: bills, laws, Federal Register, congressional records.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/govinfo-mcp",
