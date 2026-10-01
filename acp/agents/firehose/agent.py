@@ -1,13 +1,14 @@
 """Firehose - a real push stream: live Wikimedia edits, one message per event.
 
-Every other agent in this repo can only poll, and says so. This one cannot: it is connected to
+The free skill is connected to
 Wikimedia's EventStreams, a Server-Sent Events channel that pushes edits as they happen on
 every Wikipedia, every minute. Each event is sent as its own `session/update`, so an editor
 renders them as they arrive rather than as one block at the end.
 
 It ends when the count is reached, when the deadline passes, or when the turn is cancelled -
 and it reports how many events it saw versus how many it showed, so "10 edits" is never
-mistaken for "the wiki is quiet". Nothing is left running when the turn ends.
+mistaken for "the wiki is quiet". Nothing is left running when the turn ends. A premium recent-edit digest aggregates a bounded
+MediaWiki API history on the licence gateway.
 """
 
 from __future__ import annotations
@@ -21,7 +22,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text,
+                     GatewayClient, GatewayError, premium_call, empty_premium_answer)  # noqa: E402
 
 from data import (  # noqa: E402
     DATASET,
@@ -36,6 +38,7 @@ HELP = (
     "as it arrives. Ask me:\n"
     "  - watch the wiki firehose for 10 edits\n"
     "  - live wikipedia edits\n"
+    "  - premium: wiki digest on en from 2026-10-01T07:40:00Z to 2026-10-01T07:45:00Z\n"
     "  - new wikipedia articles\n"
     "  - live edits on de.wikipedia\n"
     "  - big wikipedia edits over 5000 bytes\n"
@@ -45,7 +48,7 @@ HELP = (
 
 PERMISSION_KEY = "firehose-read-public-wikimedia-stream"
 
-SKILLS = ("firehose-edits", "help")
+SKILLS = ("firehose-edits", "firehose-digest", "help")
 
 _COUNT_RE = re.compile(r"\b(\d{1,3})\s*(?:edits?|events?|changes?|items?|updates?)\b", re.IGNORECASE)
 _SECONDS_RE = re.compile(r"\b(?:for\s+)?(\d{1,3})\s*(seconds?|secs?|s\b|minutes?|mins?|m\b)",
@@ -73,6 +76,12 @@ def route(text: str) -> tuple[str, dict]:
     stripped = str(text or "").strip()
     if not stripped or re.search(r"\b(help|what can you do|commands?)\b", stripped, re.IGNORECASE):
         return "help", {}
+    if re.search(r"\b(?:wiki|wikipedia|edit) digest\b", stripped, re.IGNORECASE):
+        times = re.findall(r"20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", stripped)
+        editions = re.findall(r"\b(en|de)\b", stripped.lower())
+        return "firehose-digest", {"wikis": list(dict.fromkeys(editions)) or ["en"],
+                                   "start": times[0] if times else "",
+                                   "end": times[1] if len(times) > 1 else ""}
     if not _WORDS.search(stripped):
         return "help", {}
 
@@ -130,9 +139,11 @@ class FirehoseAgent(AcpAgent):
     title = "Firehose - live Wikimedia edit stream (push, not poll)"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: FirehoseData | None = None) -> None:
+    def __init__(self, connection=None, data: FirehoseData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or FirehoseData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -143,6 +154,18 @@ class FirehoseAgent(AcpAgent):
     def prompt(self, ctx: SessionContext, prompt: list[dict]) -> str:
         text = prompt_text(prompt)
         skill, params = route(text)
+        if skill == "firehose-digest":
+            tool = "call_firehose_digest"
+            ctx.tool_call(tool, "Aggregate recent Wikipedia changes", kind="fetch", name=skill, raw_input=params)
+            try:
+                body, artifact = self._digest(params)
+            except (GatewayError, ValueError) as exc:
+                ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
+                ctx.message(str(exc))
+                return STOP_END_TURN
+            ctx.tool_call_update(tool, status="completed", content=ctx.text_content(artifact))
+            ctx.stream_text(body + "\n")
+            return STOP_END_TURN
         ctx.plan([
             (f"Route the request ({skill})", "high"),
             ("Open Wikimedia's push stream", "medium"),
@@ -216,6 +239,29 @@ class FirehoseAgent(AcpAgent):
                     f"{last['title'] if last else 'none'}. Source: {DATASET}, pushed live; nothing "
                     "is still reading it now that this turn is over.")
         return STOP_END_TURN
+
+    def _digest(self, params: dict) -> tuple[str, dict]:
+        """Render the gateway's bounded recentchanges digest."""
+        if not params.get("start") or not params.get("end"):
+            raise ValueError("Give UTC start and end timestamps, for example wiki digest on en from 2026-10-01T07:40:00Z to 2026-10-01T07:45:00Z.")
+        arguments = {key: params[key] for key in ("wikis", "start", "end")}
+        context = {"agent": "firehose", "skill": "firehose-digest"}
+        data, refused = premium_call(self.gateway, "wikimedia_recent_edit_digest", arguments, context)
+        if refused:
+            return refused
+        if (not isinstance(data, dict) or type(data.get("totalChanges")) is not int
+                or not isinstance(data.get("wikis"), list) or not data["wikis"]
+                or type(data.get("complete")) is not bool
+                or any(not isinstance(row, dict) or not isinstance(row.get("byNamespace"), dict)
+                       or not isinstance(row.get("byType"), dict) or type(row.get("changes")) is not int
+                       for row in data["wikis"])):
+            return empty_premium_answer("The gateway returned no readable recent-edit digest.", context)
+        scope = "complete available window" if data["complete"] else "partial, newest capped records"
+        lines = [f"Recent-edit digest: {data['totalChanges']} changes ({scope})."]
+        for row in data["wikis"]:
+            lines.append(f"  {row.get('wiki')}: {row['changes']} changes; namespaces {row['byNamespace']}; types {row['byType']}.")
+        lines.append(str(data.get("note") or "Source: MediaWiki recentchanges API."))
+        return "\n".join(lines), {**data, **context, "premium": True}
 
     def on_cancel(self, session) -> None:
         """Nothing to clean up: the read loop checks the session's cancel flag per event."""
