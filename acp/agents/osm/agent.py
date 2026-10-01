@@ -22,6 +22,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
 
 from data import (  # noqa: E402
     DATASET,
@@ -38,13 +39,14 @@ HELP = (
     "  - EV chargers within 2 km of 40.7536,-73.9832\n"
     "  - pharmacies near Miami Beach\n"
     "  - playgrounds within 500 m of Central Park\n"
+    "  - area profile within 300 m of 40.7536,-73.9832 (premium)\n"
     "I map places, not opinions: OSM is volunteer-mapped, so an empty answer means nobody has "
     "mapped it yet, and I say that rather than pretending it is not there."
 )
 
 PERMISSION_KEY = "osm-read-public-openstreetmap"
 
-SKILLS = ("osm-near", "osm-place", "help")
+SKILLS = ("osm-near", "osm-place", "osm-profile", "help")
 
 _COORDS_RE = re.compile(r"(-?\d{1,2}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)")
 _TRAILING_NOISE = (" right now", " now", " today", " near here", " nearby", " around here",
@@ -139,6 +141,13 @@ def route(text: str) -> tuple[str, dict]:
     if not stripped or re.search(r"\b(help|what can you do|commands?)\b", stripped, re.IGNORECASE):
         return "help", {}
 
+    if re.search(r"\b(area profile|area histogram|what is (?:this|the) area like)\b", stripped, re.IGNORECASE):
+        coords = coords_from_text(stripped)
+        params = {"radius_m": radius_from_text(stripped) or 500}
+        if coords:
+            params["latitude"], params["longitude"] = coords
+        return "osm-profile", params
+
     params: dict = {}
     kinds = kinds_from_text(without_place(stripped))
     if kinds:
@@ -190,9 +199,11 @@ class OsmAgent(AcpAgent):
     title = "OSM - OpenStreetMap places and what is near them"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: OsmData | None = None) -> None:
+    def __init__(self, connection=None, data: OsmData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or OsmData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -215,7 +226,8 @@ class OsmAgent(AcpAgent):
                         "mapping gap, not proof that the thing is absent.")
             return STOP_END_TURN
 
-        tool = "call_overpass" if skill == "osm-near" else "call_nominatim"
+        tool = "call_osm_profile" if skill == "osm-profile" else (
+            "call_overpass" if skill == "osm-near" else "call_nominatim")
         ctx.tool_call(tool, f"Ask OpenStreetMap ({skill.removeprefix('osm-')})", kind="fetch",
                       name=skill, raw_input={"skill": skill, **params})
         if not ctx.ask_permission(tool, "Allow OSM to query OpenStreetMap's public services?",
@@ -227,7 +239,7 @@ class OsmAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (OsmError, ValueError) as exc:
+        except (OsmError, GatewayError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read OpenStreetMap: {exc}")
             return STOP_END_TURN
@@ -242,11 +254,43 @@ class OsmAgent(AcpAgent):
     # -- skills ------------------------------------------------------------
 
     def _run_skill(self, skill: str, params: dict) -> tuple[str, dict]:
+        if skill == "osm-profile":
+            return self._profile(params)
         if skill == "osm-near":
             return self._near(params)
         if skill == "osm-place":
             return self._place(params)
         return HELP, {"summary": "help", "dataset": None}
+
+    def _profile(self, params: dict) -> tuple[str, dict]:
+        """The gateway counts the complete mix of mapped amenities and shops."""
+        if params.get("latitude") is None or params.get("longitude") is None:
+            raise ValueError("give explicit coordinates, e.g. area profile within 300 m of 40.7536,-73.9832")
+        arguments = {"latitude": float(params["latitude"]), "longitude": float(params["longitude"]),
+                     "radius_m": int(params.get("radius_m", 500))}
+        data, refused = premium_call(self.gateway, "osm_area_histogram", arguments,
+                                     {"agent": "osm", "skill": "osm-profile"})
+        if refused:
+            return refused
+        categories = data.get("categories") if isinstance(data, dict) else None
+        if (not isinstance(categories, list) or not isinstance(data.get("total_objects"), int)
+                or data["total_objects"] < 0 or (data["total_objects"] > 0 and not categories)
+                or not isinstance(data.get("objects_per_km2"), (int, float))
+                or not all(isinstance(row, dict) and isinstance(row.get("category"), str)
+                           and isinstance(row.get("count"), int) and row["count"] >= 0
+                           and isinstance(row.get("share_percent"), (int, float)) for row in categories)):
+            return empty_premium_answer("The gateway returned no readable area histogram.",
+                                        {"agent": "osm", "skill": "osm-profile", "dataset": DATASET})
+        lines = [f"Premium OSM area profile within {arguments['radius_m']} m of "
+                 f"{arguments['latitude']},{arguments['longitude']}: "
+                 f"{data['total_objects']:,} mapped objects; {data['objects_per_km2']} objects/km²."]
+        for row in categories:
+            lines.append(f"  - {row['category']}: {row['count']:,} ({row['share_percent']}%)")
+        lines.append("Source: OpenStreetMap contributors (ODbL), aggregated on the licence gateway. "
+                     "Counts are mapped objects, not distinct businesses. An object with both tags "
+                     "counts in both categories; ways may intersect the radius. Missing means unmapped, not absent.")
+        return "\n".join(lines), {**data, "premium": True, "dataset": DATASET,
+                                  "summary": f"premium area profile: {data['total_objects']:,} mapped objects"}
 
     def _origin(self, params: dict) -> dict:
         """Where the question is about: coordinates given, or a geocoded place name."""
