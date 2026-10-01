@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { city, stationSearch, nearestStation } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { city } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -32,10 +32,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: station_search ----
-    const paywallMessage = await premiumRequired("station_search")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await stationSearch(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_waqi_station_search", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -49,10 +48,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: nearest_station ----
-    const paywallMessage = await premiumRequired("nearest_station")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await nearestStation(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_waqi_nearest_station", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
