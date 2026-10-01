@@ -1,9 +1,11 @@
+import { mediaProbe, timecodeConvert } from "./api.js"
+import { premiumTool } from "./gateway.js"
 // @ts-nocheck
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import * as Premiere from "./premiere.js"
-import { mediaProbe, timecodeConvert } from "./api.js"
-import { premiumRequired } from "./license.js"
+const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
+const error = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
 const WRITE = { readOnlyHint: false, openWorldHint: true } as const
@@ -243,10 +245,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: media_probe ----
-    const paywallMessage = await premiumRequired("media_probe")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return { content: [{ type: "text" as const, text: await mediaProbe(args as { path: string }) }] } } catch (err) { return textError(`Error: ${(err as Error).message}`) }
   }
   )
@@ -263,5 +261,21 @@ export function createServer(): McpServer {
     try { return { content: [{ type: "text" as const, text: await timecodeConvert(args as { value: string; rate?: string }) }] } } catch (err) { return textError(`Error: ${(err as Error).message}`) }
   }
   )
+  server.registerTool(
+    "search_archive_footage",
+    {
+      title: "Search archive footage",
+      description: "Search Internet Archive movies for source footage, returning item links and reported license metadata without downloading media or opening Premiere.",
+      inputSchema: z.object({ query: z.string().describe("Internet Archive search query; defaults to nasa.").optional(), limit: z.number().describe("Maximum results, 1-20.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: search_archive_footage ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_adobe_premiere_search_archive_footage", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }
