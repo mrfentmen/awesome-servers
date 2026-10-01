@@ -511,5 +511,69 @@ class TurnTests(unittest.TestCase):
         self.assertIn("failed", statuses)
 
 
+import json
+import os
+from unittest.mock import Mock, patch
+from acp_kit import GatewayClient, GatewayError
+
+class PremiumTests(unittest.TestCase):
+    question = 'trend for Danaus plexippus in Canada from 2020 to 2024'
+    arguments = {'name': 'Danaus plexippus', 'country': 'CA', 'start_year': 2020, 'end_year': 2024}
+    payload = {'name': 'Danaus plexippus', 'annual': [{'year': 2020, 'count': 4331}, {'year': 2024, 'count': 8050}], 'total': 31686, 'net_change': 3719, 'slope_per_year': 766.8}
+
+    def run_premium(self, gateway):
+        data, _ = live_data()
+        agent = NatureAgent(data=data, gateway=gateway)
+        return agent._run_skill(*route(self.question))
+
+    def test_no_key_attempts_premium_and_preserves_client_wording(self):
+        with patch.dict(os.environ, {}, clear=True):
+            fetch = Mock(side_effect=AssertionError("must not authorize"))
+            gateway = GatewayClient(fetch=fetch)
+            with self.assertRaises(GatewayError) as expected:
+                gateway.call('nature_occurrence_trend', self.arguments)
+            with patch.object(gateway, "call", wraps=gateway.call) as call:
+                answer, artifact = self.run_premium(gateway)
+                call.assert_called_once_with('nature_occurrence_trend', self.arguments)
+            self.assertEqual(answer, str(expected.exception))
+            self.assertIn("MCP_LICENSE_KEY", answer)
+            self.assertEqual(artifact["reason"], "missing_key")
+            fetch.assert_not_called()
+
+    def test_rejected_key_preserves_gateway_wording(self):
+        message = "Gateway says this key was revoked. Get a key at https://example.test/buy"
+        fetch = Mock(return_value={"result": {"isError": True,
+                     "structuredContent": {"licenceRefusal": True, "reason": "revoked"},
+                     "content": [{"type": "text", "text": message}]}})
+        answer, artifact = self.run_premium(GatewayClient(key="lic_live_but_rejected", fetch=fetch))
+        self.assertEqual(answer, message)
+        self.assertEqual(artifact["reason"], "denied")
+        self.assertEqual(fetch.call_args.args[2]["Authorization"], "Bearer lic_live_but_rejected")
+
+    def test_good_key_calls_once_and_reports_real_numbers(self):
+        fetch = Mock(return_value={"result": {"content": [{"type": "text", "text": json.dumps(self.payload)}]}})
+        answer, artifact = self.run_premium(GatewayClient(key="test-good", fetch=fetch))
+        self.assertEqual(fetch.call_count, 1)
+        self.assertEqual(fetch.call_args.args[1]["params"], {"name": 'nature_occurrence_trend', "arguments": self.arguments})
+        for number in ['31,686', '8,050']:
+            self.assertIn(number, answer)
+        self.assertTrue(artifact["premium"])
+
+    def test_free_question_never_calls_gateway(self):
+        gateway = Mock()
+        data, _ = live_data()
+        answer, _ = NatureAgent(data=data, gateway=gateway)._run_skill(*route('how many monarch butterflies are in Canada?'))
+        self.assertIn('87,502', answer)
+        gateway.call.assert_not_called()
+
+    def test_unreadable_payload_has_no_invented_numbers(self):
+        for payload in ({}, {"annual": [None]}, "bad"):
+            gateway = Mock()
+            gateway.call.return_value = payload
+            answer, artifact = self.run_premium(gateway)
+            self.assertIn("no readable", answer)
+            self.assertTrue(artifact["failed"])
+
+
 if __name__ == "__main__":
     unittest.main()

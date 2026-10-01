@@ -23,6 +23,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
 
 from data import (  # noqa: E402
     DATASET,
@@ -41,6 +42,7 @@ HELP = (
     "  • when are monarch butterflies recorded most?\n"
     "  • what is the newest bald eagle record?\n"
     "  • what species is Carcharodon carcharias?\n"
+    "  • trend for Danaus plexippus in Canada from 2020 to 2024 (premium)\n"
     "Answers carry GBIF's own numbers. These are catalog records in museums, surveys and "
     "citizen science, not a count of living animals. If a name is too vague to pin down, "
     "I say so instead of guessing."
@@ -48,7 +50,7 @@ HELP = (
 
 PERMISSION_KEY = "nature-read-public-gbif"
 
-SKILLS = ("nature-taxon", "nature-count", "nature-season", "nature-recent", "help")
+SKILLS = ("nature-taxon", "nature-count", "nature-season", "nature-recent", "nature-trend", "help")
 
 _RECENT_WORDS = re.compile(r"\b(latest|recent|newest|last seen|most recent|just recorded)\b", re.IGNORECASE)
 _SEASON_WORDS = re.compile(r"\b(season|seasonal|months?|monthly|time of year|what time|when)\b", re.IGNORECASE)
@@ -117,6 +119,11 @@ def route(text: str) -> tuple[str, dict]:
     if not text.strip() or re.search(r"\b(help|what can you do|commands?)\b", text, re.IGNORECASE):
         return "help", {}
 
+    trend = re.search(r"\b(?:trend|year-by-year)\s+(?:for|of)\s+(.+?)\s+in\s+(.+?)\s+from\s+(\d{4})\s+to\s+(\d{4})[?.!]*$", text, re.IGNORECASE)
+    if trend:
+        return "nature-trend", {"name": trend[1], "country": trend[2],
+                                "start_year": int(trend[3]), "end_year": int(trend[4])}
+
     params: dict = {}
     country, phrase = GbifData.country_phrase_from_text(text)
     work = text
@@ -146,9 +153,11 @@ class NatureAgent(AcpAgent):
     title = "Nature — GBIF biodiversity records"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: GbifData | None = None) -> None:
+    def __init__(self, connection=None, data: GbifData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or GbifData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -187,7 +196,7 @@ class NatureAgent(AcpAgent):
             ctx.tool_call_update(tool, status="completed", content=ctx.text_content("name not recognised"))
             ctx.stream_text(self._unknown_name_answer(str(exc), exc.candidates))
             return STOP_END_TURN
-        except (NatureError, ValueError) as exc:
+        except (NatureError, GatewayError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the nature feeds: {exc}")
             return STOP_END_TURN
@@ -203,6 +212,8 @@ class NatureAgent(AcpAgent):
     # -- skills ------------------------------------------------------------
 
     def _run_skill(self, skill: str, params: dict) -> tuple[str, dict]:
+        if skill == "nature-trend":
+            return self._trend(params)
         if skill == "nature-count":
             return self._count(params)
         if skill == "nature-season":
@@ -212,6 +223,34 @@ class NatureAgent(AcpAgent):
         if skill == "nature-taxon":
             return self._taxon(params)
         return HELP, {"summary": "help", "dataset": None}
+
+    def _trend(self, params: dict) -> tuple[str, dict]:
+        """Annual occurrence comparisons are computed on the licence gateway."""
+        arguments = {"name": GbifData.check_name(params.get("name")),
+                     "country": GbifData.country_code(params.get("country")),
+                     "start_year": int(params["start_year"]), "end_year": int(params["end_year"])}
+        data, refused = premium_call(self.gateway, "nature_occurrence_trend", arguments,
+                                     {"agent": "nature", "skill": "nature-trend"})
+        if refused:
+            return refused
+        annual = data.get("annual") if isinstance(data, dict) else None
+        numeric = lambda value: isinstance(value, (int, float)) and not isinstance(value, bool)
+        if (not isinstance(annual, list) or not annual or len(annual) > 30
+                or not all(isinstance(row, dict) and isinstance(row.get("year"), int)
+                           and isinstance(row.get("count"), int) and row["count"] >= 0 for row in annual)
+                or not numeric(data.get("total")) or not numeric(data.get("net_change"))
+                or not numeric(data.get("slope_per_year"))):
+            return empty_premium_answer("The gateway returned no readable annual occurrence trend.",
+                                        {"agent": "nature", "skill": "nature-trend", "dataset": DATASET})
+        lines = [f"Premium GBIF trend for {data.get('name', arguments['name'])} in {arguments['country']}:"]
+        for row in annual:
+            lines.append(f"  • {row['year']}: {row['count']:,} records")
+        lines.append(f"Total: {data['total']:,}; net change: {data['net_change']:+,}; "
+                     f"fitted change: {data['slope_per_year']} records per year.")
+        lines.append("Source: GBIF, compared on the licence gateway. These are published records, "
+                     "not population estimates; recording effort and publication delays affect the trend.")
+        return "\n".join(lines), {**data, "premium": True, "dataset": DATASET,
+                                  "summary": f"premium GBIF trend: {data['total']:,} records"}
 
     @staticmethod
     def _unknown_name_answer(message: str, candidates: list[dict]) -> str:
