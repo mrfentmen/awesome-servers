@@ -10,10 +10,12 @@ from __future__ import annotations
 
 import datetime
 import json
+import os
 import queue
 import sys
 import threading
 import unittest
+from unittest.mock import Mock, patch
 from pathlib import Path
 
 AGENT_DIR = Path(__file__).resolve().parents[1]
@@ -22,7 +24,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL, GatewayClient  # noqa: E402
 
 from agent import phase_from_text, place_from_text, route  # noqa: E402
 from data import MoonData, MoonError, day_length, stamp  # noqa: E402
@@ -159,6 +161,12 @@ class RouteTests(unittest.TestCase):
         self.assertIsNone(phase_from_text("moon phases"))
         self.assertEqual(place_from_text("when does it get dark in Denver tonight?"), "Denver")
 
+    def test_phase_calendar_extracts_explicit_window(self):
+        self.assertEqual(route("phase calendar for Denver from 2026-10-01 for 7 nights"),
+                         ("phase-calendar", {"place": "Denver", "start": "2026-10-01", "nights": 7}))
+        self.assertEqual(route("phase calendar for New York from 2026-11-01 for 2 nights")[1]["place"], "New York")
+        self.assertEqual(route("phase calendar")[0], "help")
+
 
 class QueueReader:
     def __init__(self):
@@ -203,12 +211,12 @@ def connected_pair():
 
 
 class TurnTests(unittest.TestCase):
-    def turn(self, text: str, permission: str = "allow-once", **kw):
+    def turn(self, text: str, permission: str = "allow-once", gateway=None, **kw):
         from agent import MoonAgent
 
         agent_conn, client_conn = connected_pair()
         data, feed = make_data(**kw)
-        agent = MoonAgent(agent_conn, data)
+        agent = MoonAgent(agent_conn, data, gateway=gateway)
         threading.Thread(target=agent_conn.serve, daemon=True).start()
         client = AcpClient(connection=client_conn, permission=permission)
         client.start()
@@ -248,6 +256,71 @@ class TurnTests(unittest.TestCase):
     def test_a_dead_source_is_reported(self):
         result, _, _ = self.turn("when is the next full moon?", fail="usno")
         self.assertIn("I could not read that", result["text"])
+
+    def test_premium_without_key_uses_gateway_wording(self):
+        with patch.dict(os.environ):
+            os.environ.pop("MCP_LICENSE_KEY", None)
+            fetch = Mock(side_effect=AssertionError("missing key must not authorize a request"))
+            gateway = GatewayClient(fetch=fetch)
+            gateway.call = Mock(wraps=gateway.call)
+            result, _, feeds = self.turn("phase calendar for Denver from 2026-10-01 for 2 nights", gateway=gateway)
+        self.assertIn("`moon_phase_calendar` is a premium skill and no licence key is set. "
+                      "Put a Polar key in MCP_LICENSE_KEY and ask again.", result["text"])
+        gateway.call.assert_called_once_with("moon_phase_calendar", {"place": "Denver", "start": "2026-10-01", "nights": 2})
+        fetch.assert_not_called()
+        self.assertEqual(feeds.calls, [])
+
+    def test_premium_rejected_key_uses_gateway_wording(self):
+        def fetch(url, payload, headers):
+            self.assertEqual(headers["Authorization"], "Bearer lic_live_but_rejected")
+            return {"result": {"isError": True, "content": [{"type": "text", "text": "moon_phase_calendar was refused: revoked licence"}],
+                               "structuredContent": {"licenceRefusal": True, "reason": "revoked"}}}
+        with patch.dict(os.environ, {"MCP_LICENSE_KEY": "lic_live_but_rejected"}):
+            gateway = GatewayClient(fetch=fetch)
+            gateway.call = Mock(wraps=gateway.call)
+            result, _, _ = self.turn("phase calendar for Denver from 2026-10-01 for 2 nights", gateway=gateway)
+        self.assertIn("revoked licence", result["text"])
+        gateway.call.assert_called_once()
+
+    def test_premium_good_key_renders_gateway_numbers(self):
+        def fetch(url, payload, headers):
+            self.assertEqual(headers["Authorization"], "Bearer lic_granted")
+            self.assertEqual(payload["params"], {"name": "moon_phase_calendar", "arguments": {
+                "place": "Denver", "start": "2026-10-01", "nights": 2}})
+            data = {"place": "Denver", "days": [
+                    {"date": "2026-10-01", "timezone": "America/Denver", "phase": "Waning Gibbous",
+                     "illumination_percent": 70.33, "moonrise": "21:49:51", "moonset": "12:52:45",
+                     "sunrise": "06:49:04", "sunset": "18:49:20", "darkness": {"start_local": "2026-10-01 20:19:04", "end_local": "2026-10-02 05:19:09", "minutes": 540}},
+                    {"date": "2026-10-02", "timezone": "America/Denver", "phase": "Waning Gibbous",
+                     "illumination_percent": 62, "moonrise": "22:00:00", "moonset": "13:00:00",
+                     "sunrise": "06:50:00", "sunset": "18:48:00", "darkness": None}],
+                    "ranked_dates": ["2026-10-01"], "total_darkness_minutes": 540}
+            return {"result": {"content": [{"type": "text", "text": json.dumps(data)}]}}
+        gateway = GatewayClient(fetch=fetch, key="lic_granted")
+        gateway.call = Mock(wraps=gateway.call)
+        result, _, _ = self.turn("phase calendar for Denver from 2026-10-01 for 2 nights", gateway=gateway)
+        self.assertIn("70.33%", result["text"])
+        self.assertIn("540 minutes", result["text"])
+        gateway.call.assert_called_once_with("moon_phase_calendar", {"place": "Denver", "start": "2026-10-01", "nights": 2})
+
+    def test_free_question_never_calls_gateway(self):
+        class Never:
+            def call(self, tool, args): raise AssertionError("free skill reached gateway")
+        for question, answer in [("when is the next full moon?", "Next full moon:"),
+                                 ("when does it get dark in Denver?", "Sun times for Denver")]:
+            result, _, _ = self.turn(question, gateway=Never())
+            self.assertIn(answer, result["text"])
+
+    def test_unreadable_premium_payload_stays_empty(self):
+        from agent import MoonAgent
+        for payload in ({}, {"place": "Denver", "days": [None, None]},
+                        {"place": "Denver", "days": [{"date": "2026-10-01", "timezone": "UTC", "darkness": []}] * 2}):
+            gateway = Mock()
+            gateway.call.return_value = payload
+            body, artifact = MoonAgent(gateway=gateway)._phase_calendar({"place": "Denver", "start": "2026-10-01", "nights": 2})
+            self.assertIn("no readable phase calendar", body)
+            self.assertTrue(artifact["premium"])
+            self.assertTrue(artifact["failed"])
 
 
 if __name__ == "__main__":
