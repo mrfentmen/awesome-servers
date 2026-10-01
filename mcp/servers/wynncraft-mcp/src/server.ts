@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatGuild, formatItem, formatPlayer, getGuild, getPlayer, searchItems, WynncraftError, itemBuild } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { formatGuild, formatItem, formatPlayer, getGuild, getPlayer, searchItems, WynncraftError, mapLocations } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -85,17 +85,41 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ query, limit }) => {
+    async (args) => {
       // ---- paywall: item_build ----
-      const paywallMessage = await premiumRequired("item_build")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await itemBuild(query, limit))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_wynncraft_item_build", args)) } catch (e) { return textError(errorMessage(e)) }
     }
+  )
+
+  server.registerTool(
+    "map_locations",
+    {
+      title: "Map locations",
+      description: "Find Wynncraft map locations and profession stations by name, with their coordinates.",
+      inputSchema: z.object( { query: z.string().describe("Optional location name filter.").optional(), limit: z.number().optional() } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await mapLocations(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "territory_owners",
+    {
+      title: "Territory owners",
+      description: "List territory ownership, acquisition times and headquarters flags, optionally filtered by guild.",
+      inputSchema: z.object( { guild: z.string().describe("Optional guild name filter.").optional(), limit: z.number().optional() } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: territory_owners ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_wynncraft_territory_owners", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server
