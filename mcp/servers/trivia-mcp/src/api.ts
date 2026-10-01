@@ -73,8 +73,6 @@ const CATS = "https://opentdb.com/api_category.php"
 
 class TriviaError extends Error {}
 
-
-
 /** Decode common HTML entities in trivia text. */
 function decodeHtml(s: string): string {
   return s
@@ -155,49 +153,4 @@ export const m1_getQuestions = m1.getQuestions;
 
 // OpenTDB's own category ids, so a caller who already knows the number can use
 // it without going through the friendly-name table.
-const TRIVIA_BASE = "https://opentdb.com/api.php"
-const TRIVIA_UA = "mrfentmen-trivia-mcp/1.0 (https://github.com/mrfentmen)"
 
-class TriviaDbError extends Error {}
-
-async function triviaFetch(url: string): Promise<any> {
-  const res = await fetch(url, { headers: { "User-Agent": TRIVIA_UA, Accept: "application/json" }, signal: AbortSignal.timeout(25000) })
-  if (res.status === 429) throw new TriviaDbError("Open Trivia rate limit hit, wait a few seconds and retry")
-  if (!res.ok) throw new TriviaDbError(`Open Trivia error ${res.status}`)
-  return res.json()
-}
-
-const decodeText = (s: unknown): string => {
-  const raw = String(s ?? "")
-  try {
-    return decodeURIComponent(raw)
-  } catch {
-    return raw
-  }
-}
-
-/** True/false questions, which the multiple-choice tools never ask for. */
-export async function booleanQuestion(args: { category_id?: number; amount?: number }): Promise<string> {
-  const amount = Math.max(1, Math.min(args.amount ?? 3, 20))
-  const params = [`amount=${amount}`, "type=boolean", "encode=url3986"]
-  const id = args.category_id
-  if (id !== undefined) {
-    if (!Number.isInteger(id) || id < 9 || id > 32) throw new TriviaDbError("OpenTDB category ids run from 9 (General Knowledge) to 32 (Cartoons & Animations)")
-    params.push(`category=${id}`)
-  }
-  const d = await triviaFetch(`${TRIVIA_BASE}?${params.join("&")}`)
-  if (d?.response_code !== 0) throw new TriviaDbError(`Open Trivia answered response_code ${d?.response_code} (4 means the token expired, 5 a rate limit, 0 is success)`)
-  const rows = d?.results ?? []
-  if (!rows.length) return "Open Trivia returned no true/false questions."
-  return `Open Trivia true/false (${rows.length}):\n` +
-    rows.map((q: any, i: number) => `${i + 1}. ${decodeText(q.question)}\n   ${decodeText(q.category)} | ${decodeText(q.difficulty)} | answer: ${decodeText(q.correct_answer)}`).join("\n")
-}
-
-/** The category list straight from OpenTDB, with each category's question count. */
-export async function categoryList(): Promise<string> {
-  const d = await triviaFetch("https://opentdb.com/api_category.php?type=multiple")
-  const rows = d?.trivia_categories ?? []
-  if (!rows.length) return "Open Trivia returned no categories."
-  return `Open Trivia categories for multiple-choice questions (${rows.length}):\n` +
-    rows.map((c: any, i: number) => `${i + 1}. id ${c.id} - ${c.name}`).join("\n")
-}
