@@ -1,7 +1,7 @@
+import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, listDomains, getDomain, getTopBrowsers, appStoreSearch, appStoreReviews } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { errorMessage, listDomains, getDomain, getTopBrowsers } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -82,13 +82,12 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ query, country, limit }) => {
+    async (args) => {
       // ---- paywall: app_store_search ----
-      const paywallMessage = await premiumRequired("app_store_search")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await appStoreSearch({ query, country, limit }));
+        return text(await premiumTool("mcp_ackee_app_store_search", args));
       } catch (e) {
         return textError(errorMessage(e));
       }
@@ -107,13 +106,12 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ appId, page, limit }) => {
+    async (args) => {
       // ---- paywall: app_store_reviews ----
-      const paywallMessage = await premiumRequired("app_store_reviews")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await appStoreReviews({ appId, page, limit }));
+        return text(await premiumTool("mcp_ackee_app_store_reviews", args));
       } catch (e) {
         return textError(errorMessage(e));
       }

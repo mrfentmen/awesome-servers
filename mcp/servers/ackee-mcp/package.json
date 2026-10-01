@@ -1,6 +1,6 @@
 {
   "name": "ackee-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Self-hosted Ackee analytics via GraphQL: domains, facts, top browsers.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ackee-mcp",
