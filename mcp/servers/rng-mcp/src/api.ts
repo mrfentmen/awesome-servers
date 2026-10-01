@@ -1,28 +1,5 @@
-import { randomInt } from "node:crypto"
-
 const UA = "mrfentmen-rng-mcp/1.0"
 export class RngError extends Error {}
-
-export async function rollDice(args: { count?: number; sides?: number }): Promise<string> {
-  const count = Math.min(Math.max(args.count ?? 1, 1), 20)
-  const sides = Math.min(Math.max(args.sides ?? 6, 2), 100)
-  const rolls = Array.from({ length: count }, () => randomInt(1, sides + 1))
-  const total = rolls.reduce((a, b) => a + b, 0)
-  return `Rolled ${count}d${sides}: [${rolls.join(", ")}]\nTotal: ${total}`
-}
-
-export async function coinFlip(args: Record<string, never>): Promise<string> {
-  const side = randomInt(0, 2) === 0 ? "heads" : "tails"
-  return `Coin flip: ${side}`
-}
-
-export async function randomNumber(args: { min?: number; max?: number }): Promise<string> {
-  const min = Math.round(args.min ?? 0)
-  const max = Math.round(args.max ?? 100)
-  if (min > max) throw new RngError("Min must be less than or equal to max")
-  const n = randomInt(min, max + 1)
-  return `Random integer between ${min} and ${max}: ${n}`
-}
 
 // ---- muxB tools:
 
@@ -43,34 +20,7 @@ export interface RandomFactArgs {
   language?: string;
 }
 
-export async function randomFact(args: RandomFactArgs): Promise<string> {
-  const language = (args.language ?? "en").trim() || "en"
-  const d = await rngGet<{ id?: string; text?: string; source?: string; source_url?: string; language?: string; permalink?: string; error?: string }>(
-    `https://uselessfacts.jsph.pl/api/v2/facts/random?language=${encodeURIComponent(language)}`,
-  )
-  if (d?.error) throw new RngError(`Useless Facts API said: ${d.error}`)
-  if (!rngText(d?.text) || rngText(d.text) === "not reported") throw new RngError("Useless Facts API returned no fact text")
-  return [
-    `Random fact (${rngText(d.language)}):`,
-    `   ${rngText(d.text)}`,
-    `   source: ${rngText(d.source)}`,
-    `   source URL: ${rngText(d.source_url)}`,
-    `   permalink: ${rngText(d.permalink)}`,
-    `   fact id: ${rngText(d.id)}`,
-  ].join("\n")
-}
-
 export interface RandomAdviceArgs {}
-
-export async function randomAdvice(_args: RandomAdviceArgs): Promise<string> {
-  const d = await rngGet<{ slip?: { id?: number; advice?: string }; message?: string }>(
-    "https://api.adviceslip.com/advice",
-  )
-  if (d?.message) throw new RngError(`Advice Slip API said: ${d.message}`)
-  const advice = rngText(d?.slip?.advice)
-  if (advice === "not reported") throw new RngError("Advice Slip API returned no advice text")
-  return `Random advice (slip ${rngText(d?.slip?.id)}):\n   ${advice}`
-}
 
 export interface RandomWordsArgs {
   count?: number;

@@ -1,10 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { coinFlip } from "./api.js"
-import { randomNumber } from "./api.js"
-import { rollDice, randomFact, randomAdvice, randomWords } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { coinFlip, randomNumber, rollDice } from "./local-rng.js"
 
+import { randomWords } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -58,10 +57,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: random_fact ----
-    const paywallMessage = await premiumRequired("random_fact")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await randomFact(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_rng_random_fact", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -75,10 +73,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: random_advice ----
-    const paywallMessage = await premiumRequired("random_advice")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await randomAdvice(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_rng_random_advice", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
