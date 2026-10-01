@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { domainStats, formatStats, listBounces, listDomains, MailgunError, dkimSelectorScan, mailgunStatusAudit } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { domainStats, formatStats, listBounces, listDomains, MailgunError } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -86,10 +86,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: dkim_selector_scan ----
-      const paywallMessage = await premiumRequired("dkim_selector_scan")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await dkimSelectorScan(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_mailgun_dkim_selector_scan", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -103,10 +102,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: mailgun_status_audit ----
-      const paywallMessage = await premiumRequired("mailgun_status_audit")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await mailgunStatusAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_mailgun_mailgun_status_audit", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 

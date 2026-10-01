@@ -1,6 +1,6 @@
 {
   "name": "mailgun-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "MCP server for Mailgun: domains, stats, bounces, complaints. Needs a free API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/mailgun-mcp",
