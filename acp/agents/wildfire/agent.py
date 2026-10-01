@@ -24,7 +24,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text,  # noqa: E402
+                     GatewayClient, GatewayError, premium_call, empty_premium_answer)
 
 from data import (  # noqa: E402
     CITY_COORDS,
@@ -40,13 +41,14 @@ HELP = (
     "  • any fires within 150 miles of Denver?\n"
     "  • how much fire is burning in the country right now?\n"
     "  • tell me about the Timber fire\n"
+    "  • premium: season board in CA from 2026-09-01 to 2026-09-30\n"
     "Every answer names the layer it came from and the acreage agencies reported. I am not an "
     "evacuation notice — follow local authorities for that."
 )
 
 PERMISSION_KEY = "wildfire-read-public-nifc"
 
-SKILLS = ("wildfire-active", "wildfire-near", "wildfire-summary", "wildfire-lookup", "help")
+SKILLS = ("wildfire-active", "wildfire-near", "wildfire-summary", "wildfire-lookup", "wildfire-season-board", "help")
 
 DEFAULT_RADIUS_MILES = 100.0
 
@@ -147,6 +149,16 @@ def route(text: str) -> tuple[str, dict]:
     if not text.strip() or re.search(r"\b(help|what can you do|commands?)\b", text, re.IGNORECASE):
         return "help", {}
 
+    if re.search(r"\bseason board\b", text, re.IGNORECASE):
+        params = {}
+        dates = re.search(r"\bfrom (\d{4}-\d{2}-\d{2}) to (\d{4}-\d{2}-\d{2})\b", text, re.IGNORECASE)
+        if dates:
+            params.update(start_date=dates.group(1), end_date=dates.group(2))
+        state = state_from_text(text)
+        if state:
+            params["state"] = state
+        return "wildfire-season-board", params
+
     params: dict = {}
     point = None
     match = _POINT_RE.search(text)
@@ -208,9 +220,11 @@ class WildfireAgent(AcpAgent):
     title = "Wildfire — interagency fire incidents"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: WildfireData | None = None) -> None:
+    def __init__(self, connection=None, data: WildfireData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or WildfireData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -245,6 +259,10 @@ class WildfireAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
+        except GatewayError as exc:
+            ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
+            ctx.message(f"I could not build the season board on the licence gateway: {exc}")
+            return STOP_END_TURN
         except (WildfireError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the wildfire layer: {exc}")
@@ -255,12 +273,14 @@ class WildfireAgent(AcpAgent):
         return STOP_END_TURN
 
     def on_cancel(self, session) -> None:
-        # Every skill is a single HTTP read; nothing long-running to interrupt.
+        # Reads are bounded; there is no background work.
         return None
 
     # -- skills ------------------------------------------------------------
 
     def _run_skill(self, skill: str, params: dict) -> tuple[str, dict]:
+        if skill == "wildfire-season-board":
+            return self._season_board(params)
         if skill == "wildfire-near":
             return self._near(params)
         if skill == "wildfire-summary":
@@ -270,6 +290,41 @@ class WildfireAgent(AcpAgent):
         if skill == "wildfire-active":
             return self._active(params)
         return HELP, {"summary": "help", "dataset": None}
+
+    def _season_board(self, params: dict) -> tuple[str, dict]:
+        """Summarize a discovery window on the licence gateway."""
+        arguments = {"start_date": params.get("start_date", ""),
+                     "end_date": params.get("end_date", "")}
+        if params.get("state"):
+            arguments["state"] = params["state"]
+        data, refused = premium_call(self.gateway, "wildfire_season_board", arguments,
+                                     {"agent": "wildfire", "skill": "wildfire-season-board"})
+        if refused:
+            return refused
+        if (not isinstance(data, dict) or type(data.get("incidents")) is not int
+                or data["incidents"] < 0 or not all(
+                    isinstance(data.get(key), list) and all(isinstance(row, dict) for row in data[key])
+                    for key in ("byState", "bySize", "byContainment"))):
+            return empty_premium_answer("The gateway returned no readable wildfire season board.",
+                                        {"agent": "wildfire", "skill": "wildfire-season-board"})
+
+        def shown(value):
+            return "not reported" if value is None else str(value)
+
+        lines = [f"Premium wildfire season board: {data.get('state') or 'United States'}, "
+                 f"discoveries {data.get('start')} to {data.get('end')}.",
+                 f"{data['incidents']} incidents; {shown(data.get('reportedAcres'))} reported acres; "
+                 f"{shown(data.get('missingAcres'))} missing sizes; "
+                 f"{shown(data.get('missingContainment'))} missing containment readings."]
+        for key, field, label in (("byState", "state", "State"), ("bySize", "sizeClass", "Size class"),
+                                  ("byContainment", "containment", "Containment")):
+            for row in data[key]:
+                lines.append(f"{label} {row.get(field)}: {shown(row.get('incidents'))} incidents, "
+                             f"{shown(row.get('reportedAcres'))} reported acres.")
+        lines.extend([str(data.get("note", "")), f"Source: {data.get('source')}"])
+        summary = f"premium season board: {data['incidents']} incidents"
+        return "\n".join(lines), {"summary": summary, "premium": True, "data": data,
+                                   "agent": "wildfire", "skill": "wildfire-season-board"}
 
     def _active(self, params: dict) -> tuple[str, dict]:
         result = self.data.incidents(state=params.get("state"), min_acres=params.get("min_acres"),
