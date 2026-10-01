@@ -25,10 +25,6 @@ export async function avatar(args: { text?: string; size?: number; set?: number 
 
 import { createHash } from 'node:crypto';
 
-const FORMATS = ['png', 'jpg', 'bmp', 'gif', 'svg'] as const;
-const SETS = ['set1', 'set2', 'set3', 'set4', 'set5'] as const;
-const BGSETS = ['bg1', 'bg2'] as const;
-
 const RH_UA = 'mrfentmen-robohash-mcp/1.0 (https://github.com/mrfentmen)';
 
 const digest = (buf: ArrayBuffer): string => createHash('sha256').update(Buffer.from(buf)).digest('hex').slice(0, 12);
@@ -56,50 +52,6 @@ async function probeRobo(url: string): Promise<Pick<Probe, 'status' | 'type' | '
 export interface RobohashVariantsArgs {
   text?: string
   size?: number
-}
-
-export async function robohashVariants(args: RobohashVariantsArgs): Promise<string> {
-  const text = sanitize(args.text ?? '') || 'robohash';
-  const size = Math.max(32, Math.min((args.size ?? 200) || 200, 1024));
-  const base = `${BASE}/${encodeURIComponent(text)}`;
-  const wanted: Array<{ label: string; url: string }> = [];
-  for (const format of FORMATS) {
-    wanted.push({ label: `format ${format}`, url: `${base}.${format}?size=${size}x${size}` });
-  }
-  for (const set of SETS) {
-    wanted.push({ label: `set ${set}`, url: `${base}.png?size=${size}x${size}&set=${set}` });
-  }
-  for (const bg of BGSETS) {
-    wanted.push({ label: `background ${bg}`, url: `${base}.png?size=${size}x${size}&bgset=${bg}` });
-  }
-  const results: Probe[] = [];
-  for (const w of wanted) {
-    try {
-      const r = await probeRobo(w.url);
-      results.push({ label: w.label, url: w.url, ...r });
-    } catch (e) {
-      results.push({ label: w.label, url: w.url, status: 0, type: `request failed: ${e instanceof Error ? e.message : String(e)}`, bytes: 0, digest: '-' });
-    }
-  }
-  const reference = results.find((r) => r.status === 200);
-  const lines = [
-    `RoboHash variant matrix for seed "${text}" at ${size}px (${results.length} documented parameter variants, each fetched):`,
-  ];
-  for (const r of results) {
-    const sameAsDefault = reference && r.digest === reference.digest && r.status === reference.status;
-    lines.push(
-      `* ${r.label} - HTTP ${r.status || 'n/a'}, ${r.type}, ${r.bytes.toLocaleString('en-US')} bytes, sha256:${r.digest}` +
-        (sameAsDefault ? ' [byte-identical to the plain .png reference]' : '')
-    );
-  }
-  const ok = results.filter((r) => r.status === 200).length;
-  const distinct = new Set(results.filter((r) => r.status === 200).map((r) => r.digest)).size;
-  lines.push('');
-  lines.push(`${ok} of ${results.length} variants served, and they produce ${distinct} distinct image(s) from this one seed.`);
-  if (distinct < ok) {
-    lines.push('Variants marked byte-identical above were ignored by robohash.org and fall back to the default render.');
-  }
-  return lines.join('\n');
 }
 
 export interface RobohashCompareArgs {

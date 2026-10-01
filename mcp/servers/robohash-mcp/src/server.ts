@@ -1,8 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { avatar, robohashVariants, robohashCompare } from './api.js'
-import { premiumRequired } from "./license.js"
 
+import { avatar, robohashCompare } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -32,10 +32,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: robohash_variants ----
-    const paywallMessage = await premiumRequired("robohash_variants")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await robohashVariants(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_robohash_robohash_variants", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
