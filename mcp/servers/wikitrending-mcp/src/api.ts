@@ -65,56 +65,45 @@ export interface OnThisDayArgs {
   limit?: number;
 }
 
-export async function onThisDay(args: OnThisDayArgs): Promise<string> {
-  const date = normDate(args?.date);
-  const limit = Math.max(1, Math.min(args?.limit ?? 10, 25));
-  const feed = await getFeed(date);
-  const items = (feed.onthisday ?? []) as Array<{ text?: string; pages?: Array<{ content_urls?: { desktop?: { page?: string } } }> }>;
-  if (!items.length) return `No on-this-day entries in the Wikipedia feed for ${date}.`;
-  return `Wikipedia on this day, ${date} (${Math.min(items.length, limit)} of ${items.length} shown):\n` +
-    items.slice(0, limit).map((it, i) => {
-      const link = it.pages?.[0]?.content_urls?.desktop?.page;
-      return `${i + 1}. ${String(it.text ?? '').trim()}${link ? ` (${link})` : ''}`;
-    }).join('\n');
-}
-
 export interface PictureOfTheDayArgs {
   date?: string;
 }
 
 // the feed sends description, artist, credit and licence as { text } or { html }
 // objects, and image/thumbnail as { source }, so flatten whatever comes back
-function picText(value: unknown): string {
-  if (value == null) return '';
-  if (typeof value === 'string') return value.replace(/<[^>]+>/g, '').trim();
-  if (typeof value === 'object') {
-    const row = value as Record<string, unknown>;
-    const text = row.text ?? row.html ?? row.value ?? row.source;
-    return text == null ? '' : picText(text);
-  }
-  return String(value).trim();
+
+// ---- gap4a4 tools:
+
+interface ViewsArgs {
+  start: string;
+  end: string;
 }
 
-export async function pictureOfTheDay(args: PictureOfTheDayArgs): Promise<string> {
-  const date = normDate(args?.date);
-  const feed = await getFeed(date);
-  const pic = (feed.image ?? {}) as Record<string, unknown>;
-  const title = picText(pic.title);
-  if (!title) return `No picture of the day in the Wikipedia feed for ${date}.`;
-  const description = picText(pic.description);
-  const artist = picText(pic.artist);
-  const credit = picText(pic.credit);
-  const licence = picText(pic.license);
-  const image = picText(pic.image);
-  const filePage = picText(pic.file_page);
-  return [
-    `Wikipedia picture of the day, ${date}:`,
-    `Title: ${title}`,
-    description ? `Description: ${description.slice(0, 400)}` : '',
-    artist ? `Artist: ${artist.slice(0, 120)}` : '',
-    licence ? `Licence: ${licence.slice(0, 80)}` : '',
-    credit ? `Credit: ${credit.slice(0, 120)}` : '',
-    image ? `Image: ${image}` : '',
-    filePage ? `File page: ${filePage}` : '',
-  ].filter((l) => l !== '').join('\n');
+function viewDates(args: ViewsArgs): string {
+  const parse = (value: string): number => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new Error('Dates must use YYYY-MM-DD.');
+    const time = Date.parse(`${value}T00:00:00Z`);
+    if (!Number.isFinite(time) || new Date(time).toISOString().slice(0, 10) !== value) throw new Error('Invalid calendar date.');
+    return time;
+  };
+  const start = parse(args.start);
+  const end = parse(args.end);
+  if (end < start || end - start > 30 * 86400000) throw new Error('Choose an inclusive range of 1-31 days.');
+  return `${args.start.replace(/-/g, '')}00/${args.end.replace(/-/g, '')}00`;
+}
+
+async function viewSeries(path: string, label: string): Promise<string> {
+  const res = await fetch(`https://wikimedia.org/api/rest_v1/metrics/pageviews/${path}`, {
+    headers: {'User-Agent': 'mrfentmen-wikitrending-mcp/1.0', Accept: 'application/json'},
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error(`Wikimedia pageviews returned ${res.status}`);
+  const data = await res.json() as {items?: Array<{timestamp?: string; views?: number}>};
+  const rows = data.items ?? [];
+  if (!rows.length) return 'No pageview observations returned.';
+  return `${label} (daily user pageviews across all access methods):\n` + rows.slice(0, 31).map(row => `${row.timestamp?.slice(0, 8) ?? 'date not reported'}: ${row.views ?? 'not reported'} views`).join('\n');
+}
+
+export async function projectPageviews(args: ViewsArgs): Promise<string> {
+  return viewSeries(`aggregate/en.wikipedia/all-access/user/daily/${viewDates(args)}`, 'English Wikipedia');
 }

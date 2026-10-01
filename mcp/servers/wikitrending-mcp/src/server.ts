@@ -1,9 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { featured } from "./api.js"
-import { mostread, onThisDay, pictureOfTheDay } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { featured, mostread, projectPageviews } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -45,10 +44,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: on_this_day ----
-    const paywallMessage = await premiumRequired("on_this_day")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await onThisDay(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wikitrending_on_this_day", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -62,10 +60,38 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: picture_of_the_day ----
-    const paywallMessage = await premiumRequired("picture_of_the_day")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await pictureOfTheDay(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wikitrending_picture_of_the_day", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "article_pageviews",
+    {
+      title: "Article pageviews",
+      description: "Daily readership of an English Wikipedia article over a date range.",
+      inputSchema: z.object( { title: z.string().describe("Exact article title."), start: z.string().describe("First date, YYYY-MM-DD."), end: z.string().describe("Last date, YYYY-MM-DD; at most 31 days inclusive.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: article_pageviews ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_wikitrending_article_pageviews", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "project_pageviews",
+    {
+      title: "Project pageviews",
+      description: "Daily total readership of English Wikipedia over a date range.",
+      inputSchema: z.object( { start: z.string().describe("First date, YYYY-MM-DD."), end: z.string().describe("Last date, YYYY-MM-DD; at most 31 days inclusive.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await projectPageviews(args)) } catch (e) { return textError(error(e)) }
   }
   )
 
