@@ -5,6 +5,9 @@
 
 from __future__ import annotations
 
+import json
+import os
+from unittest.mock import patch
 import queue
 import sys
 import threading
@@ -18,7 +21,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import GatewayClient, AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
 
 from agent import IssAgent, band, route  # noqa: E402
 from data import (  # noqa: E402
@@ -248,6 +251,68 @@ class TurnTests(unittest.TestCase):
         statuses = [update.get("status") for update in result["updates"]
                     if update.get("sessionUpdate") == "tool_call_update"]
         self.assertIn("failed", statuses)
+
+
+PASS_PAYLOAD = {
+    "point": "39.74,-104.99", "searched_minutes": 90,
+    "closest_approach": {"minutes_from_now": 37.5, "ground_km": 421.7,
+                         "elevation_deg": 42.1, "look_direction": "NW", "time": "2026-10-01T22:00:00Z"},
+    "visible_in_window": False, "source": "api.wheretheiss.at + api.sunrise-sunset.org",
+}
+
+
+class PremiumTests(unittest.TestCase):
+    def gateway(self, key, payload=PASS_PAYLOAD, refused=False):
+        self.calls = []
+        def fetch(url, body, headers):
+            self.calls.append((body["params"], headers))
+            result = {"content": [{"type": "text", "text": payload if refused else json.dumps(payload)}]}
+            if refused:
+                result.update(isError=True, structuredContent={"licenceRefusal": True, "reason": "denied"})
+            return {"jsonrpc": "2.0", "id": 1, "result": result}
+        return GatewayClient(key=key, fetch=fetch)
+
+    def test_no_key_attempts_premium_call_without_authorization(self):
+        with patch.dict(os.environ, {}, clear=True):
+            gateway = self.gateway(None)
+            with patch.object(gateway, "call", wraps=gateway.call) as attempted:
+                text, artifact = IssAgent(data=FakeData(), gateway=gateway)._run_skill(*route("estimate the ISS pass over Denver"))
+            attempted.assert_called_once_with("iss_pass_estimate", {"point": "39.74,-104.99", "minutes": 90})
+        self.assertIn("MCP_LICENSE_KEY", text)
+        self.assertEqual(artifact["reason"], "missing_key")
+        self.assertEqual(self.calls, [])
+
+    def test_rejected_key_preserves_gateway_wording(self):
+        wording = "This premium tool needs a valid license key; this key is revoked."
+        gateway = self.gateway("lic_live_but_rejected", wording, True)
+        text, artifact = IssAgent(data=FakeData(), gateway=gateway)._pass({"point": "39.74,-104.99"})
+        self.assertEqual(text, wording)
+        self.assertEqual(artifact["reason"], "denied")
+        self.assertEqual(len(self.calls), 1)
+
+    def test_good_key_uses_real_payload_numbers(self):
+        gateway = self.gateway("lic_granted")
+        text, artifact = IssAgent(data=FakeData(), gateway=gateway)._run_skill(*route("estimate the ISS pass over Denver in the next 90 minutes"))
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(self.calls[0][0], {"name": "iss_pass_estimate", "arguments": {"point": "39.74,-104.99", "minutes": 90}})
+        self.assertIn("37.5 minutes", text)
+        self.assertIn("421.7 km", text)
+        self.assertIn("42.1 degrees", text)
+        self.assertTrue(artifact["premium"])
+
+    def test_free_questions_never_call_gateway(self):
+        gateway = self.gateway("lic_granted")
+        agent = IssAgent(data=FakeData(), gateway=gateway)
+        with patch.object(gateway, "call", wraps=gateway.call) as attempted:
+            for question in ("where is the ISS right now?", "could I see the ISS from Denver tonight?"):
+                agent._run_skill(*route(question))
+            attempted.assert_not_called()
+
+    def test_empty_payload_is_honest(self):
+        gateway = self.gateway("lic_granted", {})
+        text, artifact = IssAgent(data=FakeData(), gateway=gateway)._pass({"point": "39.74,-104.99"})
+        self.assertIn("no readable closest approach", text)
+        self.assertTrue(artifact["failed"])
 
 
 if __name__ == "__main__":
