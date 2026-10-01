@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import datetime
 import json
+import os
+from unittest.mock import patch
 import queue
 import sys
 import threading
@@ -499,11 +501,11 @@ def connected_pair():
 
 
 class TurnTests(unittest.TestCase):
-    def turn(self, text, permission="allow-once", feed=None):
+    def turn(self, text, permission="allow-once", feed=None, gateway=None):
         from agent import CompanyAgent
 
         agent_conn, client_conn = connected_pair()
-        agent = CompanyAgent(agent_conn, CompanyData(fetch=feed or FakeEdgar()))
+        agent = CompanyAgent(agent_conn, CompanyData(fetch=feed or FakeEdgar()), gateway=gateway)
         threading.Thread(target=agent_conn.serve, daemon=True).start()
         client = AcpClient(connection=client_conn, permission=permission)
         client.start()
@@ -577,6 +579,83 @@ class TurnTests(unittest.TestCase):
                     if update.get("sessionUpdate") == "tool_call_update"]
         self.assertIn("completed", statuses)
         self.assertNotIn("failed", statuses)
+
+
+
+class PremiumTests(unittest.TestCase):
+    args = {"cik": "320193", "start_year": 2010, "end_year": 2025}
+    question = "filing cadence for CIK 320193 from 2010 to 2025"
+    payload = {"cik": "0000320193", "name": "Apple Inc.", "totalFilings": 217,
+               "complete": True, "window": {"start": "2010-01-01", "end": "2025-12-31"},
+               "byFormYear": [{"year": 2025, "form": "8-K", "count": 17,
+                              "meanGapDays": 15.5, "earliest": "2025-01-01", "latest": "2025-12-01"}],
+               "latestFilings": [{"filed": "2025-12-01", "form": "8-K",
+                                  "gapDaysSincePreviousSameFormInWindow": 31}]}
+
+    def gateway(self, key=None, payload=None, rejected=False):
+        from acp_kit import GatewayClient
+        calls = []
+        def fetch(url, body, headers):
+            calls.append((body, headers))
+            if rejected:
+                return {"result": {"isError": True, "structuredContent": {
+                    "licenceRefusal": True, "reason": "revoked"},
+                    "content": [{"type": "text", "text": "Gateway says this licence is revoked."}]}}
+            return {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
+        return GatewayClient(fetch=fetch, key=key), calls
+
+    def test_missing_key_attempts_premium_call(self):
+        from agent import CompanyAgent
+        with patch.dict(os.environ, {}, clear=True):
+            gateway, calls = self.gateway()
+            with patch.object(gateway, "call", wraps=gateway.call) as attempted:
+                answer, artifact = CompanyAgent(gateway=gateway)._cadence(self.args)
+            attempted.assert_called_once_with("company_filing_cadence", self.args)
+        self.assertIn("MCP_LICENSE_KEY", answer)
+        self.assertEqual(artifact["reason"], "missing_key")
+        self.assertEqual(calls, [])
+
+    def test_rejected_key_preserves_gateway_words(self):
+        from agent import CompanyAgent
+        gateway, calls = self.gateway("lic_live_but_rejected", rejected=True)
+        answer, artifact = CompanyAgent(gateway=gateway)._cadence(self.args)
+        self.assertEqual(answer, "Gateway says this licence is revoked.")
+        self.assertEqual(artifact["reason"], "denied")
+        self.assertEqual(len(calls), 1)
+
+    def test_good_key_routes_and_displays_real_counts(self):
+        from agent import CompanyAgent
+        gateway, calls = self.gateway("lic_good", self.payload)
+        self.assertEqual(route(self.question), ("company-cadence", self.args))
+        feed = FakeEdgar()
+        answer, artifact = CompanyAgent(data=CompanyData(fetch=feed), gateway=gateway)._cadence(self.args)
+        self.assertEqual(feed.calls, [])
+        self.assertIn("217 filing(s)", answer)
+        self.assertIn("8-K: 17 filing(s), mean gap 15.5 days", answer)
+        self.assertIn("31 days since same form", answer)
+        self.assertTrue(artifact["premium"])
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][0]["params"], {"name": "company_filing_cadence", "arguments": self.args})
+        self.assertEqual(calls[0][1]["Authorization"], "Bearer lic_good")
+
+    def test_free_question_never_calls_gateway(self):
+        gateway, calls = self.gateway("lic_good", self.payload)
+        with patch.object(gateway, "call", side_effect=AssertionError("free question used gateway")) as attempted:
+            result, _ = TurnTests().turn("Microsoft's last 10-K", gateway=gateway)
+        attempted.assert_not_called()
+        self.assertEqual(calls, [])
+        self.assertIn("MICROSOFT CORP", result["text"])
+
+    def test_premium_turn_and_unreadable_payload(self):
+        from agent import CompanyAgent
+        gateway, _ = self.gateway("lic_good", self.payload)
+        result, _ = TurnTests().turn(self.question, gateway=gateway)
+        self.assertIn("217 filing(s)", result["text"])
+        for payload in ({}, [], {**self.payload, "byFormYear": [{}]}, {**self.payload, "window": None}):
+            gateway, _ = self.gateway("lic_good", payload)
+            answer, artifact = CompanyAgent(gateway=gateway)._cadence(self.args)
+            self.assertTrue(artifact["failed"])
+            self.assertIn("no readable filing cadence", answer)
 
 
 if __name__ == "__main__":
