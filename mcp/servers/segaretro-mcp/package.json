@@ -1,6 +1,6 @@
 {
   "name": "segaretro-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Use this MCP server to Sega Retro, every Sega game, console, and unreleased hardware. Tools include search pages, get page, list category",
   "type": "module",
   "mcpName": "io.github.mrfentmen/segaretro-mcp",
