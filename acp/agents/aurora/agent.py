@@ -25,6 +25,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
 from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
 
 from data import (  # noqa: E402
@@ -45,13 +46,14 @@ HELP = (
     "  • what is the aurora forecast for the next 3 days?\n"
     "  • what are the odds of seeing the aurora in Fairbanks tonight?\n"
     "  • what has NOAA said about geomagnetic storms lately?\n"
+    "  • storm digest for recent history and the next 3 days (premium)\n"
     "Every answer names the SWPC product it came from. I read the agency's data; I do not "
     "forecast space weather myself."
 )
 
 PERMISSION_KEY = "aurora-read-public-swpc"
 
-SKILLS = ("aurora-now", "aurora-forecast", "aurora-visibility", "aurora-messages", "help")
+SKILLS = ("aurora-now", "aurora-forecast", "aurora-visibility", "aurora-messages", "aurora-digest", "help")
 
 _POINT_RE = re.compile(r"(-?\d{1,2}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)")
 _FORECAST_WORDS = re.compile(
@@ -122,6 +124,8 @@ def route(text: str) -> tuple[str, dict]:
     asked_for_visibility = bool(_VISIBILITY_WORDS.search(text))
     asked_for_messages = bool(_MESSAGE_WORDS.search(text))
 
+    if re.search(r"\b(?:storm|space weather)\s+digest\b", text, re.IGNORECASE):
+        return "aurora-digest", {}
     if params.get("point") or params.get("place"):
         return "aurora-visibility", params
     if asked_for_forecast:
@@ -151,9 +155,11 @@ class AuroraAgent(AcpAgent):
     title = "Aurora — NOAA space weather"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: SpaceWeatherData | None = None) -> None:
+    def __init__(self, connection=None, data: SpaceWeatherData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or SpaceWeatherData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -188,7 +194,7 @@ class AuroraAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (SpaceWeatherError, ValueError) as exc:
+        except (SpaceWeatherError, GatewayError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the NOAA product: {exc}")
             return STOP_END_TURN
@@ -198,12 +204,14 @@ class AuroraAgent(AcpAgent):
         return STOP_END_TURN
 
     def on_cancel(self, session) -> None:
-        # Every skill is a single HTTP read; nothing long-running to interrupt.
+        # Every skill is a bounded set of HTTP reads.
         return None
 
     # -- skills ------------------------------------------------------------
 
     def _run_skill(self, skill: str, params: dict) -> tuple[str, dict]:
+        if skill == "aurora-digest":
+            return self._digest(params)
         if skill == "aurora-forecast":
             return self._forecast(params)
         if skill == "aurora-visibility":
@@ -213,6 +221,61 @@ class AuroraAgent(AcpAgent):
         if skill == "aurora-now":
             return self._now()
         return HELP, {"summary": "help", "dataset": None}
+
+    def _digest(self, params: dict) -> tuple[str, dict]:
+        """Read historical storm days and a graded window from the gateway."""
+        if params:
+            raise ValueError("storm digest takes no place or date arguments")
+        context = {"agent": "aurora", "skill": "aurora-digest"}
+        data, refused = premium_call(self.gateway, "aurora_storm_digest", {}, context)
+        if refused:
+            return refused
+
+        def count(value):
+            return type(value) is int and value >= 0
+
+        def kp(value):
+            return type(value) in (int, float) and 0 <= value <= 9
+
+        def period(row, history=False):
+            return (isinstance(row, dict) and isinstance(row.get("date" if history else "start"), str)
+                    and count(row.get("periods")) and isinstance(row.get("grade"), str)
+                    and (kp(row.get("maxKp")) or not history and row.get("maxKp") is None))
+
+        if isinstance(data, dict):
+            storms, forecast, best = data.get("stormDays"), data.get("forecastDays"), data.get("bestWindow")
+            valid = (count(data.get("historyDays")) and count(data.get("completeHistoryDays"))
+                     and count(data.get("stormDayCount")) and isinstance(data.get("historyStart"), str)
+                     and isinstance(data.get("historyEnd"), str) and isinstance(data.get("note"), str)
+                     and isinstance(storms, list) and len(storms) <= 30
+                     and len(storms) == data["stormDayCount"] and all(period(r, True) for r in storms)
+                     and isinstance(forecast, list) and len(forecast) == 3 and all(period(r) for r in forecast)
+                     and (best is None or isinstance(best, dict) and kp(best.get("meanKp"))
+                          and kp(best.get("peakKp")) and isinstance(best.get("grade"), str)
+                          and isinstance(best.get("start"), str) and isinstance(best.get("end"), str)))
+        else:
+            valid = False
+        if not valid:
+            return empty_premium_answer("The gateway returned no readable NOAA storm digest.", context)
+        lines = [f"Premium NOAA storm digest: {data['stormDayCount']} storm-level days from "
+                 f"{data['historyStart']} to {data['historyEnd']}.",
+                 f"  Coverage: {data['historyDays']} reported days; {data['completeHistoryDays']} complete days.",
+                 "  Storm-level days, worst first:"]
+        for row in storms:
+            lines.append(f"    • {row['date']}: peak Kp {row['maxKp']:g} ({row['grade']}); {row['periods']}/8 readings.")
+        if not storms:
+            lines.append("    No storm-level readings in the available history.")
+        lines.append("  Next three 24-hour forecast blocks, worst first:")
+        for row in forecast:
+            peak = row['maxKp'] if row['maxKp'] is not None else 'not reported'
+            lines.append(f"    • {row['start']}: peak Kp {peak} ({row['grade']}); {row['periods']}/8 readings.")
+        if best:
+            lines.append(f"  Best six-hour window: {best['start']} to {best['end']}; "
+                         f"mean Kp {best['meanKp']:g}, peak {best['peakKp']:g} ({best['grade']}).")
+        else:
+            lines.append("  Best six-hour window: no consecutive forecast readings available.")
+        lines.append(data['note'])
+        return "\n".join(lines), {**context, "summary": "premium NOAA storm digest", "premium": True, "data": data}
 
     def _now(self) -> tuple[str, dict]:
         recent = self.data.recent(hours=24)
