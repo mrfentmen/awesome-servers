@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/whois-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "RDAP whois records for domains and IPs.",
   "type": "module",
   "main": "dist/index.js",

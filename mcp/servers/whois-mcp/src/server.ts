@@ -1,8 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_domain, m0_ip, m1_domainInfo, asnInfo, asnNetworks, domainContacts } from './api.js'
-import { premiumRequired } from "./license.js"
 
+import { m0_domain, m0_ip, m1_domainInfo } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -57,10 +57,9 @@ server.registerTool(
     },
     async (args) => {
     // ---- paywall: asn_info ----
-    const paywallMessage = await premiumRequired("asn_info")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await asnInfo(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_whois_asn_info", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -74,10 +73,9 @@ server.registerTool(
     },
     async (args) => {
     // ---- paywall: asn_networks ----
-    const paywallMessage = await premiumRequired("asn_networks")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await asnNetworks(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_whois_asn_networks", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -91,10 +89,9 @@ server.registerTool(
     },
     async (args) => {
     // ---- paywall: domain_contacts ----
-    const paywallMessage = await premiumRequired("domain_contacts")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await domainContacts(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_whois_domain_contacts", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
