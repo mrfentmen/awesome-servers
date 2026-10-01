@@ -1,9 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { explainEvidence, format } from "./evidence.js"
-import { testEvidence, commitEvidence } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { testEvidence, commitEvidence } from "./local-api.js"
 
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -45,12 +45,42 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async ({ project, limit }) => {
-      // ---- paywall: commit_history_evidence ----
-      const paywallMessage = await premiumRequired("commit_history_evidence")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try { return text(await commitEvidence({ project, limit })) } catch (error) { return errorText(error) }
     }
   )
+  server.registerTool(
+    "public_revision_evidence",
+    {
+      title: "Public revision evidence",
+      description: "Compare two public GitHub revisions using relationship, commit counts and bounded file-change totals, without returning source diffs.",
+      inputSchema: z.object({ owner: z.string().min(1).max(100).default("nodejs").describe("Public GitHub owner."), repo: z.string().min(1).max(100).default("node").describe("Public GitHub repository."), base: z.string().min(1).max(200).default("v22.0.0"), head: z.string().min(1).max(200).default("v22.1.0") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: public_revision_evidence ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_evidence_diff_public_revision_evidence", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "public_check_evidence",
+    {
+      title: "Public check evidence",
+      description: "Fetch public GitHub commit check statuses and conclusions without returning check names, logs or annotations.",
+      inputSchema: z.object({ owner: z.string().min(1).max(100).default("microsoft").describe("Public GitHub owner."), repo: z.string().min(1).max(100).default("TypeScript").describe("Public GitHub repository."), ref: z.string().min(1).max(200).default("main"), limit: z.number().optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: public_check_evidence ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_evidence_diff_public_check_evidence", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }
+
+function error(e: unknown): string { return e instanceof Error ? e.message : String(e) }
