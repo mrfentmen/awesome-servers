@@ -1,6 +1,6 @@
 {
   "name": "ns-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NS Dutch Railways API: live departures, station search, journey planning, disruptions, fares.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ns-mcp",

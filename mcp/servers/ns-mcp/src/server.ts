@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, getDepartures, searchStations, planJourney, getDisruptions, getFares, stationNetworkCensus, stationWikidataProfile } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, getDepartures, searchStations, planJourney, getDisruptions, getFares } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -123,10 +123,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: station_network_census ----
-      const paywallMessage = await premiumRequired("station_network_census")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await stationNetworkCensus(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_ns_station_network_census", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -140,10 +139,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: station_wikidata_profile ----
-      const paywallMessage = await premiumRequired("station_wikidata_profile")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await stationWikidataProfile(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_ns_station_wikidata_profile", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
