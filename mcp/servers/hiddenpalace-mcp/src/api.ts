@@ -82,53 +82,8 @@ export interface RecentChangesArgs {
   limit?: number;
 }
 
-export async function recentChanges(args: RecentChangesArgs): Promise<string> {
-  const limit = Math.max(1, Math.min(Number(args?.limit ?? 15) || 15, 50))
-  const d = await getJson<{ query?: { recentchanges?: any[] } }>({
-    action: "query",
-    list: "recentchanges",
-    rclimit: String(limit),
-    rctype: "edit|new",
-    rcprop: "user|title|timestamp|size|comment",
-  })
-  const rows = d.query?.recentchanges ?? []
-  if (!rows.length) return "No recent changes on hiddenpalace.org."
-  return `Recent changes on hiddenpalace.org (${rows.length} shown):\n` +
-    rows.map((c: any, i: number) => {
-      const who = c.user ?? "not reported"
-      const when = String(c.timestamp ?? "").replace("T", " ").replace("Z", " UTC")
-      const size = c.size != null ? ` | size ${c.size} bytes` : ""
-      return `${i + 1}. ${c.type ?? "change"} of "${c.title ?? "page not reported"}" by ${who} at ${when || "time not reported"}${size}`
-    }).join("\n")
-}
-
 export interface PageInfoArgs {
   title: string;
-}
-
-export async function pageInfo(args: PageInfoArgs): Promise<string> {
-  const title = (args.title ?? "").trim()
-  if (!title) throw new WikiError("Provide a page title")
-  const d = await getJson<{ query?: { pages?: any[] } }>({
-    action: "query",
-    prop: "info|revisions",
-    titles: title,
-    rvprop: "timestamp|user|size",
-    rvlimit: "1",
-    inprop: "url",
-    formatversion: "2",
-  })
-  const page = (d.query?.pages ?? [])[0]
-  if (!page || page.missing !== undefined) return `No hiddenpalace page "${title}".`
-  const rev = Array.isArray(page.revisions) ? page.revisions[0] : undefined
-  return [
-    `${page.title ?? title}`,
-    `URL: ${page.canonicalurl ?? page.fullurl ?? "not reported"}`,
-    `Page id: ${page.pageid ?? "not reported"} | namespace: ${page.ns ?? "not reported"}`,
-    `Length: ${page.length != null ? `${page.length} bytes` : "not reported"}`,
-    `Last touched: ${String(page.touched ?? "not reported").replace("T", " ").replace("Z", " UTC")}`,
-    `Last edit by: ${rev?.user ?? "not reported"} at ${String(rev?.timestamp ?? "not reported").replace("T", " ").replace("Z", " UTC")}`,
-  ].join("\n")
 }
 
 export interface ListCategoriesArgs {
@@ -147,3 +102,6 @@ export async function listCategories(args: ListCategoriesArgs): Promise<string> 
   return `hiddenpalace.org categories (${rows.length} shown, alphabetical from the start of the list):\n` +
     rows.map((name, i) => `${i + 1}. ${name}`).join("\n")
 }
+
+// ---- gap4b1 tools:
+

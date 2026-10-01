@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { WikiError, getPage, searchPages, wikiTextToPlain, recentChanges, pageInfo, listCategories } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { WikiError, getPage, searchPages, wikiTextToPlain, listCategories } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -77,14 +77,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: recent_changes ----
-      const paywallMessage = await premiumRequired("recent_changes")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await recentChanges(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_hiddenpalace_recent_changes", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -99,14 +94,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: page_info ----
-      const paywallMessage = await premiumRequired("page_info")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await pageInfo(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_hiddenpalace_page_info", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -126,6 +116,22 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "category_members",
+    {
+      title: "Category members",
+      description: "Browse the pages and subcategories filed in a Hidden Palace category, with their page IDs.",
+      inputSchema: z.object({ category: z.string().describe("Category title, with or without the Category: prefix."), limit: z.number().describe("Maximum members, 1-50; default 20.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: category_members ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_hiddenpalace_category_members", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server
