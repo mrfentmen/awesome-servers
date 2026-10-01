@@ -1,9 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { get } from "./api.js"
-import { ip, statusProbe, headerEcho, redirectProbe } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { get, ip } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -45,10 +44,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: status_probe ----
-    const paywallMessage = await premiumRequired("status_probe")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await statusProbe(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_postman_echo_status_probe", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -62,10 +60,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: header_echo ----
-    const paywallMessage = await premiumRequired("header_echo")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await headerEcho(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_postman_echo_header_echo", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -79,10 +76,25 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: redirect_probe ----
-    const paywallMessage = await premiumRequired("redirect_probe")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await redirectProbe(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_postman_echo_redirect_probe", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "json_body_echo",
+    {
+      title: "JSON body echo",
+      description: "POST a JSON object to Postman Echo and inspect the returned body fields to test JSON request serialization.",
+      inputSchema: z.object({ body: z.string().max(4000).describe("JSON object encoded as a string. Defaults to a greeting.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: json_body_echo ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_postman_echo_json_body_echo", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
