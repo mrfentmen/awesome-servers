@@ -11,12 +11,6 @@ export function errorMessage(e: unknown): string {
 
 const UA = { "User-Agent": "awesome-mcps/1.0" }
 
-function envStrict(name: string): string {
-  const v = process.env[name]
-  if (!v) throw new CoinmetricsError(`Set the ${name} environment variable.`)
-  return v
-}
-
 async function authHeaders(): Promise<Record<string, string>> {
   return {};
 }
@@ -67,35 +61,29 @@ const CM_UA = "awesome-mcps/1.0"
 
 class CoinmetricsLookupError extends Error {}
 
-/**
- * CoinMetrics publishes a catalogue of every asset it carries, with each one's
- * metrics and the window of history available for them. Nothing else on the
- * server exposes that list, and it is the only way to know which id to ask for.
- */
-export async function assetCatalog(args: { search?: string; limit?: number }): Promise<string> {
-  const q = (args.search ?? "").trim().toLowerCase()
-  const limit = Math.max(1, Math.min(args.limit ?? 15, 200))
-  const res = await fetch("https://community-api.coinmetrics.io/v4/catalog/assets", {
-    headers: { "User-Agent": CM_UA, Accept: "application/json" },
-    signal: AbortSignal.timeout(30000),
-  })
-  if (!res.ok) throw new CoinmetricsLookupError(`CoinMetrics returned ${res.status} for the asset catalogue`)
-  const d = (await res.json()) as {
-    data?: Array<{ asset?: string; full_name?: string; metrics?: Array<{ metric?: string; frequencies?: Array<{ frequency?: string; min_time?: string; max_time?: string }> }> }>
-  }
-  const assets = d.data ?? []
-  if (!assets.length) throw new CoinmetricsLookupError("CoinMetrics returned an empty asset catalogue")
-  const hits = q ? assets.filter((a) => String(a.full_name ?? "").toLowerCase().includes(q) || String(a.asset ?? "").toLowerCase().includes(q)) : assets
-  if (!hits.length) return `CoinMetrics has no asset matching "${q}". It carries ${assets.length}.`
-  const shown = hits.slice(0, limit)
-  return [
-    `CoinMetrics community catalogue: ${assets.length} assets total, ${hits.length} matching, ${shown.length} shown.`,
-    ...shown.map((a, i) => {
-      const metrics = a.metrics ?? []
-      const freqs = [...new Set(metrics.flatMap((m) => (m.frequencies ?? []).map((f) => f.frequency ?? "?")))].sort()
-      const first = metrics[0]?.frequencies?.[0]
-      const last = metrics[0]?.frequencies?.[0]
-      return `${i + 1}. [${a.asset ?? "?"}] ${a.full_name ?? "unnamed"}\n   ${metrics.length} metrics | frequencies: ${freqs.join(", ") || "none listed"}\n   history for the first metric: ${first?.min_time?.slice(0, 10) ?? "?"} to ${last?.max_time?.slice(0, 10) ?? "?"}`
-    }),
-  ].join("\n")
+// ---- gap4a1 tools:
+
+async function cmPublic<T>(path: string, params?: URLSearchParams): Promise<T[]> {
+  const res = await fetch(`https://community-api.coinmetrics.io/v4/${path}${params ? `?${params}` : ''}`, { headers: { 'User-Agent': CM_UA, Accept: 'application/json' }, signal: AbortSignal.timeout(25000) })
+  if (!res.ok) throw new CoinmetricsLookupError(`CoinMetrics returned HTTP ${res.status} for ${path}`)
+  const data = await res.json() as { data?: T[] }
+  if (!Array.isArray(data.data)) throw new CoinmetricsLookupError('CoinMetrics returned no data array')
+  return data.data
 }
+
+export async function metricDefinitions(args: { search?: string; limit?: number }): Promise<string> {
+  const rows = await cmPublic<{ metric?: string; full_name?: string; description?: string; unit?: string; category?: string; data_type?: string }>('catalog/metrics')
+  const q = (args.search ?? '').trim().toLowerCase()
+  const hits = rows.filter(r => !q || `${r.metric} ${r.full_name} ${r.description}`.toLowerCase().includes(q))
+  const limit = Math.max(1, Math.min(Math.trunc(args.limit ?? 10), 30))
+  return `Metric definitions: ${hits.length} matching.\n` + (hits.slice(0, limit).map(r => `${r.metric ?? 'not reported'}: ${(r.full_name ?? 'not reported').slice(0, 150)}\nUnit: ${r.unit ?? 'not reported'} | category: ${r.category ?? 'not reported'} | type: ${r.data_type ?? 'not reported'}\n${(r.description ?? 'not reported').slice(0, 900)}`).join('\n\n') || 'No matching definitions.')
+}
+
+export async function candlePairs(args: { search?: string; limit?: number }): Promise<string> {
+  const rows = await cmPublic<{ pair?: string; frequencies?: { frequency?: string; min_time?: string; max_time?: string }[] }>('catalog/pair-candles')
+  const q = (args.search ?? '').trim().toLowerCase()
+  const hits = rows.filter(r => !q || (r.pair ?? '').toLowerCase().includes(q))
+  const limit = Math.max(1, Math.min(Math.trunc(args.limit ?? 10), 30))
+  return `Candle pairs: ${hits.length} matching.\n` + (hits.slice(0, limit).map(r => `${r.pair ?? 'not reported'}\n${(r.frequencies ?? []).slice(0, 12).map(f => `  ${f.frequency ?? 'not reported'}: ${f.min_time ?? 'not reported'} to ${f.max_time ?? 'not reported'}`).join('\n') || 'Frequencies not reported.'}`).join('\n') || 'No matching pairs.')
+}
+

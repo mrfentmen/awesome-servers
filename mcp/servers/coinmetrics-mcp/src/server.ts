@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, getAssetMetrics, listMetrics, assetCatalog } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, getAssetMetrics, listMetrics, metricDefinitions, candlePairs } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -66,16 +66,53 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: asset_catalog ----
-    const paywallMessage = await premiumRequired("asset_catalog")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try {
-      return text(await assetCatalog(args));
-    } catch (e) {
-      return textError(errorMessage(e));
-    }
+    try { return text(await premiumTool("mcp_coinmetrics_asset_catalog", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   );
+
+  server.registerTool(
+    "metric_definitions",
+    {
+      title: "Metric definitions",
+      description: "Search the definitions, units, categories and data types of community metrics.",
+      inputSchema: z.object({ search: z.string().describe("Search metric code, name or definition.").optional(), limit: z.number().describe("Maximum definitions, 1-30.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await metricDefinitions(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "candle_pairs",
+    {
+      title: "Candle pair availability",
+      description: "Find trading pairs with available OHLC candles and history windows at each frequency.",
+      inputSchema: z.object({ search: z.string().describe("Pair name filter.").optional(), limit: z.number().describe("Maximum pairs, 1-30.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await candlePairs(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "pair_candles",
+    {
+      title: "Pair OHLC candles",
+      description: "Read open, high, low and close prices for a trading pair from the public CoinMetrics candle series.",
+      inputSchema: z.object({ pair: z.string().describe("Pair identifier, default btc-usd.").optional(), frequency: z.string().describe("1m, 5m, 10m, 15m, 30m, 1h, 4h or 1d.").optional(), startTime: z.string().describe("Start ISO timestamp.").optional(), limit: z.number().describe("Maximum candles, 1-50.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: pair_candles ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_coinmetrics_pair_candles", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
 
   return server
 }
