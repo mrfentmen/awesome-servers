@@ -1,6 +1,6 @@
 {
   "name": "openrouteservice-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Query OpenRouteService (free key; set OPENROUTESERVICE_API_KEY): geocode, reverse geocode, driving directions.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/openrouteservice-mcp",

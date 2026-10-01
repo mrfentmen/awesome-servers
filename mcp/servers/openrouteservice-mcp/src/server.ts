@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, geocode, reverse, directions, nominatimLookup, osrmRouteSteps, valhallaModeCompare } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, geocode, reverse, directions, nominatimLookup } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -110,10 +110,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: osrm_route_steps ----
-    const paywallMessage = await premiumRequired("osrm_route_steps")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await osrmRouteSteps(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_openrouteservice_osrm_route_steps", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -133,10 +132,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: valhalla_mode_compare ----
-    const paywallMessage = await premiumRequired("valhalla_mode_compare")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await valhallaModeCompare(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_openrouteservice_valhalla_mode_compare", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
