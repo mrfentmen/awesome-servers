@@ -20,6 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer
 from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
 
 from data import (  # noqa: E402
@@ -36,13 +37,14 @@ HELP = (
     "  • what is the EUR to JPY rate?\n"
     "  • how did USD-EUR move over the last 30 days?\n"
     "  • which currencies do you know?\n"
+    "  • rate history board USD EUR GBP JPY over the last 30 days (premium)\n"
     "These are reference rates published once per working day: nothing on weekends or "
     "holidays, and not a rate you can trade at."
 )
 
 PERMISSION_KEY = "fx-read-public-ecb-rates"
 
-SKILLS = ("fx-rate", "fx-history", "fx-currencies", "help")
+SKILLS = ("fx-rate", "fx-history", "fx-currencies", "fx-history-board", "help")
 
 _AMOUNT_RE = re.compile(r"\b(\d[\d,]*(?:\.\d+)?)\b")
 _WINDOW_RE = re.compile(r"\b(?:last|past|previous|over the last)\s+(\d{1,4})\s*(days?|weeks?|months?|years?)\b",
@@ -131,6 +133,15 @@ def route(text: str) -> tuple[str, dict]:
     if not text.strip() or re.search(r"\b(help|what can you do|commands?)\b", text, re.IGNORECASE):
         return "help", {}
 
+    if re.search(r"\brate history board\b", text, re.IGNORECASE):
+        codes = currencies_in(text)
+        dates = re.findall(r"\b\d{4}-\d{2}-\d{2}\b", text)
+        start, end = (tuple(dates) if len(dates) == 2 else history_window(text) or
+                      ((date.today() - timedelta(days=30)).isoformat(), date.today().isoformat()))
+        return "fx-history-board", {"base": codes[0] if codes else "USD",
+                                    "symbols": codes[1:] if len(codes) > 1 else ["EUR", "GBP", "JPY"],
+                                    "start": start, "end": end}
+
     params: dict = {}
     if re.search(r"\b(which|what) (?:currencies|currency codes?)\b|\bcurrencies do you\b", text, re.IGNORECASE):
         return "fx-currencies", params
@@ -164,9 +175,11 @@ class FxAgent(AcpAgent):
     title = "FX — ECB reference rates"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: FxData | None = None) -> None:
+    def __init__(self, connection=None, data: FxData | None = None,
+                 gateway: GatewayClient | None = None) -> None:
         super().__init__(connection)
         self.data = data or FxData()
+        self.gateway = gateway or GatewayClient()
 
     # -- ACP ---------------------------------------------------------------
 
@@ -202,7 +215,7 @@ class FxAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (FxError, ValueError) as exc:
+        except (FxError, GatewayError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the reference rates: {exc}")
             return STOP_END_TURN
@@ -212,12 +225,14 @@ class FxAgent(AcpAgent):
         return STOP_END_TURN
 
     def on_cancel(self, session) -> None:
-        # Every skill is a single HTTP read; nothing long-running to interrupt.
+        # Requests are bounded; no background work to interrupt.
         return None
 
     # -- skills ------------------------------------------------------------
 
     def _run_skill(self, skill: str, params: dict) -> tuple[str, dict]:
+        if skill == "fx-history-board":
+            return self._history_board(params)
         if skill == "fx-history":
             return self._history(params)
         if skill == "fx-currencies":
@@ -225,6 +240,39 @@ class FxAgent(AcpAgent):
         if skill == "fx-rate":
             return self._rate(params)
         return HELP, {"summary": "help", "dataset": None}
+
+    def _history_board(self, params: dict) -> tuple[str, dict]:
+        """Compare a currency basket on the licence gateway."""
+        arguments = {"base": FxData.check_currency(params.get("base", "USD")),
+                     "symbols": FxData.check_symbols(params.get("symbols")) or ["EUR", "GBP", "JPY"],
+                     "start": str(params.get("start", "")), "end": str(params.get("end", ""))}
+        data, refused = premium_call(self.gateway, "fx_rate_history_board", arguments,
+                                     {"agent": "fx", "skill": "fx-history-board"})
+        if refused:
+            return refused
+        rows = data.get("currencies") if isinstance(data, dict) else None
+        numeric = ("min", "max", "mean", "change_percent", "daily_volatility_percent")
+        if (not isinstance(rows, list) or len(rows) < 2 or
+                any(not isinstance(row, dict) or not isinstance(row.get("currency"), str) or
+                    any(not isinstance(row.get(key), (int, float)) or isinstance(row.get(key), bool)
+                        for key in numeric) for row in rows) or
+                not isinstance(data.get("biggest_movers"), list) or
+                any(not isinstance(code, str) for code in data["biggest_movers"])):
+            return empty_premium_answer("The gateway returned no readable currency comparison board.",
+                                        {"agent": "fx", "skill": "fx-history-board"})
+        lines = [f"Premium rate history board: {data.get('base', arguments['base'])}, "
+                 f"{data.get('first_date', 'not reported')} to {data.get('last_date', 'not reported')} "
+                 f"({data.get('common_days', 'not reported')} common publication dates)."]
+        for row in rows:
+            lines.append(f"  {row['currency']}: min {row['min']}, max {row['max']}, mean {row['mean']}; "
+                         f"change {row['change_percent']}%; daily volatility {row['daily_volatility_percent']}%.")
+            move = row.get("largest_daily_move")
+            if isinstance(move, dict):
+                lines.append(f"    Largest daily move: {move.get('percent', 'not reported')}% "
+                             f"from {move.get('from', 'not reported')} to {move.get('to', 'not reported')}.")
+        lines.append("Biggest movers (absolute window change): " + ", ".join(data["biggest_movers"]))
+        lines.append(str(data.get("note") or "ECB reference rates; quotes per one base currency, not trading prices."))
+        return "\n".join(lines), {**data, "summary": lines[0], "premium": True}
 
     def _rate(self, params: dict) -> tuple[str, dict]:
         if not params.get("base"):

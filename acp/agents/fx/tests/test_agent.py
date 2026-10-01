@@ -5,6 +5,10 @@
 
 from __future__ import annotations
 
+import json
+import os
+from unittest.mock import patch
+
 import queue
 import sys
 import threading
@@ -18,6 +22,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
+from acp_kit import GatewayClient
 from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
 
 from agent import FxAgent, amount_in, currencies_in, history_window, route  # noqa: E402
@@ -297,9 +302,9 @@ class RouteTests(unittest.TestCase):
 
 
 class TurnTests(unittest.TestCase):
-    def turn(self, text: str, data: FakeData | None = None, permission: str = "allow-once"):
+    def turn(self, text: str, data: FakeData | None = None, permission: str = "allow-once", gateway=None):
         agent_conn, client_conn = connected_pair()
-        agent = FxAgent(agent_conn, data or FakeData())
+        agent = FxAgent(agent_conn, data or FakeData(), gateway=gateway)
         threading.Thread(target=agent_conn.serve, daemon=True).start()
         client = AcpClient(connection=client_conn, permission=permission)
         client.start()
@@ -361,6 +366,68 @@ class TurnTests(unittest.TestCase):
         statuses = [update.get("status") for update in result["updates"]
                     if update.get("sessionUpdate") == "tool_call_update"]
         self.assertIn("failed", statuses)
+
+
+BOARD_ARGS = {"base": "USD", "symbols": ["EUR", "GBP"], "start": "2026-09-01", "end": "2026-09-04"}
+BOARD_QUESTION = "rate history board USD EUR GBP from 2026-09-01 to 2026-09-04"
+BOARD_PAYLOAD = {"base": "USD", "common_days": 3, "first_date": "2026-09-01", "last_date": "2026-09-04",
+                 "currencies": [{"currency": code, "min": 1, "max": 3, "mean": 2.123,
+                                 "change_percent": 12.7, "daily_volatility_percent": 3.25}
+                                for code in ("EUR", "GBP")], "biggest_movers": ["GBP", "EUR"]}
+
+
+class PremiumTests(unittest.TestCase):
+    def gateway(self, key, payload=BOARD_PAYLOAD, refused=False):
+        self.calls = []
+        def fetch(url, body, headers):
+            self.calls.append((body["params"], headers))
+            result = {"content": [{"type": "text", "text": payload if refused else json.dumps(payload)}]}
+            if refused:
+                result.update(isError=True, structuredContent={"licenceRefusal": True, "reason": "denied"})
+            return {"jsonrpc": "2.0", "id": 1, "result": result}
+        return GatewayClient(key=key, fetch=fetch)
+
+    def test_no_key_attempts_call_without_authorization(self):
+        with patch.dict(os.environ, {}, clear=True):
+            gateway = self.gateway(None)
+            with patch.object(gateway, "call", wraps=gateway.call) as attempted:
+                result, _ = TurnTests().turn(BOARD_QUESTION, gateway=gateway)
+            attempted.assert_called_once_with("fx_rate_history_board", BOARD_ARGS)
+        self.assertIn("MCP_LICENSE_KEY", result["text"])
+        self.assertEqual(self.calls, [])
+
+    def test_rejected_key_preserves_wording(self):
+        wording = "This premium tool needs a valid license key; key revoked."
+        result, _ = TurnTests().turn(BOARD_QUESTION, gateway=self.gateway("lic_live_but_rejected", wording, True))
+        self.assertEqual(result["text"], wording)
+        self.assertEqual(len(self.calls), 1)
+
+    def test_good_key_returns_gateway_numbers(self):
+        data = FakeData()
+        result, _ = TurnTests().turn(BOARD_QUESTION, data=data, gateway=self.gateway("lic_granted"))
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(self.calls[0][0], {"name": "fx_rate_history_board", "arguments": BOARD_ARGS})
+        self.assertEqual(self.calls[0][1]["Authorization"], "Bearer lic_granted")
+        for value in ("mean 2.123", "change 12.7%", "daily volatility 3.25%", "GBP, EUR"):
+            self.assertIn(value, result["text"])
+        self.assertEqual(data.calls, [])
+
+    def test_free_questions_never_call_gateway(self):
+        gateway = self.gateway("lic_granted")
+        with patch.object(gateway, "call", wraps=gateway.call) as attempted:
+            for question in ("what is 100 USD in EUR?", "how did USD-EUR move this month?", "which currencies do you know?"):
+                TurnTests().turn(question, gateway=gateway)
+            attempted.assert_not_called()
+
+    def test_unreadable_payload_is_honest(self):
+        for payload in ({}, {"currencies": [None, None]}, {"currencies": [{"currency": "EUR"}, {"currency": "GBP"}]}):
+            answer, artifact = FxAgent(gateway=self.gateway("lic_granted", payload))._history_board(BOARD_ARGS)
+            self.assertIn("no readable currency comparison board", answer)
+            self.assertTrue(artifact["failed"])
+
+    def test_artifact_marks_premium(self):
+        _, artifact = FxAgent(gateway=self.gateway("lic_granted"))._history_board(BOARD_ARGS)
+        self.assertTrue(artifact["premium"])
 
 
 if __name__ == "__main__":
