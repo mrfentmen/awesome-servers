@@ -40,7 +40,6 @@ return { WpError, pluginInfo, searchPlugins };
 const m1 = (() => {
 const BASE = 'https://api.wordpress.org/themes/info/1.1/';
 
-
 async function search(args: m1_SearchArgs): Promise<string> {
   const q = (args.query ?? '').trim();
   if (!q) return 'Provide a search query.';
@@ -86,43 +85,5 @@ export const m1_search = m1.search;
 
 // ---- muxC tools:
 
-const WP_UA = "mrfentmen-wordpress-mcp/1.0 (https://github.com/mrfentmen)"
+// ---- gap4b4 tools:
 
-class WordPressOrgError extends Error {}
-
-async function wporg(url: string, ms = 30000): Promise<any> {
-  const res = await fetch(url, { headers: { "User-Agent": WP_UA, Accept: "application/json" }, signal: AbortSignal.timeout(ms) })
-  if (res.status === 400) throw new WordPressOrgError("the wordpress.org api rejected that request; check the slug and action")
-  if (!res.ok) throw new WordPressOrgError(`wordpress.org returned ${res.status}`)
-  return await res.json()
-}
-
-/** One theme's record, which the plugin tools cannot fetch. */
-export async function themeInfo(args: { slug?: string }): Promise<string> {
-  const slug = (args.slug ?? "").trim()
-  if (!slug) throw new WordPressOrgError("Provide a theme slug, e.g. twentytwentyfour")
-  if (!/^[a-z0-9-]+$/i.test(slug)) throw new WordPressOrgError("A theme slug is lowercase letters, digits and hyphens")
-  const d = await wporg(`https://api.wordpress.org/themes/info/1.1/?action=theme_information&request[slug]=${encodeURIComponent(slug)}`)
-  if (!d || !d.name) throw new WordPressOrgError(`wordpress.org has no theme with the slug "${slug}".`)
-  return [
-    `${d.name} (${slug}) version ${d.version ?? "not reported"}`,
-    d.author?.display_name ? `by ${d.author.display_name}` : "author not reported",
-    d.description ? `${String(d.description).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 240)}` : null,
-    `active installs ${d.active_installs ?? "not reported"} | rated ${Number(d.rating ?? 0).toFixed(1)} of 100 by ${d.num_ratings ?? 0} raters`,
-    d.tags?.length ? `tags: ${(d.tags ?? []).slice(0, 8).join(", ")}` : null,
-    d.download_link ?? "",
-  ]
-    .filter(Boolean)
-    .join("\n")
-}
-
-/** Browse the theme directory, which no existing tool does. */
-export async function themeList(args: { query?: string; limit?: number }): Promise<string> {
-  const query = (args.query ?? "blog").trim()
-  const limit = Math.max(1, Math.min(args.limit ?? 10, 50))
-  const d = await wporg(`https://api.wordpress.org/themes/info/1.1/?action=query_themes&request[search]=${encodeURIComponent(query)}&request[per_page]=${limit}&request[fields][short_description]=1`)
-  const themes: any[] = d?.themes ?? []
-  if (!themes.length) return `The wordpress.org theme directory has nothing matching "${query}".`
-  return `wordpress.org themes matching "${query}" (${d?.info?.results ?? themes.length} found, ${themes.length} shown):\n` +
-    themes.map((t, i) => `${i + 1}. ${t.name} (${t.slug})\n   ${String(t.short_description ?? "no description").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 140)}\n   rated ${Number(t.rating ?? 0).toFixed(0)} by ${t.num_ratings ?? 0} raters | ${t.active_installs ?? "?"} active installs`).join("\n")
-}

@@ -1,8 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_pluginInfo, m0_searchPlugins, m1_search, themeInfo, themeList } from './api.js'
-import { premiumRequired } from "./license.js"
 
+import { m0_pluginInfo, m0_searchPlugins, m1_search } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -57,10 +57,9 @@ server.registerTool(
     },
     async (args) => {
     // ---- paywall: theme_info ----
-    const paywallMessage = await premiumRequired("theme_info")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await themeInfo(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wordpress_theme_info", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -74,10 +73,25 @@ server.registerTool(
     },
     async (args) => {
     // ---- paywall: theme_list ----
-    const paywallMessage = await premiumRequired("theme_list")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await themeList(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wordpress_theme_list", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "core_releases",
+    {
+      title: "Core releases",
+      description: "List official WordPress core update offers with release downloads and minimum PHP and MySQL versions.",
+      inputSchema: z.object( { limit: z.number().describe("Maximum offers, 1-30.").optional() } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: core_releases ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_wordpress_core_releases", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
