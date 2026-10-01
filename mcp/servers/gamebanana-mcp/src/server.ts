@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { BananaError, formatGame, formatMod, formatSearchResult, getGame, getGameMods, getMod, searchGames, searchMods, modFiles, modStats, modPreviews } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { BananaError, formatGame, formatMod, formatSearchResult, getGame, getGameMods, getMod, searchGames, searchMods } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -122,14 +122,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: mod_files ----
-      const paywallMessage = await premiumRequired("mod_files")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await modFiles(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_gamebanana_mod_files", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -143,14 +138,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: mod_stats ----
-      const paywallMessage = await premiumRequired("mod_stats")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await modStats(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_gamebanana_mod_stats", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -164,14 +154,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: mod_previews ----
-      const paywallMessage = await premiumRequired("mod_previews")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await modPreviews(args))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_gamebanana_mod_previews", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
