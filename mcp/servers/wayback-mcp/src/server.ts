@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { WaybackError, domainSnapshots, formatSnapshot, getAvailability, getSnapshots, getSnapshotText, siteHistory, statusHistory, captureGaps, snapshotDiff, brokenPages, contentProfile, prefixInventory } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { WaybackError, domainSnapshots, formatSnapshot, getAvailability, getSnapshots, getSnapshotText, siteHistory, statusHistory, captureGaps, snapshotDiff, brokenPages, prefixInventory } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -268,10 +268,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: content_profile ----
-    const paywallMessage = await premiumRequired("content_profile")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await contentProfile(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_wayback_content_profile", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 

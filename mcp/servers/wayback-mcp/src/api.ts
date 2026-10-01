@@ -451,7 +451,6 @@ export async function brokenPages(url: string, limit = 15): Promise<string> {
 
 const WB2_UA = "mcfentmen-wayback-mcp/1.1 (https://github.com/mcfentmen/wayback-mcp)";
 const WB2_FIELDS = "timestamp,original,statuscode,mimetype";
-const WB2_ROWS = 150;
 
 interface Wb2Row {
   timestamp?: string;
@@ -515,18 +514,6 @@ async function wb2Cdx(query: string, label: string): Promise<Wb2Row[]> {
   throw new WaybackError(`The archive index did not answer after 3 attempts: ${lastNote}. It throttles bursts, so a pause before the next call helps.`);
 }
 
-/** The first two path segments, which is the level a reader can hold in their head. */
-function wb2Prefix(url: string): string {
-  try {
-    const parsed = new URL(url.replace(/^\/\//, "http://"));
-    const parts = parsed.pathname.split("/").filter(Boolean);
-    if (!parts.length) return "/ (site root)";
-    return `/${parts.slice(0, 2).join("/")}`;
-  } catch {
-    return "(unparseable url)";
-  }
-}
-
 const wb2Family = (mime?: string): string => {
   const m = String(mime ?? "").toLowerCase();
   if (!m) return "no mimetype recorded";
@@ -541,72 +528,6 @@ const wb2Family = (mime?: string): string => {
   if (m.startsWith("text/")) return "other text";
   return "other binary";
 };
-
-/**
- * What a domain's archive is made of. Every other tool here counts captures over
- * time; this counts what was captured, by content family, how much of the record
- * is images rather than pages, and which kind of URL carries the archive.
- */
-export async function contentProfile(args: { domain: string; limit?: number }): Promise<string> {
-  const domain = String(args?.domain ?? "").trim().replace(/^https?:\/\//, "").replace(/\/$/, "");
-  if (!domain) throw new WaybackError("Give a domain, e.g. 'example.com'.");
-  const limit = Math.min(Math.max(Number(args?.limit ?? 12) || 12, 1), 30);
-
-  const rows = await wb2Cdx(
-    `url=${encodeURIComponent(domain)}&matchType=domain&output=json&fl=${WB2_FIELDS}&collapse=urlkey&limit=${WB2_ROWS}`,
-    `the capture record for ${domain}`,
-  );
-  if (!rows.length) {
-    return `The archive index holds no captures for ${domain} or anything under it. A domain that never answered a crawler simply has no record here.`;
-  }
-
-  const families = new Map<string, { count: number; distinct: Set<string>; mimes: Map<string, number> }>();
-  const prefixes = new Map<string, number>();
-  const statuses = new Map<string, number>();
-  const years = new Set<string>();
-  let withMime = 0;
-  for (const row of rows) {
-    const family = wb2Family(row.mimetype);
-    const entry = families.get(family) ?? { count: 0, distinct: new Set<string>(), mimes: new Map<string, number>() };
-    entry.count += 1;
-    if (row.original) entry.distinct.add(row.original);
-    if (row.mimetype) {
-      entry.mimes.set(row.mimetype, (entry.mimes.get(row.mimetype) ?? 0) + 1);
-      withMime += 1;
-    }
-    families.set(family, entry);
-    const prefix = wb2Prefix(String(row.original ?? ""));
-    prefixes.set(prefix, (prefixes.get(prefix) ?? 0) + 1);
-    const code = String(row.statuscode ?? "?");
-    statuses.set(code, (statuses.get(code) ?? 0) + 1);
-    const year = String(row.timestamp ?? "").slice(0, 4);
-    if (/^\d{4}$/.test(year)) years.add(year);
-  }
-
-  const ranked = [...families.entries()].sort((a, b) => b[1].count - a[1].count);
-  const max = ranked[0]?.[1].count ?? 1;
-  const total = rows.length;
-  const topPrefixes = [...prefixes.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit);
-
-  return [
-    `Archive content profile for ${domain}`,
-    `  ${total} distinct capture(s) read from the index${withMime < total ? `, ${total - withMime} without a recorded mimetype` : ", all with a recorded mimetype"}`,
-    years.size ? `  spanning ${Math.min(...[...years].map(Number))} to ${Math.max(...[...years].map(Number))}` : "  no usable timestamps",
-    `  ${[...statuses.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([c, n]) => `${n} ${c}`).join(", ")} by status code`,
-    "",
-    "By content family:",
-    ...ranked.map(
-      ([family, entry]) =>
-        `  ${family.padEnd(22)}${String(entry.count).padStart(5)}  ${((entry.count / total) * 100).toFixed(1).padStart(5)}%  ${"#".repeat(Math.max(1, Math.round((entry.count / max) * 26)))}` +
-        `  top: ${[...entry.mimes.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2).map(([m, n]) => `${m} (${n})`).join(", ") || "none recorded"}`,
-    ),
-    "",
-    `Busiest path prefixes (${topPrefixes.length} of ${prefixes.size}):`,
-    ...topPrefixes.map(([prefix, n]) => `  ${prefix.slice(0, 60).padEnd(60)}${String(n).padStart(5)}  ${((n / total) * 100).toFixed(1)}% of the record`),
-    "",
-    "Read as: an archive that is mostly images is a mirror of the site's assets rather than a record of its pages, and a prefix carrying most of the record means the domain's history is really one section's history. The index is sampled with one row per distinct URL key rather than every capture, so this describes the shape of what was stored, not how often it was re-crawled; a page captured a thousand times counts once here.",
-  ].join("\n");
-}
 
 /**
  * What lives under a path: for a domain and a prefix, the archived URLs beneath

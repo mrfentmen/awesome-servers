@@ -1,6 +1,6 @@
 {
   "name": "wayback-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "MCP server for the Wayback Machine, snapshot history, page availability, and dead site recovery.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/wayback-mcp",
