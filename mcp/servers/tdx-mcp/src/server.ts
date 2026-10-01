@@ -1,7 +1,7 @@
+import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, listTraStations, getTraLiveboard, listThsrStations, getTraTimetable, odsStationSearch, odsTrainDepartures, odsTrainRoute } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { errorMessage, listTraStations, getTraLiveboard, listThsrStations, getTraTimetable, odsStationSearch } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -121,13 +121,12 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ stationId, date, limit }) => {
+    async (args) => {
       // ---- paywall: ods_train_departures ----
-      const paywallMessage = await premiumRequired("ods_train_departures")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await odsTrainDepartures({ stationId, date, limit }));
+        return text(await premiumTool("mcp_tdx_ods_train_departures", args));
       } catch (e) {
         return textError(errorMessage(e));
       }
@@ -145,13 +144,12 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ trainNumber, date }) => {
+    async (args) => {
       // ---- paywall: ods_train_route ----
-      const paywallMessage = await premiumRequired("ods_train_route")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await odsTrainRoute({ trainNumber, date }));
+        return text(await premiumTool("mcp_tdx_ods_train_route", args));
       } catch (e) {
         return textError(errorMessage(e));
       }
