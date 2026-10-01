@@ -165,10 +165,6 @@ export async function serviceStatus(): Promise<string> {
   return out.join("\n")
 }
 
-const STJ_TEMP = /(^~\$)|(\.tmp$)|(\.temp$)|(\.bak$)|(\.old$)|(\.swp$)|(\.part$)|(\.crdownload$)|(\.lock$)|(\.DS_Store$)|(\.gitkeep$)/i
-const STJ_DOUBLE_EXT = /\.(txt|doc|docx|pdf|jpg|png|xls|xlsx|ppt|pptx|csv|zip|gz|exe|js|html)\.(exe|scr|com|pif|bat|cmd|sh|js|txt|zip)$/i
-const STJ_SAFE = /^[A-Za-z0-9!_.*'()/-]+$/
-
 export interface StorjKeyAuditArgs {
   keys: string
   bucket?: string
@@ -179,93 +175,3 @@ interface StjRow {
   size?: number
 }
 
-function stjParseKeys(text: string): StjRow[] {
-  const out: StjRow[] = []
-  for (const line of (text ?? "").split(/\r?\n/).slice(0, 2000)) {
-    const row = line.trim()
-    if (!row || row.startsWith("#")) continue
-    const tab = row.indexOf("\t")
-    if (tab > 0) {
-      const size = Number(row.slice(tab + 1).trim())
-      out.push({ key: row.slice(0, tab), size: Number.isFinite(size) ? size : undefined })
-    } else {
-      out.push({ key: row })
-    }
-  }
-  return out
-}
-
-export async function storageKeyAudit(args: StorjKeyAuditArgs): Promise<string> {
-  const rows = stjParseKeys(args.keys ?? "")
-  if (rows.length === 0) {
-    return "Paste the object keys to audit, one per line. Add a tab and a byte count after a key to include size totals."
-  }
-  const where = args.bucket ? ` for ${args.bucket}` : ""
-  const keys = rows.map((r) => r.key)
-  const unique = new Set(keys)
-  const depths = new Map<number, number>()
-  const prefixes = new Map<string, number>()
-  const exts = new Map<string, number>()
-  const problems: string[] = []
-  let dated = 0
-  let totalBytes = 0
-  let sized = 0
-  for (const r of rows) {
-    const k = r.key
-    const segments = k.split("/")
-    const depth = segments.length - 1
-    depths.set(depth, (depths.get(depth) ?? 0) + 1)
-    const prefix = segments.length > 1 ? segments[0] : "(bucket root)"
-    prefixes.set(prefix, (prefixes.get(prefix) ?? 0) + 1)
-    const dot = k.lastIndexOf(".")
-    const ext = dot > k.lastIndexOf("/") ? k.slice(dot + 1).toLowerCase() : "(none)"
-    exts.set(ext, (exts.get(ext) ?? 0) + 1)
-    if (segments.some((s) => /^\d{4}$/.test(s) || /^\d{4}-\d{2}$/.test(s) || /^\d{8}$/.test(s))) dated++
-    if (r.size !== undefined) {
-      sized++
-      totalBytes += r.size
-    }
-    if (!STJ_SAFE.test(k)) problems.push(`${k}: uses characters that need URL-encoding or are not portable (spaces, quotes, unicode)`)
-    if (k.length > 512) problems.push(`${k.slice(0, 40)}...: key is ${k.length} characters long`)
-    if (k.includes("//")) problems.push(`${k}: contains an empty path segment (//)`)
-    if (k.startsWith("/")) problems.push(`${k}: leading slash is meaningless in S3 and creates a hidden prefix`)
-    if (k !== k.trim()) problems.push(`${k}: leading or trailing whitespace in the key`)
-    if (k.endsWith("/")) problems.push(`${k}: folder marker object`)
-    if (STJ_DOUBLE_EXT.test(k)) problems.push(`${k}: double extension, a classic way to disguise an executable`)
-    if (STJ_TEMP.test(k)) problems.push(`${k}: temporary or editor artefact, probably not worth storing`)
-    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(k)) {
-      problems.push(`${k}: bare UUID as the whole key, no namespace to search by`)
-    }
-  }
-  const top = (m: Map<string, number>, n: number) =>
-    [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, c]) => `${k} (${c})`)
-  const lens = keys.map((k) => k.length)
-  const biggest = rows
-    .filter((r) => r.size !== undefined)
-    .sort((a, b) => (b.size ?? 0) - (a.size ?? 0))
-    .slice(0, 3)
-  const out = [
-    `${rows.length} key(s) audited${where}, ${unique.size} unique, ${rows.length - unique.size} duplicate.`,
-    `Key length: shortest ${Math.min(...lens)}, longest ${Math.max(...lens)}, mean ${(lens.reduce((a, b) => a + b, 0) / lens.length).toFixed(0)}.`,
-    sized > 0
-      ? `Sizes supplied for ${sized} key(s): ${totalBytes.toLocaleString()} bytes total (${(totalBytes / 1048576).toFixed(1)} MiB).`
-      : "No sizes supplied, so this is a layout audit only.",
-    "",
-    `Path depth: ${[...depths.entries()].sort((a, b) => a[0] - b[0]).map(([d, c]) => `${d} slash(es): ${c}`).join(", ")}`,
-    `Top prefixes: ${top(prefixes, 8).join(", ") || "(none)"}`,
-    `Extensions: ${top(exts, 8).join(", ") || "(none)"}`,
-    `Keys with a YYYY / YYYY-MM / YYYYMMDD segment: ${dated} of ${rows.length}.`,
-  ]
-  if (biggest.length) {
-    out.push(`Largest: ${biggest.map((b) => `${b.key} (${(b.size ?? 0).toLocaleString()} B)`).join(", ")}`)
-  }
-  const uniqueProblems = [...new Set(problems)]
-  out.push("", `Layout problems: ${uniqueProblems.length}.`)
-  if (uniqueProblems.length === 0) {
-    out.push("No unportable characters, no double extensions, no temp artefacts, no empty segments.")
-  } else {
-    out.push(...uniqueProblems.slice(0, 25).map((p) => `  - ${p}`))
-    if (uniqueProblems.length > 25) out.push(`  ...and ${uniqueProblems.length - 25} more.`)
-  }
-  return out.join("\n")
-}

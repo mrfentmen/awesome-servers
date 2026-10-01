@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatObject, listBuckets, listObjects, StorjError, serviceStatus, storageKeyAudit } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { formatObject, listBuckets, listObjects, StorjError, serviceStatus } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -83,10 +83,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: storage_key_audit ----
-    const paywallMessage = await premiumRequired("storage_key_audit")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await storageKeyAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_storj_storage_key_audit", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
