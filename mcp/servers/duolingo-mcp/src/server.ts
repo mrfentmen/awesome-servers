@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { DuolingoError, formatProfile, getProfile, profileDetails } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { DuolingoError, formatProfile, getProfile } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -44,17 +44,28 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ username }) => {
+    async (args) => {
       // ---- paywall: profile_details ----
-      const paywallMessage = await premiumRequired("profile_details")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+          // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try {
-        return text(await profileDetails({ username }))
-      } catch (e) {
-        return textError(errorMessage(e))
-      }
+      try { return text(await premiumTool("mcp_duolingo_profile_details", args)) } catch (e) { return textError(errorMessage(e)) }
     }
+  )
+
+  server.registerTool(
+    "course_catalog",
+    {
+      title: "Course catalog",
+      description: "Duolingo's public course catalog with language pair, learner count and course phase.",
+      inputSchema: z.object({ search: z.string().describe("Filter by language name or code.").optional(), limit: z.number().describe("Maximum courses, 1-50.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: course_catalog ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_duolingo_course_catalog", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server
