@@ -150,23 +150,6 @@ const NYCA_CATEGORY: Record<string, string> = {
   I: "infraction",
 }
 
-// Read live: the borough field only ever holds K, B, M, Q and S.
-const NYCA_BOROUGH: Record<string, string> = {
-  K: "Brooklyn",
-  B: "Bronx",
-  M: "Manhattan",
-  Q: "Queens",
-  S: "Staten Island",
-}
-
-// The date_trunc names that answer 200 on this backend. date_trunc_yw and
-// date_trunc_q both fail with query.soql.no-such-function, so they are absent.
-const NYCA_GRAIN: Record<string, string> = {
-  day: "date_trunc_ymd",
-  month: "date_trunc_ym",
-  year: "date_trunc_y",
-}
-
 function nycaCategoryLabel(code: unknown): string {
   if (typeof code !== "string" || code.length === 0) return "not classified, no code recorded"
   // The source data carries two different kinds of empty: a missing code and
@@ -176,25 +159,12 @@ function nycaCategoryLabel(code: unknown): string {
   return known ? `${code} ${known}` : `${code} (not a standard NY category code)`
 }
 
-function nycaBoroughLabel(code: unknown): string {
-  if (typeof code !== "string" || code.length === 0 || code === "(null)") return "borough not recorded"
-  return NYCA_BOROUGH[code] ? `${NYCA_BOROUGH[code]} (${code})` : `code ${code}`
-}
-
 // Socrata answers aggregated rows as strings, and an ungrouped null arrives as
 // a missing key rather than as a null value, so every number is parsed here
 // instead of being trusted.
 function nycaNumber(value: unknown): number {
   const n = Number(value)
   return Number.isFinite(n) ? n : 0
-}
-
-const NYCA_DATE = /^\d{4}-\d{2}-\d{2}$/
-
-function nycaDate(value: string, field: string): string {
-  const trimmed = value.trim()
-  if (!NYCA_DATE.test(trimmed)) throw new NycArrestsError(`${field} must be YYYY-MM-DD, got "${value}".`)
-  return trimmed
 }
 
 async function nycaAgg(
@@ -271,116 +241,3 @@ export async function datasetCoverage(): Promise<string> {
   return lines.join("\n")
 }
 
-// The historic file holds over six million rows and every attempt to group it
-// by month or year was killed by the 45 second timeout, so trends are read from
-// the current year file only. The historic file is still reachable row by row
-// through the existing historic_search tool.
-export async function arrestTrend(args: {
-  granularity?: string
-  borough?: string
-  offense?: string
-  category?: string
-  from?: string
-  to?: string
-}): Promise<string> {
-  const grain = (args.granularity ?? "month").trim().toLowerCase()
-  const trunc = NYCA_GRAIN[grain]
-  if (!trunc) throw new NycArrestsError(`Granularity must be one of ${Object.keys(NYCA_GRAIN).join(", ")}, got "${args.granularity}".`)
-
-  const base = NYCA_YTD
-
-  const from = args.from ? nycaDate(args.from, "from") : ""
-  const to = args.to ? nycaDate(args.to, "to") : ""
-  const filters = baseFilters({ borough: args.borough, offense: args.offense, from, to })
-  const category = (args.category ?? "").trim().toUpperCase()
-  if (category) filters.push(`law_cat_cd='${category.replace(/'/g, "''")}'`)
-
-  const params: Array<[string, string]> = [
-    ["$select", `${trunc}(arrest_date) as bucket,count(arrest_key) as n`],
-    ["$group", "bucket"],
-    ["$order", "bucket"],
-    ["$limit", "5000"],
-  ]
-  if (filters.length) params.push(["$where", filters.join(" AND ")])
-
-  const rows = await nycaAgg(base, params, "Try a narrower date range.")
-  if (!rows.length) {
-    const span = await nycaSpan(base)
-    return `No arrests match in the current year file, which records ${span.from} to ${span.to}. A range outside that span is the usual cause.`
-  }
-
-  const buckets = rows.map((row) => ({ when: String(row.bucket ?? "?").slice(0, 10), n: nycaNumber(row.n) }))
-  const total = buckets.reduce((sum, b) => sum + b.n, 0)
-  const peak = buckets.reduce((best, b) => (b.n > best.n ? b : best), buckets[0])
-  const low = buckets.reduce((worst, b) => (b.n < worst.n ? b : worst), buckets[0])
-  const mean = total / buckets.length
-
-  const described = [
-    args.borough ? `borough ${args.borough}` : "",
-    args.offense ? `offense containing "${args.offense}"` : "",
-    category ? `category ${nycaCategoryLabel(category)}` : "",
-    from ? `from ${from}` : "",
-    to ? `to ${to}` : "",
-  ].filter(Boolean)
-
-  const shown = buckets.slice(-60)
-  const head = [
-    `Arrests per ${grain} in the current year file${described.length ? ` (${described.join(", ")})` : ""}`,
-    `${total.toLocaleString()} arrests across ${buckets.length} ${grain}${buckets.length === 1 ? "" : "s"}, averaging ${mean.toLocaleString("en-US", { maximumFractionDigits: 1 })}`,
-    `Busiest ${grain} ${peak.when} with ${peak.n.toLocaleString()}, quietest ${low.when} with ${low.n.toLocaleString()}`,
-    buckets.length > shown.length ? `Showing the most recent ${shown.length} entries of ${buckets.length}:` : "Every entry:",
-  ]
-  return [...head, ...shown.map((b) => `  ${b.when}  ${b.n.toLocaleString()}`)].join("\n")
-}
-
-export async function boroughCategoryMatrix(args: { from?: string; to?: string; offense?: string }): Promise<string> {
-  const from = args.from ? nycaDate(args.from, "from") : ""
-  const to = args.to ? nycaDate(args.to, "to") : ""
-  const filters = baseFilters({ offense: args.offense, from, to })
-  const params: Array<[string, string]> = [
-    ["$select", "arrest_boro,law_cat_cd,count(arrest_key) as n"],
-    ["$group", "arrest_boro,law_cat_cd"],
-    ["$order", "n DESC"],
-  ]
-  if (filters.length) params.push(["$where", filters.join(" AND ")])
-  const rows = await nycaAgg(NYCA_YTD, params, "Try a narrower date range.")
-
-  const boroughs = new Map<string, { label: string; counts: Map<string, number>; total: number }>()
-  const categoryCodes = new Set<string>()
-  for (const row of rows) {
-    const boroCode = typeof row.arrest_boro === "string" ? row.arrest_boro : ""
-    const catCode = typeof row.law_cat_cd === "string" && row.law_cat_cd !== "(null)" ? row.law_cat_cd : ""
-    const entry = boroughs.get(boroCode) ?? { label: nycaBoroughLabel(boroCode), counts: new Map<string, number>(), total: 0 }
-    const n = nycaNumber(row.n)
-    entry.counts.set(catCode, (entry.counts.get(catCode) ?? 0) + n)
-    entry.total += n
-    boroughs.set(boroCode, entry)
-    categoryCodes.add(catCode)
-  }
-  if (!boroughs.size) return "No arrests match those filters in the current year file."
-
-  const categories = Array.from(categoryCodes).sort(
-    (a, b) =>
-      rows.reduce((s, r) => s + (String(r.law_cat_cd ?? "") === b ? nycaNumber(r.n) : 0), 0) -
-      rows.reduce((s, r) => s + (String(r.law_cat_cd ?? "") === a ? nycaNumber(r.n) : 0), 0)
-  )
-  const grand = Array.from(boroughs.values()).reduce((sum, entry) => sum + entry.total, 0)
-  const described = [args.offense ? `offense containing "${args.offense}"` : "", from ? `from ${from}` : "", to ? `to ${to}` : ""].filter(Boolean)
-
-  const lines = [
-    `Arrests by borough and category in the current year file${described.length ? ` (${described.join(", ")})` : ""}`,
-    `${grand.toLocaleString()} arrests in total`,
-    "",
-    `columns: ${categories.map((code) => nycaCategoryLabel(code)).join(" | ")}`,
-    "",
-    ...Array.from(boroughs.entries())
-      .sort((a, b) => b[1].total - a[1].total)
-      .map(([, entry]) => {
-        const cells = categories.map((code) => (entry.counts.get(code) ?? 0).toLocaleString().padStart(9))
-        return `${entry.label.padEnd(20)} ${cells.join("")}   total ${entry.total.toLocaleString()}`
-      }),
-    "",
-    "The current year file ends months before today, so recent weeks are not represented.",
-  ]
-  return lines.join("\n")
-}

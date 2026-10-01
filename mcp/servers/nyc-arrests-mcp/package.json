@@ -1,6 +1,6 @@
 {
   "name": "nyc-arrests-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "NYPD arrest records: search by date, borough, offense. No names in public data.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nyc-arrests-mcp",

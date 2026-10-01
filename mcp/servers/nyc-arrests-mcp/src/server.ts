@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, searchArrests, arrestDetails, historicSearch, topOffenses, precinctActivity, boroughStats, recentFelonies, recentMisdemeanors, offenseLookup, arrestMapData, datasetCoverage, arrestTrend, boroughCategoryMatrix } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { errorMessage, searchArrests, arrestDetails, historicSearch, topOffenses, precinctActivity, boroughStats, recentFelonies, recentMisdemeanors, offenseLookup, arrestMapData, datasetCoverage } from "./api.js"
+import { premiumTool } from "./gateway.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -255,13 +255,12 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ granularity, borough, offense, category, from, to }) => {
+    async (args) => {
       // ---- paywall: arrest_trend ----
-      const paywallMessage = await premiumRequired("arrest_trend")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await arrestTrend({ granularity, borough, offense, category, from, to }));
+        return text(await premiumTool("mcp_nyc_arrests_arrest_trend", args));
       } catch (e) {
         return textError(errorMessage(e));
       }
@@ -280,13 +279,12 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ offense, from, to }) => {
+    async (args) => {
       // ---- paywall: borough_category_matrix ----
-      const paywallMessage = await premiumRequired("borough_category_matrix")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await boroughCategoryMatrix({ offense, from, to }));
+        return text(await premiumTool("mcp_nyc_arrests_borough_category_matrix", args));
       } catch (e) {
         return textError(errorMessage(e));
       }
