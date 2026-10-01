@@ -50,18 +50,8 @@ export async function getProject(projectId: string): Promise<string> {
 }
 
 // ---- muxG tools:
-const SW_NPM = "https://registry.npmjs.org/swetrix"
-const SW_DOWNLOADS = "https://api.npmjs.org/downloads/point/last-week"
-const SW_GITHUB = "https://api.github.com/repos/swetrix/swetrix"
-const SW_LIST_CAP = 10
 
-async function swJson<T>(url: string, accept = "application/json"): Promise<T> {
-  const res = await fetch(url, { headers: { "User-Agent": "awesome-mcp/1.0", Accept: accept }, signal: AbortSignal.timeout(40000) })
-  if (res.status === 404) throw new SwetrixError(`Not found: ${url.replace(/^https:\/\//, "")}`)
-  if (res.status === 403 || res.status === 429) throw new SwetrixError("GitHub or npm is rate limiting this IP. Wait a minute and try again.")
-  if (!res.ok) throw new SwetrixError(`Returned ${res.status} for ${url.replace(/^https:\/\//, "")}`)
-  return (await res.json()) as T
-}
+const SW_LIST_CAP = 10
 
 function swBound(value: unknown, min: number, max: number, fallback: number): number {
   const n = Number(value)
@@ -190,105 +180,3 @@ export async function campaignParameters(args: { urls?: string; limit?: number }
   return out.filter(Boolean).join("\n")
 }
 
-/** The published tracker package: how often it ships, and how many people install it. */
-export async function sdkReleaseFeed(args: { limit?: number }): Promise<string> {
-  const limit = swBound(args?.limit, 1, SW_LIST_CAP, 6)
-  const [doc, dl, releases] = await Promise.all([
-    swJson<{
-      "dist-tags"?: Record<string, string>
-      versions?: Record<string, { dependencies?: Record<string, string> }>
-      time?: Record<string, string>
-      description?: string
-    }>(SW_NPM),
-    swJson<{ downloads?: number; start?: string; end?: string }>(`${SW_DOWNLOADS}/swetrix`),
-    swJson<{ tag_name?: string; name?: string; published_at?: string; prerelease?: boolean }[]>(`${SW_GITHUB}/releases?per_page=${limit}`),
-  ])
-
-  const time = doc.time ?? {}
-  const published = Object.entries(time)
-    .filter(([k]) => k !== "created" && k !== "modified")
-    .map(([version, date]) => ({ version, date }))
-    .sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
-  const latest = doc["dist-tags"]?.latest ?? "no latest tag"
-  const gaps: number[] = []
-  for (let i = 1; i < published.length; i += 1) {
-    gaps.push(Math.abs((Date.parse(published[i - 1].date) - Date.parse(published[i].date)) / 86400000))
-  }
-  const latestManifest = doc.versions?.[latest]
-  const daysSince = published.length ? Math.round((Date.now() - Date.parse(published[0].date)) / 86400000) : null
-
-  return [
-    "Swetrix tracker package on npm",
-    doc.description ?? "",
-    `Latest ${latest}, ${published.length} version(s), first published ${String(time.created ?? "?").slice(0, 10)}`,
-    daysSince !== null ? `Last publish ${daysSince} day(s) ago` : "",
-    gaps.length ? `Median ${(gaps.slice().sort((a, b) => a - b)[Math.floor(gaps.length / 2)] ?? 0).toFixed(1)} day(s) between releases, shortest ${Math.min(...gaps).toFixed(1)}, longest ${Math.max(...gaps).toFixed(1)}` : "",
-    latestManifest ? `Dependencies on latest: ${Object.keys(latestManifest.dependencies ?? {}).length}` : "",
-    `Weekly downloads: ${(dl.downloads ?? 0).toLocaleString("en-US")} (${dl.start} to ${dl.end})`,
-    "",
-    "Most recent versions:",
-    ...published.slice(0, limit).map((p) => `  ${p.version.padEnd(12)} ${p.date.slice(0, 10)}`),
-    "",
-    "Newest GitHub releases for the project:",
-    ...(releases.length
-      ? releases.map((r) => `  ${String(r.published_at ?? "?").slice(0, 10)}  ${r.tag_name ?? "?"}${r.prerelease ? " (prerelease)" : ""}`)
-      : ["  the repository publishes no GitHub releases"]),
-    "",
-    "GitHub release tags here are named after the component they build, so they are not the same version line as the npm package. Compare a tag to a version only when the tag is the tracker itself.",
-  ]
-    .filter(Boolean)
-    .join("\n")
-}
-
-/** The project's shape: who maintains it, what it is written in and how busy it is. */
-export async function ecosystemAudit(args: { limit?: number }): Promise<string> {
-  const limit = swBound(args?.limit, 1, SW_LIST_CAP, 8)
-  const [repo, langs, contributors, issues] = await Promise.all([
-    swJson<{
-      full_name?: string
-      description?: string
-      stargazers_count?: number
-      forks_count?: number
-      open_issues_count?: number
-      subscribers_count?: number
-      created_at?: string
-      pushed_at?: string
-      archived?: boolean
-      license?: { spdx_id?: string }
-      topics?: string[]
-    }>(SW_GITHUB),
-    swJson<Record<string, number>>(`${SW_GITHUB}/languages`),
-    swJson<{ login?: string; contributions?: number; type?: string }[]>(`${SW_GITHUB}/contributors?per_page=${limit}`),
-    swJson<{ total_count?: number }>(`${SW_GITHUB}/issues?state=open&per_page=1`),
-  ])
-
-  const totalBytes = Object.values(langs).reduce((s, n) => s + n, 0)
-  const ranked = Object.entries(langs).sort((a, b) => b[1] - a[1])
-  const topShare = totalBytes ? (ranked[0]?.[1] ?? 0) / totalBytes : 0
-  const totalContrib = contributors.reduce((s, c) => s + (c.contributions ?? 0), 0)
-  const topContrib = contributors[0]?.contributions ?? 0
-  const daysSince = repo.pushed_at ? Math.round((Date.now() - Date.parse(repo.pushed_at)) / 86400000) : null
-
-  return [
-    `${repo.full_name ?? "swetrix/swetrix"}${repo.archived ? " (ARCHIVED)" : ""}`,
-    repo.description ?? "",
-    `Licence ${repo.license?.spdx_id ?? "not reported"}, created ${String(repo.created_at ?? "?").slice(0, 10)}${daysSince !== null ? `, last push ${daysSince} day(s) ago` : ""}`,
-    `${repo.stargazers_count?.toLocaleString("en-US") ?? "not reported"} stars, ${repo.forks_count ?? "not reported"} forks, ${repo.subscribers_count ?? "not reported"} watchers, ${issues.total_count ?? repo.open_issues_count ?? "?"} open issues and pull requests`,
-    repo.topics?.length ? `Topics: ${repo.topics.join(", ")}` : "",
-    "",
-    `Language mix by bytes (${Math.round(totalBytes / 1024)} kB counted):`,
-    ...ranked.slice(0, limit).map(([k, v]) => `  ${((v / totalBytes) * 100).toFixed(1).padStart(5)}%  ${k}`),
-    "",
-    `Contributors shown (${contributors.length}), ${totalContrib.toLocaleString("en-US")} commits between them; the top one is ${totalContrib ? ((topContrib / totalContrib) * 100).toFixed(0) : "?"}%`,
-    ...contributors.slice(0, limit).map((c) => `  ${String(c.contributions ?? 0).padStart(6)}  ${c.login ?? "?"}${c.type === "Bot" ? " (bot)" : ""}`),
-    "",
-    topShare > 0.8
-      ? "One language is over 80% of the codebase, which is healthy for a typed project of this size and means a contributor can be productive quickly."
-      : `The top language is only ${(topShare * 100).toFixed(0)}% of the codebase, so this is a polyglot repository and a change can touch several build systems.`,
-    totalContrib > 0 && topContrib / totalContrib > 0.8
-      ? "One contributor accounts for most commits. For a self-hostable analytics server that is a bus-factor risk, not a quality signal."
-      : "Commit counts are spread across contributors, which is a healthier sign than the star count suggests.",
-  ]
-    .filter(Boolean)
-    .join("\n")
-}

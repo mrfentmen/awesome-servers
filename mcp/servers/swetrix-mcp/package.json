@@ -1,6 +1,6 @@
 {
   "name": "swetrix-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Swetrix analytics: projects and project details. Needs API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/swetrix-mcp",

@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, listProjects, getProject, campaignParameters, sdkReleaseFeed, ecosystemAudit } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { errorMessage, listProjects, getProject, campaignParameters } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -76,10 +76,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: sdk_release_feed ----
-    const paywallMessage = await premiumRequired("sdk_release_feed")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await sdkReleaseFeed(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_swetrix_sdk_release_feed", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -93,10 +92,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: ecosystem_audit ----
-    const paywallMessage = await premiumRequired("ecosystem_audit")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await ecosystemAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_swetrix_ecosystem_audit", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
