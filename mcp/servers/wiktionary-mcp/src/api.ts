@@ -48,42 +48,8 @@ export interface WordLanguagesArgs {
   limit?: number
 }
 
-export async function wordLanguages(args: WordLanguagesArgs): Promise<string> {
-  const word = (args.word ?? "").trim()
-  if (!word) throw new WiktionaryError("Provide a word to look up")
-  const limit = Math.max(1, Math.min(args.limit ?? 25, 100))
-  const d = await get<any>(
-    `${BASE}?action=query&prop=langlinks&lllimit=${limit}&titles=${encodeURIComponent(word)}&format=json&origin=*`,
-  )
-  const page = firstPage(d)
-  if (!page) return `No entry for "${word}"`
-  const links = (page as any).langlinks as Array<{ lang?: string; "*"?: string }> | undefined
-  if (!links?.length) return `No interlanguage links recorded for "${word}".`
-  return `Wiktionary languages for "${word}" (${links.length} shown):\n` +
-    links.map((l, i) => `${i + 1}. ${l.lang ?? "?"} -> ${l["*"] ?? "not reported"}`).join("\n")
-}
-
 export interface EntrySectionsArgs {
   word: string
-}
-
-export async function entrySections(args: EntrySectionsArgs): Promise<string> {
-  const word = (args.word ?? "").trim()
-  if (!word) throw new WiktionaryError("Provide a word to look up")
-  const d = await get<any>(
-    `${BASE}?action=parse&prop=tocdata&page=${encodeURIComponent(word)}&format=json&origin=*`,
-  )
-  if (d?.error) throw new WiktionaryError(String(d.error?.info ?? "Wiktionary could not parse that title"))
-  const sections = d?.parse?.tocdata?.sections as Array<Record<string, unknown>> | undefined
-  if (!sections?.length) return `No section outline published for "${word}".`
-  return `Section outline of the Wiktionary entry "${word}" (${sections.length} sections):\n` +
-    sections
-      .map((s) => {
-        const level = Number(s.tocLevel ?? 1)
-        const number = String(s.number ?? "?")
-        return `${"  ".repeat(Math.max(0, level - 1))}${number} ${String(s.line ?? "?")}`
-      })
-      .join("\n")
 }
 
 export interface WordRevisionsArgs {
@@ -112,3 +78,18 @@ export async function wordRevisions(args: WordRevisionsArgs): Promise<string> {
       })
       .join("\n")
 }
+
+// ---- gap4b4 tools:
+
+export async function searchEntries(args: { query: string; limit?: number }): Promise<string> {
+  const query = args.query.trim()
+  if (!query) throw new WiktionaryError("Provide search terms")
+  const limit = Math.max(1, Math.min(Math.trunc(args.limit ?? 10), 30))
+  const params = new URLSearchParams({ action: "query", list: "search", srsearch: query, srlimit: String(limit), format: "json" })
+  const d = await get<any>(`${BASE}?${params}`)
+  if (d.error) throw new WiktionaryError(d.error.info ?? "Search failed")
+  const rows = d.query?.search ?? []
+  return `Wiktionary search: ${query.slice(0, 100)} | total ${d.query?.searchinfo?.totalhits ?? "not reported"}\n` +
+    rows.slice(0, limit).map((r: any) => `${String(r.title ?? "not reported").slice(0, 120)}: ${String(r.snippet ?? "not reported").replace(/<[^>]*>/g, "").slice(0, 240)}`).join("\n")
+}
+

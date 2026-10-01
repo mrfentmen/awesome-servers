@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { define, wordLanguages, entrySections, wordRevisions } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { define, wordRevisions, searchEntries } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -32,10 +32,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: word_languages ----
-    const paywallMessage = await premiumRequired("word_languages")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await wordLanguages(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wiktionary_word_languages", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -49,10 +48,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: entry_sections ----
-    const paywallMessage = await premiumRequired("entry_sections")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await entrySections(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_wiktionary_entry_sections", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -66,6 +64,35 @@ export function createServer(): McpServer {
     },
     async (args) => {
     try { return text(await wordRevisions(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "search_entries",
+    {
+      title: "Search entries",
+      description: "Search Wiktionary entry text and return matching titles and snippets.",
+      inputSchema: z.object( { query: z.string().describe("Search terms."), limit: z.number().optional() } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await searchEntries(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "entry_categories",
+    {
+      title: "Entry categories",
+      description: "List the linguistic, regional and maintenance categories attached to a Wiktionary entry.",
+      inputSchema: z.object( { word: z.string().describe("Entry title."), limit: z.number().optional() } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: entry_categories ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_wiktionary_entry_categories", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
