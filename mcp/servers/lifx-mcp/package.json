@@ -1,6 +1,6 @@
 {
   "name": "lifx-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "MCP server for LIFX lights: list, state, power control. Needs a free API token.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/lifx-mcp",

@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatLight, LifxError, listLights, setPower, colorConvert, kelvinSchedule } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { formatLight, LifxError, listLights, setPower, kelvinSchedule } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -71,10 +71,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: color_convert ----
-    const paywallMessage = await premiumRequired("color_convert")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await colorConvert(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_lifx_color_convert", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
