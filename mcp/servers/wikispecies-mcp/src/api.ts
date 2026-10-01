@@ -52,29 +52,6 @@ export interface CategoriesArgs {
   limit?: number;
 }
 
-export async function speciesPage(args: PageArgs): Promise<string> {
-  const title = (args.title ?? '').trim();
-  if (!title) return 'Provide a species page title, e.g. Vulpes vulpes.';
-  const chars = Math.max(200, Math.min(Number(args.chars ?? 1200) || 1200, 4000));
-  const params = new URLSearchParams({
-    action: 'query',
-    format: 'json',
-    prop: 'extracts',
-    explaintext: '1',
-    redirects: '1',
-    titles: title,
-  });
-  const data = JSON.parse(await wiki(params)) as {
-    query?: { pages?: Record<string, { title?: string; missing?: string; extract?: string }> };
-  };
-  const page = Object.values(data.query?.pages ?? {})[0];
-  if (!page) return `Wikispecies has no page for "${title}".`;
-  if (page.missing !== undefined) return `Wikispecies has no page for "${title}".`;
-  const body = (page.extract ?? '').replace(/\r/g, '').trim();
-  if (!body) return `Wikispecies page "${page.title ?? title}" has no extract text.`;
-  return `Wikispecies page "${page.title ?? title}" (${body.length} characters of extract, first ${Math.min(chars, body.length)}):\n${body.slice(0, chars)}`;
-}
-
 export async function pageCategories(args: CategoriesArgs): Promise<string> {
   const title = (args.title ?? '').trim();
   if (!title) return 'Provide a species page title, e.g. Vulpes vulpes.';
@@ -98,3 +75,38 @@ export async function pageCategories(args: CategoriesArgs): Promise<string> {
   return `Wikispecies categories for "${page.title ?? title}" (${rows.length} shown):\n` +
     rows.slice(0, limit).map((c, i) => `${i + 1}. ${(c.title ?? '').replace(/^Category:/, '')}`).join('\n');
 }
+
+// ---- gap4a4 tools:
+
+async function gapQuery(params: Record<string, string>): Promise<any> {
+  const query = new URLSearchParams({action: 'query', format: 'json', ...params});
+  const res = await fetch(`https://species.wikimedia.org/w/api.php?${query}`, {
+    headers: {'User-Agent': 'mrfentmen-wikispecies-mcp/1.0', Accept: 'application/json'},
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error(`Wiki API returned ${res.status}`);
+  const data = await res.json() as any;
+  if (data.error) throw new Error(data.error.info ?? 'Wiki API error');
+  return data;
+}
+
+export async function pageHistory(args: { title: string; limit?: number }): Promise<string> {
+  const limit = Math.max(1, Math.min(Math.round(args.limit ?? 10), 30));
+  const title = args.title.trim();
+  if (!title) throw new Error('Provide a page title.');
+  const data = await gapQuery({prop: 'revisions', titles: title, rvprop: 'ids|timestamp|user|comment', rvlimit: String(limit)});
+  const page: any = Object.values(data.query?.pages ?? {})[0];
+  if (!page || page.missing !== undefined) return 'Page not found.';
+  const rows = page.revisions ?? [];
+  return rows.length ? `${page.title}\n` + rows.slice(0, limit).map((r: any) => `${r.revid ?? 'not reported'} | ${r.timestamp ?? 'not reported'} | ${r.user ?? 'not reported'} | ${String(r.comment ?? 'not reported').slice(0, 300)}`).join('\n') : 'No revisions returned.';
+}
+
+export async function pageBacklinks(args: { title: string; limit?: number }): Promise<string> {
+  const limit = Math.max(1, Math.min(Math.round(args.limit ?? 10), 30));
+  const title = args.title.trim();
+  if (!title) throw new Error('Provide a page title.');
+  const data = await gapQuery({list: 'backlinks', bltitle: title, bllimit: String(limit)});
+  const rows = data.query?.backlinks ?? [];
+  return rows.length ? rows.slice(0, limit).map((r: any, i: number) => `${i + 1}. ${String(r.title ?? 'not reported').slice(0, 250)} | page ${r.pageid ?? 'not reported'} | namespace ${r.ns ?? 'not reported'}`).join('\n') : 'No backlinks returned.';
+}
+
