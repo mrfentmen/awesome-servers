@@ -11,12 +11,6 @@ export function errorMessage(e: unknown): string {
 
 const UA = { "User-Agent": "awesome-mcps/1.0" }
 
-function envStrict(name: string): string {
-  const v = process.env[name]
-  if (!v) throw new DoabError(`Set the ${name} environment variable.`)
-  return v
-}
-
 async function authHeaders(): Promise<Record<string, string>> {
   return {};
 }
@@ -52,3 +46,39 @@ export async function getItem(prefix: string, suffix: string): Promise<string> {
   const data = await req(url);
   return pretty(data);
 }
+
+// ---- muxC tools:
+
+// ---- gap4c1 tools:
+
+interface DirectoryEntry {
+  uuid?: string; name?: string; handle?: string; lastModified?: string;
+  bundleName?: string; mimeType?: string; sizeBytes?: number; retrieveLink?: string;
+}
+
+async function directoryRows(path: string): Promise<DirectoryEntry[]> {
+  const res = await fetch(`https://directory.doabooks.org/rest${path}`, {
+    headers: { 'User-Agent': 'mrfentmen-doab-mcp/1.0', Accept: 'application/json' },
+    signal: AbortSignal.timeout(20000),
+  })
+  if (!res.ok) throw new DoabError(`DOAB returned ${res.status}`)
+  const rows = await res.json()
+  if (!Array.isArray(rows)) throw new DoabError('DOAB did not return a list.')
+  return rows as DirectoryEntry[]
+}
+
+function directoryUuid(value: string): string {
+  if (!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value)) throw new DoabError('Provide a DOAB UUID, not a handle.')
+  return value
+}
+
+export async function collectionItems(args: { collection: string; limit?: number; offset?: number }): Promise<string> {
+  const limit = Math.max(1, Math.min(Math.trunc(args.limit ?? 10), 30))
+  const offset = Math.max(0, Math.min(Math.trunc(args.offset ?? 0), 100000))
+  const rows = await directoryRows(`/collections/${directoryUuid(args.collection)}/items?limit=${limit}&offset=${offset}`)
+  if (!rows.length) return 'No collection items returned at this offset.'
+  return `DOAB collection items, offset ${offset}:\n` + rows.slice(0, limit).map((r, i) =>
+    `${i + 1}. ${(r.name ?? 'not reported').slice(0, 250)}\n   Handle: ${r.handle ?? 'not reported'} | UUID: ${r.uuid ?? 'not reported'} | Modified: ${r.lastModified ?? 'not reported'}`
+  ).join('\n')
+}
+
