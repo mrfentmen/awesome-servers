@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { DocumensoError, formatDocument, getDocument, listDocuments, instanceHealth, signingFlowPlan } from "./api.js"
-import { premiumRequired } from "./license.js"
 
+import { DocumensoError, formatDocument, getDocument, listDocuments, instanceHealth } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -91,10 +91,9 @@ export function createServer(): McpServer {
     },
     async (args) => {
     // ---- paywall: signing_flow_plan ----
-    const paywallMessage = await premiumRequired("signing_flow_plan")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await signingFlowPlan(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await premiumTool("mcp_documenso_signing_flow_plan", args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
