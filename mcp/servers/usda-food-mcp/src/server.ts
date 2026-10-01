@@ -1,8 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_search, m1_searchFood, foodDetails } from './api.js'
-import { premiumRequired } from "./license.js"
 
+import { m0_search, m1_searchFood } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -45,10 +45,9 @@ server.registerTool(
     },
     async (args) => {
     // ---- paywall: food_details ----
-    const paywallMessage = await premiumRequired("food_details")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+        // The body runs on the gateway, behind the licence gate.
     // ---- paywall: end ----
-    try { return text(await foodDetails(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await premiumTool("mcp_usda_food_food_details", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
