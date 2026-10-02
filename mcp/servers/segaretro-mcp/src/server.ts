@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { SegaError, categoryMembers, getPage, searchPages, wikiTextToPlain } from "./api.js"
-import { premiumTool } from "./gateway.js"
+import { SegaError, categoryMembers, getPage, pageMetadata, recentChanges, searchPages, wikiTextToPlain } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -95,11 +94,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: recent_changes ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_segaretro_recent_changes", args))
+        return text(await recentChanges(args))
       } catch (e) {
         return textError(errorMessage(e))
       }
@@ -119,11 +115,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: page_metadata ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_segaretro_page_metadata", args))
+        return text(await pageMetadata(args))
       } catch (e) {
         return textError(errorMessage(e))
       }
