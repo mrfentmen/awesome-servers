@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { format, operation, schemas, summary } from "./scout.js"
 import { operationMatrix, redactionAudit, schemaShapeReport } from "./api.js"
-import { premiumRequired } from "./license.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -49,10 +48,6 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: operation_matrix ----
-      const paywallMessage = await premiumRequired("operation_matrix")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try {
         return text(await operationMatrix(args))
       } catch (error) {
@@ -70,10 +65,6 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: schema_shape_report ----
-      const paywallMessage = await premiumRequired("schema_shape_report")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try {
         return text(await schemaShapeReport(args))
       } catch (error) {
