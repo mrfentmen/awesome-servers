@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { formatRecord, searchRecords, TroveError, catalogueSearch, authorSearch } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -49,10 +48,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ query, limit }) => {
-      // ---- paywall: catalogue_search ----
-      const paywallMessage = await premiumRequired("catalogue_search")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try {
         return text(await catalogueSearch({ query, limit }))
       } catch (e) {
@@ -73,10 +68,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ query, limit }) => {
-      // ---- paywall: author_search ----
-      const paywallMessage = await premiumRequired("author_search")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try {
         return text(await authorSearch({ query, limit }))
       } catch (e) {
