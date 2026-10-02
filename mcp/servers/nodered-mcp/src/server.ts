@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { formatFlow, getFlow, listFlows, NodeRedError, flowGraphAudit, wiringReport, flowLint } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -61,10 +60,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: flow_graph_audit ----
-      const paywallMessage = await premiumRequired("flow_graph_audit")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try {
         return text(await flowGraphAudit(args))
       } catch (e) {
@@ -82,10 +77,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: wiring_report ----
-      const paywallMessage = await premiumRequired("wiring_report")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try {
         return text(await wiringReport(args))
       } catch (e) {
