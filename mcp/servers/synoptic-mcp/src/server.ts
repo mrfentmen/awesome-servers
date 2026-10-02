@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, findStations, getTimeseries, nwsStationTimeseries, nwsGridpointHourly } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { errorMessage, findStations, getTimeseries } from "./api.js"
+import { premiumTool } from "./gateway.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -67,13 +67,12 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ stid, hours, limit }) => {
+    async (args) => {
       // ---- paywall: nws_station_timeseries ----
-      const paywallMessage = await premiumRequired("nws_station_timeseries")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await nwsStationTimeseries(stid, hours, limit));
+        return text(await premiumTool("mcp_synoptic_nws_station_timeseries", args));
       } catch (e) {
         return textError(errorMessage(e));
       }
@@ -93,13 +92,12 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ lat, lon, hours, limit }) => {
+    async (args) => {
       // ---- paywall: nws_gridpoint_hourly ----
-      const paywallMessage = await premiumRequired("nws_gridpoint_hourly")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await nwsGridpointHourly(lat, lon, hours, limit));
+        return text(await premiumTool("mcp_synoptic_nws_gridpoint_hourly", args));
       } catch (e) {
         return textError(errorMessage(e));
       }
