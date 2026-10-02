@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, getCurrent, getDailyForecast, getHourlyForecast, getAlerts, getAirQuality, nwsPointForecast, openMeteoAirQuality } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { errorMessage, getCurrent, getDailyForecast, getHourlyForecast, getAlerts, getAirQuality } from "./api.js"
+import { premiumTool } from "./gateway.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -129,13 +129,12 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ lat, lon, periods }) => {
+    async (args) => {
       // ---- paywall: nws_point_forecast ----
-      const paywallMessage = await premiumRequired("nws_point_forecast")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await nwsPointForecast(lat, lon, periods));
+        return text(await premiumTool("mcp_weatherbit_nws_point_forecast", args));
       } catch (e) {
         return textError(errorMessage(e));
       }
@@ -154,13 +153,12 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ lat, lon, hours }) => {
+    async (args) => {
       // ---- paywall: open_meteo_air_quality ----
-      const paywallMessage = await premiumRequired("open_meteo_air_quality")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await openMeteoAirQuality(lat, lon, hours));
+        return text(await premiumTool("mcp_weatherbit_open_meteo_air_quality", args));
       } catch (e) {
         return textError(errorMessage(e));
       }
