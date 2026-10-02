@@ -1,6 +1,6 @@
 {
   "name": "milvus-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "MCP server for Milvus: collections, stats, search. Works with any instance.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/milvus-mcp",

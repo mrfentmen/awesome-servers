@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { collectionStats, describeCollection, formatDescribe, formatStats, listCollections, MilvusError, vectorFootprint, searchCost, metricProbe } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -90,10 +89,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: vector_footprint ----
-      const paywallMessage = await premiumRequired("vector_footprint")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try {
         return text(await vectorFootprint(args))
       } catch (e) {
@@ -121,10 +116,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: search_cost ----
-      const paywallMessage = await premiumRequired("search_cost")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try {
         return text(await searchCost(args))
       } catch (e) {
