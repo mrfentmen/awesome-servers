@@ -1,6 +1,6 @@
 {
   "name": "statuscake-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Uptime, TCP port, SSL chain and DNS propagation checks - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/statuscake-mcp",

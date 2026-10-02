@@ -23,7 +23,6 @@ Part of [awesome-mcps](https://github.com/mrfentmen/awesome-mcps).
 These tools need a license key:
 
 * `header_audit`
-* `http_timing`
 
 Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-statuscake-mcp and set it in your MCP client config:
 

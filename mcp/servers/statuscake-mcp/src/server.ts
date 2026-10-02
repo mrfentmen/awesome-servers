@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { checkUrl, dnsPropagation, errorMessage, portCheck, sslChain, uptimeReport, header_audit, dns_records, http_timing } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { checkUrl, dnsPropagation, errorMessage, portCheck, sslChain, uptimeReport, dns_records, http_timing } from "./api.js"
+import { premiumTool } from "./gateway.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -154,12 +154,11 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ url, path }) => {
+    async (args) => {
       // ---- paywall: header_audit ----
-      const paywallMessage = await premiumRequired("header_audit")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await header_audit({ url, path })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_statuscake_header_audit", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -191,10 +190,9 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ url, repeats }) => {
-      // ---- paywall: http_timing ----
-      const paywallMessage = await premiumRequired("http_timing")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
+      // http_timing stays free: it times the DNS, TCP and TLS phases from a
+      // real socket, which the gateway cannot see, so it was ungated rather
+      // than moved behind the gate.
       try { return text(await http_timing({ url, repeats })) } catch (e) { return textError(errorMessage(e)) }
     }
   )
