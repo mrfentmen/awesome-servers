@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatProject, getProject, SourceForgeError, listNews, listActivity } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { formatProject, getProject, SourceForgeError } from "./api.js"
+import { premiumTool } from "./gateway.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -46,11 +46,10 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: list_project_news ----
-      const paywallMessage = await premiumRequired("list_project_news")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await listNews(args))
+        return text(await premiumTool("mcp_sourceforge_list_project_news", args))
       } catch (e) {
         return textError(errorMessage(e))
       }
@@ -70,11 +69,10 @@ export function createServer(): McpServer {
     },
     async (args) => {
       // ---- paywall: list_project_activity ----
-      const paywallMessage = await premiumRequired("list_project_activity")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
       try {
-        return text(await listActivity(args))
+        return text(await premiumTool("mcp_sourceforge_list_project_activity", args))
       } catch (e) {
         return textError(errorMessage(e))
       }
