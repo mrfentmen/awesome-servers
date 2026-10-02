@@ -344,87 +344,15 @@ export async function statusSummary(args: { urls: string[] }): Promise<string> {
 
 // ---- muxE tools:
 // The six existing tools cover up/down, response time, TCP ports, A-record
-// propagation across three resolvers, and the certificate chain. Three things
-// they touch but never read are here instead: service_status pulls exactly three
-// response headers out of every response it makes, the DNS tool asks only for A
+// propagation across three resolvers, and the certificate chain. Two things
+// they touch but never read are here instead: the DNS tool asks only for A
 // records, and the TLS tool reports the chain without ever saying how long the
-// certificate has left or how strong the key is. All three were verified live.
+// certificate has left or how strong the key is. Both were verified live.
 // normalizeTarget is already declared in this module, so it is reused here
-// rather than imported a second time.
+// rather than imported a second time. The third, header_audit, moved to the
+// licence gateway, behind the gate.
 
 const UA2 = 'mrfentmen-statping-mcp/1.0';
-
-// The security headers worth reporting on, with why each one matters. This is a
-// checklist of things a response either carries or does not, so it is a fixed
-// list rather than a guess about what matters.
-const SECURITY_HEADERS: Array<[string, string]> = [
-  ['strict-transport-security', 'tells a browser to refuse plain http for a year, so a downgrade cannot strip the padlock'],
-  ['content-security-policy', 'limits where scripts and resources may be loaded from, which is the main defence against an injected script'],
-  ['x-content-type-options', 'stops a browser guessing a response type, which closes the classic content sniffing hole'],
-  ['x-frame-options', 'stops the page being framed, which is clickjacking'],
-  ['referrer-policy', 'controls how much of the current URL is sent along in a referrer header'],
-  ['permissions-policy', 'declares which browser features the page and its frames may use'],
-  ['cross-origin-opener-policy', 'isolates the browsing context from cross-origin windows it opens'],
-  ['cross-origin-resource-policy', 'restricts which other origins may embed this response'],
-];
-
-export interface HeaderAuditArgs {
-  url: string;
-  path?: string;
-}
-
-export async function header_audit(args: HeaderAuditArgs): Promise<string> {
-  const url = normalizeTarget(args?.url ?? '');
-  // A path can be given so the same host can be audited at more than one route,
-  // since headers are frequently set per route rather than per host.
-  const suffix = (args?.path ?? '').trim();
-  const target = new URL(url.toString());
-  if (suffix) {
-    const s = suffix.startsWith('/') ? suffix : `/${suffix}`;
-    target.pathname = target.pathname.replace(/\/$/, '') + s;
-  }
-  const started = Date.now();
-  const res = await fetch(target.toString(), {
-    method: 'GET',
-    headers: { 'User-Agent': UA2, Accept: '*/*' },
-    redirect: 'follow',
-    signal: AbortSignal.timeout(20000),
-  });
-  const ms = Date.now() - started;
-  const lines = [
-    `Response headers for ${target.toString()}:`,
-    `  ${res.status} ${res.statusText || 'no status text'}, ${res.url} in ${ms}ms after ${res.redirected ? 'following a redirect' : 'no redirect'}.`,
-    `  ${[...res.headers].length} header fields came back:`,
-  ];
-  const all = [...res.headers.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  for (const [k, v] of all) {
-    const shown = v.length > 150 ? `${v.slice(0, 150)}...` : v;
-    lines.push(`    ${k}: ${shown}`);
-  }
-  const present = new Set(all.map(([k]) => k.toLowerCase()));
-  const missing = SECURITY_HEADERS.filter(([h]) => !present.has(h));
-  const found = SECURITY_HEADERS.filter(([h]) => present.has(h));
-  lines.push('');
-  lines.push(`  security headers: ${found.length} of the ${SECURITY_HEADERS.length} worth reporting on are present.`);
-  for (const [h, why] of found) lines.push(`    present  ${h} — ${why}`);
-  for (const [h, why] of missing) lines.push(`    absent   ${h} — ${why}`);
-  if (!found.length) {
-    lines.push('    None of them are set, so nothing in this response tells a browser to restrict anything.');
-  }
-  // HSTS is worth singling out because it is the one that only works if it was
-  // sent before, and its absence is a one-way door.
-  if (!present.has('strict-transport-security')) {
-    lines.push('');
-    lines.push('  No HSTS here means a first visit is still exposed to a plain http request, and a browser only starts enforcing it after the header has been seen over https.');
-  }
-  if (res.status >= 300 && res.status < 400) {
-    lines.push('  This response is itself a redirect, so the headers above are the redirect and not the destination. Auditing the destination needs a separate call.');
-  }
-  if (!present.has('server')) lines.push('  No server header, so the origin software is not being advertised.');
-  lines.push('');
-  lines.push("  The existing service_status reads only content-type, server and location out of every response it makes, so the rest of the header set has never been visible through this server.");
-  return lines.join('\n');
-}
 
 const RECORD_TYPES = ['A', 'AAAA', 'MX', 'TXT', 'NS', 'CNAME', 'SOA', 'CAA'] as const;
 type RecordType = (typeof RECORD_TYPES)[number];

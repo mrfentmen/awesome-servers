@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { checkServices, dnsPropagation, errorMessage, portCheck, serviceStatus, sslChain, statusSummary, header_audit, dns_records, cert_forecast } from "./api.js"
-import { premiumRequired } from "./license.js"
+import { checkServices, dnsPropagation, errorMessage, portCheck, serviceStatus, sslChain, statusSummary, dns_records, cert_forecast } from "./api.js"
+import { premiumTool } from "./gateway.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -113,12 +113,11 @@ export function createServer(): McpServer {
       }),
       annotations: READ_ONLY,
     },
-    async ({ url, path }) => {
+    async (args) => {
       // ---- paywall: header_audit ----
-      const paywallMessage = await premiumRequired("header_audit")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // The body runs on the gateway, behind the licence gate.
       // ---- paywall: end ----
-      try { return text(await header_audit({ url, path })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await premiumTool("mcp_statping_header_audit", args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -151,10 +150,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ host, port, warnDays }) => {
-      // ---- paywall: cert_forecast ----
-      const paywallMessage = await premiumRequired("cert_forecast")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
+      // cert_forecast stays free: it reads the live TLS handshake, which the
+      // gateway cannot see, so it was ungated rather than moved behind the gate.
       try { return text(await cert_forecast({ host, port, warnDays })) } catch (e) { return textError(errorMessage(e)) }
     }
   )

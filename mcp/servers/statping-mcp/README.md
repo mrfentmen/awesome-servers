@@ -23,7 +23,6 @@ Part of [awesome-mcps](https://github.com/mrfentmen/awesome-mcps).
 These tools need a license key:
 
 * `header_audit`
-* `cert_forecast`
 
 Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-statping-mcp and set it in your MCP client config:
 
