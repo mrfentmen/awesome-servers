@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { candidateSummary, formatCandidate, OpenSecretsError, searchCandidates, fecCandidateSearch, fecCommitteeSearch } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -70,10 +69,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ query, office, state, party, limit }) => {
-      // ---- paywall: fec_candidate_search ----
-      const paywallMessage = await premiumRequired("fec_candidate_search")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try {
         return text(await fecCandidateSearch({ query, office, state, party, limit }))
       } catch (e) {
@@ -94,10 +89,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ query, limit }) => {
-      // ---- paywall: fec_committee_search ----
-      const paywallMessage = await premiumRequired("fec_committee_search")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try {
         return text(await fecCommitteeSearch({ query, limit }))
       } catch (e) {
