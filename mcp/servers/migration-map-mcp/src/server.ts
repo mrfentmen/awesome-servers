@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { compareProjects, migrationOrdering } from "./api.js"
 import { format, inspectMigrationMap } from "./core.js"
-import { premiumRequired } from "./license.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -28,10 +27,6 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: migration_ordering ----
-      const paywallMessage = await premiumRequired("migration_ordering")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try {
         return text(await migrationOrdering(args))
       } catch (error) {
