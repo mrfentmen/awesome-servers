@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, getCapabilities, listShares, getShare, createShare, serverStatus } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -98,10 +97,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async () => {
-      // ---- paywall: server_status ----
-      const paywallMessage = await premiumRequired("server_status")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try {
         return text(await serverStatus());
       } catch (e) {
