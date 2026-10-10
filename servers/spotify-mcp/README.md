@@ -1,34 +1,39 @@
-# Spotify MCP
+# spotify-mcp
 
-MCP server for Spotify: search albums, artists, tracks. Needs free API credentials.
+Query the Spotify Web API (free app; set SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET, client-credentials token auto-minted): search, artists, albums.
 
-## Setup
+## Tools
 
-Create an app at https://developer.spotify.com/dashboard/ (free), then:
+- `search` — Search the Spotify catalog for tracks, artists or albums.
+- `get_artist` — Artist profile: genres, popularity and follower count.
+- `get_album` — Album details plus its track list and release date.
 
-```bash
-export SPOTIFY_CLIENT_ID=your_id
-export SPOTIFY_CLIENT_SECRET=your_secret
-npm install
-npm run build
-node dist/index.js
+- `get_track` — Track details.
+- `artist_top` — Top tracks (US).
+- `artist_albums` — Album list.
+- `new_releases` — Fresh albums.
+- `get_episode` — Podcast episode.
+- `get_show` — Podcast show.
+- `browse_categories` — Browse genres.
+
+## Source
+
+[spotify-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/spotify-mcp)
+
+<!-- paywall -->
+## Premium tools
+
+These tools need a license key:
+
+* `artist_identity`
+
+Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-spotify-mcp and set it in your MCP client config:
+
+```json
+"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
 ```
 
-The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code, MCP Inspector, or another compatible MCP client.
-
-## Tools at a glance
-
-- `search`: Albums, artists, tracks.
-- `get_album`: Date, tracks, label, link.
-- `get_artist`: Followers, genres, link.
-
-- `get_track`
-- `artist_top`
-- `artist_albums`
-- `new_releases`
-- `get_episode`
-- `get_show`
-- `browse_categories`
-## Limits and privacy
-
-This project is intentionally narrow. It should be treated as a practical helper, not a complete certification or security audit. Check the implementation and the returned data before using it with sensitive material. Credentials stay local and go only to Spotify's API. Catalog endpoints only (no user data).
+The key is checked against MCP Marketplace, cached for 24 hours, and keeps
+working offline once one check has succeeded. Every other tool on this server
+stays free.
+<!-- /paywall -->

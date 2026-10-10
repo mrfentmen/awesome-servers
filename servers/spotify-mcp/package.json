@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/spotify-mcp",
-  "version": "1.1.0",
-  "description": "MCP server for Spotify: search albums, artists, tracks. Needs free API credentials.",
+  "version": "1.1.1",
+  "description": "Query the Spotify Web API (free app; set SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET, client-credentials token auto-minted): search, artists, albums.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/spotify-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/awesome-mcps.git"
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
   },
   "bin": {
     "spotify-mcp": "./dist/index.js"
@@ -25,7 +25,8 @@
     "mcp",
     "spotify",
     "music",
-    "api"
+    "search",
+    "artists"
   ],
   "license": "MIT",
   "dependencies": {

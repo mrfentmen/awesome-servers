@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { artistAlbums, artistTop, browseCategories, formatAlbum, formatArtist, formatItem, formatTrack, getAlbum, getArtist, getEpisode, getShow, getTrack, newReleases, searchCatalog, SpotifyError } from "./api.js"
+import { errorMessage, search, getArtist, getAlbum, getTrack, artistTop, artistAlbums, newReleases, getEpisode, getShow, browseCategories, artistIdentity, musicCharts } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -17,40 +18,19 @@ export function createServer(): McpServer {
     "search",
     {
       title: "Search catalog",
-      description: "Search Spotify albums, artists, tracks.",
+      description: "Search the Spotify catalog for tracks, artists or albums.",
       inputSchema: z.object({
-        query: z.string().describe("Search text, e.g. 'daft punk'"),
-        kind: z.enum(["album", "artist", "track"]).default("track"),
-        limit: z.number().int().min(1).max(50).default(5),
+        query: z.string().describe("Search text."),
+        type: z.string().describe("track,artist,album combo (default all).").optional(),
+        limit: z.string().describe("Max results (default 5, max 50).").optional()
       }),
       annotations: READ_ONLY,
     },
-    async ({ query, kind, limit }) => {
+    async ({ query, type, limit }) => {
       try {
-        const results = await searchCatalog(query, kind, limit)
-        if (results.length === 0) return text(`Nothing found for "${query}".`)
-        return text(`Spotify ${kind}s for "${query}":\n\n${results.map((it, i) => formatItem(it, i)).join("\n")}`)
+        return text(await search(query, type, limit));
       } catch (e) {
-        return textError(errorMessage(e))
-      }
-    }
-  )
-
-  server.registerTool(
-    "get_album",
-    {
-      title: "Get album",
-      description: "One Spotify album: artists, date, tracks, label, link.",
-      inputSchema: z.object({
-        id: z.string().describe("Spotify album id (use search to find it)"),
-      }),
-      annotations: READ_ONLY,
-    },
-    async ({ id }) => {
-      try {
-        return text(formatAlbum(await getAlbum(id)))
-      } catch (e) {
-        return textError(errorMessage(e))
+        return textError(errorMessage(e));
       }
     }
   )
@@ -59,17 +39,36 @@ export function createServer(): McpServer {
     "get_artist",
     {
       title: "Get artist",
-      description: "One Spotify artist: followers, genres, link.",
+      description: "Artist profile: genres, popularity and follower count.",
       inputSchema: z.object({
-        id: z.string().describe("Spotify artist id (use search to find it)"),
+        artist_id: z.string().describe("Spotify artist ID.")
       }),
       annotations: READ_ONLY,
     },
-    async ({ id }) => {
+    async ({ artist_id }) => {
       try {
-        return text(formatArtist(await getArtist(id)))
+        return text(await getArtist(artist_id));
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "get_album",
+    {
+      title: "Get album",
+      description: "Album details plus its track list and release date.",
+      inputSchema: z.object({
+        album_id: z.string().describe("Spotify album ID.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ album_id }) => {
+      try {
+        return text(await getAlbum(album_id));
+      } catch (e) {
+        return textError(errorMessage(e));
       }
     }
   )
@@ -78,17 +77,17 @@ export function createServer(): McpServer {
     "get_track",
     {
       title: "Get track",
-      description: "One Spotify track: artists, album, length, popularity.",
+      description: "Track details.",
       inputSchema: z.object({
-        id: z.string().describe("Spotify track id (use search to find it)"),
+        track_id: z.string().describe("Spotify track ID.")
       }),
       annotations: READ_ONLY,
     },
-    async ({ id }) => {
+    async ({ track_id }) => {
       try {
-        return text(formatTrack(await getTrack(id)))
+        return text(await getTrack(track_id));
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(errorMessage(e));
       }
     }
   )
@@ -97,17 +96,17 @@ export function createServer(): McpServer {
     "artist_top",
     {
       title: "Artist top tracks",
-      description: "Top tracks for an artist (US).",
+      description: "Top tracks (US).",
       inputSchema: z.object({
-        id: z.string().describe("Spotify artist id"),
+        artist_id: z.string().describe("Spotify artist ID.")
       }),
       annotations: READ_ONLY,
     },
-    async ({ id }) => {
+    async ({ artist_id }) => {
       try {
-        return text(await artistTop(id))
+        return text(await artistTop(artist_id));
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(errorMessage(e));
       }
     }
   )
@@ -116,17 +115,17 @@ export function createServer(): McpServer {
     "artist_albums",
     {
       title: "Artist albums",
-      description: "Albums of an artist.",
+      description: "Album list.",
       inputSchema: z.object({
-        id: z.string().describe("Spotify artist id"),
+        artist_id: z.string().describe("Spotify artist ID.")
       }),
       annotations: READ_ONLY,
     },
-    async ({ id }) => {
+    async ({ artist_id }) => {
       try {
-        return text(await artistAlbums(id))
+        return text(await artistAlbums(artist_id));
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(errorMessage(e));
       }
     }
   )
@@ -135,17 +134,17 @@ export function createServer(): McpServer {
     "new_releases",
     {
       title: "New releases",
-      description: "Fresh album releases.",
+      description: "Fresh albums.",
       inputSchema: z.object({
-        limit: z.number().int().min(1).max(50).default(10),
+        limit: z.string().describe("Max results (default 10, max 50).").optional()
       }),
       annotations: READ_ONLY,
     },
     async ({ limit }) => {
       try {
-        return text(await newReleases(limit))
+        return text(await newReleases(limit));
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(errorMessage(e));
       }
     }
   )
@@ -154,18 +153,17 @@ export function createServer(): McpServer {
     "get_episode",
     {
       title: "Get episode",
-      description: "One podcast episode (name, show, length).",
+      description: "Podcast episode.",
       inputSchema: z.object({
-        id: z.string().describe("Spotify episode id"),
+        episode_id: z.string().describe("Episode ID.")
       }),
       annotations: READ_ONLY,
     },
-    async ({ id }) => {
+    async ({ episode_id }) => {
       try {
-        const e = await getEpisode(id)
-        return text(`[${String(e.id)}] ${String(e.name ?? "?")} — ${String((e.show as { name?: string } | undefined)?.name ?? "?")}`)
+        return text(await getEpisode(episode_id));
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(errorMessage(e));
       }
     }
   )
@@ -174,18 +172,17 @@ export function createServer(): McpServer {
     "get_show",
     {
       title: "Get show",
-      description: "One podcast show.",
+      description: "Podcast show.",
       inputSchema: z.object({
-        id: z.string().describe("Spotify show id"),
+        show_id: z.string().describe("Show ID.")
       }),
       annotations: READ_ONLY,
     },
-    async ({ id }) => {
+    async ({ show_id }) => {
       try {
-        const s = await getShow(id)
-        return text(`[${String(s.id)}] ${String(s.name ?? "?")} — ${String(s.publisher ?? "?")}`)
+        return text(await getShow(show_id));
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(errorMessage(e));
       }
     }
   )
@@ -193,27 +190,60 @@ export function createServer(): McpServer {
   server.registerTool(
     "browse_categories",
     {
-      title: "Browse categories",
-      description: "Spotify browse genres and moods.",
+      title: "Categories",
+      description: "Browse genres.",
       inputSchema: z.object({
-        limit: z.number().int().min(1).max(50).default(10),
+        limit: z.string().describe("Max results (default 10, max 50).").optional()
       }),
       annotations: READ_ONLY,
     },
     async ({ limit }) => {
       try {
-        return text(await browseCategories(limit))
+        return text(await browseCategories(limit));
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(errorMessage(e));
       }
     }
   )
 
-  return server
-}
+  server.registerTool(
+    "artist_identity",
+    {
+      title: "Artist identity",
+      description:
+        "Resolves an artist name against MusicBrainz: the disambiguation hint, aliases, life span, begin area, gender and tags, the release-group count broken down by type, and every other entry sharing the name so two same-named performers are not merged by accident.",
+      inputSchema: z.object({
+        name: z.string().describe("Artist name to resolve, e.g. Radiohead, Sade, Air."),
+        limit: z.number().describe("Max competing entries shown, 1-15. Defaults to 5.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: artist_identity ----
+    const paywallMessage = await premiumRequired("artist_identity")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await artistIdentity(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
 
-function errorMessage(e: unknown): string {
-  if (e instanceof SpotifyError) return `Error: ${e.message}`
-  if (e instanceof Error) return `Error: ${e.message}`
-  return `Error: ${String(e)}`
+  server.registerTool(
+    "music_charts",
+    {
+      title: "Music charts",
+      description:
+        "Deezer's editorial charts for tracks, albums and artists: rank, duration, explicit flag, preview availability, release date, track and fan counts, optionally filtered by genre. No Spotify credentials needed.",
+      inputSchema: z.object({
+        kind: z.string().describe("Which chart: tracks, albums or artists. Defaults to tracks.").optional(),
+        limit: z.number().describe("Entries per chart, 1-50. Defaults to 10.").optional(),
+        genre: z.string().describe("Optional genre name, e.g. rock, jazz, rap.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await musicCharts(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  return server
 }
