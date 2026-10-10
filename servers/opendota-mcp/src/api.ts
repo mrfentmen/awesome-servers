@@ -71,3 +71,31 @@ export async function player(args: { accountId?: number }): Promise<string> {
   if (p?.competitive_rank) lines.push(`Competitive rank: ${p.competitive_rank}`)
   return lines.join("\n")
 }
+
+// ---- muxB tools:
+
+const OD_COUNT_LABELS: Record<string, Record<string, string>> = {
+  leaver_status: { "0": "completed", "1": "disconnected", "2": "abandoned", "3": "left" },
+  game_mode: {
+    "0": "unknown", "1": "all pick", "2": "captains mode", "3": "random draft", "4": "single draft",
+    "5": "all random", "6": "intro", "7": "directors", "8": "reverse captains mode", "9": "greeviling",
+    "10": "tutorial", "11": "mid only", "12": "least played", "13": "limited heroes", "14": "compendium matchmaking",
+    "15": "custom", "16": "captains draft", "17": "balanced draft", "18": "ability draft", "19": "event", "20": "all random deathmatch",
+    "21": "1v1 mid", "22": "all draft", "23": "turbo", "24": "mutation",
+  },
+  lobby_type: { "0": "unknown", "1": "lobby", "2": "practice", "6": "direct", "7": "live", "8": "ranked" },
+  lane_role: { "0": "safe lane", "1": "mid lane", "2": "off lane", "3": "jungle", "4": "roaming" },
+  region: { "1": "US WEST", "2": "US EAST", "3": "EUROPE", "4": "KOREA", "5": "CHINA", "6": "SEA", "7": "SOUTHEAST ASIA" },
+  is_radiant: { "0": "Dire", "1": "Radiant" },
+}
+
+export interface PlayerBreakdownArgs {
+  accountId?: number
+  dimension?: string
+  limit?: number
+}
+
+export interface TopTeamsArgs {
+  limit?: number
+}
+

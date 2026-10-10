@@ -54,3 +54,83 @@ export function formatProfile(p: DuoProfile): string {
   ].filter(Boolean)
   return lines.join("\n")
 }
+
+// ---- muxB tools:
+
+export interface ProfileDetailsArgs {
+  username: string;
+}
+
+const duoStamp = (seconds: unknown): string => {
+  const n = Number(seconds);
+  if (!Number.isFinite(n) || n <= 0) return "not reported";
+  return `${new Date(n * 1000).toISOString().slice(0, 10)} (unix ${n})`;
+};
+
+export async function profileDetails(args: ProfileDetailsArgs): Promise<string> {
+  const username = (args.username ?? "").trim();
+  if (!/^[\w.-]+$/.test(username)) throw new DuolingoError(`Not a username: "${args.username}".`);
+  const data = await getJson<Raw>(`/users?username=${encodeURIComponent(username)}`);
+  const users: Raw[] = Array.isArray(data.users) ? data.users : [];
+  const u = users[0];
+  if (!u) throw new DuolingoError(`No Duolingo user "${username}".`);
+  const streakData = (u.streakData ?? {}) as Raw;
+  const ambassador = (u.globalAmbassadorStatus ?? {}) as Raw;
+  const privacy: string[] = Array.isArray(u.privacySettings) ? u.privacySettings : [];
+  const current = (Array.isArray(u.courses) ? u.courses : []).find(
+    (c: Raw) => c?.id != null && c.id === u.currentCourseId,
+  );
+  return [
+    `${u.username ?? username}`,
+    `Display name: ${u.name != null && String(u.name).trim() ? String(u.name) : "not reported"}`,
+    `Bio: ${u.bio != null && String(u.bio).trim() ? String(u.bio) : "not reported"}`,
+    `Profile picture: ${u.picture != null && String(u.picture).trim() ? String(u.picture) : "not reported"}`,
+    `Joined Duolingo: ${duoStamp(u.creationDate)}`,
+    `Email verified: ${u.emailVerified === true ? "yes" : u.emailVerified === false ? "no" : "not reported"}`,
+    `Duolingo Plus: ${u.hasPlus === true ? "yes" : u.hasPlus === false ? "no" : "not reported"}`,
+    `Current streak: ${streakData.currentStreak ?? "not reported"}`,
+    `Current course: ${u.currentCourseId != null ? String(u.currentCourseId) : "not reported"}${current?.title ? ` (${current.title})` : ""}`,
+    `Interface language: ${u.learningLanguage != null ? String(u.learningLanguage) : "not reported"} | base language: ${u.fromLanguage != null ? String(u.fromLanguage) : "not reported"}`,
+    `Motivation: ${u.motivation != null && String(u.motivation) !== "none" ? String(u.motivation) : "not reported"}`,
+    `Global ambassador status: ${Object.keys(ambassador).length ? JSON.stringify(ambassador).slice(0, 120) : "not reported"}`,
+    `Roles: ${Array.isArray(u.roles) && u.roles.length ? u.roles.map(String).join(", ") : "not reported"}`,
+    `Privacy settings: ${privacy.length ? `${privacy.length} flags, all public flags are off for the fields above` : "not reported"}`,
+  ].join("\n");
+}
+
+// ---- gap4c1 tools:
+
+export async function courseCatalog(args: { limit?: number }): Promise<string> {
+  const limit = Math.max(1, Math.min(Math.trunc(args.limit ?? 20), 100))
+  const res = await fetch('https://www.duolingo.com/api/1/courses/list', { headers: { 'User-Agent': 'duolingo-mcp/1.0', Accept: 'application/json' }, signal: AbortSignal.timeout(20000) })
+  if (!res.ok) throw new DuolingoError(`Duolingo course catalog error ${res.status}`)
+  const rows = await res.json()
+  if (!Array.isArray(rows)) throw new DuolingoError('Duolingo returned no course catalog.')
+  return `Duolingo course catalog (${rows.length} courses, ${Math.min(limit, rows.length)} shown):\n` + rows.slice(0, limit).map((r: Raw, i: number) => `${i + 1}. ${r.learning_language_name ?? r.learning_language ?? '?'} from ${r.from_language_name ?? r.from_language ?? '?'} | learners ${r.num_learners ?? 'not reported'} | phase ${r.phase ?? 'not reported'}`).join('\n')
+}
+
+async function publicUser(username: string): Promise<Raw> {
+  const name = (username ?? '').trim()
+  if (!/^[\w.-]+$/.test(name)) throw new DuolingoError(`Not a username: "${username}".`)
+  const data = await getJson<Raw>(`/users?username=${encodeURIComponent(name)}`)
+  const u = Array.isArray(data.users) ? data.users[0] : undefined
+  if (!u) throw new DuolingoError(`No Duolingo user "${name}".`)
+  return u
+}
+
+export async function profileCourses(args: { username: string }): Promise<string> {
+  const u = await publicUser(args.username)
+  const courses: Raw[] = Array.isArray(u.courses) ? u.courses : []
+  return `${u.username ?? args.username} courses (${courses.length}):\n` + (courses.length ? courses.map((c, i) => `${i + 1}. ${c.title ?? c.learningLanguage ?? '?'} | ${c.fromLanguage ?? '?'} -> ${c.learningLanguage ?? '?'} | XP ${c.xp ?? 'not reported'} | crowns ${c.crowns ?? 'not reported'}`).join('\n') : 'No courses reported.')
+}
+
+export async function profileAchievements(args: { username: string }): Promise<string> {
+  const u = await publicUser(args.username)
+  const rows: Raw[] = Array.isArray(u.achievements) ? u.achievements : []
+  return `${u.username ?? args.username} achievements (${rows.length}):\n` + (rows.length ? rows.slice(0, 50).map((a, i) => `${i + 1}. ${a.name ?? a.title ?? 'not reported'}${a.tier ? ` | tier ${a.tier}` : ''}${a.progress != null ? ` | progress ${a.progress}` : ''}`).join('\n') : 'No achievements reported.')
+}
+
+export async function profileSummary(args: { username: string }): Promise<string> {
+  const u = await publicUser(args.username)
+  return [`${u.username ?? args.username}`, `Name: ${u.name || 'not reported'}`, `Bio: ${u.bio || 'not reported'}`, `Streak: ${u.streak ?? 'not reported'} days`, `Total XP: ${u.totalXp ?? 'not reported'}`, `Plus: ${u.hasPlus === true ? 'yes' : u.hasPlus === false ? 'no' : 'not reported'}`].join('\n')
+}

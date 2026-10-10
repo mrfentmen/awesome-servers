@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { browse } from "./api.js"
-import { resolve } from "./api.js"
 
+import { browse, resolve, versionRange } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,50 @@ export function createServer(): McpServer {
     try { return text(await browse(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "package_metadata",
+    {
+      title: "Package metadata",
+      description: "Read the real package manifest served by esm.sh: name, version, description, licence, main entry, homepage, repository, author, keywords and declared runtime and peer dependencies.",
+      inputSchema: z.object( { name: z.string().describe("Package name."), version: z.string().describe("Version, defaults to latest.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: package_metadata ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_esm_package_metadata", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "module_size_report",
+    {
+      title: "Module size report",
+      description: "Compare how esm.sh builds a package for different targets such as es2022, esnext, node18 and deno, following each re-export stub to the real module and reporting the actual payload size rather than the stub.",
+      inputSchema: z.object( { name: z.string().describe("Package name."), version: z.string().describe("Version, defaults to latest.").optional(), targets: z.string().describe("Comma separated build targets.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: module_size_report ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_esm_module_size_report", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "version_range",
+    {
+      title: "Version range",
+      description: "Resolve a semver range through esm.sh to the concrete published version it currently serves, and optionally compare two ranges to see whether a floating dependency can change the code you ship.",
+      inputSchema: z.object( { name: z.string().describe("Package name."), range: z.string().describe("Semver range, e.g. ^4.17.0."), compare: z.string().describe("A second range to compare against.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await versionRange(args)) } catch (e) { return textError(e instanceof Error ? `Error: ${e.message}` : String(e)) }
+  }
+  )
+
   return server
 }

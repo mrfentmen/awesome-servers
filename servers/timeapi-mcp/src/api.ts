@@ -12,8 +12,6 @@ const m0 = (() => {
 const UA = 'mrfentmen-timeapi-mcp/1.0';
 const BASE = 'https://timeapi.io/api/Time';
 
-
-
 async function current(args: m0_ZoneArgs): Promise<string> {
   const zone = String(args.zone).trim();
   if (!zone) throw new Error('Provide an IANA zone like Europe/London.');
@@ -87,3 +85,11 @@ export const m0_current = m0.current;
 export const m1_TimeError = m1.TimeError;
 export const m1_listZones = m1.listZones;
 export const m1_timeInZone = m1.timeInZone;
+
+// ---- muxB tools:
+
+export interface AvailableZonesArgs {
+  prefix?: string;
+  limit?: number;
+}
+

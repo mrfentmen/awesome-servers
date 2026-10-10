@@ -33,3 +33,16 @@ export async function user(args: { user?: string }): Promise<string> {
     d.url ?? '',
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxB tools:
+
+export interface UserCloudcastsArgs {
+  user: string;
+  limit?: number;
+}
+
+export interface UserPlaylistsArgs {
+  user: string;
+  limit?: number;
+}
+

@@ -1,6 +1,6 @@
 {
   "name": "police-transparency-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Use this MCP server to Aggregate historical NYC police complaint statistics with no person lookup. Tools include summarize complaints",
   "type": "module",
   "mcpName": "io.github.mrfentmen/police-transparency-mcp",

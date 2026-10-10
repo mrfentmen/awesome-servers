@@ -12,8 +12,6 @@ export interface m0_RouteArgs {
 const m0 = (() => {
 const BASE = 'https://www3.septa.org/hackathon';
 
-
-
 async function next(args: m0_NextArgs): Promise<string> {
   const from = (args.from ?? '').trim();
   const to = (args.to ?? '').trim();
@@ -97,3 +95,23 @@ export const m0_next = m0.next;
 export const m1_nextArrivals = m1.nextArrivals;
 export const m1_TransitError = m1.TransitError;
 export const m1_transitView = m1.transitView;
+
+// ---- muxC tools:
+
+interface SeptaRoute {
+  route_id?: string
+  route_short_name?: string
+  route_long_name?: string
+  route_type?: string
+  route_color?: string
+  route_text_color?: string
+}
+
+interface SeptaArrival {
+  station?: string
+  direction?: string
+  line?: string
+  updated?: string
+  due?: string
+}
+

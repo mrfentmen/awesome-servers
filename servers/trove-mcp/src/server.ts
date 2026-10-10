@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatRecord, searchRecords, TroveError } from "./api.js"
+import { formatRecord, searchRecords, TroveError, catalogueSearch, authorSearch } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -30,6 +31,54 @@ export function createServer(): McpServer {
         const rows = await searchRecords(query, category, limit)
         if (rows.length === 0) return text(`Nothing found for "${query}".`)
         return text(rows.map((r, i) => formatRecord(r, i)).join("\n\n"))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "catalogue_search",
+    {
+      title: "Search the book catalogue",
+      description: "Search Open Library's catalogue of books: authors, first publication year, edition count, publishers, subjects, ISBNs, ratings and whether a copy is readable online.",
+      inputSchema: z.object({
+        query: z.string().describe("Search text, e.g. 'australian short stories', 'banjo paterson'"),
+        limit: z.number().int().min(1).max(20).default(5),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, limit }) => {
+      // ---- paywall: catalogue_search ----
+      const paywallMessage = await premiumRequired("catalogue_search")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await catalogueSearch({ query, limit }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "author_search",
+    {
+      title: "Search authors",
+      description: "Search Open Library's author index: work count, best known work, subject headings, average rating and how many readers want to or have read them.",
+      inputSchema: z.object({
+        query: z.string().describe("Author name fragment, e.g. 'ned kelly'"),
+        limit: z.number().int().min(1).max(20).default(5),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, limit }) => {
+      // ---- paywall: author_search ----
+      const paywallMessage = await premiumRequired("author_search")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await authorSearch({ query, limit }))
       } catch (e) {
         return textError(errorMessage(e))
       }

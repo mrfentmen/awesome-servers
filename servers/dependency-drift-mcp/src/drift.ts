@@ -115,3 +115,93 @@ export async function inspectDependencyDrift(input: string): Promise<Record<stri
 }
 
 export function format(value: unknown): string { return JSON.stringify(value, null, 2).slice(0, MAX_OUTPUT) }
+
+const LIFECYCLE_HOOKS = ["preinstall", "install", "postinstall", "prepublish", "prepublishOnly", "prepare"]
+const LOOSE_LOCK = /lock$|\.lock$|lock\.json$|lock\.yaml$|shrinkwrap|sum$/
+
+export async function inspectInstallScripts(input: string): Promise<Record<string, unknown>> {
+  const root = await boundedRoot(input)
+  const found = await collect(root)
+  const manifests = found.filter((item) => item.name === "package.json")
+  const hookCounts: Record<string, number> = {}
+  let unreadableManifestCount = 0
+  let manifestsWithLifecycleHooks = 0
+  let totalScriptCount = 0
+  let totalLifecycleHookCount = 0
+  let maxHooksInOneManifest = 0
+  for (const manifest of manifests) {
+    let parsed: Record<string, unknown>
+    try { parsed = JSON.parse(manifest.text) as Record<string, unknown> } catch { unreadableManifestCount += 1; continue }
+    const scripts = parsed.scripts
+    const names = scripts && typeof scripts === "object" ? Object.keys(scripts as Record<string, unknown>) : []
+    totalScriptCount += names.length
+    const hooks = names.filter((name) => LIFECYCLE_HOOKS.includes(name))
+    if (hooks.length) manifestsWithLifecycleHooks += 1
+    totalLifecycleHookCount += hooks.length
+    if (hooks.length > maxHooksInOneManifest) maxHooksInOneManifest = hooks.length
+    for (const hook of hooks) hookCounts[hook] = (hookCounts[hook] ?? 0) + 1
+  }
+  return {
+    manifestsScanned: manifests.length,
+    unreadableManifestCount,
+    totalScriptCount,
+    manifestsWithLifecycleHooks,
+    totalLifecycleHookCount,
+    maxHooksInOneManifest,
+    lifecycleHookCounts: Object.fromEntries(Object.entries(hookCounts).sort((a, b) => a[0].localeCompare(b[0]))),
+    risk: totalLifecycleHookCount > 0 ? "review" : "low-signal",
+    valueFree: true,
+    warning: "Only aggregate counts and hook categories are returned. Package names, script bodies, versions, paths, commands, and environment values are never emitted."
+  }
+}
+
+export async function inspectLockIntegrity(input: string): Promise<Record<string, unknown>> {
+  const root = await boundedRoot(input)
+  const found = await collect(root)
+  const locks = found.filter((item) => LOOSE_LOCK.test(item.name))
+  const jsonLocks = locks.filter((item) => item.name === "package-lock.json" || item.name === "npm-shrinkwrap.json")
+  let parsedLockfileCount = 0
+  let unreadableLockfileCount = 0
+  let entriesWithIntegrity = 0
+  let entriesWithoutIntegrity = 0
+  let entriesWithResolved = 0
+  let entriesWithoutResolved = 0
+  for (const lock of jsonLocks) {
+    let parsed: Record<string, unknown>
+    try { parsed = JSON.parse(lock.text) as Record<string, unknown> } catch { unreadableLockfileCount += 1; continue }
+    parsedLockfileCount += 1
+    const packages = parsed.packages
+    let entries: Record<string, unknown>[] = []
+    if (packages && typeof packages === "object") {
+      entries = Object.entries(packages as Record<string, unknown>)
+        .filter(([key]) => key !== "")
+        .map(([, value]) => (value && typeof value === "object" ? (value as Record<string, unknown>) : {}))
+    } else if (parsed.dependencies && typeof parsed.dependencies === "object") {
+      entries = Object.values(parsed.dependencies as Record<string, unknown>)
+        .map((value) => (value && typeof value === "object" ? (value as Record<string, unknown>) : {}))
+    }
+    for (const entry of entries) {
+      if (typeof entry.integrity === "string" && entry.integrity) entriesWithIntegrity += 1
+      else entriesWithoutIntegrity += 1
+      if (typeof entry.resolved === "string" && entry.resolved) entriesWithResolved += 1
+      else entriesWithoutResolved += 1
+    }
+  }
+  const entriesAnalysed = entriesWithIntegrity + entriesWithoutIntegrity
+  return {
+    lockfilesScanned: locks.length,
+    jsonLockfileCount: jsonLocks.length,
+    parsedLockfileCount,
+    unreadableLockfileCount,
+    otherLockfileCount: locks.length - jsonLocks.length,
+    entriesAnalysed,
+    entriesWithIntegrity,
+    entriesWithoutIntegrity,
+    entriesWithResolved,
+    entriesWithoutResolved,
+    integrityCoveragePercent: entriesAnalysed ? Math.round((entriesWithIntegrity / entriesAnalysed) * 1000) / 10 : null,
+    risk: entriesWithoutIntegrity > 0 ? "review" : "low-signal",
+    valueFree: true,
+    warning: "Only aggregate counts are returned. Package names, versions, integrity hashes, resolved URLs, paths, and file contents are never emitted. Only npm JSON lockfiles are parsed; other lockfile formats are counted but not analysed."
+  }
+}

@@ -67,3 +67,35 @@ export function cleanWikiText(wt: string, maxChars = 4000): string {
   s = s.replace(/[ \t]+\n/g, "\n")
   return s.trim().slice(0, maxChars)
 }
+
+// ---- muxA tools:
+// The existing tools hand back page text and category lists. These add the
+// wiki's own statistics, one page's metadata without its wikitext, and the
+// live recent-changes feed.
+export interface SiteStatsArgs {}
+
+export async function siteStats(_args: SiteStatsArgs = {}): Promise<string> {
+  const d = await apiGet({ action: "query", meta: "siteinfo", siprop: "statistics" })
+  const s = d?.query?.statistics
+  if (!s) throw new DoomWikiError("The wiki returned no statistics.")
+  return [
+    "Doom Wiki statistics:",
+    `  content pages: ${s.articles ?? "not reported"}`,
+    `  all pages: ${s.pages ?? "not reported"}`,
+    `  edits: ${s.edits ?? "not reported"}`,
+    `  files: ${s.images ?? "not reported"}`,
+    `  registered users: ${s.users ?? "not reported"} (${s.activeusers ?? "not reported"} active, ${s.admins ?? "not reported"} admins)`,
+    `  queued jobs: ${s.jobs ?? "not reported"}`,
+  ].join("\n")
+}
+
+export interface PageInfoArgs {
+  title: string
+}
+
+export interface RecentChangesArgs {
+  limit?: number
+  namespace?: number
+  onlyNew?: boolean
+}
+

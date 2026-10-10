@@ -14,3 +14,44 @@ export async function random(_args: RandomArgs): Promise<string> {
   if (!d.image) return 'No fox photo returned.';
   return `Random fox:\n${d.image}`;
 }
+
+// ---- muxB tools:
+
+interface GbifTaxon {
+  key?: number;
+  scientificName?: string;
+  canonicalName?: string;
+  rank?: string;
+  kingdom?: string;
+  phylum?: string;
+  className?: string;
+  order?: string;
+  family?: string;
+  genus?: string;
+  species?: string;
+  vernacularName?: string;
+}
+
+interface GbifOccurrence {
+  key?: number;
+  scientificName?: string;
+  country?: string;
+  stateProvince?: string;
+  year?: number;
+  month?: number;
+  day?: number;
+  basisOfRecord?: string;
+  eventDate?: string;
+  datasetTitle?: string;
+}
+
+export interface FoxSpeciesArgs {
+  query?: string;
+  limit?: number;
+}
+
+export interface FoxSightingsArgs {
+  scientific_name?: string;
+  limit?: number;
+}
+

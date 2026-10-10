@@ -1,14 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  SmogonError,
-  formatPoke,
-  getPokemon,
-  getUsageStats,
-  listAvailableMonths,
-  searchDex,
-} from "./api.js"
 
+import { SmogonError, formatPoke, getPokemon, getUsageStats, listAvailableMonths, searchDex } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -113,6 +107,38 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "pokemon_by_type",
+    {
+      title: "Pokemon by type",
+      description: "Every Pokemon in the national dex that has a given type, with its other type, Smogon tier and abilities.",
+      inputSchema: z.object({ type: z.string().describe("Pokemon type, e.g. Fire."), limit: z.number().int().min(1).max(60).default(25) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: pokemon_by_type ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_smogon_pokemon_by_type", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "pokemon_by_ability",
+    {
+      title: "Pokemon by ability",
+      description: "Every Pokemon in the national dex with a given ability, marking the ones where it is a hidden ability.",
+      inputSchema: z.object({ ability: z.string().describe("Ability name, e.g. Intimidate."), limit: z.number().int().min(1).max(60).default(25) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: pokemon_by_ability ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_smogon_pokemon_by_ability", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

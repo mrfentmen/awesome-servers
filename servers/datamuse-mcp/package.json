@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/datamuse-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Use this MCP server to wordplay. Rhymes, related words, spell checks, and word suggestions for any phrase",
   "type": "module",
   "mcpName": "io.github.mrfentmen/datamuse-mcp",

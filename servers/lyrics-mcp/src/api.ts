@@ -17,3 +17,29 @@ export async function getLyrics(args: { artist?: string; song?: string }): Promi
   if (!lyrics) throw new LyricsError("No lyrics returned")
   return `${artist} - ${song}\n\n${lyrics.slice(0, 5000)}`
 }
+
+// ---- muxB tools:
+
+type MbArtist = {
+  id?: string
+  name?: string
+  type?: string
+  country?: string
+  disambiguation?: string
+  area?: { name?: string }
+  "life-span"?: { begin?: string; ended?: string }
+  tags?: { name?: string }[]
+}
+
+type ItunesTrack = {
+  trackId?: number
+  trackName?: string
+  artistName?: string
+  collectionName?: string
+  releaseDate?: string
+  trackTimeMillis?: number
+  trackExplicitness?: string
+  trackViewUrl?: string
+  previewUrl?: string
+}
+

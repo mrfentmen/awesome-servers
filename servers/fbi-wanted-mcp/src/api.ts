@@ -59,3 +59,57 @@ export async function topRewards(_args: Record<string, never> = {}): Promise<str
     `${i + 1}. ${it.title ?? '?'}\n   ${it.reward_text}\n   ${it.url ?? ''}`
   ).join('\n');
 }
+
+// ---- muxA tools:
+// The existing tools list wanted persons, search by title and read the top
+// rewards. These filter the same dataset by the FBI field office handling the
+// case, and total the offices and classifications across a sample of it.
+interface SlimWanted {
+  title?: string;
+  uid?: string;
+  status?: string;
+  reward_text?: string;
+  publication?: string;
+  poster_classification?: string;
+  field_offices?: string[];
+  url?: string;
+}
+
+export interface WantedByOfficeArgs {
+  office: string;
+  pageSize?: number;
+}
+
+export interface OfficeSummaryArgs {
+  sampleSize?: number;
+}
+
+export async function officeSummary(args: OfficeSummaryArgs = {}): Promise<string> {
+  const sampleSize = Math.max(1, Math.min(args.sampleSize ?? 50, 50));
+  const d = await get<{ total?: number; items?: SlimWanted[] }>(`${BASE}/list?pageSize=${sampleSize}`);
+  const items = d.items ?? [];
+  if (!items.length) return 'The FBI Wanted list returned no entries.';
+  const offices = new Map<string, number>();
+  const classifications = new Map<string, number>();
+  let withReward = 0;
+  for (const it of items) {
+    for (const office of it.field_offices ?? []) {
+      offices.set(office, (offices.get(office) ?? 0) + 1);
+    }
+    const cls = it.poster_classification ?? 'unclassified';
+    classifications.set(cls, (classifications.get(cls) ?? 0) + 1);
+    if (it.reward_text && it.reward_text.trim()) withReward += 1;
+  }
+  const top = (m: Map<string, number>, n: number) =>
+    [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, n);
+  const lines = [
+    `FBI Wanted, first ${items.length} of ${d.total ?? '?'} entries:`,
+    `  carrying a reward offer: ${withReward} of ${items.length}`,
+    `  by poster classification:`,
+  ];
+  for (const [name, count] of top(classifications, 10)) lines.push(`    ${name}: ${count}`);
+  lines.push(`  by field office (${offices.size} distinct in this sample):`);
+  for (const [name, count] of top(offices, 12)) lines.push(`    ${name}: ${count}`);
+  lines.push('This counts only the sample above, so it describes those entries rather than the whole dataset.');
+  return lines.join('\n');
+}

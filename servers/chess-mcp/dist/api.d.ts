@@ -21,3 +21,7 @@ export declare function formatPlayer(p: Player): string;
 export declare function formatStats(stats: Record<string, any>): string;
 export declare function formatGame(g: any, index?: number): string;
 export declare function formatBoardRow(r: any): string;
+export declare function titledPlayerLookup(args: {
+    title: string;
+    player: string;
+}): Promise<string>;

@@ -42,3 +42,67 @@ export async function spells(args: SpellsArgs = {}): Promise<string> {
   if (!rows.length) return `No spells found${search ? ` for "${search}"` : ''}.`;
   return `Spells (${rows.length} shown):\n` + rows.map((r, i) => `${i + 1}. ${r}`).join('\n');
 }
+
+// ---- muxB tools:
+type O5eMonster = {
+  name?: string;
+  size?: string;
+  type?: string;
+  subtype?: string;
+  alignment?: string;
+  armor_class?: number;
+  armor_desc?: string;
+  hit_points?: number;
+  hit_dice?: string;
+  speed?: Record<string, number | string>;
+  strength?: number; dexterity?: number; constitution?: number;
+  intelligence?: number; wisdom?: number; charisma?: number;
+  cr?: string; challenge_rating?: string;
+  languages?: string;
+  traits?: string;
+  actions?: { name?: string; desc?: string }[];
+  bonus_actions?: { name?: string; desc?: string }[];
+  reactions?: { name?: string; desc?: string }[];
+  environments?: string[];
+  source?: string;
+  document__title?: string;
+}
+
+type O5eSpell = {
+  name?: string;
+  level?: string;
+  level_int?: number;
+  school?: string;
+  casting_time?: string;
+  range?: string;
+  components?: string;
+  material?: string;
+  ritual?: boolean;
+  duration?: string;
+  desc?: string;
+  higher_level?: string;
+  dnd_class?: string;
+  source?: string;
+  document__title?: string;
+}
+
+type O5eClass = {
+  name?: string;
+  hit_dice?: number | string;
+  hp_at_1st_level?: string;
+  hp_at_higher_levels?: string;
+  prof_armor?: string;
+  prof_saving_throws?: string;
+  prof_skills?: string;
+  primary_ability?: string;
+  archetypes?: { name?: string; desc?: string }[];
+  source?: string;
+  document__title?: string;
+}
+
+const plain = (v: string | undefined, max: number): string => {
+  const t = (v ?? '').replace(/\*\*/g, '').replace(/^#+\s*/gm, '').replace(/\s+/g, ' ').trim();
+  if (!t) return 'not reported';
+  return t.length > max ? `${t.slice(0, max)}...` : t;
+}
+

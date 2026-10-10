@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { BbsError, formatBbs, listAll } from "./api.js"
+import { BbsError, formatBbs, listAll, softwareCensus, bbsStats } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -85,6 +86,51 @@ export function createServer(): McpServer {
         if (all.length === 0) return text("No BBSes found.")
         const pick = all[Math.floor(Math.random() * all.length)]
         return text(`Dialing ${pick.name}...\n\n${formatBbs(pick)}`)
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "software_census",
+    {
+      title: "Software census",
+      description: "How many live BBSes in the Telnet BBS Guide run each software package, " +
+      "most common first.",
+      inputSchema: z.object(
+    { limit: z.number().int().min(1).max(60).default(20) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: software_census ----
+      const paywallMessage = await premiumRequired("software_census")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await softwareCensus(args))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "bbs_stats",
+    {
+      title: "Bbs stats",
+      description: "Counts for the whole Telnet BBS Guide listing: how many systems are up, " +
+      "how many also accept SSH, how many locations and which connection types they use.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: bbs_stats ----
+      const paywallMessage = await premiumRequired("bbs_stats")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await bbsStats(args))
       } catch (e) {
         return textError(errorMessage(e))
       }

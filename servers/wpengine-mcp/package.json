@@ -1,6 +1,6 @@
 {
   "name": "wpengine-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "WP Engine hosting API: installs, sites. Needs API credentials.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/wpengine-mcp",

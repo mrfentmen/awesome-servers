@@ -1,15 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  MangaDexError,
-  formatChapter,
-  formatManga,
-  getChapters,
-  getManga,
-  getTags,
-  searchAuthor,
-  searchManga,
-} from "./api.js"
+import { MangaDexError, formatChapter, formatManga, getChapters, getManga, getTags, searchAuthor, searchManga, mangaStatistics, mangaByTag } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -146,6 +138,53 @@ export function createServer(): McpServer {
           ([group, names]) => `${group} (${names.length}):\n  ${names.join(", ")}`
         )
         return text(`MangaDex tags:\n\n${lines.join("\n\n")}`)
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "manga_statistics",
+    {
+      title: "Manga statistics",
+      description: "MangaDex engagement statistics for one manga UUID: bayesian rating, rating vote spread, follower count, comment thread size and unavailable chapters.",
+      inputSchema: z.object({
+        id: z.string().describe("MangaDex manga UUID, from search_manga"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ id }) => {
+      // ---- paywall: manga_statistics ----
+      const paywallMessage = await premiumRequired("manga_statistics")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await mangaStatistics(id))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "manga_by_tag",
+    {
+      title: "Manga by tag",
+      description: "The most-followed MangaDex manga carrying a named content tag, e.g. isekai or slice of life, with authors and publication status.",
+      inputSchema: z.object({
+        tag: z.string().describe("Tag name as listed by list_tags, e.g. \"isekai\""),
+        limit: z.number().int().min(1).max(20).default(8),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: manga_by_tag ----
+      const paywallMessage = await premiumRequired("manga_by_tag")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await mangaByTag(args))
       } catch (e) {
         return textError(errorMessage(e))
       }

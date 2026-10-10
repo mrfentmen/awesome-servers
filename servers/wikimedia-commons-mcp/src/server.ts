@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_file, m0_search, m1_random } from './api.js'
+import { m0_file, m0_search, m1_random, fileCategories, fileThumbnail, categoryFiles } from './api.js'
+import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -46,5 +47,52 @@ server.registerTool(
     try { return text(await m1_random(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "file_categories",
+    {
+      title: "File categories",
+      description: "The Wikimedia Commons categories a file sits in, which is how Commons media gets browsed.",
+      inputSchema: z.object( { title: z.string().describe("File title like File:Example.jpg."), limit: z.number().describe("Max categories.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: file_categories ----
+    const paywallMessage = await premiumRequired("file_categories")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await fileCategories(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "file_thumbnail",
+    {
+      title: "File thumbnail",
+      description: "The thumbnail URL for a Commons file at a chosen pixel width, alongside the original's dimensions and MIME type.",
+      inputSchema: z.object( { title: z.string().describe("File title like File:Example.jpg."), width: z.number().describe("Thumbnail width in pixels, 20 to 2000.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: file_thumbnail ----
+    const paywallMessage = await premiumRequired("file_thumbnail")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await fileThumbnail(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "category_files",
+    {
+      title: "Category files",
+      description: "List the media files and subcategories inside a Wikimedia Commons category.",
+      inputSchema: z.object( { category: z.string().describe("Category name, e.g. Featured pictures of animals."), limit: z.number().describe("Max members.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await categoryFiles(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

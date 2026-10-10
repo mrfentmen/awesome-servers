@@ -1,0 +1,27 @@
+export declare class TraxnycError extends Error {
+    constructor(message: string);
+}
+export declare function errorMessage(e: unknown): string;
+export declare function searchProducts(query: string, limit?: string, maxPrice?: string, productType?: string): Promise<string>;
+export declare function listNewest(limit?: string, page?: string, productType?: string): Promise<string>;
+export declare function getProduct(handle: string): Promise<string>;
+export declare function priceOverview(limit?: string): Promise<string>;
+export declare function findDeals(limit?: string, sample?: string): Promise<string>;
+export declare function listCategories(): Promise<string>;
+export declare function listCollections(query?: string): Promise<string>;
+export declare function browseCollection(handle: string, limit?: string, maxPrice?: string, size?: string): Promise<string>;
+export declare function find_by_size(size: string, limit?: string, maxPrice?: string): Promise<string>;
+/** The whole size curve of the catalogue, and where it has holes. */
+export declare function sizeMatrix(args: {
+    pages?: number;
+    threshold?: number;
+}): Promise<string>;
+/** Where the money sits in the catalogue, by product type. */
+export declare function priceDistribution(args: {
+    pages?: number;
+    buckets?: number;
+}): Promise<string>;
+/** What is wrong with the catalogue data itself, which is what breaks a storefront. */
+export declare function catalogueHealth(args: {
+    pages?: number;
+}): Promise<string>;

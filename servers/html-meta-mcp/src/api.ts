@@ -62,3 +62,27 @@ export async function meta(args: { url?: string }): Promise<string> {
   if (published) lines.push(`Published: ${published.slice(0, 10)}`)
   return lines.join("\n")
 }
+
+// ---- muxC tools:
+
+function normaliseUrl(raw: string): string {
+  const value = raw.trim()
+  if (!value) throw new HtmlmetaError("Provide a URL")
+  return /^https?:\/\//i.test(value) ? value : `https://${value}`
+}
+
+async function fetchText(url: string, accept: string, timeout = 15000): Promise<{ res: Response; body: string }> {
+  let res: Response
+  try {
+    res = await fetch(url, {
+      headers: { "User-Agent": UA, Accept: accept },
+      redirect: "follow",
+      signal: AbortSignal.timeout(timeout),
+    })
+  } catch (e) {
+    throw new HtmlmetaError(`Could not fetch ${url}: ${e instanceof Error ? e.message : String(e)}`)
+  }
+  if (!res.ok) throw new HtmlmetaError(`HTTP ${res.status} from ${url}`)
+  return { res, body: await res.text() }
+}
+

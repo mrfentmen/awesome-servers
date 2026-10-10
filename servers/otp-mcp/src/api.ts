@@ -42,3 +42,57 @@ export async function generateHotp(args: { secret?: string; counter?: number }):
   if (counter < 0) throw new OtpError("Counter must be non negative")
   return `HOTP: ${hotp(secret, counter)}\nCounter: ${counter}`
 }
+
+// ---- muxF tools:
+import { timingSafeEqual } from "node:crypto"
+
+const B32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+
+function base32encode(buf: Buffer): string {
+  let bits = ""
+  for (const byte of buf) bits += byte.toString(2).padStart(8, "0")
+  let out = ""
+  for (let i = 0; i < bits.length; i += 5) {
+    out += B32[parseInt(bits.slice(i, i + 5).padEnd(5, "0"), 2)]
+  }
+  while (out.length % 8 !== 0) out += "="
+  return out
+}
+
+export async function provisioningUri(args: {
+  secret?: string
+  label?: string
+  issuer?: string
+  type?: string
+  digits?: number
+  period?: number
+  counter?: number
+}): Promise<string> {
+  const secret = (args.secret ?? "").toUpperCase().replace(/=+$/, "").replace(/\s/g, "")
+  if (!secret) throw new OtpError("Provide a base32 secret")
+  const key = base32decode(secret)
+  const label = (args.label ?? "").trim()
+  if (!label) throw new OtpError("Provide a label, usually the account or issuer colon account")
+  const type = (args.type ?? "totp").toLowerCase() === "hotp" ? "hotp" : "totp"
+  const digits = Math.max(6, Math.min(Math.floor(args.digits ?? 6), 10))
+  const period = Math.max(15, Math.min(Math.floor(args.period ?? 30), 300))
+  const issuer = (args.issuer ?? "").trim()
+  const labelPart = issuer ? `${issuer}:${label}` : label
+  const params = [`secret=${secret}`, `digits=${digits}`, "algorithm=SHA1"]
+  if (type === "totp") {
+    params.push(`period=${period}`)
+  } else {
+    params.push(`counter=${Math.max(0, Math.floor(args.counter ?? 0))}`)
+  }
+  if (issuer) params.push(`issuer=${encodeURIComponent(issuer)}`)
+  return [
+    `Provisioning URI (${type}, SHA1):`,
+    `otpauth://${type}/${encodeURIComponent(labelPart)}?${params.join("&")}`,
+    `Secret re-encoded to canonical base32: ${base32encode(key)}`,
+    `Key material: ${key.length} bytes (${key.length * 8} bits)`,
+    `Type: ${type}${type === "totp" ? `, ${period} second period` : ", counter based"}`,
+    `Digits: ${digits}, algorithm: SHA1`,
+    `Label: ${labelPart}`,
+  ].join("\n")
+}
+

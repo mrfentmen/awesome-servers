@@ -122,3 +122,91 @@ export async function filter(args: { guesses?: string }): Promise<string> {
   if (!candidates.length) return "No words match those marks"
   return `Candidates (${candidates.length}):\n${candidates.slice(0, 30).join(", ")}${candidates.length > 30 ? "..." : ""}`
 }
+
+// ---- muxB tools:
+const DATAMUSE = 'https://api.datamuse.com/words';
+const WIKTIONARY = 'https://en.wiktionary.org/w/api.php';
+
+type DatamuseWord = {
+  word?: string;
+  score?: number;
+  tags?: string[];
+  defs?: string[];
+}
+
+const freqOf = (tags: string[] | undefined): string => {
+  const f = (tags ?? []).find((t) => t.startsWith('f:'));
+  return f ? f.slice(2) : 'frequency not reported';
+}
+
+const defOf = (word: DatamuseWord): string => {
+  const d = word.defs?.[0]
+  if (!d) return ''
+  const clean = d.replace(/^[a-z]+\t/, '').replace(/\s+/g, ' ').trim()
+  return clean.length > 140 ? `${clean.slice(0, 140)}...` : clean
+}
+
+async function datamuse(query: URLSearchParams, label: string): Promise<DatamuseWord[]> {
+  const res = await fetch(`${DATAMUSE}?${query.toString()}`, {
+    headers: { Accept: 'application/json', 'User-Agent': UA },
+    signal: AbortSignal.timeout(20000),
+  })
+  if (res.status === 400) throw new WordleError(`The word service rejected that ${label} query.`)
+  if (!res.ok) throw new WordleError(`Word service returned ${res.status}`)
+  const data = (await res.json()) as DatamuseWord[]
+  if (!Array.isArray(data) || !data.length) throw new WordleError(`The word service has no ${label} for that.`)
+  return data
+}
+
+export async function patternWords(args: { pattern: string; limit?: number; definition?: boolean }): Promise<string> {
+  const raw = (args.pattern ?? '').trim().toLowerCase()
+  if (!raw) throw new WordleError('Provide a letter pattern using ? for a blank, for example "c?o?e".')
+  if (!/^[a-z?*]+$/.test(raw)) throw new WordleError('A pattern may only contain letters and the wildcards ? or *.')
+  const limit = Math.max(1, Math.min(Math.trunc(Number(args.limit ?? 20) || 20), 50))
+  const q = new URLSearchParams({ sp: raw, max: String(limit), md: args.definition ? 'df' : 'f' })
+  const rows = await datamuse(q, 'words matching that pattern')
+  const lines = rows.slice(0, limit).map((w, i) => {
+    const freq = freqOf(w.tags)
+    const d = args.definition ? defOf(w) : ''
+    return `${i + 1}. ${w.word ?? '?'} - frequency ${freq}${d ? `\n   ${d}` : ''}`
+  })
+  return `Dictionary words matching "${raw}" (${rows.length} shown, ? is a blank letter):\n${lines.join('\n')}`
+}
+
+export async function rhymingWords(args: { word: string; limit?: number; definition?: boolean }): Promise<string> {
+  const word = (args.word ?? '').trim().toLowerCase()
+  if (!word) throw new WordleError('Provide a word to find rhymes for.')
+  if (!/^[a-z]+$/.test(word)) throw new WordleError('Provide a single word in letters only.')
+  const limit = Math.max(1, Math.min(Math.trunc(Number(args.limit ?? 20) || 20), 50))
+  const q = new URLSearchParams({ rel_rhy: word, max: String(limit), md: args.definition ? 'df' : 'f' })
+  const rows = await datamuse(q, 'rhymes')
+  const lines = rows.slice(0, limit).map((w, i) => {
+    const freq = freqOf(w.tags)
+    const d = args.definition ? defOf(w) : ''
+    return `${i + 1}. ${w.word ?? '?'} - frequency ${freq}${d ? `\n   ${d}` : ''}`
+  })
+  return `Words rhyming with "${word}" (${rows.length} shown):\n${lines.join('\n')}`
+}
+
+export async function wordFacts(args: { word: string }): Promise<string> {
+  const word = (args.word ?? '').trim().replace(/\s+/g, '_')
+  if (!word) throw new WordleError('Provide a word to look up.')
+  const qs = new URLSearchParams({ action: 'query', prop: 'extracts', explaintext: '1', format: 'json', redirects: '1', titles: word })
+  const res = await fetch(`${WIKTIONARY}?${qs.toString()}`, {
+    headers: { Accept: 'application/json', 'User-Agent': UA },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (!res.ok) throw new WordleError(`Wiktionary returned ${res.status}`)
+  const d = (await res.json()) as { query?: { pages?: Record<string, { title?: string; extract?: string; missing?: string }> } }
+  const page = Object.values(d.query?.pages ?? {})[0]
+  if (!page || page.missing !== undefined) throw new WordleError(`Wiktionary has no entry for "${word}".`)
+  const body = (page.extract ?? '').split('\n').map((l) => l.replace(/^=+\s*|\s*=+$/g, '').replace(/'''?/g, '').trim()).filter(Boolean)
+  const head = body.slice(0, 18).map((l) => (l.length > 200 ? `${l.slice(0, 200)}...` : l))
+  const senses = body.filter((l) => /^\(?\d+\)?\s/.test(l) || /^[a-z-]+:/.test(l)).length
+  return [
+    `Wiktionary entry for ${page.title ?? word}:`,
+    ...head,
+    '',
+    `Lines of meaning captured: ${senses || 'none counted'}`,
+  ].join('\n')
+}

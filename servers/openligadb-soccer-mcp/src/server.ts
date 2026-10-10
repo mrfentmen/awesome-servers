@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { matches } from "./api.js"
 
+import { matches, leagues } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -21,5 +22,34 @@ export function createServer(): McpServer {
     try { return text(await matches(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "top_scorers",
+    {
+      title: "Top scorers",
+      description: "Top goal scorers for a league and season.",
+      inputSchema: z.object( { league: z.string().describe("League like bl1.").optional(), season: z.number().describe("Season year.").optional(), limit: z.number().describe("Max scorers.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: top_scorers ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_openligadb_soccer_top_scorers", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "leagues",
+    {
+      title: "Leagues",
+      description: "Available OpenLigaDB league shortcuts, seasons and names.",
+      inputSchema: z.object( { limit: z.number().describe("Max leagues.").optional(), sport: z.string().describe("Filter by sport name substring.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await leagues(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

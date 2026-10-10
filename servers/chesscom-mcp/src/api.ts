@@ -184,3 +184,53 @@ export function formatLeaders(category: string, rows: LeaderEntry[]): string {
     rows.map((r) => `${r.rank ?? "?"}. ${r.username} — ${r.score ?? "?"}${r.country ? ` (${r.country.toUpperCase()})` : ""}`).join("\n")
   )
 }
+
+// ---- muxA tools:
+
+function day(epoch: unknown): string {
+  const n = Number(epoch);
+  if (!Number.isFinite(n) || n <= 0) return "unknown";
+  return new Date(n * 1000).toISOString().slice(0, 16).replace("T", " ");
+}
+
+export interface RecentGamesArgs {
+  username: string;
+  limit?: number;
+}
+
+export interface ClubArgs {
+  club_id: string;
+}
+
+export async function clubProfile(args: ClubArgs): Promise<string> {
+  const id = (args.club_id ?? "").trim();
+  if (!id) throw new Error("Provide a club id or slug, e.g. lichess.");
+  const res = await fetch(`${BASE}/club/${encodeURIComponent(id)}`, {
+    headers: { "User-Agent": UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) {
+    if (res.status === 404) return `No public Chess.com club matches "${id}".`;
+    throw new Error(`Chess.com returned ${res.status}`);
+  }
+  const c = (await res.json()) as Record<string, any>;
+  const admins = Array.isArray(c.admin) ? c.admin : [];
+  const country = String(c.country ?? "").split("/").pop() ?? "not reported";
+  return [
+    `${c.name ?? id} (club id ${c.club_id ?? "?"})`,
+    `Visibility ${c.visibility ?? "unknown"} | members ${c.members_count ?? "?"} | average daily rating ${c.average_daily_rating ?? "not reported"}`,
+    `Country ${country || "not reported"} | created ${day(c.created)} | last activity ${day(c.last_activity)}`,
+    `Admins: ${admins.length ? admins.map((a: unknown) => String(a).split("/").pop()).join(", ") : "none listed"}`,
+    `Join: ${c.join_request ?? "not reported"}`,
+    c.url ? `Page: ${c.url}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+export interface ClubMembersArgs {
+  club_id: string;
+  period?: string;
+  limit?: number;
+}
+

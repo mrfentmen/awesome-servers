@@ -1,6 +1,6 @@
 {
   "name": "mangadex-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Use this MCP server to MangaDex, search manga, browse chapters, authors, and tags. Tools include search manga, get manga, list chapters",
   "type": "module",
   "mcpName": "io.github.mrfentmen/mangadex-mcp",

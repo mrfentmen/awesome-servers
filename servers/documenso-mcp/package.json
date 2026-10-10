@@ -1,6 +1,6 @@
 {
   "name": "documenso-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Documenso: documents, recipients. Works with any instance.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/documenso-mcp",

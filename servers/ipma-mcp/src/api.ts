@@ -34,3 +34,28 @@ export async function forecast(args: ForecastArgs): Promise<string> {
   return `IPMA forecast for city ${id} (next ${limit} days):\n` +
     data.slice(0, limit).map((f, i) => `${i + 1}. ${f.forecastDate ?? '?'}: max ${f.tMax ?? '?'}C min ${f.tMin ?? '?'}C rain ${f.precipitaProb ?? '?'}%`).join('\n');
 }
+
+// ---- muxB tools:
+
+const WARNINGS = 'https://api.ipma.pt/open-data/forecast/warnings/warnings_www.json';
+const STATIONS = 'https://api.ipma.pt/open-data/observation/meteorology/stations/stations.json';
+const OBSERVATIONS = 'https://api.ipma.pt/open-data/observation/meteorology/stations/observations.json';
+
+const LEVELS: Record<string, string> = {
+  green: 'green (no risk)',
+  yellow: 'yellow (moderate)',
+  orange: 'orange (high)',
+  red: 'red (highest)',
+};
+
+export interface WeatherWarningsArgs {
+  level?: string;
+  area?: string;
+  limit?: number;
+}
+
+export interface StationObservationsArgs {
+  station?: string;
+  limit?: number;
+}
+

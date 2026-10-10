@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { format, getDocument, listMeetings, searchDocuments, searchGroups } from "./api.js"
 
+import { format, getDocument, listMeetings, searchDocuments, searchGroups, documentAuthors } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -57,5 +58,50 @@ export function createServer() {
     try { return text(format(await listMeetings(limit))) } catch (error) { return errorText(error) }
   }
   )
+  server.registerTool(
+    "group_profile",
+    {
+      title: "Group profile",
+      description: "One IETF working group's profile by acronym: full name, current state, type, parent group, description, mailing list, archive and charter.",
+      inputSchema: z.object( { acronym: z.string().min(1).max(20) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: group_profile ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_ietf_group_profile", args)) } catch (e) { return textError(String(e)) }
+  }
+  )
+
+  server.registerTool(
+    "group_history",
+    {
+      title: "Group history",
+      description: "Dated history of an IETF working group's state changes, with the change type and any recorded comment.",
+      inputSchema: z.object( { acronym: z.string().min(1).max(20), limit: z.number().int().min(1).max(25).default(10) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: group_history ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_ietf_group_history", args)) } catch (e) { return textError(String(e)) }
+  }
+  )
+
+  server.registerTool(
+    "document_authors",
+    {
+      title: "Document authors",
+      description: "The people credited on an IETF document, with each author's affiliation and country.",
+      inputSchema: z.object( { name: z.string().min(1).max(120), limit: z.number().int().min(1).max(60).default(20) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await documentAuthors(args)) } catch (e) { return errorText(e) }
+  }
+  )
+
   return server
 }

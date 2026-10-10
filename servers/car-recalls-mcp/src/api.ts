@@ -28,3 +28,31 @@ export async function recallByCampaign(args: { campaign?: string }): Promise<str
   const rows = d.results ?? []
   return rows.slice(0, 5).map(fmt).join("\n\n") || "No recall found"
 }
+
+// ---- muxA tools:
+
+async function nhtsa<T>(path: string): Promise<T> {
+  const res = await fetch(`https://api.nhtsa.gov${path}`, {
+    headers: { 'User-Agent': 'mrfentmen-car-recalls-mcp/1.0', Accept: 'application/json' },
+    signal: AbortSignal.timeout(30000),
+  });
+  if (res.status === 404) throw new Error(`NHTSA has nothing at ${path}`);
+  if (!res.ok) throw new Error(`NHTSA returned ${res.status} for ${path}`);
+  const d = (await res.json()) as { message?: string } & T;
+  if (d?.message && /error|not found|invalid/i.test(d.message)) {
+    throw new Error(`NHTSA said: ${d.message}`);
+  }
+  return d;
+}
+
+export interface ComplaintArgs {
+  make: string
+  model: string
+  year: number
+  limit?: number
+}
+
+export interface YearsArgs {
+  issueType?: string
+}
+

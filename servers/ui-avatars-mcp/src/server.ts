@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { avatar } from "./api.js"
+import { avatar, gravatar, gravatarProfile } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -21,5 +22,35 @@ export function createServer(): McpServer {
     try { return text(await avatar(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "gravatar",
+    {
+      title: "Gravatar URL",
+      description: "Gravatar image URL for an email address. The URL is a pure local MD5 of the trimmed lowercase address, so no request is made.",
+      inputSchema: z.object( { email: z.string().describe("Email address."), size: z.number().int().min(16).max(2048).default(200), default: z.string().describe("Fallback: 404, mp, identicon, retro, robohash, blank.").default("identicon"), rating: z.string().describe("g, pg, r or x.").default("g"), format: z.string().describe("jpg, png or gif.").default("png") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: gravatar ----
+    const paywallMessage = await premiumRequired("gravatar")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await gravatar(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "gravatar_profile",
+    {
+      title: "Gravatar profile",
+      description: "The public Gravatar profile registered for an email address: display name, username, location and profile URL.",
+      inputSchema: z.object( { email: z.string().describe("Email address.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await gravatarProfile(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

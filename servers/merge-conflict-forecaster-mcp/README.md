@@ -48,3 +48,22 @@ npm test
 ```
 
 The tests create a temporary Git repository, make two branches edit the same file, verify the real overlap forecast, check malformed and out-of-root paths, and assert that private content, paths, branch names, commit messages, and authors do not appear in the returned result.
+
+<!-- paywall -->
+## Premium tools
+
+These tools need a license key:
+
+* `commit_cadence`
+* `object_store`
+
+Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-merge-conflict-forecaster-mcp and set it in your MCP client config:
+
+```json
+"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
+```
+
+The key is checked against MCP Marketplace, cached for 24 hours, and keeps
+working offline once one check has succeeded. Every other tool on this server
+stays free.
+<!-- /paywall -->

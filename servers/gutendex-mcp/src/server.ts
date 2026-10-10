@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_book, m0_search, m1_bookInfo, m1_searchBooks } from './api.js'
 
+import { m0_book, m0_search, m1_bookInfo, m1_searchBooks } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -58,5 +59,21 @@ server.registerTool(
     try { return text(await m1_bookInfo(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "browse_by_filter",
+    {
+      title: "Browse by filter",
+      description: "Browse the whole Project Gutenberg catalogue by language, topic or format - every English plain-text book about love, say - instead of searching titles.",
+      inputSchema: z.object( { language: z.string().describe("Language code, e.g. en or fr.").optional(), topic: z.string().describe("Topic slug, e.g. love or science.").optional(), mime_type: z.string().describe("text/plain, text/html or application/epub+zip.").optional(), limit: z.number().describe("Max books, 1 to 32.").optional(), page: z.number().describe("Page number.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: browse_by_filter ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_gutendex_browse_by_filter", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

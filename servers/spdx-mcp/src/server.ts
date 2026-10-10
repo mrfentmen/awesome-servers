@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { find, format, get, SpdxError } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -22,5 +23,19 @@ export function createServer() { const server = new McpServer({ name: "spdx-mcp"
       annotations: READ_ONLY,
     },
     async ({ id }) => { try { const x = await get(id); return text(x ? format([x]) : `No SPDX license named ${id}.`) } catch (e) { return textError(`Error: ${e instanceof Error ? e.message : String(e)}`) } }
+  ); server.registerTool(
+    "license_exceptions",
+    {
+      title: "License exceptions",
+      description: "Search the SPDX license exception list: named exceptions to license restrictions, with the example text each one covers.",
+      inputSchema: z.object( { query: z.string().min(1).describe("Search term, e.g. classpath or linking exception.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: license_exceptions ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_spdx_license_exceptions", args)) } catch (e) { return textError(String(e)) }
+  }
   ); return server }
 export { SpdxError }

@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { repo } from "./api.js"
-import { repos } from "./api.js"
 
+import { repo, repos } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,53 @@ export function createServer(): McpServer {
     try { return text(await repo(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "workspace",
+    {
+      title: "Workspace",
+      description: "A Bitbucket workspace's own record: its uuid, html link, whether it is private and whether privacy is enforced.",
+      inputSchema: z.object( { workspace: z.string().describe("Workspace slug, e.g. atlassian."), }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: workspace ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_bitbucket_workspace", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "repo_commits",
+    {
+      title: "Repo commits",
+      description: "A public Bitbucket repository's commit history, newest first, with author, date and short hash.",
+      inputSchema: z.object( { workspace: z.string().describe("Workspace slug."), repo: z.string().describe("Repository name."), limit: z.number().describe("Max commits.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: repo_commits ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_bitbucket_repo_commits", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "repo_pull_requests",
+    {
+      title: "Repo pull requests",
+      description: "A public Bitbucket repository's pull requests filtered by state, with author, branches and html link.",
+      inputSchema: z.object( { workspace: z.string().describe("Workspace slug."), repo: z.string().describe("Repository name."), state: z.string().describe("OPEN, MERGED, DECLINED, SUPERSEDED or ALL.").optional(), limit: z.number().describe("Max pull requests.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: repo_pull_requests ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_bitbucket_repo_pull_requests", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

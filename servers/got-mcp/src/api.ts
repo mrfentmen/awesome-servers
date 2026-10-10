@@ -61,3 +61,21 @@ export async function houses(args: ListArgs): Promise<string> {
       return `${i + 1}. ${s('name')} | ${s('region')} | words: ${s('words') || 'none'}`;
     }).join('\n');
 }
+
+// ---- muxC tools:
+
+const GOT_UA = "mrfentmen-got-mcp/1.0 (https://github.com/mrfentmen)"
+
+class GotError extends Error {}
+
+const GOT = "https://www.anapioficeandfire.com/api"
+
+async function gotPage(path: string, page: number): Promise<any[]> {
+  const p = Math.max(1, Math.min(page, 100))
+  const res = await fetch(`${GOT}${path}?page=${p}`, { headers: { "User-Agent": GOT_UA, Accept: "application/json" }, signal: AbortSignal.timeout(25000) })
+  if (!res.ok) throw new GotError(`The API of Ice and Fire returned ${res.status} for ${path}`)
+  const d = (await res.json()) as any
+  if (!Array.isArray(d)) throw new GotError(`The API of Ice and Fire returned no list for ${path}`)
+  return d
+}
+

@@ -1,6 +1,6 @@
 {
   "name": "tasmota-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Tasmota devices: status, power control. Local-first smart home.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/tasmota-mcp",

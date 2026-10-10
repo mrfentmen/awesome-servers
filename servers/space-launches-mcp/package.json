@@ -1,6 +1,6 @@
 {
   "name": "space-launches-mcp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Spaceflight launches, next launch, and astronauts.",
   "type": "module",
   "main": "dist/index.js",

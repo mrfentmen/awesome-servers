@@ -23,3 +23,24 @@ export async function trade(args: TradeArgs): Promise<string> {
   return `UN Comtrade preview for reporter ${reporter} in ${period} (${d.count ?? data.length} records, showing ${Math.min(limit, data.length)}):\n` +
     data.slice(0, limit).map((x, i) => `${i + 1}. [${x.cmdCode ?? '?'}] ${x.cmdDescE ?? '?'} | value: ${x.primaryValue ?? '?'} | weight: ${x.netWgt ?? '?'}`).join('\n');
 }
+
+// ---- muxC tools:
+
+interface ComtradeArea {
+  id?: number
+  text?: string
+  PartnerCode?: number
+  PartnerDesc?: string
+  PartnerCodeIsoAlpha2?: string
+  PartnerCodeIsoAlpha3?: string
+  isGroup?: boolean
+}
+
+interface ComtradeCode {
+  id?: string
+  text?: string
+  parent?: string
+  isLeaf?: string
+  aggrlevel?: number
+}
+

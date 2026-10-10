@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { formatArtist, formatRecording, formatRelease, getArtist, MusicBrainzError, searchArtists, searchRecordings, searchReleases } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -47,6 +48,38 @@ export function createServer(): McpServer {
     },
     async ({ id }) => { try { return text(formatArtist(await getArtist(id))) } catch (e) { return textError(error(e)) } }
   )
+  server.registerTool(
+    "search_release_groups",
+    {
+      title: "Search release groups",
+      description: "Search MusicBrainz release groups, which collapse an artist's records across editions and reissues in a way individual release searches cannot.",
+      inputSchema: z.object( { query: z.string().describe("Query, e.g. artist:radiohead."), limit: z.number().describe("Max results.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: search_release_groups ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_musicbrainz_search_release_groups", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "search_labels",
+    {
+      title: "Search labels",
+      description: "Search MusicBrainz record labels by name, with country and lifespan, which the artist, release and recording searches never touch.",
+      inputSchema: z.object( { query: z.string().describe("Label name, e.g. parlophone."), limit: z.number().describe("Max results.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: search_labels ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_musicbrainz_search_labels", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }
 export { MusicBrainzError }

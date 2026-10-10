@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatArticle, getArticle, LostMediaError, randomArticle, searchArticles } from "./api.js"
+import { formatArticle, getArticle, LostMediaError, randomArticle, searchArticles, recentChanges, browseCategories } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -72,6 +73,51 @@ export function createServer(): McpServer {
         const a = await getArticle(title)
         if (!a) return text(`Random pick: ${title}`)
         return text(formatArticle(a))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "recent_changes",
+    {
+      title: "Recent changes",
+      description: "The newest edits to Lost Media Wiki articles, with editor, timestamp, byte size change and edit summary.",
+      inputSchema: z.object({ limit: z.number().int().min(1).max(30).default(10) }),
+      annotations: READ_ONLY,
+    },
+    async ({ limit }) => {
+      // ---- paywall: recent_changes ----
+      const paywallMessage = await premiumRequired("recent_changes")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await recentChanges({ limit }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "browse_categories",
+    {
+      title: "Browse categories",
+      description: "List Lost Media Wiki categories whose name starts with a prefix, to explore how lost media is organised.",
+      inputSchema: z.object({
+        prefix: z.string().describe("Category name prefix, e.g. \"Lost\" or \"Lost films\""),
+        limit: z.number().int().min(1).max(50).default(25),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: browse_categories ----
+      const paywallMessage = await premiumRequired("browse_categories")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await browseCategories(args))
       } catch (e) {
         return textError(errorMessage(e))
       }

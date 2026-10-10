@@ -27,3 +27,18 @@ export async function markets(_args?: unknown): Promise<string> {
   return `Poloniex markets (${d.length}):\n` +
     d.slice(0, 30).map((m, i) => `${i + 1}. ${m.symbol ?? '?'} (${m.baseCurrency ?? ''}/${m.quoteCurrency ?? ''})`).join('\n');
 }
+
+// ---- muxB tools:
+
+export interface PriceCandlesArgs {
+  symbol: string;
+  interval?: string;
+  limit?: number;
+}
+
+export interface OrderBookArgs {
+  symbol: string;
+  depth_group?: number;
+  depth?: number;
+}
+

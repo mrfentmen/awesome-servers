@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { search } from "./api.js"
 
+import { search, publisherDatasets } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -21,5 +22,34 @@ export function createServer(): McpServer {
     try { return text(await search(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "dataset_detail",
+    {
+      title: "Dataset detail",
+      description: "One data.gov.uk dataset in full: its publisher, licence, state, version, dates, tags, vocabularies and every downloadable resource with its format, its resource id and whether the table can be queried. The search tool returns only a title, a truncated note and a date.",
+      inputSchema: z.object( { name: z.string().describe("The dataset slug, the part after data.gov.uk/dataset/.") } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: dataset_detail ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_data_gov_uk_dataset_detail", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "publisher_datasets",
+    {
+      title: "Publisher datasets",
+      description: "Everything one publisher has put on data.gov.uk: how many datasets the catalogue holds for it and each one with its name, licence, resource count and formats and the date its metadata last changed. The search tool does free text only and cannot filter to a publisher.",
+      inputSchema: z.object( { organization: z.string().describe("Publisher slug, the part after data.gov.uk/organisation/, e.g. open-data-ni. This is the name field, not the display title."), limit: z.number().describe("Max datasets, 1 to 25.").optional() } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await publisherDatasets(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

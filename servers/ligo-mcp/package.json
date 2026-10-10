@@ -1,6 +1,6 @@
 {
   "name": "ligo-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Keyless MCP server for LIGO gravitational-wave catalogs: events, masses, distances.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ligo-mcp",

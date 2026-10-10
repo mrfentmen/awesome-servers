@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatHit, formatMember, getMember, ParliamentError, searchMembers } from "./api.js"
 
+import { formatHit, formatMember, getMember, ParliamentError, searchMembers } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -54,6 +55,22 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "member_career",
+    {
+      title: "Member career",
+      description: "A UK Parliament member's full record: who they are, every constituency they have represented, their government and opposition posts, and their committee memberships.",
+      inputSchema: z.object( { id: z.string().describe("Numeric member id, e.g. 4380.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: member_career ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_ukparliament_member_career", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

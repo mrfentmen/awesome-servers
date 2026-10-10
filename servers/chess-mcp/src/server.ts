@@ -1,18 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  ChessError,
-  formatBoardRow,
-  formatGame,
-  formatPlayer,
-  formatStats,
-  getLeaderboards,
-  getPlayer,
-  getPlayerGames,
-  getPlayerStats,
-  getTitledPlayers,
-} from "./api.js"
 
+import { ChessError, formatBoardRow, formatGame, formatPlayer, formatStats, getLeaderboards, getPlayer, getPlayerGames, getPlayerStats, getTitledPlayers, titledPlayerLookup } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -128,6 +118,51 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "live_leaderboards",
+    {
+      title: "Live leaderboards",
+      description: "The live and puzzle chess.com leaderboards with records and trends, covering the groups the plain daily board misses.",
+      inputSchema: z.object( { group: z.string().describe("One board, e.g. live_blitz, tactics, rush, battle. Omit for all live groups.").optional(), limit: z.number().describe("Rows per group.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: live_leaderboards ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_chess_live_leaderboards", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "board_records",
+    {
+      title: "Board records",
+      description: "One chess.com leaderboard with per player win, loss and draw records, score and rank trend, plus the aggregate across the rows.",
+      inputSchema: z.object( { group: z.string().describe("live_rapid, live_blitz, live_bullet, daily960, tactics, rush, battle and the rest."), limit: z.number().describe("Max rows.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: board_records ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_chess_board_records", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "titled_player_lookup",
+    {
+      title: "Titled player lookup",
+      description: "Check whether a player holds a given title and where their username sits in that title list.",
+      inputSchema: z.object( { title: z.string().describe("Title, e.g. GM, IM, WGM."), player: z.string().describe("Username to look for.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await titledPlayerLookup(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

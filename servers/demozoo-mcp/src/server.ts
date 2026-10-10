@@ -1,15 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  DemozooError,
-  formatProduction,
-  formatReleaser,
-  formatSummary,
-  getProduction,
-  getReleaser,
-  searchProductions,
-} from "./api.js"
 
+import { DemozooError, formatProduction, formatReleaser, formatSummary, getProduction, getReleaser, searchProductions, referenceCatalogue, partiesAndScenes } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -83,6 +76,64 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "reference_catalogue",
+    {
+      title: "Reference catalogue",
+      description: "The Demozoo taxonomies used to classify productions: every production type with its supertype, and every platform, optionally filtered by name.",
+      inputSchema: z.object( { include_platforms: z.boolean().describe("Include the platform list.").optional(), search: z.string().describe("Name fragment.").optional(), limit: z.number().describe("Max rows per list.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await referenceCatalogue(args)) } catch (e) { return textError(e instanceof Error ? `Error: ${e.message}` : String(e)) }
+  }
+  )
+
+  server.registerTool(
+    "parties_and_scenes",
+    {
+      title: "Parties and scenes",
+      description: "Browse Demozoo demoparty records: parties with dates, locations, organisers and websites, party series, or bulletin board systems with their location coordinates.",
+      inputSchema: z.object( { kind: z.string().describe("parties, party_series or bbses.").optional(), query: z.string().describe("Name fragment.").optional(), limit: z.number().describe("Max records.").optional(), start_year: z.number().describe("Only records from this year onwards.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await partiesAndScenes(args)) } catch (e) { return textError(e instanceof Error ? `Error: ${e.message}` : String(e)) }
+  }
+  )
+
+  server.registerTool(
+    "releaser_productions",
+    {
+      title: "Releaser productions",
+      description: "Every production credited to a Demozoo releaser or group, with authors, release dates, platforms and types, plus a platform usage breakdown for that releaser.",
+      inputSchema: z.object( { releaser_id: z.number().describe("Demozoo releaser id, e.g. 43417."), limit: z.number().describe("Max productions.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: releaser_productions ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_demozoo_releaser_productions", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "platform_productions",
+    {
+      title: "Platform productions",
+      description: "Browse the Demozoo production archive by platform, resolving a platform name or id from the catalogue of 94 platforms and listing matching productions with authors and release dates.",
+      inputSchema: z.object( { platform: z.string().describe("Platform name or id, e.g. Amiga AGA or 6."), limit: z.number().describe("Max productions.").optional(), start_year: z.number().describe("Only productions released in this year or later.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: platform_productions ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_demozoo_platform_productions", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

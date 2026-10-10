@@ -41,3 +41,40 @@ export async function search(args: SearchArgs): Promise<string> {
   }
   return out.join('\n');
 }
+
+// ---- muxB tools:
+
+async function streamEvents(query: string, wanted: string): Promise<Array<Record<string, unknown>>> {
+  const q = encodeURIComponent(`context:global ${query}`);
+  const res = await fetch(`${BASE}?q=${q}`, {
+    headers: { 'User-Agent': 'mrfentmen-sourcegraph-mcp/1.0', Accept: 'text/event-stream' },
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!res.ok) throw new Error(`Sourcegraph returned ${res.status}`);
+  const text = await res.text();
+  const matches: Array<Record<string, unknown>> = [];
+  for (const block of text.split('\n\n')) {
+    const lines = block.split('\n');
+    if (lines[0] !== `event: ${wanted}`) continue;
+    const dataLine = lines.find((l) => l.startsWith('data: '));
+    if (!dataLine) continue;
+    try {
+      const arr = JSON.parse(dataLine.slice(6)) as Array<Record<string, unknown>>;
+      matches.push(...arr);
+    } catch {
+      /* skip malformed event */
+    }
+  }
+  return matches;
+}
+
+export interface SearchReposArgs {
+  query: string;
+  limit?: number;
+}
+
+export interface SearchPathsArgs {
+  query: string;
+  limit?: number;
+}
+

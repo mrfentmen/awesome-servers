@@ -20,3 +20,19 @@ export async function template(args: TemplateArgs): Promise<string> {
   const lines = text.split('\n').filter(Boolean);
   return `Gitignore template "${name}" (${lines.length} lines):\n\`\`\`\n${lines.slice(0, 60).join('\n')}\n${lines.length > 60 ? `\n... ${lines.length - 60} more lines` : ''}\n\`\`\``;
 }
+
+// ---- muxB tools:
+async function rawTemplate(path: string): Promise<string> {
+  const res = await fetch(`${BASE}/${path}`, {
+    headers: { 'User-Agent': UA, Accept: 'text/plain' },
+    signal: AbortSignal.timeout(20000),
+  })
+  if (res.status === 404) throw new Error(`Toptal gitignore returned 404 for ${path}`)
+  if (!res.ok) throw new Error(`Toptal gitignore returned ${res.status}`)
+  const body = await res.text()
+  if (!body.trim() || body.includes('The specified template(s) were not found')) {
+    throw new Error(`No gitignore template for "${path}". Use list_templates to see the names.`)
+  }
+  return body
+}
+

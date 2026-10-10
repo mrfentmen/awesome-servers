@@ -50,3 +50,6 @@ export async function character(args: IdArgs): Promise<string> {
     quotes.length ? `Quote: "${String(quotes[0])}"` : '',
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxC tools:
+

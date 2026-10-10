@@ -88,3 +88,24 @@ export function formatMember(m: MemberDetails): string {
   ].filter(Boolean)
   return lines.join("\n")
 }
+
+// ---- muxC tools:
+
+interface ParlBiography {
+  value?: {
+    id?: number
+    nameDisplayAs?: string
+    nameListAs?: string
+    latestParty?: { name?: string }
+    mostRecentConstituency?: { name?: string }
+    dateOfBirth?: string
+    dateOfDeath?: string
+    gender?: string
+    representations?: Array<{ name?: string; house?: number; startDate?: string; endDate?: string; party?: { name?: string }; partyId?: number }>
+  }
+}
+
+interface ParlContact {
+  value?: Array<{ contactType?: string; value?: string }>
+}
+

@@ -30,3 +30,6 @@ export async function matches(args: { pattern?: string; input?: string; limit?: 
     return `${i + 1}. "${m[0]}" at ${m.index}${groups}`
   }).join("\n")
 }
+
+// ---- muxC tools:
+

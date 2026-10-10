@@ -28,3 +28,18 @@ export async function dateDiff(args: { start?: string; end?: string }): Promise<
   const remDays = Math.abs(days) % 7
   return `${start} to ${end}:\n${Math.abs(days)} day(s) apart${weeks ? ` (${weeks} week(s) and ${remDays} day(s))` : ""}${days < 0 ? " (end before start)" : ""}`
 }
+
+// ---- muxA tools:
+// The existing tools read the clock, convert one timestamp and measure the gap
+// between two dates. These answer calendar questions about one date and do
+// calendar aware arithmetic on it. Both are pure computation with no network.
+
+export interface WeekInfoArgs {
+  date?: string;
+}
+
+export interface AddDurationArgs {
+  start?: string;
+  duration?: string;
+}
+

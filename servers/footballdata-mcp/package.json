@@ -1,5 +1,5 @@
 {
-  "name": "footballdata-mcp",
+  "name": "@mrfentmen/footballdata-mcp",
   "version": "1.0.0",
   "description": "MCP server for football-data.org: soccer competitions, teams, matches. Free key.",
   "type": "module",

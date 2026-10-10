@@ -26,3 +26,138 @@ export async function allProducts(args: Record<string, never>): Promise<string> 
   if (!d?.length) return "No products"
   return `Tracked products (${d.length}):\n${d.slice(0, 60).join(", ")}${d.length > 60 ? ", ..." : ""}`
 }
+
+// ---- muxA tools:
+interface EolV1Release {
+  name?: string
+  codename?: string | null
+  label?: string
+  releaseDate?: string | null
+  isLts?: boolean | null
+  ltsFrom?: string | null
+  isEoas?: boolean | null
+  eoasFrom?: string | null
+  isEol?: boolean | null
+  eolFrom?: string | null
+  isEoes?: boolean | null
+  eoesFrom?: string | null
+  latest?: { name?: string; date?: string; link?: string } | null
+}
+
+interface EolV1Labels {
+  eoas?: string | null
+  eol?: string | null
+  eoes?: string | null
+  discontinued?: string | null
+}
+
+interface EolV1Product {
+  name?: string
+  aliases?: string[]
+  label?: string
+  category?: string
+  tags?: string[]
+  uri?: string
+  versionCommand?: string | null
+  labels?: EolV1Labels | null
+  links?: { html?: string; icon?: string; releasePolicy?: string } | null
+  releases?: EolV1Release[]
+}
+
+interface EolV1IndexEntry {
+  name?: string
+  aliases?: string[]
+  label?: string
+  category?: string
+  tags?: string[]
+}
+
+// Every v1 route wraps its payload in this envelope, so the result has to be
+// unwrapped before any field can be read.
+interface EolV1Envelope<T> {
+  total?: number
+  result?: T
+}
+
+// The v0 routes the existing tools use answer JSON for unknown products, but
+// every v1 route answers 404 with an HTML error page, so json() would raise a
+// parse error instead of something a caller can read. This wrapper turns each
+// miss into a plain message before any body is parsed.
+async function eolApi<T>(path: string, missing: string): Promise<EolV1Envelope<T>> {
+  const res = await fetch(`${BASE}/v1${path}`, {
+    headers: { "User-Agent": UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(20000),
+  })
+  if (res.status === 404) throw new EolError(missing)
+  if (res.status === 429) throw new EolError("endoflife.date rate limit hit, wait and retry")
+  if (!res.ok) throw new EolError(`endoflife.date error ${res.status}`)
+  return (await res.json()) as EolV1Envelope<T>
+}
+
+// Day numbers rather than Date objects, so the arithmetic cannot drift with
+// the host timezone.
+
+// Products name their own support stages, for instance Node.js calls the EOL
+// stage "Security Support" while Ubuntu calls it "Maintenance & Security
+// Support", so the label is read from the product instead of assumed.
+
+// The cycle label usually already contains the cycle name, either exactly
+// ("25") or with extra words after it ("20 (LTS)"), so the name is only added
+// back when the label does not carry it.
+
+export async function productSearch(args: { query?: string; category?: string; tag?: string; limit?: number }): Promise<string> {
+  const index = await eolApi<EolV1IndexEntry[]>("/products", "endoflife.date had no product index to read")
+  const all = index.result ?? []
+  if (!all.length) return "endoflife.date returned an empty product index."
+  const limit = Math.max(1, Math.min(Math.trunc(args.limit ?? 25) || 25, 100))
+  const wanted = (args.query ?? "").trim().toLowerCase()
+  const category = (args.category ?? "").trim().toLowerCase()
+  const tag = (args.tag ?? "").trim().toLowerCase()
+
+  if (!wanted && !category && !tag) {
+    const counts = new Map<string, number>()
+    for (const entry of all) {
+      const key = entry.category ?? "uncategorised"
+      counts.set(key, (counts.get(key) ?? 0) + 1)
+    }
+    const rows = [...counts.entries()].sort((a, b) => b[1] - a[1])
+    return [
+      `${index.total ?? all.length} tracked products across ${rows.length} categories:`,
+      ...rows.map(([name, count]) => `    ${name.padEnd(14)} ${count}`),
+      "",
+      "  Pass query, category or tag to narrow this down.",
+    ].join("\n")
+  }
+
+  const matched = all.filter((entry) => {
+    if (category && (entry.category ?? "").toLowerCase() !== category) return false
+    if (tag && !(entry.tags ?? []).some((value) => value.toLowerCase() === tag)) return false
+    if (!wanted) return true
+    const haystack = [entry.name, entry.label, ...(entry.aliases ?? []), ...(entry.tags ?? [])]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+    return haystack.includes(wanted)
+  })
+
+  if (!matched.length) {
+    const filters = [wanted && `"${args.query}"`, category && `category ${category}`, tag && `tag ${tag}`].filter(Boolean)
+    return `No product matched ${filters.join(" and ")}. endoflife.date tracks ${index.total ?? all.length} products.`
+  }
+
+  const shown = matched.slice(0, limit)
+  const lines = [`Products matching ${[wanted && `"${args.query}"`, category && `category ${category}`, tag && `tag ${tag}`].filter(Boolean).join(" and ")} (${matched.length} of ${index.total ?? all.length}):`]
+  for (const entry of shown) {
+    const alias = entry.aliases?.length ? `  (${entry.aliases.join(", ")})` : ""
+    lines.push(
+      `    ${(entry.name ?? "?").padEnd(24)} ${(entry.label ?? "").padEnd(28)} ${(entry.category ?? "?").padEnd(11)}${alias}`,
+    )
+  }
+  if (matched.length > shown.length) lines.push(`  ${matched.length - shown.length} more not shown, raise limit to see them.`)
+  lines.push(
+    "",
+    "  Filtering happens in this tool: the products endpoint ignores a category or tag query parameter and always returns all products.",
+  )
+  return lines.join("\n")
+}
+

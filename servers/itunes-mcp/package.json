@@ -1,6 +1,6 @@
 {
   "name": "itunes-mcp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "iTunes Search API: apps, podcasts, and media.",
   "type": "module",
   "main": "dist/index.js",

@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { rhymes } from "./api.js"
 
+import { rhymes } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -21,5 +22,21 @@ export function createServer(): McpServer {
     try { return text(await rhymes(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "pronunciation",
+    {
+      title: "Pronunciation",
+      description: "How a word is pronounced: Arpabet respelling, IPA, syllable count and frequency rank from RhymeBrain.",
+      inputSchema: z.object( { word: z.string().describe("Word to pronounce.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: pronunciation ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_rhymebrain_pronunciation", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

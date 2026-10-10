@@ -1,6 +1,6 @@
 {
   "name": "liquipedia-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Keyless Liquipedia esports wiki: search pages, read articles, recent changes, categories, backlinks.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/liquipedia-mcp",

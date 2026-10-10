@@ -1,6 +1,6 @@
 {
   "name": "git-reflog-archaeologist-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Aggregate local Git reflog and recovery signals without exposing repository content. Tools include reflog signals, recovery signals, stash signals",
   "type": "module",
   "mcpName": "io.github.mrfentmen/git-reflog-archaeologist-mcp",

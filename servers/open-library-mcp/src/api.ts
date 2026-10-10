@@ -9,10 +9,6 @@ const headers = { "User-Agent": "mrfentmen-open-library-mcp/1.0 (https://github.
 
 class OpenLibraryError extends Error {}
 
-
-
-
-
 async function request<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, { headers, signal: AbortSignal.timeout(20000) })
   if (!res.ok) throw new OpenLibraryError(`Open Library error ${res.status}`)
@@ -132,3 +128,14 @@ export const m0_formatBook = m0.formatBook;
 export const m1_IsbnError = m1.IsbnError;
 export const m1_validate = m1.validate;
 export const m1_lookup = m1.lookup;
+
+// ---- muxC tools:
+
+interface OlWorkEntry {
+  key?: string
+  title?: string
+  first_publish_date?: string
+  subjects?: string[]
+  covers?: number[]
+}
+

@@ -37,3 +37,38 @@ export async function anagramsOf(args: { word?: string; limit?: number }): Promi
   }
   return `${word}: ${out.length} rearrangements\n${out.join(", ")}`
 }
+
+// ---- muxA tools:
+
+export interface GroupArgs {
+  words: string
+}
+
+export interface PhraseArgs {
+  phrase: string
+  limit?: number
+}
+
+export interface ProfileArgs {
+  text: string
+}
+
+export async function letterProfile(args: ProfileArgs): Promise<string> {
+  const text = (args.text ?? '').trim()
+  if (!text) throw new AnagramError('Provide the text to profile.')
+  const letters = canon(text)
+  if (!letters) throw new AnagramError('That text has no letters to profile.')
+  const counts = new Map<string, number>()
+  for (const ch of letters) counts.set(ch, (counts.get(ch) ?? 0) + 1)
+  const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  const vowels = 'aeiou'.split('').reduce((s, ch) => s + (counts.get(ch) ?? 0), 0)
+  const doubles = ranked.filter(([, n]) => n > 1).map(([ch, n]) => `${ch}${n}`)
+  return [
+    `Letter profile of "${text.length} character(s)": ${letters.length} letter(s), ${counts.size} distinct.`,
+    `Vowels ${vowels} (${Math.round((vowels / letters.length) * 100)}%) | consonants ${letters.length - vowels}`,
+    `Most frequent: ${ranked.slice(0, 5).map(([ch, n]) => `${ch} ${n}`).join(', ')}`,
+    `Repeated letters: ${doubles.length ? doubles.join(', ') : 'none'}`,
+    `Anagram signature: ${letters.split('').sort().join('')}`,
+    'Only a-z letters are counted, so accents and digits are ignored.',
+  ].join('\n')
+}

@@ -41,3 +41,50 @@ export async function scaleNotes(args: { root?: string; scale?: string }): Promi
   const notes = intervals.map((iv) => NOTES[(r + iv) % 12])
   return `${root} ${scale}: ${notes.join(" - ")}`
 }
+
+// ---- muxA tools:
+
+const INTERVAL_NAMES = [
+  "unison", "minor 2nd", "major 2nd", "minor 3rd", "major 3rd", "perfect 4th",
+  "tritone", "perfect 5th", "minor 6th", "major 6th", "minor 7th", "major 7th",
+  "octave",
+]
+
+// The 17 standard key signatures, by tonic spelling. A key signature is really
+// a position on the circle of fifths, so a key is stored as a signed accidental
+// count: positive is sharps, negative is flats.
+const MAJOR_SHARPS_BY_NAME: Record<string, number> = {
+  C: 0, G: 1, D: 2, A: 3, E: 4, B: 5, "F#": 6, "C#": 7, "D#": 9, "A#": 10,
+  F: -1, Bb: -2, Eb: -3, Ab: -4, Db: -5, Gb: -6,
+}
+
+// Same thing indexed by pitch class, for tonics the name table does not cover.
+const MAJOR_SHARPS_BY_CLASS: Record<number, number> = {
+  5: -1, 0: 0, 7: 1, 2: 2, 9: 3, 4: 4, 11: 5, 6: 6, 1: 7, 8: 8, 3: 9, 10: 10,
+}
+
+const SHARP_ORDER = ["F", "C", "G", "D", "A", "E", "B"]
+const FLAT_ORDER = ["B", "E", "A", "D", "G", "C", "F"]
+
+function sharpsForMajor(root: string, pitchClass: number): number {
+  const named = MAJOR_SHARPS_BY_NAME[root]
+  if (named !== undefined) return named
+  const byClass = MAJOR_SHARPS_BY_CLASS[pitchClass]
+  // Beyond the standard signatures the count keeps climbing by fifths; say so
+  // rather than inventing a signature nobody uses.
+  if (byClass === undefined) {
+    throw new ChordError(`No standard key signature for ${root}. Try a tonic like C#, F# or Bb.`)
+  }
+  return byClass
+}
+
+function accidentals(count: number): string {
+  if (count === 0) return "none"
+  const order = count > 0 ? SHARP_ORDER : FLAT_ORDER
+  return order.slice(0, Math.abs(count)).map((n) => `${n}${count > 0 ? "#" : "b"}`).join(" ")
+}
+
+function spell(index: number): string {
+  return NOTES[((index % 12) + 12) % 12]
+}
+

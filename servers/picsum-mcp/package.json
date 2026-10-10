@@ -1,6 +1,6 @@
 {
   "name": "picsum-mcp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Keyless MCP server for Picsum: placeholder photos, author info, deterministic image URL builder.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/picsum-mcp",

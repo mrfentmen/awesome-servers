@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { convert } from "./api.js"
+import { convert, convertUrl, extractLinks } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -21,5 +22,39 @@ export function createServer(): McpServer {
     try { return text(await convert(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "convert_url",
+    {
+      title: "Convert url",
+      description: "Fetch a page over http or https and convert it to markdown, so a web page can be read as clean text without a copy-paste step.",
+      inputSchema: z.object( { url: z.string().describe("Page url, e.g. https://example.com/article."), max_length: z.number().describe("Max markdown characters.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: convert_url ----
+    const paywallMessage = await premiumRequired("convert_url")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await convertUrl(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "extract_links",
+    {
+      title: "Extract links",
+      description: "List every outbound link and image on a page, split into internal and external, resolved against the page url so relative hrefs become absolute.",
+      inputSchema: z.object( { url: z.string().describe("Page url."), limit: z.number().describe("Max links per group.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: extract_links ----
+    const paywallMessage = await premiumRequired("extract_links")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await extractLinks(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { books } from "./api.js"
-import { chapters } from "./api.js"
 
+import { books, chapters } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,37 @@ export function createServer(): McpServer {
     try { return text(await chapters(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "gateway_page",
+    {
+      title: "Gateway page",
+      description: "A Tolkien Gateway article rendered as plain text: characters, places, peoples, items and books of Middle-earth.",
+      inputSchema: z.object( { title: z.string().max(120).describe("Tolkien Gateway page title, e.g. Gandalf."), maxChars: z.number().int().min(200).max(6000).default(1200) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: gateway_page ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_lotr_gateway_page", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "gateway_categories",
+    {
+      title: "Gateway categories",
+      description: "The Tolkien Gateway categories a page belongs to, which is how the wiki sorts characters by appearance, era and work.",
+      inputSchema: z.object( { title: z.string().max(120).describe("Tolkien Gateway page title, e.g. Gandalf."), limit: z.number().int().min(1).max(100).default(20) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: gateway_categories ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_lotr_gateway_categories", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

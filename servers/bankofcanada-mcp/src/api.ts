@@ -38,3 +38,8 @@ export async function list(_args?: unknown): Promise<string> {
   return `Available FX series (${keys.length}):\n` +
     keys.slice(0, 20).map((k, i) => `${i + 1}. ${k} - ${String(series[k].label ?? '')}`).join('\n');
 }
+
+// ---- muxC tools:
+
+class BocError extends Error {}
+

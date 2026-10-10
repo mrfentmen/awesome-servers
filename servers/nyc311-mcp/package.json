@@ -1,6 +1,6 @@
 {
   "name": "nyc311-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Use this MCP server to NYC 311 public service request search and aggregate civic data. Tools include search requests, count requests",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nyc311-mcp",

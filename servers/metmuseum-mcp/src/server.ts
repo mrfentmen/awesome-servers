@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_formatObject, m0_getDepartments, m0_getObject, m0_MetError, m0_searchObjects, m1_object, m1_search } from './api.js'
 
+import { m0_formatObject, m0_getDepartments, m0_getObject, m0_MetError, m0_searchObjects, m1_object, m1_search } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -89,5 +90,37 @@ server.registerTool(
     try { return text(await m1_object(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "objects_in_department",
+    {
+      title: "Objects in department",
+      description: "The object ids held by a Met department, which is how you enumerate a department's whole catalogue before fetching individual records.",
+      inputSchema: z.object( { department: z.number().describe("Department id, e.g. 12 for European Paintings."), limit: z.number().describe("Max ids.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: objects_in_department ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_metmuseum_objects_in_department", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "objects_with_images",
+    {
+      title: "Objects with images",
+      description: "Search The Met for objects that actually have a photograph, returning each hit's title, artist and date, which the plain text search cannot filter for.",
+      inputSchema: z.object( { query: z.string().describe("Search terms, e.g. violin."), limit: z.number().describe("Max objects.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: objects_with_images ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_metmuseum_objects_with_images", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
   return server
 }

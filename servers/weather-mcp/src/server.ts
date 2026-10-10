@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_earthquakes, m0_femaDisasters, m0_forecast, m1_activeAlerts, m1_alertsForPoint } from './api.js'
+import { m0_earthquakes, m0_femaDisasters, m0_forecast, m1_activeAlerts, m1_alertsForPoint, alertsForArea, disastersByState } from './api.js'
+import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -70,5 +71,39 @@ server.registerTool(
     try { return text(await m1_alertsForPoint(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "alerts_for_area",
+    {
+      title: "Alerts for area",
+      description: "Active National Weather Service alerts for a whole US state or territory, with severity, urgency and affected area, which a point lookup cannot return.",
+      inputSchema: z.object( { area: z.string().describe("Two letter state code, e.g. CA."), limit: z.number().describe("Max alerts.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: alerts_for_area ----
+    const paywallMessage = await premiumRequired("alerts_for_area")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await alertsForArea(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "disasters_by_state",
+    {
+      title: "Disasters by state",
+      description: "FEMA disaster declarations filtered to a single state, newest first, which the national disaster list cannot narrow down.",
+      inputSchema: z.object( { state: z.string().describe("Two letter state code, e.g. CA."), limit: z.number().describe("Max declarations.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: disasters_by_state ----
+    const paywallMessage = await premiumRequired("disasters_by_state")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await disastersByState(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

@@ -1,13 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  errorMessage,
-  autocompleteStop,
-  reverseGeocode,
-  getDepartures,
-  planTrip,
-} from "./api.js"
 
+import { errorMessage, autocompleteStop, reverseGeocode, getDepartures, planTrip } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -100,6 +95,54 @@ export function createServer(): McpServer {
         return textError(errorMessage(e));
       }
     }
+  )
+
+  server.registerTool(
+    "quays_nearby",
+    {
+      title: "Quays nearby",
+      description: "Every Entur quay within a radius of a latitude and longitude, each with its real distance in metres, which is how you find the stop ids the other tools need.",
+      inputSchema: z.object( { latitude: z.number().describe("Latitude, -90 to 90."), longitude: z.number().describe("Longitude, -180 to 180."), radius: z.number().describe("Radius in metres, up to 20000.").optional(), limit: z.number().describe("Max quays.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: quays_nearby ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_entur_quays_nearby", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "stop_details",
+    {
+      title: "Stop details",
+      description: "One Entur stop place in full: transport modes, tariff zones, and every quay with its public code, stop type and wheelchair accessibility.",
+      inputSchema: z.object( { stopId: z.string().describe("Stop place id, e.g. NSR:StopPlace:58366."), }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: stop_details ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_entur_stop_details", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "service_alerts",
+    {
+      title: "Service alerts",
+      description: "Live service disruptions across Norway's transport network, optionally narrowed to one Entur severity level.",
+      inputSchema: z.object( { severity: z.string().describe("verySevere, severe, unknownSeverity, normal or verySlight.").optional(), limit: z.number().describe("Max alerts.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: service_alerts ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_entur_service_alerts", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

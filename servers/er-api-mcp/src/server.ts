@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_convert, m0_latest, m1_history, m1_latest } from './api.js'
 
+import { m0_convert, m0_latest, m1_history, m1_latest } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -46,5 +47,21 @@ server.registerTool(
     try { return text(await m1_history(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "currency_list",
+    {
+      title: "Currency list",
+      description: "Every currency the free ExchangeRate API covers with its name and current rate against USD, or filtered by code or name.",
+      inputSchema: z.object( { search: z.string().describe("Filter by code or name, e.g. yen or JPY.").optional(), limit: z.number().describe("Max currencies.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: currency_list ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_er_api_currency_list", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

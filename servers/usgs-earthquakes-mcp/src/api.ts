@@ -19,7 +19,6 @@ export interface m2_Quake {
 const m0 = (() => {
 const BASE = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson';
 
-
 async function recent(args: m0_RecentArgs = {}): Promise<string> {
   const res = await fetch(BASE, {
     headers: { 'User-Agent': 'mrfentmen-usgs-earthquakes-mcp/1.0', Accept: 'application/json' },
@@ -117,7 +116,6 @@ const QUERY = "https://earthquake.usgs.gov/fdsnws/event/1/query"
 
 class UsgsError extends Error {}
 
-
 function mapFeature(f: any): m2_Quake {
   const p = f.properties ?? {}
   const c = f.geometry?.coordinates ?? []
@@ -186,3 +184,20 @@ export const m2_queryQuakes = m2.queryQuakes;
 export const m2_UsgsError = m2.UsgsError;
 export const m2_formatQuake = m2.formatQuake;
 export const m2_latestQuakes = m2.latestQuakes;
+
+// ---- muxB tools:
+
+const FDSN = 'https://earthquake.usgs.gov/fdsnws/event/1/query'
+
+export interface NearbyQuakesArgs {
+  lat?: number
+  lon?: number
+  radiusKm?: number
+  minMagnitude?: number
+  limit?: number
+}
+
+export interface EventDetailArgs {
+  eventId: string
+}
+

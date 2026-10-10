@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_formatAuthor, m0_formatBook, m0_formatWork, m0_getAuthor, m0_getEditions, m0_getWork, m0_OpenLibraryError, m0_searchBooks, m1_lookup, m1_validate } from './api.js'
 
+import { m0_formatAuthor, m0_formatBook, m0_formatWork, m0_getAuthor, m0_getEditions, m0_getWork, m0_OpenLibraryError, m0_searchBooks, m1_lookup, m1_validate } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -78,5 +79,37 @@ server.registerTool(
     try { return text(await m1_lookup(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "author_works",
+    {
+      title: "Author works",
+      description: "Every work an author has in Open Library, with publication dates and cover links - the author record itself only carries a work count.",
+      inputSchema: z.object( { author: z.string().describe("Open Library author key, e.g. OL45804A."), limit: z.number().describe("Max works.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: author_works ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_open_library_author_works", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "subject_works",
+    {
+      title: "Subject works",
+      description: "Browse an Open Library subject shelf such as science_fiction, listing the works and how many the subject holds in total.",
+      inputSchema: z.object( { subject: z.string().describe("Subject key, e.g. science_fiction."), limit: z.number().describe("Max works.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: subject_works ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_open_library_subject_works", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

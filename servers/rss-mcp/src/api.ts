@@ -73,3 +73,22 @@ export async function feedJson(args: { url?: string; limit?: number }): Promise<
       .map((item, i) => `${i + 1}. ${item.title ?? 'untitled'} | ${(item.pubDate ?? '').slice(0, 16)}${item.link ? `\n   ${item.link}` : ''}`)
       .join('\n');
 }
+
+// ---- muxC tools:
+
+const RSS_UA = "mrfentmen-rss-mcp/1.0 (https://github.com/mrfentmen)"
+
+class Rss2JsonError extends Error {}
+
+/** rss2json's count parameter needs a paid key, so ask for the default 10 and slice. */
+async function feed(rssUrl: string, limit: number): Promise<any> {
+  const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`, {
+    headers: { "User-Agent": RSS_UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(30000),
+  })
+  if (!res.ok) throw new Rss2JsonError(`rss2json returned ${res.status} for that feed`)
+  const d = (await res.json()) as any
+  if (d.status !== "ok") throw new Rss2JsonError(`rss2json could not read that feed: ${d.message ?? d.status}`)
+  return d
+}
+

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ukparliament-mcp",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Keyless MCP server for the UK Parliament Members API: MPs, Lords, parties, constituencies.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ukparliament-mcp",

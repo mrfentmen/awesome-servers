@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { extract, format, searchTitles } from "./api.js"
+import { extract, format, searchTitles, pageSummary, pageCategories } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -33,5 +34,39 @@ export function createServer() {
     try { return text(format(await extract(title, introOnly, maxCharacters))) } catch (error) { return errorText(error) }
   }
   )
+  server.registerTool(
+    "page_summary",
+    {
+      title: "Page summary",
+      description: "A readable lead summary of a Wikisource page: description, Wikidata item, last edit time, lead extract and link. Verify rights and edition before reuse.",
+      inputSchema: z.object( { title: z.string().min(1).max(300), maxCharacters: z.number().int().min(200).max(6000).default(1200) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: page_summary ----
+    const paywallMessage = await premiumRequired("page_summary")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await pageSummary(args)) } catch (error) { return errorText(error) }
+  }
+  )
+
+  server.registerTool(
+    "page_categories",
+    {
+      title: "Page categories",
+      description: "The categories a Wikisource text is filed under: year, author, genre, licence and transcription status.",
+      inputSchema: z.object( { title: z.string().min(1).max(300), limit: z.number().int().min(1).max(100).default(20) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: page_categories ----
+    const paywallMessage = await premiumRequired("page_categories")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await pageCategories(args)) } catch (error) { return errorText(error) }
+  }
+  )
+
   return server
 }

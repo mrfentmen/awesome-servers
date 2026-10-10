@@ -51,3 +51,31 @@ export function formatVulnerability(v: OsvVuln): string {
   ]
   return lines.filter(Boolean).join("\n")
 }
+
+// ---- muxB tools:
+
+type GhAdvisory = {
+  ghsa_id?: string
+  cve_id?: string | null
+  summary?: string
+  description?: string
+  severity?: string
+  cvss?: { score?: number; vector_string?: string }
+  cvss_severities?: { cvss_v3?: { base_score?: number; vector_string?: string }; cvss_v4?: { base_score?: number; vector_string?: string } }
+  cwes?: { cwe_id?: string; name?: string }[]
+  published_at?: string
+  updated_at?: string
+  html_url?: string
+  withdrawn_at?: string | null
+  vulnerabilities?: { package?: { ecosystem?: string; name?: string }; vulnerable_version_range?: string; first_patched_version?: { identifier?: string } | null }[]
+  references?: string[]
+}
+
+type DepsVersion = {
+  versionKey?: { version?: string }
+  publishedAt?: string
+  isDefault?: boolean
+  isDeprecated?: boolean
+  deprecatedReason?: string
+}
+

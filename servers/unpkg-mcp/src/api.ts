@@ -26,3 +26,34 @@ export async function info(args: PackageArgs): Promise<string> {
     s('repository') ? `Repo: ${s('repository').slice(0, 100)}` : '',
   ].filter(Boolean).join('\n') || `No data for ${name}.`;
 }
+
+// ---- muxB tools:
+
+interface UnpkgFile {
+  path?: string;
+  size?: number;
+  type?: string;
+  integrity?: string;
+}
+
+interface UnpkgMeta {
+  package?: string;
+  version?: string;
+  prefix?: string;
+  files?: UnpkgFile[];
+}
+
+export interface FilesArgs {
+  name: string;
+  version?: string;
+  path?: string;
+  limit?: number;
+}
+
+export interface ReadFileArgs {
+  name: string;
+  path: string;
+  version?: string;
+  max_bytes?: number;
+}
+

@@ -1,6 +1,6 @@
 {
   "name": "yugioh-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Use this MCP server to YGOPRODeck, Yu Gi Oh! cards, archetypes, and banlists. Tools include search cards, search by archetype, get card",
   "type": "module",
   "mcpName": "io.github.mrfentmen/yugioh-mcp",

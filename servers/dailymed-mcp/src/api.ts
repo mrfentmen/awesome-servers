@@ -47,3 +47,57 @@ export async function spl(args: { setId?: string }): Promise<string> {
   }
   return lines.join("\n")
 }
+
+// ---- muxA tools:
+interface DmIngredient {
+  name?: string
+  strength?: string
+}
+
+interface DmPackage {
+  ndc?: string
+  package_descriptions?: string[]
+}
+
+interface DmProduct {
+  product_name?: string
+  product_name_generic?: string
+  product_code?: string
+  active_ingredients?: DmIngredient[]
+  packaging?: DmPackage[]
+}
+
+interface DmPackagingData {
+  spl_version?: number
+  published_date?: string
+  title?: string
+  setid?: string
+  products?: DmProduct[]
+}
+
+interface DmHistoryData {
+  spl?: { title?: string; setid?: string }
+  history?: Array<{ spl_version?: number; published_date?: string }>
+}
+
+export async function drugNames(args: { query?: string; limit?: number }): Promise<string> {
+  const q = (args.query ?? "").trim()
+  if (!q) throw new DailymedError("Provide part of a drug name")
+  const limit = Math.max(1, Math.min(Math.trunc(args.limit ?? 10) || 10, 25))
+  const d = await get<{
+    data?: Array<{ name_type?: string; drug_name?: string }>
+    metadata?: { total?: number }
+  }>(`${BASE}/drugnames.json?drug_name=${encodeURIComponent(q)}&pagesize=${limit}`)
+  const list = d?.data ?? []
+  if (!list.length) return `DailyMed has no drug names matching "${q}".`
+  // DailyMed marks G for generic and B for brand; anything else is reported as
+  // unclassified rather than guessed at.
+  const kind = (t: string | undefined) =>
+    t === "G" ? "generic" : t === "B" ? "brand" : "unclassified"
+  return [
+    `DailyMed drug names matching "${q}" (${d?.metadata?.total ?? list.length} total, showing ${list.length}):`,
+    ...list
+      .slice(0, limit)
+      .map((n, i) => `      ${String(i + 1).padStart(2)}. [${kind(n.name_type)}] ${n.drug_name ?? "not reported"}`),
+  ].join("\n")
+}

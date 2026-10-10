@@ -56,3 +56,30 @@ export const timeline = m1.timeline;
 export const m0_radar = m0.radar;
 export const m1_timeline = m1.timeline;
 export const m1_RadarError = m1.RadarError;
+
+// ---- muxC tools:
+
+/**
+ * RainViewer serves radar as 256px XYZ tiles. The API only hands out the host
+ * and a frame path, so a client has to build the tile URL itself; this does the
+ * slippy-map maths from a latitude and longitude and reports the exact tiles.
+ */
+function lonToTileX(lon: number, zoom: number): number {
+  return Math.floor(((lon + 180) / 360) * 2 ** zoom)
+}
+
+function latToTileY(lat: number, zoom: number): number {
+  const clamped = Math.max(-85.05112878, Math.min(85.05112878, lat))
+  const rad = (clamped * Math.PI) / 180
+  return Math.floor(((1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2) * 2 ** zoom)
+}
+
+async function rainViewerMaps(): Promise<{ host: string; radar: Record<string, any[]> }> {
+  const res = await fetch("https://api.rainviewer.com/public/weather-maps.json", {
+    headers: { "User-Agent": "mrfentmen-rainviewer-mcp/1.0", Accept: "application/json" },
+    signal: AbortSignal.timeout(20000),
+  })
+  if (!res.ok) throw new RadarError(`RainViewer returned HTTP ${res.status}`)
+  return (await res.json()) as { host: string; radar: Record<string, any[]> }
+}
+

@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { table, rates, gold } from './api.js'
 
+import { table, rates, gold } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -45,5 +46,37 @@ export function createServer(): McpServer {
     try { return text(await gold(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "currency_rate",
+    {
+      title: "Currency rate",
+      description: "One currency's row inside a NBP table: its name, effective date and mid rate in PLN, without pulling the whole table.",
+      inputSchema: z.object( { code: z.string().describe("Three-letter code such as USD."), table: z.string().describe("NBP table A, B or C.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: currency_rate ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_nbp_currency_rate", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "rate_history",
+    {
+      title: "Rate history",
+      description: "A currency's mid rate in PLN over the last N NBP publishing days, with the change across the window.",
+      inputSchema: z.object( { code: z.string().describe("Three-letter code such as USD."), table: z.string().describe("NBP table A, B or C.").optional(), last: z.number().describe("How many publishing days, 1 to 90.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: rate_history ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_nbp_rate_history", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

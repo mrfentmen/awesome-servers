@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { search } from "./api.js"
 
+import { search, repoHeader } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -21,5 +22,34 @@ export function createServer(): McpServer {
     try { return text(await search(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "package_versions",
+    {
+      title: "Package versions",
+      description: "Every build F-Droid carries for one package: how many there are, how many distinct version names, the suggested version code, the version code range and the newest twenty builds by code. The search tool cannot reach this because the F-Droid search route it calls does not exist, so this is currently the only working route into the F-Droid API on this server.",
+      inputSchema: z.object( { package: z.string().describe("F-Droid package name, like org.fdroid.fdroid.") } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: package_versions ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_f_droid_package_versions", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "repo_header",
+    {
+      title: "Repository header",
+      description: "The F-Droid repository's own header: when the index was built, its format version, how long clients may cache it, the repository address and every mirror including the onion ones. It reads only the first 64 KB of the index with an HTTP Range request, so it does not download the 63 MB file.",
+      inputSchema: z.object( {  } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await repoHeader()) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

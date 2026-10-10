@@ -21,3 +21,23 @@ export async function user(args: UserArgs): Promise<string> {
     s('isBanned') === 'true' ? 'Status: banned' : 'Status: active',
   ].filter(Boolean).join('\n') || `No data for user ${id}.`;
 }
+
+// ---- muxC tools:
+
+const RBX_UA = "mrfentmen-roblox-mcp/1.0 (https://github.com/mrfentmen)"
+
+async function rbxJson(url: string, ms = 25000): Promise<any> {
+  const res = await fetch(url, { headers: { "User-Agent": RBX_UA, Accept: "application/json" }, signal: AbortSignal.timeout(ms) })
+  if (res.status === 404) throw new Error("Roblox has no such public record")
+  if (res.status === 429) throw new Error("Roblox is rate limiting this client")
+  if (!res.ok) throw new Error(`Roblox returned ${res.status} for ${url}`)
+  return await res.json()
+}
+
+function username(v: string | undefined): string {
+  const u = (v ?? "").trim()
+  if (!u) throw new Error("Provide a Roblox username")
+  if (!/^[A-Za-z0-9_]{3,20}$/.test(u)) throw new Error("A Roblox username is 3 to 20 letters, digits or underscores")
+  return u
+}
+

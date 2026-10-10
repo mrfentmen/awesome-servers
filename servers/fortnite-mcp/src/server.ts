@@ -1,15 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  errorMessage,
-  getBrNews,
-  getBrShop,
-  getMap,
-  getAes,
-  searchCosmetic,
-  getPlaylists,
-} from "./api.js"
 
+import { errorMessage, getBrNews, getBrShop, getMap, getAes, searchCosmetic, getPlaylists } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -130,6 +123,38 @@ export function createServer(): McpServer {
         return textError(errorMessage(e));
       }
     }
+  )
+
+  server.registerTool(
+    "cosmetics_by_type",
+    {
+      title: "Cosmetics by type",
+      description: "Browse Fortnite's br cosmetic catalogue by type (character, back, pickaxe, glider, wrap, emote, contrail) with rarity, price and set, which name search alone cannot enumerate.",
+      inputSchema: z.object( { type: z.string().describe("Cosmetic type, e.g. character or pickaxe."), limit: z.number().describe("Max cosmetics.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: cosmetics_by_type ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_fortnite_cosmetics_by_type", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "cosmetic_detail",
+    {
+      title: "Cosmetic detail",
+      description: "One Fortnite cosmetic's full record by id: type, rarity, v-buck price, set, and the season and chapter it was introduced in.",
+      inputSchema: z.object( { id: z.string().describe("Cosmetic id, e.g. Character_Squidward."), }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: cosmetic_detail ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_fortnite_cosmetic_detail", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

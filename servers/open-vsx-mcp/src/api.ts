@@ -82,3 +82,19 @@ export function formatExtension(e: ExtensionDetails): string {
   ].filter(Boolean)
   return lines.join("\n")
 }
+
+// ---- muxC tools:
+
+const VSX_UA = "mrfentmen-open-vsx-mcp/1.0 (https://github.com/mrfentmen)"
+
+async function vsx(path: string, ms = 25000): Promise<any> {
+  const res = await fetch(`https://open-vsx.org/api${path}`, { headers: { "User-Agent": VSX_UA, Accept: "application/json" }, signal: AbortSignal.timeout(ms) })
+  if (res.status === 404) throw new OpenVsxError("open-vsx.org has no such extension")
+  if (!res.ok) throw new OpenVsxError(`open-vsx.org returned ${res.status}`)
+  return await res.json()
+}
+
+function rows(d: any): any[] {
+  return d?.extensions ?? d?.results ?? []
+}
+

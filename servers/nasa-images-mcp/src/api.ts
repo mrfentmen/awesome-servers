@@ -23,3 +23,15 @@ export async function search(args: { query?: string; limit?: number }): Promise<
   })
   return `NASA media for \"${q}\" (${total} total, ${rows.length} shown):\n` + rows.join("\n")
 }
+
+// ---- muxC tools:
+
+async function nasaImagesJson<T>(path: string): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    headers: { "User-Agent": UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(30000),
+  })
+  if (!res.ok) throw new NasaImagesError(`NASA Images returned HTTP ${res.status}`)
+  return (await res.json()) as T
+}
+

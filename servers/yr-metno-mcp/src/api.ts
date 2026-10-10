@@ -121,3 +121,74 @@ export const nowcast = m0.nowcast;
 export const m0_nowcast = m0.nowcast;
 export const m0_forecast = m0.forecast;
 export const m1_forecast = m1.forecast;
+
+// ---- muxC tools:
+
+const METNO_UA = "mrfentmen-yr-metno-mcp/1.0 (https://github.com/mrfentmen)"
+const METNO_SUN = "https://api.met.no/weatherapi/sunrise/3.0/sun"
+
+class MetNoSunError extends Error {}
+
+function metNoPoint(args: { lat?: number; lon?: number }): { lat: number; lon: number } {
+  const lat = Number(args.lat)
+  const lon = Number(args.lon)
+  if (!Number.isFinite(lat) || lat < -90 || lat > 90) throw new MetNoSunError("Provide lat between -90 and 90")
+  if (!Number.isFinite(lon) || lon < -180 || lon > 180) throw new MetNoSunError("Provide lon between -180 and 180")
+  return { lat, lon }
+}
+
+/**
+ * MET Norway's sun product reports sunrise and sunset with their azimuths, plus
+ * solar noon and solar midnight with the sun's elevation, for a point and date.
+ * The forecast and nowcast feeds carry none of that.
+ */
+export async function sunTimes(args: { lat?: number; lon?: number; date?: string; offset?: string }): Promise<string> {
+  const { lat, lon } = metNoPoint(args)
+  const date = (args.date ?? "").trim() || new Date().toISOString().slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new MetNoSunError("Provide the date as YYYY-MM-DD")
+  // The API needs a UTC offset for the local times it reports.
+  const offset = (args.offset ?? "+00:00").trim()
+  if (!/^[+-]\d{2}:\d{2}$/.test(offset)) throw new MetNoSunError("Provide the UTC offset as +HH:MM, e.g. +02:00")
+  const url = `${METNO_SUN}?lat=${lat}&lon=${lon}&date=${date}&offset=${encodeURIComponent(offset)}`
+  const res = await fetch(url, {
+    headers: { "User-Agent": METNO_UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (!res.ok) throw new MetNoSunError(`MET Norway returned ${res.status} for ${date} at ${lat},${lon}`)
+  const d = (await res.json()) as {
+    when?: { interval?: [string, string] }
+    properties?: {
+      sunrise?: { time?: string; azimuth?: number }
+      sunset?: { time?: string; azimuth?: number }
+      solarnoon?: { time?: string; disc_centre_elevation?: number; visible?: boolean }
+      solarmidnight?: { time?: string; disc_centre_elevation?: number; visible?: boolean }
+    }
+  }
+  const p = d.properties ?? {}
+  if (!p.sunrise?.time && !p.sunset?.time) {
+    throw new MetNoSunError(`MET Norway reported no sunrise or sunset for ${date} at ${lat},${lon}, which is what it does inside the polar day or night.`)
+  }
+  const time = (v?: string): string => (v ? v.slice(11, 16) : "does not happen on this date")
+  const dayLength = (() => {
+    if (!p.sunrise?.time || !p.sunset?.time) return ""
+    const rise = Date.parse(p.sunrise.time)
+    const set = Date.parse(p.sunset.time)
+    if (!Number.isFinite(rise) || !Number.isFinite(set) || set <= rise) return ""
+    const mins = Math.round((set - rise) / 60000)
+    return `${Math.floor(mins / 60)}h ${String(mins % 60).padStart(2, "0")}m`
+  })()
+  return [
+    `Sun at ${lat}, ${lon} for ${date} (local time ${offset}, MET Norway):`,
+    `  Sunrise: ${time(p.sunrise?.time)}${p.sunrise?.azimuth != null ? ` at azimuth ${p.sunrise.azimuth} deg` : ""}`,
+    `  Sunset: ${time(p.sunset?.time)}${p.sunset?.azimuth != null ? ` at azimuth ${p.sunset.azimuth} deg` : ""}`,
+    dayLength ? `  Daylight: ${dayLength}` : null,
+    p.solarnoon?.time
+      ? `  Solar noon: ${time(p.solarnoon.time)} | sun ${p.solarnoon.disc_centre_elevation != null ? `${p.solarnoon.disc_centre_elevation} deg above the horizon` : "elevation not reported"}${p.solarnoon.visible === true ? " | sun visible" : p.solarnoon.visible === false ? " | sun hidden by the horizon" : ""}`
+      : null,
+    p.solarmidnight?.time
+      ? `  Solar midnight: ${time(p.solarmidnight.time)} | sun ${p.solarmidnight.disc_centre_elevation != null ? `${p.solarmidnight.disc_centre_elevation} deg above the horizon` : "elevation not reported"}${p.solarmidnight.visible === true ? " | sun visible" : p.solarmidnight.visible === false ? " | sun hidden by the horizon" : ""}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join("\n")
+}

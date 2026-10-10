@@ -1,15 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  DndError,
-  formatMonster,
-  formatSpell,
-  getClassInfo,
-  getMonster,
-  getSpell,
-  listMonsters,
-} from "./api.js"
 
+import { DndError, formatMonster, formatSpell, getClassInfo, getMonster, getSpell, listMonsters, listRaces } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -123,6 +116,51 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "list_spells",
+    {
+      title: "List spells",
+      description: "Browse the D&D 5e SRD spell list filtered by level, school, ritual or concentration, with optional text search, showing casting time, range and components metadata.",
+      inputSchema: z.object( { level: z.number().describe("Spell level 0 to 9.").optional(), school: z.string().describe("School name, e.g. evocation.").optional(), search: z.string().describe("Text to look for.").optional(), ritual_only: z.boolean().describe("Only ritual spells.").optional(), concentration_only: z.boolean().describe("Only concentration spells.").optional(), limit: z.number().describe("Max spells.").optional(), detail_limit: z.number().describe("Max spells expanded with full casting data.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: list_spells ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_dnd5e_list_spells", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "list_magic_items",
+    {
+      title: "List magic items",
+      description: "Browse the D&D 5e SRD magic item list, reading each item record for rarity, attunement requirement and equipment category, then filtering by rarity, attunement or name.",
+      inputSchema: z.object( { rarity: z.string().describe("Rarity, e.g. rare.").optional(), search: z.string().describe("Name fragment.").optional(), attunement: z.string().describe("required or none.").optional(), limit: z.number().describe("Max items scanned.").optional(), detail_limit: z.number().describe("Max item records to read.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: list_magic_items ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_dnd5e_list_magic_items", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "list_races",
+    {
+      title: "List races",
+      description: "List the D&D 5e SRD playable races and optionally fetch each full record with speed, size, darkvision, languages, subraces, ability score increases and trait descriptions.",
+      inputSchema: z.object( { include_details: z.boolean().describe("Fetch full race records.").optional(), trait_limit: z.number().describe("Max traits per race.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await listRaces(args)) } catch (e) { return textError(e instanceof Error ? `Error: ${e.message}` : String(e)) }
+  }
   )
 
   return server

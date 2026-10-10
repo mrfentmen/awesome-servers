@@ -75,3 +75,64 @@ export function formatPodcast(p: Podcast, index?: number): string {
   ].filter(Boolean)
   return lines.join("\n")
 }
+
+// ---- muxB tools:
+
+async function searchRows(query: string): Promise<Array<Record<string, unknown>>> {
+  const res = await fetch(`https://gpodder.net/search.json?q=${encodeURIComponent(query)}`, {
+    headers: { "User-Agent": "gpodder-mcp/1.0" },
+    signal: AbortSignal.timeout(20000),
+  })
+  if (!res.ok) throw new GpodderError(`gPodder error ${res.status}`)
+  const rows = (await res.json()) as unknown
+  return Array.isArray(rows) ? (rows as Array<Record<string, unknown>>) : []
+}
+
+export interface SearchHostsArgs {
+  query: string
+  limit?: number
+}
+
+export interface SearchOverlapArgs {
+  queries: string[]
+  limit?: number
+}
+
+export async function searchOverlap(args: SearchOverlapArgs): Promise<string> {
+  const queries = (args.queries ?? []).map((q) => (q ?? "").trim()).filter(Boolean).slice(0, 5)
+  if (queries.length < 2) return "Provide at least two search terms to compare."
+  const limit = Math.max(1, Math.min(Number(args.limit ?? 10) || 10, 20))
+  const sets = await Promise.all(queries.map(async (q) => ({ q, rows: await searchRows(q) })))
+  for (const { q, rows } of sets) {
+    if (!rows.length) return `No podcasts match "${q}", so there is nothing to compare.`
+  }
+  const index = new Map<string, { title: string; author: string; hits: string[]; subs: number }>()
+  const perQuery: string[] = []
+  for (const { q, rows } of sets) {
+    perQuery.push(`"${q}": ${rows.length} result(s)`)
+    for (const row of rows) {
+      const key = String(row.url ?? row.title ?? "").toLowerCase()
+      if (!key) continue
+      const entry = index.get(key) ?? {
+        title: String(row.title ?? "?"),
+        author: String(row.author ?? "not reported"),
+        hits: [],
+        subs: 0,
+      }
+      entry.hits.push(q)
+      if (typeof row.subscribers === "number") entry.subs = Math.max(entry.subs, row.subscribers)
+      index.set(key, entry)
+    }
+  }
+  const shared = [...index.values()].filter((e) => e.hits.length > 1).sort((a, b) => b.hits.length - a.hits.length || b.subs - a.subs)
+  const lines = [`Comparing ${queries.length} gPodder searches: ${perQuery.join("; ")}.`, ""]
+  if (!shared.length) {
+    lines.push(`No feed appears in more than one of the ${queries.length} result sets (${index.size} distinct feeds checked).`)
+    return lines.join("\n")
+  }
+  lines.push(`${shared.length} feed(s) appear in more than one result set:`)
+  shared.slice(0, limit).forEach((e, i) => {
+    lines.push(`${i + 1}. ${e.title} - ${e.author} | matched: ${e.hits.join(" + ")} | up to ${e.subs.toLocaleString("en-US")} subscribers`)
+  })
+  return lines.join("\n")
+}

@@ -27,3 +27,11 @@ export async function questions(args: QuestionsArgs): Promise<string> {
       })
       .join('\n');
 }
+
+// ---- muxB tools:
+const CATEGORIES = `${BASE.replace('/questions', '/categories')}`;
+
+export interface CategoriesArgs {
+  limit?: number;
+}
+

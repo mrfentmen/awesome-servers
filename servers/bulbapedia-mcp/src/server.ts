@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { BulbapediaError, formatArticle, getArticle, randomArticle, searchArticles } from "./api.js"
 
+import { BulbapediaError, formatArticle, getArticle, randomArticle, searchArticles, pageLinks } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -76,6 +77,51 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "page_details",
+    {
+      title: "Page details",
+      description: "Full page metadata for a Bulbapedia article beyond its intro text: page id, canonical URL, byte length, last touch and revision with editor, linked Wikidata item and every category the page sits in.",
+      inputSchema: z.object( { title: z.string().describe("Page title, e.g. Pikachu.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: page_details ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_bulbapedia_page_details", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "category_members",
+    {
+      title: "Category members",
+      description: "List the pages inside any Bulbapedia category, automatically adding the Category prefix, reporting how many members the API returned and whether more pages of results exist.",
+      inputSchema: z.object( { category: z.string().describe("Category name, e.g. Pokémon or Type:Electric."), limit: z.number().describe("Max members.").optional(), namespace: z.number().describe("Restrict to one namespace id.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: category_members ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_bulbapedia_category_members", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "page_links",
+    {
+      title: "Page links",
+      description: "Outbound wiki links and images used by a Bulbapedia page, with any redirect the title resolved through, useful for tracing how an article connects to the rest of the site.",
+      inputSchema: z.object( { title: z.string().describe("Page title, e.g. Pikachu."), limit: z.number().describe("Max links and images.").optional(), redirects: z.boolean().describe("Follow redirects.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await pageLinks(args)) } catch (e) { return textError(e instanceof Error ? `Error: ${e.message}` : String(e)) }
+  }
   )
 
   return server

@@ -21,3 +21,26 @@ export async function search(args: SearchArgs): Promise<string> {
   return `PLOS papers for "${query}" (total ${d.response?.numFound ?? docs.length}):\n` +
     docs.slice(0, limit).map((p, i) => `${i + 1}. ${p.title ?? '?'} (${String(p.publication_date ?? '').slice(0, 10)}) [${p.journal ?? '?'}]`).join('\n');
 }
+
+// ---- muxC tools:
+
+const PLOS_UA = "mrfentmen-plos-mcp/1.0"
+
+async function plosSearch(query: string, fl: string, rows: number): Promise<{ numFound?: number; docs?: Array<Record<string, unknown>> }> {
+  const url = `${BASE}?q=${encodeURIComponent(query)}&rows=${rows}&fl=${encodeURIComponent(fl)}`
+  const res = await fetch(url, {
+    headers: { "User-Agent": PLOS_UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (!res.ok) throw new Error(`PLOS returned ${res.status}`)
+  const d = (await res.json()) as { response?: { numFound?: number; docs?: Array<Record<string, unknown>> } }
+  return d.response ?? {}
+}
+
+function docString(value: unknown, max = 300): string {
+  if (value === undefined || value === null) return "not reported"
+  if (Array.isArray(value)) return value.map((v) => String(v)).join("; ").slice(0, max)
+  const s = String(value)
+  return s.length > max ? `${s.slice(0, max)}...` : s
+}
+

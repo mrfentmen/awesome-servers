@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { entry } from "./api.js"
-import { search } from "./api.js"
 
+import { entry, search, publications } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,50 @@ export function createServer(): McpServer {
     try { return text(await search(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "polymer_entity",
+    {
+      title: "Polymer entity",
+      description: "One polymer chain group of a PDB entry: description, type, chains and the one-letter sequence.",
+      inputSchema: z.object( { id: z.string().describe("PDB ID like 4hhb."), entity: z.string().default("1").describe("Entity id like 1.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: polymer_entity ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_rcsb_pdb_polymer_entity", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "ligands",
+    {
+      title: "Ligands",
+      description: "The non-polymer entities of a PDB entry: component id, name, copy count, formula weight and the chains they sit in.",
+      inputSchema: z.object( { id: z.string().describe("PDB ID like 4hhb.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: ligands ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_rcsb_pdb_ligands", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "publications",
+    {
+      title: "Publications",
+      description: "The primary and additional publications behind a PDB entry, with journal, year, authors, DOI and PubMed id.",
+      inputSchema: z.object( { id: z.string().describe("PDB ID like 4hhb.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await publications(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

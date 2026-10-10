@@ -111,3 +111,73 @@ export const m0_file = m0.file;
 export const m0_search = m0.search;
 export const m0_CommonsError = m0.CommonsError;
 export const m1_random = m1.random;
+
+// ---- muxC tools:
+
+const COMMONS_BASE = "https://commons.wikimedia.org/w/api.php"
+const COMMONS_UA = "mrfentmen-wikimedia-commons-mcp/1.0 (https://github.com/mrfentmen)"
+
+class CommonsLookupError extends Error {}
+
+async function commonsGet(url: string): Promise<any> {
+  const res = await fetch(url, {
+    headers: { "User-Agent": COMMONS_UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(30000),
+  })
+  if (!res.ok) throw new CommonsLookupError(`Wikimedia Commons returned HTTP ${res.status}`)
+  return res.json()
+}
+
+function commonsTitle(args: { title?: string }): string {
+  const title = (args.title ?? "").trim()
+  if (!title) throw new CommonsLookupError("Provide a file title like File:Example.jpg")
+  return title.startsWith("File:") ? title : `File:${title}`
+}
+
+/** The categories a file sits in, which is how Commons files are browsed. */
+export async function fileCategories(args: { title?: string; limit?: number }): Promise<string> {
+  const title = commonsTitle(args)
+  const limit = Math.max(1, Math.min(args.limit ?? 15, 50))
+  const d = await commonsGet(
+    `${COMMONS_BASE}?action=query&titles=${encodeURIComponent(title)}&prop=categories&cllimit=${limit}&format=json&origin=*`,
+  )
+  const pages = Object.values(d?.query?.pages ?? {}) as any[]
+  const page = pages[0]
+  if (!page || page.missing !== undefined) throw new CommonsLookupError(`File not found: ${title}`)
+  const cats = page.categories ?? []
+  if (!cats.length) return `${page.title} is in no categories.`
+  return `Categories for ${page.title} (${cats.length}${cats.length >= limit ? "+, capped by limit" : ""}):\n` +
+    cats.map((c: any, i: number) => `${i + 1}. ${c.title}${c.hidden === true ? " (hidden)" : ""}`).join("\n")
+}
+
+/** A thumbnail URL at a chosen width, so a client can fetch a sized copy. */
+export async function fileThumbnail(args: { title?: string; width?: number }): Promise<string> {
+  const title = commonsTitle(args)
+  const width = Math.max(20, Math.min(args.width ?? 320, 2000))
+  const d = await commonsGet(
+    `${COMMONS_BASE}?action=query&titles=${encodeURIComponent(title)}&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=${width}&format=json&origin=*`,
+  )
+  const pages = Object.values(d?.query?.pages ?? {}) as any[]
+  const info = pages[0]?.imageinfo?.[0]
+  if (!info) throw new CommonsLookupError(`No image info for ${title}`)
+  return [
+    `File: ${pages[0]?.title ?? title}`,
+    `Original: ${info.url ?? "not reported"} (${info.width ?? "?"}x${info.height ?? "?"}, ${info.mime ?? "?"})`,
+    `Thumbnail at ${width}px: ${info.thumburl ?? "not offered by Commons for this file"}`,
+  ].join("\n")
+}
+
+/** Browse a Commons category and list the media files inside it. */
+export async function categoryFiles(args: { category?: string; limit?: number }): Promise<string> {
+  const raw = (args.category ?? "").trim()
+  if (!raw) throw new CommonsLookupError("Provide a category name, e.g. Featured pictures of animals")
+  const category = raw.startsWith("Category:") ? raw : `Category:${raw}`
+  const limit = Math.max(1, Math.min(args.limit ?? 10, 50))
+  const d = await commonsGet(
+    `${COMMONS_BASE}?action=query&list=categorymembers&cmtitle=${encodeURIComponent(category)}&cmtype=file|subcat&cmlimit=${limit}&format=json&origin=*`,
+  )
+  const rows = d?.query?.categorymembers ?? []
+  if (!rows.length) return `Commons category ${category} has no file or subcategory members.`
+  return `Members of ${category} (${rows.length} shown):\n` +
+    rows.map((m: any, i: number) => `${i + 1}. ${m.title} (${m.ns === 14 ? "subcategory" : "file"})`).join("\n")
+}

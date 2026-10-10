@@ -87,3 +87,43 @@ export function formatGame(g, index) {
 export function formatBoardRow(r) {
     return `${r.rank ?? "?"}. ${r.username ?? "?"}${r.title ? ` (${r.title})` : ""} score ${r.score ?? "?"}`;
 }
+export async function titledPlayerLookup(args) {
+    const title = (args.title ?? '').trim().toUpperCase();
+    const player = (args.player ?? '').trim().toLowerCase();
+    if (!title)
+        return 'Provide a title, e.g. GM.';
+    if (!player)
+        return 'Provide the player name to look for.';
+    // getTitledPlayers hands back chess.com's { players: [...] } wrapper rather
+    // than a bare array, so accept both shapes
+    const raw = (await getTitledPlayers(title));
+    const users = Array.isArray(raw)
+        ? raw.map(String)
+        : Array.isArray(raw?.players)
+            ? (raw.players).map(String)
+            : [];
+    if (!users.length) {
+        return `chess.com returned no list for the ${title} title, so no lookup is possible.`;
+    }
+    const lowered = users.map((u) => String(u).toLowerCase());
+    const exact = lowered.indexOf(player);
+    const partial = lowered
+        .map((u, i) => ({ u, i }))
+        .filter((r) => r.u.includes(player))
+        .slice(0, 25);
+    if (exact < 0 && !partial.length) {
+        return `"${args.player}" holds no ${title} title. chess.com lists ${users.length} ${title} players, indexed 0 to ${users.length - 1}.`;
+    }
+    const lines = [
+        `chess.com lists ${users.length} ${title} player(s), alphabetically by username.`,
+    ];
+    if (exact >= 0) {
+        lines.push(`${users[exact]} is a ${title}, at position ${exact} of ${users.length}.`);
+    }
+    if (partial.length) {
+        lines.push(`${partial.length} username(s) contain "${args.player}":`);
+        for (const r of partial)
+            lines.push(`  ${users[r.i]} — position ${r.i} of ${users.length}`);
+    }
+    return lines.join('\n');
+}

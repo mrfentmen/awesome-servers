@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_next, m0_stops, m1_nextArrivals, m1_transitView } from './api.js'
 
+import { m0_next, m0_stops, m1_nextArrivals, m1_transitView } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -58,5 +59,21 @@ server.registerTool(
     try { return text(await m1_transitView(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "list_routes",
+    {
+      title: "List routes",
+      description: "SEPTA's own route catalogue: every line it runs with its long name, mode (rail, trolley, bus) and brand colour.",
+      inputSchema: z.object( { mode: z.string().describe("Filter by mode digit: 1 rail, 2 subway, 3 trolley, 4 bus, 5 trackless trolley.").optional(), limit: z.number().describe("Max routes.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: list_routes ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_septa_list_routes", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

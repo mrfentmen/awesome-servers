@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { search } from "./api.js"
 
+import { search } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -21,5 +22,37 @@ export function createServer(): McpServer {
     try { return text(await search(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "asset_manifest",
+    {
+      title: "Asset manifest",
+      description: "Every downloadable file NASA holds for one NASA id: all image sizes, the collection manifest and any sidecar text.",
+      inputSchema: z.object( { nasa_id: z.string().describe("NASA id, e.g. jsc2007e034221."), limit: z.number().describe("Max files.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: asset_manifest ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_nasa_images_asset_manifest", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "media_details",
+    {
+      title: "Media details",
+      description: "Full descriptive metadata for one NASA id: title, center, media type, date, keywords and description.",
+      inputSchema: z.object( { nasa_id: z.string().describe("NASA id, e.g. jsc2007e034221.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: media_details ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_nasa_images_media_details", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

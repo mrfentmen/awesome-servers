@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { coneSearch, formatObs, MastError } from "./api.js"
 
+import { coneSearch, formatObs, MastError } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -35,6 +36,23 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+
+  server.registerTool(
+    "resolve_name",
+    {
+      title: "Resolve name",
+      description: "Resolve a target name such as M51 or Betelgeuse to coordinates and object type through MAST's name resolver, which is how you turn a name into a position for a cone search.",
+      inputSchema: z.object( { name: z.string().describe("Target name, e.g. M51."), limit: z.number().describe("Max candidates.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: resolve_name ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_mast_resolve_name", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

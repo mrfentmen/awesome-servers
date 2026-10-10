@@ -31,3 +31,6 @@ export async function pricefeed(_args?: unknown): Promise<string> {
   return `Gemini pricefeed (${d.length} pairs):\n` +
     d.slice(0, 40).map((p, i) => `${i + 1}. ${p.pair ?? '?'}: ${p.price ?? '?'} (${p.percentChange24h ?? '?'}% 24h)`).join('\n');
 }
+
+// ---- muxC tools:
+

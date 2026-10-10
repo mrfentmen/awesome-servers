@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { checkText, formatResult, LanguageToolError, listLanguages } from "./api.js"
+import { checkText, formatResult, LanguageToolError, listLanguages, translateText, wordLookup } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -45,6 +46,56 @@ export function createServer(): McpServer {
       try {
         const langs = await listLanguages()
         return text(langs.map((l) => `${l.code} — ${l.name}`).join("\n"))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "translate_text",
+    {
+      title: "Translate text",
+      description: "Translate up to 500 characters between two languages with the MyMemory public API, including match quality.",
+      inputSchema: z.object({
+        text: z.string().max(500).describe("Text to translate (max 500 chars)"),
+        from: z.string().default("en").describe("Source language code, e.g. 'en'"),
+        to: z.string().describe("Target language code, e.g. 'de'"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: translate_text ----
+      const paywallMessage = await premiumRequired("translate_text")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await translateText(args))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "word_lookup",
+    {
+      title: "Word lookup",
+      description: "Look up a word with Datamuse: spelling variants, matching words, rhymes or definitions.",
+      inputSchema: z.object({
+        word: z.string().min(1).max(80).describe("Word to look up"),
+        relation: z.enum(["spelling", "match", "rhyme", "define"]).describe("What to look for"),
+        limit: z.number().int().min(1).max(25).default(8).describe("Max results"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: word_lookup ----
+      const paywallMessage = await premiumRequired("word_lookup")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await wordLookup(args))
       } catch (e) {
         return textError(errorMessage(e))
       }

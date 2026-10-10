@@ -36,3 +36,31 @@ export const randomFact = m1.randomFact;
 export const m0_fact = m0.fact;
 export const m1_FactsError = m1.FactsError;
 export const m1_randomFact = m1.randomFact;
+
+// ---- muxC tools:
+
+const FACTS_BASE = "https://uselessfacts.jsph.pl/api/v2/facts"
+const FACTS_UA = "mrfentmen-uselessfacts-mcp/1.0"
+
+class FactsLookupError extends Error {}
+
+/**
+ * The daily fact is a different endpoint from the random one and changes once a
+ * day, so a caller can cite a fact that will still be the same tomorrow.
+ */
+export async function dailyFact(): Promise<string> {
+  const res = await fetch(`${FACTS_BASE}/today`, {
+    headers: { "User-Agent": FACTS_UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (res.status === 429) throw new FactsLookupError("UselessFacts rate limit hit, wait and retry")
+  if (!res.ok) throw new FactsLookupError(`UselessFacts returned ${res.status}`)
+  const d = (await res.json()) as { id?: string; text?: string; source?: string; source_url?: string; language?: string; permalink?: string }
+  if (!d.text) throw new FactsLookupError("UselessFacts returned no text for today's fact")
+  return [
+    `Useless fact of the day:`,
+    d.text,
+    `Source: ${d.source ?? "not reported"}${d.source_url ? ` - ${d.source_url}` : ""}`,
+    `Language: ${d.language ?? "not reported"}${d.permalink ? ` | ${d.permalink}` : ""}`,
+  ].join("\n")
+}

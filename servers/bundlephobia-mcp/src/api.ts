@@ -29,3 +29,37 @@ export async function size(args: SizeArgs): Promise<string> {
     `Dependencies: ${s('dependencyCount')} | Has side effects: ${s('hasJSModule') ? 'module' : s('hasJSNext') ? 'next' : 'no'}`,
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxA tools:
+
+function fmtBytes(n: unknown): string {
+  const v = Number(n);
+  if (!Number.isFinite(v) || v <= 0) return 'n/a';
+  if (v >= 1024 * 1024) return `${(v / 1024 / 1024).toFixed(2)} MB`;
+  if (v >= 1024) return `${(v / 1024).toFixed(1)} KB`;
+  return `${v} B`;
+}
+
+function clean(value: unknown): string {
+  return value != null ? String(value) : '';
+}
+
+async function sizeOf(name: string): Promise<Record<string, unknown>> {
+  const res = await fetch(`${BASE}?package=${encodeURIComponent(name)}`, {
+    headers: { 'User-Agent': 'mrfentmen-bundlephobia-mcp/1.0', Accept: 'application/json' },
+    // bundlephobia builds each package on demand and is slow on a cold package
+    signal: AbortSignal.timeout(45000),
+  });
+  if (res.status === 404) throw new Error(`Bundlephobia has no package named ${name}`);
+  if (!res.ok) throw new Error(`Bundlephobia returned ${res.status} for ${name}`);
+  return (await res.json()) as Record<string, unknown>;
+}
+
+export interface CompareArgs {
+  packages: string;
+}
+
+export interface MetaArgs {
+  name: string;
+}
+

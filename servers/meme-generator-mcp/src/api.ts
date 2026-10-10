@@ -23,7 +23,6 @@ async function get<T>(path: string): Promise<T> {
   return (await res.json()) as T
 }
 
-
 async function templates(args: { limit?: number }): Promise<string> {
   const data = await get<{ success: boolean; data: { memes: m0_MemeTemplate[] } }>("/get_memes")
   if (!data.success) throw new MemeError("Imgflip could not list templates")
@@ -49,7 +48,6 @@ return { MemeError, caption, templates };
 
 const m1 = (() => {
 const BASE = 'https://api.imgflip.com/get_memes';
-
 
 async function templates(args: m1_TemplatesArgs): Promise<string> {
   const limit = Math.max(1, Math.min(args.limit ?? 20, 100));
@@ -80,3 +78,15 @@ export const m0_MemeError = m0.MemeError;
 export const m0_templates = m0.templates;
 export const m0_caption = m0.caption;
 export const m1_templates = m1.templates;
+
+// ---- muxC tools:
+
+const MEME_UA = "mrfentmen-meme-generator-mcp/1.0 (https://github.com/mrfentmen)"
+
+async function imgflip(path: string, ms = 25000): Promise<any> {
+  const res = await fetch(`https://api.imgflip.com${path}`, { headers: { "User-Agent": MEME_UA, Accept: "application/json" }, signal: AbortSignal.timeout(ms) })
+  if (res.status === 429) throw new Error("imgflip is rate limiting this client")
+  if (!res.ok) throw new Error(`imgflip returned ${res.status} for ${path}`)
+  return (await res.json()) as any
+}
+

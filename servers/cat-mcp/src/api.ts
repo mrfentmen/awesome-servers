@@ -63,3 +63,49 @@ export async function searchImages(args: { tag?: string; limit?: number }): Prom
   }
   return out.join('\n') || 'No cat photos returned';
 }
+
+// ---- muxA tools:
+
+const CATAAS = 'https://cataas.com';
+
+interface CataasCat {
+  id?: string;
+  tags?: string[];
+  mimetype?: string;
+  created_at?: string;
+  createdAt?: string;
+  url?: string;
+}
+
+function catUrl(id: string): string {
+  return `${CATAAS}/cat/${encodeURIComponent(id)}`;
+}
+
+function bound(value: number | undefined, fallback: number, max: number): number {
+  return Math.max(1, Math.min(Math.round(value ?? fallback), max));
+}
+
+export async function popularCatTags(args: { limit?: number; filter?: string }): Promise<string> {
+  const limit = bound(args.limit, 40, 200)
+  const filter = (args.filter ?? '').trim()
+  const d = await get<string[]>(`${CATAAS}/api/tags`)
+  if (!Array.isArray(d)) throw new CatError('Cataas returned an unexpected tags payload')
+  // the tag list includes an empty string and a leading "#" convention, so keep
+  // only entries a caller could actually pass back to catPhotosByTag
+  const usable = d.filter((t) => typeof t === 'string' && t.trim().length > 0)
+  const matched = filter
+    ? usable.filter((t) => t.toLowerCase().includes(filter.toLowerCase()))
+    : usable
+  if (!matched.length) {
+    return filter ? `No Cataas tag contains "${filter}".` : 'Cataas returned no usable tags.'
+  }
+  const shown = matched.slice(0, limit)
+  return [
+    `Cataas has ${usable.length} usable tag(s)${filter ? `, ${matched.length} containing "${filter}"` : ''}.`,
+    `Showing ${shown.length}:`,
+    shown.join(', '),
+    filter ? '' : 'Pass any of these to cat_photos_by_tag to browse a set.',
+  ]
+    .filter(Boolean)
+    .join('\n')
+}

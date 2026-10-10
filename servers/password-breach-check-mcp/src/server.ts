@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { checkHash } from "./api.js"
-import { checkPassword } from "./api.js"
 
+import { checkHash, checkPassword } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,21 @@ export function createServer(): McpServer {
     try { return text(await checkHash(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "exposure_lookup",
+    {
+      title: "Exposure lookup",
+      description: "Search the public LeakCheck breach corpus for an email address, username or domain. Returns the record count, which field types were exposed and the names of the breach sources - never the leaked values themselves.",
+      inputSchema: z.object( { query: z.string().describe("Email address, username or domain."), limit: z.number().int().min(1).max(25).default(10).describe("Max breach sources listed.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: exposure_lookup ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_password_breach_check_exposure_lookup", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

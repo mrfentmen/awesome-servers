@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { getTemplate, listTemplates, makeMeme, MemeError } from "./api.js"
+import { getTemplate, listTemplates, makeMeme, MemeError, listFonts, randomQuote } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -69,6 +70,48 @@ export function createServer(): McpServer {
       try {
         const t = await getTemplate(id)
         return text(`${t.id} — ${t.name} (${t.lines} lines)${t.blank ? `\nBlank: ${t.blank}` : ""}${t.example ? `\nExample: ${t.example}` : ""}`)
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "list_caption_fonts",
+    {
+      title: "List caption fonts",
+      description: "Every caption font memegen.link can render with: font id, short alias and the font file behind it.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async () => {
+      // ---- paywall: list_caption_fonts ----
+      const paywallMessage = await premiumRequired("list_caption_fonts")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await listFonts())
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "random_quote",
+    {
+      title: "Random quote",
+      description: "Fetch a random quote and its author from ZenQuotes, ready to use as meme caption text.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async () => {
+      // ---- paywall: random_quote ----
+      const paywallMessage = await premiumRequired("random_quote")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await randomQuote())
       } catch (e) {
         return textError(errorMessage(e))
       }

@@ -62,3 +62,42 @@ export async function muscles(_args?: unknown): Promise<string> {
     return `${i + 1}. ${m?.name ?? "n/a"}${m?.is_front != null ? ` | ${m.is_front ? "front" : "back"}` : ""}`
   }).join("\n")
 }
+
+// ---- muxC tools:
+
+const WGER_UA = "mrfentmen-wger-mcp/1.0 (https://github.com/mrfentmen)"
+
+class WgerToolError extends Error {}
+
+async function wger(path: string, ms = 25000): Promise<any> {
+  const res = await fetch(`https://wger.de/api/v2${path}`, { headers: { "User-Agent": WGER_UA, Accept: "application/json" }, signal: AbortSignal.timeout(ms) })
+  if (!res.ok) throw new WgerToolError(`wger.de returned ${res.status} for ${path}`)
+  return await res.json()
+}
+
+/** The equipment wger records, which the exercise and muscle tools never list. */
+export async function equipmentList(args: { limit?: number }): Promise<string> {
+  const limit = Math.max(1, Math.min(args.limit ?? 20, 100))
+  const d = await wger(`/equipment/?limit=${limit}`)
+  const rows: any[] = d?.results ?? []
+  if (!rows.length) return "wger.de lists no equipment."
+  return `wger.de equipment (${d.count ?? rows.length} total, ${rows.length} shown):\n` +
+    rows.map((e, i) => `${i + 1}. ${e.name ?? "unnamed"} (id ${e.id ?? "?"})`).join("\n")
+}
+
+/** One exercise's full record, which the exercise and muscle listings never join together. */
+export async function exerciseDetail(args: { exerciseId?: number }): Promise<string> {
+  const id = args.exerciseId
+  if (!Number.isInteger(id) || Number(id) <= 0) throw new Error("Provide a numeric wger exercise id, e.g. 9")
+  const d = await wger(`/exerciseinfo/${id}/?status=2&language=2`)
+  if (!d || typeof d !== "object" || !d.id) throw new Error(`wger.de has no exerciseinfo record for id ${id}`)
+  const cat = typeof d.category === "object" && d.category ? d.category.name : d.category
+  return [
+    `wger exercise ${d.id} (uuid ${d.uuid ?? "not reported"})`,
+    `name: ${d.name ?? "wger.de returns no localized name for this record on its public api"}`,
+    `category: ${cat ?? "not reported"} | created ${String(d.created ?? "").slice(0, 10)} | last update ${String(d.last_update ?? "").slice(0, 10)}`,
+    `muscles: ${(d.muscles ?? []).map((m: any) => m.name).join(", ") || "none recorded"}`,
+    `equipment: ${(d.equipment ?? []).map((e: any) => e.name).join(", ") || "none recorded"}`,
+    `variations: ${(d.variations ?? []).length}`,
+  ].join("\n")
+}

@@ -49,3 +49,21 @@ export async function taxa(args: { name?: string }): Promise<string> {
   if (t?.namer) lines.push(`Namer: ${t.namer}`)
   return lines.join("\n")
 }
+
+// ---- muxC tools:
+
+const PBDB_UA = "mrfentmen-pbdb-mcp/1.0 (https://github.com/mrfentmen)"
+
+class PbdbToolError extends Error {}
+
+async function pbdb(path: string, ms = 30000): Promise<any> {
+  const res = await fetch(`https://paleobiodb.org/data1.2/${path}`, { headers: { "User-Agent": PBDB_UA, Accept: "application/json" }, signal: AbortSignal.timeout(ms) })
+  if (!res.ok) throw new PbdbToolError(`The Paleobiology Database returned ${res.status} for ${path}`)
+  return await res.json()
+}
+
+function warn(d: any): string | null {
+  const w = d?.warnings ?? []
+  return w.length ? `note: ${w.join("; ")}` : null
+}
+

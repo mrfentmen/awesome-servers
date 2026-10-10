@@ -73,3 +73,181 @@ export function formatMatch(m: Match, index?: number): string {
   const prefix = index !== undefined ? `${index + 1}. ` : ""
   return `${prefix}${m.name ?? "(unnamed)"}${m.status ? ` [${m.status}]` : ""}${m.score ? `\n   ${m.score}` : ""}${m.date ? `\n   ${m.date}${m.venue ? ` at ${m.venue}` : ""}` : ""}`
 }
+
+// ---- muxB tools:
+
+const ESPN = "https://site.web.api.espn.com/apis/site/v2"
+
+async function espnGet(path: string): Promise<Record<string, unknown>> {
+  const res = await fetch(`${ESPN}${path}`, {
+    headers: { "User-Agent": "cricapi-mcp/1.0", Accept: "application/json" },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (res.status === 404) throw new CricApiError(`ESPNcricinfo has nothing at ${path}. Check the id, they are their own numbers and differ from CricAPI ids.`)
+  if (!res.ok) throw new CricApiError(`ESPNcricinfo returned ${res.status} for ${path}.`)
+  return (await res.json()) as Record<string, unknown>
+}
+
+async function espnSeriesId(series: string | undefined): Promise<{ id: string; name: string; searched?: string }> {
+  const given = String(series ?? "").trim()
+  if (/^\d+$/.test(given)) return { id: given, name: `series ${given}` }
+  if (!given) {
+    throw new CricApiError("Give an ESPNcricinfo series id (the number at the end of a cricinfo.com/series/... url) or a competition name to look up.")
+  }
+  const data = (await espnGet("/leagues/dropdown?region=us&lang=en&contentorigin=espn&sport=cricket&limit=500")) as {
+    leagues?: Array<{ id?: string; name?: string; abbreviation?: string }>
+  }
+  const rows = Array.isArray(data.leagues) ? data.leagues : []
+  const ql = given.toLowerCase()
+  const hit = rows.find(
+    (l) => (l.name ?? "").toLowerCase() === ql || (l.abbreviation ?? "").toLowerCase() === ql
+  ) ?? rows.find((l) => (l.name ?? "").toLowerCase().includes(ql))
+  if (!hit) {
+    throw new CricApiError(`No competition in ESPNcricinfo's catalogue of ${rows.length} entries matches "${given}". Pass the numeric series id from a cricinfo.com series url instead.`)
+  }
+  return { id: String(hit.id), name: String(hit.name ?? given), searched: given }
+}
+
+interface EspnEvent {
+  id?: string
+  date?: string
+  name?: string
+  shortName?: string
+  status?: { type?: { description?: string; detail?: string; state?: string } }
+  competitions?: Array<{
+    venue?: { fullName?: string; address?: { city?: string; country?: string } }
+    competitors?: Array<{ homeAway?: string; score?: string; team?: { displayName?: string; abbreviation?: string } }>
+    notes?: Array<{ text?: string }>
+  }>
+  links?: Array<{ href?: string }>
+}
+
+function espnLink(e: EspnEvent): string {
+  for (const l of e.links ?? []) if (l.href && l.href.includes("/series/")) return l.href
+  return `https://www.espncricinfo.com/series/_/game/${e.id ?? "?"}`
+}
+
+export async function seriesFixtures(args: { series?: string; year?: number; limit?: number }): Promise<string> {
+  const target = await espnSeriesId(args.series)
+  const qs = new URLSearchParams({ limit: String(Math.min(Math.max(Number(args.limit ?? 20), 1), 200)) })
+  if (args.year !== undefined && Number.isFinite(args.year)) qs.set("dates", String(Math.round(args.year)))
+  const data = (await espnGet(`/sports/cricket/${target.id}/scoreboard?${qs.toString()}`)) as {
+    leagues?: Array<{ name?: string; abbreviation?: string; slug?: string }>
+    events?: EspnEvent[]
+  }
+  const league = (data.leagues ?? [])[0]
+  const events = Array.isArray(data.events) ? data.events : []
+  if (events.length === 0) {
+    return `${league?.name ?? target.name} (series ${target.id}) has no matches${args.year ? ` for ${args.year}` : ""} in ESPNcricinfo's schedule.`
+  }
+  const out = [
+    `${league?.name ?? target.name} (series ${target.id}): ${events.length} match(es)${args.year ? ` for ${args.year}` : ""}.`,
+  ]
+  for (const e of events.slice(0, 40)) {
+    const c = (e.competitions ?? [])[0]
+    const state = e.status?.type?.state ?? "unknown"
+    const label = e.status?.type?.description ?? e.status?.type?.detail ?? "status not reported"
+    const teams = (c?.competitors ?? [])
+      .map((t) => `${t.homeAway === "home" ? "" : "@"}${t.team?.displayName ?? "?"} ${t.score ?? "no score"}`)
+      .join("  v  ")
+    out.push(`  ${String(e.date ?? "?").slice(0, 10)}  ${e.name ?? "(unnamed)"}`)
+    const suffix = state === "in" ? ", in progress" : state === "pre" ? ", not started" : ""
+    out.push(`     ${teams}  [${label}${suffix}]`)
+    if (c?.venue?.fullName) out.push(`     at ${c.venue.fullName}`)
+    out.push(`     ${espnLink(e)}`)
+  }
+  if (events.length > 40) out.push(`  ...and ${events.length - 40} more.`)
+  return out.join("\n")
+}
+
+export async function seriesStandings(args: { series?: string }): Promise<string> {
+  const target = await espnSeriesId(args.series)
+  const data = (await espnGet(`/sports/cricket/${target.id}/scoreboard?limit=1`)) as {
+    leagues?: Array<{ name?: string }>
+    standings?: Array<{
+      team?: { displayName?: string; abbreviation?: string }
+      stats?: Array<{ name?: string; displayName?: string; displayValue?: string; value?: number | string }>
+    }>
+  }
+  const league = (data.leagues ?? [])[0]
+  const table = Array.isArray(data.standings) ? data.standings : []
+  if (table.length === 0) {
+    return `${league?.name ?? target.name} (series ${target.id}) has no standings table. Not every format keeps one; a Test series is the usual reason.`
+  }
+  const columns: string[] = []
+  const out = [`${league?.name ?? target.name} (series ${target.id}) standings, ${table.length} team(s).`, ""]
+  for (const row of table) {
+    const stats = Array.isArray(row.stats) ? row.stats : []
+    for (const s of stats) {
+      const label = String(s.displayName ?? s.name ?? "?")
+      if (!columns.includes(label) && row.team) columns.push(label)
+    }
+    const cells = stats.map((s) => `${s.displayName ?? s.name ?? "?"} ${s.displayValue ?? s.value ?? "not reported"}`)
+    out.push(`  ${row.team?.displayName ?? "(unknown team)"}${row.team?.abbreviation ? ` [${row.team.abbreviation}]` : ""}: ${cells.join(", ") || "no stats reported"}`)
+  }
+  return out.join("\n")
+}
+
+export async function matchScorecard(args: { series?: string; event_id: string }): Promise<string> {
+  const event = String(args.event_id ?? "").trim()
+  if (!/^\d+$/.test(event)) {
+    return `Give the match id, the number at the end of its cricinfo.com game url, e.g. 1535465. Got "${args.event_id}".`
+  }
+  const target = await espnSeriesId(args.series)
+  const data = (await espnGet(`/sports/cricket/${target.id}/summary?event=${event}`)) as {
+    header?: {
+      name?: string
+      competitions?: Array<{
+        competitors?: Array<{ homeAway?: string; score?: string; linescores?: Array<Record<string, unknown>>; team?: { displayName?: string } }>
+        status?: { type?: { description?: string; detail?: string } }
+        notes?: Array<{ text?: string }>
+      }>
+    }
+    leaders?: Array<{
+      team?: { displayName?: string }
+      linescores?: Array<{
+        period?: number
+        isBatting?: boolean
+        leaders?: Array<{ displayName?: string; leaders?: Array<{ displayValue?: string; athlete?: { displayName?: string } }> }>
+      }>
+    }>
+    gameInfo?: { venue?: { fullName?: string; address?: { city?: string; country?: string } }; officials?: Array<{ displayName?: string; displayType?: string }> }
+  }
+  const header = data.header
+  const comp = (header?.competitions ?? [])[0]
+  if (!header || !comp) throw new CricApiError(`Match ${event} returned no header, so it is not a cricket scorecard ESPNcricinfo recognises.`)
+  const out = [
+    `${header.name ?? `Match ${event}`}`,
+    `${comp.status?.type?.description ?? "result not reported"}${comp.status?.type?.detail ? ` (${comp.status.type.detail})` : ""}`,
+  ]
+  if (data.gameInfo?.venue?.fullName) out.push(`at ${data.gameInfo.venue.fullName}`)
+  out.push("")
+  for (const t of comp.competitors ?? []) {
+    const innings = (t.linescores ?? []).filter((l) => Number(l.runs ?? 0) > 0 || Number(l.wickets ?? 0) > 0 || l.isBatting)
+    out.push(`${t.team?.displayName ?? "?"}  ${t.score ?? "no score"}`)
+    if (innings.length > 1) {
+      out.push("  innings: " + innings.map((l) => {
+        const runs = Number(l.runs ?? 0)
+        const wkts = Number(l.wickets ?? 0)
+        const overs = Number(l.overs ?? 0)
+        const extras = [l.fours ? `${l.fours}x4` : "", l.sixes ? `${l.sixes}x6` : ""].filter(Boolean).join(" ")
+        const target = Number(l.target ?? 0) > 0 ? ` chasing ${l.target}` : ""
+        return `${l.period ?? "?"}: ${runs}/${wkts} (${overs} ov${extras ? ", " + extras : ""}${target ? ", " + target : ""})`
+      }).join("  |  "))
+    }
+  }
+  for (const l of data.leaders ?? []) {
+    const top = (l.linescores ?? []).flatMap((ls) =>
+      (ls.leaders ?? []).map((g) => {
+        const people = (g.leaders ?? []).slice(0, 2).map((p) => `${p.athlete?.displayName ?? "?"} ${p.displayValue ?? "?"}`).join(", ")
+        return `  ${g.displayName ?? "statistic"}: ${people || "not reported"}`
+      })
+    )
+    if (top.length > 0) out.push("", `${l.team?.displayName ?? "?"} leaders`, ...top)
+  }
+  const notes = (comp.notes ?? []).map((n) => n.text).filter(Boolean)
+  if (notes.length > 0) out.push("", ...notes.map((n) => `  ${n}`))
+  const officials = (data.gameInfo?.officials ?? []).map((o) => `${o.displayType ?? "official"}: ${o.displayName ?? "?"}`)
+  if (officials.length > 0) out.push("", "Officials: " + officials.join(", "))
+  return out.join("\n")
+}

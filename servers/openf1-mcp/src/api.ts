@@ -44,3 +44,62 @@ export async function drivers(args: DriversArgs): Promise<string> {
   }
   return `OpenF1 drivers (${rows.length}):\n${rows.join('\n')}`;
 }
+
+// ---- muxB tools:
+type Of1Session = {
+  session_key?: number;
+  meeting_key?: number;
+  session_name?: string;
+  session_type?: string;
+  date_start?: string;
+  date_end?: string;
+  location?: string;
+  country_name?: string;
+  country_code?: string;
+  circuit_short_name?: string;
+  circuit_key?: number;
+  gmt_offset?: string;
+  year?: number;
+  is_cancelled?: boolean;
+}
+
+type Of1Stint = {
+  session_key?: number;
+  meeting_key?: number;
+  stint_number?: number;
+  driver_number?: number;
+  lap_start?: number;
+  lap_end?: number;
+  compound?: string;
+  tyre_age_at_start?: number;
+  stint_length?: number;
+}
+
+type Of1Lap = {
+  session_key?: number;
+  meeting_key?: number;
+  driver_number?: number;
+  lap_number?: number;
+  lap_duration?: number;
+  duration_sector_1?: number;
+  duration_sector_2?: number;
+  duration_sector_3?: number;
+  i1_speed?: number;
+  i2_speed?: number;
+  i3_speed?: number;
+  st_speed?: number;
+  is_pit_out_lap?: boolean;
+  date_start?: string;
+}
+
+async function of1Get<T>(path: string, label: string): Promise<T> {
+  const res = await fetch(`${BASE}/${path}`, { headers: HEADERS, signal: AbortSignal.timeout(40000) })
+  if (res.status === 400) throw new Error(`OpenF1 rejected that ${label} query, check the key.`)
+  if (!res.ok) throw new Error(`OpenF1 returned ${res.status} for ${label}`)
+  const d = (await res.json()) as T
+  if (!Array.isArray(d) || !d.length) throw new Error(`OpenF1 has no ${label} data for that query.`)
+  return d
+}
+
+const secs = (v: number | undefined) => (v == null ? 'not reported' : v.toFixed(3))
+

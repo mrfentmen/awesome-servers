@@ -20,8 +20,6 @@ export interface m1_ArtworkArgs {
 const m0 = (() => {
 const BASE = 'https://api.artic.edu/api/v1';
 
-
-
 function pick<T>(obj: Record<string, unknown>, key: string): T {
   return (obj?.[key] as T) ?? ('' as T);
 }
@@ -80,8 +78,6 @@ return { artwork, search };
 const m1 = (() => {
 const BASE = 'https://api.artic.edu/api/v1/artworks';
 
-
-
 async function search(args: m1_SearchArgs): Promise<string> {
   const query = (args.query ?? '').trim();
   if (!query) return 'Provide search terms.';
@@ -130,3 +126,94 @@ export const m0_search = m0.search;
 export const m0_artwork = m0.artwork;
 export const m1_search = m1.search;
 export const m1_artwork = m1.artwork;
+
+// ---- muxE tools:
+// The two existing tools search artworks and read one artwork, and the search
+// prints one line per hit. The new tools work the two angles that leaves open:
+// the shape of a whole result set rather than its first rows, and the exhibition
+// records, which this server has never touched at all.
+const AIC = "https://api.artic.edu/api/v1";
+const AIC_UA = "mrfentmen-art-institute-mcp/1.0";
+
+interface AICEnvelope {
+  pagination?: { total?: number; current_page?: number; total_pages?: number };
+  data?: Array<Record<string, unknown>>;
+  facets?: unknown;
+}
+
+async function aicGet(path: string, params: Record<string, string | number>): Promise<AICEnvelope> {
+  const qs = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) qs.set(key, String(value));
+  const res = await fetch(`${AIC}${path}?${qs.toString()}`, {
+    headers: { 'User-Agent': AIC_UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(30000),
+  });
+  if (res.status === 404) throw new Error('The Art Institute has no record for that.');
+  if (!res.ok) {
+    let why = `The Art Institute returned ${res.status}`;
+    const raw = await res.text();
+    if (raw.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(raw) as { error?: { reason?: string } };
+        if (parsed?.error?.reason) why = `The Art Institute said: ${parsed.error.reason}`;
+      } catch {
+        // the body was not the JSON error, so the status is all we have
+      }
+    }
+    throw new Error(why);
+  }
+  const raw = await res.text();
+  try {
+    return JSON.parse(raw) as AICEnvelope;
+  } catch {
+    throw new Error('The Art Institute returned a body that is not JSON.');
+  }
+}
+
+const text = (v: unknown): string => (v === undefined || v === null || v === '' ? 'not reported' : String(v));
+const clean = (v: unknown): string => String(v ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+
+export interface CollectionProfileArgs {
+  query: string;
+  limit?: number;
+}
+
+export interface ExhibitionSearchArgs {
+  query: string;
+  limit?: number;
+}
+
+export async function exhibitionSearch(args: ExhibitionSearchArgs): Promise<string> {
+  const query = (args?.query ?? '').trim();
+  if (!query) return 'Provide search terms for the exhibition archive.';
+  const limit = Math.max(1, Math.min(Math.floor(Number(args?.limit ?? 10) || 10), 25));
+  const fields = ['id', 'title', 'aic_start_at', 'aic_end_at', 'web_url', 'artwork_ids', 'short_description'].join(',');
+  const body = await aicGet('/exhibitions/search', { q: query, limit, fields, page: 1 });
+  const rows = Array.isArray(body.data) ? body.data : [];
+  if (!rows.length) return `The Art Institute exhibition archive holds nothing matching "${query}".`;
+  const lines = [
+    `Exhibitions at the Art Institute matching "${query}" (${rows.length} shown):`,
+  ];
+  let withArtworks = 0;
+  let totalArtworks = 0;
+  for (const [i, r] of rows.entries()) {
+    const ids = Array.isArray(r.artwork_ids) ? r.artwork_ids : [];
+    if (ids.length) {
+      withArtworks += 1;
+      totalArtworks += ids.length;
+    }
+    const start = String(r.aic_start_at ?? '').slice(0, 10);
+    const end = String(r.aic_end_at ?? '').slice(0, 10);
+    const ran = start && end ? (end >= start ? `${start} to ${end}` : `${start} to ${end || 'unknown'}`) : start ? `opened ${start}, no end date reported` : 'no dates reported';
+    lines.push(`${i + 1}. ${text(r.title)}`);
+    lines.push(`   exhibition id ${text(r.id)}, ${ran}`);
+    lines.push(`   artworks listed in the record: ${ids.length}${ids.length ? `, first few ${ids.slice(0, 8).join(', ')}` : ' (this record lists none)'}`);
+    if (r.web_url) lines.push(`   ${String(r.web_url).slice(0, 160)}`);
+    const description = clean(r.short_description);
+    if (description) lines.push(`   ${description.slice(0, 200)}`);
+  }
+  lines.push(`  exhibitions in this page that list at least one artwork: ${withArtworks} of ${rows.length}, ${totalArtworks} artwork id(s) in total.`);
+  const apiTotal = body.pagination?.total;
+  lines.push(`  the Art Institute's exhibition index holds ${typeof apiTotal === 'number' ? apiTotal.toLocaleString('en-US') : 'an unstated number of'} exhibitions, though that count is the index size and not a match count for this query.`);
+  return lines.join('\n');
+}

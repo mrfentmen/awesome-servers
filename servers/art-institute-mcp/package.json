@@ -1,6 +1,6 @@
 {
   "name": "art-institute-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Art Institute of Chicago collection search.",
   "type": "module",
   "main": "dist/index.js",

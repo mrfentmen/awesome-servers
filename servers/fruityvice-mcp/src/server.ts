@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { all } from "./api.js"
-import { fruit } from "./api.js"
 
+import { all, fruit } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,37 @@ export function createServer(): McpServer {
     try { return text(await all(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "grocery_product",
+    {
+      title: "Grocery product",
+      description: "Look up a packaged grocery product by barcode: name, brands, Nutri-Score, ingredients, allergens and per-100g nutrition, from the Open Food Facts database.",
+      inputSchema: z.object( { barcode: z.string().describe("Product barcode, digits only, e.g. 3017620422003.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: grocery_product ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_fruityvice_grocery_product", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "product_search",
+    {
+      title: "Product search",
+      description: "Search the Open Food Facts database for packaged food products by name, showing brand, quantity and Nutri-Score.",
+      inputSchema: z.object( { query: z.string().describe("Search terms, e.g. apple juice."), limit: z.number().int().min(1).max(20).default(10).describe("Max results.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: product_search ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_fruityvice_product_search", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

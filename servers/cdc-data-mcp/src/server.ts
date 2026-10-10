@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { dataset } from "./api.js"
 
+import { dataset, datasetSearch } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -21,5 +22,50 @@ export function createServer(): McpServer {
     try { return text(await dataset(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "dataset_metadata",
+    {
+      title: "Dataset metadata",
+      description: "Schema and provenance for a CDC dataset: asset type, licence, update dates, view and download counts, and every column with its data type.",
+      inputSchema: z.object( { dataset_id: z.string().describe("Socrata dataset id, e.g. bugr-bbfr."), show_columns: z.boolean().describe("Include per-column detail.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: dataset_metadata ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_cdc_data_dataset_metadata", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "dataset_aggregate",
+    {
+      title: "Dataset aggregate",
+      description: "Run a read-only SoQL aggregation against a CDC dataset with select, where, group and order, for counts, group-by breakdowns and sums.",
+      inputSchema: z.object( { dataset_id: z.string().describe("Socrata dataset id, e.g. bugr-bbfr."), select: z.string().describe("SoQL select, e.g. count(*) or state, count(*) as n."), where: z.string().describe("SoQL where filter.").optional(), group: z.string().describe("Group-by expression.").optional(), order: z.string().describe("Order-by expression.").optional(), limit: z.number().describe("Max rows.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: dataset_aggregate ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_cdc_data_dataset_aggregate", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "dataset_search",
+    {
+      title: "Dataset search",
+      description: "Search the CDC open data catalog by keyword to discover dataset ids you can then query.",
+      inputSchema: z.object( { query: z.string().describe("Search words, e.g. COVID vaccine."), only: z.string().describe("dataset, chart or any.").optional(), limit: z.number().describe("Max results.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await datasetSearch(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

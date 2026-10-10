@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { listBreeds, randomImage, breedImages, facts, randomMedia } from './api.js'
 
+import { listBreeds, randomImage, breedImages, facts, randomMedia, breedGroups } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -69,5 +70,50 @@ export function createServer(): McpServer {
     try { return text(await randomMedia()) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    'breed_profile',
+    {
+      title: "Breed Profile",
+      description: 'Full breed profile from dogapi.dog: origin, coat, life span, weights, heights, five behaviour traits, temperament and recognised bodies.',
+      inputSchema: z.object( { breed: z.string().describe('Breed name like Affenpinscher.') }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: breed_profile ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_dog_breed_profile", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    'breed_matcher',
+    {
+      title: "Breed Matcher",
+      description: 'Filter the full breed list by hypoallergenic, maximum male weight and minimum life span.',
+      inputSchema: z.object( { hypoallergenic: z.boolean().describe('Only hypoallergenic breeds, or only ones that are not.').optional(), maxWeightKg: z.number().describe('Maximum male weight in kg, 1-120.').optional(), minLifeYears: z.number().describe('Minimum life span in years, 1-30.').optional(), limit: z.number().describe('How many to list, 1-25.').optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: breed_matcher ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_dog_breed_matcher", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    'breed_groups',
+    {
+      title: "Breed Groups",
+      description: 'The dogapi.dog breed groups with their breed counts, or the members of one group.',
+      inputSchema: z.object( { group: z.string().describe('Group name like Terrier.').optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await breedGroups(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

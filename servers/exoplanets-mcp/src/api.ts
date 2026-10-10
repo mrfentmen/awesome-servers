@@ -42,3 +42,70 @@ export async function byName(args: { name?: string }): Promise<string> {
   ].filter(Boolean)
   return lines.join("\n")
 }
+
+// ---- muxA tools:
+
+const TAP = "https://exoplanetarchive.ipac.caltech.edu/TAP/sync";
+
+function clamp(value: number | undefined, fallback: number, max: number): number {
+  return Math.max(1, Math.min(Math.round(value ?? fallback), max));
+}
+
+function cell(value: unknown): string {
+  if (value == null || value === "") return "null";
+  if (typeof value === "number") return String(Math.round(value * 10000) / 10000);
+  return String(value);
+}
+
+async function tap(query: string): Promise<Array<Record<string, unknown>>> {
+  const res = await fetch(`${TAP}?query=${encodeURIComponent(query)}&format=json`, {
+    headers: { "User-Agent": UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(60000),
+  });
+  const text = await res.text();
+  if (!res.ok || text.trimStart().startsWith("<?xml")) {
+    const reason = /ORA-\d+: ([^<]*)/.exec(text)?.[1] ?? text.replace(/\s+/g, " ").slice(0, 220);
+    throw new Error(`Exoplanet TAP error: ${reason}`);
+  }
+  const rows = JSON.parse(text) as Array<Record<string, unknown>>;
+  return Array.isArray(rows) ? rows : [];
+}
+
+const SAFE = /^[a-zA-Z0-9_.,()'"*=<>!+\- /%]*$/;
+
+export interface StatsArgs {
+  group_by?: string;
+  min_year?: number;
+  limit?: number;
+}
+
+export interface AdqlArgs {
+  select: string;
+  where?: string;
+  order?: string;
+  limit?: number;
+  table?: string;
+}
+
+export interface HostArgs {
+  host: string;
+  limit?: number;
+}
+
+export async function hostStars(args: HostArgs): Promise<string> {
+  const host = (args.host ?? "").trim();
+  if (!host) throw new Error("Provide a host star name such as Kepler-186 or TRAPPIST-1.");
+  if (!SAFE.test(host) || /['"();]/.test(host)) throw new Error("That host name contains unsupported characters.");
+  const limit = clamp(args.limit, 10, 60);
+  const rows = await tap(
+    `select pl_name, pl_letter, pl_orbper, pl_rade, pl_masse, pl_eqt, pl_orbsmax, pl_dens, disc_year, discoverymethod, st_teff, st_rad, st_mass, st_spectype, sy_dist from pscomppars where hostname like '%${host.replace(/'/g, "")}%' top ${limit}`,
+  );
+  if (!rows.length) return `No confirmed planet in the archive orbits a star matching "${host}".`;
+  const columns = Object.keys(rows[0]);
+  return [
+    `Planets around host stars matching "${host}": ${rows.length} confirmed planet(s).`,
+    ...rows.map((r, i) => `${i + 1}. ${cell(r.pl_name)} (${cell(r.pl_letter)}) discovered ${cell(r.disc_year)} by ${cell(r.discoverymethod)}`),
+    "",
+    ...rows.map((r) => columns.map((c) => `${c}=${cell(r[c])}`).join(" | ")),
+  ].join("\n");
+}

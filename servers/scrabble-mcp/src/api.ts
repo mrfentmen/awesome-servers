@@ -20,3 +20,26 @@ export async function wordScore(args: { word?: string }): Promise<string> {
   const bingo = word.length === 7 ? "\n7 letters: +50 bingo bonus" : ""
   return `"${word}"\n${breakdown}\nBase score: ${total}${bingo}\nTotal: ${total + (word.length === 7 ? 50 : 0)}`
 }
+
+// ---- muxA tools:
+// The existing tool scores a word of letters and nothing else. These score a
+// word that may use blank tiles, written as ? _ or *, and check a word against
+// the real tile distribution rather than only adding its letters up. Both are
+// pure computation on the local tables below.
+/** How many of each letter a standard English set holds. */
+const DISTRIBUTION: Record<string, number> = {
+  a: 9, b: 2, c: 2, d: 4, e: 12, f: 2, g: 3, h: 2, i: 9, j: 1, k: 1, l: 4, m: 2,
+  n: 6, o: 8, p: 2, q: 1, r: 6, s: 4, t: 6, u: 4, v: 2, w: 2, x: 1, y: 2, z: 1,
+};
+const BLANKS = 2;
+/** The characters that stand for a blank tile, worth nothing but usable as any letter. */
+const BLANK_MARKERS = "?_*";
+
+export interface ScoreWithBlanksArgs {
+  word?: string;
+}
+
+export interface TileCheckArgs {
+  word?: string;
+}
+

@@ -17,3 +17,8 @@ export async function searchPatents(args: { query?: string; limit?: number }): P
   })
   return `Patents for "${args.query}"\n${rows.join("\n\n") || "No patents found"}`
 }
+
+// ---- muxB tools:
+
+type RefRow = { number: string; priority: string; published: string; assignee: string; title: string }
+

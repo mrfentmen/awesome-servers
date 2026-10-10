@@ -68,3 +68,6 @@ export async function planTrip(from: string, to: string, dateTime?: string): Pro
   const data = await req(url, { method: "POST", headers: { "Content-Type": "application/json", "ET-Client-Name": "awesome-mcps" }, body: JSON.stringify({ query }) });
   return pretty(data);
 }
+
+// ---- muxC tools:
+

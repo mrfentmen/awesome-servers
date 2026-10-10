@@ -1,6 +1,6 @@
 {
   "name": "tdx-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Taiwan TDX transport: TRA and THSR stations, live boards, daily timetables. Needs app keys.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/tdx-mcp",

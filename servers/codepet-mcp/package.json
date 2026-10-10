@@ -1,6 +1,6 @@
 {
   "name": "codepet-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Local MCP companion for CodePet status, quests, and source-free coding events. Tools include get pet status, record coding event, list quests",
   "type": "module",
   "mcpName": "io.github.mrfentmen/codepet-mcp",

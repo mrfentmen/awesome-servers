@@ -1,16 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  SpeedrunError,
-  formatGame,
-  formatRecordCategory,
-  getCategories,
-  getLeaderboard,
-  getRunner,
-  getWorldRecords,
-  searchGames,
-} from "./api.js"
 
+import { SpeedrunError, formatGame, formatRecordCategory, getCategories, getLeaderboard, getRunner, getWorldRecords, searchGames } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -146,6 +138,38 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "latest_runs",
+    {
+      title: "Latest runs",
+      description: "The most recently submitted verified runs on speedrun.com, with game, category, runner and time.",
+      inputSchema: z.object( { limit: z.number().int().min(1).max(20).default(5).describe("How many runs.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: latest_runs ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_speedrun_latest_runs", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "player_pbs",
+    {
+      title: "Player pbs",
+      description: "A speedrun.com user's personal bests: game, category, place and time for each.",
+      inputSchema: z.object( { userId: z.string().describe("User id, e.g. j4pe1ywj"), limit: z.number().int().min(1).max(20).default(5).describe("How many personal bests.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: player_pbs ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_speedrun_player_pbs", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

@@ -59,3 +59,52 @@ export function countRequests(complaintType?: string, borough?: string, agency?:
 }
 
 export function format(value: unknown): string { return JSON.stringify(value, null, 2).slice(0, 16000) }
+
+// ---- muxB tools:
+
+// aggregation only: the existing tools deliberately keep addresses and
+// coordinates out of the response, so these do too
+async function groupBy(column: string, where: string, limit: number): Promise<Array<Record<string, string>>> {
+  const params: Record<string, string> = {
+    $select: `${column},count(*) as n`,
+    $group: column,
+    $order: 'n DESC',
+    $limit: String(limit),
+  }
+  if (where) params.$where = where
+  const url = new URL(BASE)
+  Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value))
+  const response = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(30000) })
+  if (!response.ok) throw new Nyc311Error(`NYC 311 error ${response.status}`)
+  return (await response.json()) as Array<Record<string, string>>
+}
+
+const nycCount = (row: Record<string, string>): string => {
+  const n = Number(row.n)
+  return Number.isFinite(n) ? n.toLocaleString('en-US') : 'not reported'
+}
+
+export interface AgencyBreakdownArgs {
+  start?: string
+  end?: string
+  limit?: number
+}
+
+export interface BoroughBreakdownArgs {
+  start?: string
+  end?: string
+}
+
+export async function boroughBreakdown(args: BoroughBreakdownArgs): Promise<string> {
+  validateDates(args.start, args.end)
+  const where = filters(undefined, undefined, undefined, args.start, args.end).join(' AND ')
+  const rows = await groupBy('borough', where, 6)
+  if (!rows.length) return 'NYC 311 returned no borough totals.'
+  return `NYC 311 requests by borough (${rows.length} shown):\n` +
+    rows.map((r, i) => `${i + 1}. ${r.borough || 'not reported'}: ${nycCount(r)} requests`).join('\n')
+}
+
+export interface OpenByTypeArgs {
+  limit?: number
+}
+

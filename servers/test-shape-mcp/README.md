@@ -15,3 +15,21 @@ Use `inspect_test_shape` against a local project. Results are heuristics for rev
 ## Privacy and limits
 
 Only bounded local test files are read. The response contains aggregate counts only. Test names, paths, source, and assertion details are suppressed.
+
+<!-- paywall -->
+## Premium tools
+
+These tools need a license key:
+
+* `analyze_test_source`
+
+Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-test-shape-mcp and set it in your MCP client config:
+
+```json
+"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
+```
+
+The key is checked against MCP Marketplace, cached for 24 hours, and keeps
+working offline once one check has succeeded. Every other tool on this server
+stays free.
+<!-- /paywall -->

@@ -37,8 +37,6 @@ const META = "https://archive.org/metadata"
 
 class ArchiveError extends Error {}
 
-
-
 async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(url, { headers: { "User-Agent": "archive-org-mcp/1.0" } })
   if (!res.ok) throw new ArchiveError(`Internet Archive error ${res.status} for ${url.slice(0, 120)}`)
@@ -134,7 +132,6 @@ const CDX = "https://web.archive.org/cdx/search/cdx"
 const AVAILABLE = "https://archive.org/wayback/available"
 
 class WaybackError extends Error {}
-
 
 async function getText(url: string): Promise<string> {
   const res = await fetch(url, {
@@ -235,3 +232,132 @@ export const m1_getAvailability = m1.getAvailability;
 export const m1_WaybackError = m1.WaybackError;
 export const m1_getSnapshotText = m1.getSnapshotText;
 export const m1_getSnapshots = m1.getSnapshots;
+
+// ---- muxE tools:
+// The five existing tools either print a short list of Archive items or list the
+// newest few Wayback snapshots. The new ones answer two questions neither asks:
+// what a search term actually looks like across the catalogue, and how one URL's
+// archived history is distributed over time rather than merely listed.
+
+const ADVANCED = "https://archive.org/advancedsearch.php";
+const IA_UA = "archive-org-mcp/1.0";
+
+interface CdxRow {
+  timestamp: string;
+  original: string;
+  statusCode: string;
+  mimeType: string;
+  digest: string;
+  length: string;
+}
+
+interface IaBody {
+  text: string;
+  contentType: string;
+}
+
+/**
+ * Fetches and returns the body unparsed. The two APIs here differ: advancedsearch
+ * always answers JSON and reports its own problems in an `error` field, while the
+ * CDX API occasionally answers a non JSON body of its own, so the caller reports
+ * what actually came back instead of the fetch layer assuming JSON.
+ */
+async function iaText(url: string, seconds: number): Promise<IaBody> {
+  let res: Response;
+  try {
+    res = await fetch(url, { headers: { "User-Agent": IA_UA }, signal: AbortSignal.timeout(seconds * 1000) });
+  } catch (e) {
+    if (e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError")) {
+      throw new ArchiveError(`The Internet Archive did not answer within ${seconds} seconds on this route; its index query is slow for a very widely captured URL, so narrow the year range or lower the limit.`);
+    }
+    throw new ArchiveError(`The Internet Archive could not be reached: ${e instanceof Error ? e.message : String(e)}`);
+  }
+  if (!res.ok) throw new ArchiveError(`Internet Archive error ${res.status}`);
+  const body = await res.text();
+  if (body.trim()) {
+    try {
+      const parsed = JSON.parse(body) as { error?: string };
+      if (parsed && typeof parsed.error === "string") {
+        throw new ArchiveError(`The Internet Archive said: ${parsed.error}`);
+      }
+    } catch (e) {
+      if (e instanceof ArchiveError) throw e;
+      // not JSON, which is the caller's business to report
+    }
+  }
+  return { text: body, contentType: res.headers.get("content-type") ?? "not reported" };
+}
+
+async function iaJson(url: string, seconds: number): Promise<unknown> {
+  const body = await iaText(url, seconds);
+  try {
+    return JSON.parse(body.text) as unknown;
+  } catch {
+    throw new ArchiveError(`The Internet Archive answered ${body.contentType} rather than JSON on this route.`);
+  }
+}
+
+export interface SnapshotTimelineArgs {
+  url: string;
+  from?: number;
+  to?: number;
+  limit?: number;
+}
+
+export interface SearchProfileArgs {
+  query: string;
+  mediatype?: string;
+  limit?: number;
+}
+
+export async function searchProfile(args: SearchProfileArgs): Promise<string> {
+  const query = (args?.query ?? "").trim();
+  if (!query) throw new ArchiveError("Provide search terms.");
+  const mediatype = (args?.mediatype ?? "").trim().toLowerCase();
+  if (mediatype && !/^[a-z]+$/.test(mediatype)) throw new ArchiveError("A media type is a single word like software, audio, movies or texts.");
+  const limit = Math.max(10, Math.min(Math.floor(Number(args?.limit ?? 200) || 200), 500));
+  const q = mediatype ? `(${query}) AND mediatype:${mediatype}` : query;
+  const fields = ["identifier", "year", "mediatype", "downloads", "collection", "item_size"].map((f) => `fl[]=${f}`).join("&");
+  const url = `${ADVANCED}?q=${encodeURIComponent(q)}&${fields}&rows=${limit}&page=1&output=json`;
+  const parsed = (await iaJson(url, 60)) as { response?: { numFound?: number; docs?: Array<Record<string, unknown>> } };
+  const docs = parsed.response?.docs ?? [];
+  const numFound = typeof parsed.response?.numFound === "number" ? parsed.response.numFound : docs.length;
+  if (!docs.length) return `The Internet Archive holds nothing matching "${query}"${mediatype ? ` in ${mediatype}` : ""}.`;
+  const types = new Map<string, number>();
+  const years = new Map<string, number>();
+  const collections = new Map<string, number>();
+  const downloads: number[] = [];
+  let withYear = 0;
+  for (const d of docs) {
+    const type = typeof d.mediatype === "string" ? d.mediatype : "not reported";
+    types.set(type, (types.get(type) ?? 0) + 1);
+    const year = d.year != null ? String(d.year).slice(0, 4) : "not reported";
+    years.set(year, (years.get(year) ?? 0) + 1);
+    if (d.year != null) withYear += 1;
+    for (const c of Array.isArray(d.collection) ? d.collection : []) collections.set(String(c), (collections.get(String(c)) ?? 0) + 1);
+    if (typeof d.downloads === "number" && Number.isFinite(d.downloads)) downloads.push(d.downloads);
+  }
+  const top = (m: Map<string, number>, n: number): string[] =>
+    [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, n).map(([k, v]) => `${k} (${v})`);
+  const lines = [
+    `What the Internet Archive holds for "${query}"${mediatype ? ` in ${mediatype}` : ""}:`,
+    `  items in the catalogue: ${numFound.toLocaleString("en-US")}`,
+    `  items read for this profile: ${docs.length}${numFound > docs.length ? `, so every breakdown below is a sample of the first ${docs.length} and not of all ${numFound.toLocaleString("en-US")}` : ""}`,
+  ];
+  lines.push(`  media types in the sample: ${top(types, 10).join(", ") || "none reported"}`);
+  lines.push(`  items with no year recorded: ${docs.length - withYear} of ${docs.length}`);
+  const knownYears = [...years.entries()].filter(([y]) => y !== "not reported").sort((a, b) => b[1] - a[1]);
+  lines.push(`  most common years in the sample: ${knownYears.slice(0, 12).map(([y, n]) => `${y} (${n})`).join(", ") || "none reported"}`);
+  lines.push(`  distinct collections touched: ${collections.size}`);
+  lines.push(`    ${top(collections, 10).join(", ") || "none reported"}`);
+  if (downloads.length) {
+    const sorted = [...downloads].sort((a, b) => a - b);
+    const total = downloads.reduce((a, b) => a + b, 0);
+    const median = sorted.length % 2 ? sorted[Math.floor(sorted.length / 2)] : Math.round((sorted[sorted.length - 1] + sorted[sorted.length]) / 2);
+    lines.push(`  downloads across the ${downloads.length} item(s) that report it: total ${total.toLocaleString("en-US")}, median ${median.toLocaleString("en-US")}, highest ${sorted[sorted.length - 1].toLocaleString("en-US")}, lowest ${sorted[0].toLocaleString("en-US")}`);
+  } else {
+    lines.push("  no item in the sample reports a download count.");
+  }
+  lines.push("  every figure above is tallied from the rows the search returned, and the sample size is stated rather than implied.");
+  return lines.join("\n");
+}

@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { latest } from "./api.js"
-import { search } from "./api.js"
 
+import { latest, search } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,37 @@ export function createServer(): McpServer {
     try { return text(await latest(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "section_feed",
+    {
+      title: "Section feed",
+      description: "The Guardian's RSS feed for one section, which needs no API key, so you can follow a beat without the open API.",
+      inputSchema: z.object( { section: z.string().describe("Section slug, e.g. environment or world/uk."), limit: z.number().describe("Max items.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: section_feed ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_guardian_section_feed", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "front_page_feed",
+    {
+      title: "Front page feed",
+      description: "The Guardian's front page RSS feed, keyless: everything currently on the front page with its standfirst and link.",
+      inputSchema: z.object( { limit: z.number().describe("Max items.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: front_page_feed ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_guardian_front_page_feed", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

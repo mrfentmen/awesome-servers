@@ -37,3 +37,45 @@ export async function depth(args: DepthArgs): Promise<string> {
   if (d.status !== 'ok') throw new Error(`No depth for ${symbol}.`);
   return `HTX ${symbol.toUpperCase()} order book (top ${depth}):\nBids:\n` + bids.slice(0, depth).map(([p, s]) => `  ${p} @ ${s}`).join('\n') + `\nAsks:\n` + asks.slice(0, depth).map(([p, s]) => `  ${p} @ ${s}`).join('\n');
 }
+
+// ---- muxB tools:
+
+const TRADE = `${BASE}/market/trade`;
+
+export interface CandlesArgs {
+  symbol: string;
+  period?: string;
+  size?: number;
+}
+
+export interface RecentTradeArgs {
+  symbol: string;
+  limit?: number;
+}
+
+function symbolOf(value: string | undefined): string {
+  const symbol = String(value ?? '').trim().toLowerCase();
+  if (!symbol) throw new Error('Provide a symbol like btcusdt.');
+  return symbol;
+}
+
+export async function recentTrades(args: RecentTradeArgs): Promise<string> {
+  const symbol = symbolOf(args.symbol);
+  const limit = Math.max(1, Math.min(Number(args.limit ?? 10) || 10, 50));
+  const res = await fetch(`${TRADE}?symbol=${encodeURIComponent(symbol)}`, {
+    headers: { 'User-Agent': UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!res.ok) throw new Error(`HTX returned ${res.status}`);
+  const d = (await res.json()) as {
+    status?: string;
+    tick?: { ts?: number; data?: Array<{ id?: number; ts?: number; tradeId?: number; amount?: number; price?: number; direction?: string }> };
+  };
+  if (d.status !== 'ok') throw new Error(`No trades for ${symbol}.`);
+  const rows = (d.tick?.data ?? []).slice(0, limit);
+  if (!rows.length) return `HTX ${symbol.toUpperCase()}: no trades reported.`;
+  return `HTX ${symbol.toUpperCase()} recent trades (${rows.length} shown, newest first):\n` +
+    rows
+      .map((t, i) => `${i + 1}. ${t.direction ?? '?'} ${t.amount ?? '?'} @ ${t.price ?? '?'} | ${t.ts ? new Date(t.ts).toISOString().replace('T', ' ').slice(0, 19) : 'time not reported'}`)
+      .join('\n');
+}

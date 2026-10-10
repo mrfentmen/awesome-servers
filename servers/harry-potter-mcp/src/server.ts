@@ -1,9 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { character } from "./api.js"
-import { house } from "./api.js"
-import { spells } from "./api.js"
 
+import { character, house, spells } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -47,5 +46,37 @@ export function createServer(): McpServer {
     try { return text(await spells(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "character_profile",
+    {
+      title: "Character profile",
+      description: "One character's full record: alternate names, appearance, birth date, ancestry, wand, patronus, Hogwarts role and actors.",
+      inputSchema: z.object( { name: z.string().max(120).describe("Character name.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: character_profile ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_harry_potter_character_profile", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "search_spells",
+    {
+      title: "Search spells",
+      description: "Search spell names and descriptions for a word, with how many spells matched out of the whole list.",
+      inputSchema: z.object( { query: z.string().max(120).describe("Words to look for."), limit: z.number().int().min(1).max(77).default(20) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: search_spells ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_harry_potter_search_spells", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

@@ -1,6 +1,6 @@
 {
   "name": "smithsonian-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Smithsonian collections: artifacts, art, specimens. Free key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/smithsonian-mcp",

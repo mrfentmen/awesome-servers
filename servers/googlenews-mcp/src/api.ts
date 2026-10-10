@@ -29,3 +29,8 @@ export async function search(args: SearchArgs): Promise<string> {
   if (!items.length) return `No Google News headlines for "${q}".`;
   return `Google News for "${q}" (${items.length} shown):\n` + items.map((s, i) => `${i + 1}. ${s}`).join('\n');
 }
+
+// ---- muxB tools:
+
+type RssItem = { title: string; link: string; date: string; source: string };
+

@@ -1,6 +1,6 @@
 {
   "name": "logto-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Logto: users, applications. Works with Cloud or self-hosted.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/logto-mcp",

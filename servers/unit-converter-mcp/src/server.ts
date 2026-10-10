@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { convert } from "./api.js"
-import { listUnits } from "./api.js"
 
+import { convert, listUnits } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,21 @@ export function createServer(): McpServer {
     try { return text(await listUnits(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "convert_many",
+    {
+      title: "Convert many",
+      description: "Convert a whole list of values with one unit pair in a single call, which saves a round trip per amount.",
+      inputSchema: z.object( { values: z.array(z.number()).describe("Up to 100 numbers to convert."), from: z.string().describe("Source unit."), to: z.string().describe("Target unit."), }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: convert_many ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_unit_converter_convert_many", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

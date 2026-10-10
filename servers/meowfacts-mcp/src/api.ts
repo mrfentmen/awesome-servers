@@ -21,3 +21,8 @@ export async function many(args: { count?: number }): Promise<string> {
   }
   return out.join("\n\n")
 }
+
+// ---- muxC tools:
+
+const MEOWFACTS_UA = "mrfentmen-meowfacts-mcp/1.0 (https://github.com/mrfentmen)"
+

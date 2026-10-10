@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { verse, search, kjvChapter } from './api.js'
 
+import { verse, search, kjvChapter, bibleBooks } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -45,5 +46,50 @@ export function createServer(): McpServer {
     try { return text(await kjvChapter(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "translation_catalogue",
+    {
+      title: "Translation catalogue",
+      description: "Every Bible translation bible-api.com serves, with language and licence, optionally filtered to one language.",
+      inputSchema: z.object( { language: z.string().describe("Only this language, e.g. English.").optional(), limit: z.number().describe("Max translations.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: translation_catalogue ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_bible_translation_catalogue", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "bible_books",
+    {
+      title: "Bible books",
+      description: "The 66 KJV books in canonical order, filtered to the Old or New Testament, with each book's API url.",
+      inputSchema: z.object( { testament: z.string().describe("all, old or new.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await bibleBooks(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "book_chapters",
+    {
+      title: "Book chapters",
+      description: "Chapter and verse counts for one KJV book, by number or name, with its first verse.",
+      inputSchema: z.object( { book: z.string().describe("Book number 1 to 66, or a name like Genesis.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: book_chapters ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_bible_book_chapters", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

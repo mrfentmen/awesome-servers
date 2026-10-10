@@ -29,3 +29,48 @@ export async function formula(args: FormulaArgs): Promise<string> {
   ].filter(Boolean);
   return lines.join('\n') || `No data for formula ${name}.`;
 }
+
+// ---- muxB tools:
+
+type Cask = {
+  token?: string;
+  name?: string[];
+  version?: string;
+  desc?: string | null;
+  homepage?: string;
+  depends_on?: { macos?: Record<string, string>; cask?: string[] };
+  conflicts_with?: { cask?: string[]; formula?: string[] };
+  artifacts?: { app?: string[]; binary?: string[] }[];
+  caveats?: string | null;
+  deprecated?: boolean;
+  deprecation_date?: string;
+  disabled?: boolean;
+  disable_date?: string;
+  languages?: string[];
+  auto_updates?: boolean;
+};
+
+type BottleFile = { cellar?: string; url?: string; sha256?: string };
+type Formula = {
+  name?: { full?: string; stable?: string; head?: string };
+  full_name?: string;
+  desc?: string | null;
+  homepage?: string;
+  versions?: { stable?: string; head?: string; bottle?: boolean };
+  revision?: number;
+  bottle?: { stable?: { files?: Record<string, BottleFile> } };
+  dependencies?: string[];
+  build_dependencies?: string[];
+  test_dependencies?: string[];
+  recommended_dependencies?: string[];
+  optional_dependencies?: string[];
+  deprecated?: boolean;
+  deprecation_date?: string;
+  disabled?: boolean;
+  disable_date?: string;
+  disable_reason?: string;
+  keg_only?: boolean;
+  aliases?: string[];
+  oldname?: string;
+};
+

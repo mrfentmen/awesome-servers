@@ -10,3 +10,6 @@ export async function random(_args: Record<string, never> = {}): Promise<string>
   if (!data.quote) throw new Error('kanye.rest returned an empty quote');
   return data.quote;
 }
+
+// ---- muxC tools:
+

@@ -48,3 +48,73 @@ export async function artwork(args: ArtworkArgs): Promise<string> {
     s('description') ? `\n${s('description')}` : '',
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxA tools:
+
+const CMA = "https://openaccess-api.clevelandart.org/api";
+
+function clamp(value: number | undefined, fallback: number, max: number): number {
+  return Math.max(1, Math.min(Math.round(value ?? fallback), max));
+}
+
+function text(value: unknown, max = 160): string {
+  if (value == null) return "not recorded";
+  if (Array.isArray(value)) {
+    const parts = value.map((v) => (v && typeof v === "object" ? String((v as Record<string, unknown>).name ?? JSON.stringify(v)) : String(v)));
+    return parts.filter(Boolean).join(", ") || "not recorded";
+  }
+  const s = String(value).replace(/\s+/g, " ").trim();
+  if (!s) return "not recorded";
+  return s.length > max ? `${s.slice(0, max)}...` : s;
+}
+
+async function cmaGet(path: string, params: Record<string, string> = {}): Promise<any> {
+  const query = new URLSearchParams(params);
+  const res = await fetch(`${CMA}${path}?${query.toString()}`, {
+    headers: { "User-Agent": "mrfentmen-clevelandart-mcp/1.0", Accept: "application/json" },
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!res.ok) throw new Error(`Cleveland Museum of Art returned ${res.status}`);
+  return (await res.json()) as any;
+}
+
+export interface CreatorArgs {
+  name?: string;
+  nationality?: string;
+  limit?: number;
+}
+
+export interface OaImageArgs {
+  query?: string;
+  department?: string;
+  type?: string;
+  limit?: number;
+  skip?: number;
+}
+
+export interface ExhibitionArgs {
+  query?: string;
+  limit?: number;
+}
+
+export async function exhibitions(args: ExhibitionArgs): Promise<string> {
+  const params: Record<string, string> = { limit: String(clamp(args.limit, 10, 50)) };
+  if (args.query?.trim()) params.q = args.query.trim();
+  const d = await cmaGet("/exhibitions/", params);
+  const rows = (d.data ?? []) as Array<Record<string, any>>;
+  const total = Number(d.info?.total ?? rows.length);
+  if (!rows.length) return `No Cleveland Museum of Art exhibition matches "${args.query}".`;
+  const shown = rows.slice(0, clamp(args.limit, 10, 50));
+  return [
+    `Cleveland Museum of Art exhibitions: ${total.toLocaleString("en-US")} record(s), showing ${shown.length}.`,
+    ...shown.map((e, i) => {
+      const start = String(e.opening_date ?? "").slice(0, 10);
+      const end = String(e.closing_date ?? "").slice(0, 10);
+      const venues = Array.isArray(e.venues) ? e.venues.map((v: Record<string, any>) => String(v?.name ?? "")).filter(Boolean) : [];
+      return `${i + 1}. ${text(e.title, 90)} | id ${e.id ?? "?"} | ${start || "?"} to ${end || "still open"} | organizer ${text(e.organizer, 50)}${venues.length ? ` | venue ${venues.slice(0, 2).join(", ")}` : ""}`;
+    }),
+    total > shown.length ? `plus ${total - shown.length} more exhibitions` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}

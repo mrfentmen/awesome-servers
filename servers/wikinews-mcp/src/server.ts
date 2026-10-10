@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { search } from "./api.js"
+import { search, article, browseCategories } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -21,5 +22,39 @@ export function createServer(): McpServer {
     try { return text(await search(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "article",
+    {
+      title: "Article",
+      description: "Full plain text of a Wikinews article, from a title found with search.",
+      inputSchema: z.object( { title: z.string().describe("Exact Wikinews article title.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: article ----
+    const paywallMessage = await premiumRequired("article")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await article(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "browse_categories",
+    {
+      title: "Browse categories",
+      description: "List Wikinews categories whose name starts with a prefix, to find the beat a story belongs to.",
+      inputSchema: z.object( { prefix: z.string().describe("Category name prefix, e.g. \"Afri\"."), limit: z.number().int().min(1).max(50).default(20).describe("Max categories.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: browse_categories ----
+    const paywallMessage = await premiumRequired("browse_categories")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await browseCategories(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

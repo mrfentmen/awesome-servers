@@ -1,6 +1,6 @@
 {
   "name": "open-library-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Open Library search, works, authors, editions, and ISBN.",
   "type": "module",
   "main": "dist/index.js",

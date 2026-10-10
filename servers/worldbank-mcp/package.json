@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/worldbank-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "World Bank indicators, countries, and EIA energy series.",
   "type": "module",
   "main": "dist/index.js",

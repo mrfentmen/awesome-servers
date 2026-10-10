@@ -1,7 +1,7 @@
 {
   "name": "pokemon-tcg-mcp",
-  "version": "1.0.0",
-  "description": "Use this MCP server to the Pok\u00e9mon TCG, search cards, sets, rarities via TCGdex. Tools include search cards, get card, list sets",
+  "version": "1.0.1",
+  "description": "Use this MCP server to the Pokémon TCG, search cards, sets, rarities via TCGdex. Tools include search cards, get card, list sets",
   "type": "module",
   "mcpName": "io.github.mrfentmen/pokemon-tcg-mcp",
   "repository": {

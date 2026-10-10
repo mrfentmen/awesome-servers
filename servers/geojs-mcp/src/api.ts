@@ -29,3 +29,26 @@ export async function lookup(args: LookupArgs): Promise<string> {
 export async function self(_args?: unknown): Promise<string> {
   return lookup({});
 }
+
+// ---- muxC tools:
+
+interface GeoJsGeo {
+  ip?: string
+  latitude?: string
+  longitude?: string
+  accuracy?: number
+  asn?: number
+  asnOrganization?: string
+  organization?: string
+  area_code?: string
+  city?: string
+  region?: string
+  region_code?: string
+  country?: string
+  country_code?: string
+  country_code3?: string
+  continent_code?: string
+  postal?: string
+  timezone?: string
+}
+

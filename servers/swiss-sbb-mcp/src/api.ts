@@ -52,3 +52,27 @@ export async function stationboard(args: StationboardArgs): Promise<string> {
       return `${i + 1}. ${dep} ${j.category ?? ''} ${j.name ?? ''} -> ${j.to ?? '?'}`.trim();
     }).join('\n');
 }
+
+// ---- muxB tools:
+const SWISSTOPO = 'https://api3.geo.admin.ch/rest/services/api/SearchServer';
+
+type SwissHit = {
+  id?: string;
+  weight?: number;
+  attrs?: {
+    label?: string;
+    detail?: string;
+    lat?: number;
+    lon?: number;
+    objectclass?: string;
+    origin?: string;
+    type?: string;
+    house_no?: string;
+    str_name?: string;
+    zip?: string;
+    town?: string;
+    canton?: string;
+    district?: string;
+  };
+}
+

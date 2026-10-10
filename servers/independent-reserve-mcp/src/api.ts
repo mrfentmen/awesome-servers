@@ -25,3 +25,13 @@ export async function ticker(args: TickerArgs): Promise<string> {
     `24h volume: ${get('DayVolumeXbt')} ${primary.toUpperCase()}`,
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxB tools:
+type IrOrder = { OrderType?: string; Price?: number; Volume?: number }
+type IrTrade = {
+  TradeTimestampUtc?: string;
+  PrimaryCurrencyAmount?: number;
+  SecondaryCurrencyTradePrice?: number;
+  Taker?: string;
+}
+

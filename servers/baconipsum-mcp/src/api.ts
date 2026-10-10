@@ -18,3 +18,17 @@ export async function generate(args: GenerateArgs): Promise<string> {
   if (!Array.isArray(d) || !d.length) return 'No text returned.';
   return d.join(' ');
 }
+
+// ---- muxA tools:
+// The existing tool returns one joined blob of sentences. This returns the real
+// paragraph blocks the API can produce, in JSON, HTML or plain text, and refuses
+// a type the API would silently ignore.
+const TYPES = ['meat-and-filler', 'all-meat'];
+
+export interface ParagraphsArgs {
+  paras?: number;
+  type?: string;
+  startWithLorem?: boolean;
+  format?: string;
+}
+

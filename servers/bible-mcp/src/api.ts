@@ -95,3 +95,69 @@ export async function kjvChapter(args: { book?: string; chapter?: number }): Pro
   return `${name} ${data.chapter ?? ch} (${verses.length} verses):\n` +
     verses.map((v) => `${v.verse}. ${(v.text ?? '').trim()}`).join('\n');
 }
+
+// ---- muxA tools:
+
+const GETBIBLE = 'https://api.getbible.net/v2';
+const UA_HDR = { 'User-Agent': 'mrfentmen-bible-mcp/1.0', Accept: 'application/json' };
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { headers: UA_HDR, signal: AbortSignal.timeout(25000) });
+  if (!res.ok) throw new Error(`Request returned ${res.status} for ${url}`);
+  return (await res.json()) as T;
+}
+
+function clean(value: unknown): string {
+  return value != null ? String(value) : '';
+}
+
+async function bookList(): Promise<Array<{ nr: number; name: string; url: string }>> {
+  const d = await fetchJson<Record<string, { name?: string; nr?: number; url?: string }>>(
+    `${GETBIBLE}/kjv/books.json`,
+  );
+  return Object.entries(d)
+    .map(([key, v]) => ({
+      nr: Number(v.nr ?? key),
+      name: clean(v.name),
+      url: clean(v.url) || `${GETBIBLE}/kjv/${key}.json`,
+    }))
+    .sort((a, b) => a.nr - b.nr);
+}
+
+export interface CatalogueArgs {
+  language?: string;
+  limit?: number;
+}
+
+// getbible's books.json carries no chapter counts, so this lists the books and
+// their API urls without inventing a structure the endpoint does not report.
+export interface BooksArgs {
+  testament?: string;
+}
+
+export async function bibleBooks(args: BooksArgs): Promise<string> {
+  const wanted = (args.testament ?? 'all').trim().toLowerCase();
+  const books = await bookList();
+  if (!books.length) return 'getbible.net returned no KJV books.';
+  const isOld = (b: { nr: number }) => b.nr < 40;
+  const filtered =
+    wanted === 'old' || wanted === 'ot' ? books.filter(isOld)
+    : wanted === 'new' || wanted === 'nt' ? books.filter((b) => !isOld(b))
+    : books;
+  if (!['all', 'old', 'ot', 'new', 'nt'].includes(wanted)) {
+    return `Unknown testament ${wanted}. Use all, old or new.`;
+  }
+  const label =
+    wanted === 'old' || wanted === 'ot' ? 'Old Testament'
+    : wanted === 'new' || wanted === 'nt' ? 'New Testament'
+    : 'both testaments';
+  return [
+    `The King James Version has ${books.length} books, ${filtered.length} in the ${label}.`,
+    filtered.map((b) => `${b.nr}. ${b.name} — ${b.url}`).join('\n'),
+  ].join('\n');
+}
+
+export interface ChapterArgs {
+  book: string;
+}
+

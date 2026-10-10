@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatGame, formatStanding, formatTeamStats, getSchedule, getStandings, getTeamStats, NhlError } from "./api.js"
 
+import { formatGame, formatStanding, formatTeamStats, getSchedule, getStandings, getTeamStats, NhlError } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -68,6 +69,38 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "player_profile",
+    {
+      title: "Player profile",
+      description: "An NHL player's current club, position, birth date, height, weight and featured season statistics by category.",
+      inputSchema: z.object( { playerId: z.number().describe("NHL player id, e.g. 8478402."), }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: player_profile ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_nhl_player_profile", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "team_roster",
+    {
+      title: "Team roster",
+      description: "A club's current NHL roster grouped by forwards, defence and goalies with player ids, positions and birth dates, which standings and schedules do not give.",
+      inputSchema: z.object( { team: z.string().describe("Team abbreviation, e.g. EDM."), }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: team_roster ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_nhl_team_roster", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

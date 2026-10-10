@@ -1,15 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  LichessError,
-  formatPlayer,
-  formatPuzzle,
-  getDailyPuzzle,
-  getPlayer,
-  getPuzzleById,
-  getTopPlayers,
-} from "./api.js"
 
+import { LichessError, formatPlayer, formatPuzzle, getDailyPuzzle, getPlayer, getPuzzleById, getTopPlayers } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -108,6 +101,38 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "live_tournaments",
+    {
+      title: "Live tournaments",
+      description: "The arena and swiss tournaments Lichess has open right now, with clock, variant, player count and join link.",
+      inputSchema: z.object( { limit: z.number().describe("Max tournaments.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: live_tournaments ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_lichess_live_tournaments", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "team_info",
+    {
+      title: "Team info",
+      description: "A Lichess team's public record: whether it is open to join, its description, its leader and its members with titles and blitz ratings.",
+      inputSchema: z.object( { team: z.string().describe("Team id, e.g. lichess-swiss."), }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: team_info ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_lichess_team_info", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

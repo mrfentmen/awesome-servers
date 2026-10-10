@@ -35,3 +35,16 @@ export async function publicTimeline(args: TimelineArgs): Promise<string> {
     return `${i + 1}. @${p.account?.username ?? '?'}: ${strip.slice(0, 120)} (${(p.media_attachments ?? []).length} media)`;
   }).join('\n');
 }
+
+// ---- muxB tools:
+
+type TrendTag = {
+  name?: string;
+  url?: string;
+  history?: { day?: string; accounts?: string; uses?: string }[];
+};
+
+type ServerRule = { id?: string; text?: string; hint?: string };
+
+type WeekStat = { week?: string; statuses?: string; logins?: string; registrations?: string };
+

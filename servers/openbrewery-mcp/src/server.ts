@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_search, m1_byCity, m1_byState, m1_search } from './api.js'
 
+import { m0_search, m1_byCity, m1_byState, m1_search } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -46,5 +47,37 @@ server.registerTool(
     try { return text(await m1_byState(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "brewery_detail",
+    {
+      title: "Brewery detail",
+      description: "One brewery by its Open Brewery DB id, with type, full address, phone, website and coordinates.",
+      inputSchema: z.object( { id: z.string().min(1).max(64) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: brewery_detail ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_openbrewery_brewery_detail", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "by_type",
+    {
+      title: "By type",
+      description: "List breweries of one brewery type, such as micro, brewpub, large or contract.",
+      inputSchema: z.object( { type: z.string().min(1).max(40), limit: z.number().int().min(1).max(25).default(10) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: by_type ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_openbrewery_by_type", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

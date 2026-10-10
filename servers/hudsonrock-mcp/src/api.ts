@@ -27,3 +27,41 @@ export async function email(args: EmailArgs): Promise<string> {
     ...rows,
   ].join('\n');
 }
+
+// ---- muxB tools:
+const TOOLS_ROOT = 'https://cavalier.hudsonrock.com/api/json/v2/osint-tools';
+
+async function osint(path: string, query: string): Promise<Record<string, unknown>> {
+  const res = await fetch(`${TOOLS_ROOT}/${path}?${query}`, {
+    headers: { 'User-Agent': 'mrfentmen-hudsonrock-mcp/1.0', Accept: 'application/json' },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error(`Hudson Rock returned ${res.status}`);
+  return (await res.json()) as Record<string, unknown>;
+}
+
+export interface DomainArgs {
+  domain: string;
+  apps?: number;
+}
+
+export interface IpArgs {
+  ip: string;
+  limit?: number;
+}
+
+export async function ipBreaches(args: IpArgs): Promise<string> {
+  const ip = (args.ip ?? '').trim();
+  if (!ip) return 'Provide an IP address.';
+  const limit = Math.max(1, Math.min(Number(args.limit ?? 5) || 5, 20));
+  const d = await osint('search-by-ip', `ip=${encodeURIComponent(ip)}`);
+  const rows = (Array.isArray(d.stealers) ? (d.stealers as Array<Record<string, unknown>>) : []).slice(0, limit);
+  if (!rows.length) return `Hudson Rock reports no infostealer breach records for IP ${ip}.`;
+  return `Hudson Rock infostealer breaches for IP ${ip} (${rows.length} shown):\n` +
+    rows
+      .map((r, i) => {
+        const av = (Array.isArray(r.antiviruses) ? (r.antiviruses as string[]) : []).slice(0, 2).join(', ');
+        return `${i + 1}. ${String(r.stealer_name ?? 'not reported')} on ${String(r.computer_name ?? 'not reported')} at ${String(r.date_compromised ?? 'not reported').slice(0, 10)} | ${String(r.operating_system ?? 'OS not reported')}${av ? ` | AV ${av}` : ''} | corporate services ${String(r.total_corporate_services ?? 0)}, user services ${String(r.total_user_services ?? 0)}`;
+      })
+      .join('\n');
+}

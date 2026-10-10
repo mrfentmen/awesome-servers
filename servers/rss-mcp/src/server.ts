@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { readFeed, feedJson } from './api.js'
 
+import { readFeed, feedJson } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -33,5 +34,37 @@ export function createServer(): McpServer {
     try { return text(await feedJson(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "search_feed",
+    {
+      title: "Search feed",
+      description: "Find items inside an RSS feed by word or phrase, which is how you pull one story out of a busy site instead of reading the whole feed.",
+      inputSchema: z.object( { url: z.string().describe("Feed url."), query: z.string().describe("Word or phrase to look for."), limit: z.number().describe("Max matches.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: search_feed ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_rss_search_feed", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "feed_info",
+    {
+      title: "Feed info",
+      description: "A feed's own channel metadata: title, description, site link, image and item count, which reading its items does not show.",
+      inputSchema: z.object( { url: z.string().describe("Feed url."), }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: feed_info ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_rss_feed_info", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_history, m0_latest, m1_convert, m1_latest } from './api.js'
 
+import { m0_history, m0_latest, m1_convert, m1_latest } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -46,5 +47,21 @@ server.registerTool(
     try { return text(await m1_convert(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "supported_currencies",
+    {
+      title: "Supported currencies",
+      description: "Every currency Frankfurter quotes with its name, or - given a base code - that base's current rate against each currency it tracks.",
+      inputSchema: z.object( { base: z.string().describe("Base code such as EUR to list its rates.").optional(), symbol: z.string().describe("Filter the list to one code or name.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: supported_currencies ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_frankfurter_supported_currencies", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

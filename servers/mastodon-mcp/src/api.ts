@@ -47,3 +47,55 @@ export async function trends(args: TrendsArgs): Promise<string> {
       })
       .join('\n');
 }
+
+// ---- muxF tools:
+/**
+ * Two more public Mastodon endpoints: resolving a handle to a real account
+ * across the fediverse, and reading a hashtag timeline, which is a different
+ * question from what is trending right now.
+ */
+const MS_UA = { "User-Agent": "mrfentmen-mastodon-mcp/1.0", Accept: "application/json" };
+
+function msBase(domain?: string): string {
+  const base = (domain ?? "").trim().replace(/\/+$/, "");
+  if (base && !/^https:\/\//i.test(base)) return `https://${base}`;
+  return base || DEFAULT;
+}
+
+async function msGet<T>(url: string, what: string): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(url, { headers: MS_UA, signal: AbortSignal.timeout(20000) });
+  } catch (e) {
+    throw new Error(`Network error talking to Mastodon: ${(e as Error).message}`);
+  }
+  if (res.status === 401 || res.status === 403) throw new Error(`Mastodon requires authentication for ${what} (${res.status}).`);
+  if (res.status === 404) throw new Error(`Mastodon returned 404 for ${what}.`);
+  if (!res.ok) throw new Error(`Mastodon returned ${res.status} for ${what}.`);
+  const body = (await res.text()).trim();
+  if (!body) throw new Error(`Mastodon returned an empty body for ${what}.`);
+  return JSON.parse(body) as T;
+}
+
+const msText = (value: unknown, max = 120): string =>
+  String(value ?? "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, max);
+
+const msDate = (value: unknown): string => {
+  const stamp = Date.parse(String(value ?? ""));
+  if (!Number.isFinite(stamp)) return "not reported";
+  const days = Math.round((Date.now() - stamp) / 86_400_000);
+  return `${new Date(stamp).toISOString().slice(0, 10)} (${days} day(s) ago)`;
+};
+
+const msHost = (raw: string): string => new URL(raw).host.replace(/^www\./, "");
+
+const msLastStatus = (value: unknown): string => {
+  const seconds = Number(value);
+  if (!Number.isFinite(seconds) || seconds <= 0) return "not reported";
+  return msDate(new Date(seconds * 1000).toISOString());
+};
+

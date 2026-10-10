@@ -25,3 +25,9 @@ export async function search(args: SearchArgs): Promise<string> {
       return `${i + 1}. ${s('_primaryTitle') || s('object')}${artist ? ` | ${artist}` : ''}${date ? ` | ${date}` : ''}`;
     }).join('\n');
 }
+
+// ---- muxC tools:
+
+// The V&A wraps most values twice: a list of {name:{text,id}} or
+// {place:{text,id}} or {date:{text,...}}. Flatten either shape to plain text.
+

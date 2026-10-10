@@ -31,3 +31,30 @@ export async function current(_args: Record<string, never> = {}): Promise<string
   const d = await get<Record<string, unknown>>(BASE);
   return format(d);
 }
+
+// ---- muxB tools:
+
+function fiGet<T>(url: string): Promise<T> {
+  return get<T>(url);
+}
+
+function fiList(value: unknown, max = 12): string {
+  if (!Array.isArray(value) || !value.length) return 'not reported';
+  const items = value.slice(0, max).map((v) => String(v));
+  const extra = value.length - items.length;
+  return items.join(', ') + (extra > 0 ? `, and ${extra} more` : '');
+}
+
+function fiText(d: Record<string, unknown>, key: string): string {
+  const v = d[key];
+  return v != null && String(v).trim() ? String(v) : 'not reported';
+}
+
+export interface NetworkDetailsArgs {
+  ip?: string;
+}
+
+export interface CountryLocaleArgs {
+  ip?: string;
+}
+

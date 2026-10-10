@@ -1,6 +1,6 @@
 {
   "name": "frankfurter-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ECB reference exchange rates (Frankfurter).",
   "type": "module",
   "main": "dist/index.js",

@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { locate } from "./api.js"
 
+import { locate, distanceBetween } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -21,5 +22,34 @@ export function createServer(): McpServer {
     try { return text(await locate(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "locate_many",
+    {
+      title: "Locate many",
+      description: "Look up several IPv4 or IPv6 addresses at once and report each location, a country tally, and any address the database could not resolve.",
+      inputSchema: z.object( { ips: z.string().describe("IP addresses separated by spaces or commas, up to 20.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: locate_many ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_geolocation_db_locate_many", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "distance_between",
+    {
+      title: "Distance between",
+      description: "Great-circle distance and initial bearing between the locations of two IP addresses.",
+      inputSchema: z.object( { from: z.string().describe("First IP address."), to: z.string().describe("Second IP address.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await distanceBetween(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

@@ -71,3 +71,56 @@ export function wikiTextToPlain(wt: string, maxChars = 12000): string {
     .trim()
     .slice(0, maxChars)
 }
+
+// ---- muxA tools:
+
+const DF = "https://dwarffortresswiki.org/api.php";
+
+function cap(value: number | undefined, fallback: number, max: number): number {
+  return Math.max(1, Math.min(Math.round(value ?? fallback), max));
+}
+
+const strip = (s: unknown): string => String(s ?? "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+
+async function dfGet(params: Record<string, string>): Promise<any> {
+  const qs = new URLSearchParams({ format: "json", ...params });
+  const res = await fetch(`${DF}?${qs.toString()}`, {
+    headers: { "User-Agent": "dwarffortress-mcp/1.0 (research)" },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new DfError(`DF wiki error ${res.status}`);
+  return (await res.json()) as any;
+}
+
+export interface DfDetailsArgs {
+  title: string;
+}
+
+export interface DfCategoryArgs {
+  category: string;
+  limit?: number;
+}
+
+export interface DfLinksArgs {
+  title: string;
+  limit?: number;
+  search?: string;
+}
+
+export async function pageLinks(args: DfLinksArgs): Promise<string> {
+  const title = (args.title ?? "").trim();
+  if (!title) throw new DfError("Provide a page title, e.g. Dwarf.");
+  const limit = cap(args.limit, 40, 200);
+  const d = await dfGet({ action: "query", prop: "links", titles: title, pllimit: String(limit) });
+  const pages = (d?.query?.pages ?? {}) as Record<string, any>;
+  const page = Object.values(pages)[0] as Record<string, any> | undefined;
+  if (!page || page.missing !== undefined) return `The Dwarf Fortress wiki has no page titled "${title}".`;
+  const links = (page.links ?? []) as Array<{ title?: string; ns?: number }>;
+  if (!links.length) return `${String(page.title)} links to no other wiki pages.`;
+  const q = (args.search ?? "").trim().toLowerCase();
+  const rows = q ? links.filter((l) => String(l.title).toLowerCase().includes(q)) : links;
+  return [
+    `Pages linked from ${String(page.title ?? title)}: ${links.length}${d?.continue ? " returned, more pages exist" : ""}${q ? `, ${rows.length} match "${q}"` : ""}.`,
+    ...rows.slice(0, limit).map((l, i) => `${i + 1}. ${String(l.title ?? "?").replace(/^Category:/, "Category:")} (namespace ${l.ns ?? "?"})`),
+  ].join("\n");
+}

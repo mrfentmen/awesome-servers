@@ -8,7 +8,6 @@ export interface m0_SearchArgs {
 const m0 = (() => {
 const BASE = 'https://api.openbrewerydb.org/v1/breweries';
 
-
 async function search(args: m0_SearchArgs = {}): Promise<string> {
   const limit = Math.max(1, Math.min(args.limit ?? 10, 25));
   const params = new URLSearchParams({ per_page: String(limit) });
@@ -91,3 +90,15 @@ export const m1_search = m1.search;
 export const m1_byState = m1.byState;
 export const m1_BreweryError = m1.BreweryError;
 export const m1_byCity = m1.byCity;
+
+// ---- muxB tools:
+
+export interface BreweryDetailArgs {
+  id: string
+}
+
+export interface ByTypeArgs {
+  type: string
+  limit?: number
+}
+

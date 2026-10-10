@@ -38,3 +38,50 @@ export async function sets(args: SetsArgs): Promise<string> {
   return `MTG sets (${list.length}):\n` +
     list.slice(0, limit).map((s, i) => `${i + 1}. [${s.code ?? '?'}] ${s.name ?? '?'} (${s.type ?? '?'}, released ${s.releaseDate ?? '?'})`).join('\n');
 }
+
+// ---- muxB tools:
+const SCY = 'https://api.scryfall.com';
+
+type ScryfallCard = {
+  id?: string;
+  name?: string;
+  mana_cost?: string;
+  cmc?: number | null;
+  type_line?: string;
+  oracle_text?: string;
+  flavor_text?: string;
+  power?: string;
+  toughness?: string;
+  colors?: string[];
+  color_identity?: string[];
+  keywords?: string[];
+  legalities?: Record<string, string>;
+  prices?: Record<string, string | null>;
+  edhrec_rank?: number | null;
+  artist?: string;
+  rarity?: string;
+  set?: string;
+  set_name?: string;
+  collector_number?: string;
+  released_at?: string;
+  image_uris?: Record<string, string>;
+  layout?: string;
+  games?: string[];
+  reserved?: boolean;
+}
+
+async function scy(path: string, label: string): Promise<Record<string, unknown>> {
+  const res = await fetch(`${SCY}${path}`, {
+    headers: { 'User-Agent': UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(25000),
+  });
+  if (res.status === 404) throw new Error(`Scryfall has no ${label} matching that.`);
+  if (res.status === 400) throw new Error(`Scryfall rejected that ${label} query.`);
+  if (!res.ok) throw new Error(`Scryfall returned ${res.status} for ${label}`);
+  return (await res.json()) as Record<string, unknown>;
+}
+
+const q = (v: string): string => encodeURIComponent(v);
+
+type ScryfallRuling = { comment?: string; published_at?: string; source?: string }
+

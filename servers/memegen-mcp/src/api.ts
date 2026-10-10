@@ -65,3 +65,38 @@ export function makeMeme(template: string, lines: string[]): string {
   while (parts.length === 0) parts.push("_")
   return `https://api.memegen.link/images/${clean}/${parts.join("/")}.png`
 }
+
+// ---- muxB tools:
+const FONT_FIELDS = ["id", "alias", "filename"] as const;
+
+type MemeFont = { id?: string; alias?: string | null; filename?: string };
+
+export async function listFonts(): Promise<string> {
+  const res = await fetch(`${BASE}/fonts`, {
+    headers: { "User-Agent": "memegen-mcp/1.0", Accept: "application/json" },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) throw new MemeError(`memegen.link error ${res.status}`)
+  const rows = (await res.json()) as MemeFont[]
+  if (!Array.isArray(rows) || !rows.length) throw new MemeError("No caption fonts reported.")
+  const lines = rows.map((f) => {
+    const fields = FONT_FIELDS.map((k) => `${k} ${f[k] == null ? "not reported" : f[k]}`).join(" | ")
+    return `- ${fields}`
+  })
+  return `Caption fonts on memegen.link (${rows.length} available)\nAppend the font to the image path, for example https://api.memegen.link/images/fry/one_line/two_lines.png?font=impact\n${lines.join("\n")}`
+}
+
+type ZenQuote = { q?: string; a?: string };
+
+export async function randomQuote(): Promise<string> {
+  const res = await fetch("https://zenquotes.io/api/random", {
+    headers: { "User-Agent": "memegen-mcp/1.0", Accept: "application/json" },
+    signal: AbortSignal.timeout(15000),
+  })
+  if (!res.ok) throw new MemeError(`Quote service error ${res.status}`)
+  const data = (await res.json()) as ZenQuote[]
+  const q = Array.isArray(data) ? data[0] : undefined
+  if (!q?.q) throw new MemeError("The quote service returned no quote.")
+  const text = q.q.length > 280 ? `${q.q.slice(0, 280)}...` : q.q
+  return `Quote: ${text}\nAttributed to: ${q.a ?? "not reported"}`
+}

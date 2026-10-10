@@ -1,6 +1,6 @@
 {
   "name": "flaky-history-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Local aggregate test-history stability analysis without test names or raw result contents. Tools include analyze test history",
   "type": "module",
   "mcpName": "io.github.mrfentmen/flaky-history-mcp",

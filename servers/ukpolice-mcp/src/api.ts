@@ -40,3 +40,15 @@ export async function street(args: StreetArgs): Promise<string> {
     }),
   ].join('\n');
 }
+
+// ---- muxC tools:
+
+const UKP_UA = "mrfentmen-ukpolice-mcp/1.0 (https://github.com/mrfentmen)"
+
+async function ukPolice(path: string, ms = 30000): Promise<any> {
+  const res = await fetch(`https://data.police.uk/api${path}`, { headers: { "User-Agent": UKP_UA, Accept: "application/json" }, signal: AbortSignal.timeout(ms) })
+  if (res.status === 404) throw new Error(`data.police.uk returned 404 for ${path}; that route is no longer published`)
+  if (!res.ok) throw new Error(`data.police.uk returned ${res.status} for ${path}`)
+  return await res.json()
+}
+

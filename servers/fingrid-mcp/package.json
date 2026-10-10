@@ -1,6 +1,6 @@
 {
   "name": "fingrid-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Fingrid Finnish grid open data: datasets and records. Needs free key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/fingrid-mcp",

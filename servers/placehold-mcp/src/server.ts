@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { image } from "./api.js"
 
+import { image } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -21,5 +22,21 @@ export function createServer(): McpServer {
     try { return text(await image(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "svg_source",
+    {
+      title: "SVG source",
+      description: "Fetch the actual SVG markup placehold.co generates for a size, caption and colours, so it can be saved to a file or inlined into markup.",
+      inputSchema: z.object( { width: z.number().describe("Width in pixels.").optional(), height: z.number().describe("Height in pixels, defaults to width.").optional(), text: z.string().describe("Caption to draw on the image.").optional(), background: z.string().describe("Background colour or hex.").optional(), foreground: z.string().describe("Text colour or hex.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: svg_source ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_placehold_svg_source", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

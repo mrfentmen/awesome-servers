@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_quoteOfTheDay, m0_randomQuote, m1_qotd, m1_search, m2_random, m3_many, m3_random, m4_random, m4_today, m4_quotes } from './api.js'
 
+import { m0_quoteOfTheDay, m0_randomQuote, m1_qotd, m1_search, m2_random, m3_many, m3_random, m4_random, m4_today, m4_quotes } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -106,5 +107,21 @@ server.registerTool(
     try { return text(await m4_quotes(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "quote_by_id",
+    {
+      title: "Quote by id",
+      description: "One specific quote from the DummyJSON catalogue by its numeric id, for pulling a known line.",
+      inputSchema: z.object( { id: z.number().describe("Quote id, 1 to 1000.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: quote_by_id ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_quotes_quote_by_id", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

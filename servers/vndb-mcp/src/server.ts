@@ -1,15 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  VndbApiError,
-  formatCharacter,
-  formatRelease,
-  formatVn,
-  getReleases,
-  getVn,
-  searchCharacters,
-  searchVns,
-} from "./api.js"
+import { VndbApiError, formatCharacter, formatRelease, formatVn, getReleases, getVn, searchCharacters, searchVns, producerSearch, staffSearch } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -117,6 +109,40 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "producer_search",
+    {
+      title: "Producer search",
+      description: "Search VNDB's producer and studio collection with original names, aliases and types, which the visual novel and character tools never return.",
+      inputSchema: z.object( { query: z.string().describe("Producer or studio name."), limit: z.number().describe("Max producers.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: producer_search ----
+    const paywallMessage = await premiumRequired("producer_search")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await producerSearch(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "staff_search",
+    {
+      title: "Staff search",
+      description: "Search VNDB's staff collection with original names, aliases and role type, which is how you find who is credited on a visual novel.",
+      inputSchema: z.object( { query: z.string().describe("Staff name."), limit: z.number().describe("Max staff.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: staff_search ----
+    const paywallMessage = await premiumRequired("staff_search")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await staffSearch(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

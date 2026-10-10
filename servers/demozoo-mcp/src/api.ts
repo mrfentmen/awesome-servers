@@ -139,3 +139,101 @@ export function formatReleaser(r: Releaser): string {
   ].filter(Boolean)
   return lines.join("\n")
 }
+
+// ---- muxA tools:
+
+const DEMOZOO = "https://demozoo.org/api/v1";
+
+function cap(value: number | undefined, fallback: number, max: number): number {
+  return Math.max(1, Math.min(Math.round(value ?? fallback), max));
+}
+
+export interface ReleaserProductionsArgs {
+  releaser_id: number;
+  limit?: number;
+}
+
+export interface PlatformArgs {
+  platform: string;
+  limit?: number;
+  start_year?: number;
+}
+
+export interface CatalogueArgs {
+  include_platforms?: boolean;
+  search?: string;
+  limit?: number;
+}
+
+export async function referenceCatalogue(args: CatalogueArgs): Promise<string> {
+  const limit = cap(args.limit, 30, 100);
+  const wantPlatforms = args.include_platforms !== false;
+  const q = (args.search ?? "").trim().toLowerCase();
+  const out: string[] = [];
+  const types = await getJson<Paged<Raw>>(`/production_types/?page_size=${Math.max(limit, 60)}`);
+  let typeRows = types.results ?? [];
+  if (q) typeRows = typeRows.filter((t) => String(t.name ?? "").toLowerCase().includes(q));
+  const supertypes = new Map<string, number>();
+  for (const t of types.results ?? []) {
+    const k = String(t.supertype ?? "unspecified");
+    supertypes.set(k, (supertypes.get(k) ?? 0) + 1);
+  }
+  out.push(
+    `Demozoo production types: ${Number(types.count ?? typeRows.length).toLocaleString("en-US")} defined` +
+      `${q ? `, ${typeRows.length} match "${q}"` : ""}. Supertypes: ${[...supertypes.entries()].map(([k, v]) => `${k} ${v}`).join(", ")}`,
+  );
+  for (const t of typeRows.slice(0, limit)) out.push(`  [${t.id}] ${String(t.name ?? "?")} | supertype ${t.supertype ?? "?"}`);
+  if (wantPlatforms) {
+    const platforms = await getJson<Paged<Raw>>("/platforms/?page_size=200");
+    let platRows = platforms.results ?? [];
+    if (q) platRows = platRows.filter((p) => String(p.name ?? "").toLowerCase().includes(q));
+    out.push("");
+    out.push(`Demozoo platforms: ${Number(platforms.count ?? platRows.length).toLocaleString("en-US")} defined${q ? `, ${platRows.length} match "${q}"` : ""}.`);
+    for (const p of platRows.slice(0, limit)) out.push(`  [${p.id}] ${String(p.name ?? "?")}`);
+  }
+  return out.join("\n");
+}
+
+export interface PartiesArgs {
+  kind?: string;
+  query?: string;
+  limit?: number;
+  start_year?: number;
+}
+
+export async function partiesAndScenes(args: PartiesArgs): Promise<string> {
+  const kind = (args.kind ?? "parties").trim().toLowerCase();
+  if (!["parties", "bbses", "party_series"].includes(kind)) {
+    return `Unknown kind "${args.kind}". Use parties, party_series or bbses.`;
+  }
+  const limit = cap(args.limit, 20, 50);
+  const path = kind === "bbses" ? "/bbses/" : kind === "party_series" ? "/party_series/" : "/parties/";
+  const query = new URLSearchParams({ page_size: String(Math.max(limit, 50)) });
+  if (args.query?.trim()) query.set("query", args.query.trim());
+  const data = await getJson<Paged<Raw>>(`${path}?${query.toString()}`);
+  let rows = data.results ?? [];
+  const all = Number(data.count ?? rows.length);
+  const year = Number(args.start_year);
+  if (Number.isFinite(year) && year > 1900) {
+    rows = rows.filter((p) => Number(String(p.start_date ?? "").slice(0, 4)) >= year);
+  }
+  if (!rows.length) {
+    return `Demozoo ${kind} returned ${all.toLocaleString("en-US")} record(s) but none matched the filters.`;
+  }
+  const shown = rows.slice(0, limit);
+  const label = kind === "bbses" ? "bulletin board systems" : kind === "party_series" ? "party series" : "parties";
+  return [
+    `Demozoo ${label} matching ${args.query ? `"${args.query}"` : "any"}${Number.isFinite(year) && year > 1900 ? ` from ${Math.round(year)} onwards` : ""}: ${all.toLocaleString("en-US")} in the index, showing ${shown.length}.`,
+    ...shown.map((p, i) => {
+      const bits = [
+        `${i + 1}. [${p.id}] ${String(p.name ?? "?")}`,
+        p.start_date ? `dates ${String(p.start_date).slice(0, 10)}${p.end_date ? ` to ${String(p.end_date).slice(0, 10)}` : ""}` : "",
+        p.location ? `location ${String(p.location).slice(0, 60)}` : "",
+        p.website ? `website ${String(p.website).slice(0, 50)}` : "",
+        p.tagline ? `tagline ${String(p.tagline).slice(0, 60)}` : "",
+        p.demozoo_url ? `${p.demozoo_url}` : "",
+      ];
+      return bits.filter(Boolean).join(" | ");
+    }),
+  ].join("\n");
+}

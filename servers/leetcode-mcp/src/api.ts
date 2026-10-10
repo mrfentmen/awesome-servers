@@ -51,3 +51,6 @@ export async function search(args: SearchArg): Promise<string> {
   if (!hits.length) return `No LeetCode problems matching "${args.query}".`;
   return `LeetCode problems matching "${args.query}" (${hits.length} shown):\n` + hits.map((p) => `* ${p.stat?.question_id ?? '?'}. ${p.stat?.question__title ?? '?'} [${levelName(p.difficulty?.level)}]${p.paid_only ? ' (premium)' : ''}`).join('\n');
 }
+
+// ---- muxC tools:
+

@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatEvent, getEvent, LigoError, listCatalogs, listEvents } from "./api.js"
+import { formatEvent, getEvent, LigoError, listCatalogs, listEvents, eventParameters } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -65,6 +66,29 @@ export function createServer(): McpServer {
     async () => {
       try {
         return text((await listCatalogs()).join("\n"))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "event_parameters",
+    {
+      title: "Event parameters",
+      description: "The measured source properties of one gravitational-wave event: component and total masses, chirp mass, effective spin, luminosity distance, redshift, probability of astrophysical origin, false alarm rate and SNR, with uncertainty bands.",
+      inputSchema: z.object({
+        name: z.string().describe("Event name, e.g. GW150914"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ name }) => {
+      // ---- paywall: event_parameters ----
+      const paywallMessage = await premiumRequired("event_parameters")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await eventParameters(name))
       } catch (e) {
         return textError(errorMessage(e))
       }

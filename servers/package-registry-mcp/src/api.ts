@@ -34,3 +34,6 @@ export async function npmSearch(args: { query?: string; limit?: number }): Promi
     return `${i + 1}. ${p.name}@${p.version ?? ""}\n   ${(p.description ?? "").slice(0, 120)}\n   ${p.links?.npm ?? ""}`
   }).join("\n\n") || "No packages found"
 }
+
+// ---- muxC tools:
+

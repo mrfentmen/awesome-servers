@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { controllers } from "./api.js"
-import { pilots } from "./api.js"
 
+import { controllers, pilots, serverList } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,50 @@ export function createServer(): McpServer {
     try { return text(await controllers(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "atis",
+    {
+      title: "Atis",
+      description: "Live VATSIM ATIS stations: frequency, facility, station name, the current text ATIS and when it was last updated.",
+      inputSchema: z.object( { limit: z.number().int().min(1).max(40).default(10), frequency: z.string().max(10).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: atis ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_vatsim_atis", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "servers",
+    {
+      title: "Servers",
+      description: "The VATSIM server list with location and whether it accepts client connections, plus network-wide connected client and unique user counts.",
+      inputSchema: z.object( {  }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await serverList(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "pilot_detail",
+    {
+      title: "Pilot detail",
+      description: "One connected pilot by callsign or CID: live position, altitude, speed, heading, transponder, QNH, flight plan and route.",
+      inputSchema: z.object( { callsign: z.string().max(20).optional(), cid: z.number().int().min(1).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: pilot_detail ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_vatsim_pilot_detail", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

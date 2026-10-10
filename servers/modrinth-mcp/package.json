@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/modrinth-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Use this MCP server to Modrinth, search Minecraft mods, filter by loader and game version, browse versions",
   "type": "module",
   "mcpName": "io.github.mrfentmen/modrinth-mcp",

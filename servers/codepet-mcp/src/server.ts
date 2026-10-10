@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { eventText, load, safeEvent, save, statePath, type PetState } from "./state.js"
+import { eventText, languageBreakdown, load, petExport, petProgressReport, safeEvent, save, statePath, type PetState } from "./state.js"
+import { premiumRequired } from "./license.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -48,6 +49,62 @@ export function createServer(): McpServer {
       annotations: WRITE,
     },
     async () => { const state = await load(); state.history = []; await save(state); return text("CodePet metadata history cleared.") }
+  )
+  server.registerTool(
+    "pet_progress_report",
+    {
+      title: "Pet progress report",
+      description: "Derived progress view of CodePet: event kinds and statuses in the history window, rate per day and achievements.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async () => {
+      // ---- paywall: pet_progress_report ----
+      const paywallMessage = await premiumRequired("pet_progress_report")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await petProgressReport())
+      } catch (error) {
+        return textError(`Error: ${error instanceof Error ? error.message : String(error)}`)
+      }
+    }
+  )
+  server.registerTool(
+    "language_breakdown",
+    {
+      title: "Language breakdown",
+      description: "Per language event counts, line totals, statuses and last seen across CodePet's retained history.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async () => {
+      // ---- paywall: language_breakdown ----
+      const paywallMessage = await premiumRequired("language_breakdown")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await languageBreakdown())
+      } catch (error) {
+        return textError(`Error: ${error instanceof Error ? error.message : String(error)}`)
+      }
+    }
+  )
+  server.registerTool(
+    "pet_export",
+    {
+      title: "Pet export",
+      description: "Export CodePet's current stats as JSON, with or without the retained event history.",
+      inputSchema: z.object({ include_history: z.boolean().describe("Include history events.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (input) => {
+      try {
+        return text(await petExport(input))
+      } catch (error) {
+        return textError(`Error: ${error instanceof Error ? error.message : String(error)}`)
+      }
+    }
   )
   return server
 }

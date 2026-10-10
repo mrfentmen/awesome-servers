@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { country } from "./api.js"
-import { rates } from "./api.js"
 
+import { country, rates } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,21 @@ export function createServer(): McpServer {
     try { return text(await country(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "validate_vat_number",
+    {
+      title: "Validate VAT number",
+      description: "Check an EU VAT number against the European Commission VIES service and report validity plus the registered name and address VIES returns.",
+      inputSchema: z.object( { country: z.string().describe("Two-letter EU country code like DE."), number: z.string().describe("VAT number digits, e.g. 129274202.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: validate_vat_number ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_vatcomply_validate_vat_number", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

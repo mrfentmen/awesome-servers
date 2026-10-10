@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_search, m1_appLookup, m1_topFree, m1_topPaid, m2_searchPodcasts, m2_topPodcasts } from './api.js'
 
+import { m0_search, m1_appLookup, m1_topFree, m1_topPaid, m2_searchPodcasts, m2_topPodcasts } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -82,5 +83,37 @@ server.registerTool(
     try { return text(await m2_topPodcasts(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "podcast_episodes",
+    {
+      title: "Podcast episodes",
+      description: "The episode list behind a podcast by its iTunes collection id, with release date and running time, which the podcast search and chart tools do not return.",
+      inputSchema: z.object( { podcastId: z.number().describe("Podcast collection id, e.g. 152249110."), limit: z.number().describe("Max episodes.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: podcast_episodes ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_itunes_podcast_episodes", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "audiobooks",
+    {
+      title: "Audiobooks",
+      description: "Search the iTunes audiobook store by title, author or narrator, which is a separate catalogue from apps, podcasts and music.",
+      inputSchema: z.object( { query: z.string().describe("Title, author or narrator."), limit: z.number().describe("Max results.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: audiobooks ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_itunes_audiobooks", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

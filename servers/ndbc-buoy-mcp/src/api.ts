@@ -48,3 +48,41 @@ export async function station(args: { stationId?: string }): Promise<string> {
   })
   return `Buoy ${id} (latest ${rows.length} observations):\n` + rows.join("\n")
 }
+
+// ---- muxB tools:
+
+async function activeStations(): Promise<Array<Record<string, string>>> {
+  const res = await fetch("https://www.ndbc.noaa.gov/activestations.xml", {
+    headers: { "User-Agent": UA },
+    signal: AbortSignal.timeout(40000),
+  })
+  if (!res.ok) throw new NdbcError(`NDBC returned HTTP ${res.status} for the active station list`)
+  const xml = await res.text()
+  const out: Array<Record<string, string>> = []
+  for (const tag of xml.match(/<station\b[^>]*\/>/g) ?? []) {
+    const row: Record<string, string> = {}
+    for (const attr of tag.match(/[a-z]+="[^"]*"/g) ?? []) {
+      const eq = attr.indexOf("=")
+      row[attr.slice(0, eq)] = attr.slice(eq + 2, -1)
+    }
+    if (row.id) out.push(row)
+  }
+  if (!out.length) throw new NdbcError("NDBC active station list could not be parsed")
+  return out
+}
+
+const toRad = (deg: number): number => (deg * Math.PI) / 180
+
+export interface NearbyStationsArgs {
+  lat: number
+  lon: number
+  radiusKm?: number
+  type?: string
+  limit?: number
+}
+
+export interface WaveSpectrumArgs {
+  stationId: string
+  limit?: number
+}
+

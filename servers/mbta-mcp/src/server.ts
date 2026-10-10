@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { routes } from "./api.js"
 
+import { routes } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -21,5 +22,37 @@ export function createServer(): McpServer {
     try { return text(await routes(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "stops",
+    {
+      title: "Stops",
+      description: "MBTA stops with their description, municipality, platform name and wheelchair boarding level.",
+      inputSchema: z.object( { limit: z.number().describe("Max stops, 1 to 100.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: stops ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_mbta_stops", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "alerts",
+    {
+      title: "Alerts",
+      description: "Current MBTA service alerts: header, severity, cause, effect, active window and description.",
+      inputSchema: z.object( { limit: z.number().describe("Max alerts, 1 to 25.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: alerts ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_mbta_alerts", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

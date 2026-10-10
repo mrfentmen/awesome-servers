@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { fact } from "./api.js"
-import { many } from "./api.js"
 
+import { fact, many } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,21 @@ export function createServer(): McpServer {
     try { return text(await many(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "fact_by_number",
+    {
+      title: "Fact by number",
+      description: "One specific numbered MeowFacts cat fact, so a cited fact still resolves to the same text on a later call.",
+      inputSchema: z.object( { number: z.number().describe("Fact number, 1 to 9999.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: fact_by_number ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_meowfacts_fact_by_number", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

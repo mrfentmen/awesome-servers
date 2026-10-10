@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { certInfo } from "./api.js"
+import { certInfo, tlsDetails, certExpiry } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -21,5 +22,39 @@ export function createServer(): McpServer {
     try { return text(await certInfo(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "tls_details",
+    {
+      title: "TLS details",
+      description: "The protocol version and cipher suite a host negotiates, plus whether Node trusted its certificate against the local store.",
+      inputSchema: z.object( { host: z.string().describe("Hostname like example.com."), port: z.number().describe("Port, default 443.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: tls_details ----
+    const paywallMessage = await premiumRequired("tls_details")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await tlsDetails(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "cert_expiry",
+    {
+      title: "Cert expiry",
+      description: "How long a host's certificate has left, whether it has already expired, its total lifetime and SHA-256 fingerprint.",
+      inputSchema: z.object( { host: z.string().describe("Hostname like example.com."), port: z.number().describe("Port, default 443.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: cert_expiry ----
+    const paywallMessage = await premiumRequired("cert_expiry")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await certExpiry(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

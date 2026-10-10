@@ -29,3 +29,35 @@ export function recent(args: ListArgs): Promise<string> {
 export function significant(args: ListArgs): Promise<string> {
   return query(5, args);
 }
+
+// ---- muxB tools:
+
+interface SeismicFeature {
+  properties?: Record<string, unknown>;
+  geometry?: { coordinates?: [number, number, number?] };
+}
+
+async function features(params: string): Promise<SeismicFeature[]> {
+  const res = await fetch(`${BASE}?format=json&${params}`, {
+    headers: { 'User-Agent': 'mrfentmen-seismicportal-mcp/1.0', Accept: 'application/json' },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error(`Seismic portal returned ${res.status}`);
+  const d = (await res.json()) as { features?: SeismicFeature[] };
+  return d.features ?? [];
+}
+
+export interface LargestArgs {
+  limit?: number;
+  min_magnitude?: number;
+}
+
+export interface BoxArgs {
+  min_lat: number;
+  min_lon: number;
+  max_lat: number;
+  max_lon: number;
+  min_magnitude?: number;
+  limit?: number;
+}
+

@@ -26,3 +26,38 @@ export async function chapters(args: { bookId?: string }): Promise<string> {
   if (!docs.length) return `No chapters found for book ${id}`
   return `Chapters (${docs.length} total, first 30 shown):\n` + docs.slice(0, 30).map((c: any, i: number) => `${i + 1}. ${c?.chapterName ?? "n/a"}`).join("\n")
 }
+
+// ---- muxB tools:
+
+// wikitext -> readable lead, the same way the rest of this repo strips wikitext
+function tgPlain(wt: string, maxChars: number): string {
+  // infoboxes nest their arguments, so peel templates until none are left
+  let text = wt
+  for (let pass = 0; pass < 12 && text.includes('{{'); pass++) {
+    const before = text
+    text = text.replace(/\{\{[^{}]*\}\}/g, '')
+    if (text === before) break
+  }
+  return text
+    .replace(/<ref[^>]*>[\s\S]*?<\/ref>/gi, '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\[\[(?:[^|\]]*\|)?([^\]]*)\]\]/g, '$1')
+    .replace(/'''?/g, '')
+    .replace(/^\s*[=*#:;]+/gm, '')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{2,}/g, '\n')
+    .trim()
+    .slice(0, maxChars)
+}
+
+export interface GatewayPageArgs {
+  title?: string
+  maxChars?: number
+}
+
+export interface GatewayCategoriesArgs {
+  title?: string
+  limit?: number
+}
+

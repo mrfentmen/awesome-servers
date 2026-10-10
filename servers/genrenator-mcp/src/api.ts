@@ -28,3 +28,10 @@ export async function genres(args: GenresArgs): Promise<string> {
   if (!out.length) out.push('(empty response)');
   return `Genres:\n${out.join('\n')}`;
 }
+
+// ---- muxB tools:
+
+export interface GenreStoryArgs {
+  count?: number;
+}
+

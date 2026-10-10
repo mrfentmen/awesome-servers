@@ -56,3 +56,66 @@ export async function sensors(_args?: Record<string, never>): Promise<string> {
   if (!Array.isArray(d) || !d.length) return 'No sensors returned.';
   return `enviroCar sensors (${d.length}):\n` + d.map((s) => `* ${s.name ?? '?'} (${s.quantity ?? '?'}) [${s.unit ?? '?'}]`).join('\n');
 }
+
+// ---- muxA tools:
+interface EcoStatRow {
+  max?: number;
+  avg?: number;
+  min?: number;
+  measurements?: number;
+  tracks?: number;
+  users?: number;
+  sensors?: number;
+  phenomenon?: { name?: string; unit?: string };
+}
+
+function ecoNumber(value: number | undefined): string {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 'not reported';
+  return Math.abs(value) >= 1000 ? value.toFixed(0) : value.toFixed(3);
+}
+
+function ecoWithUnit(value: number | undefined, unit: string | undefined): string {
+  const shown = ecoNumber(value);
+  if (shown === 'not reported') return shown;
+  return unit ? `${shown} ${unit}` : shown;
+}
+
+function ecoSortByMeasurements(rows: EcoStatRow[]): EcoStatRow[] {
+  return [...rows].sort((a, b) => (b.measurements ?? 0) - (a.measurements ?? 0));
+}
+
+export async function platformStatistics(args: { limit?: number; phenomenon?: string }): Promise<string> {
+  const limit = Math.max(1, Math.min(Math.trunc(args.limit ?? 8) || 8, 30));
+  const res = await fetch(`${BASE}/statistics`, {
+    headers: { 'User-Agent': UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!res.ok) throw new Error(`enviroCar returned ${res.status}`);
+  const d = (await res.json()) as { statistics?: EcoStatRow[] };
+  const all = d.statistics ?? [];
+  if (!all.length) return 'enviroCar returned no platform statistics.';
+  const wanted = (args.phenomenon ?? '').trim().toLowerCase();
+  const pool = wanted
+    ? all.filter((row) => (row.phenomenon?.name ?? '').toLowerCase().includes(wanted))
+    : all;
+  if (!pool.length) {
+    return `No platform statistic matched "${args.phenomenon}". ${all.length} phenomena are reported.`;
+  }
+  const ordered = ecoSortByMeasurements(pool);
+  const shown = ordered.slice(0, limit);
+  const widest = all.reduce((best, row) => ((row.measurements ?? 0) > (best.measurements ?? 0) ? row : best), all[0]);
+  return [
+    `enviroCar platform statistics (showing ${shown.length} of ${pool.length} phenomena, most measured first):`,
+    ...shown.map((row) => {
+      const unit = row.phenomenon?.unit;
+      return (
+        `      ${(row.phenomenon?.name ?? 'unknown').padEnd(26)} ` +
+        `avg ${ecoWithUnit(row.avg, unit)} | ${row.measurements ?? 0} measurements | ` +
+        `${row.tracks ?? 0} tracks | ${row.users ?? 0} users | ${row.sensors ?? 0} sensors`
+      );
+    }),
+    `  Totals for the widest covered phenomenon (${widest?.phenomenon?.name ?? 'unknown'}): ` +
+      `${widest?.measurements ?? 0} measurements from ${widest?.tracks ?? 0} tracks.`,
+    '  Note: these are unfiltered community submissions, so min and max include obvious sensor outliers.',
+  ].join('\n');
+}

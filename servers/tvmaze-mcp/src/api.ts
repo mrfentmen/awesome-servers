@@ -13,8 +13,6 @@ export interface m0_ScheduleArgs {
 const m0 = (() => {
 const UA = 'mrfentmen-tvmaze-mcp/1.0';
 
-
-
 async function search(args: m0_SearchArgs): Promise<string> {
   const query = (args.query ?? '').trim();
   if (!query) return 'Provide a show name.';
@@ -108,3 +106,22 @@ export const m1_todaySchedule = m1.todaySchedule;
 export const m1_TvError = m1.TvError;
 export const m1_showEpisodes = m1.showEpisodes;
 export const m1_searchShows = m1.searchShows;
+
+// ---- muxC tools:
+
+interface TvMazeShow {
+  id?: number
+  name?: string
+  type?: string
+  language?: string
+  genres?: string[]
+  status?: string
+  premiered?: string
+  ended?: string
+  network?: { name?: string } | null
+  webChannel?: { name?: string } | null
+  schedule?: { time?: string; days?: string[] }
+  averageRuntime?: number | null
+  url?: string
+}
+

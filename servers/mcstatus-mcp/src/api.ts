@@ -26,3 +26,30 @@ export async function status(args: StatusArgs): Promise<string> {
   const motdClean = Array.isArray(d.motd?.clean) ? d.motd.clean.join(' ') : (d.motd?.clean as string | undefined) ?? '';
   return `Minecraft server ${host}:${port} is ONLINE.\nVersion: ${d.version?.name_clean ?? d.version?.name_raw ?? '?'}\nPlayers: ${d.players?.online ?? 0}/${d.players?.max ?? 0}${sample ? `\nOnline: ${sample}` : ''}\nMOTD: ${motdClean.trim().slice(0, 150) || 'none'}\nIP: ${d.ip_address ?? '?'}`;
 }
+
+// ---- muxB tools:
+
+const PROFILE = 'https://api.mojang.com/users/profiles/minecraft';
+
+export interface VersionsArgs {
+  kind?: string;
+  limit?: number;
+}
+
+export interface ProfileArgs {
+  name: string;
+}
+
+export async function playerProfile(args: ProfileArgs): Promise<string> {
+  const name = (args.name ?? '').trim();
+  if (!name) return 'Provide a Minecraft username.';
+  const res = await fetch(`${PROFILE}/${encodeURIComponent(name)}`, {
+    headers: { 'User-Agent': UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (res.status === 204 || res.status === 404) return `No Minecraft profile found for "${name}".`;
+  if (!res.ok) throw new Error(`Mojang profile API returned ${res.status}`);
+  const d = (await res.json()) as { id?: string; name?: string };
+  if (!d.id) return `Mojang returned no profile id for "${name}".`;
+  return `Minecraft profile for "${d.name ?? name}": UUID ${d.id}`;
+}

@@ -25,3 +25,47 @@ export async function searchGems(args: { query?: string; limit?: number }): Prom
   if (!gems.length) return "No gems found"
   return gems.map((g: any, i: number) => `${i + 1}. ${g.name} ${g.version ?? ""}\n   ${(g.info ?? "").slice(0, 120)} | ${(g.downloads ?? 0).toLocaleString()} downloads`).join("\n\n")
 }
+
+// ---- muxB tools:
+
+const gemField = (row: any, key: string, fallback = "not reported"): string => {
+  const value = row?.[key]
+  return value != null && String(value) !== "" ? String(value) : fallback
+}
+
+export interface GemVersionsArgs {
+  name: string
+  limit?: number
+  includePrerelease?: boolean
+}
+
+export interface RecentGemsArgs {
+  limit?: number
+}
+
+export interface GemDependenciesArgs {
+  name: string
+}
+
+export async function gemDependencies(args: GemDependenciesArgs): Promise<string> {
+  const name = (args.name ?? "").trim().toLowerCase()
+  if (!name) throw new GemsError("Provide a gem name")
+  const d = await get<any>(`${BASE}/gems/${encodeURIComponent(name)}.json`)
+  const deps = d.dependencies && typeof d.dependencies === "object" ? d.dependencies : {}
+  const runtime: any[] = Array.isArray(deps.runtime) ? deps.runtime : []
+  const development: any[] = Array.isArray(deps.development) ? deps.development : []
+  const show = (rows: any[], max: number) =>
+    rows.length
+      ? rows.slice(0, max).map((r) => `  ${gemField(r, "name")} ${gemField(r, "requirements")}`).join("\n")
+      : "  none declared"
+  return [
+    `Dependencies of ${gemField(d, "name", name)} ${gemField(d, "version")}`,
+    `${runtime.length} runtime, ${development.length} development`,
+    "",
+    "Runtime:",
+    show(runtime, 40),
+    "",
+    "Development:",
+    show(development, 25),
+  ].join("\n")
+}

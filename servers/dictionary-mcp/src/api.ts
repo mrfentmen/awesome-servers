@@ -90,3 +90,121 @@ export const m0_define = m0.define;
 export const m1_wordOfTheDay = m1.wordOfTheDay;
 export const m1_WordError = m1.WordError;
 export const m1_randomWord = m1.randomWord;
+
+// ---- muxE tools:
+// The four existing tools print a word, its phonetic text and a few definitions
+// with their examples. Two whole parts of the entry are never read: the synonyms
+// and antonyms under every meaning, and the per pronunciation audio, language and
+// licence. The new tools read those, and both cope with the upstream answering
+// 522 for some words, which was verified live and is not a block on this side.
+const DICT = "https://api.dictionaryapi.dev/api/v2/entries/en";
+const DICT_UA = "mrfentmen-dictionary-mcp/1.0 (https://github.com/mrfentmen)";
+
+interface DictPhonetic {
+  text?: string;
+  audio?: string;
+  sourceUrl?: string;
+  license?: { name?: string; url?: string };
+  lang?: string;
+}
+
+interface DictDefinition {
+  definition?: string;
+  example?: string;
+  synonyms?: string[];
+  antonyms?: string[];
+}
+
+interface DictMeaning {
+  partOfSpeech?: string;
+  definitions?: DictDefinition[];
+  synonyms?: string[];
+  antonyms?: string[];
+}
+
+interface DictEntry {
+  word?: string;
+  phonetic?: string;
+  phonetics?: DictPhonetic[];
+  meanings?: DictMeaning[];
+  license?: { name?: string; url?: string };
+  sourceUrls?: string[];
+}
+
+/**
+ * Two things about this host were measured live. It answers 200 for a word one
+ * request serves and 522 for another, and which is which is stable per word
+ * rather than per rate: cat, test and a answered 200 every time while happy,
+ * dog, love and apple answered 522 every time. And a successful answer takes
+ * about 20 seconds, measured at 19868, 19514, 19513 and 19525 ms across four
+ * node fetches, so the timeout has to clear 20 s and a retry does not fit inside
+ * a single MCP request. One attempt, a timeout that fits the real latency, and a
+ * 522 reported as what it is rather than as a missing word.
+ */
+async function dictGet<T>(word: string): Promise<T> {
+  const url = `${DICT}/${encodeURIComponent(word)}`;
+  let res: Response;
+  try {
+    res = await fetch(url, { headers: { "User-Agent": DICT_UA }, signal: AbortSignal.timeout(28000) });
+  } catch (e) {
+    const timedOut = e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
+    if (!timedOut) throw new Error(`The dictionary could not be reached: ${e instanceof Error ? e.message : String(e)}`);
+    throw new Error(
+      `The dictionary at api.dictionaryapi.dev did not answer within 28 seconds for "${word}". A successful answer to this host takes about 20 seconds, so this is the upstream being slower than usual rather than this client.`,
+    );
+  }
+  if (res.status === 404) throw new Error(`The dictionary holds no entry for "${word}".`);
+  if (res.status === 522) {
+    throw new Error(
+      `The dictionary's own host answered HTTP 522 for "${word}", which is a timeout between it and its origin. It answers 522 for some words and 200 for others, so this is that word rather than this client; try another word.`,
+    );
+  }
+  if (!res.ok) throw new Error(`The dictionary returned ${res.status}.`);
+  return (await res.json()) as T;
+}
+
+async function entryFor(word: string): Promise<DictEntry> {
+  const raw = (word ?? "").trim();
+  if (!raw) throw new Error("Provide a word.");
+  const list = await dictGet<DictEntry[]>(raw);
+  const entry = Array.isArray(list) ? list[0] : null;
+  if (!entry || typeof entry !== "object") throw new Error(`The dictionary returned no usable entry for "${raw}".`);
+  return entry;
+}
+
+export interface WordRelationsArgs {
+  word: string;
+}
+
+export interface WordPhoneticsArgs {
+  word: string;
+}
+
+export async function wordPhonetics(args: WordPhoneticsArgs): Promise<string> {
+  const entry = await entryFor(args?.word ?? "");
+  const items = Array.isArray(entry.phonetics) ? entry.phonetics : [];
+  const seen = new Set<string>();
+  const unique = items.filter((p) => {
+    const key = `${p.text ?? ""}|${p.audio ?? ""}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  const withAudio = unique.filter((p) => typeof p.audio === "string" && p.audio);
+  const lines = [
+    `Pronunciations recorded for ${entry.word ?? args?.word}:`,
+    `  headword phonetic: ${entry.phonetic || "not reported"}`,
+    `  pronunciation records: ${items.length}, of which ${unique.length} are distinct`,
+    `  with an audio file: ${withAudio.length}`,
+  ];
+  for (const p of unique.slice(0, 15)) {
+    lines.push(`  ${p.text || "no phonetic text"}${p.lang ? ` (${p.lang})` : ""}`);
+    if (p.audio) lines.push(`    audio: ${p.audio.slice(0, 140)}`);
+    if (p.sourceUrl) lines.push(`    recorded by: ${p.sourceUrl.slice(0, 120)}`);
+    if (p.license?.name) lines.push(`    licence: ${p.license.name}${p.license.url ? ` - ${p.license.url}` : ""}`);
+  }
+  if (unique.length > 15) lines.push(`  and ${unique.length - 15} more pronunciation(s) not listed here`);
+  if (!unique.length) lines.push("  this entry records no per pronunciation data at all.");
+  lines.push("  the existing tools print at most a comma joined list of the phonetic text, with no audio, no language and no recording licence.");
+  return lines.join("\n");
+}

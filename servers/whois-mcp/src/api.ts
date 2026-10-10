@@ -117,3 +117,75 @@ export const m0_ip = m0.ip;
 export const m0_WhoisError = m0.WhoisError;
 export const m1_domainInfo = m1.domainInfo;
 export const m1_DomainError = m1.DomainError;
+
+// ---- muxC tools:
+
+const RDAP_UA = "mrfentmen-whois-mcp/1.0 (https://github.com/mrfentmen)"
+
+class RdapError extends Error {}
+
+async function rdap(path: string, ms = 30000): Promise<any> {
+  const res = await fetch(`https://rdap.org/${path}`, {
+    headers: { "User-Agent": RDAP_UA, Accept: "application/rdap+json, application/json" },
+    redirect: "follow",
+    signal: AbortSignal.timeout(ms),
+  })
+  if (res.status === 404) throw new RdapError("RDAP has no record for that identifier")
+  if (!res.ok) throw new RdapError(`RDAP returned ${res.status} for ${path}`)
+  return await res.json()
+}
+
+function events(d: any): string[] {
+  const rows: any[] = d?.events ?? []
+  return rows
+    .filter((e) => ["registration", "expiration", "last changed", "last update of RDAP database"].includes(e.eventAction))
+    .map((e) => `${e.eventAction}: ${String(e.eventDate ?? "").slice(0, 10)}`)
+}
+
+/** An autonomous system's registration, which the domain and ip tools never reach. */
+export async function asnInfo(args: { asn?: string | number }): Promise<string> {
+  const raw = String(args.asn ?? "").trim().toUpperCase()
+  if (!raw) throw new RdapError("Provide an AS number, e.g. 15169 or AS15169")
+  const asn = raw.replace(/^AS/, "")
+  if (!/^\d+$/.test(asn)) throw new RdapError("An AS number is digits, e.g. 15169 or AS15169")
+  const d = await rdap(`autnum/${asn}`)
+  return [
+    `${d.name ?? `AS${asn}`} (AS${asn})`,
+    `handle: ${d.handle ?? "not reported"} | type: ${d.type ?? "not reported"}`,
+    events(d).length ? `dates: ${events(d).join(" | ")}` : null,
+    (d.entities ?? []).length ? `entities: ${(d.entities ?? []).map((e: any) => `${e.handle ?? "?"} (${(e.roles ?? []).join(", ") || "role not reported"})`).join("; ")}` : null,
+    d.country ? `country: ${d.country}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n")
+}
+
+/** Every network range a registered autonomous system announces, from its RDAP record. */
+export async function asnNetworks(args: { asn?: string | number }): Promise<string> {
+  const raw = String(args.asn ?? "").trim().toUpperCase()
+  if (!raw) throw new RdapError("Provide an AS number, e.g. 15169 or AS15169")
+  const asn = raw.replace(/^AS/, "")
+  if (!/^\d+$/.test(asn)) throw new RdapError("An AS number is digits, e.g. 15169 or AS15169")
+  const d = await rdap(`autnum/${asn}`)
+  const cidrs: any[] = d?.cidr0_cidrs ?? []
+  if (!cidrs.length) return `AS${asn} (${d.name ?? "unnamed"}) publishes no CIDR ranges in its RDAP record.`
+  return `AS${asn} (${d.name ?? "unnamed"}) announces ${cidrs.length} CIDR ranges:\n` +
+    cidrs.map((c, i) => `${i + 1}. ${c.v4prefix ?? c.v6prefix ?? "?"}/${c.length ?? "?"}`).join("\n")
+}
+
+/** The contact records an RDAP entry carries, which the summary views leave out. */
+export async function domainContacts(args: { domain?: string }): Promise<string> {
+  const domain = (args.domain ?? "").trim()
+  if (!domain) throw new RdapError("Provide a domain name, e.g. github.com")
+  const d = await rdap(`domain/${encodeURIComponent(domain)}`)
+  const rows: any[] = d?.entities ?? []
+  if (!rows.length) return `${domain} has no public contact entities in its RDAP record.`
+  return `Contact entities for ${domain} (${rows.length} published):\n` +
+    rows
+      .map((e, i) => {
+        const v: any[] = e.vcardArray?.[1] ?? []
+        const val = (n: string) => v.find((x) => x[0] === n)?.[3] ?? null
+        return `${i + 1}. ${(e.roles ?? []).join(", ") || "role not reported"} - ${e.handle ?? "no handle"}\n   ${val("fn") ? `name: ${val("fn")}` : ""}${val("org") ? ` | org: ${val("org")}` : ""}\n   ${val("email") ? `email: ${val("email").replace(/^mailto:/, "")}` : ""}${val("tel") ? ` | tel: ${val("tel").replace(/^tel:/, "")}` : ""}`
+      })
+      .join("\n")
+}

@@ -1,7 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
+import { gameMap, gameRoutes } from "./api.js"
 import { Adventure } from "./engine.js"
 import { describeGames, GAMES } from "./games.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -120,6 +122,48 @@ export function createServer(): McpServer {
       try {
         const game = requireGame()
         return text(game.doScore())
+      } catch (e) {
+        return textError(`Error: ${(e as Error).message}`)
+      }
+    }
+  )
+
+  server.registerTool(
+    "game_map",
+    {
+      title: "Game map",
+      description: "Show every room of a bundled game with its objects and its exits, including which exits are locked, unlit or one way. Read straight from the engine's own map, no network.",
+      inputSchema: z.object( { gameId: z.string().describe("Game id from list_games, default colossal-dungeon.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try {
+        return text(await gameMap(args))
+      } catch (e) {
+        return textError(`Error: ${(e as Error).message}`)
+      }
+    }
+  )
+
+  server.registerTool(
+    "game_routes",
+    {
+      title: "Game routes",
+      description: "Shortest route from a room to every other room in a game, worked out with a breadth-first walk of the declared exits, with dark rooms and guarded exits flagged.",
+      inputSchema: z.object( {
+        gameId: z.string().describe("Game id from list_games, default colossal-dungeon.").optional(),
+        from: z.string().describe("Room id to start from, default the game's start room.").optional(),
+        maxRooms: z.number().int().min(1).max(200).describe("Max rooms listed, 1-200, default 30.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: game_routes ----
+      const paywallMessage = await premiumRequired("game_routes")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await gameRoutes(args))
       } catch (e) {
         return textError(`Error: ${(e as Error).message}`)
       }

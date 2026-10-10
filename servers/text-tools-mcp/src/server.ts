@@ -2,7 +2,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { base64 } from "./api.js"
 import { slugify } from "./api.js"
-import { toCase } from "./api.js"
+import { toCase, textMetrics, diffText } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -47,5 +48,39 @@ export function createServer(): McpServer {
     try { return text(await base64(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "text_metrics",
+    {
+      title: "Text metrics",
+      description: "Measure a string: characters, graphemes, words, sentences, syllables, unique words, reading time and a Flesch readability score. All computed locally.",
+      inputSchema: z.object( { text: z.string().describe("The text to measure, up to 200,000 characters.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: text_metrics ----
+    const paywallMessage = await premiumRequired("text_metrics")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await textMetrics(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "diff_text",
+    {
+      title: "Diff text",
+      description: "Line diff of two strings with added, removed and unchanged markers, computed with a longest-common-subsequence comparison.",
+      inputSchema: z.object( {
+        before: z.string().describe("The original text.").optional(),
+        after: z.string().describe("The changed text.").optional(),
+        context: z.number().int().min(0).max(10).describe("Unchanged lines to keep around each change, 0-10, default 1.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await diffText(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

@@ -88,3 +88,110 @@ export function formatRecipe(r: Recipe, index?: number): string {
   const prefix = index !== undefined ? `${index + 1}. ` : ""
   return `${prefix}[${r.id}] ${r.title ?? "(untitled)"}${r.minutes !== undefined ? ` — ${r.minutes} min` : ""}${r.servings !== undefined ? `, serves ${r.servings}` : ""}${r.image ? `\n   ${r.image}` : ""}`
 }
+
+// ---- muxB tools:
+
+// Open Food Facts is an open, keyless database of packaged food products.
+const OFF_BASE = "https://world.openfoodfacts.org"
+const OFF_UA = "spoonacular-mcp/1.0 (openfoodfacts public API)"
+
+async function offGet<T>(path: string): Promise<T> {
+  // The search route answers 503 from a "page temporarily unavailable" front
+  // page fairly often, so a short bounded retry is the difference between a
+  // flaky tool and a usable one.
+  let last = 0
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await fetch(`${OFF_BASE}${path}`, {
+      headers: { "User-Agent": OFF_UA, Accept: "application/json" },
+      signal: AbortSignal.timeout(25000),
+    })
+    if (res.status === 429) throw new SpoonacularError("Open Food Facts rate limit reached, try again shortly.")
+    if (res.status === 404) throw new SpoonacularError("Not found in Open Food Facts.")
+    if (res.ok) return (await res.json()) as T
+    last = res.status
+    if (res.status !== 503) break
+    await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)))
+  }
+  throw new SpoonacularError(`Open Food Facts error ${last}`)
+}
+
+function offNumber(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined
+}
+
+function offPer100g(nutriments: Raw | undefined): string {
+  const n: Raw = nutriments ?? {}
+  const parts = [
+    offNumber(n["energy-kcal_100g"]) !== undefined ? `${offNumber(n["energy-kcal_100g"])} kcal` : "",
+    offNumber(n.proteins_100g) !== undefined ? `P ${offNumber(n.proteins_100g)}g` : "",
+    offNumber(n.fat_100g) !== undefined ? `F ${offNumber(n.fat_100g)}g` : "",
+    offNumber(n["carbohydrates_100g"]) !== undefined ? `C ${offNumber(n["carbohydrates_100g"])}g` : "",
+    offNumber(n.sugars_100g) !== undefined ? `sugars ${offNumber(n.sugars_100g)}g` : "",
+    offNumber(n.fiber_100g) !== undefined ? `fibre ${offNumber(n.fiber_100g)}g` : "",
+    offNumber(n.salt_100g) !== undefined ? `salt ${offNumber(n.salt_100g)}g` : "",
+  ].filter(Boolean)
+  return parts.length ? parts.join(" · ") : "nutrient values not reported"
+}
+
+function offGrade(grade: unknown): string {
+  const g = typeof grade === "string" ? grade.trim().toLowerCase() : ""
+  if (g === "a" || g === "b" || g === "c" || g === "d" || g === "e") return g.toUpperCase()
+  return "not graded"
+}
+
+function offCategories(tags: unknown): string {
+  const list: string[] = Array.isArray(tags) ? tags.map((t) => String(t).replace(/^en:/, "")) : []
+  if (list.length === 0) return "categories not reported"
+  return list.slice(0, 3).join(", ") + (list.length > 3 ? `, +${list.length - 3} more` : "")
+}
+
+export async function productSearch(args: { query: string; limit?: number }): Promise<string> {
+  const q = (args.query ?? "").trim()
+  if (!q) throw new SpoonacularError("Query is empty.")
+  const limit = Math.min(Math.max(args.limit ?? 5, 1), 20)
+  const fields = "product_name,brands,code,nutriscore_grade,nutriments,serving_size,categories_tags,quantity"
+  const params = new URLSearchParams({ search_terms: q, json: "1", page_size: String(limit), fields })
+  const data = await offGet<Raw>(`/cgi/search.pl?${params.toString()}`)
+  const rows: Raw[] = Array.isArray(data.products) ? data.products : []
+  if (rows.length === 0) return `No packaged products match "${q}".`
+  return [
+    `Open Food Facts products for "${q}" - ${Number(data.count ?? 0).toLocaleString()} indexed, showing ${rows.length}:`,
+    ...rows.map((r, i) => {
+      const name = String(r.product_name ?? "").trim() || "(unnamed product)"
+      const brand = String(r.brands ?? "").trim()
+      const portion = String(r.serving_size ?? "").trim() || String(r.quantity ?? "").trim()
+      return [
+        `${i + 1}. ${name}${brand ? ` - ${brand}` : ""}`,
+        `   barcode ${r.code ?? "not reported"} · Nutri-Score ${offGrade(r.nutriscore_grade)}${portion ? ` · serving ${portion}` : ""}`,
+        `   per 100 g: ${offPer100g(r.nutriments)}`,
+        `   ${offCategories(r.categories_tags)}`,
+      ].join("\n")
+    }),
+  ].join("\n")
+}
+
+export async function barcodeLookup(args: { barcode: string }): Promise<string> {
+  const code = (args.barcode ?? "").replace(/[\s-]/g, "")
+  if (!/^\d{8,14}$/.test(code)) throw new SpoonacularError(`Barcode must be 8-14 digits, got "${args.barcode ?? ""}".`)
+  const fields = "product_name,generic_name,brands,code,quantity,product_quantity,product_quantity_unit,nutriscore_grade,nutriments,serving_size,ingredients_text,allergens_tags,categories_tags,countries,nutrition_data_per"
+  const data = await offGet<Raw>(`/api/v2/product/${encodeURIComponent(code)}.json?fields=${encodeURIComponent(fields)}`)
+  const p: Raw = (data.product ?? {}) as Raw
+  if (Object.keys(p).length === 0 || Number(data.status ?? 0) === 0) {
+    return `Barcode ${code} is not in Open Food Facts.`
+  }
+  const ingredients = String(p.ingredients_text ?? "").replace(/\s+/g, " ").trim()
+  const allergens: string[] = Array.isArray(p.allergens_tags) ? p.allergens_tags.map((t) => String(t).replace(/^en:/, "")) : []
+  const name = String(p.product_name ?? "").trim() || "(unnamed product)"
+  const generic = String(p.generic_name ?? "").replace(/\s+/g, " ").trim()
+  return [
+    `${name}${generic ? ` (${generic})` : ""}`,
+    `Brand: ${String(p.brands ?? "").trim() || "not reported"} · barcode ${p.code ?? code}`,
+    `Quantity: ${String(p.serving_size ?? "").trim() || "not reported"}${p.product_quantity ? ` (${p.product_quantity}${p.product_quantity_unit ? ` ${p.product_quantity_unit}` : ""})` : ""}`,
+    `Nutri-Score: ${offGrade(p.nutriscore_grade)} · nutrition basis: ${String(p.nutrition_data_per ?? "").trim() || "not reported"}`,
+    `Per 100 g: ${offPer100g(p.nutriments)}`,
+    `Countries: ${String(p.countries ?? "").trim() || "not reported"}`,
+    `Categories: ${offCategories(p.categories_tags)}`,
+    allergens.length ? `Allergens: ${allergens.slice(0, 8).join(", ")}` : "Allergens: none listed",
+    ingredients ? `Ingredients: ${ingredients.slice(0, 400)}` : "Ingredients: not reported",
+  ].join("\n")
+}

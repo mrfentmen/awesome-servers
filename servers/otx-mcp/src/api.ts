@@ -73,3 +73,158 @@ export function formatPulse(p: Pulse, index?: number): string {
   const prefix = index !== undefined ? `${index + 1}. ` : ""
   return `${prefix}[${p.id ?? "?"}] ${p.name ?? "(unnamed)"}${p.author ? ` by ${p.author}` : ""}${p.indicators !== undefined ? ` (${p.indicators} indicators)` : ""}${p.modified ? ` — ${p.modified}` : ""}`
 }
+
+// ---- muxQ tools:
+// OTX asks for an API key on most of its v1 surface, but not on the indicator
+// lookups. /indicators/<type>/<value>/general answers an anonymous caller with
+// HTTP 200 and the full record - reputation, ASN, country, malware stats and
+// pulse membership - and /url_list comes back the same way. Those two are what
+// the three tools below read, so all of them work with no OTX_API_KEY set.
+const OTX_IND = 'https://otx.alienvault.com/api/v1/indicators';
+const OTX_UA = 'otx-mcp/1.1';
+const OTX_LIST_MAX = 25;
+
+type Json = Record<string, unknown>;
+
+async function otxGet<T>(path: string): Promise<T> {
+  const res = await fetch(`${OTX_IND}${path}`, {
+    headers: { 'User-Agent': OTX_UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(25000),
+  });
+  if (res.status === 401 || res.status === 403) throw new Error('OTX refused the request (401/403).');
+  if (res.status === 404) throw new Error('OTX has no record for that indicator.');
+  if (!res.ok) throw new Error(`OTX error ${res.status}`);
+  const data = (await res.json()) as T;
+  if (!data || typeof data !== 'object') throw new Error('OTX returned an empty body.');
+  return data;
+}
+
+function num(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function str(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function cap(value: number | undefined, fallback: number, max: number): number {
+  const n = typeof value === 'number' && Number.isFinite(value) ? Math.floor(value) : fallback;
+  return Math.min(max, Math.max(1, n));
+}
+
+export interface ReportArgs {
+  indicator: string;
+  type: string;
+}
+
+/** Full OTX record for any indicator type: IP, domain, hostname, file hash, CVE. */
+export async function indicatorReport(args: ReportArgs): Promise<string> {
+  const indicator = (args.indicator ?? '').trim();
+  const type = (args.type ?? '').trim();
+  if (!indicator) throw new Error('An indicator is required, for example 8.8.8.8 or a sha256 hash.');
+  if (!type) throw new Error('An indicator type is required: IPv4, IPv6, domain, hostname, file, CVE or URL.');
+  const allowed = ['IPv4', 'IPv6', 'domain', 'hostname', 'file', 'CVE', 'URL'];
+  if (!allowed.includes(type)) {
+    throw new Error(`Type "${type}" is not one of: ${allowed.join(', ')}.`);
+  }
+  const data = await otxGet<Json>(`/${type}/${encodeURIComponent(indicator)}/general`);
+
+  const reputation = num(data.reputation);
+  const pulseCount = (data.pulse_info as Json | undefined)?.count;
+  const asn = num(data.asn);
+  const asnName = str(data.asn_name);
+  const country = str(data.country_code);
+  const city = str(data.city);
+  const malware = (data.malware as Json | undefined)?.count;
+
+  const lines = [
+    `${type} indicator: ${indicator}`,
+    `OTX type: ${str(data.type) ?? 'not reported'}`,
+    `Reputation: ${reputation !== null ? reputation : 'not reported'}`,
+    `Pulses containing it: ${num(pulseCount) !== null ? pulseCount : 'not reported'}`,
+    `Malware associations: ${num(malware) !== null ? malware : 'not reported'}`,
+    `Autonomous system: ${asn !== null || asnName ? `${asn ?? 'not reported'}${asnName ? ` (${asnName})` : ''}` : 'not reported'}`,
+    `Country: ${country ?? 'not reported'}`,
+    `City: ${city ?? 'not reported'}`,
+    `Whois: ${str(data.whois) ?? 'not reported'}`,
+  ];
+  const geo = data.geo as Json | undefined;
+  if (geo && typeof geo === 'object') {
+    const lat = num(geo.latitude);
+    const lon = num(geo.longitude);
+    if (lat !== null || lon !== null) {
+      lines.push(`Coordinates: ${lat !== null ? lat.toFixed(4) : 'not reported'}, ${lon !== null ? lon.toFixed(4) : 'not reported'}`);
+    }
+  }
+  const created = str(data.created);
+  const modified = str(data.modified);
+  if (created) lines.push(`First seen: ${created.slice(0, 10)}`);
+  if (modified) lines.push(`Last seen: ${modified.slice(0, 10)}`);
+  return lines.join('\n');
+}
+
+export interface PulsesArgs {
+  indicator: string;
+  type: string;
+  limit?: number;
+}
+
+/** The community pulses an indicator belongs to, newest first. */
+export async function indicatorPulses(args: PulsesArgs): Promise<string> {
+  const indicator = (args.indicator ?? '').trim();
+  const type = (args.type ?? '').trim();
+  if (!indicator) throw new Error('An indicator is required.');
+  if (!type) throw new Error('An indicator type is required: IPv4, IPv6, domain, hostname or file.');
+  const limit = cap(args.limit, 10, OTX_LIST_MAX);
+  const data = await otxGet<Json>(`/${type}/${encodeURIComponent(indicator)}/general`);
+  const info = (data.pulse_info as Json | undefined) ?? {};
+  const rows = Array.isArray(info.pulses) ? (info.pulses as Json[]) : [];
+  if (!rows.length) return `"${indicator}" is not in any OTX pulse.`;
+  const total = num(info.count) ?? rows.length;
+  return (
+    `"${indicator}" is in ${total} OTX pulses, showing ${Math.min(limit, rows.length)}:\n` +
+    rows
+      .slice(0, limit)
+      .map((p) => {
+        const name = str(p.name) ?? str(p.id) ?? 'unnamed pulse';
+        const author = str(p.author_name);
+        const created = str(p.created);
+        const tags = Array.isArray(p.tags) ? (p.tags as unknown[]).filter((t) => typeof t === 'string') as string[] : [];
+        const parts = [author ? `by ${author}` : 'author not reported'];
+        if (created) parts.push(created.slice(0, 10));
+        if (tags.length) parts.push(`tags: ${tags.slice(0, 5).join(', ')}`);
+        return `* ${name} (${parts.join(', ')})`;
+      })
+      .join('\n')
+  );
+}
+
+export interface UrlsArgs {
+  indicator: string;
+  type: string;
+  limit?: number;
+}
+
+/** URLs an indicator has been seen hosting or talking to. */
+export async function indicatorUrls(args: UrlsArgs): Promise<string> {
+  const indicator = (args.indicator ?? '').trim();
+  const type = (args.type ?? '').trim();
+  if (!indicator) throw new Error('An indicator is required.');
+  if (!type) throw new Error('An indicator type is required: IPv4, IPv6, domain or hostname.');
+  const limit = cap(args.limit, 10, OTX_LIST_MAX);
+  const data = await otxGet<Json>(`/${type}/${encodeURIComponent(indicator)}/url_list?limit=${limit}`);
+  const rows = Array.isArray(data.url_list) ? (data.url_list as Json[]) : [];
+  if (!rows.length) return `No URLs are recorded for "${indicator}".`;
+  return (
+    `URLs recorded for "${indicator}" (${rows.length}):\n` +
+    rows
+      .slice(0, limit)
+      .map((u) => {
+        const url = str(u.url) ?? 'url not reported';
+        const host = str(u.hostname) ?? str(u.domain) ?? 'host not reported';
+        const date = str(u.date);
+        return `* ${url} | host ${host}${date ? ` | ${date.slice(0, 10)}` : ''}`;
+      })
+      .join('\n')
+  );
+}

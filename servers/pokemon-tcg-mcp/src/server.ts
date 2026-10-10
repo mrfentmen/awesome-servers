@@ -1,15 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  TcgError,
-  formatCardDetail,
-  formatCardSummary,
-  formatSet,
-  getCard,
-  getSet,
-  listSets,
-  searchCards,
-} from "./api.js"
+import { TcgError, formatCardDetail, formatCardSummary, formatSet, getCard, getSet, listSets, searchCards, cardsByRarity, cardRarities } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -113,6 +105,47 @@ export function createServer(): McpServer {
           .join("\n")
         const tail = set.cards.length > 25 ? `\n…and ${set.cards.length - 25} more` : ""
         return text(head + body + tail)
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "cards_by_rarity",
+    {
+      title: "Cards by rarity",
+      description: "TCGdex cards carrying a given rarity label, with their set-relative id and category.",
+      inputSchema: z.object({
+        rarity: z.string().describe("Rarity name, e.g. \"Holo Rare\" (use card_rarities to list them)"),
+        limit: z.number().int().min(1).max(50).default(15),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: cards_by_rarity ----
+      const paywallMessage = await premiumRequired("cards_by_rarity")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await cardsByRarity(args))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "card_rarities",
+    {
+      title: "Card rarities",
+      description: "Every rarity label TCGdex uses, so cards_by_rarity can be called with a name that really exists.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try {
+        return text(await cardRarities(args))
       } catch (e) {
         return textError(errorMessage(e))
       }

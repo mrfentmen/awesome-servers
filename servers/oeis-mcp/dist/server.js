@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { formatSequence, getSequence, OeisError, searchSequences } from "./api.js";
+import { premiumTool } from "./gateway.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -36,6 +37,22 @@ export function createServer() {
             if (!s)
                 return text(`No OEIS sequence ${id}.`);
             return text(formatSequence(s));
+        }
+        catch (e) {
+            return textError(errorMessage(e));
+        }
+    });
+    server.registerTool("sequence_terms", {
+        title: "Sequence terms",
+        description: "The full term list of an OEIS sequence from its b-file: every term with its index, plus the file's own offset header.",
+        inputSchema: z.object({ id: z.string().describe("OEIS id like A000045."), start: z.number().describe("Terms to skip.").optional(), count: z.number().describe("How many terms.").optional() }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        // ---- paywall: sequence_terms ----
+        // The body runs on the gateway, behind the licence gate.
+        // ---- paywall: end ----
+        try {
+            return text(await premiumTool("mcp_oeis_sequence_terms", args));
         }
         catch (e) {
             return textError(errorMessage(e));

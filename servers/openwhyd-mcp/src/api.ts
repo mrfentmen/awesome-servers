@@ -24,3 +24,34 @@ export async function hot(args: HotArgs = {}): Promise<string> {
       })
       .join('\n');
 }
+
+// ---- muxB tools:
+
+const OW = 'https://openwhyd.org'
+
+async function owGet<T>(path: string): Promise<T> {
+  const res = await fetch(`${OW}${path}`, {
+    headers: { 'User-Agent': 'mrfentmen-openwhyd-mcp/1.0', Accept: 'application/json' },
+    signal: AbortSignal.timeout(20000),
+  })
+  if (!res.ok) throw new Error(`OpenWhyd returned ${res.status} for ${path}`)
+  return (await res.json()) as T
+}
+
+const owText = (row: Record<string, unknown>, key: string): string =>
+  row[key] != null && String(row[key]).trim() ? String(row[key]) : 'not reported'
+
+const owNum = (value: unknown): string => {
+  const n = Number(value)
+  return Number.isFinite(n) ? n.toLocaleString('en-US') : 'not reported'
+}
+
+export interface HotDetailArgs {
+  limit?: number;
+}
+
+export interface SearchTracksArgs {
+  query?: string;
+  limit?: number;
+}
+

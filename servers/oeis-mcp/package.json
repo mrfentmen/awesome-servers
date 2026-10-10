@@ -1,6 +1,6 @@
 {
   "name": "oeis-mcp",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Use this MCP server to the OEIS, the encyclopedia of integer sequences. Look up any sequence, find its name, formula, and neighbors",
   "type": "module",
   "mcpName": "io.github.mrfentmen/oeis-mcp",

@@ -35,3 +35,61 @@ export async function jsonInfo(args: { json?: string }): Promise<string> {
   }
   return `Type: ${type}\nValue: ${String(value).slice(0, 200)}`
 }
+
+// ---- muxB tools:
+
+const SCHEMASTORE_CATALOG = "https://www.schemastore.org/api/json/catalog.json"
+const SCHEMASTORE_UA = "mrfentmen-json-tools-mcp/1.0"
+
+interface CatalogEntry {
+  name?: string
+  description?: string
+  url?: string
+  fileMatch?: string[]
+  versions?: Record<string, string>
+}
+
+async function catalogGet<T>(url: string): Promise<T> {
+  const res = await fetch(url, { headers: { "User-Agent": SCHEMASTORE_UA, Accept: "application/json" }, signal: AbortSignal.timeout(25000) })
+  if (!res.ok) throw new JsonError(`SchemaStore returned ${res.status} for ${url}`)
+  return (await res.json()) as T
+}
+
+async function catalog(): Promise<CatalogEntry[]> {
+  const data = await catalogGet<{ schemas?: CatalogEntry[] }>(SCHEMASTORE_CATALOG)
+  return data.schemas ?? []
+}
+
+export interface FindSchemaArgs {
+  query: string
+  limit?: number
+}
+
+export interface SchemaForFileArgs {
+  filename: string
+}
+
+export async function schemaForFile(args: SchemaForFileArgs): Promise<string> {
+  const filename = (args.filename ?? "").trim().toLowerCase()
+  if (!filename) throw new JsonError("Provide a file name, e.g. \"package.json\".")
+  const rows = await catalog()
+  const exact = rows.filter((entry) => (entry.fileMatch ?? []).some((pattern) => pattern.toLowerCase() === filename))
+  const partial = exact.length ? exact : rows.filter((entry) => (entry.fileMatch ?? []).some((pattern) => pattern.toLowerCase().includes(filename)))
+  const entry = partial[0]
+  if (!entry) return `No SchemaStore schema is registered for "${filename}". Try find_schema to search the ${rows.length}-entry catalogue by topic.`
+  if (!entry.url) return `SchemaStore lists "${entry.name ?? filename}" for ${filename} but publishes no schema URL for it.`
+  const schema = await catalogGet<Record<string, unknown>>(entry.url)
+  const properties = schema.properties && typeof schema.properties === "object" ? (schema.properties as Record<string, unknown>) : {}
+  const required = Array.isArray(schema.required) ? (schema.required as unknown[]).map(String) : []
+  const defs = schema.$defs && typeof schema.$defs === "object" ? Object.keys(schema.$defs as Record<string, unknown>) : []
+  return [
+    `JSON Schema for ${filename}: ${entry.name ?? "unnamed"}`,
+    `From: ${entry.url}`,
+    `Description: ${String(entry.description ?? "not reported").slice(0, 200)}`,
+    `Declared type: ${schema.type != null ? String(schema.type) : "not reported"} | draft: ${String(schema.$schema ?? "not reported")}`,
+    `Properties (${Object.keys(properties).length}): ${Object.keys(properties).slice(0, 20).join(", ") || "none at top level"}`,
+    `Required: ${required.length ? required.join(", ") : "none"}`,
+    `$defs sections (${defs.length}): ${defs.slice(0, 12).join(", ") || "none"}`,
+    `Versions published: ${entry.versions ? Object.keys(entry.versions).slice(0, 8).join(", ") || "none" : "none"}`,
+  ].join("\n")
+}

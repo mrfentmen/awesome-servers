@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_search, m1_searchFood } from './api.js'
+import { m0_search, m1_searchFood, foodDetails } from './api.js'
+import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -34,5 +35,22 @@ server.registerTool(
     try { return text(await m1_searchFood(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "food_details",
+    {
+      title: "Food details",
+      description: "The USDA FoodData Central record for one FDC id: data type, brand, category, serving size and the published nutrient amounts.",
+      inputSchema: z.object( { fdc_id: z.string().describe("Numeric FDC id, e.g. 173944 for raw bananas.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: food_details ----
+    const paywallMessage = await premiumRequired("food_details")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await foodDetails(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

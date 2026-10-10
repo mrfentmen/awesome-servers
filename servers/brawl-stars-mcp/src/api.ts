@@ -43,3 +43,17 @@ export async function brawler(args: BrawlerArgs): Promise<string> {
     ga.length ? `Gadgets (${ga.length}): ${ga.slice(0, 3).map((x) => String(x.name ?? '')).join(', ')}` : '',
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxA tools:
+
+export interface MapsArgs {
+  mode?: string;
+  include_disabled?: boolean;
+  limit?: number;
+}
+
+export interface ModesArgs {
+  include_disabled?: boolean;
+  limit?: number;
+}
+

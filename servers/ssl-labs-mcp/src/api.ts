@@ -32,3 +32,16 @@ export async function analyze(args: AnalyzeArgs): Promise<string> {
     `Overall grade: ${String(d.grade ?? 'n/a')}`,
   ].join('\n');
 }
+
+// ---- muxB tools:
+
+export interface CertificateLogArgs {
+  domain?: string;
+  limit?: number;
+  include_expired?: boolean;
+}
+
+export interface CaaRecordsArgs {
+  domain?: string;
+}
+

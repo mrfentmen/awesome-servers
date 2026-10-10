@@ -29,3 +29,19 @@ export async function lookup(args: LookupArgs = {}): Promise<string> {
     `Timezone: ${(d.timezone as Record<string, unknown> | undefined)?.id ?? 'n/a'}`,
   ].join('\n');
 }
+
+// ---- muxB tools:
+
+export interface RdapArgs {
+  ip?: string;
+}
+
+interface RdapEntity {
+  handle?: string;
+  roles?: string[];
+  vcardArray?: unknown[] | string;
+  name?: string;
+  fn?: string;
+  org?: string;
+}
+

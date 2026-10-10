@@ -20,3 +20,10 @@ export async function rhymes(args: RhymesArgs): Promise<string> {
   const rows = d.slice(0, limit).map((r, i) => `${i + 1}. ${r.word ?? '?'} (${r.syllables ?? '?'} syll)`);
   return `Rhymes for "${word}" (${d.length} found, showing ${rows.length}):\n${rows.join('\n')}`;
 }
+
+// ---- muxB tools:
+
+export interface PronunciationArgs {
+  word: string;
+}
+

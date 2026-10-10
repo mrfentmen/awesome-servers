@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { FoodError, format, product, search } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -22,5 +23,39 @@ export function createServer() { const server = new McpServer({ name: "open-food
       annotations: READ_ONLY,
     },
     async ({ query, page }) => { try { return text(format(await search(query, String(page)))) } catch (e) { return textError(`Error: ${e instanceof Error ? e.message : String(e)}`) } }
-  ); return server }
+  );
+  server.registerTool(
+    "ingredient_search",
+    {
+      title: "Ingredient search",
+      description: "Find Open Food Facts products that list an ingredient, which the barcode and product-name searches cannot do.",
+      inputSchema: z.object( { ingredient: z.string().describe("Ingredient, e.g. coconut."), limit: z.number().describe("Max products.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: ingredient_search ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_open_food_facts_ingredient_search", args)) } catch (e) { return textError(String(e)) }
+  }
+  )
+
+  server.registerTool(
+    "tag_search",
+    {
+      title: "Tag search",
+      description: "Find Open Food Facts products by category, label, country, packaging or trace tag, which is how you browse a diet or a market.",
+      inputSchema: z.object( { tag: z.string().describe("Tag value, e.g. chocolate."), tagType: z.string().describe("categories, labels, countries, packaging, nutriments, states, traces or ingredients.").optional(), limit: z.number().describe("Max products.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: tag_search ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_open_food_facts_tag_search", args)) } catch (e) { return textError(String(e)) }
+  }
+  )
+
+  return server
+}
 export { FoodError }

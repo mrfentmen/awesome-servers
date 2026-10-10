@@ -1,6 +1,6 @@
 {
   "name": "inngest-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Inngest: send events, list apps. Needs an event key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/inngest-mcp",

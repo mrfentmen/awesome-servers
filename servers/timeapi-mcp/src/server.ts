@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_convert, m0_current, m1_listZones, m1_timeInZone } from './api.js'
 
+import { m0_convert, m0_current, m1_listZones, m1_timeInZone } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -58,5 +59,21 @@ server.registerTool(
     try { return text(await m1_listZones(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "available_zones",
+    {
+      title: "Available zones",
+      description: "The full list of IANA time zones TimeAPI recognises, filtered by a text fragment, instead of a short built-in list.",
+      inputSchema: z.object( { prefix: z.string().describe("Text fragment to match inside the zone name, e.g. \"london\".").optional(), limit: z.number().int().min(1).max(200).default(40).describe("Max zones.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: available_zones ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_timeapi_available_zones", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

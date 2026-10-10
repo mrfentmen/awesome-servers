@@ -42,3 +42,20 @@ export async function all(_args?: unknown): Promise<string> {
   return `Fruityvice fruits (${d.length}):\n` +
     d.slice(0, 40).map((f, i) => `${i + 1}. ${f.name ?? '?'} (${f.family ?? '?'})`).join('\n');
 }
+
+// ---- muxB tools:
+
+function kcal(value: unknown): string {
+  const n = Number(value);
+  return Number.isFinite(n) ? `${n} kcal` : 'not reported';
+}
+
+export interface GroceryProductArgs {
+  barcode: string;
+}
+
+export interface ProductSearchArgs {
+  query: string;
+  limit?: number;
+}
+

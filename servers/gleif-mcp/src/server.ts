@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { lei } from "./api.js"
-import { search } from "./api.js"
 
+import { lei, search } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,37 @@ export function createServer(): McpServer {
     try { return text(await lei(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "lei_identifiers",
+    {
+      title: "Lei identifiers",
+      description: "Cross references and registration history for one LEI: national registration number, LOU, status and validity dates, direct and ultimate parent, and the BIC, MIC, GEM, QCC and OCID identifiers GLEIF holds.",
+      inputSchema: z.object({ id: z.string().describe("20 character LEI code, e.g. '529900PZALZWTFHKJ345'."), }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: lei_identifiers ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_gleif_lei_identifiers", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "entities_by_country",
+    {
+      title: "Entities by country",
+      description: "List legal entities whose LEI is registered in a given ISO country, with the total GLEIF holds for that country.",
+      inputSchema: z.object({ country: z.string().describe("Two letter ISO country code, e.g. 'CH' or 'DE'."), limit: z.number().describe("Max entities, 1-100, default 15.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: entities_by_country ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_gleif_entities_by_country", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

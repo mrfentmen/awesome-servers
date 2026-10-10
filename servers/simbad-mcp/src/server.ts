@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { coneSearch, lookupObject, SimbadError } from "./api.js"
+import { coneSearch, lookupObject, SimbadError, objectPhotometry, objectReferences, objectIdentifiers } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -48,6 +49,71 @@ export function createServer(): McpServer {
     async ({ ra, dec, radius, limit }) => {
       try {
         return text(await coneSearch(ra, dec, radius, limit))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "object_photometry",
+    {
+      title: "Object photometry",
+      description: "SIMBAD flux measurements for one object: filter, flux value, quality flag, photometric system and source bibcode.",
+      inputSchema: z.object(
+    { ident: z.string().describe("Object name, e.g. 'Vega'"), limit: z.number().int().min(1).max(60).default(20) },
+      ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: object_photometry ----
+      const paywallMessage = await premiumRequired("object_photometry")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await objectPhotometry(args))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "object_references",
+    {
+      title: "Object references",
+      description: "The SIMBAD bibliography for one object: journal, year, title, bibcode and DOI.",
+      inputSchema: z.object(
+    { ident: z.string().describe("Object name, e.g. 'Vega'"), limit: z.number().int().min(1).max(50).default(15) },
+      ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: object_references ----
+      const paywallMessage = await premiumRequired("object_references")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await objectReferences(args))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "object_identifiers",
+    {
+      title: "Object identifiers",
+      description: "Every alternate identifier SIMBAD cross-matches for one object: catalogue names, Gaia, Hipparcos, 2MASS and more.",
+      inputSchema: z.object(
+    { ident: z.string().describe("Object name, e.g. 'Vega'"), limit: z.number().int().min(1).max(60).default(20) },
+      ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try {
+        return text(await objectIdentifiers(args))
       } catch (e) {
         return textError(errorMessage(e))
       }

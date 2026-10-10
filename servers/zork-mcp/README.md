@@ -64,3 +64,21 @@ This project is intentionally narrow. It should be treated as a practical helper
 ## Try it
 
 After building, connect the server through your MCP client. The repository root also contains `smoke-test.mjs` for projects covered by the shared harness. A typical tool call starts with `list_games`.
+
+<!-- paywall -->
+## Premium tools
+
+These tools need a license key:
+
+* `game_routes`
+
+Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-zork-mcp and set it in your MCP client config:
+
+```json
+"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
+```
+
+The key is checked against MCP Marketplace, cached for 24 hours, and keeps
+working offline once one check has succeeded. Every other tool on this server
+stays free.
+<!-- /paywall -->

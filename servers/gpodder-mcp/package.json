@@ -1,6 +1,6 @@
 {
   "name": "gpodder-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Keyless MCP server for the gPodder podcast directory: search podcasts, top charts, tags, feeds and subscriber counts.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/gpodder-mcp",

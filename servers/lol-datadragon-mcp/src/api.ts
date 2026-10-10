@@ -48,3 +48,15 @@ export async function champion(args: ChampionArgs): Promise<string> {
     s('partype') ? `Resource: ${s('partype')}` : '',
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxB tools:
+
+export interface ItemsArgs {
+  name?: string;
+  limit?: number;
+}
+
+export interface RunesArgs {
+  tree?: string;
+}
+

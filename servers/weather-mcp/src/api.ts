@@ -98,3 +98,48 @@ export const m0_WeatherError = m0.WeatherError;
 export const m1_alertsForPoint = m1.alertsForPoint;
 export const m1_AlertError = m1.AlertError;
 export const m1_activeAlerts = m1.activeAlerts;
+
+// ---- muxC tools:
+
+const WX_UA = "mrfentmen-weather-mcp/1.0 (https://github.com/mrfentmen)"
+
+class WeatherToolError extends Error {}
+
+/** Active NWS alerts for a whole state or territory code, not just a point. */
+export async function alertsForArea(args: { area?: string; limit?: number }): Promise<string> {
+  const area = (args.area ?? "").trim().toUpperCase()
+  if (!area) throw new WeatherToolError("Provide a two letter state or territory code, e.g. CA, TX or PR")
+  if (!/^[A-Z]{2}$/.test(area)) throw new WeatherToolError("A US state or territory code is two capitals, e.g. CA")
+  const limit = Math.max(1, Math.min(args.limit ?? 10, 100))
+  const res = await fetch(`https://api.weather.gov/alerts/active/area/${area}`, {
+    headers: { "User-Agent": WX_UA, Accept: "application/geo+json" },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (!res.ok) throw new WeatherToolError(`The National Weather Service returned ${res.status} for area ${area}`)
+  const d = (await res.json()) as { features?: any[] }
+  const rows: any[] = d?.features ?? []
+  if (!rows.length) return `The National Weather Service has no active alerts for ${area}.`
+  return `Active NWS alerts for ${area} (${rows.length} active, ${limit} shown):\n` +
+    rows.slice(0, limit).map((f, i) => {
+      const p = f.properties ?? {}
+      return `${i + 1}. ${p.event ?? "alert"} - ${p.severity ?? "severity not reported"} / ${p.urgency ?? "urgency not reported"}\n   ${p.headline ?? "no headline"}\n   effective ${String(p.effective ?? "").slice(0, 16).replace("T", " ") || "not reported"} | expires ${String(p.expires ?? "").slice(0, 16).replace("T", " ") || "not reported"}\n   ${p.areaDesc ? `area: ${String(p.areaDesc).slice(0, 140)}` : ""}`
+    })
+    .join("\n")
+}
+
+/** FEMA disaster declarations filtered to one state, which the national list cannot narrow. */
+export async function disastersByState(args: { state?: string; limit?: number }): Promise<string> {
+  const state = (args.state ?? "").trim().toUpperCase()
+  if (!state) throw new WeatherToolError("Provide a two letter state code, e.g. CA or TX")
+  if (!/^[A-Z]{2}$/.test(state)) throw new WeatherToolError("A US state code is two capitals, e.g. CA")
+  const limit = Math.max(1, Math.min(args.limit ?? 10, 50))
+  const filter = encodeURIComponent(`state eq '${state}'`)
+  const url = `https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?$top=${limit}&$orderby=declarationDate%20desc&$filter=${filter}`
+  const res = await fetch(url, { headers: { "User-Agent": WX_UA, Accept: "application/json" }, signal: AbortSignal.timeout(30000) })
+  if (!res.ok) throw new WeatherToolError(`FEMA's open api returned ${res.status}`)
+  const d = (await res.json()) as { DisasterDeclarationsSummaries?: any[] }
+  const rows: any[] = d?.DisasterDeclarationsSummaries ?? []
+  if (!rows.length) return `FEMA has no disaster declarations for ${state}.`
+  return `FEMA disaster declarations in ${state} (${rows.length} returned, newest first):\n` +
+    rows.map((r, i) => `${i + 1}. ${r.disasterName ?? "unnamed declaration"} (${r.declarationType ?? "type not reported"})\n   declared ${String(r.declarationDate ?? "").slice(0, 10) || "not reported"} | incident ${String(r.incidentBeginDate ?? "").slice(0, 10) || "not reported"} to ${String(r.incidentEndDate ?? "").slice(0, 10) || "ongoing"} | ${r.designationNumber ?? "no designation number"}`).join("\n")
+}

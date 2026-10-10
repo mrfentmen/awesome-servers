@@ -36,3 +36,39 @@ export async function random(_args?: unknown): Promise<string> {
   const r = results[0];
   return `Random postcode: ${r.postcode ?? '?'} [${r.country ?? '?'}, ${r.region ?? '?'}]`;
 }
+
+// ---- muxF tools:
+
+interface PcResult {
+  postcode?: string
+  quality?: number
+  country?: string
+  region?: string
+  nhs_ha?: string | null
+  nhs_region?: string | null
+  icb?: string | null
+  ccg?: string | null
+  european_electoral_region?: string | null
+  parliamentary_constituency?: string | null
+  parliamentary_constituency_2024?: string | null
+  pfa?: string | null
+  lsoa?: string | null
+  msoa?: string | null
+  nuts?: string | null
+  parish?: string | null
+  admin_district?: string
+  admin_county?: string | null
+  admin_ward?: string | null
+  bua?: string | null
+  ced?: string | null
+  cancer_alliance?: string | null
+  national_park?: string | null
+  primary_care_trust?: string | null
+  ttwa?: string | null
+  date_of_introduction?: string | null
+  date_of_termination?: string | null
+  latitude?: number
+  longitude?: number
+  codes?: Record<string, string | null>
+}
+

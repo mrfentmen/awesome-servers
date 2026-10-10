@@ -26,3 +26,41 @@ export async function app(args: AppArgs): Promise<string> {
     s('negative') ? `Negative reviews: ${s('negative')}` : '',
   ].filter(Boolean).join('\n') || `No data for app ${appid}.`;
 }
+
+// ---- muxB tools:
+
+interface SpyApp {
+  appid?: number;
+  name?: string;
+  developer?: string;
+  publisher?: string;
+  owners?: string;
+  positive?: number;
+  negative?: number;
+  tags?: Record<string, number> | unknown[];
+  price?: string;
+}
+
+async function spyGet<T>(params: Record<string, string>): Promise<T> {
+  const res = await fetch(`${BASE}?${new URLSearchParams(params).toString()}`, {
+    headers: { 'User-Agent': 'mrfentmen-steamspy-mcp/1.0', Accept: 'application/json' },
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!res.ok) throw new Error(`SteamSpy returned ${res.status}`);
+  return (await res.json()) as T
+}
+
+function spyLine(app: SpyApp, i: number): string {
+  const reviews = app.positive !== undefined && app.negative !== undefined ? `${app.positive} positive / ${app.negative} negative` : 'not reported';
+  return `${i + 1}. ${app.name ?? '?'} (appid ${app.appid ?? '?'}) | ${app.developer ?? 'developer not reported'} | owners ${app.owners ?? 'not reported'} | ${reviews}`;
+}
+
+export interface GenreAppsArgs {
+  genre: string;
+  limit?: number;
+}
+
+export interface TopOwnedArgs {
+  limit?: number;
+}
+

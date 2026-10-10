@@ -24,3 +24,18 @@ export async function estimateGender(args: { name?: string }): Promise<string> {
   const pct = Math.round((d.probability ?? 0) * 100)
   return `"${d.name}" is estimated ${d.gender} with ${pct}% probability (based on ${d.count?.toLocaleString() ?? "?"} people)`
 }
+
+// ---- muxB tools:
+
+// Wikidata stores dates as a signed year plus a precision, so only claim a
+// birth or death year when the value is precise enough to trust
+
+export interface FamousNamesakesArgs {
+  name?: string
+  limit?: number
+}
+
+export interface NamesakeLifespanArgs {
+  name?: string
+}
+

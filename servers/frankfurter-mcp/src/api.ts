@@ -20,8 +20,6 @@ export interface m1_ConvertArgs {
 const m0 = (() => {
 const BASE = 'https://api.frankfurter.app';
 
-
-
 async function latest(args: m0_LatestArgs): Promise<string> {
   const from = (args.from ?? 'USD').toUpperCase();
   const to = (args.to ?? '').toUpperCase();
@@ -62,7 +60,6 @@ return { history, latest };
 
 const m1 = (() => {
 const BASE = 'https://api.frankfurter.app';
-
 
 async function latest(_args: Record<string, never> = {}): Promise<string> {
   const res = await fetch(`${BASE}/latest`, {
@@ -105,3 +102,6 @@ export const m0_latest = m0.latest;
 export const m0_history = m0.history;
 export const m1_latest = m1.latest;
 export const m1_convert = m1.convert;
+
+// ---- muxC tools:
+

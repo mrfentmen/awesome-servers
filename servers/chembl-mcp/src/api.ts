@@ -44,3 +44,57 @@ export async function search(args: { query?: string; limit?: number }): Promise<
     return `${i + 1}. ${m?.pref_name ?? "n/a"} | ${m?.molecule_chembl_id ?? ""} | ${m?.molecule_properties?.full_molformula ?? ""}`
   }).join("\n")
 }
+
+// ---- muxA tools:
+
+function molId(value: unknown): string {
+  return value != null ? String(value).trim().toUpperCase() : ""
+}
+
+function requireMol(value: string | undefined): string {
+  const id = molId(value)
+  if (!/^CHEMBL\d+$/.test(id)) throw new ChemblError("Provide a molecule ID like CHEMBL25")
+  return id
+}
+
+export interface ActivityArgs {
+  molecule_id: string;
+  type?: string;
+  limit?: number;
+}
+
+export async function moleculeMechanism(args: { molecule_id: string }): Promise<string> {
+  const id = requireMol(args.molecule_id)
+  const d = await get<any>(`${BASE}/mechanism.json?molecule_chembl_id=${id}&limit=50`)
+  const rows = (d?.mechanisms ?? []) as any[]
+  if (!rows.length) {
+    return `ChEMBL records no mechanism of action for ${id}. Not every ChEMBL entry has one; check molecule_indications for the trial data instead.`
+  }
+  return [
+    `${id} acts on ${rows.length} target(s) by mechanism.`,
+    ...rows.map((m, i) => {
+      const yes = (v: unknown) => (v === 1 || v === true ? "yes" : "no")
+      return `${i + 1}. ${m?.mechanism_of_action ?? "mechanism not reported"} on ${m?.target_chembl_id ?? "target not reported"}` +
+        `${m?.action_type ? ` | action ${m.action_type}` : ""}` +
+        `${m?.max_phase != null ? ` | max trial phase ${m.max_phase}` : ""}` +
+        `\n   direct interaction: ${yes(m?.direct_interaction)} | efficacy against disease: ${yes(m?.disease_efficacy)}` +
+        `${m?.mechanism_comment ? `\n   comment: ${String(m.mechanism_comment).slice(0, 300)}` : ""}`
+    }),
+  ].join("\n")
+}
+
+export async function chemblRelease(_args?: unknown): Promise<string> {
+  const d = await get<any>(`${BASE}/status.json`)
+  const n = (k: string) => (d?.[k] != null ? Number(d[k]).toLocaleString("en-US") : "not reported")
+  return [
+    `ChEMBL release ${d?.chembl_db_version ?? "version not reported"}, released ${d?.chembl_release_date ?? "date not reported"}`,
+    `Service status: ${d?.status ?? "not reported"}`,
+    `Activities: ${n("activities")}`,
+    // the API spells this key "disinct_compounds", typo and all
+    `Distinct compounds: ${n("disinct_compounds")}`,
+    `Compound records: ${n("compound_records")}`,
+    `Targets: ${n("targets")}`,
+    `Publications: ${n("publications")}`,
+    "The status resource reports only these six counts, so anything else is not counted here.",
+  ].join("\n")
+}

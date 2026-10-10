@@ -42,3 +42,32 @@ export async function page(args: PageArgs): Promise<string> {
     `Name source: ${t.nameAccordingTo ?? '?'} | Richness score: ${t.richness_score ?? '?'}`,
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxA tools:
+
+const EOL = "https://eol.org/api";
+
+function clamp(value: number | undefined, fallback: number, max: number): number {
+  return Math.max(1, Math.min(Math.round(value ?? fallback), max));
+}
+
+async function eolGet(path: string, params: Record<string, string>): Promise<any> {
+  const query = new URLSearchParams(params);
+  const res = await fetch(`${EOL}/${path}?${query.toString()}`, {
+    headers: { "User-Agent": UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!res.ok) throw new Error(`EOL returned ${res.status}`);
+  return (await res.json()) as any;
+}
+
+export interface ClassificationArgs {
+  id: number;
+}
+
+export interface PagedArgs {
+  query: string;
+  page?: number;
+  limit?: number;
+}
+

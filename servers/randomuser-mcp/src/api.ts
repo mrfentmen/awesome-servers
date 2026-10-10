@@ -6,7 +6,6 @@ export interface m0_UsersArgs {
 const m0 = (() => {
 const BASE = 'https://randomuser.me/api/';
 
-
 async function users(args: m0_UsersArgs = {}): Promise<string> {
   const count = Math.max(1, Math.min(args.count ?? 5, 20));
   const res = await fetch(`${BASE}?results=${count}`, {
@@ -88,3 +87,9 @@ export const m0_users = m0.users;
 export const m1_generate = m1.generate;
 export const m1_RandomUserError = m1.RandomUserError;
 export const m1_seed = m1.seed;
+
+// ---- muxC tools:
+
+// randomuser.me's own field names, so an invalid one fails loudly rather than
+// silently returning a profile with nothing in it.
+

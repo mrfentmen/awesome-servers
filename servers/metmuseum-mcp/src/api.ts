@@ -25,7 +25,6 @@ const BASE = "https://collectionapi.metmuseum.org/public/collection/v1"
 
 class MetError extends Error {}
 
-
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     headers: { "User-Agent": "metmuseum-mcp/1.0" },
@@ -154,3 +153,6 @@ export const m0_getObject = m0.getObject;
 export const m1_search = m1.search;
 export const m1_object = m1.object;
 export const m1_MetError = m1.MetError;
+
+// ---- muxC tools:
+

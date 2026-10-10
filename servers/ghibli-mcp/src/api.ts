@@ -45,3 +45,59 @@ export async function film(args: FilmArgs): Promise<string> {
     s('description') ? `\n${s('description').slice(0, 200)}` : '',
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxB tools:
+
+interface GhibliFilm {
+  id?: string;
+  title?: string;
+  original_title?: string;
+  release_date?: string;
+  rt_score?: string;
+  director?: string;
+  people?: string[];
+  vehicles?: string[];
+  locations?: string[];
+  species?: string | string[];
+  image?: string;
+  movie_banner?: string;
+  url?: string;
+}
+
+async function allFilms(): Promise<GhibliFilm[]> {
+  const res = await fetch(BASE, {
+    headers: { 'User-Agent': 'mrfentmen-ghibli-mcp/1.0', Accept: 'application/json' },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error(`Ghibli API returned ${res.status}`);
+  const rows = (await res.json()) as GhibliFilm[];
+  return Array.isArray(rows) ? rows : [];
+}
+
+export interface SearchFilmsArgs {
+  query: string;
+  limit?: number;
+}
+
+export interface FilmPeopleArgs {
+  id: string;
+}
+
+// the API links people, vehicles and locations by UUID, so the ids have to be
+// resolved to names before they are worth showing
+async function nameOf(url: string): Promise<string> {
+  const key = url.replace(/[/#?]+$/, '').split('/').pop() ?? '';
+  if (!key) return 'not reported';
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'mrfentmen-ghibli-mcp/1.0', Accept: 'application/json' },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) return `${key} (name not published)`;
+    const d = (await res.json()) as { name?: string };
+    return d.name ? `${d.name} (${key})` : `${key} (name not published)`;
+  } catch {
+    return `${key} (name not reported)`;
+  }
+}
+

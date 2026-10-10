@@ -51,3 +51,27 @@ export function listEpisodes(page?: string, per?: string): Promise<string> {
 export function getEpisode(episodeId: string): Promise<string> {
   return req(`/api/v1/episodes/${encodeURIComponent(episodeId)}`)
 }
+
+// ---- muxC tools:
+
+interface PrxItem {
+  id?: string | number
+  title?: string
+  description?: string
+  link?: string
+  imageUrl?: string
+  category?: { value?: string; label?: string }
+  tags?: string[]
+  publishedAt?: string
+  duration?: number
+  explicitContent?: boolean
+  podcastName?: string
+  podcastId?: string | number
+}
+
+interface PrxListing {
+  count?: number
+  total?: number
+  _embedded?: { "prx:items"?: PrxItem[] }
+}
+

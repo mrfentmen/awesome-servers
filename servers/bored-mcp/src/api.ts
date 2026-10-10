@@ -55,3 +55,35 @@ export async function activityByParticipants(args: ParticipantsArg): Promise<str
   if (!list.length || !list[0]?.activity) return `No activities for ${n} participants.`;
   return `Activities for ${n} participants (${list.length}):\n` + list.slice(0, 5).map((a, i) => `${i + 1}. ${a.activity} (${a.type ?? '?'})`).join('\n');
 }
+
+// ---- muxA tools:
+
+interface BoredActivity {
+  activity?: string;
+  type?: string;
+  participants?: number;
+  price?: number;
+  availability?: number;
+  accessibility?: string;
+  duration?: string;
+  kidFriendly?: boolean;
+  link?: string;
+  key?: string;
+}
+
+export interface CatalogueArgs {
+  type?: string;
+  kid_friendly_only?: boolean;
+  free_only?: boolean;
+}
+
+export interface SearchArgs {
+  keyword?: string;
+  type?: string;
+  participants?: number;
+  max_price?: number;
+  accessibility?: string;
+  kid_friendly?: boolean;
+  limit?: number;
+}
+

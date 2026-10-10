@@ -2,7 +2,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { coinFlip } from "./api.js"
 import { randomNumber } from "./api.js"
-import { rollDice } from "./api.js"
+import { rollDice, randomFact, randomAdvice, randomWords } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -47,5 +48,52 @@ export function createServer(): McpServer {
     try { return text(await randomNumber(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "random_fact",
+    {
+      title: "Random fact",
+      description: "A real random fact from the Useless Facts API, with its source, source URL and permalink.",
+      inputSchema: z.object( { language: z.string().max(5).default("en").describe("Fact language code, e.g. 'en' or 'de'.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: random_fact ----
+    const paywallMessage = await premiumRequired("random_fact")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await randomFact(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "random_advice",
+    {
+      title: "Random advice",
+      description: "A real random advice slip from the Advice Slip API, with its slip id.",
+      inputSchema: z.object( {  }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: random_advice ----
+    const paywallMessage = await premiumRequired("random_advice")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await randomAdvice(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "random_words",
+    {
+      title: "Random words",
+      description: "A real random batch of English words from the Random Word API, optionally filtered by length.",
+      inputSchema: z.object( { count: z.number().int().min(1).max(25).default(5), minLength: z.number().int().min(1).max(30).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await randomWords(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

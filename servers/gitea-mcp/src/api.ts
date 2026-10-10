@@ -33,3 +33,23 @@ export async function repoDetail(args: RepoArg): Promise<string> {
   if (!d.full_name) throw new Error('No repo returned.');
   return `Repo ${d.full_name}\n${d.description ?? 'No description'}\nLanguage: ${d.language ?? '?'} | Default branch: ${d.default_branch ?? '?'}\nStars: ${d.stars_count ?? 0} | Forks: ${d.forks_count ?? 0} | Open issues: ${d.open_issues_count ?? 0}\nUpdated: ${d.updated_at ?? '?'}\n${d.html_url ?? ''}`;
 }
+
+// ---- muxC tools:
+
+interface GiteaUser {
+  id?: number
+  login?: string
+  full_name?: string
+  email?: string
+  avatar_url?: string
+  html_url?: string
+  followers?: number
+  following?: number
+  starred_repos_count?: number
+  language?: string
+  last_login?: string
+  created?: string
+  restricted?: boolean
+  active?: boolean
+}
+

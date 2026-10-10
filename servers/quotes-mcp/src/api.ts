@@ -36,7 +36,6 @@ return { QuotesError, quoteOfTheDay, randomQuote };
 const m1 = (() => {
 const BASE = 'https://favqs.com/api';
 
-
 async function qotd(_args?: unknown): Promise<string> {
   const res = await fetch(`${BASE}/qotd`, {
     headers: { 'User-Agent': 'mrfentmen-favqs-mcp/1.0', Accept: 'application/json' },
@@ -78,7 +77,6 @@ return { qotd, search };
 
 const m2 = (() => {
 const BASE = 'https://dummyjson.com/quotes/random';
-
 
 async function random(_args: m2_RandomArgs): Promise<string> {
   const res = await fetch(BASE, {
@@ -188,3 +186,6 @@ export const m4_random = m4.random;
 export const m4_today = m4.today;
 export const m4_quotes = m4.quotes;
 export const m4_ZenquotesError = m4.ZenquotesError;
+
+// ---- muxC tools:
+

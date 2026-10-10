@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { createWorkbook } from "./api.js"
-import { readWorkbook } from "./api.js"
+import { readWorkbook, workbookProfile, formulaReport } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -35,5 +36,35 @@ export function createServer(): McpServer {
     try { return text(await readWorkbook(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "workbook_profile",
+    {
+      title: "Workbook profile",
+      description: "Profile a whole sheet column by column: how many cells are filled, blank, distinct, formula or literal, the min, max, mean, median and sum of every numeric column, the date range of every date column and the most frequent text values. The read_workbook tool only prints the first rows, so it can answer none of this.",
+      inputSchema: z.object( { path: z.string().describe("Path to the xlsx file."), sheet: z.string().describe("Sheet name. Omit for the first sheet.").optional(), max_rows: z.number().describe("Stop after this many rows. 1 to 20000.").optional() } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: workbook_profile ----
+    const paywallMessage = await premiumRequired("workbook_profile")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await workbookProfile(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "formula_report",
+    {
+      title: "Formula report",
+      description: "Every formula in a workbook, cell by cell, with the value Excel last cached for it, plus how many formulas cache an error or no result at all. The read_workbook tool stringifies cells so a formula reads as an object and a cached result is never shown.",
+      inputSchema: z.object( { path: z.string().describe("Path to the xlsx file."), sheet: z.string().describe("Scan only this sheet. Omit for every sheet.").optional(), max_formulas: z.number().describe("How many formula cells to list, 1 to 200.").optional() } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await formulaReport(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

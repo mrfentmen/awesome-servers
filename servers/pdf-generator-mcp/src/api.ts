@@ -74,3 +74,48 @@ export async function createReport(args: { title?: string; author?: string; bull
   writeFileSync(path, bytes)
   return `Created ${path} (${bytes.length} bytes)`
 }
+
+// ---- muxC tools:
+
+const PDF_UA = "mrfentmen-pdf-generator-mcp/1.0 (https://github.com/mrfentmen)"
+
+/** Fetch a page over http and render its readable text into a pdf file. */
+export async function urlToPdf(args: { url?: string; title?: string; maxChars?: number }): Promise<string> {
+  const url = (args.url ?? "").trim()
+  if (!url) throw new Error("Provide a url to fetch and render")
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    throw new Error(`"${url}" is not a valid url; include the scheme, e.g. https://example.com/article`)
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error("Only http and https urls can be fetched")
+  const res = await fetch(parsed.toString(), { headers: { "User-Agent": PDF_UA, Accept: "text/html,application/xhtml+xml" }, redirect: "follow", signal: AbortSignal.timeout(30000) })
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText} fetching ${parsed.hostname}`)
+  const type = res.headers.get("content-type") ?? "not reported"
+  if (!/text\/html|application\/xhtml/i.test(type)) throw new Error(`${parsed.hostname} answered ${type}, not HTML`)
+  const html = await res.text()
+  const title = (args.title ?? "").trim() || (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.trim() || parsed.hostname)
+  const body = html
+    .replace(/<script\b[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript\b[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<\/(p|div|h[1-6]|li|tr|section|article)>/gi, "\n\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+  const max = Math.max(500, Math.min(args.maxChars ?? 20000, 200000))
+  const text = body.length > max ? `${body.slice(0, max)}\n[truncated at ${max} characters]` : body
+  if (!text) throw new Error(`${parsed.hostname} answered ${type} but the page had no readable text`)
+  const out = await createPdf({ title, body: text })
+  return `Fetched ${res.url || parsed.toString()} (${html.length} bytes of HTML, ${text.length} characters of text).\nRendered "${title}" to ${out}`
+}

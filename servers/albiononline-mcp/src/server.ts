@@ -1,15 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  errorMessage,
-  getPrices,
-  getPriceHistory,
-  getPriceCharts,
-  getGoldPrices,
-  getRecentKills,
-  getKillDetails,
-} from "./api.js"
 
+import { errorMessage, getPrices, getPriceHistory, getPriceCharts, getGoldPrices, getRecentKills, getKillDetails, priceTrend } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -144,6 +137,35 @@ export function createServer(): McpServer {
         return textError(errorMessage(e));
       }
     }
+  )
+
+  server.registerTool(
+    "market_summary",
+    {
+      title: "Market summary",
+      description: "Compare Albion Online market prices across cities: the cheapest sell orders, the best buy orders, and the gross arbitrage difference between the two extremes.",
+      inputSchema: z.object( { item: z.string().describe("Item id, e.g. 'T4_BAG'"), quality: z.number().int().min(1).max(5).describe("Restrict to one quality 1-5.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: market_summary ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_albiononline_market_summary", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "price_trend",
+    {
+      title: "Price trend",
+      description: "Summarise an item's price history: low, high, volume-weighted mean and end-to-end change per location and quality, instead of the raw rows.",
+      inputSchema: z.object( { item: z.string().describe("Item id, e.g. 'T4_BAG'"), quality: z.number().int().min(1).max(5).optional(), location: z.string().describe("City, e.g. 'Caerleon'.").optional(), timeScale: z.string().describe("1h, 1d or 1w.").default("1d"), days: z.number().int().min(1).max(365).describe("Look-back window in days.").default(30) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await priceTrend(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

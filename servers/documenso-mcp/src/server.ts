@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { DocumensoError, formatDocument, getDocument, listDocuments } from "./api.js"
+import { DocumensoError, formatDocument, getDocument, listDocuments, instanceHealth, signingFlowPlan } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -51,6 +52,50 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "instance_health",
+    {
+      title: "Check instance health",
+      description: "Read the public /api/health of the Documenso instance DOCUMENSO_URL points at, including its database and certificate checks. Needs no API key, so it works on a self-hosted deployment before you have one.",
+      inputSchema: z.object({
+      }),
+      annotations: READ_ONLY,
+    },
+    async () => {
+    try { return text(await instanceHealth()) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "signing_flow_plan",
+    {
+      title: "Plan a signing flow",
+      description: "Validate a recipient list and its fields before you create a document, and produce the exact create-many request body: duplicate emails, gaps in the signing order, approvers placed after the signers they release, fields assigned to a CC or VIEWER who cannot act, and signers with no signature field.",
+      inputSchema: z.object({
+        recipients: z.array(z.object({
+          email: z.string().describe("Recipient email"),
+          name: z.string().optional().describe("Display name on the document"),
+          role: z.enum(["signer", "approver", "viewer", "cc", "assistant"]).optional().describe("Role, default signer"),
+          order: z.number().int().optional().describe("Signing round, starting at 1"),
+        })).describe("Everyone on the document"),
+        fields: z.array(z.object({
+          label: z.string().describe("What the field is, e.g. 'Signature' or 'Start date'"),
+          type: z.string().describe("SIGNATURE, INITIALS, NAME, EMAIL, DATE, TEXT, NUMBER, RADIO, CHECKBOX or DROPDOWN"),
+          for: z.string().optional().describe("Email of the recipient who fills it in"),
+        })).optional().describe("Fields placed on the document"),
+        envelope_id: z.string().optional().describe("Existing envelope id, if you already created one"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: signing_flow_plan ----
+    const paywallMessage = await premiumRequired("signing_flow_plan")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await signingFlowPlan(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

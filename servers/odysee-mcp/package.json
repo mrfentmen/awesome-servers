@@ -1,6 +1,6 @@
 {
   "name": "odysee-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Keyless Odysee video search via Lighthouse: keyword and channel search with claim ids.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/odysee-mcp",

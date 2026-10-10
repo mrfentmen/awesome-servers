@@ -36,3 +36,32 @@ export async function summarize(group: Group, year?: number, borough?: string, l
 }
 
 export function format(value: unknown): string { return JSON.stringify(value, null, 2).slice(0, 14000) }
+
+// ---- muxB tools:
+const FORCE_BASE = "https://data.cityofnewyork.us/resource/f4tj-796d.json"
+const ARREST_BASE = "https://data.cityofnewyork.us/resource/8h9b-rp9u.json"
+
+const PATROL_BOROUGHS: Record<string, string> = {
+  BRONX: "PBBX",
+  BROOKLYN: "PBBN",
+  MANHATTAN: "PBMN",
+  QUEENS: "PBQS",
+  "STATEN ISLAND": "PBSI",
+}
+
+const ARREST_BOROUGHS: Record<string, string> = {
+  BRONX: "B",
+  BROOKLYN: "K",
+  MANHATTAN: "M",
+  QUEENS: "Q",
+  "STATEN ISLAND": "S",
+}
+
+async function aggregateAt(base: string, params: Record<string, string>) {
+  const url = new URL(base)
+  Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value))
+  const response = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(30000) })
+  if (!response.ok) throw new PoliceTransparencyError(`NYC Open Data police error ${response.status}`)
+  return response.json()
+}
+

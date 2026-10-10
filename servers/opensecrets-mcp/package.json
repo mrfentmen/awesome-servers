@@ -1,6 +1,6 @@
 {
   "name": "opensecrets-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for OpenSecrets: money in U.S. politics. Needs a free API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/opensecrets-mcp",

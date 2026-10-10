@@ -1,6 +1,6 @@
 {
   "name": "tides-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Use this MCP server to NOAA tides and currents predictions and water levels. Tools include get tide predictions, get water levels",
   "type": "module",
   "mcpName": "io.github.mrfentmen/tides-mcp",

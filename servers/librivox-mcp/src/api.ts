@@ -32,3 +32,24 @@ export async function search(args: SearchArgs): Promise<string> {
       return `${i + 1}. ${s('title')}${auth ? ` by ${auth}` : ''}${secs(b.totaltimesecs) ? ` | ${secs(b.totaltimesecs)}` : ''}`;
     }).join('\n');
 }
+
+// ---- muxC tools:
+
+const LIBRIVOX_BASE = "https://librivox.org/api/feed/audiobooks"
+const LIBRIVOX_UA = "mrfentmen-librivox-mcp/1.0"
+
+class LibrivoxError extends Error {}
+
+function totalTime(seconds: unknown): string {
+  const v = Number(seconds)
+  if (!Number.isFinite(v) || v <= 0) return ""
+  const h = Math.floor(v / 3600)
+  const m = Math.round((v % 3600) / 60)
+  return `${h}h ${String(m).padStart(2, "0")}m`
+}
+
+function stripTags(value: unknown, max = 260): string {
+  const s = String(value ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
+  return s.length > max ? `${s.slice(0, max)}...` : s
+}
+

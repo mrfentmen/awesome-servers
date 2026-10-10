@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { packageInfo } from "./api.js"
-import { searchPackages } from "./api.js"
 
+import { packageInfo, searchPackages, requirementScan } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,50 @@ export function createServer(): McpServer {
     try { return text(await searchPackages(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "release_history",
+    {
+      title: "Release history",
+      description: "The release history behind a Packagist package: how many versions exist and how many are stable, when the first shipped, the median and longest gap between stable releases, the stable releases by major version, which versions are abandoned, the licences used across the history, and the most recent releases with their PHP requirement.",
+      inputSchema: z.object( { name: z.string().describe("Package name like laravel/framework."), limit: z.number().describe("Recent releases to list, 5-40.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: release_history ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_packagist_release_history", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "package_metrics",
+    {
+      title: "Package metrics",
+      description: "How much a Packagist package is actually used: total, monthly and daily downloads against the lifetime daily average, favers, GitHub stars, watchers, forks and open issues, dependents, suggesters, maintainer names, type, language and how long the package has existed.",
+      inputSchema: z.object( { name: z.string().describe("Package name like monolog/monolog.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: package_metrics ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_packagist_package_metrics", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "requirement_scan",
+    {
+      title: "Requirement scan",
+      description: "Audit a package's own requirements across its stable releases: how many releases declare a given dependency such as php or psr/log, which constraints were used and when each change landed, and how wide the requirement sets get across the history.",
+      inputSchema: z.object( { name: z.string().describe("Package name like monolog/monolog."), requirement: z.string().describe("Requirement to scan for, e.g. php, psr/log, ext-json.").optional(), limit: z.number().describe("Constraint changes to show, 5-30.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await requirementScan(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

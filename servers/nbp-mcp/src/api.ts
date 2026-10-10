@@ -43,3 +43,16 @@ export async function gold(args: { from?: string; to?: string }): Promise<string
   if (!d.length) return 'No gold price data returned.';
   return `NBP gold price (${d.length} entries):\n` + d.slice(0, 15).map((g) => `${g.data ?? '?'}: ${g.cena ?? '?'} PLN/g`).join('\n');
 }
+
+// ---- muxC tools:
+
+const NBP_UA = "mrfentmen-nbp-mcp/1.0 (https://github.com/mrfentmen)"
+
+class NbpLookupError extends Error {}
+
+async function nbpGet<T>(url: string): Promise<T> {
+  const res = await fetch(url, { headers: { "User-Agent": NBP_UA, Accept: "application/json" }, signal: AbortSignal.timeout(20000) })
+  if (!res.ok) throw new NbpError(`NBP returned ${res.status}`)
+  return (await res.json()) as T
+}
+

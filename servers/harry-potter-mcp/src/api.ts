@@ -43,3 +43,46 @@ export async function spells(args: { limit?: number }): Promise<string> {
   const all = await get<any[]>("spells")
   return all.slice(0, limit).map((s, i) => `${i + 1}. ${s.name} | ${s.description ?? "no description"}`).join("\n")
 }
+
+// ---- muxB tools:
+
+interface HpPerson {
+  id?: string
+  name?: string
+  alternate_names?: string[]
+  species?: string
+  gender?: string
+  house?: string
+  dateOfBirth?: string
+  yearOfBirth?: number
+  wizard?: boolean
+  ancestry?: string
+  eyeColour?: string
+  hairColour?: string
+  wand?: { wood?: string; core?: string; length?: number }
+  patronus?: string
+  hogwartsStudent?: boolean
+  hogwartsStaff?: boolean
+  actor?: string
+  alternate_actors?: string[]
+  alive?: boolean
+  image?: string
+}
+
+const hpText = (v: unknown): string => (v != null && String(v).trim() ? String(v) : 'not reported')
+
+const hpList = (v: unknown, max = 6): string => {
+  if (!Array.isArray(v) || !v.length) return 'not reported'
+  const items = v.slice(0, max).map((x) => String(x))
+  return items.join(', ') + (v.length > max ? `, and ${v.length - max} more` : '')
+}
+
+export interface CharacterProfileArgs {
+  name?: string
+}
+
+export interface SearchSpellsArgs {
+  query?: string
+  limit?: number
+}
+

@@ -1,6 +1,6 @@
 {
   "name": "simbad-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Keyless MCP server for SIMBAD: astronomical objects via TAP queries.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/simbad-mcp",

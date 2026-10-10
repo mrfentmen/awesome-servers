@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { countRequests, format, searchRequests } from "./api.js"
 
+import { countRequests, format, searchRequests, boroughBreakdown } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -47,5 +48,50 @@ export function createServer() {
     try { return text(format(await countRequests(complaintType, borough, agency, start, end, limit))) } catch (error) { return errorText(error) }
   }
   )
+  server.registerTool(
+    "agency_breakdown",
+    {
+      title: "Agency breakdown",
+      description: "Count NYC 311 requests grouped by the agency that received them, with an optional date range.",
+      inputSchema: z.object( { start: date, end: date, limit: z.number().int().min(1).max(100).default(15) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: agency_breakdown ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_nyc311_agency_breakdown", args)) } catch (e) { return textError(String(e)) }
+  }
+  )
+
+  server.registerTool(
+    "borough_breakdown",
+    {
+      title: "Borough breakdown",
+      description: "Count NYC 311 requests grouped by borough, with an optional date range.",
+      inputSchema: z.object( { start: date, end: date }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await boroughBreakdown(args)) } catch (e) { return errorText(e) }
+  }
+  )
+
+  server.registerTool(
+    "open_by_type",
+    {
+      title: "Open by type",
+      description: "Which NYC 311 complaint types have the most requests that were never closed.",
+      inputSchema: z.object( { limit: z.number().int().min(1).max(100).default(15) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: open_by_type ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_nyc311_open_by_type", args)) } catch (e) { return textError(String(e)) }
+  }
+  )
+
   return server
 }

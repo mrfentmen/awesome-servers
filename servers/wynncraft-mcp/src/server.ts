@@ -1,14 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  formatGuild,
-  formatItem,
-  formatPlayer,
-  getGuild,
-  getPlayer,
-  searchItems,
-  WynncraftError,
-} from "./api.js"
+import { formatGuild, formatItem, formatPlayer, getGuild, getPlayer, searchItems, WynncraftError, itemBuild } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -75,6 +68,30 @@ export function createServer(): McpServer {
         const results = await searchItems(query, limit)
         if (results.length === 0) return text(`No Wynncraft items match "${query}".`)
         return text(`Wynncraft items for "${query}":\n\n${results.map((it, i) => formatItem(it, i)).join("\n")}`)
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "item_build",
+    {
+      title: "Item build stats",
+      description: "Build data for Wynncraft items matching a name: level and class requirements, stat requirements and identifications, elements, powder slots, emblem and average DPS.",
+      inputSchema: z.object({
+        query: z.string().describe("Item name, e.g. \"Idol\" or \"Pareidolia\""),
+        limit: z.number().int().min(1).max(10).default(5),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, limit }) => {
+      // ---- paywall: item_build ----
+      const paywallMessage = await premiumRequired("item_build")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await itemBuild(query, limit))
       } catch (e) {
         return textError(errorMessage(e))
       }

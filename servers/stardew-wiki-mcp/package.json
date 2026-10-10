@@ -1,6 +1,6 @@
 {
   "name": "stardew-wiki-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Keyless MCP server for the Stardew Valley Wiki: search crops, villagers, quests, items, get guides and gift tastes.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/stardew-wiki-mcp",

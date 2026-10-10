@@ -42,3 +42,25 @@ export async function bookInfo(args: { volumeId?: string }): Promise<string> {
   if (vi.description) lines.push(`\n${vi.description}`)
   return lines.join("\n")
 }
+
+// ---- muxB tools:
+
+type OlEdition = {
+  title?: string;
+  subtitle?: string;
+  publish_date?: string;
+  publishers?: string[];
+  number_of_pages?: number;
+  isbn_10?: string[];
+  isbn_13?: string[];
+  languages?: { key?: string }[];
+  subjects?: string[];
+  covers?: number[];
+  first_sentence?: string | string[] | { value?: string };
+  works?: { key?: string }[];
+  key?: string;
+}
+
+type OlAuthorDoc = { key?: string; name?: string; top_work?: string; work_count?: number; birth_date?: string; death_date?: string }
+type OlWork = { key?: string; title?: string; description?: string | { value?: string } }
+

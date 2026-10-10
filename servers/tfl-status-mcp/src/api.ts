@@ -28,3 +28,24 @@ export async function status(_args: StatusArgs): Promise<string> {
       })
       .join('\n');
 }
+
+// ---- muxB tools:
+
+const MODES = ['bus', 'overground', 'trams', 'dlr', 'elizabeth-line', 'boat', 'cable-car'];
+
+interface TflLine {
+  id?: string;
+  name?: string;
+  modeName?: string;
+  disruptions?: Array<{ description?: string; summary?: string; fromDate?: string; toDate?: string }>;
+  lineStatuses?: Array<{ statusSeverity?: number; statusSeverityDescription?: string; reason?: string }>;
+}
+
+export interface ModeStatusArgs {
+  mode: string;
+}
+
+export interface LineDetailArgs {
+  id: string;
+}
+

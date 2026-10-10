@@ -56,3 +56,19 @@ export async function nearest(args: { longitude?: number; latitude?: number; pro
   const loc = wp?.location ?? []
   return `Nearest ${profile} point:\n  ${wp?.name || "unnamed road"} at ${loc[1] != null ? loc[1].toFixed(5) : "?"}, ${loc[0] != null ? loc[0].toFixed(5) : "?"}\n  Distance from input: ${fmtDist(wp?.distance ?? 0)}`
 }
+
+// ---- muxB tools:
+const PROFILES = ["driving", "cycling", "walking"] as const;
+
+function profileOf(raw: string | undefined): string {
+  const p = (raw ?? "driving").trim().toLowerCase()
+  if (!(PROFILES as readonly string[]).includes(p)) throw new OsrmError("profile must be driving, cycling, or walking")
+  return p
+}
+
+function coordList(coords: string): string[] {
+  const list = coords.trim().split(";").map((c) => c.trim()).filter(Boolean)
+  if (list.length < 2) throw new OsrmError("Provide at least two coordinate pairs as lon,lat;lon,lat")
+  return list
+}
+

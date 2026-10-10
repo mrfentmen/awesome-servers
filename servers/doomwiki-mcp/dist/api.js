@@ -59,3 +59,18 @@ export function cleanWikiText(wt, maxChars = 4000) {
     s = s.replace(/[ \t]+\n/g, "\n");
     return s.trim().slice(0, maxChars);
 }
+export async function siteStats(_args = {}) {
+    const d = await apiGet({ action: "query", meta: "siteinfo", siprop: "statistics" });
+    const s = d?.query?.statistics;
+    if (!s)
+        throw new DoomWikiError("The wiki returned no statistics.");
+    return [
+        "Doom Wiki statistics:",
+        `  content pages: ${s.articles ?? "not reported"}`,
+        `  all pages: ${s.pages ?? "not reported"}`,
+        `  edits: ${s.edits ?? "not reported"}`,
+        `  files: ${s.images ?? "not reported"}`,
+        `  registered users: ${s.users ?? "not reported"} (${s.activeusers ?? "not reported"} active, ${s.admins ?? "not reported"} admins)`,
+        `  queued jobs: ${s.jobs ?? "not reported"}`,
+    ].join("\n");
+}

@@ -162,3 +162,28 @@ export function formatSet(s: SetSummary): string {
     (s.cardCount ? ` (${s.cardCount} cards)` : "")
   )
 }
+
+// ---- muxB tools:
+
+export interface CardsByRarityArgs {
+  rarity: string;
+  limit?: number;
+}
+
+export async function cardsByRarity(args: CardsByRarityArgs): Promise<string> {
+  const rarity = (args.rarity ?? "").trim()
+  if (!rarity) throw new TcgError("Provide a rarity name, e.g. \"Holo Rare\"")
+  const limit = Math.max(1, Math.min(args.limit ?? 15, 50))
+  const res = await getJson<Array<Record<string, any>>>(`/cards?rarity=${encodeURIComponent(rarity)}`)
+  const list = (Array.isArray(res) ? res : []).slice(0, limit)
+  if (!list.length) return `No TCGdex card has the rarity "${rarity}". Use card_rarities to see the list.`
+  return `TCGdex cards with rarity ${rarity} (${list.length} of ${Array.isArray(res) ? res.length : 0} shown):\n` +
+    list.map((c, i) => `${i + 1}. [${c.id ?? "?"}] ${c.name ?? "untitled"} | local id ${c.localId ?? "not reported"}${c.category ? ` | ${c.category}` : ""}`).join("\n")
+}
+
+export async function cardRarities(_args?: unknown): Promise<string> {
+  const res = await getJson<string[]>("/rarities")
+  const list = (Array.isArray(res) ? res : []).map(String)
+  if (!list.length) return "TCGdex returned no rarities."
+  return `TCGdex rarity names (${list.length}):\n` + list.map((r, i) => `${i + 1}. ${r}`).join("\n")
+}

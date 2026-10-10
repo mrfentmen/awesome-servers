@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_nextLaunch, m0_upcomingLaunches, m1_list, m2_previous, m2_upcoming } from './api.js'
 
+import { m0_nextLaunch, m0_upcomingLaunches, m1_list, m2_previous, m2_upcoming } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -70,5 +71,37 @@ server.registerTool(
     try { return text(await m2_previous(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "launch_by_id",
+    {
+      title: "Launch by id",
+      description: "One space launch in full from the SpaceDevs database: its window and go probability, rocket, provider, pad, mission and any hold or failure reason.",
+      inputSchema: z.object( { id: z.string().describe("Launch UUID or slug, e.g. sr75-flight-2.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: launch_by_id ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_space_launches_launch_by_id", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "launcher_configs",
+    {
+      title: "Launcher configs",
+      description: "The rocket configurations the SpaceDevs database knows, with manufacturer, family, variant, reusability and how many launches each has flown.",
+      inputSchema: z.object( { search: z.string().describe("Filter by name, manufacturer or family, e.g. falcon.").optional(), limit: z.number().describe("Max configurations.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: launcher_configs ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_space_launches_launcher_configs", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

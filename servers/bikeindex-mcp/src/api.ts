@@ -63,3 +63,104 @@ export async function bike(args: BikeArgs): Promise<string> {
     b.thumb ? `Photo: ${b.thumb}` : null,
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxA tools:
+
+const BI = "https://bikeindex.org/api/v3";
+
+function cap(value: number | undefined, fallback: number, max: number): number {
+  return Math.max(1, Math.min(Math.round(value ?? fallback), max));
+}
+
+function day(ts: unknown): string {
+  const n = Number(ts);
+  return Number.isFinite(n) && n > 0 ? new Date(n * 1000).toISOString().slice(0, 10) : "not recorded";
+}
+
+function line(b: Record<string, any>, i: number): string {
+  const loc = [b.city, b.state, b.country].filter(Boolean).join(", ");
+  return [
+    `${i + 1}. ${b.title ?? "Unnamed bike"} (id ${b.id ?? "?"})`,
+    `   ${b.manufacturer_name ?? "?"} ${b.frame_model ?? ""}`.trimEnd() +
+      `${Array.isArray(b.frame_colors) && b.frame_colors.length ? ` | colour ${b.frame_colors.join(", ")}` : ""}` +
+      `${b.cycle_type ? ` | ${String(b.cycle_type).replace(/_/g, " ")}` : ""}`,
+    `   ${b.status ?? "?"}${b.stolen ? " | stolen" : ""}${b.date_stolen ? ` on ${day(b.date_stolen)}` : ""}${loc ? ` | last seen ${loc}` : ""}` +
+      `${b.serial ? ` | serial ${b.serial}` : ""}`,
+    b.description ? `   ${String(b.description).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 180)}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+async function biSearch(params: Record<string, string>): Promise<{ bikes: Array<Record<string, any>> }> {
+  const query = new URLSearchParams(params);
+  const res = await fetch(`${BI}/search?${query.toString()}`, {
+    headers: { "User-Agent": UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error(`Bike Index returned ${res.status}`);
+  // The endpoint returns a bare bikes array with no total, so counts are what we fetched.
+  const d = (await res.json()) as { bikes?: Array<Record<string, any>> };
+  return { bikes: d.bikes ?? [] };
+}
+
+export interface StolenArgs {
+  limit?: number;
+  page?: number;
+  days_ago?: number;
+}
+
+export interface NearbyArgs {
+  lat: number;
+  lon: number;
+  distance?: number;
+  stolen_only?: boolean;
+  limit?: number;
+}
+
+export interface MakerArgs {
+  manufacturer?: string;
+  search_catalogue?: boolean;
+  limit?: number;
+}
+
+export async function manufacturerCatalogue(args: MakerArgs): Promise<string> {
+  const name = (args.manufacturer ?? "").trim();
+  if (!name) throw new Error("Provide a manufacturer name, e.g. Trek or Surly.");
+  const limit = cap(args.limit, 15, 50);
+  if (args.search_catalogue === true) {
+    const res = await fetch(`${BI}/manufacturers?per_page=${Math.max(limit, 50)}`, {
+      headers: { "User-Agent": UA, Accept: "application/json" },
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok) throw new Error(`Bike Index returned ${res.status}`);
+    const d = (await res.json()) as { manufacturers?: Array<Record<string, any>> };
+    const all = d.manufacturers ?? [];
+    const q = name.toLowerCase();
+    const rows = all.filter((m) => String(m.name ?? "").toLowerCase().includes(q));
+    if (!rows.length) {
+      const sample = all.slice(0, 15).map((m) => String(m.name)).join(", ");
+      return `No Bike Index manufacturer matches "${name}". The catalogue returns ${all.length} entries, for example: ${sample}.`;
+    }
+    return [
+      `Bike Index manufacturers matching "${name}": ${rows.length} of ${all.length} in the catalogue page.`,
+      ...rows.map(
+        (m, i) =>
+          `${i + 1}. ${m.name ?? "?"}${m.country ? ` | ${m.country}` : ""}${m.frame_type ? ` | ${m.frame_type}` : ""}` +
+          `${m.about ? ` | ${String(m.about).replace(/<[^>]*>/g, " ").slice(0, 90)}` : ""}${m.company_url ? ` | ${m.company_url}` : ""}`,
+      ),
+    ].join("\n");
+  }
+  const { bikes } = await biSearch({ manufacturer: name, per_page: String(limit) });
+  if (!bikes.length) return `Bike Index has no registered bikes for manufacturer "${name}".`;
+  const models = new Map<string, number>();
+  for (const b of bikes) {
+    const k = String(b.frame_model ?? "model not recorded");
+    models.set(k, (models.get(k) ?? 0) + 1);
+  }
+  return [
+    `Bikes on Bike Index from ${name}: ${bikes.length} record(s) returned.`,
+    `Frame models here: ${[...models.entries()].slice(0, 8).map(([k, v]) => `${k} ${v}`).join(", ") || "not recorded"}.`,
+    ...bikes.map((b, i) => line(b, i)),
+  ].join("\n");
+}

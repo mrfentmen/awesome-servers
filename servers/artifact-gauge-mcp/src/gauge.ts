@@ -72,3 +72,99 @@ export async function manifest(input: string, relativeFile: string): Promise<Rec
 }
 
 export function format(value: unknown): string { return JSON.stringify(value, null, 2).slice(0, MAX_OUTPUT) }
+
+const ROOT_BUCKET = "[root files]"
+const HINT_EXTENSIONS = new Set([".map", ".log", ".tmp", ".bak", ".orig", ".rej", ".gz", ".zip", ".tar", ".tgz", ".old", ".swp"])
+
+export async function directoryWeights(input: string): Promise<Record<string, unknown>> {
+  const root = await boundedRoot(input)
+  const files = await collect(root)
+  const totalBytes = files.reduce((sum, item) => sum + item.bytes, 0)
+  const buckets = new Map<string, { files: number; bytes: number }>()
+  for (const item of files) {
+    const separator = item.path.indexOf(path.sep)
+    const top = separator < 0 ? ROOT_BUCKET : item.path.slice(0, separator)
+    const bucket = buckets.get(top) ?? { files: 0, bytes: 0 }
+    bucket.files += 1
+    bucket.bytes += item.bytes
+    buckets.set(top, bucket)
+  }
+  const byDirectory = [...buckets.entries()]
+    .map(([directory, value]) => ({
+      directory,
+      files: value.files,
+      bytes: value.bytes,
+      sharePercent: totalBytes ? Math.round((value.bytes / totalBytes) * 1000) / 10 : 0
+    }))
+    .sort((a, b) => b.bytes - a.bytes)
+    .slice(0, 40)
+  return {
+    root,
+    filesScanned: files.length,
+    totalBytes,
+    directoryCount: buckets.size,
+    byDirectory,
+    valueFree: true,
+    warning: "Only top level directory names, file counts, byte totals and share of the total are returned. File contents and dependency versions are not emitted."
+  }
+}
+
+export async function sizeBudget(input: string, budgetBytes: number): Promise<Record<string, unknown>> {
+  const root = await boundedRoot(input)
+  const files = await collect(root)
+  const totalBytes = files.reduce((sum, item) => sum + item.bytes, 0)
+  const budget = Math.max(1, Math.floor(budgetBytes))
+  const perExtension = new Map<string, number>()
+  for (const item of files) perExtension.set(item.extension, (perExtension.get(item.extension) ?? 0) + item.bytes)
+  const byExtension = [...perExtension.entries()]
+    .map(([extension, bytes]) => ({
+      extension,
+      bytes,
+      shareOfTotalPercent: totalBytes ? Math.round((bytes / totalBytes) * 1000) / 10 : 0,
+      shareOfBudgetPercent: Math.round((bytes / budget) * 1000) / 10
+    }))
+    .sort((a, b) => b.bytes - a.bytes)
+    .slice(0, 25)
+  return {
+    root,
+    filesScanned: files.length,
+    totalBytes,
+    budgetBytes: budget,
+    overBudget: totalBytes > budget,
+    headroomBytes: budget - totalBytes,
+    usedPercentOfBudget: Math.round((totalBytes / budget) * 1000) / 10,
+    byExtension,
+    valueFree: true,
+    warning: "Only byte counts, extensions and percentages against the supplied budget are returned. File contents and dependency versions are not emitted."
+  }
+}
+
+export async function artifactHints(input: string): Promise<Record<string, unknown>> {
+  const root = await boundedRoot(input)
+  const files = await collect(root)
+  const totalBytes = files.reduce((sum, item) => sum + item.bytes, 0)
+  const flagged = files.filter((item) => HINT_EXTENSIONS.has(item.extension))
+  const flaggedBytes = flagged.reduce((sum, item) => sum + item.bytes, 0)
+  const buckets = new Map<string, { files: number; bytes: number }>()
+  for (const item of flagged) {
+    const bucket = buckets.get(item.extension) ?? { files: 0, bytes: 0 }
+    bucket.files += 1
+    bucket.bytes += item.bytes
+    buckets.set(item.extension, bucket)
+  }
+  return {
+    root,
+    filesScanned: files.length,
+    totalBytes,
+    flaggedFileCount: flagged.length,
+    flaggedBytes,
+    flaggedShareOfTotalPercent: totalBytes ? Math.round((flaggedBytes / totalBytes) * 1000) / 10 : 0,
+    byExtension: [...buckets.entries()]
+      .map(([extension, value]) => ({ extension, files: value.files, bytes: value.bytes }))
+      .sort((a, b) => b.bytes - a.bytes)
+      .slice(0, 20),
+    flaggedExtensions: [...HINT_EXTENSIONS].sort(),
+    valueFree: true,
+    warning: "Only byte counts and extension tallies are returned. This flags extensions commonly left behind by builds, logs and archives; it is a heuristic hint, not a verdict on whether a file is safe to delete."
+  }
+}

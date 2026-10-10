@@ -48,3 +48,78 @@ export async function stations(_args?: unknown): Promise<string> {
       return `${i + 1}. ${s('abbr')} | ${s('name')} | ${s('city')}`;
     }).join('\n');
 }
+
+// ---- muxP tools:
+
+interface BartStationRecord {
+  name?: string
+  abbr?: string
+  address?: string
+  city?: string
+  county?: string
+  state?: string
+  zipcode?: string
+  gtfs_latitude?: string
+  gtfs_longitude?: string
+}
+
+async function bartStations(): Promise<BartStationRecord[]> {
+  const res = await fetch(`${BASE}/stn.aspx?cmd=stns&key=${KEY}&json=y`, {
+    headers: { "User-Agent": "mrfentmen-bart-mcp/1.0", Accept: "application/json" },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error(`BART returned HTTP ${res.status}`);
+  const d = (await res.json()) as Record<string, unknown>;
+  const root = (d.root ?? {}) as Record<string, unknown>;
+  const wrap = (root.stations as { station?: BartStationRecord[] } | undefined)?.station ?? [];
+  if (!wrap.length) throw new Error("BART returned no stations.");
+  return wrap;
+}
+
+const field = (value: string | undefined): string =>
+  typeof value === "string" && value.trim() ? value.trim() : "not reported"
+
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const toRad = (d: number): number => (d * Math.PI) / 180;
+  const R = 6371;
+  const a =
+    Math.sin(toRad(lat2 - lat1) / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(toRad(lon2 - lon1) / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+
+export interface StationLocationsArgs {
+  city?: string
+  latitude?: number
+  longitude?: number
+  limit?: number
+}
+
+interface BartEstimate {
+  minutes?: string
+  platform?: string
+  direction?: string
+  length?: string
+  color?: string
+  bikeflag?: string
+  delay?: string
+  cancelflag?: string
+}
+
+interface BartTrain {
+  destination?: string
+  abbreviation?: string
+  limited?: string
+  estimate?: BartEstimate[]
+}
+
+interface BartEtdStation {
+  name?: string
+  abbr?: string
+  etd?: BartTrain[]
+}
+
+export interface NetworkStatusArgs {
+  limit?: number
+}
+

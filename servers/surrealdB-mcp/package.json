@@ -1,6 +1,6 @@
 {
   "name": "surrealdb-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for SurrealDB: version check, SQL queries. Works with any instance.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/surrealdb-mcp",

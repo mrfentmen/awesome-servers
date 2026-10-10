@@ -81,3 +81,49 @@ export async function getAddress(address: string): Promise<string> {
   const bal = (Number(chain.funded_txo_sum ?? 0) - Number(chain.spent_txo_sum ?? 0)) / 1e8
   return `${clean}\nBalance: ${bal.toFixed(8)} BTC (${chain.tx_count ?? 0} txs)\nMempool: ${mem.tx_count ?? 0} pending`
 }
+
+// ---- muxB tools:
+
+const sat = (value: unknown): string => {
+  const n = Number(value)
+  return Number.isFinite(n) ? `${n.toLocaleString()} sats` : "not reported"
+}
+
+const when = (value: unknown): string => {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return "time not reported"
+  return new Date(n * 1000).toISOString().replace("T", " ").slice(0, 19) + " UTC"
+}
+
+export async function recentBlocks(heightOrTip: string, limit = 10): Promise<string> {
+  const cap = Math.max(1, Math.min(limit, 25))
+  let height = heightOrTip.trim()
+  if (!/^\d+$/.test(height)) {
+    height = (await getText("/blocks/tip/height")).trim()
+  }
+  if (!/^\d+$/.test(height)) throw new EsploraError(`Not a block height: "${heightOrTip}".`)
+  const blocks = await getJson<Raw[]>(`/blocks/${height}`)
+  if (!Array.isArray(blocks) || !blocks.length) throw new EsploraError(`No blocks at or below height ${height}.`)
+  return `Most recent ${Math.min(blocks.length, cap)} Bitcoin blocks from height ${height} (Esplora lists ${blocks.length}):\n` +
+    blocks.slice(0, cap).map((b, i) =>
+      [
+        `${i + 1}. height ${b.height ?? "?"} | ${when(b.timestamp)}`,
+        `   hash ${b.id ?? "not reported"}`,
+        `   ${b.tx_count ?? "?"} txs | ${Number(b.size ?? 0).toLocaleString()} bytes | weight ${Number(b.weight ?? 0).toLocaleString()}`,
+        `   merkle root ${b.merkle_root ?? "not reported"}`,
+      ].join("\n"),
+    ).join("\n")
+}
+
+export async function recentMempool(limit = 10): Promise<string> {
+  const cap = Math.max(1, Math.min(limit, 30))
+  const rows = await getJson<Raw[]>("/mempool/recent")
+  if (!Array.isArray(rows) || !rows.length) throw new EsploraError("Esplora returned no recent mempool transactions.")
+  return `Most recent mempool transactions (${Math.min(rows.length, cap)} of ${rows.length} shown):\n` +
+    rows.slice(0, cap).map((r, i) => {
+      const vsize = Number(r.vsize ?? 0)
+      const fee = Number(r.fee ?? 0)
+      const rate = vsize > 0 ? (fee / vsize).toFixed(2) : "not reported"
+      return `${i + 1}. ${r.txid ?? "not reported"}\n   value ${sat(r.value)} | fee ${fee} sats (${rate} sat/vB) | vsize ${vsize}`
+    }).join("\n")
+}

@@ -31,3 +31,22 @@ export async function moonOnDate(args: { date?: string }): Promise<string> {
   const p = phaseFor(d)
   return `${d.toISOString().slice(0, 10)}: ${p.name} (${(p.illumination * 100).toFixed(1)}% illuminated)`
 }
+
+// ---- muxB tools:
+
+type PhaseRow = { day?: number; month?: number; year?: number; phase?: string; time?: string }
+
+type Phenomenon = { phen?: string; time?: string }
+type OneDay = {
+  properties?: {
+    data?: {
+      moondata?: Phenomenon[];
+      sundata?: Phenomenon[];
+      fracillum?: string;
+      curphase?: string;
+      closestphase?: { day?: number; month?: number; year?: number; phase?: string; time?: string };
+      tz?: number;
+    };
+  };
+};
+

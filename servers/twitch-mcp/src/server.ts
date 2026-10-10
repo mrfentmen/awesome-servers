@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatStream, formatUser, getUser, topGames, topStreams, TwitchError } from "./api.js"
+import { formatStream, formatUser, getUser, topGames, topStreams, TwitchError, serviceStatus, gameDemand } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -75,6 +76,40 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "service_status",
+    {
+      title: "Service status",
+      description:
+        "Whether Twitch itself is up: the overall indicator, each published component (login, web, chat, watching, broadcasting, purchases) with its state and last update, and any incident still open right now. Reads Twitch's public status page, no client id needed.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async (_args) => {
+    try { return text(await serviceStatus()) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "game_demand",
+    {
+      title: "Game demand",
+      description:
+        "What is actually being played: Steam's public most-played chart enriched per title with genre, developer, review split, price and owner estimate, plus each game's rank change over a week. The demand side of a streaming decision. No Twitch client id needed.",
+      inputSchema: z.object({
+        limit: z.number().describe("Games shown, 1-12. Defaults to 6.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: game_demand ----
+    const paywallMessage = await premiumRequired("game_demand")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await gameDemand(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

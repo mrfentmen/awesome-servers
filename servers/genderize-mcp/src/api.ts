@@ -22,3 +22,17 @@ export async function gender(args: GenderArgs): Promise<string> {
   const pct = Math.round((data.probability ?? 0) * 100);
   return `${name}: estimated gender ${data.gender} (${pct}% confidence, ${data.count ?? 0} records)`;
 }
+
+// ---- muxC tools:
+
+const GENDERIZE_UA = "mrfentmen-genderize-mcp/1.0"
+
+class GenderizeError extends Error {}
+
+interface GenderizeResult {
+  name?: string
+  gender?: string
+  probability?: number
+  count?: number
+}
+

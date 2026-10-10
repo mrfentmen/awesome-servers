@@ -21,9 +21,6 @@ interface m0_GBook {
 const m0 = (() => {
 const BASE = 'https://gutendex.com/books';
 
-
-
-
 function bookLine(b: m0_GBook, i: number): string {
   const authors = (b.authors ?? []).map((a) => a.name ?? '').filter(Boolean).slice(0, 2).join(', ');
   return `${i + 1}. ${b.title ?? 'untitled'} | ${authors || 'unknown'} | ${(b.languages ?? []).join(', ')} | downloads ${b.download_count ?? 0}${b.id ? ` | id ${b.id}` : ''}`;
@@ -116,3 +113,18 @@ export const m0_book = m0.book;
 export const m1_bookInfo = m1.bookInfo;
 export const m1_GutenbergError = m1.GutenbergError;
 export const m1_searchBooks = m1.searchBooks;
+
+// ---- muxC tools:
+
+interface GutendexBook {
+  id?: number
+  title?: string
+  authors?: Array<{ name?: string; birth_year?: number | null; death_year?: number | null }>
+  subjects?: string[]
+  bookshelves?: string[]
+  languages?: string[]
+  copyright?: boolean
+  media_count?: number
+  download_count?: number
+}
+

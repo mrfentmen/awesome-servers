@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/chess-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Use this MCP server to chess.com. Player profiles, ratings, game archives, leaderboards, and titled players",
   "type": "module",
   "mcpName": "io.github.mrfentmen/chess-mcp",

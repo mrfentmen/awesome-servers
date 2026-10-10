@@ -12,3 +12,6 @@ export async function vendorLookup(args: { mac?: string }): Promise<string> {
   const vendor = (await res.text()).trim()
   return `${mac} is assigned to ${vendor}`
 }
+
+// ---- muxC tools:
+

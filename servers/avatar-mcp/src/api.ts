@@ -24,3 +24,39 @@ export async function avatarUrl(args: { name?: string; style?: string }): Promis
   const style = (args.style ?? "initials").toLowerCase()
   return `${BASE}/${style}/svg?seed=${encodeURIComponent(name)}`
 }
+
+// ---- muxA tools:
+const AVATAR_FORMATS = ["svg", "png", "webp", "avif", "jpg"]
+// Every style below was probed live against the 9.x API. The module's own
+// STYLES list is shorter and omits avataaars, big-ears, glass, icons,
+// identicon, dylan, croodles and the rest.
+const AVATAR_STYLES = [
+  "initials", "pixel-art", "lorelei", "bottts", "adventurer", "fun-emoji",
+  "notionists", "thumbs", "avataaars", "big-ears", "big-smile", "croodles",
+  "dylan", "glass", "icons", "identicon", "miniavs", "open-peeps",
+  "personas", "rings", "shapes",
+]
+
+async function avatarReachable(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, {
+      method: "HEAD",
+      headers: { "User-Agent": UA },
+      signal: AbortSignal.timeout(15000),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+export async function avatarStyleCatalog(args: Record<string, never>): Promise<string> {
+  const links = AVATAR_STYLES.map((style) => ({ style, url: `${BASE}/${style}/svg?seed=probe` }))
+  const checks = await Promise.all(links.map((l) => avatarReachable(l.url)))
+  const up = checks.filter(Boolean).length
+  return [
+    `DiceBear 9.x styles reachable right now: ${up} of ${links.length}`,
+    ...links.map((l, i) => `  ${checks[i] ? "ok  " : "DOWN"} ${l.style}`),
+    `Output formats: ${AVATAR_FORMATS.join(", ")}`,
+  ].join("\n")
+}

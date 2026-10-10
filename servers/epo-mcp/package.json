@@ -1,0 +1,43 @@
+{
+  "name": "epo-mcp",
+  "version": "1.0.1",
+  "description": "Search EPO Open Patent Services (free registration; set EPO_CONSUMER_KEY + EPO_CONSUMER_SECRET, OAuth auto-token): published-data search and family.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/epo-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
+  },
+  "bin": {
+    "epo-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "patents",
+    "epo",
+    "ip",
+    "search"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

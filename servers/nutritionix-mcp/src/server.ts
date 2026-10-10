@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { analyzeMeal, formatFood, NutritionixError, searchFoods } from "./api.js"
+import { analyzeMeal, formatFood, NutritionixError, searchFoods, nutrientFoodSearch, nutrientFoodProfile } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -51,6 +52,54 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("Nothing recognized.")
         const total = rows.reduce((n, f) => n + (f.calories ?? 0), 0)
         return text(`${rows.map((f, i) => formatFood(f, i)).join("\n")}\n\nTotal: ${Math.round(total)} kcal`)
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "nutrient_food_search",
+    {
+      title: "Search USDA foods",
+      description: "Search USDA FoodData Central for a food and get its real per-100 g energy, macros, fibre, sugars, sodium, calcium and iron.",
+      inputSchema: z.object({
+        query: z.string().describe("Food name, e.g. 'oat milk', 'cheddar cheese'"),
+        limit: z.number().int().min(1).max(20).default(5),
+        branded: z.boolean().default(false).describe("Also search packaged branded food, whose nutrient data is often missing"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, limit, branded }) => {
+      // ---- paywall: nutrient_food_search ----
+      const paywallMessage = await premiumRequired("nutrient_food_search")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await nutrientFoodSearch({ query, limit, branded }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "nutrient_food_profile",
+    {
+      title: "USDA food nutrient profile",
+      description: "Full nutrient profile for one FoodData Central food by FDC id: macros, sugars, fibre, sodium, calcium, iron plus vitamins and minerals.",
+      inputSchema: z.object({
+        fdcId: z.string().describe("Numeric FDC id from nutrient_food_search, e.g. 2257046"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ fdcId }) => {
+      // ---- paywall: nutrient_food_profile ----
+      const paywallMessage = await premiumRequired("nutrient_food_profile")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await nutrientFoodProfile({ fdcId }))
       } catch (e) {
         return textError(errorMessage(e))
       }

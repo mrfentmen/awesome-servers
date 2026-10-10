@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatRecipe, getRecipe, guessNutrition, searchRecipes, SpoonacularError } from "./api.js"
+import { formatRecipe, getRecipe, guessNutrition, searchRecipes, SpoonacularError, productSearch, barcodeLookup } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -67,6 +68,53 @@ export function createServer(): McpServer {
     async ({ text: dish }) => {
       try {
         return text(await guessNutrition(dish))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "product_search",
+    {
+      title: "Search packaged foods",
+      description: "Search the Open Food Facts database of packaged products by name, with barcode, Nutri-Score and per-100 g nutrition.",
+      inputSchema: z.object({
+        query: z.string().describe("Product name or brand fragment, e.g. 'oat milk'"),
+        limit: z.number().int().min(1).max(20).default(5),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, limit }) => {
+      // ---- paywall: product_search ----
+      const paywallMessage = await premiumRequired("product_search")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await productSearch({ query, limit }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "barcode_lookup",
+    {
+      title: "Look up a barcode",
+      description: "One packaged product by barcode from Open Food Facts: name, brand, quantity, Nutri-Score, per-100 g nutrition, allergens and ingredients.",
+      inputSchema: z.object({
+        barcode: z.string().describe("8-14 digit barcode, e.g. 737628064502"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ barcode }) => {
+      // ---- paywall: barcode_lookup ----
+      const paywallMessage = await premiumRequired("barcode_lookup")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await barcodeLookup({ barcode }))
       } catch (e) {
         return textError(errorMessage(e))
       }

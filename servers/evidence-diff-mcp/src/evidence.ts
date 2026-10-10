@@ -11,7 +11,7 @@ const TEST_NAMES = /(?:test|spec|e2e|playwright|cypress|vitest|jest|pytest|cargo
 const BUILD_NAMES = /(?:dist|build|coverage|artifact|report|junit|test-results)/i
 
 export class EvidenceError extends Error {}
-async function safeRoot(input: string): Promise<string> {
+export async function safeRoot(input: string): Promise<string> {
   const configured = process.env.EVIDENCE_DIFF_ROOT ?? path.join(process.cwd(), "..")
   const allowed = await realpath(path.resolve(configured)).catch(() => path.resolve(configured))
   const requested = path.isAbsolute(input) ? input : path.resolve(allowed, input || ".")
@@ -20,7 +20,7 @@ async function safeRoot(input: string): Promise<string> {
   if (relative.startsWith("..") || path.isAbsolute(relative)) throw new EvidenceError("Project path must stay inside the configured local workspace")
   return target
 }
-async function git(cwd: string, args: string[]): Promise<string> {
+export async function git(cwd: string, args: string[]): Promise<string> {
   try { const result = await exec("git", args, { cwd, timeout: 15000, maxBuffer: MAX_LOG_BYTES }); return result.stdout.trim() }
   catch { throw new EvidenceError("Git evidence unavailable for this local project") }
 }

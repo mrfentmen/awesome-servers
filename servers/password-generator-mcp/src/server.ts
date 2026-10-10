@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { generatePassword } from "./api.js"
-import { passphrase } from "./api.js"
 
+import { generatePassword, passphrase, passwordPatterns } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,34 @@ export function createServer(): McpServer {
     try { return text(await passphrase(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "password_entropy",
+    {
+      title: "Password entropy",
+      description: "Measure a password you already have: pool size, nominal and Shannon entropy, repeat penalty, an effective bit count and a crack time at a rate you choose. Pure local maths.",
+      inputSchema: z.object( { password: z.string().describe("The password to measure, up to 4096 characters."), guessesPerSecond: z.number().describe("Attack rate for the crack-time estimate, default 1e10.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: password_entropy ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_password_generator_password_entropy", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "password_patterns",
+    {
+      title: "Password patterns",
+      description: "Find guessable patterns in a password: repeated runs, ascending or descending sequences, QWERTY keyboard walks, years and long lowercase word runs.",
+      inputSchema: z.object( { password: z.string().describe("The password to inspect, up to 4096 characters.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await passwordPatterns(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

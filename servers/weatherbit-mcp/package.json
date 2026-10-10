@@ -1,6 +1,6 @@
 {
   "name": "weatherbit-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Weatherbit API: current conditions, daily and hourly forecasts, severe alerts, air quality.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/weatherbit-mcp",

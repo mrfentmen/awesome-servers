@@ -6,7 +6,6 @@ export interface m0_SeasonArgs {
 const m0 = (() => {
 const BASE = 'https://api.jolpi.ca/ergast/f1';
 
-
 async function current(_args?: unknown): Promise<string> {
   const res = await fetch(`${BASE}/current.json`, {
     headers: { 'User-Agent': 'mrfentmen-jolpica-mcp/1.0', Accept: 'application/json' },
@@ -124,3 +123,15 @@ export const m1_seasonSchedule = m1.seasonSchedule;
 export const m1_lastRace = m1.lastRace;
 export const m1_driverStandings = m1.driverStandings;
 export const m1_F1Error = m1.F1Error;
+
+// ---- muxG tools:
+
+type F1Row = Record<string, unknown>
+
+interface F1Qualifying {
+  round?: string;
+  raceName?: string;
+  date?: string;
+  QualifyingResults?: F1Row[];
+}
+

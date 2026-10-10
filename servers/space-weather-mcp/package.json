@@ -1,6 +1,6 @@
 {
   "name": "space-weather-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Unified space weather server: solar wind, NOAA scales and alerts, aurora forecasts, and X-ray flux.",
   "type": "module",
   "main": "dist/index.js",

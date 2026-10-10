@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { cards } from "./api.js"
-import { sets } from "./api.js"
 
+import { cards, sets } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,53 @@ export function createServer(): McpServer {
     try { return text(await sets(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "card_profile",
+    {
+      title: "Card profile",
+      description: "Full Scryfall record for one exact card name: mana cost, type line, oracle and flavour text, power/toughness, colours, keywords, format legality, prices, EDHREC rank, artist and image link.",
+      inputSchema: z.object({ name: z.string().describe("Exact card name, e.g. 'Shivan Dragon'."), }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: card_profile ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_mtg_card_profile", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "card_rulings",
+    {
+      title: "Card rulings",
+      description: "Official rule clarifications Scryfall records for a card, with the date each was published.",
+      inputSchema: z.object({ name: z.string().describe("Exact card name, e.g. 'Fling'."), limit: z.number().describe("Max rulings, 1-40, default 8.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: card_rulings ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_mtg_card_rulings", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "keyword_list",
+    {
+      title: "Keyword list",
+      description: "The keyword ability names in Scryfall's catalogue, as a reference for reading card text.",
+      inputSchema: z.object({  }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: keyword_list ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_mtg_keyword_list", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

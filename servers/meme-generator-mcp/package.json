@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/meme-generator-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ImgFlip meme templates and captions.",
   "type": "module",
   "main": "dist/index.js",

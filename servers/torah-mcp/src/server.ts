@@ -1,13 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  errorMessage,
-  getCommentaries,
-  getConnections,
-  getTanakhText,
-  getWeeklyPortion,
-  searchTexts,
-} from "./api.js"
+import { errorMessage, getCommentaries, getConnections, getTanakhText, getWeeklyPortion, searchTexts, bookIndex, wordLookup } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -121,6 +115,48 @@ export function createServer(): McpServer {
       }
     }
   )
+
+  server.registerTool(
+    "book_index",
+    {
+      title: "Book index",
+      description: "How Sefaria structures a book: its address scheme and depth, section names, categories, composition and publication data.",
+      inputSchema: z.object( { book: z.string().describe("Book name, e.g. Genesis or Psalms.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: book_index ----
+    const paywallMessage = await premiumRequired("book_index")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try {
+      return text(await bookIndex(args));
+    } catch (e) {
+      return textError(errorMessage(e));
+    }
+    }
+  );
+
+  server.registerTool(
+    "word_lookup",
+    {
+      title: "Word lookup",
+      description: "Dictionary lookup for a Hebrew or Aramaic word in Sefaria's lexicon, with its morphology, source lexicon and every published sense.",
+      inputSchema: z.object( { word: z.string().describe("Hebrew or Aramaic word."), limit: z.number().describe("Max dictionary entries.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: word_lookup ----
+    const paywallMessage = await premiumRequired("word_lookup")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try {
+      return text(await wordLookup(args));
+    } catch (e) {
+      return textError(errorMessage(e));
+    }
+    }
+  );
 
   return server
 }

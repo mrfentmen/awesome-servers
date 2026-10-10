@@ -92,3 +92,6 @@ export async function solve(args: { grid?: string }): Promise<string> {
   if (!backtrack(grid)) throw new SudokuError("Puzzle has no solution")
   return `Solved:\n${gridToText(grid)}`
 }
+
+// ---- muxC tools:
+

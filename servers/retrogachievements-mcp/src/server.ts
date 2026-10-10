@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { gameExtended, RaError, userProgress } from "./api.js"
+import { gameExtended, RaError, userProgress, setScorecard, libraryBreakdown } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -49,6 +50,41 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "set_scorecard",
+    {
+      title: "Score a list of games",
+      description: "Paste the games you have started and get your points against what each set offers, what is still on the table, and the order to grind in by points per remaining achievement. Computed locally, no account needed.",
+      inputSchema: z.object({
+        games: z.string().describe("One game per line: title | console | percentage | achievements owned | achievements total | game points"),
+        set_name: z.string().optional().describe("What this list is, e.g. 'Genesis set'"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: set_scorecard ----
+    const paywallMessage = await premiumRequired("set_scorecard")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await setScorecard(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "library_breakdown",
+    {
+      title: "Break a list down",
+      description: "Summarise a pasted game list by console and completion band, list what is closest to finished, and rank the sets by points per achievement as a difficulty signal. Computed locally.",
+      inputSchema: z.object({
+        games: z.string().describe("One game per line: title | console | percentage | achievements owned | achievements total | game points"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await libraryBreakdown(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

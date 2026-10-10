@@ -22,3 +22,15 @@ export async function summary(args: SummaryArgs): Promise<string> {
     d.summary ? `Summary: ${d.summary}` : '',
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxB tools:
+
+export interface GameDetailsArgs {
+  appid?: number;
+}
+
+export interface FindAppIdArgs {
+  query?: string;
+  limit?: number;
+}
+

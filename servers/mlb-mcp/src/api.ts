@@ -59,3 +59,17 @@ export async function standings(args: { season?: number }): Promise<string> {
   }
   return `MLB standings ${season}:` + lines.join("\n")
 }
+
+// ---- muxB tools:
+
+export interface PlayerSearchArgs {
+  name: string;
+  limit?: number;
+}
+
+export interface TeamRosterArgs {
+  team_id: string;
+  roster_type?: string;
+  limit?: number;
+}
+

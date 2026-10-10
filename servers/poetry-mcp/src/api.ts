@@ -40,3 +40,6 @@ export async function randomPoem(args: Record<string, never>): Promise<string> {
   const arr = Array.isArray(d) ? d : [d]
   return fmtPoem(arr[0] ?? {})
 }
+
+// ---- muxB tools:
+

@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { scanCommon } from "./api.js"
-import { scanHost } from "./api.js"
+import { scanHost, summarizeScanResults, parsePortSpec } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -34,5 +35,35 @@ export function createServer(): McpServer {
     try { return text(await scanCommon(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "summarize_scan_results",
+    {
+      title: "Summarize scan results",
+      description: "Summarise a scan report you paste back in: state counts, open ratio, open ports as contiguous runs, highest open port, longest run, isolated opens and probed coverage. Computed locally from the text you supply; no connection is attempted.",
+      inputSchema: z.object({ report: z.string().min(1).max(200000).describe("Scan output to summarise, for example \"80: OPEN\" lines, up to 200,000 characters.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: summarize_scan_results ----
+    const paywallMessage = await premiumRequired("summarize_scan_results")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await summarizeScanResults(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "parse_port_spec",
+    {
+      title: "Parse port spec",
+      description: "Expand a port specification you supply into a deduplicated sorted list: contiguous runs, duplicates collapsed, backwards and out-of-range entries rejected with a reason, and the port count the specification implies. No connection is attempted.",
+      inputSchema: z.object({ spec: z.string().min(1).max(20000).describe("Port specification such as 22,80,8000-8010, up to 20,000 characters."), max_ports: z.number().int().min(1).max(4096).optional().describe("Reject any single range wider than this many ports, 1-4096.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await parsePortSpec(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

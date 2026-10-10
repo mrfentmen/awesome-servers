@@ -64,3 +64,11 @@ export function formatRecord(r: CernRecord, index?: number): string {
   const prefix = index !== undefined ? `${index + 1}. ` : ""
   return `${prefix}[${r.id ?? "?"}] ${r.title ?? "(untitled)"}${r.type ? ` (${r.type})` : ""}${r.experiment ? ` — ${r.experiment}` : ""}${r.year ? ` (${r.year})` : ""}`
 }
+
+// ---- muxC tools:
+
+interface CernFilesPayload {
+  contents?: Array<{ key?: string; size?: number; checksum?: string; mimetype?: string; version_id?: string; is_head?: boolean; delete_marker?: boolean; links?: { self?: string; version?: string } }>
+  links?: { self?: string; versions?: string }
+}
+

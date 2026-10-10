@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { CtanError, formatPackage, getPackage } from "./api.js"
 
+import { CtanError, formatPackage, getPackage, licenseCatalog } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -30,6 +31,56 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "search_packages",
+    {
+      title: "Search CTAN packages",
+      description: "Search the whole CTAN catalogue by key, name or caption, ranked so exact and prefix key matches come first.",
+      inputSchema: z.object({
+        query: z.string().describe("Search terms, e.g. beamer, table, font"),
+        limit: z.number().describe("Max results, 1-40.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: search_packages ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_ctan_search_packages", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "package_provenance",
+    {
+      title: "CTAN package provenance",
+      description: "Provenance behind a CTAN package: licence keys resolved against CTAN's licence list, authors and copyright years, topics, source repository, issue tracker, TeX Live and MiKTeX names, install bundle and documentation links.",
+      inputSchema: z.object({
+        key: z.string().describe("Package key, e.g. 'beamer', 'tikz', 'biblatex'"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: package_provenance ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_ctan_package_provenance", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "license_catalog",
+    {
+      title: "CTAN license catalog",
+      description: "The licence keys CTAN itself uses, each with its name and whether CTAN marks it free, so a package licence can be read as free or not.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async (_args) => {
+    try { return text(await licenseCatalog(_args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

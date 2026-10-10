@@ -15,3 +15,15 @@ export async function word(args: WordArgs = {}): Promise<string> {
   if (!Array.isArray(data) || !data.length) throw new Error('Random Word API returned an empty response');
   return data.length === 1 ? data[0] : `Random words (${data.length}):\n` + data.map((w, i) => `${i + 1}. ${w}`).join('\n');
 }
+
+// ---- muxB tools:
+
+const WIKTIONARY_API = 'https://en.wiktionary.org/w/api.php'
+
+const rwField = (value: unknown, fallback = 'not reported'): string =>
+  value != null && String(value) !== '' ? String(value) : fallback
+
+export interface WordDetailsArgs {
+  word: string;
+}
+

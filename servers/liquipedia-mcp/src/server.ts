@@ -1,14 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  errorMessage,
-  searchPages,
-  getPage,
-  getRecentChanges,
-  getCategoryMembers,
-  getBacklinks,
-} from "./api.js"
 
+import { errorMessage, searchPages, getPage, getRecentChanges, getCategoryMembers, getBacklinks } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -122,6 +116,38 @@ export function createServer(): McpServer {
         return textError(errorMessage(e));
       }
     }
+  )
+
+  server.registerTool(
+    "wiki_search",
+    {
+      title: "Wiki search",
+      description: "Full-text search a Liquipedia wiki through its own MediaWiki search index, across every game wiki it hosts, which the rendered-page tools cannot do.",
+      inputSchema: z.object( { query: z.string().describe("Search terms."), host: z.string().describe("Wiki host, e.g. dota2, lol, cs, overwatch or commons.").optional(), limit: z.number().describe("Max results.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: wiki_search ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_liquipedia_wiki_search", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "page_info",
+    {
+      title: "Page info",
+      description: "A Liquipedia page's metadata and last revision from the api: page id, revision author and timestamp, edit summary and byte size.",
+      inputSchema: z.object( { title: z.string().describe("Page title, e.g. Dota 2."), host: z.string().describe("Wiki host, e.g. dota2 or commons.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: page_info ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_liquipedia_page_info", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

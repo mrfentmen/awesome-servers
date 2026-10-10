@@ -59,3 +59,6 @@ export function formatObs(o: Observation, index?: number): string {
   const bits = [o.target, o.collection, o.instrument, o.filters].filter(Boolean).join(" · ")
   return `${prefix}${bits || "(observation)"}${o.date ? ` (${o.date})` : ""}${o.id ? ` [${o.id}]` : ""}`
 }
+
+// ---- muxC tools:
+

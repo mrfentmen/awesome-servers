@@ -36,3 +36,9 @@ export async function get(args: GetArgs): Promise<string> {
   const cs = d.clinvar?.clinical_significance ?? [];
   return `Variant ${d._id}\nHGVS: ${d.hgvs ?? '?'}\nPosition: ${d.chrom ?? '?'}:${d.pos ?? '?'} ${d.ref ?? ''}>${d.alt ?? ''}\nClinVar id: ${d.clinvar?.clinvar_id ?? 'none'}\nSignificance: ${cs.map((c) => c.clinical_significance).join(', ') || 'not classified'}${cs[0]?.last_evaluated ? ` (last evaluated ${cs[0].last_evaluated})` : ''}`;
 }
+
+// ---- muxC tools:
+
+const MYVARIANT_BASE = "https://myvariant.info/v1"
+const MYVARIANT_UA = "mrfentmen-myvariant-mcp/1.0"
+

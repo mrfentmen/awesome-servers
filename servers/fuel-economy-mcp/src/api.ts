@@ -57,3 +57,34 @@ export async function vehicleMpg(args: { make?: string; model?: string; year?: n
   }
   return `${args.year} ${make} ${model}\n${out.join("\n") || "No trims found"}`
 }
+
+// ---- muxB tools:
+
+export interface MakesForYearArgs {
+  year: number;
+  limit?: number;
+}
+
+export interface ModelsForMakeArgs {
+  year: number;
+  make: string;
+  limit?: number;
+}
+
+export async function modelsForMake(args: ModelsForMakeArgs): Promise<string> {
+  const year = Number(args.year)
+  if (!Number.isFinite(year) || year < 1984 || year > 2100) throw new FuelError("Provide a year between 1984 and 2100")
+  const make = (args.make ?? "").trim()
+  if (!make) throw new FuelError("Provide a make, e.g. Toyota")
+  const limit = Math.max(1, Math.min(args.limit ?? 25, 100))
+  const xml = await getText(`${BASE}/menu/model?year=${year}&make=${encodeURIComponent(make)}`)
+  const names = extract(xml, "text")
+  if (!names.length) return `The EPA vehicle data has no models for ${year} ${make}.`
+  return `EPA fuel economy models for ${year} ${make} (${Math.min(names.length, limit)} of ${names.length} shown):\n` +
+    names.slice(0, limit).map((n, i) => `${i + 1}. ${n}`).join("\n")
+}
+
+export interface VehicleDataArgs {
+  id: string;
+}
+

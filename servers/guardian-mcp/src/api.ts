@@ -42,3 +42,9 @@ export async function latest(args: LatestArgs = {}): Promise<string> {
   const rows = await fetchArticles('order-by=newest');
   return formatRows(rows.slice(0, limit), rows.length);
 }
+
+// ---- muxC tools:
+
+// The Guardian's open API no longer honours its own documented `api-key=test`,
+// so these tools use the keyless RSS feeds on www.theguardian.com instead.
+

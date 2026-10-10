@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_formatAlerts, m0_formatScales, m0_formatSpeed, m0_SpaceWeatherError, m0_alerts, m0_scales, m0_solarWindSpeed, m1_latest, m1_map, m2_xrays } from './api.js'
 
+import { m0_formatAlerts, m0_formatScales, m0_formatSpeed, m0_SpaceWeatherError, m0_alerts, m0_scales, m0_solarWindSpeed, m1_latest, m1_map, m2_xrays } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -76,5 +77,37 @@ server.registerTool(
     try { return text(await m2_xrays(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "planetary_k_index",
+    {
+      title: "Planetary K-index",
+      description: "NOAA's planetary K-index time series with the G-scale storm level each reading falls in and the running A index.",
+      inputSchema: z.object( { limit: z.number().describe("Max readings, newest last.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: planetary_k_index ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_space_weather_planetary_k_index", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "solar_wind_mag_field",
+    {
+      title: "Solar wind magnetic field",
+      description: "The interplanetary magnetic field strength and Bz at L1 from NOAA SWPC, with a note on how southward Bz drives geomagnetic storms.",
+      inputSchema: z.object( { limit: z.number().describe("Max readings, newest last.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: solar_wind_mag_field ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_space_weather_solar_wind_mag_field", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

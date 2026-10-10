@@ -66,3 +66,4 @@ export function formatGame(g) {
     const score = g.awayScore != null && g.homeScore != null ? `${g.awayScore}-${g.homeScore}` : "vs";
     return `${state}: ${g.awayAbbrev ?? "?"} ${score} ${g.homeAbbrev ?? "?"} (${when})`;
 }
+// ---- muxC tools:

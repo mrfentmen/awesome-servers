@@ -36,3 +36,11 @@ export async function date(args: { date?: string }): Promise<string> {
   if (!list.length) return `No EPIC images for ${date}`
   return `Earth images from EPIC on ${date} (${list.length}):\n` + list.map(fmt).join("\n")
 }
+
+// ---- muxC tools:
+
+// EPIC publishes two products from the same spacecraft camera. The natural
+// product is plain-colour RGB; the enhanced product is reprocessed for ozone
+// and aerosol retrieval, so it is a different image with its own identifiers
+// and its own archive path.
+

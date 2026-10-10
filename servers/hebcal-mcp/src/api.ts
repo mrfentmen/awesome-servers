@@ -19,3 +19,22 @@ export async function convert(args: ConvertArgs): Promise<string> {
     d.events?.length ? `Events: ${(d.events ?? []).slice(0, 5).join(' | ')}` : null,
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxC tools:
+
+interface HebcalItem {
+  title?: string
+  date?: string
+  hdate?: string
+  category?: string
+  subcat?: string
+  hebrew?: string
+  leyning?: Record<string, string>
+}
+
+interface HebcalCalendar {
+  title?: string
+  range?: { start?: string; end?: string }
+  items?: HebcalItem[]
+}
+

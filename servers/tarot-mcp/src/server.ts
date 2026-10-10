@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { cardInfo } from "./api.js"
-import { randomCards } from "./api.js"
 
+import { cardInfo, randomCards } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,37 @@ export function createServer(): McpServer {
     try { return text(await cardInfo(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "suit_cards",
+    {
+      title: "Suit cards",
+      description: "The whole cups, wands, swords or pentacles suit with upright and reversed meanings, which a random draw or a single card lookup cannot give you.",
+      inputSchema: z.object( { suit: z.string().describe("cups, wands, swords or pentacles."), }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: suit_cards ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_tarot_suit_cards", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "major_arcana",
+    {
+      title: "Major arcana",
+      description: "All 22 major arcana cards in order with their upright meanings, which is the backbone a single card lookup never shows in full.",
+      inputSchema: z.object( {  }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: major_arcana ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_tarot_major_arcana", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

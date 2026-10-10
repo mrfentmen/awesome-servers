@@ -1,6 +1,6 @@
 {
   "name": "entur-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Keyless Entur Norway: stop autocomplete, reverse geocode, departures, door-to-door trip planning.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/entur-mcp",

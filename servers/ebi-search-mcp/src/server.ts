@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { entry } from "./api.js"
-import { search } from "./api.js"
 
+import { entry, search, domainIndex } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,34 @@ export function createServer(): McpServer {
     try { return text(await entry(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "domain_index",
+    {
+      title: "Domain index",
+      description: "The whole tree of databases EBI Search can query, with how many domains sit inside each group, so a caller can see what is searchable instead of guessing a domain name.",
+      inputSchema: z.object( {  } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await domainIndex()) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "domain_info",
+    {
+      title: "Domain info",
+      description: "One database's own facts: the entry count and release dates EBI Search reports for it, and which of its fields are searchable. The search tool only returns results, it never describes the domain.",
+      inputSchema: z.object( { domain: z.string().describe("A domain id from the domain index, like uniprot, ensembl or literature.") } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: domain_info ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_ebi_search_domain_info", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

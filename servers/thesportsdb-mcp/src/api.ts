@@ -45,3 +45,58 @@ export async function league(args: LeagueArgs): Promise<string> {
       return `${i + 1}. ${s('strHomeTeam')} vs ${s('strAwayTeam')} | ${s('strEventDate')} ${s('strTime')}`;
     }).join('\n');
 }
+
+// ---- muxB tools:
+
+const UA_TSDB = 'mrfentmen-thesportsdb-mcp/1.0';
+
+async function tsdbGet<T>(path: string): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    headers: { 'User-Agent': UA_TSDB, Accept: 'application/json' },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error(`TheSportsDB returned ${res.status}`);
+  return (await res.json()) as T;
+}
+
+const tsdbText = (row: Record<string, unknown>, key: string): string => {
+  const value = row[key];
+  return value != null && String(value) !== '' ? String(value) : 'not reported';
+};
+
+export interface LeagueTableArgs {
+  id: number;
+  limit?: number;
+}
+
+export interface LeagueTeamsArgs {
+  league: string;
+  limit?: number;
+}
+
+export interface PlayerArgs {
+  id: number;
+}
+
+export async function player(args: PlayerArgs): Promise<string> {
+  const id = Math.floor(args.id ?? 0);
+  if (!id) throw new Error('Provide a player id.');
+  const d = await tsdbGet<{ players?: Array<Record<string, unknown>> }>(`/lookupplayer.php?id=${id}`);
+  const players = d.players ?? [];
+  if (!players.length) return `No player found for id ${id}.`;
+  const p = players[0];
+  const rows: Array<[string, string]> = [
+    ['Name', tsdbText(p, 'strPlayer')],
+    ['Team', tsdbText(p, 'strTeam')],
+    ['Position', tsdbText(p, 'strPosition')],
+    ['Shirt number', tsdbText(p, 'strNumber')],
+    ['Nationality', tsdbText(p, 'strNationality')],
+    ['Born', tsdbText(p, 'dateBorn')],
+    ['Birthplace', tsdbText(p, 'strBirthLocation')],
+    ['Height', tsdbText(p, 'strHeight')],
+    ['Weight', tsdbText(p, 'strWeight')],
+    ['Status', tsdbText(p, 'strStatus')],
+    ['SoccerXML team id', tsdbText(p, 'intSoccerXMLTeamID')],
+  ];
+  return [`Player ${id}`, ...rows.map(([label, value]) => `  ${label}: ${value}`)].join('\n');
+}

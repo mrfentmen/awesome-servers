@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/godot-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Godot Asset Library: search, metadata, download URLs. Keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/godot-mcp",

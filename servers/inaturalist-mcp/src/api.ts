@@ -36,3 +36,6 @@ export async function recentObservations(args: { taxonId?: number; limit?: numbe
     return `${i + 1}. ${o?.taxon?.name ?? "n/a"} observed at ${place} on ${date}${img ? `\n   ${img}` : ""}`
   }).join("\n\n")
 }
+
+// ---- muxC tools:
+

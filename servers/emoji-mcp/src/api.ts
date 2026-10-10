@@ -59,3 +59,12 @@ export async function search(args: { query?: string; limit?: number }): Promise<
 export async function categories(args: Record<string, never>): Promise<string> {
   return `Emoji categories (${Object.keys(CATALOG).length}):\n${Object.keys(CATALOG).sort().join(", ")}`
 }
+
+// ---- muxA tools:
+// The existing tools search the catalogue and list its group names. These work
+// the other way round, from one emoji back to the groups that hold it, and
+// total the catalogue up. Both are pure computation on the local catalogue.
+export interface EmojiInfoArgs {
+  emoji: string;
+}
+

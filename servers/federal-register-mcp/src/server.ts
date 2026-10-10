@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { format, getDocument, listAgencies, searchDocuments } from "./api.js"
 
+import { format, getDocument, listAgencies, searchDocuments, documentCounts } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -54,5 +55,34 @@ export function createServer() {
     try { return text(format(await listAgencies())) } catch (error) { return errorText(error) }
   }
   )
+  server.registerTool(
+    "comment_periods",
+    {
+      title: "Comment periods",
+      description: "Which Federal Register documents are open for public comment right now and when each comment window closes, which the search tool cannot answer because it does not return the closing date.",
+      inputSchema: z.object( { days: z.number().describe("How many days ahead to look, 1-90. Defaults to 7.").optional(), limit: z.number().describe("How many documents to list, 1-50. Defaults to 10.").optional(), type: z.string().describe("Optional type: RULE, PRORULE, NOTICE or PRESDOCU.").optional() } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: comment_periods ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_federal_register_comment_periods", args)) } catch (e) { return textError(String(e)) }
+  }
+  )
+
+  server.registerTool(
+    "document_counts",
+    {
+      title: "Document counts",
+      description: "How many Federal Register documents match a term, broken down by the four real document types, with the API's own match count.",
+      inputSchema: z.object( { term: z.string().min(1).max(200).describe("Search term, like bears or emissions.") } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await documentCounts(args)) } catch (error) { return errorText(error) }
+  }
+  )
+
   return server
 }

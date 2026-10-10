@@ -34,3 +34,43 @@ export async function pageQuotes(args: { page?: string; limit?: number }): Promi
   if (!lines.length) return "No quotes on this page"
   return `Quotes from ${page}:\n\n${lines.map((l: string, i: number) => `${i + 1}. ${l}`).join("\n\n")}`
 }
+
+// ---- muxB tools:
+
+const WQ_REST = "https://en.wikiquote.org/api/rest_v1"
+
+export async function randomQuotePage(): Promise<string> {
+  const res = await fetch(`${WQ_REST}/page/random/summary`, {
+    headers: { "User-Agent": UA, Accept: "application/json" },
+    redirect: "follow",
+    signal: AbortSignal.timeout(25000),
+  })
+  if (res.status === 429) throw new WikiquoteError("Wikiquote rate limit hit, wait and retry")
+  if (!res.ok) throw new WikiquoteError(`Wikiquote error ${res.status}`)
+  const d = (await res.json()) as { title?: string; description?: string; extract?: string; timestamp?: string; content_urls?: { desktop?: { page?: string } } }
+  const page = d.content_urls?.desktop?.page ?? "URL not reported"
+  return [
+    `Random Wikiquote page: ${d.title ?? "title not reported"}`,
+    `Description: ${d.description && d.description.trim() ? d.description.trim() : "not reported"}`,
+    `Last edited: ${d.timestamp ?? "not reported"}`,
+    `Page: ${page}`,
+    "",
+    String(d.extract ?? "").replace(/\s+/g, " ").trim().slice(0, 900) || "No extract reported",
+  ].join("\n")
+}
+
+export async function pageLanguages(args: { page?: string; limit?: number }): Promise<string> {
+  const page = (args.page ?? "").trim()
+  if (!page) throw new WikiquoteError("Provide a page title")
+  const limit = Math.max(1, Math.min(Number(args.limit ?? 20) || 20, 100))
+  const d = await get<any>(
+    `${BASE}?action=query&prop=langlinks&titles=${encodeURIComponent(page)}&lllimit=200&llprop=url%7Clangname&format=json&origin=*`,
+  )
+  const pages = d?.query?.pages ?? {}
+  const first = Object.values(pages)[0] as any
+  if (!first || first.missing !== undefined) return `No Wikiquote page titled "${page}".`
+  const links = Array.isArray(first.langlinks) ? first.langlinks : []
+  if (!links.length) return `No other-language Wikiquote pages link to "${page}".`
+  return `Wikiquote pages for "${first.title ?? page}" in other languages (${links.length} total, showing ${Math.min(limit, links.length)}):\n` +
+    links.slice(0, limit).map((l: any, i: number) => `${i + 1}. ${l.lang ?? "?"} (${l.langname ?? "name not reported"}): ${l.url ?? "URL not reported"}`).join("\n")
+}

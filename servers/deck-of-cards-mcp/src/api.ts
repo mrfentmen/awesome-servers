@@ -29,3 +29,21 @@ export async function draw(args: { deckId?: string; count?: number }): Promise<s
     `${i + 1}. ${c?.value ?? "?"} of ${c?.suit ?? "?"}`
   ).join("\n")
 }
+
+// ---- muxA tools:
+// The existing tools create a full deck and draw from it. These build a deck
+// from exactly the named cards and put an already dealt deck back together.
+
+export interface BuildDeckArgs {
+  cards: string
+  shuffle?: boolean
+  deckCount?: number
+}
+
+export async function reshuffle(args: { deckId?: string }): Promise<string> {
+  const deckId = (args.deckId ?? "").trim()
+  if (!deckId) throw new CardsError("Provide a deck ID")
+  const d = await get<any>(`${BASE}/deck/${encodeURIComponent(deckId)}/shuffle/?remaining=true`)
+  if (!d?.deck_id) throw new CardsError("The deck service returned no deck id")
+  return `Deck ${d.deck_id} shuffled:\n  Cards remaining: ${d.remaining ?? "?"}\n  Shuffled: ${d.shuffled ? "yes" : "no"}`
+}

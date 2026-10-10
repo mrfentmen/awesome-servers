@@ -140,3 +140,82 @@ export function formatItem(it: ItemSummary, index?: number): string {
   const meta = [it.tier, it.type, it.level !== undefined ? `lvl ${it.level}` : ""].filter(Boolean).join(" · ")
   return `${prefix}${it.displayName}${meta ? ` (${meta})` : ""}${it.lore ? `\n   ${it.lore}` : ""}`
 }
+
+// ---- muxB tools:
+
+interface BuildItem {
+  displayName: string
+  tier?: string
+  type?: string
+  subType?: string
+  level?: number
+  classRequirement?: string
+  stats: string[]
+  elements: string[]
+  powderSlots?: number
+  emblem?: string
+  averageDps?: number
+  dropRestriction?: string
+}
+
+function identSummary(raw: unknown): string[] {
+  if (!raw || typeof raw !== "object") return []
+  const out: string[] = []
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (value && typeof value === "object" && "raw" in (value as Record<string, unknown>)) {
+      const r = Number((value as Record<string, unknown>).raw)
+      out.push(`${key} ${Number.isFinite(r) ? r : "?"}`)
+      continue
+    }
+    const n = Number(value)
+    if (Number.isFinite(n) && n !== 0) out.push(`${key} ${n}`)
+  }
+  return out.sort()
+}
+
+export async function itemBuild(query: string, limit = 5): Promise<string> {
+  const q = query.trim()
+  if (!q) throw new WynncraftError("Provide an item name to look up.")
+  const cap = Math.max(1, Math.min(limit, 10))
+  const rows = await getJson<Raw[]>(`/item/search/${encodeURIComponent(q)}`)
+  const items: BuildItem[] = rows.slice(0, cap).map((it) => {
+    const reqs = (it.requirements ?? {}) as Record<string, unknown>
+    const stats: string[] = []
+    for (const key of ["strength", "dexterity", "intelligence", "agility"]) {
+      const n = Number(reqs[key])
+      if (Number.isFinite(n) && n !== 0) stats.push(`${key} +${n}`)
+    }
+    stats.push(...identSummary(it.identifications).slice(0, 8))
+    const elements = Array.isArray(it.elements) ? it.elements.map((e) => String(e)) : []
+    return {
+      displayName: String(it.displayName ?? it.internalName ?? "?"),
+      tier: it.tier ? String(it.tier) : undefined,
+      type: it.type ? String(it.type) : undefined,
+      subType: it.subType ? String(it.subType) : undefined,
+      level: reqs.level !== undefined ? Number(reqs.level) : undefined,
+      classRequirement: reqs.classRequirement ? String(reqs.classRequirement) : undefined,
+      stats,
+      elements,
+      powderSlots: typeof it.powderSlots === "number" ? it.powderSlots : undefined,
+      emblem: it.emblem ? String(it.emblem) : undefined,
+      averageDps: typeof it.averageDps === "number" ? it.averageDps : undefined,
+      dropRestriction: it.dropRestriction ? String(it.dropRestriction) : undefined,
+    }
+  })
+  if (!items.length) return `No Wynncraft item matches "${q}".`
+  return `Build stats for Wynncraft items matching "${q}" (${items.length} shown):\n` +
+    items
+      .map((it, i) =>
+        [
+          `${i + 1}. ${it.displayName}${it.tier ? ` | ${it.tier} ${it.type ?? ""} ${it.subType ?? ""}`.trim() : ""}`,
+          `   requires: level ${it.level ?? "not reported"}${it.classRequirement ? `, class ${it.classRequirement}` : ""}`,
+          `   stats: ${it.stats.length ? it.stats.join(", ") : "none reported"}`,
+          it.elements.length ? `   elements: ${it.elements.join(", ")}` : "",
+          `   powder slots: ${it.powderSlots ?? "not reported"} | emblem: ${it.emblem ?? "not reported"}`,
+          `   average dps: ${it.averageDps ?? "not reported"} | drop: ${it.dropRestriction ?? "not reported"}`,
+        ]
+          .filter((l) => l !== "")
+          .join("\n"),
+      )
+      .join("\n")
+}

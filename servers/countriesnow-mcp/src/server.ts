@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_cities, m0_countries, m0_flag, m1_byCode, m1_byName, m1_search } from './api.js'
 
+import { m0_cities, m0_countries, m0_flag, m1_byCode, m1_byName, m1_search, currencyTally } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -82,5 +83,34 @@ server.registerTool(
     try { return text(await m1_search(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "country_profile",
+    {
+      title: "Country profile",
+      description: "One country assembled from the CountriesNow tables the other tools never read: its ISO alpha-2 and alpha-3 codes, its capital, its currency code together with the other countries that share that currency, its stored coordinates, its flag image and the shape of its population series from the first year on record to the peak. The by_name tool returns only a name, two codes, a flag and the latest population figure.",
+      inputSchema: z.object( { country: z.string().describe("Country name, like Brazil.") } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: country_profile ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_countriesnow_country_profile", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "currency_tally",
+    {
+      title: "Currency tally",
+      description: "The currency distribution across every country in the CountriesNow country table: how many distinct codes are in use, which codes cover the most countries, how many countries share each currency, how many have no currency recorded and how many codes belong to a single country. No existing tool reads the currency table at all.",
+      inputSchema: z.object( {  } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await currencyTally()) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

@@ -1,6 +1,6 @@
 {
   "name": "quotes-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Unified quotes server: FavQs, ZenQuotes, Stoic quotes, and Quotes REST.",
   "type": "module",
   "main": "dist/index.js",

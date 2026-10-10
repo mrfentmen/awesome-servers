@@ -27,3 +27,72 @@ export async function issuances(args: IssuancesArgs): Promise<string> {
       })
       .join('\n');
 }
+
+// ---- muxA tools:
+
+const CRTSH = 'https://crt.sh/';
+
+function bound(value: number | undefined, fallback: number, max: number): number {
+  return Math.max(1, Math.min(Math.round(value ?? fallback), max));
+}
+
+function clean(value: unknown): string {
+  return value != null ? String(value) : '';
+}
+
+async function spotter(domain: string, expand: string, count: number, subdomains: boolean): Promise<Array<Record<string, unknown>>> {
+  const params = new URLSearchParams({
+    domain,
+    include_subdomains: subdomains ? 'true' : 'false',
+    expand,
+    after: '0',
+  });
+  const res = await fetch(`${BASE}?${params.toString()}&count=${count}`, {
+    headers: { 'User-Agent': 'mrfentmen-certspotter-mcp/1.0', Accept: 'application/json' },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error(`Cert Spotter returned ${res.status}`);
+  return (await res.json()) as Array<Record<string, unknown>>;
+}
+
+export interface SubdomainArgs {
+  domain: string;
+  limit?: number;
+}
+
+export interface IssuerArgs {
+  domain: string;
+  limit?: number;
+}
+
+export interface LogArgs {
+  domain: string;
+  limit?: number;
+}
+
+export async function transparencyLog(args: LogArgs): Promise<string> {
+  const domain = (args.domain ?? '').trim().toLowerCase();
+  if (!domain) return 'Provide a domain name.';
+  const limit = bound(args.limit, 15, 50);
+  const res = await fetch(`${CRTSH}?q=${encodeURIComponent(domain)}&output=json&exclude=expired`, {
+    headers: { 'User-Agent': 'mrfentmen-certspotter-mcp/1.0', Accept: 'application/json' },
+    // crt.sh is a volunteer-run mirror and is routinely slow
+    signal: AbortSignal.timeout(60000),
+  });
+  if (!res.ok) throw new Error(`crt.sh returned ${res.status}`);
+  const rows = (await res.json()) as Array<Record<string, unknown>>;
+  if (!rows.length) return `crt.sh has no unexpired entries for ${domain}.`;
+  const cas = new Map<string, number>();
+  for (const r of rows) {
+    const key = clean(r.issuer_name) || 'issuer not reported';
+    cas.set(key, (cas.get(key) ?? 0) + 1);
+  }
+  return [
+    `crt.sh logged ${rows.length} unexpired certificate(s) for ${domain}, from ${cas.size} distinct CA(s).`,
+    `Top CAs: ${[...cas.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, v]) => `${k.split(',').pop()?.trim() || k} ${v}`).join(' | ')}`,
+    ...rows.slice(0, limit).map((r, i) => {
+      const names = clean(r.name_value).split('\n').slice(0, 3).join(', ');
+      return `${i + 1}. ${clean(r.common_name) || names || 'name not reported'} | ${clean(r.not_before).slice(0, 10)} to ${clean(r.not_after).slice(0, 10)} | CA id ${r.issuer_ca_id ?? 'not reported'} | serial ${clean(r.serial_number).slice(0, 20) || 'not reported'}${names ? `\n   names: ${names.slice(0, 160)}` : ''}`;
+    }),
+  ].join('\n');
+}

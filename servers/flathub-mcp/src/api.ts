@@ -54,3 +54,78 @@ export async function app(args: { appId?: string }): Promise<string> {
   if (a?.urls?.homepage) lines.push(`\nHomepage: ${a.urls.homepage}`)
   return lines.join("\n")
 }
+
+// ---- muxF tools:
+interface FlathubStats {
+  totals?: { downloads?: number; number_of_apps?: number; verified_apps?: number }
+  countries?: Record<string, number>
+  category_totals?: Array<{ category?: string; count?: number }>
+  downloads_per_day?: Record<string, number>
+  flatpak_versions?: Record<string, number>
+}
+
+function bound(value: unknown, min: number, max: number, fallback: number): number {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return fallback
+  return Math.max(min, Math.min(Math.floor(n), max))
+}
+
+function plain(value: unknown, chars = 200): string {
+  const text = typeof value === 'string' ? value.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : ''
+  if (!text) return 'not reported'
+  return text.length > chars ? `${text.slice(0, chars)}...` : text
+}
+
+function isoDate(epochSeconds: unknown): string {
+  const n = Number(epochSeconds)
+  if (!Number.isFinite(n) || n <= 0) return 'not reported'
+  return new Date(n * 1000).toISOString().slice(0, 10)
+}
+
+function median(values: number[]): number | null {
+  if (!values.length) return null
+  const sorted = [...values].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
+}
+
+interface AppRelease {
+  timestamp?: string
+  type?: string
+  date_eol?: string | null
+  description?: string
+}
+
+/** When an app actually shipped: how many releases Flathub lists, their types, the span they cover and how often they land. */
+export async function appTimeline(args: { appId?: string; limit?: number }): Promise<string> {
+  const id = (args.appId ?? '').trim()
+  if (!id) throw new FlathubError('Provide an app ID like org.gimp.GIMP')
+  const limit = bound(args.limit, 1, 20, 8)
+  const a = await appDetail(id)
+  if (!a?.id) throw new FlathubError(`App not found: ${id}`)
+  const releases = (Array.isArray(a.releases) ? a.releases : []) as AppRelease[]
+  if (!releases.length) return `Flathub lists no releases for ${a.name ?? id}.`
+  const stamps = releases.map((r) => Number(r.timestamp)).filter((n) => Number.isFinite(n) && n > 0).sort((x, y) => y - x)
+  const gaps: number[] = []
+  for (let i = 0; i < stamps.length - 1; i += 1) {
+    const gap = (stamps[i] - stamps[i + 1]) / 86400000
+    if (gap >= 0) gaps.push(gap)
+  }
+  const gapMedian = median(gaps)
+  const byType = new Map<string, number>()
+  for (const r of releases) byType.set(r.type ?? 'type not reported', (byType.get(r.type ?? 'type not reported') ?? 0) + 1)
+  const eol = releases.filter((r) => r.date_eol)
+  return [
+    `Release timeline of ${a.name ?? id}`,
+    `Current release: ${a.current_release_version ?? 'not reported'}`,
+    `Releases on file: ${releases.length}`,
+    `First release: ${stamps.length ? isoDate(stamps[stamps.length - 1]) : 'not reported'}`,
+    `Most recent release: ${stamps.length ? isoDate(stamps[0]) : 'not reported'}`,
+    `Median gap between releases: ${gapMedian === null ? 'not reported' : `${gapMedian.toFixed(1)} days`}`,
+    `By release type: ${[...byType.entries()].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(', ')}`,
+    `Releases carrying an end of life date: ${eol.length}`,
+    `Most recent ${Math.min(limit, releases.length)} release(s):`,
+    ...releases.slice(0, limit).map((r) => `- ${isoDate(r.timestamp)} ${r.type ?? 'type not reported'}: ${plain(r.description, 160)}`),
+    'Release timestamps are the epoch values Flathub stores with each release entry.',
+  ].join('\n')
+}

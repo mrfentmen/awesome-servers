@@ -1,6 +1,6 @@
 {
   "name": "openapi-scout-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Local read-only OpenAPI and Swagger inspection with secret-safe schema summaries. Tools include inspect spec, find operation, list schemas",
   "type": "module",
   "mcpName": "io.github.mrfentmen/openapi-scout-mcp",

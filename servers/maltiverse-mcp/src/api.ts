@@ -27,3 +27,32 @@ export async function ip(args: IpArgs): Promise<string> {
     bl ? `Recent blacklists: ${bl}` : 'No blacklist records.',
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxB tools:
+const RDAP_BOOTSTRAP = 'https://rdap.org';
+const CRT_SH = 'https://crt.sh';
+
+type VCardRow = unknown[];
+type RdapEntity = {
+  handle?: string;
+  roles?: string[];
+  vcardArray?: [unknown, VCardRow[]];
+};
+
+function vcardField(card: VCardRow[] | undefined, key: string): string {
+  if (!Array.isArray(card)) return '';
+  for (const row of card) {
+    if (Array.isArray(row) && row[0] === key) return String(row[3] ?? '');
+  }
+  return '';
+}
+
+type CrtEntry = {
+  id?: number;
+  issuer_name?: string;
+  common_name?: string;
+  name_value?: string;
+  not_before?: string;
+  not_after?: string;
+};
+

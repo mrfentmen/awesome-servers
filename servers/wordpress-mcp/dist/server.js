@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { m0_pluginInfo, m0_searchPlugins, m1_search } from './api.js';
+import { m0_pluginInfo, m0_searchPlugins, m1_search, themeInfo, themeList } from './api.js';
+import { premiumRequired } from "./license.js";
 const text = (value) => ({ content: [{ type: 'text', text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -42,6 +43,42 @@ export function createServer() {
     }, async (args) => {
         try {
             return text(await m1_search(args));
+        }
+        catch (e) {
+            return textError(error(e));
+        }
+    });
+    server.registerTool("theme_info", {
+        title: "Theme info",
+        description: "One wordpress.org theme's record: version, author, rating, active installs and tags, which the plugin tools cannot fetch.",
+        inputSchema: z.object({ slug: z.string().describe("Theme slug, e.g. twentytwentyfour."), }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        // ---- paywall: theme_info ----
+        const paywallMessage = await premiumRequired("theme_info");
+        if (paywallMessage)
+            return { content: [{ type: "text", text: paywallMessage }], isError: true };
+        // ---- paywall: end ----
+        try {
+            return text(await themeInfo(args));
+        }
+        catch (e) {
+            return textError(error(e));
+        }
+    });
+    server.registerTool("theme_list", {
+        title: "Theme list",
+        description: "Browse the wordpress.org theme directory by search term, with each theme's rating and active install count, which no existing tool does.",
+        inputSchema: z.object({ query: z.string().describe("Search term, e.g. blog.").optional(), limit: z.number().describe("Max themes.").optional() }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        // ---- paywall: theme_list ----
+        const paywallMessage = await premiumRequired("theme_list");
+        if (paywallMessage)
+            return { content: [{ type: "text", text: paywallMessage }], isError: true };
+        // ---- paywall: end ----
+        try {
+            return text(await themeList(args));
         }
         catch (e) {
             return textError(error(e));

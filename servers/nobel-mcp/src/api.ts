@@ -29,3 +29,17 @@ export async function prizes(args: { year?: number }): Promise<string> {
     return `${p.awardYear ?? ""} ${p.category?.en ?? ""}\n  ${laureates || "no laureates listed"}`
   }).join("\n\n") || "No prizes found"
 }
+
+// ---- muxC tools:
+
+const NOBEL_UA = "mrfentmen-nobel-mcp/1.0 (https://github.com/mrfentmen)"
+
+async function nobelGet<T>(path: string): Promise<T> {
+  const res = await fetch(`https://api.nobelprize.org/2.1/${path}`, {
+    headers: { "User-Agent": NOBEL_UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (!res.ok) throw new NobelError(`Nobel API error ${res.status}`)
+  return (await res.json()) as T
+}
+

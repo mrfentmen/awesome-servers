@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/freshdesk-mcp",
+  "version": "1.1.2",
+  "description": "Query Freshdesk (set FRESHDESK_DOMAIN + FRESHDESK_API_KEY, key:X Basic): tickets, ticket details, contacts.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/freshdesk-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
+  },
+  "bin": {
+    "freshdesk-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "freshdesk",
+    "support",
+    "tickets",
+    "helpdesk"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

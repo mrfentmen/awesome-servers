@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { ticker, board, markets } from './api.js'
 
+import { ticker, board, markets, marketSummary } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -45,5 +46,50 @@ export function createServer(): McpServer {
     try { return text(await markets(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "recent_trades",
+    {
+      title: "Recent trades",
+      description: "The public BitFlyer execution tape for one product, with buy and sell volume, VWAP and an optional minimum trade size.",
+      inputSchema: z.object( { product: z.string().describe("Product code, default BTC_JPY.").optional(), count: z.number().describe("How many trades to fetch, 1-500. Defaults to 50.").optional(), minSize: z.number().describe("Only trades of at least this size.").optional() } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: recent_trades ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_bitflyer_recent_trades", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "market_summary",
+    {
+      title: "Market summary",
+      description: "One line per BitFlyer spot market with last price, spread in both cash and percent, volume and order book depth imbalance.",
+      inputSchema: z.object( {  } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await marketSummary(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "cross_market_check",
+    {
+      title: "Cross market check",
+      description: "Compare each BTC quoted market against its JPY counterpart to see how far the implied price drifts from the quoted one, with the spread that limits it.",
+      inputSchema: z.object( {  } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: cross_market_check ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_bitflyer_cross_market_check", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

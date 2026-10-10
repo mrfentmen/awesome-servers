@@ -1,6 +1,6 @@
 {
   "name": "demozoo-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Keyless MCP server for Demozoo, the demoscene database: search 390k+ demos, intros, graphics and music, get download links, credits, groups and sceners.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/demozoo-mcp",

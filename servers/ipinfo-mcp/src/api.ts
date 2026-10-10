@@ -18,3 +18,10 @@ export async function lookup(args: IpArg): Promise<string> {
   const loc = d.loc ? d.loc.split(',') : [];
   return `IP ${d.ip}\nLocation: ${[d.city, d.region, d.country].filter(Boolean).join(', ') || '?'}\nCoordinates: ${loc.length === 2 ? `${loc[0]}, ${loc[1]}` : '?'}\nPostal: ${d.postal ?? '?'} | Timezone: ${d.timezone ?? '?'}\nOrg: ${d.org ?? d.asn?.name ?? '?'}\nCarrier: ${d.carrier?.name ?? 'none'}`;
 }
+
+// ---- muxB tools:
+
+export interface NetworkProfileArgs {
+  ip?: string;
+}
+

@@ -40,3 +40,11 @@ export async function packageInfo(args: { packageId?: string }): Promise<string>
   ]
   return lines.join("\n")
 }
+
+// ---- muxB tools:
+
+export interface PackageVersionsArgs {
+  package_id: string;
+  limit?: number;
+}
+

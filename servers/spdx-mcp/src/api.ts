@@ -6,3 +6,18 @@ export async function licenses(): Promise<License[]> { if (cache) return cache; 
 export async function find(query: string) { const q = query.toLowerCase(); return (await licenses()).filter((x) => `${x.licenseId} ${x.name}`.toLowerCase().includes(q)).slice(0, 20) }
 export async function get(id: string) { return (await licenses()).find((x) => x.licenseId?.toLowerCase() === id.toLowerCase()) ?? null }
 export function format(rows: License[]) { return JSON.stringify(rows, null, 2).slice(0, 10000) }
+
+// ---- muxB tools:
+
+type Exception = {
+  licenseExceptionId?: string
+  name?: string
+  reference?: string
+  detailsUrl?: string
+  isDeprecatedLicenseId?: boolean
+  example?: string
+  seeAlso?: string[]
+}
+
+let exceptionCache: Exception[] | null = null
+

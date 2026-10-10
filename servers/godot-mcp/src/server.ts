@@ -1,12 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  errorMessage,
-  searchAssets,
-  getAsset,
-  getConfigure,
-} from "./api.js"
 
+import { errorMessage, searchAssets, getAsset, getConfigure } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -76,6 +72,38 @@ export function createServer(): McpServer {
         return textError(errorMessage(e));
       }
     }
+  )
+
+  server.registerTool(
+    "asset_categories",
+    {
+      title: "Asset categories",
+      description: "Godot asset library categories with the ids that search_assets filters on, read from the library's own configure endpoint.",
+      inputSchema: z.object( {  }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: asset_categories ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_godot_asset_categories", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "browse_assets",
+    {
+      title: "Browse assets",
+      description: "Browse the Godot asset library by sort order (recent, popular, rating, downloads) and by licence (free, open_source, proprietary), which the plain search filters do not expose.",
+      inputSchema: z.object( { sort: z.string().describe("recent, popular, rating or downloads.").optional(), license: z.string().describe("free, open_source or proprietary.").optional(), maxResults: z.number().describe("How many assets.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: browse_assets ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_godot_browse_assets", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

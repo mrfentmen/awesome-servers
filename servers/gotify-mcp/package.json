@@ -1,0 +1,43 @@
+{
+  "name": "gotify-mcp",
+  "version": "1.0.2",
+  "description": "Query any Gotify server (self-hosted; set GOTIFY_BASE_URL + GOTIFY_TOKEN, sent as X-Gotify-Key): send messages, list messages, list applications.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/gotify-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
+  },
+  "bin": {
+    "gotify-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "gotify",
+    "push",
+    "notifications",
+    "self-hosted"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

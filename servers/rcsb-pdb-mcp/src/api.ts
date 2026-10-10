@@ -49,3 +49,42 @@ export async function search(args: { query?: string; limit?: number }): Promise<
   if (!ids.length) return "No structures found"
   return `Structures matching \"${q}\":\n` + ids.map((i, n) => `${n + 1}. ${i.toUpperCase()}`).join("\n")
 }
+
+// ---- muxB tools:
+
+const RCSB = 'https://data.rcsb.org/rest/v1/core'
+
+export interface PolymerEntityArgs {
+  id?: string;
+  entity?: string;
+}
+
+export interface LigandsArgs {
+  id?: string;
+}
+
+export interface PublicationsArgs {
+  id?: string;
+}
+
+export async function publications(args: PublicationsArgs): Promise<string> {
+  const id = (args.id ?? '').trim().toLowerCase();
+  if (!/^[a-z0-9]{4}$/.test(id)) throw new PdbError("Provide a 4 character PDB ID like 4hhb");
+  const d = await get<any>(`${RCSB}/entry/${encodeURIComponent(id)}`);
+  const rows: any[] = Array.isArray(d?.citation) ? d.citation : [];
+  if (!rows.length) return `No primary publications listed for ${id.toUpperCase()}.`;
+  return `Publications for ${id.toUpperCase()} (${rows.length} listed):\n` +
+    rows.map((c, i) => {
+      const authors = Array.isArray(c?.rcsb_authors) ? c.rcsb_authors.join(', ') : 'not reported';
+      const year = c?.year != null ? String(c.year) : 'not reported';
+      const journal = c?.rcsb_journal_abbrev ?? c?.journal_abbrev ?? 'not reported';
+      const doi = c?.pdbx_database_id_DOI ?? 'not reported';
+      const pmid = c?.pdbx_database_id_PubMed != null ? String(c.pdbx_database_id_PubMed) : 'not reported';
+      return [
+        `${i + 1}. ${String(c?.title ?? 'title not reported').slice(0, 160)}`,
+        `   ${journal} (${year}) | ${c?.rcsb_is_primary === 'Y' ? 'primary citation' : 'additional citation'}`,
+        `   authors: ${String(authors).slice(0, 160)}`,
+        `   DOI: ${doi} | PubMed: ${pmid}`,
+      ].join('\n');
+    }).join('\n');
+}

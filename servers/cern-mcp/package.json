@@ -1,6 +1,6 @@
 {
   "name": "cern-mcp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Keyless MCP server for CERN Open Data: records, datasets, software, news.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/cern-mcp",

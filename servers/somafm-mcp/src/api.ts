@@ -55,3 +55,17 @@ export async function channel(args: ChannelArgs): Promise<string> {
     streams.length ? `Streams:\n${streams.map((s) => `  ${s.quality ?? 'n/a'} - ${s.url}`).join('\n')}` : null,
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxC tools:
+
+interface SomaSongs {
+  id?: string
+  songs?: Array<{ title?: string; artist?: string; album?: string; albumArt?: string; date?: string }>
+}
+
+function songTime(seconds: string | undefined): string {
+  const n = Number(seconds)
+  if (!Number.isFinite(n) || n <= 0) return "time not reported"
+  return new Date(n * 1000).toISOString().slice(0, 16).replace("T", " ")
+}
+

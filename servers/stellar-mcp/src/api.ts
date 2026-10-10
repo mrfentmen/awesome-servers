@@ -23,3 +23,17 @@ export async function ledgers(args: LedgersArgs): Promise<string> {
       })
       .join('\n');
 }
+
+// ---- muxC tools:
+
+const HORIZON_UA = "mrfentmen-stellar-mcp/1.0 (https://github.com/mrfentmen)"
+
+async function horizon(path: string, ms = 25000): Promise<any> {
+  const res = await fetch(`https://horizon.stellar.org${path}`, { headers: { "User-Agent": HORIZON_UA, Accept: "application/json" }, signal: AbortSignal.timeout(ms) })
+  if (!res.ok) {
+    const body = await res.text().catch(() => "")
+    throw new Error(`Stellar Horizon returned ${res.status}${body ? `: ${body.slice(0, 160)}` : ""}`)
+  }
+  return await res.json()
+}
+

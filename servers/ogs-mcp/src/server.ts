@@ -1,15 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  formatDetails,
-  formatGame,
-  formatPlayer,
-  getPlayer,
-  OgsError,
-  recentGames,
-  searchPlayers,
-} from "./api.js"
 
+import { formatDetails, formatGame, formatPlayer, getPlayer, OgsError, recentGames, searchPlayers, groupList } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -84,6 +77,51 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "game_record",
+    {
+      title: "Game record",
+      description: "One Online-Go.com game in full: board size, rules, komi, time control, both ranks and ratings, start and end time.",
+      inputSchema: z.object( { game_id: z.string().describe("Numeric OGS game id.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: game_record ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_ogs_game_record", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "tournament_list",
+    {
+      title: "Tournament list",
+      description: "Public Online-Go.com tournaments with directors, format and start times.",
+      inputSchema: z.object( { limit: z.number().int().min(1).max(20).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: tournament_list ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_ogs_tournament_list", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "group_list",
+    {
+      title: "Group list",
+      description: "Public Online-Go.com clubs and groups with member counts and visibility.",
+      inputSchema: z.object( { limit: z.number().int().min(1).max(20).optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await groupList(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

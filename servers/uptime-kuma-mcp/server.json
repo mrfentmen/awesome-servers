@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/uptime-kuma-mcp",
+  "description": "Query your Uptime Kuma instance: public status, Prometheus metrics. Endpoints per official docs.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/premium-mcps",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "uptime-kuma-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

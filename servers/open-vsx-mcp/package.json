@@ -1,6 +1,6 @@
 {
   "name": "open-vsx-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Keyless MCP server for Open VSX: VS Code extensions, versions, descriptions, download stats.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/open-vsx-mcp",

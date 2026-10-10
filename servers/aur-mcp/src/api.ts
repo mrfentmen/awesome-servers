@@ -51,3 +51,54 @@ export async function info(args: InfoArgs): Promise<string> {
     s('OutOfDate') ? `Out of date: ${s('OutOfDate')}` : '',
   ].filter(Boolean).join('\n') || `No data for ${name}.`;
 }
+
+// ---- muxA tools:
+
+const BY_FIELDS = new Set([
+  'name', 'name-desc', 'maintainer', 'submitter', 'depends', 'checkdepends',
+  'makedepends', 'optdepends', 'provides', 'conflicts', 'replaces', 'groups',
+  'keywords', 'comaintainers',
+]);
+
+function bound(value: number | undefined, fallback: number, max: number): number {
+  return Math.max(1, Math.min(Math.round(value ?? fallback), max));
+}
+
+async function rpc<T>(query: string): Promise<T> {
+  const res = await fetch(`${BASE}${query}`, {
+    headers: { 'User-Agent': 'mrfentmen-aur-mcp/1.0', Accept: 'application/json' },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error(`AUR returned ${res.status}`);
+  return (await res.json()) as T;
+}
+
+function epochDate(value: unknown): string {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return 'not reported';
+  return new Date(n * 1000).toISOString().slice(0, 10);
+}
+
+export interface SuggestArgs {
+  name: string;
+}
+
+export async function suggestNames(args: SuggestArgs): Promise<string> {
+  const name = (args.name ?? '').trim();
+  if (!name) return 'Provide a package name.';
+  const d = await rpc<string[]>(`&type=suggest&arg[]=${encodeURIComponent(name)}`);
+  if (!Array.isArray(d) || !d.length) return `The AUR suggested no alternative names for ${name}.`;
+  return `${d.length} name(s) the AUR suggests for "${name}":\n` + d.slice(0, 40).map((n, i) => `${i + 1}. ${n}`).join('\n');
+}
+
+export interface ByFieldArgs {
+  query: string;
+  by?: string;
+  limit?: number;
+}
+
+export interface MaintainerArgs {
+  maintainer: string;
+  limit?: number;
+}
+

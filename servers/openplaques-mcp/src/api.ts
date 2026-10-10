@@ -32,3 +32,36 @@ export async function search(args: SearchArgs): Promise<string> {
   if (!Array.isArray(d) || !d.length) return `No plaques matching "${args.query}".`;
   return `Plaques matching "${args.query}" (${d.length}):\n` + d.slice(0, limit).map((p, i) => `${i + 1}. [${p.id ?? '?'}] ${(p.inscription ?? '').slice(0, 100)}${p.installed_year ? ` (${p.installed_year})` : ''}`).join('\n');
 }
+
+// ---- muxB tools:
+
+interface PlaqueRecord {
+  id?: number;
+  inscription?: string;
+  title?: string;
+  address?: string;
+  subjects?: string;
+  erected_at?: string;
+  is_current?: boolean;
+  latitude?: number | null;
+  longitude?: number | null;
+  uri?: string;
+  main_photo_url?: string;
+  installed_year?: string;
+}
+
+interface PlaquePhoto {
+  file_url?: string;
+  photographer_name?: string;
+  file_description?: string;
+  is_used_on_plaque?: boolean;
+}
+
+export interface PlaqueArgs {
+  id: string;
+}
+
+export interface PlaquePhotosArgs {
+  id: string;
+}
+

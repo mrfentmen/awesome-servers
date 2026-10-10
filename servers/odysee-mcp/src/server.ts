@@ -1,10 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  errorMessage,
-  searchClaims,
-  searchChannel,
-} from "./api.js"
+import { errorMessage, searchClaims, searchChannel, videoDetails, channelProfile } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -55,6 +52,40 @@ export function createServer(): McpServer {
         return textError(errorMessage(e));
       }
     }
+  )
+
+  server.registerTool(
+    "video_details",
+    {
+      title: "Video details",
+      description: "Resolve one Odysee video URL into its full claim: title, duration, views, publish date, license, tags and description.",
+      inputSchema: z.object( { url: z.string().describe("lbry:// or https://odysee.com URL.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: video_details ----
+    const paywallMessage = await premiumRequired("video_details")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await videoDetails(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "channel_profile",
+    {
+      title: "Channel profile",
+      description: "Resolve an Odysee channel handle into its public record: upload count, creation date, activation height and support amount.",
+      inputSchema: z.object( { channel: z.string().describe("Channel handle like @veritasium.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: channel_profile ----
+    const paywallMessage = await premiumRequired("channel_profile")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await channelProfile(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/musicbrainz-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Use this MCP server to MusicBrainz artists, releases, recordings, and open music metadata. Tools include search artists, search releases, search recordings",
   "type": "module",
   "mcpName": "io.github.mrfentmen/musicbrainz-mcp",

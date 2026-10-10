@@ -144,4 +144,34 @@ export function formatCard(c: YgoCard, index?: number): string {
   return lines.join("\n")
 }
 
+// ---- muxB tools:
+export interface TopAttackArgs {
+  limit?: number;
+  type?: string;
+}
 
+export interface StapleArgs {
+  limit?: number;
+}
+
+export async function highestAttackCards(args: TopAttackArgs = {}): Promise<string> {
+  const limit = Math.max(1, Math.min(Number(args.limit ?? 10) || 10, 30));
+  const type = (args.type ?? 'Effect Monster').trim();
+  const params = new URLSearchParams({ sort: 'atk', sortorder: 'desc', num: String(limit), offset: '0' });
+  if (type) params.set('type', type);
+  const data = await getJson<{ data?: any[] }>(`/cardinfo.php?${params.toString()}`);
+  const cards: YgoCard[] = (data.data ?? []).map(mapCard);
+  if (!cards.length) return `No YGOPRODeck cards reported for type "${type}".`;
+  return `Highest-ATK YGOPRODeck cards, type ${type} (${cards.length} shown):\n\n` +
+    cards.map((c, i) => formatCard(c, i)).join('\n\n');
+}
+
+export async function stapleCards(args: StapleArgs = {}): Promise<string> {
+  const limit = Math.max(1, Math.min(Number(args.limit ?? 10) || 10, 30));
+  const params = new URLSearchParams({ staple: 'yes', num: String(limit), offset: '0' });
+  const data = await getJson<{ data?: any[] }>(`/cardinfo.php?${params.toString()}`);
+  const cards: YgoCard[] = (data.data ?? []).map(mapCard);
+  if (!cards.length) return 'No YGOPRODeck staple cards reported.';
+  return `Staple cards per YGOPRODeck (${cards.length} shown):\n\n` +
+    cards.map((c, i) => formatCard(c, i)).join('\n\n');
+}

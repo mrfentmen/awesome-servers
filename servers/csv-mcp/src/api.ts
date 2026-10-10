@@ -45,3 +45,6 @@ export async function csvInfo(args: { csv?: string }): Promise<string> {
   if (rows.length === 0) throw new CsvError("No rows found")
   return `Columns (${rows[0].length}): ${rows[0].map((c, i) => `${i}:${c}`).join(", ")}\nData rows: ${rows.length - 1}`
 }
+
+// ---- muxA tools:
+

@@ -1,9 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { book } from "./api.js"
-import { character } from "./api.js"
-import { houses } from "./api.js"
 
+import { book, character, houses } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -47,5 +46,37 @@ export function createServer(): McpServer {
     try { return text(await houses(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "list_books",
+    {
+      title: "List books",
+      description: "Page through the twelve A Song of Ice and Fire books with release date, authors, page count, isbn and publisher.",
+      inputSchema: z.object( { page: z.number().describe("Page number.").optional(), limit: z.number().describe("Max books.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: list_books ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_got_list_books", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "list_characters",
+    {
+      title: "List characters",
+      description: "Page through the characters of A Song of Ice and Fire with gender, culture, titles and aliases, or filter a page down to one alias.",
+      inputSchema: z.object( { page: z.number().describe("Page number.").optional(), limit: z.number().describe("Max characters.").optional(), alias: z.string().describe("Find the character with this alias.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: list_characters ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_got_list_characters", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

@@ -42,3 +42,6 @@ export async function stats(args: { name?: string }): Promise<string> {
   if (d?.versions) lines.push(`Versions tracked: ${d.versions}`)
   return lines.join("\n")
 }
+
+// ---- muxC tools:
+

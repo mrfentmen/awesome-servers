@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { ScrapeError, getShow, searchAnime, verdict } from "./scraper.js"
+import { ScrapeError, fillerEpisodeList, fillerRunAnalysis, getShow, searchAnime, verdict } from "./scraper.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -91,6 +92,53 @@ export function createServer(): McpServer {
       try {
         const info = await getShow(slug)
         return text(verdict(info, episode))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "filler_run_analysis",
+    {
+      title: "Filler run analysis",
+      description: "How much of a show is filler, and the longest unbroken stretch of episodes you can skip.",
+      inputSchema: z.object(
+    { slug: z.string().describe("Anime slug from search_anime, e.g. 'naruto-shippuden'") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: filler_run_analysis ----
+      const paywallMessage = await premiumRequired("filler_run_analysis")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await fillerRunAnalysis(args))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "filler_episode_list",
+    {
+      title: "Filler episode list",
+      description: "Just the skippable episodes of a show, with episode numbers and titles.",
+      inputSchema: z.object(
+    {
+      slug: z.string().describe("Anime slug from search_anime"),
+      limit: z.number().describe("Max filler episodes to list.").optional(),
+    }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: filler_episode_list ----
+      const paywallMessage = await premiumRequired("filler_episode_list")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await fillerEpisodeList(args))
       } catch (e) {
         return textError(errorMessage(e))
       }

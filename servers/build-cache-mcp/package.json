@@ -1,6 +1,6 @@
 {
   "name": "build-cache-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Summarize local build and cache footprint using size and age buckets without returning paths or file contents.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/build-cache-mcp",

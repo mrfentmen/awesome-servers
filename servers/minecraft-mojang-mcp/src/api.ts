@@ -41,3 +41,15 @@ export async function status(args: ServerStatusArgs): Promise<string> {
     s('motd') && d.motd ? `\n${String(d.motd).replace(/§[0-9a-fk-or]/g, '').slice(0, 100)}` : '',
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxB tools:
+
+export interface LatestVersionArgs {
+  limit?: number;
+}
+
+export interface WikiSearchArgs {
+  query: string;
+  limit?: number;
+}
+

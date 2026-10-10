@@ -1,6 +1,6 @@
 {
   "name": "retrogachievements-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for RetroAchievements: games, achievements, user progress. Free key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/retrogachievements-mcp",

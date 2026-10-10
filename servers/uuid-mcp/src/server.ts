@@ -2,7 +2,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { generateMany } from "./api.js"
 import { generateUuid } from "./api.js"
-import { validateUuid } from "./api.js"
+import { validateUuid, uuidInfo } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -47,5 +48,22 @@ export function createServer(): McpServer {
     try { return text(await validateUuid(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "uuid_info",
+    {
+      title: "UUID info",
+      description: "Decode a UUID: its version and what that version means, its variant bits, and for a version 1 UUID the minting timestamp and node MAC.",
+      inputSchema: z.object( { uuid: z.string().describe("UUID in the form 8-4-4-4-12 hex digits.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: uuid_info ----
+    const paywallMessage = await premiumRequired("uuid_info")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await uuidInfo(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_ArchiveError, m0_fmtSize, m0_formatItem, m0_getItemDetails, m0_searchItems, m1_WaybackError, m1_formatSnapshot, m1_getAvailability, m1_getSnapshots, m1_getSnapshotText } from './api.js'
 
+import { m0_ArchiveError, m0_fmtSize, m0_formatItem, m0_getItemDetails, m0_searchItems, m1_WaybackError, m1_formatSnapshot, m1_getAvailability, m1_getSnapshots, m1_getSnapshotText, searchProfile } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -131,5 +132,45 @@ server.registerTool(
       }
     }
   )
+  server.registerTool(
+    "snapshot_timeline",
+    {
+      title: "Snapshot timeline",
+      description: "The shape of one URL's archived history rather than a list of it: how many successful snapshots exist in a year range, how many distinct content digests they hold, how many captures just repeat a page already archived, the media types captured, the payload size and captures per year. The get_snapshots tool returns the newest few with no digest, no date range and no totals.",
+      inputSchema: z.object(
+    {
+      url: z.string().describe("Full URL, e.g. 'example.com/page.html'"),
+      from: z.number().int().min(1996).max(2100).describe("Earliest year to include.").optional(),
+      to: z.number().int().min(1996).max(2100).describe("Latest year to include.").optional(),
+      limit: z.number().int().min(1).max(3000).default(500).describe("How many snapshots to read, up to 3000."),
+    }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: snapshot_timeline ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_archive_org_snapshot_timeline", args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
+  server.registerTool(
+    "search_profile",
+    {
+      title: "Search profile",
+      description: "What a search term looks like across the Internet Archive rather than eight rows of it: the catalogue total, the media type split, how many items carry no year, the most common years, the collections involved and the download distribution, with the sample size stated. The search_items tool only prints a short list.",
+      inputSchema: z.object(
+    {
+      query: z.string().describe("Search terms, e.g. 'Windows 95'"),
+      mediatype: z.string().describe("Restrict to one media type, e.g. software or audio.").optional(),
+      limit: z.number().int().min(10).max(500).default(200).describe("How many items to read for the profile, 10 to 500."),
+    }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      try { return text(await searchProfile(args)) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+
   return server
 }

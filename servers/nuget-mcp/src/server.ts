@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { packageInfo } from "./api.js"
-import { search } from "./api.js"
 
+import { packageInfo, search } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,21 @@ export function createServer(): McpServer {
     try { return text(await packageInfo(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "package_versions",
+    {
+      title: "Package versions",
+      description: "Every version NuGet has published for a package, oldest to newest, from the NuGet flat container index.",
+      inputSchema: z.object( { package_id: z.string().describe("Package ID like Newtonsoft.Json."), limit: z.number().int().min(1).max(200).default(20).describe("Max versions.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: package_versions ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_nuget_package_versions", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

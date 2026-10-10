@@ -1,7 +1,5 @@
 import { randomInt } from "node:crypto"
 
-export class LoremError extends Error {}
-
 const WORDS = ["lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit", "sed", "do", "eiusmod", "tempor", "incididunt", "ut", "labore", "et", "dolore", "magna", "aliqua", "enim", "ad", "minim", "veniam", "quis", "nostrud", "exercitation", "ullamco", "laboris", "nisi", "aliquip", "ex", "ea", "commodo", "consequat", "duis", "aute", "irure", "in", "reprehenderit", "voluptate", "velit", "esse", "cillum", "fugiat", "nulla", "pariatur", "excepteur", "sint", "occaecat", "cupidatat", "non", "proident", "sunt", "culpa", "qui", "officia", "deserunt", "mollit", "anim", "id", "est", "laborum"]
 
 function sentence(): string {
@@ -24,3 +22,19 @@ export async function generate(args: { paragraphs?: number; words_per_paragraph?
   }
   return out.join("\n\n")
 }
+
+// ---- muxC tools:
+
+function paragraphs(count: number, wordsEach: number): string[] {
+  const out: string[] = []
+  for (let p = 0; p < count; p++) {
+    let text = ""
+    while (text.split(" ").length < wordsEach) {
+      const s = sentence()
+      text = text ? `${text} ${s.toLowerCase()}` : s
+    }
+    out.push(text)
+  }
+  return out
+}
+

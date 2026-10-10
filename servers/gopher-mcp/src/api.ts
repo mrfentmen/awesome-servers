@@ -153,3 +153,24 @@ export function formatItem(it: GopherItem, index: number): string {
           : ` [${kind}: ${it.host}:${it.port}/${it.selector}]`
   return `${index + 1}. [${kind}] ${it.label}${nav}`
 }
+
+// ---- muxC tools:
+
+/** A gopher selector has no leading slash and no trailing terminator. */
+function cleanSelector(selector: string): string {
+  return selector.replace(/^\/+/, "").replace(/\.$/, "")
+}
+
+function typeName(t: string): string {
+  if (t === "1") return "dir"
+  if (t === "0") return "file"
+  if (t === "h") return "url"
+  if (t === "g") return "gif"
+  if (t === "I") return "image"
+  if (t === "s") return "sound"
+  if (t === "9") return "binary"
+  if (t === "i") return "info"
+  if (t === "3") return "error"
+  return `type ${t}`
+}
+

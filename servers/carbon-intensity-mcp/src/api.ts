@@ -48,3 +48,86 @@ export async function regional(_args?: unknown): Promise<string> {
     .map((r: any, i: number) => `${i + 1}. ${r?.shortname ?? "n/a"}: ${r?.intensity?.forecast != null ? `${Math.round(r.intensity.forecast)} gCO2/kWh` : "n/a"} (${r?.intensity?.index ?? ""})`)
   return `UK regional carbon intensity (cleanest first):\n` + rows.join("\n")
 }
+
+// ---- muxA tools:
+
+const CARBON = "https://api.carbonintensity.org.uk";
+
+async function ciGet(path: string): Promise<any> {
+  const res = await fetch(`${CARBON}${path}`, {
+    headers: { "User-Agent": "mrfentmen-carbon-intensity-mcp/1.0 (https://github.com/mrfentmen)", Accept: "application/json" },
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    throw new CarbonError(`Carbon Intensity returned HTTP ${res.status}${body.error ? `: ${String(body.error)}` : ""}`);
+  }
+  return (await res.json()) as any;
+}
+
+function at(value: unknown): string {
+  return value != null ? String(value) : "not reported";
+}
+
+export interface MixArgs {
+  fuel?: string;
+  limit?: number;
+}
+
+export interface FuelArgs {
+  fuel?: string;
+}
+
+export async function nationalFuelMix(args: FuelArgs): Promise<string> {
+  const d = await ciGet("/intensity");
+  const row = (d?.data ?? [])[0] as Record<string, any> | undefined;
+  const mix = (row?.generationmix ?? []) as Array<Record<string, any>>;
+  if (!mix.length) {
+    // The national endpoint sometimes omits the mix, so fall back to a roll up.
+    const reg = await ciGet("/regional");
+    const regions = (reg?.data?.[0]?.regions ?? []) as Array<Record<string, any>>;
+    const totals = new Map<string, number>();
+    for (const r of regions) {
+      for (const m of (r.generationmix ?? []) as Array<Record<string, any>>) {
+        totals.set(String(m.fuel ?? "?"), (totals.get(String(m.fuel ?? "?")) ?? 0) + (Number(m.perc) || 0));
+      }
+    }
+    if (!totals.size) throw new CarbonError("Carbon Intensity returned no generation mix for the national or regional endpoints.");
+    // Each region reports its own mix as a percentage of itself, so the totals
+    // are divided by the region count to give a mean share rather than a sum.
+    const n = regions.length;
+    const mean = new Map<string, number>();
+    for (const [fuel, total] of totals) mean.set(fuel, total / n);
+    const sum = [...mean.values()].reduce((a, b) => a + b, 0);
+    const sorted = [...mean.entries()].sort((a, b) => b[1] - a[1]);
+    const fossil = ["coal", "gas", "oil"].reduce((a, f) => a + (mean.get(f) ?? 0), 0);
+    return [
+      `UK generation mix, averaged across ${n} DNO regions because the national endpoint did not publish a mix right now.`,
+      `Mean reported share per region: ${sum.toFixed(0)}% across ${mean.size} fuel(s).`,
+      ...sorted.map(([k, v], i) => `${i + 1}. ${k} | ${v.toFixed(1)}% mean regional share`),
+      `Fossil fuels (coal, gas, oil) average ${fossil.toFixed(1)}% of regional generation.`,
+      "This is a mean across distribution regions, not a national generation total, so treat it as the typical regional mix.",
+    ].join("\n");
+  }
+  const total = mix.reduce((a, m) => a + (Number(m.perc) || 0), 0);
+  const sorted = [...mix].sort((a, b) => (Number(b.perc) || 0) - (Number(a.perc) || 0));
+  const fuelPerc = (f: string): number => Number(mix.find((m) => String(m.fuel).toLowerCase() === f)?.perc ?? 0);
+  const fossil = ["coal", "gas", "oil"].reduce((a, f) => a + fuelPerc(f), 0);
+  const renewable = ["wind", "solar", "hydro", "biomass"].reduce((a, f) => a + fuelPerc(f), 0);
+  const wanted = (args.fuel ?? "").trim().toLowerCase();
+  return [
+    `UK national generation mix at ${String(row?.from ?? "unknown time")}, total reported share ${total.toFixed(0)}%.`,
+    wanted ? `Highlighted fuel ${wanted}: ${fuelPerc(wanted)}%.` : "",
+    `Renewables and biomass combined: ${renewable.toFixed(0)}% | fossil combined: ${fossil.toFixed(0)}% | imports: ${fuelPerc("imports")}% | nuclear: ${fuelPerc("nuclear")}%`,
+    "",
+    ...sorted.map((m, i) => `${i + 1}. ${String(m.fuel ?? "?")} | ${Number(m.perc ?? 0)}%`),
+    "Shares are live generation, so they move through the day. Carbon intensity is driven by this mix, which is why the two tools answer different questions.",
+  ]
+    .filter((l) => l !== "")
+    .join("\n");
+}
+
+export interface WindowArgs {
+  hours?: number;
+}
+

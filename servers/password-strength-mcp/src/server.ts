@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { checkPassword } from "./api.js"
+import { checkPassword, commonListRank, keyboardWalk, variantAudit } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -21,5 +22,52 @@ export function createServer(): McpServer {
     try { return text(await checkPassword(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "common_list_rank",
+    {
+      title: "Common list rank",
+      description: "Look a password up in the real word lists zxcvbn ships (30k passwords, 30k Wikipedia words, surnames, given names, TV and film words) and report where it and its components rank. Local only.",
+      inputSchema: z.object( { password: z.string().describe("The candidate password.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: common_list_rank ----
+    const paywallMessage = await premiumRequired("common_list_rank")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await commonListRank(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "keyboard_walk",
+    {
+      title: "Keyboard walk",
+      description: "Read a string as a walk across the qwerty, dvorak, keypad and mac keypad layouts zxcvbn ships graphs for: how much of it lands on a layout, how many direction changes, and the longest straight run. Local only.",
+      inputSchema: z.object( { password: z.string().describe("The candidate password.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await keyboardWalk(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "variant_audit",
+    {
+      title: "Variant audit",
+      description: "Score the case, symbol, digit, l33t and reversal mutations an attacker would try first, to show how little a tweak to a password buys. Local only.",
+      inputSchema: z.object( { password: z.string().describe("The candidate password.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: variant_audit ----
+    const paywallMessage = await premiumRequired("variant_audit")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await variantAudit(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { contests } from "./api.js"
-import { user } from "./api.js"
 
+import { contests, user, problemList } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,50 @@ export function createServer(): McpServer {
     try { return text(await user(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "problem_list",
+    {
+      title: "Problem list",
+      description: "Search the Codeforces problem archive by name, tag and difficulty rating.",
+      inputSchema: z.object( { query: z.string().describe("Substring of the problem name.").optional(), tag: z.string().describe("Exact problem tag, e.g. dp or greedy.").optional(), minRating: z.number().describe("Lowest difficulty rating.").optional(), maxRating: z.number().describe("Highest difficulty rating.").optional(), limit: z.number().describe("Max problems.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await problemList(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "user_rating_history",
+    {
+      title: "User rating history",
+      description: "Every rated Codeforces contest a user entered, with rank and the rating change each one caused.",
+      inputSchema: z.object( { handle: z.string().describe("Codeforces handle."), limit: z.number().describe("Max results.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: user_rating_history ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_codeforces_user_rating_history", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "user_submissions",
+    {
+      title: "User submissions",
+      description: "A user's recent Codeforces submissions with problem, verdict, language, runtime and memory.",
+      inputSchema: z.object( { handle: z.string().describe("Codeforces handle."), count: z.number().describe("Max submissions to fetch.").optional(), verdict: z.string().describe("Only this verdict, e.g. ACCEPTED.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: user_submissions ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_codeforces_user_submissions", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/fortnite-mcp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Keyless Fortnite API: battle royale news, item shop, map, AES keys, cosmetic search, playlists.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/fortnite-mcp",

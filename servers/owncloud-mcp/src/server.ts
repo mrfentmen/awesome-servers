@@ -1,12 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  errorMessage,
-  getCapabilities,
-  listShares,
-  getShare,
-  createShare,
-} from "./api.js"
+import { errorMessage, getCapabilities, listShares, getShare, createShare, serverStatus } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -93,6 +88,27 @@ export function createServer(): McpServer {
       }
     }
   )
+
+  server.registerTool(
+    "server_status",
+    {
+      title: "Server status",
+      description: "ownCloud installation status from /status.php: product, version, edition, maintenance mode and pending database upgrade. Needs no login.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async () => {
+      // ---- paywall: server_status ----
+      const paywallMessage = await premiumRequired("server_status")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await serverStatus());
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  );
 
   return server
 }

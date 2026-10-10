@@ -1,12 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  SegaError,
-  categoryMembers,
-  getPage,
-  searchPages,
-  wikiTextToPlain,
-} from "./api.js"
+import { SegaError, categoryMembers, getPage, searchPages, wikiTextToPlain, recentChanges, pageMetadata } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -84,6 +79,53 @@ export function createServer(): McpServer {
         const members = await categoryMembers(category)
         if (members.length === 0) return text(`Empty or missing category "${category}".`)
         return text(`Pages in ${category}:\n` + members.map((m, i) => `${i + 1}. ${m}`).join("\n"))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "recent_changes",
+    {
+      title: "Recent changes",
+      description: "The newest edits and new articles on Sega Retro, with the editor, timestamp and edit comment.",
+      inputSchema: z.object(
+    { limit: z.number().int().min(1).max(50).default(15) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: recent_changes ----
+      const paywallMessage = await premiumRequired("recent_changes")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await recentChanges(args))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "page_metadata",
+    {
+      title: "Page metadata",
+      description: "Dated metadata for one Sega Retro page: canonical URL, page id, byte length, last editor and the categories the page is filed under.",
+      inputSchema: z.object(
+    {
+      title: z.string().describe("Exact page title from search_pages"),
+      categoryLimit: z.number().int().min(1).max(60).default(20),
+    }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: page_metadata ----
+      const paywallMessage = await premiumRequired("page_metadata")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await pageMetadata(args))
       } catch (e) {
         return textError(errorMessage(e))
       }

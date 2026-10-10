@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatObject, listBuckets, listObjects, StorjError } from "./api.js"
+import { formatObject, listBuckets, listObjects, StorjError, serviceStatus, storageKeyAudit } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -53,6 +54,40 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "service_status",
+    {
+      title: "Storj service status",
+      description: "Live status of the Storj distributed cloud satellites and their APIs, billing and gateway, from the public status page. No account needed.",
+      inputSchema: z.object({
+      }),
+      annotations: READ_ONLY,
+    },
+    async () => {
+    try { return text(await serviceStatus()) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "storage_key_audit",
+    {
+      title: "Audit object keys",
+      description: "Audit a pasted list of S3/Storj object keys: prefix and extension layout, depth, date partitioning, sizes, and hygiene problems like double extensions, temp artefacts and unportable characters. Local, no keys needed.",
+      inputSchema: z.object({
+        keys: z.string().describe("One object key per line; optionally 'key<TAB>bytes'"),
+        bucket: z.string().optional().describe("Bucket the keys belong to, for the report header"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: storage_key_audit ----
+    const paywallMessage = await premiumRequired("storage_key_audit")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await storageKeyAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

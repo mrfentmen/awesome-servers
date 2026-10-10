@@ -12,8 +12,6 @@ export interface m0_ReverseArgs {
 const m0 = (() => {
 const BASE = 'https://nominatim.openstreetmap.org';
 
-
-
 async function search(args: m0_SearchArgs): Promise<string> {
   const q = (args.query ?? '').trim();
   if (!q) return 'Provide a place name.';
@@ -96,3 +94,6 @@ export const m0_search = m0.search;
 export const m1_geocode = m1.geocode;
 export const m1_reverse = m1.reverse;
 export const m1_GeocodeError = m1.GeocodeError;
+
+// ---- muxC tools:
+

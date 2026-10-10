@@ -1,6 +1,6 @@
 {
   "name": "npms-mcp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Keyless MCP server for npms.io: npm package quality, popularity and maintenance scores plus search.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/npms-mcp",

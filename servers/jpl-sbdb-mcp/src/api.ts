@@ -53,3 +53,7 @@ export async function browse(args: { limit?: number }): Promise<string> {
   })
   return `Small bodies (${data.length} shown):\n` + rows.join("\n")
 }
+
+// ---- muxB tools:
+type PhysPar = { name?: string; title?: string; value?: string | number | null; units?: string | null; sigma?: string | null; notes?: string | null; ref?: string | null }
+

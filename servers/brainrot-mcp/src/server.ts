@@ -1,10 +1,13 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { findInText, LEXICON, lookupExact, searchLexicon } from "./lexicon.js"
+import { originTimeline, relatedTerms, similarTerms } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
+const errorMessage = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
 
 function formatEntry(e: {
   term: string
@@ -127,6 +130,52 @@ export function createServer(): McpServer {
         `Lexicon holds ${LEXICON.length} terms.\nVibe breakdown:\n${breakdown}`
       )
     }
+  )
+
+  server.registerTool(
+    "origin_timeline",
+    {
+      title: "Origin timeline",
+      description: "When this vocabulary arrived, read out of the lexicon itself: how many entries name a specific year, how many only name a decade and how many name no date at all, the earliest and most recent term, and every dated term grouped by year. The lexicon_stats tool only counts terms and tallies vibes; no existing tool looks at the origin field as data.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async () => {
+      try { return text(await originTimeline()) } catch (error) { return textError(`Error: ${error instanceof Error ? error.message : String(error)}`) }
+    }
+  )
+
+  server.registerTool(
+    "related_terms",
+    {
+      title: "Related terms",
+      description: "Map one lexicon term's real connections: which other terms its own entry names in its meaning, origin or example, which entries name it in return, and which entries share a vibe word, with one way links called out as such. The search_terms tool is a substring filter over three fields and has no notion of direction or of who mentions whom.",
+      inputSchema: z.object({ term: z.string().describe("Term to map, e.g. 'skibidi'") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: related_terms ----
+      const paywallMessage = await premiumRequired("related_terms")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try { return text(await relatedTerms({ term: args.term })) } catch (e) { return textError(errorMessage(e)) }
+    }
+  )
+  server.registerTool(
+    "similar_terms",
+    {
+      title: "Similar terms",
+      description: "Rank the other lexicon entries by how much wording they share with this one, with the shared words named. search_terms is a substring filter and related_terms is an exact-mention graph; neither ranks entries by shared vocabulary.",
+      inputSchema: z.object( { term: z.string().describe("A lexicon term, e.g. skibidi."), limit: z.number().int().describe("How many similar terms to rank.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: similar_terms ----
+    const paywallMessage = await premiumRequired("similar_terms")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await similarTerms(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

@@ -53,3 +53,48 @@ export async function search(args: SearchArgs): Promise<string> {
       return `${i + 1}. ${s('accession')} ${s('name')} (${s('type')})`;
     }).join('\n');
 }
+
+// ---- muxB tools:
+
+interface InterProMeta {
+  accession?: string
+  name?: string
+  type?: string
+  integrated?: string | number
+  source_database?: string
+  source_organism?: { scientificName?: string; fullName?: string; taxId?: string | number }
+  length?: number | string
+  gene?: string
+  go_terms?: Array<{ name?: string; category?: { name?: string } }>
+  member_databases?: Record<string, string>
+  in_alphafold?: string | number
+}
+
+interface InterProMatchedEntry {
+  accession?: string
+  entry_type?: string
+  source_database?: string
+  protein_length?: number
+  entry_protein_locations?: unknown
+  entry_integrated?: string | number
+}
+
+interface InterProMatchedProtein {
+  accession?: string
+  source_database?: string
+  source_organism?: { scientificName?: string; fullName?: string; taxId?: string | number }
+  protein_length?: number
+  in_alphafold?: string | number
+  entry_protein_locations?: unknown
+}
+
+export interface ProteinEntryMatchesArgs {
+  accession: string;
+  limit?: number;
+}
+
+export interface EntryProteinMatchesArgs {
+  accession: string;
+  limit?: number;
+}
+

@@ -58,3 +58,46 @@ export async function lei(args: LeiArgs): Promise<string> {
     `Address: ${aS('addressLines') ? String(address.addressLines).replace(/,/g, ', ') : ''} ${aS('city')} ${aS('country')}`.replace(/  +/g, ' '),
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxB tools:
+type GleifAttrs = {
+    lei?: string;
+    bic?: string | null;
+    mic?: string | null;
+    gem?: string | null;
+    qcc?: string | null;
+    ocid?: string | null;
+    entity?: {
+      legalName?: { name?: string; nameLanguage?: string };
+      status?: string;
+      category?: string;
+      subCategory?: string | null;
+      jurisdiction?: string;
+      registeredAs?: string | null;
+      registeredAt?: { id?: string };
+      legalAddress?: { addressLines?: string[]; city?: string; country?: string };
+      otherNames?: { name?: string; language?: string }[];
+      transliteratedOtherNames?: { name?: string }[];
+      expiration?: { date?: string | null; reason?: string | null };
+      directParent?: { lei?: string; name?: string } | null;
+      ultimateParent?: { lei?: string; name?: string } | null;
+    };
+    registration?: {
+      status?: string;
+      initialRegistrationDate?: string;
+      lastUpdateDate?: string;
+      nextRenewalDate?: string;
+      corroborationLevel?: string;
+      managingLou?: string;
+    };
+};
+
+type GleifRecord = { attributes?: GleifAttrs };
+
+// JSON:API: a collection response puts an array in `data`, a single-resource
+// response puts one object there.
+type GleifPage = {
+  data?: Array<{ attributes?: Record<string, unknown> }> | { attributes?: Record<string, unknown> };
+  meta?: { pagination?: { total?: number; currentPage?: number; perPage?: number } };
+};
+

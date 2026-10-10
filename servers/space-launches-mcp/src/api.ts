@@ -49,7 +49,6 @@ return { LaunchError, nextLaunch, upcomingLaunches };
 const m1 = (() => {
 const BASE = 'https://ll.thespacedevs.com/2.2.0/astronaut/';
 
-
 async function list(args: m1_ListArgs = {}): Promise<string> {
   const limit = Math.max(1, Math.min(args.limit ?? 10, 25));
   const res = await fetch(`${BASE}?limit=${limit}`, {
@@ -80,7 +79,6 @@ return { list };
 
 const m2 = (() => {
 const BASE = 'https://ll.thespacedevs.com/2.2.0/launch';
-
 
 async function upcoming(args: m2_ListArgs): Promise<string> {
   const limit = Math.max(1, Math.min(args.limit ?? 10, 50));
@@ -136,3 +134,20 @@ export const m0_LaunchError = m0.LaunchError;
 export const m1_list = m1.list;
 export const m2_previous = m2.previous;
 export const m2_upcoming = m2.upcoming;
+
+// ---- muxC tools:
+
+const SPACEDEVS_UA = "mrfentmen-space-launches-mcp/1.0 (https://github.com/mrfentmen)"
+
+class SpaceDevsError extends Error {}
+
+async function spaceDevsGet<T>(path: string): Promise<{ count?: number; results?: Array<Record<string, any>> }> {
+  const res = await fetch(`https://ll.thespacedevs.com/2.2.0${path}`, {
+    headers: { "User-Agent": SPACEDEVS_UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(30000),
+  })
+  if (res.status === 404) throw new SpaceDevsError(`The SpaceDevs API has nothing at ${path}`)
+  if (!res.ok) throw new SpaceDevsError(`The SpaceDevs API returned ${res.status}`)
+  return (await res.json()) as { count?: number; results?: Array<Record<string, any>> }
+}
+

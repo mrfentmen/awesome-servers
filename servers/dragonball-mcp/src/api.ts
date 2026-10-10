@@ -45,3 +45,41 @@ export async function character(args: NameArgs): Promise<string> {
     s('description') ? `\n${s('description')}` : '',
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxA tools:
+// The existing tools list characters and return one by name. These read one
+// character by id with the transformations and home planet the name route does
+// not return, and page the planet catalogue.
+export interface CharacterDetailArgs {
+  id: number;
+}
+
+export interface PlanetsArgs {
+  page?: number;
+  limit?: number;
+}
+
+export async function planets(args: PlanetsArgs = {}): Promise<string> {
+  const page = Math.max(1, Math.min(Math.trunc(Number(args.page ?? 1)) || 1, 100));
+  const limit = Math.max(1, Math.min(Math.trunc(Number(args.limit ?? 10)) || 10, 50));
+  const res = await fetch(`${BASE}/planets?page=${page}&limit=${limit}`, {
+    headers: { 'User-Agent': 'mrfentmen-dragonball-mcp/1.0', Accept: 'application/json' },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error(`Dragon Ball API returned ${res.status}`);
+  const d = (await res.json()) as {
+    items?: Array<Record<string, unknown>>;
+    meta?: { totalItems?: number; totalPages?: number; currentPage?: number };
+  };
+  const rows = d.items ?? [];
+  if (!rows.length) return `No planets on page ${page}.`;
+  const meta = d.meta ?? {};
+  const lines = [
+    `Dragon Ball planets — page ${meta.currentPage ?? page} of ${meta.totalPages ?? '?'}, ${meta.totalItems ?? '?'} in total, ${rows.length} shown`,
+  ];
+  for (const [i, r] of rows.entries()) {
+    lines.push(`${i + 1}. ${r.name ?? 'unnamed'}${r.isDestroyed ? ' (destroyed)' : ' (intact)'}`);
+    if (r.description) lines.push(`   ${String(r.description).slice(0, 160)}`);
+  }
+  return lines.join('\n');
+}

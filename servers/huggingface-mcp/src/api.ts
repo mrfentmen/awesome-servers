@@ -51,3 +51,6 @@ export async function model(args: ModelArgs): Promise<string> {
     s('lastModified') ? `Updated: ${String(s('lastModified')).slice(0, 10)}` : '',
   ].filter(Boolean).join('\n') || `No data for ${name}.`;
 }
+
+// ---- muxC tools:
+

@@ -50,3 +50,87 @@ export async function redditTop(args: { subreddit?: string; limit?: number }): P
     `${i + 1}. ${p.title}\n   u/${p.author || "unknown"} | r/${sub}\n   ${p.link}`
   ).join("\n\n") || "No posts found"
 }
+
+// ---- muxB tools:
+
+interface AlgoliaHit {
+  objectID?: string
+  title?: string | null
+  url?: string | null
+  author?: string
+  points?: number | null
+  num_comments?: number
+  created_at?: string
+  story_text?: string | null
+  comment_text?: string | null
+}
+
+const hnText = (html: unknown, max = 220): string =>
+  String(html ?? "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex: string) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec: string) => String.fromCodePoint(Number(dec)))
+    .replace(/&gt;/g, ">")
+    .replace(/&lt;/g, "<")
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, max)
+
+const redditUser = (author: string): string => {
+  const name = author.trim().replace(/^\/?u\//i, "")
+  return name ? `u/${name}` : "u/unknown"
+}
+
+export interface HnSearchArgs {
+  query: string
+  tag?: string
+  minPoints?: number
+  hitsPerPage?: number
+  page?: number
+}
+
+export interface HnCommentsArgs {
+  id: number
+  depth?: number
+}
+
+export async function hnComments(args: HnCommentsArgs): Promise<string> {
+  const id = Math.floor(args.id ?? 0)
+  if (!id) throw new SocialError("Provide a Hacker News item id")
+  const maxDepth = Math.max(1, Math.min(args.depth ?? 2, 6))
+  const d = await get<{ title?: string; points?: number; author?: string; url?: string; children?: any[] }>(
+    `https://hn.algolia.com/api/v1/items/${id}`,
+  )
+  if (!d || d.title === undefined) return `No Hacker News item ${id}.`
+  const lines: string[] = []
+  let shown = 0
+  const walk = (nodes: any[], level: number): void => {
+    for (const node of nodes ?? []) {
+      if (shown >= 40) return
+      const text = hnText(node.text, 260)
+      if (text) {
+        lines.push(`${"  ".repeat(level)}- ${node.author ?? "unknown"}: ${text}`)
+        shown++
+      }
+      if (level + 1 < maxDepth) walk(node.children ?? [], level + 1)
+    }
+  }
+  walk(d.children ?? [], 1)
+  return [
+    `${d.title ?? `item ${id}`} (${d.points ?? 0} pts) by ${d.author ?? "unknown"}`,
+    d.url ?? `https://news.ycombinator.com/item?id=${id}`,
+    "",
+    lines.length ? `Comments (${shown} shown, depth ${maxDepth}):` : "No comment text at this depth.",
+    ...lines,
+  ].join("\n")
+}
+
+export interface RedditSearchArgs {
+  subreddit: string
+  query: string
+  limit?: number
+}
+

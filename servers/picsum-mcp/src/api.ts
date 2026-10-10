@@ -66,3 +66,6 @@ export function formatPhoto(p: Photo, index?: number): string {
   const dims = p.width && p.height ? ` (${p.width}x${p.height})` : ""
   return `${prefix}[${p.id}] by ${p.author}${dims}${p.page ? `\n   ${p.page}` : ""}`
 }
+
+// ---- muxC tools:
+

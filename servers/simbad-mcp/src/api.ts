@@ -63,3 +63,82 @@ export async function coneSearch(ra: number, dec: number, radius = 0.1, limit = 
     return `${i + 1}. [${oid}] ${mainId}${otype ? ` (${otype})` : ""} — RA ${ra2}, Dec ${dec2}`
   }).join("\n")
 }
+
+// ---- muxB tools:
+
+async function simbadOid(ident: string): Promise<{ oid: number; mainId: string; otype: string } | null> {
+  const safe = ident.trim().replace(/'/g, "''")
+  const { rows } = await tapQuery(
+    `SELECT TOP 1 b.oid, b.main_id, b.otype_txt FROM basic AS b JOIN ident AS i ON b.oid = i.oidref WHERE i.id = '${safe}'`,
+  )
+  const row = rows[0]
+  if (!row || row[0] == null) return null
+  return { oid: Number(row[0]), mainId: String(row[1] ?? ident), otype: String(row[2] ?? 'not reported') }
+}
+
+const simbadText = (v: unknown): string => (v == null || String(v).trim() === '' ? 'not reported' : String(v))
+
+export interface ObjectPhotometryArgs {
+  ident?: string;
+  limit?: number;
+}
+
+export async function objectPhotometry(args: ObjectPhotometryArgs): Promise<string> {
+  const ident = (args.ident ?? '').trim()
+  if (!IDENT_RE.test(ident)) throw new SimbadError(`Not an object identifier: "${args.ident}".`)
+  const limit = Math.max(1, Math.min(args.limit ?? 20, 60))
+  const target = await simbadOid(ident)
+  if (!target) return `No SIMBAD object matches "${ident}".`
+  const { cols, rows } = await tapQuery(
+    `SELECT TOP ${limit} filter, flux, qual, system, bibcode FROM flux WHERE oidref = ${target.oid}`,
+  )
+  if (!rows.length) return `SIMBAD has no flux measurements for ${target.mainId} (${target.otype}).`
+  const col = (name: string) => cols.indexOf(name)
+  return `SIMBAD flux measurements for ${target.mainId} (${target.otype}, oid ${target.oid}; ${rows.length} of ${limit} requested):\n` +
+    rows.map((r, i) =>
+      `${i + 1}. filter ${simbadText(r[col('filter')])} | flux ${simbadText(r[col('flux')])} | quality ${simbadText(r[col('qual')])} | system ${simbadText(r[col('system')])} | bibcode ${simbadText(r[col('bibcode')])}`,
+    ).join('\n')
+}
+
+export interface ObjectReferencesArgs {
+  ident?: string;
+  limit?: number;
+}
+
+export async function objectReferences(args: ObjectReferencesArgs): Promise<string> {
+  const ident = (args.ident ?? '').trim()
+  if (!IDENT_RE.test(ident)) throw new SimbadError(`Not an object identifier: "${args.ident}".`)
+  const limit = Math.max(1, Math.min(args.limit ?? 15, 50))
+  const target = await simbadOid(ident)
+  if (!target) return `No SIMBAD object matches "${ident}".`
+  const { cols, rows } = await tapQuery(
+    `SELECT TOP ${limit} r.journal, r."year", r.title, r.bibcode, r.doi FROM ref AS r JOIN has_ref AS h ON r.oidbib = h.oidbibref WHERE h.oidref = ${target.oid}`,
+  )
+  if (!rows.length) return `SIMBAD lists no bibliography references for ${target.mainId}.`
+  const col = (name: string) => cols.indexOf(name)
+  return `SIMBAD bibliography for ${target.mainId} (${target.otype}; ${rows.length} of ${limit} requested, oldest first):\n` +
+    rows.map((r, i) =>
+      [
+        `${i + 1}. ${simbadText(r[col('journal')])} (${simbadText(r[col('year')])})`,
+        `   ${simbadText(r[col('title')]).slice(0, 180)}`,
+        `   bibcode: ${simbadText(r[col('bibcode')])} | doi: ${simbadText(r[col('doi')])}`,
+      ].join('\n'),
+    ).join('\n')
+}
+
+export interface ObjectIdentifiersArgs {
+  ident?: string;
+  limit?: number;
+}
+
+export async function objectIdentifiers(args: ObjectIdentifiersArgs): Promise<string> {
+  const ident = (args.ident ?? '').trim()
+  if (!IDENT_RE.test(ident)) throw new SimbadError(`Not an object identifier: "${args.ident}".`)
+  const limit = Math.max(1, Math.min(args.limit ?? 20, 60))
+  const target = await simbadOid(ident)
+  if (!target) return `No SIMBAD object matches "${ident}".`
+  const { rows } = await tapQuery(`SELECT TOP ${limit} id FROM ident WHERE oidref = ${target.oid}`)
+  if (!rows.length) return `SIMBAD lists no alternate identifiers for ${target.mainId}.`
+  return `Every identifier SIMBAD holds for ${target.mainId} (${target.otype}, oid ${target.oid}; ${rows.length} of ${limit} requested):\n` +
+    rows.map((r, i) => `${i + 1}. ${simbadText(r[0])}`).join('\n')
+}

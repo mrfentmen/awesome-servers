@@ -245,3 +245,91 @@ export function formatChapter(c: Chapter): string {
   const ext = c.externalUrl ? ` [external: ${c.externalUrl}]` : ""
   return `${num}${vol}${title}${grp}${when} — ${c.pages}p${ext} — id ${c.id}`
 }
+
+// ---- muxB tools:
+
+interface MangaStatistics {
+  rating?: { average?: number; bayesian?: number; distribution?: Record<string, number> }
+  follows?: number
+  comments?: { threadId?: number; repliesCount?: number }
+  unavailableChaptersCount?: number
+}
+
+// the statistics route answers { result, statistics }, not the collection shape
+// every other MangaDex route uses, so it needs its own fetch
+async function getStatistics(path: string): Promise<{ statistics?: Record<string, MangaStatistics> }> {
+  const res = await fetch(`${BASE}${path}`, {
+    headers: { Accept: "application/json", "User-Agent": "mangadex-mcp/1.0" },
+    signal: AbortSignal.timeout(20000),
+  })
+  if (!res.ok) throw new MangaDexError(`MangaDex API error ${res.status}: ${res.statusText}`)
+  return (await res.json()) as { statistics?: Record<string, MangaStatistics> }
+}
+
+export async function mangaStatistics(id: string): Promise<string> {
+  const key = (id ?? "").trim()
+  if (!/^[0-9a-f-]{36}$/i.test(key)) throw new MangaDexError("Provide a MangaDex manga UUID, e.g. from search_manga.")
+  const res = await getStatistics(`/statistics/manga/${key}`)
+  const s = res.statistics?.[key]
+  if (!s) return `MangaDex has no statistics recorded for ${key}.`
+  const dist: Record<string, number> = s.rating?.distribution ?? {}
+  const total = Object.values(dist).reduce<number>((sum, n) => sum + Number(n ?? 0), 0)
+  const spread = Object.entries(dist)
+    .sort((a, b) => Number(b[0]) - Number(a[0]))
+    .slice(0, 3)
+    .map(([score, n]) => `${score} stars: ${n}`)
+  return [
+    `MangaDex statistics for ${key}`,
+    `Average rating: ${s.rating?.average !== undefined ? s.rating.average.toFixed(3) : "not reported"} | bayesian rating: ${s.rating?.bayesian !== undefined ? s.rating.bayesian.toFixed(3) : "not reported"}`,
+    `Rating votes: ${total || "not reported"}${spread.length ? ` | most common: ${spread.join(", ")}` : ""}`,
+    `Follows: ${s.follows !== undefined ? Number(s.follows).toLocaleString() : "not reported"}`,
+    `Comment thread ${s.comments?.threadId ?? "not reported"} with ${s.comments?.repliesCount ?? "not reported"} replies`,
+    `Unavailable chapters: ${s.unavailableChaptersCount !== undefined ? Number(s.unavailableChaptersCount).toLocaleString() : "not reported"}`,
+  ].join("\n")
+}
+
+export interface MangaByTagArgs {
+  tag: string
+  limit?: number
+}
+
+export async function mangaByTag(args: MangaByTagArgs): Promise<string> {
+  const wanted = (args.tag ?? "").trim().toLowerCase()
+  if (!wanted) throw new MangaDexError("Provide a tag name, e.g. \"isekai\".")
+  const limit = Math.max(1, Math.min(args.limit ?? 8, 20))
+  const tags = await get<{ id: string; attributes: TagAttr }>("/manga/tag")
+  const hit = tags.data
+    .map((t) => ({ id: t.id, name: pickLocalized(t.attributes.name) ?? t.id, group: t.attributes.group }))
+    .filter((t) => t.name.toLowerCase() === wanted)
+  if (!hit.length) {
+    const near = tags.data
+      .map((t) => pickLocalized(t.attributes.name) ?? "")
+      .filter((n) => n.toLowerCase().includes(wanted))
+      .slice(0, 8)
+    return near.length
+      ? `MangaDex has no tag exactly named "${args.tag}". Close matches: ${near.join(", ")}.`
+      : `MangaDex has no tag matching "${args.tag}".`
+  }
+  const tag = hit[0]
+  const res = await get<{
+    total?: number
+    id: string
+    attributes: MangaAttr
+    relationships: { id: string; type: string; attributes?: { name?: string } }[]
+  }>(`/manga?includedTags[]=${tag.id}&limit=${limit}&order[followedCount]=desc&includes[]=author`)
+  const rows = res.data.map((m) => {
+    const authors = m.relationships.filter((r) => r.type === "author").map((r) => r.attributes?.name ?? r.id)
+    return {
+      id: m.id,
+      title: mangaTitle(m.attributes),
+      year: m.attributes.year,
+      status: m.attributes.status,
+      authors,
+    }
+  })
+  if (!rows.length) return `No MangaDex manga carry the tag "${tag.name}".`
+  return `Most-followed manga tagged "${tag.name}" (${tag.group}) - ${res.total ?? "an unknown number"} tagged in total, ${rows.length} shown:\n` +
+    rows
+      .map((m, i) => `${i + 1}. [${m.id}] ${m.title} | ${m.status ?? "?"} | ${m.year ?? "?"} | ${m.authors.join(", ") || "author not reported"}`)
+      .join("\n")
+}

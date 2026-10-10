@@ -34,3 +34,29 @@ export async function searchPeople(args: { query?: string; limit?: number }): Pr
   if (!res.length) return "No characters found"
   return res.slice(0, limit).map((r: any, i: number) => `${i + 1}. ${r?.properties?.name ?? "n/a"} (id ${r?.uid ?? "?"})`).join("\n")
 }
+
+// ---- muxC tools:
+
+function n(value: unknown): string {
+  if (value === undefined || value === null || value === "") return "not reported"
+  if (typeof value === "string" && (value === "n/a" || value === "unknown")) return "not reported"
+  return String(value)
+}
+
+export async function searchPlanets(args: { query?: string; limit?: number }): Promise<string> {
+  const q = (args.query ?? "").trim()
+  if (!q) throw new StarWarsError("Provide a planet name")
+  const limit = Math.max(1, Math.min(args.limit ?? 5, 10))
+  const d = await get<any>(`${BASE}/planets/?name=${encodeURIComponent(q)}`)
+  const res = d?.result ?? []
+  if (!Array.isArray(res) || !res.length) return "No planets found"
+  return res.slice(0, limit)
+    .map((r: any, i: number) => {
+      const p = r?.properties ?? {}
+      return [
+        `${i + 1}. ${n(p.name)} (id ${r?.uid ?? "?"})`,
+        `   ${n(p.terrain)} terrain, ${n(p.climate)} climate | gravity ${n(p.gravity)} | population ${n(p.population)}`,
+      ].join("\n")
+    })
+    .join("\n")
+}

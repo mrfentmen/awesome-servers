@@ -18,3 +18,25 @@ export async function noteDuration(args: { bpm?: number }): Promise<string> {
   ]
   return names.map(([n, mult]) => `${n}: ${(q * mult).toFixed(1)} ms`).join("\n")
 }
+
+// ---- muxB tools:
+
+type MbRecording = {
+  id?: string;
+  title?: string;
+  length?: number | null;
+  'first-release-date'?: string | null;
+  score?: number;
+  'artist-credit'?: { artist?: { id?: string; name?: string } }[];
+  releases?: { title?: string; date?: string }[];
+}
+
+type WdEntity = {
+  id?: string;
+  labels?: Record<string, { value?: string }>;
+  descriptions?: Record<string, { value?: string } | { value?: string }[]>;
+  claims?: Record<string, WdSnak[]>;
+}
+
+type WdSnak = { mainsnak?: { datavalue?: { value?: { id?: string } | { time?: string } | { amount?: string; unit?: string } | string } } }
+

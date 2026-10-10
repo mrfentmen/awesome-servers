@@ -48,3 +48,35 @@ export async function article(args: { id?: number }): Promise<string> {
   if (a?.url_public_html) lines.push(`\nURL: ${a.url_public_html}`)
   return lines.join("\n")
 }
+
+// ---- muxB tools:
+
+const FS_UA = 'mrfentmen-figshare-mcp/1.0'
+
+const fsField = (value: unknown, fallback = 'not reported'): string =>
+  value != null && String(value) !== '' ? String(value) : fallback
+
+export interface ArticleVersionHistoryArgs {
+  id: number;
+}
+
+export async function articleVersionHistory(args: ArticleVersionHistoryArgs): Promise<string> {
+  const id = Math.floor(args.id ?? 0)
+  if (!id) throw new Error('Provide a Figshare article id.')
+  const res = await fetch(`https://api.figshare.com/v2/articles/${id}/versions`, {
+    headers: { 'User-Agent': FS_UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (res.status === 404) return `Figshare has no article with id ${id}.`
+  if (!res.ok) throw new Error(`Figshare error ${res.status}`)
+  const rows = (await res.json()) as Array<{ version?: number; url?: string }>
+  if (!Array.isArray(rows) || !rows.length) return `Figshare reports no published versions for article ${id}.`
+  return `Published versions of Figshare article ${id} (${rows.length}):\n` +
+    rows.map((r, i) => `${i + 1}. version ${fsField(r.version)} - ${fsField(r.url)}`).join('\n')
+}
+
+export interface RecentArticlesArgs {
+  limit?: number;
+  order?: string;
+}
+

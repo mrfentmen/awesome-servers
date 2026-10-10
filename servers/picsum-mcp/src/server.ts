@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatPhoto, getPhoto, listPhotos, photoUrl, PicsumError } from "./api.js"
 
+import { formatPhoto, getPhoto, listPhotos, photoUrl, PicsumError } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -75,6 +76,38 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "author_photos",
+    {
+      title: "Photos by author",
+      description: "Every Picsum photo credited to one Unsplash photographer, given the author page URL that a single-photo lookup reports.",
+      inputSchema: z.object( { author_url: z.string().describe("Unsplash page URL, e.g. https://unsplash.com/photos/LNRyGwIJr5c."), limit: z.number().describe("Max photos.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: author_photos ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_picsum_author_photos", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "photo_batch",
+    {
+      title: "Photo batch",
+      description: "Resolve several Picsum photo ids at once, reporting each one's author, dimensions, source page and download URL.",
+      inputSchema: z.object( { ids: z.string().describe("Comma-separated photo ids, e.g. 1,2,3.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: photo_batch ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_picsum_photo_batch", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

@@ -1,6 +1,6 @@
 {
   "name": "usgs-water-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Use this MCP server to USGS streamflow, gauge status, and water observations. Tools include get streamflow, find gauges",
   "type": "module",
   "mcpName": "io.github.mrfentmen/usgs-water-mcp",

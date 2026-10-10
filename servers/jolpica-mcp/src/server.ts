@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_current, m0_drivers, m0_races, m1_driverStandings, m1_lastRace, m1_seasonSchedule } from './api.js'
 
+import { m0_current, m0_drivers, m0_races, m1_driverStandings, m1_lastRace, m1_seasonSchedule } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -82,5 +83,37 @@ server.registerTool(
     try { return text(await m1_seasonSchedule(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "constructor_standings",
+    {
+      title: "Constructor standings",
+      description: "The constructor championship: points, wins and the points share of the leader, which the driver standings table never shows.",
+      inputSchema: z.object({ season: z.string().describe("Season, 'current' or a four digit year.").optional(), limit: z.number().int().min(1).max(30).default(10).describe("How many teams to show (default 10, max 30).") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: constructor_standings ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_jolpica_constructor_standings", args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
+  server.registerTool(
+    "qualifying_report",
+    {
+      title: "Qualifying report",
+      description: "Qualifying for a round: the grid order with each driver's Q1, Q2 and Q3 times, for the last round by default.",
+      inputSchema: z.object({ round: z.string().describe("Round number, e.g. 15. The last round by default.").optional(), season: z.string().describe("Season, 'current' or a four digit year.").optional(), limit: z.number().int().min(1).max(30).default(10).describe("How many drivers to show (default 10, max 30).") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: qualifying_report ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_jolpica_qualifying_report", args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
   return server
 }

@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { random } from "./api.js"
 
+import { random } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -21,5 +22,37 @@ export function createServer(): McpServer {
     try { return text(await random(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "duck_species",
+    {
+      title: "Duck Species",
+      description: "Look up the scientific classification of a duck or other waterfowl by name.",
+      inputSchema: z.object( { name: z.string().describe("Common or scientific name, e.g. 'mandarin duck'.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: duck_species ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_duck_duck_species", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "duck_sightings",
+    {
+      title: "Duck Sightings",
+      description: "Recent verified waterfowl observations reported to iNaturalist.",
+      inputSchema: z.object( { limit: z.number().describe("How many sightings, 1-20.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: duck_sightings ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_duck_duck_sightings", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

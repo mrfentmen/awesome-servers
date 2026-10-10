@@ -32,3 +32,36 @@ export async function get(args: GetArgs): Promise<string> {
   if (!d._id) throw new Error(`No gene for id ${args.id}.`);
   return `Gene ${d.symbol ?? args.id}\n${d.name ?? ''}\nEntrez id: ${d.entrezgene ?? d._id} | taxid ${d.taxid ?? '?'} | ${d.type_of_gene ?? 'gene'}\nSummary: ${(d.summary ?? 'No summary').slice(0, 500)}`;
 }
+
+// ---- muxB tools:
+
+interface MyGeneHit {
+  _id?: string;
+  symbol?: string;
+  name?: string;
+  taxid?: number;
+  map_location?: string;
+  genomic_pos?: { chr?: string; start?: number; end?: number; strand?: number; ensemblgene?: string };
+  pathway?: Record<string, Array<{ id?: string; name?: string }>>;
+}
+
+async function geneQuery(q: string, fields: string, size: number): Promise<MyGeneHit[]> {
+  const res = await fetch(`${BASE}/query?q=${encodeURIComponent(q)}&size=${size}&fields=${fields}`, {
+    headers: { 'User-Agent': UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!res.ok) throw new Error(`MyGene returned ${res.status}`);
+  const d = (await res.json()) as { hits?: MyGeneHit[] };
+  return d.hits ?? [];
+}
+
+export interface GenePathwaysArgs {
+  symbol: string;
+  species?: string;
+  limit?: number;
+}
+
+export interface GeneLocationArgs {
+  id: string;
+}
+

@@ -20,3 +20,12 @@ export async function indicators(args: IndicatorsArgs): Promise<string> {
   const header = goal ? `SDG indicators for goal ${goal} (${d.length}):` : `SDG indicators (${d.length} total, showing ${Math.min(limit, d.length)}):`;
   return header + '\n' + d.slice(0, limit).map((x, i) => `${i + 1}. [${x.code ?? '?'}] ${x.description ?? '?'}`).join('\n');
 }
+
+// ---- muxB tools:
+
+export interface SeriesArgs {
+  goal?: string;
+  indicator?: string;
+  limit?: number;
+}
+

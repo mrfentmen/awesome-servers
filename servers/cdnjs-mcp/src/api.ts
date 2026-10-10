@@ -39,3 +39,65 @@ export async function library(args: { name?: string }): Promise<string> {
   if (l?.filename) lines.push(`Main file: ${l.filename}`)
   return lines.join("\n")
 }
+
+// ---- muxA tools:
+
+interface Library {
+  name?: string;
+  version?: string;
+  versions?: string[];
+  description?: string;
+  homepage?: string;
+  author?: string;
+  license?: string;
+  filename?: string;
+  latest?: string;
+  sri?: string;
+  keywords?: string[];
+  assets?: unknown[];
+  autoupdate?: { source?: string; target?: string };
+  repository?: { type?: string; url?: string };
+}
+
+async function fetchLibrary(name: string): Promise<Library> {
+  const key = (name ?? "").trim();
+  if (!key) throw new CdnjsError("Provide a cdnjs library name, e.g. bootstrap.");
+  return get<Library>(`${BASE}/${encodeURIComponent(key)}`)
+}
+
+function bound(value: number | undefined, fallback: number, max: number): number {
+  return Math.max(1, Math.min(Math.round(value ?? fallback), max))
+}
+
+export async function libraryVersions(args: { name: string; limit?: number }): Promise<string> {
+  const lib = await fetchLibrary(args.name)
+  const versions = lib.versions ?? []
+  if (!versions.length) return `cdnjs lists no versions for ${lib.name ?? args.name}.`
+  const limit = bound(args.limit, 20, 200)
+  const shown = versions.slice(0, limit)
+  return [
+    `${lib.name} is on version ${lib.version} with ${versions.length} version(s) on cdnjs, newest first, showing ${shown.length}.`,
+    `Description: ${lib.description ?? "not reported"}`,
+    ...shown.map(
+      (v, i) =>
+        `${i + 1}. ${v}${v === lib.version ? " [current]" : ""}`,
+    ),
+    versions.length > shown.length ? `...and ${versions.length - shown.length} older version(s).` : "",
+  ]
+    .filter(Boolean)
+    .join("\n")
+}
+
+export async function libraryKeywords(args: { name: string }): Promise<string> {
+  const lib = await fetchLibrary(args.name)
+  const keywords = lib.keywords ?? []
+  return [
+    `Metadata for ${lib.name} ${lib.version}`,
+    `Keywords: ${keywords.length ? keywords.join(", ") : "none listed"}`,
+    `Author: ${lib.author ?? "not reported"}`,
+    `Homepage: ${lib.homepage ?? "not reported"}`,
+    `Licence: ${lib.license ?? "not reported"}`,
+    `Repository: ${lib.repository?.url ?? "not reported"}${lib.repository?.type ? ` (${lib.repository.type})` : ""}`,
+    `Version source: ${lib.autoupdate?.source ?? "not reported"}${lib.autoupdate?.target ? `, published to ${lib.autoupdate.target}` : ""}`,
+  ].join("\n")
+}

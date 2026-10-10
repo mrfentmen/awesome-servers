@@ -1,6 +1,6 @@
 {
   "name": "storj-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Storj buckets and objects via S3. Needs access keys.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/storj-mcp",

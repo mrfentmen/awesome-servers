@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { createEvent } from "./api.js"
-import { createReminder } from "./api.js"
+import { createReminder, createHolidayCalendar, createSunCalendar } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -35,5 +36,49 @@ export function createServer(): McpServer {
     try { return text(await createReminder(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "create_holiday_calendar",
+    {
+      title: "Create holiday calendar",
+      description: "Write an ics file of every public holiday a country observes in a year, using the Nager.Date holiday service.",
+      inputSchema: z.object({
+        country: z.string().describe("Two letter ISO country code, for example GB or US."),
+        year: z.number().describe("Year, defaults to this year.").optional(),
+        limit: z.number().describe("Max holidays to write, 1-400, default 60.").optional(),
+        filename: z.string().describe("Output file name.").optional(),
+      }),
+      annotations: WRITE,
+    },
+    async (args) => {
+    // ---- paywall: create_holiday_calendar ----
+    const paywallMessage = await premiumRequired("create_holiday_calendar")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await createHolidayCalendar(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "create_sun_calendar",
+    {
+      title: "Create sunrise and sunset calendar",
+      description: "Write an ics file of sunrise and sunset times in UTC for a coordinate over the next few days, using the Open-Meteo forecast service.",
+      inputSchema: z.object({
+        latitude: z.number().describe("Latitude between -90 and 90."),
+        longitude: z.number().describe("Longitude between -180 and 180."),
+        days: z.number().describe("Days to cover, 1-31, default 7.").optional(),
+        filename: z.string().describe("Output file name.").optional(),
+      }),
+      annotations: WRITE,
+    },
+    async (args) => {
+    // ---- paywall: create_sun_calendar ----
+    const paywallMessage = await premiumRequired("create_sun_calendar")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await createSunCalendar(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

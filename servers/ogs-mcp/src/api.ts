@@ -108,3 +108,25 @@ export function formatGame(g: GameSummary, index?: number): string {
   const vs = g.white || g.black ? `${g.black ?? "?"} (B) vs ${g.white ?? "?"} (W)` : "game"
   return `${prefix}${vs}${g.outcome ? ` — ${g.outcome}` : ""}${g.id !== undefined ? ` (https://online-go.com/game/${g.id})` : ""}`
 }
+
+// ---- muxC tools:
+
+// The API returns rules and board size as separate fields, and one is often absent.
+function g(value: unknown): string {
+  return value === undefined || value === null || value === "" ? "" : String(value)
+}
+
+/** Public OGS clubs and groups, with member counts. */
+export async function groupList(args: { limit?: number }): Promise<string> {
+  const limit = Math.max(1, Math.min(args.limit ?? 8, 20))
+  const d = await getJson<{ count?: number; results?: Raw[] }>(`/groups/?page_size=${limit}`)
+  const rows = d.results ?? []
+  if (!rows.length) return "No OGS groups returned."
+  return `Online-Go.com groups (${d.count ?? rows.length} total, ${rows.length} shown):\n` +
+    rows
+      .map((g, i) => {
+        const link = (g.related as Raw | undefined)?.detail
+        return `${i + 1}. ${g.name || g.summary?.slice(0, 80) || "(unnamed)"}\n   id ${g.id} | members ${g.member_count ?? "not reported"} | ${g.is_public ? "public" : "private"}${g.hide_details ? " | details hidden" : ""}${link ? `\n   https://online-go.com${link}` : ""}`
+      })
+      .join("\n")
+}

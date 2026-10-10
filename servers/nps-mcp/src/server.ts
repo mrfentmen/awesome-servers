@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatPark, NpsError, parkAlerts, parkCampgrounds, searchParks } from "./api.js"
+import { formatPark, NpsError, parkAlerts, parkCampgrounds, searchParks, parksByState, parkThingsToDo } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -72,6 +73,54 @@ export function createServer(): McpServer {
         const rows = await parkCampgrounds(code, limit)
         if (rows.length === 0) return text(`No campgrounds for ${code}.`)
         return text(rows.map((c, i) => `${i + 1}. ${c}`).join("\n"))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "parks_by_state",
+    {
+      title: "Parks by state",
+      description: "Every National Park Service site in one state, counted by designation, with coordinates and links.",
+      inputSchema: z.object({
+        state: z.string().describe("Two letter state code, e.g. CA, WY, DC"),
+        limit: z.number().int().min(1).max(50).default(30),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ state, limit }) => {
+      // ---- paywall: parks_by_state ----
+      const paywallMessage = await premiumRequired("parks_by_state")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await parksByState({ state, limit }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "park_things_to_do",
+    {
+      title: "Park things to do",
+      description: "Activities listed for one park, with the duration and locations where the API provides them.",
+      inputSchema: z.object({
+        code: z.string().describe("Park code, e.g. 'yose' (use search_parks)"),
+        limit: z.number().int().min(1).max(50).default(10),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ code, limit }) => {
+      // ---- paywall: park_things_to_do ----
+      const paywallMessage = await premiumRequired("park_things_to_do")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await parkThingsToDo({ code, limit }))
       } catch (e) {
         return textError(errorMessage(e))
       }

@@ -71,3 +71,73 @@ export const searchFood = m1.searchFood;
 export const m0_search = m0.search;
 export const m1_searchFood = m1.searchFood;
 export const m1_NutritionError = m1.NutritionError;
+
+// ---- muxB tools:
+
+// FoodData Central's shared DEMO_KEY is what the existing search tool already
+// uses, so the detail route sticks to the same key rather than inventing one.
+const FDC_BASE = 'https://api.nal.usda.gov/fdc/v1';
+const FDC_UA = 'mrfentmen-usda-food-mcp/1.0';
+
+interface FdcNutrient {
+  nutrient?: { name?: string; unitName?: string; number?: string };
+  amount?: number;
+}
+
+export interface FoodDetailsArgs {
+  fdc_id: string;
+}
+
+export async function foodDetails(args: FoodDetailsArgs): Promise<string> {
+  const fdcId = String(args.fdc_id ?? '').trim();
+  if (!/^\d+$/.test(fdcId)) return 'Provide a numeric FDC id, e.g. 173944 for raw bananas.';
+  const res = await fetch(`${FDC_BASE}/food/${encodeURIComponent(fdcId)}?api_key=DEMO_KEY`, {
+    headers: { 'User-Agent': FDC_UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(25000),
+  });
+  if (res.status === 401 || res.status === 403) throw new Error('USDA rejected the request key.');
+  if (res.status === 404) return `USDA FoodData Central has no food with FDC id ${fdcId}.`;
+  if (!res.ok) throw new Error(`USDA returned ${res.status}`);
+  const d = (await res.json()) as {
+    description?: string;
+    dataType?: string;
+    publicationDate?: string;
+    brandOwner?: string;
+    gtinUpc?: string;
+    foodCategory?: { description?: string } | string;
+    servingSize?: number;
+    servingSizeUnit?: string;
+    foodNutrients?: FdcNutrient[];
+  };
+  const category = typeof d.foodCategory === 'string' ? d.foodCategory : d.foodCategory?.description;
+  const wanted = ['Energy', 'Protein', 'Total lipid (fat)', 'Carbohydrate', 'Fiber, total dietary', 'Sugars, total including NLEA', 'Sodium, Na', 'Calcium, Ca', 'Iron, Fe'];
+  const rows = (d.foodNutrients ?? []).filter((n) => {
+    const name = String(n.nutrient?.name ?? '');
+    return wanted.some((w) => name.toLowerCase().startsWith(w.toLowerCase()));
+  });
+  const line = (prefix: string) => {
+    const hit = rows.find((n) => String(n.nutrient?.name ?? '').toLowerCase().startsWith(prefix.toLowerCase()));
+    if (!hit || hit.amount === undefined) return null;
+    return `${hit.amount} ${hit.nutrient?.unitName ?? ''}`.trim();
+  };
+  const per = (label: string, prefix: string) => {
+    const value = line(prefix);
+    return value ? `   ${label}: ${value}` : `   ${label}: not reported`;
+  };
+  return [
+    `USDA food ${fdcId}: ${d.description ?? 'not reported'}`,
+    `Data type: ${d.dataType ?? 'not reported'} | published: ${d.publicationDate ?? 'not reported'}`,
+    `Brand: ${d.brandOwner ?? 'not reported'} | category: ${category || 'not reported'} | GTIN: ${d.gtinUpc ?? 'not reported'}`,
+    `Serving size: ${d.servingSize ?? 'not reported'} ${d.servingSizeUnit ?? ''}`.trim(),
+    'Nutrients as published:',
+    per('Energy', 'Energy'),
+    per('Protein', 'Protein'),
+    per('Total fat', 'Total lipid (fat)'),
+    per('Carbohydrate', 'Carbohydrate'),
+    per('Total fibre', 'Fiber, total dietary'),
+    per('Total sugars', 'Sugars, total including NLEA'),
+    per('Sodium', 'Sodium, Na'),
+    per('Calcium', 'Calcium, Ca'),
+    per('Iron', 'Iron, Fe'),
+  ].join('\n');
+}

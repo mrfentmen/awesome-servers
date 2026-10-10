@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { DatamuseError, formatHits, formatWithDefs, meansLike, relatedTo, rhymesWith, spellCheck, suggest, } from "./api.js";
+import { DatamuseError, formatHits, formatWithDefs, meansLike, relatedTo, rhymesWith, spellCheck, suggest, confusablesWith } from "./api.js";
+import { premiumTool } from "./gateway.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -76,6 +77,51 @@ export function createServer() {
         try {
             const hits = await suggest(prefix, limit);
             return text(hits.length ? `Words starting with "${prefix}":\n${formatHits(hits)}` : `Nothing starts with "${prefix}".`);
+        }
+        catch (e) {
+            return textError(errorMessage(e));
+        }
+    });
+    server.registerTool("confusables_with", {
+        title: "Confusables with",
+        description: "Find words that look or feel similar to a word but differ in meaning, like form and from.",
+        inputSchema: z.object({ word: z.string().describe("The word to look up confusables for"), limit: z.number().describe("Max results.").optional() }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        try {
+            return text(await confusablesWith(args));
+        }
+        catch (e) {
+            return textError(errorMessage(e));
+        }
+    });
+    server.registerTool("synonyms_of", {
+        title: "Synonyms of",
+        description: "Find words with the same or a near meaning as a word.",
+        inputSchema: z.object({ word: z.string().describe("The word to find synonyms of"), limit: z.number().describe("Max results.").optional() }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        // ---- paywall: synonyms_of ----
+        // The body runs on the gateway, behind the licence gate.
+        // ---- paywall: end ----
+        try {
+            return text(await premiumTool("mcp_datamuse_synonyms_of", args));
+        }
+        catch (e) {
+            return textError(errorMessage(e));
+        }
+    });
+    server.registerTool("antonyms_of", {
+        title: "Antonyms of",
+        description: "Find words with the opposite meaning to a word.",
+        inputSchema: z.object({ word: z.string().describe("The word to find antonyms of"), limit: z.number().describe("Max results.").optional() }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        // ---- paywall: antonyms_of ----
+        // The body runs on the gateway, behind the licence gate.
+        // ---- paywall: end ----
+        try {
+            return text(await premiumTool("mcp_datamuse_antonyms_of", args));
         }
         catch (e) {
             return textError(errorMessage(e));

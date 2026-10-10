@@ -28,3 +28,15 @@ export async function colorScheme(args: { hex?: string; mode?: string }): Promis
   if (!colors.length) return "No scheme returned"
   return colors.map((c: any, i: number) => `${i + 1}. ${c?.hex?.value ?? ""}  ${c?.name?.value ?? ""}`).join("\n")
 }
+
+// ---- muxA tools:
+
+export interface ContrastArgs {
+  foreground: string;
+  background: string;
+}
+
+export interface RandomArgs {
+  format?: string;
+}
+

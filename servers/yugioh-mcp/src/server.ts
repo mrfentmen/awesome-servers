@@ -1,13 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  YugiohError,
-  formatCard,
-  getBanlist,
-  getCardById,
-  searchCardsByArchetype,
-  searchCardsByName,
-} from "./api.js"
+import { YugiohError, formatCard, getBanlist, getCardById, highestAttackCards, searchCardsByArchetype, searchCardsByName, stapleCards } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -111,6 +105,38 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "highest_attack_cards",
+    {
+      title: "Highest attack cards",
+      description: "Cards with the highest ATK in the YGOPRODeck database, optionally restricted to one card type.",
+      inputSchema: z.object(
+    { limit: z.number().int().min(1).max(30).default(10), type: z.string().describe("Card type, e.g. 'Effect Monster' or 'Link Monster'.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: highest_attack_cards ----
+    const paywallMessage = await premiumRequired("highest_attack_cards")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await highestAttackCards(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "staple_cards",
+    {
+      title: "Staple cards",
+      description: "Cards the YGOPRODeck database marks as tournament staples.",
+      inputSchema: z.object(
+    { limit: z.number().int().min(1).max(30).default(10) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await stapleCards(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

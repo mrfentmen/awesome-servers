@@ -17,3 +17,35 @@ export async function random(args: RandomArgs): Promise<string> {
   if (!rows.length) return 'No duck photos returned.';
   return `Random ducks (${rows.length}):\n` + rows.map((u, i) => `${i + 1}. ${u}`).join('\n');
 }
+
+// ---- muxA tools:
+
+// Waterfowl = order Anseriformes. GBIF and iNaturalist use different ids for
+// the same clade, so both are named explicitly rather than shared.
+
+interface GbifVernacular {
+  language?: string;
+  vernacularName?: string;
+}
+
+interface GbifSpecies {
+  key?: number;
+  scientificName?: string;
+  canonicalName?: string;
+  rank?: string;
+  taxonomicStatus?: string;
+  class?: string;
+  order?: string;
+  family?: string;
+  genus?: string;
+  vernacularNames?: GbifVernacular[];
+}
+
+export interface SpeciesArgs {
+  name?: string;
+}
+
+export interface SightingsArgs {
+  limit?: number;
+}
+

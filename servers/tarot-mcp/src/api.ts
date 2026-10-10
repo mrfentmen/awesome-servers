@@ -30,3 +30,6 @@ export async function cardInfo(args: { card?: string }): Promise<string> {
   if (!c?.name) return "Card not found"
   return `# ${c.name}\nSuit: ${c.suit ?? "n/a"} | Value: ${c.value ?? "n/a"} | Type: ${c.type ?? "n/a"}\n\nUpright: ${c.meaning_up ?? "n/a"}\nReversed: ${c.meaning_rev ?? "n/a"}`
 }
+
+// ---- muxC tools:
+

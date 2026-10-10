@@ -17,3 +17,6 @@ export async function sunTimes(args: { lat?: number; lon?: number; date?: string
   const fmt = (s: string) => new Date(s).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
   return `Sun times for ${lat}, ${lon} on ${date}\nSunrise: ${fmt(r.sunrise ?? "")}\nSunset: ${fmt(r.sunset ?? "")}\nSolar noon: ${fmt(r.solar_noon ?? "")}\nDay length: ${r.day_length ?? ""}\nCivil twilight: ${fmt(r.civil_twilight_begin ?? "")} to ${fmt(r.civil_twilight_end ?? "")}`
 }
+
+// ---- muxB tools:
+

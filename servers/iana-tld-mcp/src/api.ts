@@ -28,3 +28,17 @@ export async function list(args: ListArgs = {}): Promise<string> {
   if (!shown.length) return `No top level domains match "${q}".`;
   return `Top level domains (${shown.length} shown):\n` + shown.map((t, i) => `${i + 1}. .${t}`).join('\n');
 }
+
+// ---- muxC tools:
+
+/**
+ * The IANA RDAP bootstrap file is the authoritative map from a TLD to the RDAP
+ * servers that answer registration queries for it, which is what you need
+ * before you can look anything up for that TLD.
+ */
+interface IanaRdapServices {
+  publication?: string
+  description?: string
+  services?: Array<[string[], string[]]>
+}
+

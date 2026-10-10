@@ -1,6 +1,6 @@
 {
   "name": "owncloud-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ownCloud OCS: capabilities, shares. Self-hosted.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/owncloud-mcp",

@@ -31,3 +31,17 @@ export async function day(args: DayArgs): Promise<string> {
     `Notable deaths: ${deaths.slice(0, 3).map((b) => `${b.year ?? '?'}: ${b.text ?? '?'}`.slice(0, 80)).join(' | ') || 'none'}`,
   ].join('\n');
 }
+
+// ---- muxB tools:
+
+type MostReadArticle = {
+  rank?: number;
+  views?: number;
+  title?: string;
+  description?: string;
+  extract?: string;
+  thumbnail?: { source?: string; width?: number; height?: number };
+};
+
+type WdHit = { id?: string; label?: string; description?: string; concepturi?: string };
+

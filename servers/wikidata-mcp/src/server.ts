@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_entity, m0_format, m0_search, m0_sparql, m0_WikidataError, m1_search } from './api.js'
+import { m0_entity, m0_format, m0_search, m0_sparql, m0_WikidataError, m1_search, entitySitelinks, entityHistory } from './api.js'
+import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -52,5 +53,39 @@ server.registerTool(
     try { return text(await m1_search(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "entity_sitelinks",
+    {
+      title: "Entity sitelinks",
+      description: "The Wikipedia and other wiki editions a Wikidata item sits in, which the label and claim views never show.",
+      inputSchema: z.object( { id: z.string().describe("Wikidata item id, e.g. Q64."), limit: z.number().describe("Max wikis.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: entity_sitelinks ----
+    const paywallMessage = await premiumRequired("entity_sitelinks")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await entitySitelinks(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "entity_history",
+    {
+      title: "Entity history",
+      description: "A Wikidata item's revision history with editor, timestamp, size and edit summary, which shows who changed it and when.",
+      inputSchema: z.object( { id: z.string().describe("Wikidata item id, e.g. Q64."), limit: z.number().describe("Max revisions.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: entity_history ----
+    const paywallMessage = await premiumRequired("entity_history")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await entityHistory(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

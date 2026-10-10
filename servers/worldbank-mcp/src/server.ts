@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_countries, m0_indicator, m1_eiaSeries, m1_worldbankIndicator } from './api.js'
+import { m0_countries, m0_indicator, m1_eiaSeries, m1_worldbankIndicator, countryProfile, indicatorCatalog } from './api.js'
+import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -58,5 +59,39 @@ server.registerTool(
     try { return text(await m1_eiaSeries(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "country_profile",
+    {
+      title: "Country profile",
+      description: "A country's own World Bank record: region, income group, lending type, capital city and coordinates, which the data tools never show.",
+      inputSchema: z.object( { country: z.string().describe("Two or three letter code, e.g. USA."), }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: country_profile ----
+    const paywallMessage = await premiumRequired("country_profile")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await countryProfile(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "indicator_catalog",
+    {
+      title: "Indicator catalog",
+      description: "Search the World Bank's indicator directory by name or code, so you can find an indicator id before asking the data tools for its series.",
+      inputSchema: z.object( { query: z.string().describe("Search term, e.g. GDP.").optional(), limit: z.number().describe("Max indicators.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: indicator_catalog ----
+    const paywallMessage = await premiumRequired("indicator_catalog")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await indicatorCatalog(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

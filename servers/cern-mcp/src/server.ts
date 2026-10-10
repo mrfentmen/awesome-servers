@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { CernError, formatRecord, getRecord, searchRecords } from "./api.js"
 
+import { CernError, formatRecord, getRecord, searchRecords } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -54,6 +55,22 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "record_files",
+    {
+      title: "Record files",
+      description: "The files inside a CERN Open Data record, with their type, size and checksum, read from the record's own file bucket.",
+      inputSchema: z.object( { id: z.number().describe("CERN record id, e.g. 60."), limit: z.number().describe("Max files.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: record_files ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_cern_record_files", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

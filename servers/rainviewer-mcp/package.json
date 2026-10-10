@@ -1,6 +1,6 @@
 {
   "name": "rainviewer-mcp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "RainViewer radar tile timelines.",
   "type": "module",
   "main": "dist/index.js",

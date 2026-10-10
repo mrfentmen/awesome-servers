@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_publicHolidays, m0_nextHolidays, m0_countries, m0_openHolidays, m1_holidays } from './api.js'
+import { m0_publicHolidays, m0_nextHolidays, m0_countries, m0_openHolidays, m1_holidays, availableCountries } from './api.js'
+import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -70,5 +71,26 @@ server.registerTool(
     try { return text(await m1_holidays(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "available_countries",
+    {
+      title: "Available countries",
+      description: "The country codes the holidays tool accepts, with each country's name, so you can pick a valid code before querying.",
+      inputSchema: z.object( { search: z.string().describe("Filter by country name or exact code.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: available_countries ----
+    const paywallMessage = await premiumRequired("available_countries")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try {
+      return text(await availableCountries(args));
+    } catch (e) {
+      return textError(errorMessage(e));
+    }
+    }
+  );
+
   return server
 }

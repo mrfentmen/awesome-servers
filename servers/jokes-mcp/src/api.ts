@@ -45,3 +45,10 @@ export async function categories(_args: Record<string, never> = {}): Promise<str
   const cats = d.categories ?? [];
   return cats.length ? `JokeAPI categories: ${cats.join(', ')}` : 'No categories returned';
 }
+
+// ---- muxB tools:
+
+export interface TwoPartJokeArgs {
+  category: string;
+}
+

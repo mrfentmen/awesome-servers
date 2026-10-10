@@ -42,3 +42,15 @@ export async function episode(args: { id?: number }): Promise<string> {
     `Characters: ${e.characters?.length ?? 0}`,
   ].join("\n")
 }
+
+// ---- muxB tools:
+
+export interface LocationArgs {
+  id?: number;
+}
+
+export interface LocationResidentsArgs {
+  id?: number;
+  limit?: number;
+}
+

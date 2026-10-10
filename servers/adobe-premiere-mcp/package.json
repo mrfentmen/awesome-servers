@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/adobe-premiere-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "MCP server for Adobe Premiere Pro video editing via ExtendScript.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/adobe-premiere-mcp",

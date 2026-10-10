@@ -25,3 +25,8 @@ export async function image(args: ImageArgs): Promise<string> {
     text ? `Label: "${text}"` : null,
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxC tools:
+
+class PlaceholdError extends Error {}
+

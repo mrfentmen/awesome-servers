@@ -1,6 +1,6 @@
 {
   "name": "frigate-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Frigate NVR: version, stats, cameras, recent events.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/frigate-mcp",

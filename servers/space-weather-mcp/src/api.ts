@@ -11,8 +11,6 @@ const BASE = "https://services.swpc.noaa.gov/products"
 const headers = { "User-Agent": "mrfentmen-space-weather-mcp/1.0 (https://github.com/mrfentmen)" }
 class SpaceWeatherError extends Error {}
 
-
-
 async function request<T>(path: string): Promise<T> { const res = await fetch(`${BASE}${path}`, { headers, signal: AbortSignal.timeout(20000) }); if (!res.ok) throw new SpaceWeatherError(`NOAA SWPC error ${res.status}`); return (await res.json()) as T }
 function solarWindSpeed(): Promise<m0_Speed[]> { return request(`/summary/solar-wind-speed.json`) }
 function scales(): Promise<m0_Scales> { return request(`/noaa-scales.json`) }
@@ -71,7 +69,6 @@ return { AuroraError, latest, map };
 const m2 = (() => {
 const BASE = 'https://services.swpc.noaa.gov/json/goes/primary/xrays-7-day.json';
 
-
 async function xrays(args: m2_XraysArgs = {}): Promise<string> {
   const res = await fetch(BASE, {
     headers: { 'User-Agent': 'mrfentmen-space-weather-json-mcp/1.0', Accept: 'application/json' },
@@ -113,3 +110,6 @@ export const m1_latest = m1.latest;
 export const m1_AuroraError = m1.AuroraError;
 export const m1_map = m1.map;
 export const m2_xrays = m2.xrays;
+
+// ---- muxC tools:
+

@@ -1,12 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  errorMessage,
-  listTraStations,
-  getTraLiveboard,
-  listThsrStations,
-  getTraTimetable,
-} from "./api.js"
+import { errorMessage, listTraStations, getTraLiveboard, listThsrStations, getTraTimetable, odsStationSearch, odsTrainDepartures, odsTrainRoute } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -88,6 +83,75 @@ export function createServer(): McpServer {
     async ({ stationId, date }) => {
       try {
         return text(await getTraTimetable(stationId, date));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "ods_station_search",
+    {
+      title: "Search TRA stations",
+      description: "Search Taiwan Railway stations from the rail company's open data station list: code, Chinese and English name, address, phone, GPS coordinates and bike rental.",
+      inputSchema: z.object({
+        query: z.string().describe("Station code, Chinese name or English name, e.g. '1000', 'Taipei', '板橋'"),
+        limit: z.number().int().min(1).max(30).default(8),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ query, limit }) => {
+      try {
+        return text(await odsStationSearch({ query, limit }));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "ods_train_departures",
+    {
+      title: "TRA departures board",
+      description: "Real Taiwan Railway departures for one station on one published date, from the rail company's open daily timetable: departure time, train number, line and its origin and destination.",
+      inputSchema: z.object({
+        stationId: z.string().describe("4-digit station code from ods_station_search, e.g. 1000 for Taipei"),
+        date: z.string().default("").describe("Date YYYYMMDD. Empty = newest published timetable."),
+        limit: z.number().int().min(1).max(60).default(12),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ stationId, date, limit }) => {
+      // ---- paywall: ods_train_departures ----
+      const paywallMessage = await premiumRequired("ods_train_departures")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await odsTrainDepartures({ stationId, date, limit }));
+      } catch (e) {
+        return textError(errorMessage(e));
+      }
+    }
+  )
+
+  server.registerTool(
+    "ods_train_route",
+    {
+      title: "TRA train route",
+      description: "The whole run of one Taiwan Railway train on one published date: every stop with arrival and departure times and station names, plus carriage class, bike, dining and accessibility flags.",
+      inputSchema: z.object({
+        trainNumber: z.string().describe("Train number, e.g. 1001"),
+        date: z.string().default("").describe("Date YYYYMMDD. Empty = newest published timetable."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ trainNumber, date }) => {
+      // ---- paywall: ods_train_route ----
+      const paywallMessage = await premiumRequired("ods_train_route")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await odsTrainRoute({ trainNumber, date }));
       } catch (e) {
         return textError(errorMessage(e));
       }

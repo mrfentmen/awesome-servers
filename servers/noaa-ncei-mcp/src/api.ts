@@ -35,3 +35,39 @@ export async function summary(args: SummaryArgs): Promise<string> {
       })
       .join('\n');
 }
+
+// ---- muxB tools:
+
+const NCEI = 'https://www.ncei.noaa.gov/access/services/data/v1'
+
+async function nceiGet(params: Record<string, string>): Promise<Array<Record<string, unknown>>> {
+  const qs = new URLSearchParams({ format: 'json', ...params })
+  const res = await fetch(`${NCEI}?${qs.toString()}`, {
+    headers: { 'User-Agent': 'mrfentmen-noaa-ncei-mcp/1.0', Accept: 'application/json' },
+    signal: AbortSignal.timeout(30000),
+  })
+  if (!res.ok) {
+    const detail = (await res.text()).replace(/\s+/g, ' ').slice(0, 200)
+    throw new Error(`NOAA NCEI returned ${res.status}: ${detail}`)
+  }
+  return (await res.json()) as Array<Record<string, unknown>>
+}
+
+const nceiText = (row: Record<string, unknown>, key: string, unit = ''): string => {
+  const v = row[key]
+  if (v == null || String(v).trim() === '') return 'not reported'
+  return `${String(v).trim()}${unit ? ` ${unit}` : ''}`
+}
+
+export interface StationInfoArgs {
+  station?: string
+  date?: string
+}
+
+export interface MonthlyClimateArgs {
+  station?: string
+  start?: string
+  end?: string
+  limit?: number
+}
+

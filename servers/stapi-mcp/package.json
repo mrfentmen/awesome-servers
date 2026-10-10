@@ -1,6 +1,6 @@
 {
   "name": "stapi-mcp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Keyless MCP server for STAPI: Star Trek characters, episodes, series, movies, species.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/stapi-mcp",

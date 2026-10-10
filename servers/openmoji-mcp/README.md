@@ -1,0 +1,41 @@
+# openmoji-mcp
+
+Search 4500+ open-source emoji with SVG links - no API key.
+
+## Tools
+
+- `search_emoji` — Search every OpenMoji emoji by annotation, tag, group or subgroup. Returns hexcode and SVG link.
+- `get_emoji` — Full record for one emoji: group, subgroup, tags and the official SVG link.
+- `list_groups` — The OpenMoji groups with how many emoji each contains.
+- `list_subgroups` — Subgroups inside one group, with emoji counts.
+- `emojis_in_group` — Browse a group, optionally narrowed to one subgroup.
+- `random_emoji` — Pick a random emoji, from the whole set or from one group.
+- `emoji_stats` — How big the OpenMoji set is right now: totals, groups, sequences and the largest group.
+- `svg_links` — The colour and black SVG files OpenMoji publishes for one emoji, each checked live so the URL, content type and file size are known before it is used.
+- `skin_tone_variants` — Every skin-tone variant OpenMoji publishes for an emoji, read from the dataset's own base links and labelled light through dark.
+- `compare_emoji` — Compare two emoji on group, subgroup and tags with a tag-overlap score, to tell a near-duplicate apart from a genuinely different choice.
+
+## Setup
+
+No setup. The OpenMoji dataset is fetched once and queried locally.
+
+Part of [awesome-mcps](https://github.com/mrfentmen/awesome-mcps).
+
+<!-- paywall -->
+## Premium tools
+
+These tools need a licence key:
+
+* `unicode_reference`
+* `unicode_version_census`
+
+The tool bodies run on our gateway, not inside this package, so the key is what buys access. Buy one at https://buy.polar.sh/polar_cl_mrO7rS5LZxpqM7oAFFEA10i9121J240U40IIj4JRZO4 and set it in your MCP client config:
+
+```json
+"env": { "MCP_LICENSE_KEY": "polar_..." }
+```
+
+The gateway checks the key against Polar and gives every key 1,000 free premium
+calls a month before per-call billing starts. Every other tool on this server
+stays free.
+<!-- /paywall -->

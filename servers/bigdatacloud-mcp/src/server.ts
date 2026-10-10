@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { clientIp } from "./api.js"
-import { reverseGeocode } from "./api.js"
 
+import { clientIp, reverseGeocode, distanceBetween } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,50 @@ export function createServer(): McpServer {
     try { return text(await reverseGeocode(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "location_hierarchy",
+    {
+      title: "Location hierarchy",
+      description: "Every administrative level above a point, with admin level, ISO code, Wikidata id and GeoNames id.",
+      inputSchema: z.object( { lat: z.number().describe("Latitude."), lon: z.number().describe("Longitude.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: location_hierarchy ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_bigdatacloud_location_hierarchy", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "location_codes",
+    {
+      title: "Location codes",
+      description: "Continent, country, subdivision and postcode codes for a point, plus its Open Location Code.",
+      inputSchema: z.object( { lat: z.number().describe("Latitude."), lon: z.number().describe("Longitude.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: location_codes ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_bigdatacloud_location_codes", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "distance_between",
+    {
+      title: "Distance between",
+      description: "Great circle distance and initial bearing between two points, naming both places.",
+      inputSchema: z.object( { lat1: z.number().describe("First latitude."), lon1: z.number().describe("First longitude."), lat2: z.number().describe("Second latitude."), lon2: z.number().describe("Second longitude.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await distanceBetween(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

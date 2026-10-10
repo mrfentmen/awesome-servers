@@ -31,3 +31,34 @@ export async function timings(args: TimingsArgs): Promise<string> {
   }
   return lines.join('\n');
 }
+
+// ---- muxB tools:
+
+const AT_BASE = 'https://api.aladhan.com/v1';
+
+const AT_TIMING_KEYS = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const;
+
+async function atGet<T>(path: string, params: Record<string, string>): Promise<T> {
+  const url = new URL(`${AT_BASE}/${path}`);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'mrfentmen-prayer-times-mcp/1.0', Accept: 'application/json' },
+    redirect: 'follow',
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!res.ok) throw new Error(`aladhan returned ${res.status}`);
+  return (await res.json()) as T;
+}
+
+export interface MonthCalendarArgs {
+  city: string;
+  country: string;
+  month: number;
+  year: number;
+}
+
+export interface HijriDateArgs {
+  date: string;
+  direction: 'to_hijri' | 'to_gregorian';
+}
+

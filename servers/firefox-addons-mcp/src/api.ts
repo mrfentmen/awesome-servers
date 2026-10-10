@@ -52,3 +52,67 @@ export async function addon(args: { slug?: string }): Promise<string> {
   if (a?.url) lines.push(`\nPage: ${a.url}`)
   return lines.join("\n")
 }
+
+// ---- muxF tools:
+interface AmoVersion {
+  id?: number
+  version?: string
+  channel?: string
+  reviewed?: string | null
+  license?: { name?: Record<string, string>; slug?: string; is_custom?: boolean } | null
+  compatibility?: { firefox?: { min?: string; max?: string }; android?: { min?: string; max?: string } } | null
+  release_notes?: { [locale: string]: string } | string | null
+  is_strict_compatibility_enabled?: boolean
+  file?: { created?: string; size?: number; hash?: string; url?: string } | null
+}
+
+interface AmoCategory {
+  id?: number
+  name?: string
+  slug?: string
+  type?: string
+  misc?: boolean
+  weight?: number
+  description?: string
+}
+
+function bound(value: unknown, min: number, max: number, fallback: number): number {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return fallback
+  return Math.max(min, Math.min(Math.floor(n), max))
+}
+
+function epoch(value: unknown): number {
+  if (typeof value !== 'string') return NaN
+  return Date.parse(value)
+}
+
+function median(values: number[]): number | null {
+  if (!values.length) return null
+  const sorted = [...values].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
+}
+
+/** The add-on catalogue's own taxonomy: every category AMO files add-ons under, and what each one is for. */
+export async function categoryCatalog(args: { limit?: number }): Promise<string> {
+  const limit = bound(args.limit, 1, 40, 20)
+  const rows = (await get<AmoCategory[]>(`${BASE}/addons/categories/`)) ?? []
+  if (!rows.length) throw new AmoError('AMO returned no add-on categories.')
+  const byType = new Map<string, number>()
+  for (const c of rows) byType.set(c.type ?? 'not reported', (byType.get(c.type ?? 'not reported') ?? 0) + 1)
+  const misc = rows.filter((c) => c.misc)
+  const weighted = [...rows].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0))
+  return [
+    `AMO add-on category taxonomy: ${rows.length} categor${rows.length === 1 ? 'y' : 'ies'}`,
+    `By add-on type: ${[...byType.entries()].map(([k, n]) => `${k} ${n}`).join(', ')}`,
+    `Miscellaneous categories: ${misc.length}${misc.length ? ` (${[...new Set(misc.map((c) => c.slug ?? 'slug not reported'))].slice(0, 8).join(', ')})` : ''}`,
+    `Categories carrying a display weight: ${rows.filter((c) => (c.weight ?? 0) > 0).length}`,
+    rows.length ? `Categories (up to ${limit}):` : '',
+    ...rows.slice(0, limit).map((c) => `- ${c.slug ?? 'slug not reported'}: ${str(c.name, 'name not reported')} (${c.type ?? 'type not reported'}, weight ${c.weight ?? 0})`),
+    `Heaviest weights: ${weighted.slice(0, 3).map((c) => `${c.slug ?? 'slug not reported'} ${c.weight ?? 0}`).join(', ')}`,
+    `Category purpose, as AMO describes it:`,
+    ...rows.slice(0, 4).map((c) => `- ${c.slug ?? 'slug not reported'}: ${str(c.description, 'no description published').slice(0, 220)}`),
+  ].filter(Boolean).join('\n')
+}
+

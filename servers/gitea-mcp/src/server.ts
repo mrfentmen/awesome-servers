@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { repoDetail } from "./api.js"
-import { searchRepos } from "./api.js"
 
+import { repoDetail, searchRepos } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,37 @@ export function createServer(): McpServer {
     try { return text(await repoDetail(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "search_users",
+    {
+      title: "Search users",
+      description: "Search the people registered on a Gitea instance by username, with follower counts, stars and last-seen dates.",
+      inputSchema: z.object( { query: z.string().describe("Username or part of one."), limit: z.number().describe("Max users.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: search_users ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_gitea_search_users", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "org_profile",
+    {
+      title: "Org profile",
+      description: "A Gitea organisation's public profile: description, website, location, avatar and creation date.",
+      inputSchema: z.object( { org: z.string().describe("Organisation name, e.g. gitea.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: org_profile ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_gitea_org_profile", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

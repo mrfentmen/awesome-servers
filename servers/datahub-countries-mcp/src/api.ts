@@ -73,3 +73,120 @@ export async function list(args: ListArgs = {}): Promise<string> {
       .map((r, i) => `${i + 1}. ${r.name} (${r.alpha2}) ${r.alpha3 ? `| ${r.alpha3.toUpperCase()}` : ''}${r.region ? ` | ${r.region}` : ''}`)
       .join('\n');
 }
+
+// ---- muxA tools:
+
+interface WideRow {
+  [header: string]: string;
+}
+
+function blank(value: string | undefined): boolean {
+  if (value == null) return true;
+  const t = value.replace(/\u00a0/g, '').trim();
+  return t === '' || t === '-' || t.toLowerCase() === 'nan';
+}
+
+function show(value: string | undefined): string {
+  if (blank(value)) return 'not recorded';
+  const t = String(value).replace(/\u00a0/g, ' ').trim();
+  return t.length > 120 ? `${t.slice(0, 120)}...` : t;
+}
+
+function yesNo(value: string | undefined): string {
+  if (blank(value)) return 'not recorded';
+  const t = String(value).replace(/\u00a0/g, '').trim().toLowerCase();
+  if (t === 'yes' || t === 'true') return 'yes';
+  if (t === 'no' || t === 'false') return 'no';
+  return show(value);
+}
+
+async function loadWide(): Promise<WideRow[]> {
+  const res = await fetch(BASE, {
+    headers: { 'User-Agent': 'mrfentmen-datahub-countries-mcp/1.0', Accept: 'text/csv' },
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!res.ok) throw new Error(`DataHub returned ${res.status}`);
+  const lines = (await res.text()).split(/\r?\n/).filter((l) => l.trim());
+  if (lines.length < 2) return [];
+  const header = lines[0].split(',').map((h) => h.trim());
+  const rows: WideRow[] = [];
+  for (const line of lines.slice(1)) {
+    const fields: string[] = [];
+    let cur = '';
+    let inQ = false;
+    for (const ch of line) {
+      if (ch === '"') inQ = !inQ;
+      else if (ch === ',' && !inQ) {
+        fields.push(cur);
+        cur = '';
+      } else cur += ch;
+    }
+    fields.push(cur);
+    const row: WideRow = {};
+    header.forEach((h, i) => {
+      row[h] = (fields[i] ?? '').trim();
+    });
+    if (!blank(row['CLDR display name'])) rows.push(row);
+  }
+  return rows;
+}
+
+function display(row: WideRow): string {
+  return show(row['CLDR display name'] || row['official_name_en']);
+}
+
+export interface DetailsArgs {
+  code: string;
+}
+
+export interface CodeArgs {
+  code: string;
+}
+
+const CODE_FIELDS: Array<[string, string]> = [
+  ['ISO3166-1-Alpha-2', 'ISO alpha-2'],
+  ['ISO3166-1-Alpha-3', 'ISO alpha-3'],
+  ['ISO3166-1-numeric', 'ISO numeric'],
+  ['M49', 'UN M49'],
+  ['FIFA', 'FIFA'],
+  ['Dial', 'calling code'],
+  ['MARC', 'MARC'],
+  ['FIPS', 'FIPS'],
+  ['WMO', 'WMO'],
+  ['ITU', 'ITU'],
+  ['IOC', 'IOC'],
+  ['TLD', 'TLD'],
+  ['wikidata_id', 'Wikidata'],
+  ['Geoname ID', 'Geonames'],
+  ['ISO4217-currency_alphabetic_code', 'currency code'],
+];
+
+export interface RegionArgs {
+  level?: string;
+  limit?: number;
+}
+
+export async function regionSummary(args: RegionArgs): Promise<string> {
+  const level = (args.level ?? 'Region Name').trim();
+  if (!['Region Name', 'Sub-region Name', 'Continent', 'Intermediate Region Name'].includes(level)) {
+    return `Unknown level "${level}". Use Continent, Region Name, Intermediate Region Name or Sub-region Name.`;
+  }
+  const rows = await loadWide();
+  if (!rows.length) throw new Error('DataHub returned no usable rows.');
+  const groups = new Map<string, { total: number; independent: number; codes: string[] }>();
+  for (const r of rows) {
+    const key = show(r[level]);
+    const g = groups.get(key) ?? { total: 0, independent: 0, codes: [] };
+    g.total += 1;
+    if (String(r['is_independent'] ?? '').toLowerCase() === 'yes') g.independent += 1;
+    const a2 = String(r['ISO3166-1-Alpha-2'] ?? '').replace(/\u00a0/g, '').trim();
+    if (a2) g.codes.push(a2.toUpperCase());
+    groups.set(key, g);
+  }
+  const ranked = [...groups.entries()].sort((a, b) => b[1].total - a[1].total);
+  return [
+    `Country code dataset grouped by ${level}: ${rows.length} entries in ${ranked.length} groups.`,
+    ...ranked.map(([k, g], i) =>
+      `${i + 1}. ${k} | ${g.total} entries | ${g.independent} independent | codes ${g.codes.slice(0, 12).join(' ')}${g.codes.length > 12 ? ' ...' : ''}`),
+  ].join('\n');
+}

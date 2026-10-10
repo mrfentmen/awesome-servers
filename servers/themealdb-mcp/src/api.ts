@@ -28,7 +28,6 @@ const m0 = (() => {
 const UA = 'mrfentmen-themealdb-mcp/1.0';
 const BASE = 'https://www.themealdb.com/api/json/v1/1';
 
-
 function describeMeal(m: m0_Meal): string {
   const ings: string[] = [];
   for (let i = 1; i <= 5; i++) {
@@ -38,8 +37,6 @@ function describeMeal(m: m0_Meal): string {
   }
   return `* ${m.strMeal ?? '?'} (${m.strArea ?? '?'} | ${m.strCategory ?? '?'})\n  Ingredients: ${ings.join(', ') || '?'}\n  ${(m.strInstructions ?? '').slice(0, 180)}${(m.strInstructions ?? '').length > 180 ? '...' : ''}`;
 }
-
-
 
 async function search(args: m0_QueryArg): Promise<string> {
   const res = await fetch(`${BASE}/search.php?s=${encodeURIComponent(args.query)}`, {
@@ -161,3 +158,26 @@ export const m1_recipeDetails = m1.recipeDetails;
 export const m1_byIngredient = m1.byIngredient;
 export const m1_RecipesError = m1.RecipesError;
 export const m1_searchRecipes = m1.searchRecipes;
+
+// ---- muxC tools:
+
+const MEALDB_BASE = "https://www.themealdb.com/api/json/v1/1"
+const MEALDB_UA = { "User-Agent": "mrfentmen-themealdb-mcp/1.0", Accept: "application/json" }
+
+async function mealdbGet<T>(path: string): Promise<T> {
+  const res = await fetch(`${MEALDB_BASE}${path}`, {
+    headers: MEALDB_UA,
+    signal: AbortSignal.timeout(25000),
+  })
+  if (!res.ok) throw new Error(`TheMealDB returned ${res.status}`)
+  return (await res.json()) as T
+}
+
+export async function listIngredients(args: { limit?: number }): Promise<string> {
+  const limit = Math.max(1, Math.min(args.limit ?? 40, 100))
+  const d = await mealdbGet<{ meals?: Array<{ strIngredient?: string }> | null }>("/list.php?i=list")
+  const names = (d.meals ?? []).map((m) => m.strIngredient ?? "?").filter(Boolean)
+  if (!names.length) return "No ingredients returned."
+  return `TheMealDB ingredients (${names.length} total), first ${Math.min(limit, names.length)}:\n` +
+    names.slice(0, limit).map((n, i) => `${i + 1}. ${n}`).join("\n")
+}

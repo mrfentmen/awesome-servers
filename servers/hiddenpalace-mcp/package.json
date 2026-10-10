@@ -1,6 +1,6 @@
 {
   "name": "hiddenpalace-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Use this MCP server to hiddenpalace.org, unreleased game prototypes, beta content, and cut levels. Tools include search pages, get page",
   "type": "module",
   "mcpName": "io.github.mrfentmen/hiddenpalace-mcp",

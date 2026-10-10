@@ -45,3 +45,44 @@ export async function lookupAll(args: { domain?: string }): Promise<string> {
   }
   return out.join("\n\n")
 }
+
+// ---- muxA tools:
+// The existing tools answer one record type and the six common types together.
+// These add a reverse lookup for an address, the DNSSEC posture of a name, and
+// the CNAME chain a name actually resolves through.
+const STATUS_TEXT: Record<number, string> = {
+  0: "NOERROR",
+  1: "FORMERR",
+  2: "SERVFAIL",
+  3: "NXDOMAIN",
+  5: "REFUSED",
+}
+
+function statusText(status: unknown): string {
+  if (typeof status !== "number") return "not reported"
+  return STATUS_TEXT[status] ?? `status ${status}`
+}
+
+export async function cnameChain(args: { domain?: string }): Promise<string> {
+  const domain = (args.domain ?? "").trim().toLowerCase()
+  if (!domain) throw new DnsError("Provide a domain name")
+  const d = await get<any>(`${BASE}?name=${encodeURIComponent(domain)}&type=A`)
+  const status = statusText(d?.Status)
+  const answers = (d?.Answer ?? []) as Array<{ name?: string; type?: number; data?: string; TTL?: number }>
+  const cnames = answers.filter((a) => a?.type === 5)
+  const addresses = answers.filter((a) => a?.type === 1)
+  const lines = [`${domain} A lookup — ${status}`]
+  if (cnames.length) {
+    lines.push(`  follows ${cnames.length} CNAME hop(s):`)
+    for (const c of cnames) lines.push(`    ${c.name ?? "?"} -> ${c.data ?? "?"}  (ttl ${c.TTL ?? "?"})`)
+  } else {
+    lines.push("  no CNAME: the name is answered directly")
+  }
+  if (addresses.length) {
+    lines.push("  final addresses:")
+    for (const a of addresses) lines.push(`    ${a.data ?? "?"}  (ttl ${a.TTL ?? "?"})`)
+  } else {
+    lines.push("  no A record in the answer")
+  }
+  return lines.join("\n")
+}

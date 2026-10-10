@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_schedule, m0_search, m1_searchShows, m1_showEpisodes, m1_todaySchedule } from './api.js'
 
+import { m0_schedule, m0_search, m1_searchShows, m1_showEpisodes, m1_todaySchedule } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -70,5 +71,21 @@ server.registerTool(
     try { return text(await m1_todaySchedule(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "show_lookup",
+    {
+      title: "Show lookup",
+      description: "Resolve a show from an id another database holds - TheTVDB, IMDb or TVRage - into its TVMaze record, so you can skip a name search.",
+      inputSchema: z.object( { tvdb: z.string().describe("TheTVDB show id, e.g. 121361.").optional(), imdb: z.string().describe("IMDb show id, e.g. tt0944947.").optional(), tvrage: z.string().describe("TVRage show id.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: show_lookup ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_tvmaze_show_lookup", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

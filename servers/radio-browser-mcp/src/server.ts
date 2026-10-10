@@ -1,13 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  RadioError,
-  formatStation,
-  searchStations,
-  stationsByCountry,
-  stationsByTag,
-  topVoted,
-} from "./api.js"
+import { RadioError, formatStation, searchStations, stationsByCountry, stationsByTag, topVoted, listTags, listCountries, stationsByLanguage } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -92,6 +86,78 @@ export function createServer(): McpServer {
       try {
         const stations = await topVoted(limit)
         return text(`Most-voted stations:\n\n${stations.map((s, i) => formatStation(s, i)).join("\n\n")}`)
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "list_tags",
+    {
+      title: "List tags",
+      description: "The genre and mood tags Radio Browser stations carry, with a station count for each, so you can pick a tag to browse.",
+      inputSchema: z.object({
+        prefix: z.string().describe("Only show tags containing this text.").optional(),
+        limit: z.number().describe("Max tags, 1-200, default 30.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: list_tags ----
+      const paywallMessage = await premiumRequired("list_tags")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await listTags(args))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "list_countries",
+    {
+      title: "List countries",
+      description: "The countries Radio Browser covers, with ISO 3166-1 codes and station counts, so you can find the code to browse by country.",
+      inputSchema: z.object({
+        prefix: z.string().describe("Filter by country name or ISO code.").optional(),
+        limit: z.number().describe("Max countries, 1-200, default 30.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: list_countries ----
+      const paywallMessage = await premiumRequired("list_countries")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await listCountries(args))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "stations_by_language",
+    {
+      title: "Stations by language",
+      description: "Radio stations that broadcast in a given language, ordered by how often they are played.",
+      inputSchema: z.object({
+        language: z.string().describe("Language name or code, e.g. 'english' or 'german'."),
+        limit: z.number().describe("Max stations, 1-25, default 8.").optional(),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: stations_by_language ----
+      const paywallMessage = await premiumRequired("stations_by_language")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await stationsByLanguage(args))
       } catch (e) {
         return textError(errorMessage(e))
       }

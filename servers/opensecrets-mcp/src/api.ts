@@ -71,3 +71,102 @@ export function formatCandidate(c: Candidate, index?: number): string {
   const prefix = index !== undefined ? `${index + 1}. ` : ""
   return `${prefix}[${c.id ?? "?"}] ${c.name ?? "(unnamed)"}${c.party ? ` (${c.party}${c.state ? `-${c.state}` : ""})` : ""}${c.chamber ? ` — ${c.chamber}` : ""}`
 }
+
+// ---- muxB tools:
+
+// OpenFEC, the FEC's own open API. DEMO_KEY is the placeholder the FEC
+// documents for public use and reaches the candidate and committee indexes.
+const FEC_BASE = "https://api.open.fec.gov/v1"
+const FEC_DEMO_KEY = "DEMO_KEY"
+
+async function fecGet<T>(path: string, params: Array<[string, string]> = []): Promise<T> {
+  const qs = new URLSearchParams([...params, ["api_key", FEC_DEMO_KEY]])
+  const res = await fetch(`${FEC_BASE}${path}?${qs.toString()}`, {
+    headers: { "User-Agent": "opensecrets-mcp/1.0", Accept: "application/json" },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (res.status === 429) throw new OpenSecretsError("OpenFEC DEMO_KEY is limited to 40 calls an hour; wait or register a key at api.data.gov.")
+  if (res.status === 422) {
+    const detail = ((await res.json().catch(() => ({}))) as Raw).message
+    throw new OpenSecretsError(`OpenFEC rejected the query${detail ? `: ${String(detail).slice(0, 200)}` : "."}`)
+  }
+  if (!res.ok) throw new OpenSecretsError(`OpenFEC error ${res.status}`)
+  return (await res.json()) as T
+}
+
+function fecCycles(row: Raw): string {
+  const list: number[] = Array.isArray(row.cycles) ? row.cycles : []
+  if (list.length === 0) return "cycles not reported"
+  const shown = list.slice(0, 6).map(String)
+  return shown.join(", ") + (list.length > 6 ? `, +${list.length - 6} more` : "")
+}
+
+function fecCommitteeLine(c: Raw): string {
+  const designation = c.designation_full ?? c.designation ?? "";
+  return `      ${c.committee_id ?? "?"} ${c.name ?? "(unnamed)"}${designation ? ` [${designation}]` : ""}${c.committee_type_full ? ` (${c.committee_type_full})` : ""}`
+}
+
+export async function fecCandidateSearch(args: {
+  query: string
+  office?: string
+  state?: string
+  party?: string
+  limit?: number
+}): Promise<string> {
+  const q = (args.query ?? "").trim()
+  if (!q) throw new OpenSecretsError("Query is empty.")
+  const limit = Math.min(Math.max(args.limit ?? 5, 1), 20)
+  const params: Array<[string, string]> = [["q", q], ["per_page", String(limit)], ["sort", "-receipts"]]
+  const office = (args.office ?? "").trim().toUpperCase()
+  if (office) params.push(["office", office])
+  const state = (args.state ?? "").trim().toUpperCase()
+  if (state) params.push(["state", state])
+  const party = (args.party ?? "").trim().toUpperCase()
+  if (party) params.push(["party", party])
+  const data = await fecGet<Raw>("/candidates/search/", params)
+  const rows: Raw[] = Array.isArray(data.results) ? data.results : []
+  if (rows.length === 0) return `No FEC candidate records match "${q}".`
+  const total = ((data.pagination ?? {}) as Raw).count
+  return [
+    `FEC candidate index for "${q}"${office ? `, office ${office}` : ""}${state ? `, ${state}` : ""}${party ? `, ${party}` : ""} - ${Number(total ?? 0).toLocaleString()} match, showing ${rows.length}:`,
+    ...rows.map((r, i) => {
+      const committees: Raw[] = Array.isArray(r.principal_committees) ? r.principal_committees : []
+      return [
+        `${i + 1}. ${r.name ?? "(unnamed)"} [${r.candidate_id ?? "?"}]`,
+        `      ${r.office_full ?? r.office ?? "office not reported"}${r.district && r.district !== "00" ? `-${r.district}` : ""} · ${r.state ?? "?"} · ${r.party_full ?? r.party ?? "party not reported"}`,
+        `      status ${r.candidate_status ?? "not reported"}${r.incumbent_challenge_full ? `, ${r.incumbent_challenge_full}` : ""} · raised funds: ${r.has_raised_funds === true ? "yes" : r.has_raised_funds === false ? "no" : "not reported"}`,
+        `      cycles: ${fecCycles(r)}`,
+        committees.length ? `      principal committees:` : "      principal committees: not reported",
+        ...committees.slice(0, 3).map(fecCommitteeLine),
+        committees.length > 3 ? `      ...and ${committees.length - 3} more committees` : "",
+      ].filter(Boolean).join("\n")
+    }),
+  ].join("\n")
+}
+
+export async function fecCommitteeSearch(args: { query: string; limit?: number }): Promise<string> {
+  const q = (args.query ?? "").trim()
+  if (!q) throw new OpenSecretsError("Query is empty.")
+  const limit = Math.min(Math.max(args.limit ?? 5, 1), 20)
+  const data = await fecGet<Raw>("/committees/", [["q", q], ["per_page", String(limit)], ["sort", "-receipts"]])
+  const rows: Raw[] = Array.isArray(data.results) ? data.results : []
+  if (rows.length === 0) return `No FEC committees match "${q}".`
+  const total = ((data.pagination ?? {}) as Raw).count
+  return [
+    `FEC committee index for "${q}" - ${Number(total ?? 0).toLocaleString()} match, showing ${rows.length}:`,
+    ...rows.map((r, i) => {
+      const agent = [r.designated_agent_name, r.designated_agent_city, r.designated_agent_state].filter(Boolean).join(", ")
+      const sponsor: string[] = Array.isArray(r.sponsor_candidate_list) ? r.sponsor_candidate_list.map((s) => String(s.name ?? s.candidate_id ?? "?")) : []
+      const candidates: string[] = Array.isArray(r.candidate_ids) ? r.candidate_ids.map(String) : []
+      return [
+        `${i + 1}. ${r.name ?? "(unnamed committee)"} [${r.committee_id ?? "?"}]`,
+        `      ${r.committee_type_full ?? "type not reported"}${r.designation_full ? ` · ${r.designation_full}` : ""}${r.party_full ? ` · ${r.party_full}` : ""}${r.state ? ` · ${r.state}` : ""}`,
+        `      treasurer ${r.treasurer_name ?? "not reported"}${agent ? ` (designated agent ${agent})` : ""} · filing ${r.filing_frequency ?? "not reported"}`,
+        `      cycles: ${fecCycles(r)} · first file ${r.first_file_date ?? "not reported"} · last file ${r.last_file_date ?? "not reported"}`,
+        sponsor.length ? `      sponsored by: ${sponsor.slice(0, 3).join(", ")}${sponsor.length > 3 ? `, +${sponsor.length - 3} more` : ""}` : "",
+        candidates.length ? `      linked candidate ids: ${candidates.slice(0, 4).join(", ")}${candidates.length > 4 ? `, +${candidates.length - 4} more` : ""}` : "",
+        r.affiliated_committee_name ? `      affiliated with: ${r.affiliated_committee_name}` : "",
+      ].filter(Boolean).join("\n")
+    }),
+  ].join("\n")
+}

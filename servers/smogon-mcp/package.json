@@ -1,6 +1,6 @@
 {
   "name": "smogon-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Use this MCP server to competitive Pokemon, full dex data plus monthly Smogon usage statistics. Tools include search pokemon, get pokemon, get usage stats",
   "type": "module",
   "mcpName": "io.github.mrfentmen/smogon-mcp",

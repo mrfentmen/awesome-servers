@@ -1,9 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { activityByParticipants } from "./api.js"
-import { activityByType } from "./api.js"
-import { randomActivity } from "./api.js"
 
+import { activityByParticipants, activityByType, randomActivity } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -47,5 +46,37 @@ export function createServer(): McpServer {
     try { return text(await activityByParticipants(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "activity_catalogue",
+    {
+      title: "Activity catalogue",
+      description: "Deduplicated full catalogue of Bored API activities across types and group sizes, with price, duration, kid friendly counts and optionally only free or kid friendly entries.",
+      inputSchema: z.object( { type: z.string().describe("Restrict to a type, e.g. social.").optional(), kid_friendly_only: z.boolean().describe("Only kid friendly activities.").optional(), free_only: z.boolean().describe("Only zero cost activities.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: activity_catalogue ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_bored_activity_catalogue", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "activity_search",
+    {
+      title: "Activity search",
+      description: "Search Bored API activities by keyword with optional participant count, maximum price, accessibility level and kid friendly flag, filtering the full activity set rather than one criterion.",
+      inputSchema: z.object( { keyword: z.string().describe("Word or phrase to look for.").optional(), type: z.string().describe("Activity type.").optional(), participants: z.number().describe("Group size 1 to 4.").optional(), max_price: z.number().describe("Maximum price in dollars.").optional(), accessibility: z.string().describe("Accessibility fragment, e.g. no challenges.").optional(), kid_friendly: z.boolean().describe("Only kid friendly.").optional(), limit: z.number().describe("Max results.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: activity_search ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_bored_activity_search", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

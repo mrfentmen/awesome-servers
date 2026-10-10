@@ -181,3 +181,18 @@ export function formatAchievement(a: Achievement): string {
   ].filter(Boolean)
   return lines.join("\n")
 }
+
+// ---- muxC tools:
+
+interface Gw2World {
+  id?: number
+  name?: string
+  population?: string
+}
+
+interface Gw2ItemStat {
+  id?: number
+  name?: string
+  attributes?: Array<{ attribute?: string; multiplier?: number; value?: number }>
+}
+

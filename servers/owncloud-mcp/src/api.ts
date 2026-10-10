@@ -64,3 +64,27 @@ export function createShare(filePath: string, shareType: string, shareWith?: str
     body: body.toString(),
   })
 }
+
+// ---- muxC tools:
+
+/**
+ * GET /status.php is the one ownCloud endpoint that answers without a login, so
+ * it is the only place a new tool can be proven against a real server.
+ */
+export async function serverStatus(): Promise<string> {
+  const res = await fetch(`${base()}/status.php`, {
+    headers: { ...UA, Accept: "application/json" },
+    signal: AbortSignal.timeout(20000),
+  })
+  if (!res.ok) throw new OwnCloudError(`HTTP ${res.status} from ${base()}/status.php`)
+  const raw = (await res.json()) as Record<string, unknown>
+  const field = (key: string): string => {
+    const value = raw[key]
+    return value === undefined || value === null || value === "" ? "not reported" : String(value)
+  }
+  return [
+    `Server: ${field("productname")} ${field("productversion")} (${field("product")})`,
+    `ownCloud version: ${field("versionstring")} (web ${field("version")}, edition ${field("edition")})`,
+    `Installed: ${field("installed")} | Maintenance mode: ${field("maintenance")} | Needs DB upgrade: ${field("needsDbUpgrade")}`,
+  ].join("\n")
+}

@@ -1,6 +1,6 @@
 {
   "name": "hasura-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Hasura: metadata export, SQL passthrough. Works with any self-hosted instance.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/hasura-mcp",

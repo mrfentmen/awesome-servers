@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { bookInfo } from "./api.js"
-import { searchBooks } from "./api.js"
 
+import { bookInfo, searchBooks } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,37 @@ export function createServer(): McpServer {
     try { return text(await bookInfo(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "isbn_lookup",
+    {
+      title: "Isbn lookup",
+      description: "Resolve an ISBN-10 or ISBN-13 against Open Library: title, publish date, publishers, page count, language, subjects and first sentence.",
+      inputSchema: z.object({ isbn: z.string().describe("ISBN-10 or ISBN-13, digits only or with hyphens.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: isbn_lookup ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_books_isbn_lookup", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "author_works",
+    {
+      title: "Author works",
+      description: "List an author's works and descriptions from Open Library, matched by author name.",
+      inputSchema: z.object({ author: z.string().describe("Author name, for example Ursula K. Le Guin."), limit: z.number().describe("Max works, 1-50, default 10.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: author_works ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_books_author_works", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

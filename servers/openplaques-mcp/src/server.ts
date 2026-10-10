@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { recent } from "./api.js"
-import { search } from "./api.js"
 
+import { recent, search } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,37 @@ export function createServer(): McpServer {
     try { return text(await search(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "plaque",
+    {
+      title: "Plaque",
+      description: "One OpenPlaques record in full: inscription, subjects, address, erection date, whether it is still current, coordinates and photo.",
+      inputSchema: z.object( { id: z.string().describe("Numeric OpenPlaques id, e.g. 1.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: plaque ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_openplaques_plaque", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "plaque_photos",
+    {
+      title: "Plaque photos",
+      description: "Photographs of one OpenPlaques plaque, with photographer credits and file descriptions.",
+      inputSchema: z.object( { id: z.string().describe("Numeric OpenPlaques id, e.g. 1.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: plaque_photos ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_openplaques_plaque_photos", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

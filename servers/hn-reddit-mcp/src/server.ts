@@ -1,9 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { hnItem } from "./api.js"
-import { hnTop } from "./api.js"
-import { redditTop } from "./api.js"
 
+import { hnItem, hnTop, redditTop, hnComments } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -47,5 +46,50 @@ export function createServer(): McpServer {
     try { return text(await redditTop(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "hn_search",
+    {
+      title: "HN search",
+      description: "Full-text search Hacker News through the Algolia index: match title, points, comment count, author and date, with an optional minimum score.",
+      inputSchema: z.object({ query: z.string().min(1).max(200), tag: z.string().default("story").describe("story, comment, poll, show_hn, ask_hn or front_page"), minPoints: z.number().int().min(0).default(0), hitsPerPage: z.number().int().min(1).max(30).default(10), page: z.number().int().min(0).max(50).default(0) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: hn_search ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_hn_reddit_hn_search", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "hn_comments",
+    {
+      title: "HN comments",
+      description: "The comment tree under one Hacker News story, with each comment's author, indented by reply depth.",
+      inputSchema: z.object({ id: z.number().int().min(1), depth: z.number().int().min(1).max(6).default(2) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await hnComments(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "reddit_search",
+    {
+      title: "Reddit search",
+      description: "Search one subreddit's posts by keyword over the last year via Reddit's Atom feed, with the poster and permalink.",
+      inputSchema: z.object({ subreddit: z.string().min(1).max(60), query: z.string().min(1).max(200), limit: z.number().int().min(1).max(25).default(10) }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: reddit_search ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_hn_reddit_reddit_search", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

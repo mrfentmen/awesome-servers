@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { article } from "./api.js"
-import { search } from "./api.js"
 
+import { article, search, articleVersionHistory } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,34 @@ export function createServer(): McpServer {
     try { return text(await article(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "article_version_history",
+    {
+      title: "Article version history",
+      description: "Every published version of a Figshare article, with version number and the api url for each version.",
+      inputSchema: z.object( { id: z.number().int().describe("Figshare article id.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await articleVersionHistory(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "recent_articles",
+    {
+      title: "Recent articles",
+      description: "The most recently published or modified public Figshare articles, ordered by a chosen date field, with id, doi and public url.",
+      inputSchema: z.object( { limit: z.number().int().min(1).max(50).default(10), order: z.string().default("published_date").describe("published_date, modified_date, created_date or views") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: recent_articles ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_figshare_recent_articles", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

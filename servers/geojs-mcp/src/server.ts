@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { lookup } from "./api.js"
-import { self } from "./api.js"
 
+import { lookup, self } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +34,21 @@ export function createServer(): McpServer {
     try { return text(await self(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "geo_by_ip",
+    {
+      title: "Geo by IP",
+      description: "GeoJS's network view of an IP: coordinates, city and postal code, continent, area code, timezone and the autonomous system it sits in.",
+      inputSchema: z.object( { ip: z.string().describe("IP address, e.g. 8.8.8.8.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: geo_by_ip ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_geojs_geo_by_ip", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

@@ -1,15 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  DEFAULT_GHOST,
-  DEFAULT_PORT,
-  GopherError,
-  cleanText,
-  formatItem,
-  gopherFetch,
-  parseMenu,
-} from "./api.js"
 
+import { DEFAULT_GHOST, DEFAULT_PORT, GopherError, cleanText, formatItem, gopherFetch, parseMenu } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -106,6 +99,38 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "menu_inventory",
+    {
+      title: "Menu inventory",
+      description: "Read a gopher menu as a typed inventory: how many directories, files, urls and error lines it holds, then each link as a full gopher url.",
+      inputSchema: z.object( { selector: z.string().describe("Menu path, e.g. / or /1/floodgap.").optional(), host: z.string().describe("Gopher host.").optional(), port: z.number().describe("Gopher port.").optional(), limit: z.number().describe("Max links.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: menu_inventory ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_gopher_menu_inventory", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "menu_search",
+    {
+      title: "Menu search",
+      description: "Search a gopher menu's entry labels and selectors for a string, which is how you find your way through a large gopher tree.",
+      inputSchema: z.object( { selector: z.string().describe("Menu path to search.").optional(), query: z.string().describe("Text to look for."), host: z.string().describe("Gopher host.").optional(), port: z.number().describe("Gopher port.").optional(), limit: z.number().describe("Max matches.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: menu_search ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_gopher_menu_search", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

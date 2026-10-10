@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_latest, m0_versions } from './api.js'
 
+import { m0_latest, m0_versions } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -34,5 +35,37 @@ server.registerTool(
     try { return text(await m0_versions(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "version_info",
+    {
+      title: "Version info",
+      description: "The Go module proxy's record for one specific version: publication time, VCS, source repository, ref and commit hash.",
+      inputSchema: z.object( { module: z.string().describe("Module path like github.com/gin-gonic/gin."), version: z.string().describe("Version like v1.9.1.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: version_info ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_go_proxy_version_info", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "module_manifest",
+    {
+      title: "Module manifest",
+      description: "The go.mod a Go module version declares: its Go version requirement and every direct and indirect dependency it pins.",
+      inputSchema: z.object( { module: z.string().describe("Module path like github.com/gin-gonic/gin."), version: z.string().describe("Version like v1.9.1.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: module_manifest ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_go_proxy_module_manifest", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

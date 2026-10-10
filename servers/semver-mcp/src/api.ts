@@ -56,3 +56,17 @@ export async function describe(args: { version?: string }): Promise<string> {
   const p = parse(args.version ?? "")
   return `${args.version}\nMajor: ${p.major}\nMinor: ${p.minor}\nPatch: ${p.patch}\nPrerelease: ${p.pre.join(".") || "none"}`
 }
+
+// ---- muxB tools:
+
+interface VersionDoc {
+  name?: string
+  version?: string
+  description?: string
+  license?: string
+  engines?: Record<string, string>
+  deprecated?: string
+  dist?: { tarball?: string; unpackedSize?: number; fileCount?: number }
+  maintainers?: Array<{ name?: string }>
+}
+

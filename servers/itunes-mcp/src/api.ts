@@ -7,7 +7,6 @@ export interface m0_SearchArgs {
 const m0 = (() => {
 const BASE = 'https://itunes.apple.com/search';
 
-
 async function search(args: m0_SearchArgs): Promise<string> {
   const q = (args.query ?? '').trim();
   if (!q) return 'Provide a search query.';
@@ -136,3 +135,6 @@ export const m1_topPaid = m1.topPaid;
 export const m2_PodcastError = m2.PodcastError;
 export const m2_searchPodcasts = m2.searchPodcasts;
 export const m2_topPodcasts = m2.topPodcasts;
+
+// ---- muxC tools:
+

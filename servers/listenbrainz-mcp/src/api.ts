@@ -42,3 +42,17 @@ export async function popular(args: UserArgs): Promise<string> {
       return `${i + 1}. ${s('artist_name')} (${s('listen_count')} listens)`;
     }).join('\n');
 }
+
+// ---- muxB tools:
+
+export interface PlaylistsArgs {
+  username: string;
+  count?: number;
+}
+
+export interface TopRecordingsArgs {
+  username: string;
+  range?: string;
+  count?: number;
+}
+

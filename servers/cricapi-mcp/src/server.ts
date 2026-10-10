@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { CricApiError, currentMatches, formatMatch, matchInfo, searchSeries } from "./api.js"
+import { CricApiError, currentMatches, formatMatch, matchInfo, searchSeries, seriesFixtures, seriesStandings, matchScorecard } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -73,6 +74,58 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "series_fixtures",
+    {
+      title: "Series fixtures",
+      description: "Fixtures and results for a cricket competition from ESPNcricinfo's public feed: date, teams, scores, result state and the match link. Takes an ESPNcricinfo series id, or a competition name to look one up.",
+      inputSchema: z.object({
+        series: z.string().optional().describe("Series id, e.g. 8048, or a competition name such as 'The Ashes'"),
+        year: z.number().int().optional().describe("Season year, e.g. 2026"),
+        limit: z.number().int().min(1).max(200).default(20),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await seriesFixtures(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "series_standings",
+    {
+      title: "Series standings",
+      description: "The points table for a cricket competition from ESPNcricinfo's public feed, one line per team with the stats that feed publishes.",
+      inputSchema: z.object({
+        series: z.string().optional().describe("Series id, e.g. 8048, or a competition name"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await seriesStandings(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "match_scorecard",
+    {
+      title: "Match scorecard",
+      description: "The full scorecard of one cricket match from ESPNcricinfo: the score by innings, boundaries, the leading scorers and wicket-takers for each side, the result note and the officials.",
+      inputSchema: z.object({
+        series: z.string().optional().describe("Series id, e.g. 8048, or a competition name"),
+        event_id: z.string().describe("Match id from the match link, e.g. 1535465"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: match_scorecard ----
+    const paywallMessage = await premiumRequired("match_scorecard")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await matchScorecard(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

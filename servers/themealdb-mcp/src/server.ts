@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_categories, m0_filterByIngredient, m0_random, m0_search, m1_byIngredient, m1_recipeDetails, m1_searchRecipes } from './api.js'
 
+import { m0_categories, m0_filterByIngredient, m0_random, m0_search, m1_byIngredient, m1_recipeDetails, m1_searchRecipes, listIngredients } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -94,5 +95,50 @@ server.registerTool(
     try { return text(await m1_recipeDetails(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "filter_by_category",
+    {
+      title: "Filter by category",
+      description: "List meals in a TheMealDB category, such as Seafood, Dessert or Vegan.",
+      inputSchema: z.object( { category: z.string().describe("Category name, e.g. Seafood."), limit: z.number().describe("Max meals.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: filter_by_category ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_themealdb_filter_by_category", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "filter_by_area",
+    {
+      title: "Filter by area",
+      description: "List meals from a TheMealDB culinary area, such as Canadian, Italian or Japanese.",
+      inputSchema: z.object( { area: z.string().describe("Area name, e.g. Canadian."), limit: z.number().describe("Max meals.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: filter_by_area ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_themealdb_filter_by_area", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "list_ingredients",
+    {
+      title: "List ingredients",
+      description: "Every ingredient TheMealDB indexes, with a bounded slice of the catalogue.",
+      inputSchema: z.object( { limit: z.number().describe("Max ingredients.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await listIngredients(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

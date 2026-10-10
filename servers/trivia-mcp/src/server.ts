@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_categories, m0_getQuestion, m1_formatQuestion, m1_getCategories, m1_getQuestions, m1_TriviaError } from './api.js'
+import { m0_categories, m0_getQuestion, m1_formatQuestion, m1_getCategories, m1_getQuestions, m1_TriviaError, booleanQuestion, categoryList } from './api.js'
+import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -75,5 +76,43 @@ server.registerTool(
       }
     }
   )
+  server.registerTool(
+    "boolean_question",
+    {
+      title: "True or false",
+      description: "Open Trivia true/false questions, optionally from one raw OpenTDB category id.",
+      inputSchema: z.object( { category_id: z.number().describe("OpenTDB category id, 9 to 32.").optional(), amount: z.number().describe("How many questions.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: boolean_question ----
+    const paywallMessage = await premiumRequired("boolean_question")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await booleanQuestion(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "category_list",
+    {
+      title: "Category list",
+      description: "The OpenTDB category list with the raw numeric ids the API expects, for multiple-choice questions.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async () => {
+    // ---- paywall: category_list ----
+    const paywallMessage = await premiumRequired("category_list")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try {
+      return text(await categoryList());
+    } catch (e) {
+      return textError(errorMessage(e));
+    }
+    }
+  );
+
   return server
 }

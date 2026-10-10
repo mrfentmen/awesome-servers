@@ -1,6 +1,6 @@
 {
   "name": "config-weather-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Measure local configuration complexity and environment contract pressure without returning values, keys, paths, or source.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/config-weather-mcp",

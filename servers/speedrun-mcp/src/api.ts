@@ -209,3 +209,15 @@ export function formatRecordCategory(rc: RecordCategory): string {
       .join("\n")
   )
 }
+
+// ---- muxB tools:
+
+export interface LatestRunsArgs {
+  limit?: number;
+}
+
+export interface PlayerPbsArgs {
+  userId: string;
+  limit?: number;
+}
+

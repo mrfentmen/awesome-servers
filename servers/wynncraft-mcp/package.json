@@ -1,6 +1,6 @@
 {
   "name": "wynncraft-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Keyless MCP server for Wynncraft, the Minecraft MMORPG: player profiles, guilds, and item search.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/wynncraft-mcp",

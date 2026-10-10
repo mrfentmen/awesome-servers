@@ -34,3 +34,40 @@ export async function categories(_args?: unknown): Promise<string> {
   if (!Array.isArray(d) || !d.length) return 'No categories returned.';
   return `SVGL categories (${d.length}):\n${d.map((c, i) => `${i + 1}. ${c}`).join('\n')}`;
 }
+
+// ---- muxB tools:
+
+interface SvglLogo {
+  id?: number;
+  title?: string;
+  category?: string | string[];
+  route?: string | { light?: string; dark?: string };
+  wordmark?: string | { light?: string; dark?: string };
+  url?: string;
+  brandUrl?: string;
+}
+
+// the library returns category as a string or an array, and route as a single
+// SVG url or a { light, dark } pair, so normalise both before printing
+const categoryText = (value: unknown): string => {
+  if (Array.isArray(value)) return value.map(String).join(", ");
+  return value == null ? "category not reported" : String(value);
+};
+
+const svgText = (value: unknown): string => {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object") {
+    const row = value as Record<string, unknown>;
+    const light = String(row.light ?? "").trim();
+    const dark = String(row.dark ?? "").trim();
+    if (light && dark) return `${light} (light) | ${dark} (dark)`;
+    return light || dark || "not reported";
+  }
+  return "not reported";
+};
+
+export interface SearchLogosArgs {
+  query: string;
+  limit?: number;
+}
+

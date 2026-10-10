@@ -58,3 +58,27 @@ export async function repo(args: RepoArgs): Promise<string> {
     d.links?.html?.href ? `Link: ${d.links.html.href}` : null,
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxC tools:
+
+const BB_UA = "mrfentmen-bitbucket-mcp/1.0 (https://github.com/mrfentmen)"
+
+class BitbucketError extends Error {}
+
+const BB = "https://api.bitbucket.org/2.0"
+
+async function bb(path: string, ms = 25000): Promise<any> {
+  const res = await fetch(`${BB}${path}`, { headers: { "User-Agent": BB_UA, Accept: "application/json" }, signal: AbortSignal.timeout(ms) })
+  if (res.status === 404) throw new BitbucketError(`Bitbucket has no public ${path.replace(/^\/+/, "").split("?")[0]}; it may be private or gone`)
+  if (res.status === 410) throw new BitbucketError(`Bitbucket has deprecated ${path.replace(/^\/+/, "").split("?")[0]}`)
+  if (!res.ok) throw new BitbucketError(`Bitbucket returned ${res.status} for ${path}`)
+  return await res.json()
+}
+
+function checkSlug(value: string | undefined, what: string): string {
+  const v = (value ?? "").trim()
+  if (!v) throw new BitbucketError(`Provide a ${what}`)
+  if (!/^[A-Za-z0-9._-]+$/.test(v)) throw new BitbucketError(`"${v}" is not a valid Bitbucket ${what}; use letters, digits, dots, underscores or hyphens`)
+  return v
+}
+

@@ -1,4 +1,4 @@
-const UA = "mrfentmen-math-tools-mcp/1.0"
+
 export class MathError extends Error {}
 
 function gcd(a: number, b: number): number {
@@ -57,3 +57,17 @@ export async function stats(args: { values?: string }): Promise<string> {
   const fmt = (v: number) => Number.isInteger(v) ? String(v) : v.toFixed(4).replace(/0+$/, "").replace(/\.$/, "")
   return `Count: ${n}\nMean: ${fmt(mean)}\nMedian: ${fmt(median)}\nMode: ${fmt(mode)}\nMin: ${fmt(sorted[0])} | Max: ${fmt(sorted[n - 1])}\nStd dev: ${fmt(sd)}`
 }
+
+// ---- muxB tools:
+
+type OaisEntry = {
+  number?: number | string;
+  name?: string | string[];
+  offset?: string;
+  data?: string | string[];
+  formula?: string | string[];
+  keyword?: string | string[];
+  comment?: string | string[];
+  example?: string;
+};
+

@@ -1,6 +1,6 @@
 {
   "name": "spdx-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Use this MCP server to SPDX open source license metadata and compatibility helpers. Tools include search licenses, get license",
   "type": "module",
   "mcpName": "io.github.mrfentmen/spdx-mcp",

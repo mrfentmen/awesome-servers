@@ -47,3 +47,20 @@ export async function users(_args?: unknown): Promise<string> {
       return `${i + 1}. ${s('name')} | @${s('username')} | ${s('email')}`;
     }).join('\n');
 }
+
+// ---- muxC tools:
+
+interface JpComment {
+  postId?: number
+  id?: number
+  name?: string
+  email?: string
+  body?: string
+}
+
+interface JpAlbum {
+  userId?: number
+  id?: number
+  title?: string
+}
+

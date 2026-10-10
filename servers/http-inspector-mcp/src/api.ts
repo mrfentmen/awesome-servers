@@ -20,3 +20,9 @@ export async function inspectUrl(args: { url?: string }): Promise<string> {
     lines.length ? `\nHeaders:\n${lines.join("\n")}` : "",
   ].filter(Boolean).join("\n")
 }
+
+// ---- muxB tools:
+
+type DohAnswer = { name?: string; type?: number; TTL?: number; data?: string }
+type DohResponse = { Status?: number; Answer?: DohAnswer[]; Comment?: string }
+

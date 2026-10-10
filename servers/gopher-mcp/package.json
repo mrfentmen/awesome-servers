@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/gopher-mcp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Use this MCP server to the Gopher protocol, browse gopherspace, the pre HTTP internet. Menus, text files, Veronica search",
   "type": "module",
   "mcpName": "io.github.mrfentmen/gopher-mcp",

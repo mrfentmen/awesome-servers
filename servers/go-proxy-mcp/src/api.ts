@@ -45,7 +45,6 @@ return { GoproxyError, latest, versions };
 const m1 = (() => {
 const UA = 'mrfentmen-golang-proxy-mcp/1.0';
 
-
 async function latest(args: m1_LatestArgs): Promise<string> {
   const mod = (args.module ?? '').trim();
   if (!mod) return 'Provide a module path like github.com/gorilla/mux.';
@@ -75,3 +74,10 @@ export const m0_GoproxyError = m0.GoproxyError;
 export const m0_versions = m0.versions;
 export const m0_latest = m0.latest;
 export const m1_latest = m1.latest;
+
+  
+
+// ---- muxC tools:
+
+// Go's module proxy escapes uppercase letters as !lowercase in the path.
+

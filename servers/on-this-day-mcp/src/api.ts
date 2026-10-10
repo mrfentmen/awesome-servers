@@ -40,3 +40,12 @@ export async function deaths(args: { month?: number; day?: number; limit?: numbe
   const limit = Math.min(args.limit ?? 10, 20)
   return fmt(await items(args.month ?? 0, args.day ?? 0, "deaths"), limit, "Death")
 }
+
+// ---- muxB tools:
+
+export interface DayFeedArgs {
+  month: number
+  day: number
+  limit?: number
+}
+

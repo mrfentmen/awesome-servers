@@ -25,3 +25,21 @@ export async function recent(args: RecentArgs): Promise<string> {
       })
       .join('\n');
 }
+
+// ---- muxC tools:
+
+const FLICKR_UA = "mrfentmen-flickr-mcp/1.0 (https://github.com/mrfentmen)"
+
+class FlickrError extends Error {}
+
+interface FlickrItem {
+  title?: string
+  link?: string
+  media?: { m?: string }
+  date_taken?: string
+  tags?: string
+  author?: string
+  author_id?: string
+  published?: string
+}
+

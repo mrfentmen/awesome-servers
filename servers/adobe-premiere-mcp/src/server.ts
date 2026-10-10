@@ -2,6 +2,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import * as Premiere from "./premiere.js"
+import { mediaProbe, timecodeConvert } from "./api.js"
+import { premiumRequired } from "./license.js"
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
 const WRITE = { readOnlyHint: false, openWorldHint: true } as const
@@ -232,5 +234,34 @@ export function createServer(): McpServer {
     }
   )
 
+  server.registerTool(
+    "media_probe",
+    {
+      title: "Media probe",
+      description: "Read a local media file's real container and stream properties with ffprobe: format, duration, overall bit rate, and every video, audio or subtitle stream with its codec, resolution, frame rate, sample rate and channel layout, plus the container tags. Works on any file and does not need Premiere Pro, unlike the get_media_info tool.",
+      inputSchema: z.object({ path: z.string().describe("Path to a local media file.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: media_probe ----
+    const paywallMessage = await premiumRequired("media_probe")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return { content: [{ type: "text" as const, text: await mediaProbe(args as { path: string }) }] } } catch (err) { return textError(`Error: ${(err as Error).message}`) }
+  }
+  )
+
+  server.registerTool(
+    "timecode_convert",
+    {
+      title: "Timecode convert",
+      description: "Convert between SMPTE timecode and seconds, and show the same frame at every broadcast rate from 23.976 to 60. Drop frame at 29.97 is handled properly, so 00:01:00;02 is 1800 frames and not 1802. Pure arithmetic, no Premiere and no file needed.",
+      inputSchema: z.object({ value: z.string().describe("Timecode like 01:23:45:12, or a number of seconds."), rate: z.string().describe("23.976, 24, 25, 29.97, 30, 50, 59.94 or 60.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return { content: [{ type: "text" as const, text: await timecodeConvert(args as { value: string; rate?: string }) }] } } catch (err) { return textError(`Error: ${(err as Error).message}`) }
+  }
+  )
   return server
 }

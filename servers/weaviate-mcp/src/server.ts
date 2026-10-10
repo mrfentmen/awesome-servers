@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatObject, graphqlQuery, listClasses, listObjects, WeaviateError } from "./api.js"
+import { formatObject, graphqlQuery, listClasses, listObjects, WeaviateError, schemaHealth, schemaDiff } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -71,6 +72,41 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "schema_health",
+    {
+      title: "Check a schema",
+      description: "Check a pasted Weaviate schema for real configuration problems: missing dataTypes, cross-references to collections that do not exist, a vectorizer that does not match moduleConfig, vectorConfig mixed with the legacy fields, field tokenization on a non-text property, and BM25 weights out of range.",
+      inputSchema: z.object({
+        schema: z.string().describe("The GET /v1/schema JSON, or just its classes array"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: schema_health ----
+    const paywallMessage = await premiumRequired("schema_health")
+    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+    // ---- paywall: end ----
+    try { return text(await schemaHealth(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "schema_diff",
+    {
+      title: "Diff two schemas",
+      description: "Compare a before and after Weaviate schema: collections and properties added or removed, dataType and tokenization changes, index-flag toggles and vectorizer config changes, with the changes that break existing data called out separately.",
+      inputSchema: z.object({
+        before: z.string().describe("The schema as it is now"),
+        after: z.string().describe("The schema you want it to become"),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await schemaDiff(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_issNow, m0_issPasses, m1_position } from './api.js'
 
+import { m0_issNow, m0_issPasses, m1_position } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -46,5 +47,37 @@ server.registerTool(
     try { return text(await m1_position(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "iss_ground_track",
+    {
+      title: "ISS ground track",
+      description: "What the ISS is actually over right now: the named place, country and region under it, reverse geocoded from its live position through OpenStreetMap, with altitude, speed and a map link.",
+      inputSchema: z.object({}),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: iss_ground_track ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_iss_iss_ground_track", args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
+  server.registerTool(
+    "resolve_place",
+    {
+      title: "Resolve place",
+      description: "Resolve a place name to latitude and longitude through OpenStreetMap Nominatim, so iss_passes can be asked about a town instead of a pair of numbers.",
+      inputSchema: z.object({ place: z.string().describe("Place name, e.g. Reykjavik"), limit: z.number().int().min(1).max(10).default(3).describe("How many matches to print (default 3, max 10).") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+      // ---- paywall: resolve_place ----
+          // The body runs on the gateway, behind the licence gate.
+      // ---- paywall: end ----
+      try { return text(await premiumTool("mcp_iss_resolve_place", args)) } catch (e) { return textError(error(e)) }
+    }
+  )
+
   return server
 }

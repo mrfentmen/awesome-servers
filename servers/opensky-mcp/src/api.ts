@@ -10,7 +10,6 @@ export interface m0_AreaArgs {
 const m0 = (() => {
 const BASE = 'https://opensky-network.org/api/states/all';
 
-
 async function area(args: m0_AreaArgs): Promise<string> {
   const minLat = Number(args.minLat);
   const minLon = Number(args.minLon);
@@ -99,3 +98,90 @@ export const m0_area = m0.area;
 export const m1_flightsInBox = m1.flightsInBox;
 export const m1_FlightsError = m1.FlightsError;
 export const m1_flightsNear = m1.flightsNear;
+
+// ---- muxQ tools:
+// The three tools this server shipped with all use a bounding box on
+// /api/states/all. For an anonymous caller OpenSky answers that with
+// states: null - the box filter is not available without an API key. The
+// unfiltered global snapshot is served anyway, several thousand aircraft at a
+// time, and it carries every field a state vector has. These tools work off
+// that snapshot, so they work with no credentials.
+const OSKY_ALL = 'https://opensky-network.org/api/states/all';
+const OSKY_UA = 'mrfentmen-opensky-mcp/1.1';
+
+type Vector = (string | number | boolean | null)[];
+
+interface Snapshot {
+  time?: number;
+  states?: Vector[];
+}
+
+async function snapshot(): Promise<Snapshot> {
+  const res = await fetch(OSKY_ALL, {
+    headers: { 'User-Agent': OSKY_UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!res.ok) throw new Error(`OpenSky returned ${res.status}`);
+  const data = (await res.json()) as Snapshot;
+  if (!data || typeof data !== 'object') throw new Error('OpenSky returned an unexpected body.');
+  if (!Array.isArray(data.states) || !data.states.length) {
+    throw new Error('OpenSky returned an empty state vector snapshot.');
+  }
+  return data;
+}
+
+export interface CallsignArgs {
+  prefix: string;
+  limit?: number;
+}
+
+export interface CountryArgs {
+  country: string;
+  limit?: number;
+}
+
+/** What the whole sky looks like right now, in one pass. */
+export async function airspaceSummary(_args: Record<string, never> = {}): Promise<string> {
+  const snap = await snapshot();
+  const all = snap.states ?? [];
+  const airborne = all.filter((v) => v[8] !== true);
+  const ground = all.length - airborne.length;
+
+  const byCountry = new Map<string, number>();
+  for (const v of all) {
+    const name = typeof v[2] === 'string' && v[2].trim() ? v[2].trim() : 'not reported';
+    byCountry.set(name, (byCountry.get(name) ?? 0) + 1);
+  }
+  const top = [...byCountry.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+  const bands: Array<[string, number, number]> = [
+    ['below 3000 m', 0, 3000],
+    ['3000-10000 m', 3000, 10000],
+    ['10000-12000 m', 10000, 12000],
+    ['above 12000 m', 12000, Number.POSITIVE_INFINITY],
+  ];
+  const bandLines: string[] = [];
+  for (const [label, low, high] of bands) {
+    let count = 0;
+    for (const v of airborne) {
+      const alt = typeof v[13] === 'number' ? v[13] : typeof v[7] === 'number' ? v[7] : null;
+      if (alt === null) continue;
+      if (alt >= low && alt < high) count += 1;
+    }
+    bandLines.push(`${label}: ${count}`);
+  }
+
+  const snapshotAt = typeof snap.time === 'number' ? new Date(snap.time * 1000).toISOString() : 'not reported';
+  return [
+    `Global air traffic snapshot at ${snapshotAt}`,
+    `Aircraft tracked: ${all.length}`,
+    `Airborne: ${airborne.length}`,
+    `On ground: ${ground}`,
+    '',
+    'Altitude distribution (airborne):',
+    ...bandLines.map((line) => `* ${line}`),
+    '',
+    `Top 10 countries of registration (of ${byCountry.size} reported):`,
+    ...top.map(([name, count]) => `* ${name}: ${count}`),
+  ].join('\n');
+}

@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { categoryMembers, cleanWikiText, DoomWikiError, getPage, searchPages } from "./api.js"
 
+import { categoryMembers, cleanWikiText, DoomWikiError, getPage, searchPages, siteStats } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -69,6 +70,51 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "site_stats",
+    {
+      title: "Site stats",
+      description: "The Doom Wiki's own live counters: content pages, all pages, edits, files, users and admins.",
+      inputSchema: z.object( {  } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await siteStats(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "page_info",
+    {
+      title: "Page info",
+      description: "One page's metadata rather than its text: size, last editor and change summary, its categories and its url.",
+      inputSchema: z.object( { title: z.string().describe("Exact page title, e.g. 'Cyberdemon'") } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: page_info ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_doomwiki_page_info", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "recent_changes",
+    {
+      title: "Recent changes",
+      description: "The live Doom Wiki edit feed with each change's timestamp, editor and summary, optionally narrowed to one namespace or to new pages only.",
+      inputSchema: z.object( { limit: z.number().describe("How many changes to show, 1-50. Defaults to 10.").optional(), namespace: z.number().describe("Restrict to one namespace number, e.g. 0 for articles.").optional(), onlyNew: z.boolean().describe("Show only newly created pages, not edits.").optional() } ),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: recent_changes ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_doomwiki_recent_changes", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

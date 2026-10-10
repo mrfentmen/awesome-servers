@@ -149,3 +149,87 @@ export function formatSpell(s: Spell): string {
   ]
   return lines.join("\n")
 }
+
+// ---- muxA tools:
+
+function clamp(value: number | undefined, fallback: number, max: number): number {
+  return Math.max(1, Math.min(Math.round(value ?? fallback), max))
+}
+
+function text(value: unknown, max = 200): string {
+  if (value == null) return "not listed"
+  if (Array.isArray(value)) {
+    const parts = value.map((v) => String(v)).filter(Boolean)
+    return parts.join(", ") || "none"
+  }
+  const s = String(value).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
+  if (!s) return "not listed"
+  return s.length > max ? `${s.slice(0, max)}...` : s
+}
+
+export interface SpellListArgs {
+  level?: number
+  school?: string
+  search?: string
+  ritual_only?: boolean
+  concentration_only?: boolean
+  limit?: number
+  detail_limit?: number
+}
+
+export interface MagicItemArgs {
+  rarity?: string
+  search?: string
+  attunement?: string
+  limit?: number
+  detail_limit?: number
+}
+
+export interface RacesArgs {
+  include_details?: boolean
+  trait_limit?: number
+}
+
+export async function listRaces(args: RacesArgs): Promise<string> {
+  const d = await getJson<{ count?: number; results?: Array<Record<string, any>> }>("/races?limit=20")
+  const all = d.results ?? []
+  if (!all.length) throw new DndError("The SRD returned no playable races.")
+  const traitLimit = clamp(args.trait_limit, 3, 10)
+  const lines: string[] = [`D&D 5e SRD playable races: ${all.length}.`]
+  for (const [i, r] of all.entries()) {
+    if (args.include_details !== true) {
+      lines.push(`${i + 1}. ${r.name ?? "?"} | index ${r.index ?? "?"}`)
+      continue
+    }
+    const full = await getJson<Record<string, any>>(`/races/${r.index}`)
+    const bonuses = (full.ability_bonuses ?? []) as Array<Record<string, any>>
+    const traits = (full.traits ?? []) as Array<Record<string, any>>
+    const langs = (full.languages ?? []) as Array<Record<string, any>>
+    const subraces = (full.subraces ?? []) as Array<Record<string, any>>
+    lines.push(`${i + 1}. ${full.name ?? r.name ?? "?"} | index ${r.index ?? "?"}`)
+    lines.push(
+      `   speed ${text(full.speed, 40)} | size ${text(full.size, 40)} | darkvision ${full.darkvision ? "yes" : "no"}` +
+        ` | languages ${langs.length ? langs.map((l) => String(l.name)).join(", ") : "not listed"}` +
+        `${subraces.length ? ` | subraces ${subraces.map((s) => String(s.name)).join(", ")}` : ""}`,
+    )
+    if (bonuses.length) {
+      lines.push(
+        `   ability score increases: ${bonuses
+          .map((b) => `${String(b.ability_score?.name ?? b.ability_score ?? "?").slice(0, 3).toUpperCase()} +${b.bonus ?? "?"}`)
+          .join(", ")}`,
+      )
+    }
+    for (const t of traits.slice(0, traitLimit)) {
+      let desc = ""
+      try {
+        const detail = await getJson<Record<string, any>>(`${t.url ?? `/traits/${t.index}`}`)
+        const raw = Array.isArray(detail.desc) ? detail.desc.join(" ") : String(detail.desc ?? "")
+        desc = raw.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
+      } catch {
+        desc = ""
+      }
+      lines.push(`   trait ${t.name ?? "?"}${desc ? `: ${desc.slice(0, 180)}` : ""}`)
+    }
+  }
+  return lines.join("\n")
+}

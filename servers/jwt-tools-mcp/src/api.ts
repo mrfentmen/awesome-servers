@@ -1,6 +1,5 @@
 import { jwtVerify, decodeJwt, decodeProtectedHeader } from "jose"
 
-const UA = "mrfentmen-jwt-tools-mcp/1.0"
 export class JwtError extends Error {}
 
 function parts(token: string): string[] {
@@ -30,3 +29,8 @@ export async function verify(args: { token?: string; secret?: string }): Promise
     throw new JwtError(`Signature INVALID: ${e instanceof Error ? e.message : String(e)}`)
   }
 }
+
+// ---- muxB tools:
+
+type Jwk = { kid?: string; kty?: string; alg?: string; use?: string; crv?: string; x5c?: string[] }
+

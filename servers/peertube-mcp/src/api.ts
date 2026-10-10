@@ -30,3 +30,23 @@ export async function instance(_args: Record<string, never> = {}): Promise<strin
     `Server version: ${d.serverVersion ?? '?'}`,
   ].filter(Boolean).join('\n');
 }
+
+// ---- muxB tools:
+
+const SORTS: Record<string, string> = {
+  trending: '-trending',
+  views: '-views',
+  likes: '-likes',
+  published: '-publishedAt',
+  duration: '-duration',
+}
+
+export interface TopVideosArgs {
+  sort?: string;
+  limit?: number;
+}
+
+export interface VideoDetailArgs {
+  uuid: string;
+}
+

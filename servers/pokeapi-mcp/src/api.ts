@@ -29,3 +29,72 @@ export async function searchPokemon(args: { query?: string; limit?: number }): P
   if (!hits.length) return "No Pokemon match"
   return hits.map((p: any) => p.name).join("\n")
 }
+
+// ---- muxC tools:
+
+interface PokeList<T> {
+  results?: Array<{ name: string; url: string }>
+  count?: number
+}
+
+interface PokeSpecies {
+  id?: number
+  name?: string
+  generation?: { name?: string }
+  evolution_chain?: { url?: string }
+  habitat?: { name?: string } | null
+  capture_rate?: number
+  base_happiness?: number | null
+  growth_rate?: { name?: string }
+  color?: { name?: string }
+  shape?: { name?: string } | null
+  is_legendary?: boolean
+  is_mythical?: boolean
+  flavor_text_entries?: Array<{ language?: { name?: string }; flavor_text?: string }>
+  varieties?: Array<{ is_default?: boolean; pokemon?: { name?: string } }>
+}
+
+interface PokeChainNode {
+  is_baby?: boolean
+  species?: { name?: string }
+  evolves_to?: PokeChainNode[]
+  evolution_details?: Array<{ min_level?: number | null; item?: { name?: string } | string | null; trigger?: { name?: string } | null; known_move?: { name?: string } | string | null; time_of_day?: string; min_happiness?: number | null; min_beauty?: number | null }>
+}
+
+interface PokeChain {
+  chain?: PokeChainNode
+}
+
+interface PokeType {
+  name?: string
+  damage_relations?: {
+    no_damage_to?: Array<{ name: string }>
+    half_damage_to?: Array<{ name: string }>
+    double_damage_to?: Array<{ name: string }>
+    no_damage_from?: Array<{ name: string }>
+    half_damage_from?: Array<{ name: string }>
+    double_damage_from?: Array<{ name: string }>
+  }
+  moves?: PokeList<unknown>
+  pokemon?: PokeList<unknown>
+}
+
+/** Every ability a Pokemon has, with its effect text. */
+export async function pokemonAbilities(args: { name?: string }): Promise<string> {
+  const name = (args.name ?? "").trim().toLowerCase()
+  if (!name) throw new PokeError("Provide a Pokemon name or ID")
+  const d = await get<any>(`${BASE}/pokemon/${encodeURIComponent(name)}`)
+  const slots: Array<{ slot: number; ability: { name: string; url: string } }> = d?.abilities ?? []
+  if (!slots.length) return `${d.name} has no ability listed.`
+  const rows: string[] = []
+  for (const entry of slots.slice(0, 3)) {
+    const detail = await get<{ name?: string; effect_entries?: Array<{ short_effect?: string; language?: { name?: string } }>; is_main_series?: boolean }>(entry.ability.url)
+    // effect_entries is not English-only, so match the language explicitly
+    const text =
+      detail?.effect_entries?.find((e) => e.language?.name === "en" && e.short_effect)?.short_effect ??
+      detail?.effect_entries?.find((e) => e.short_effect)?.short_effect ??
+      "no effect text published"
+    rows.push(`[slot ${entry.slot}] ${entry.ability.name}: ${text}${detail?.is_main_series === false ? " (not in the main series)" : ""}`)
+  }
+  return `Abilities of ${d.name} (#${d.id}):\n${rows.join("\n")}`
+}

@@ -1,9 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { get } from "./api.js"
-import { headers } from "./api.js"
-import { ip } from "./api.js"
 
+import { get, headers, ip } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -47,5 +46,53 @@ export function createServer(): McpServer {
     try { return text(await headers(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "base64_decode",
+    {
+      title: "Base64 decode",
+      description: "Decode base64 through httpbin, surfacing the server's own correction hint when the input is not decodable.",
+      inputSchema: z.object( { value: z.string().describe("Base64 text to decode."), }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: base64_decode ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_httpbin_base64_decode", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "echo_anything",
+    {
+      title: "Echo anything",
+      description: "Send a request to httpbin's /anything and get the full request reflected back, which shows exactly what your client put on the wire.",
+      inputSchema: z.object( { path: z.string().describe("Optional extra path, e.g. /probe/check.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: echo_anything ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_httpbin_echo_anything", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "status_check",
+    {
+      title: "Status check",
+      description: "Ask httpbin for a specific HTTP status code, so a client's handling of errors and redirects can be tested deliberately.",
+      inputSchema: z.object( { code: z.number().describe("HTTP status code, 100-599.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: status_check ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_httpbin_status_check", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

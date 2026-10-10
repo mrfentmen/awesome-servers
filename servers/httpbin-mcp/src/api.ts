@@ -36,3 +36,6 @@ export async function headers(_args?: unknown): Promise<string> {
   const h = d.headers ?? {};
   return 'Request headers:\n' + Object.entries(h).map(([k, v]) => `${k}: ${String(v)}`).join('\n');
 }
+
+// ---- muxC tools:
+

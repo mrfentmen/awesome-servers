@@ -57,3 +57,66 @@ export function formatPackage(p: CtanPackage): string {
   ].filter(Boolean)
   return lines.join("\n")
 }
+
+// ---- muxF tools:
+interface CtanIndexRow {
+  key: string
+  name?: string
+  caption?: string
+}
+
+interface CtanCopyright {
+  owner?: string
+  year?: string
+}
+
+interface CtanFull {
+  id?: string
+  name?: string
+  caption?: string
+  authors?: Array<{ id?: string; active?: boolean }>
+  version?: { number?: string; date?: string } | null
+  license?: string[]
+  topics?: string[]
+  repository?: string
+  bugs?: string
+  copyright?: CtanCopyright[]
+  documentation?: Array<{ details?: string; href?: string }>
+  texlive?: string
+  miktex?: string
+  install?: string
+  ctan?: { path?: string; file?: boolean } | null
+  descriptions?: Array<{ language?: string | null; text?: string }>
+}
+
+interface CtanLicense {
+  key: string
+  name?: string
+  free?: boolean
+}
+
+async function getJsonPublic<T>(path: string): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    headers: { "User-Agent": "ctan-mcp/1.0", Accept: "application/json" },
+    signal: AbortSignal.timeout(20000),
+  })
+  if (res.status === 404) throw new CtanError("No such CTAN package.")
+  if (!res.ok) throw new CtanError(`CTAN error ${res.status}`)
+  return (await res.json()) as T
+}
+
+/** The licence vocabulary CTAN itself uses, so a package licence can be read as free or not. */
+export async function licenseCatalog(_args: Record<string, never>): Promise<string> {
+  const rows = await getJsonPublic<CtanLicense[]>("/licenses")
+  const free = rows.filter((r) => r.free)
+  const restricted = rows.filter((r) => !r.free)
+  const line = (r: CtanLicense) => `${r.key}: ${r.name ?? "name not reported"}`
+  return [
+    `CTAN licence list: ${rows.length} licence keys, ${free.length} marked free and ${restricted.length} not marked free`,
+    `Marked free (${free.length}):`,
+    ...free.map((r) => `- ${line(r)}`),
+    `Not marked free (${restricted.length}):`,
+    ...restricted.map((r) => `- ${line(r)}`),
+    "A package lists its licences by these keys, so a key that is absent here cannot be read as free or non-free.",
+  ].join("\n")
+}

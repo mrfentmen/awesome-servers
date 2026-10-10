@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { search } from "./api.js"
 
+import { search } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -21,5 +22,37 @@ export function createServer(): McpServer {
     try { return text(await search(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "fulltext_search",
+    {
+      title: "Full text search",
+      description: "Search the whole PLOS corpus including abstracts and body text, optionally restricted to one journal, with authors listed.",
+      inputSchema: z.object( { query: z.string().describe("Search terms."), limit: z.number().describe("Max results.").optional(), journal: z.string().describe("Restrict to a journal name.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: fulltext_search ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_plos_fulltext_search", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "paper_details",
+    {
+      title: "Paper details",
+      description: "One PLOS paper's full record by DOI: title, journal, article type, publication date, every author and the abstract.",
+      inputSchema: z.object( { doi: z.string().describe("DOI, e.g. 10.1371/journal.pone.0000001.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: paper_details ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_plos_paper_details", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

@@ -42,3 +42,11 @@ export async function checkHash(args: { sha1_hash?: string }): Promise<string> {
     ? `This hash appeared ${count.toLocaleString()} times in known breaches.`
     : "No matches in known breach data."
 }
+
+// ---- muxB tools:
+
+export interface ExposureLookupArgs {
+  query?: string;
+  limit?: number;
+}
+

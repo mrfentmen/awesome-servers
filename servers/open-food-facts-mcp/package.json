@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/open-food-facts-mcp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Use this MCP server to Open Food Facts product, ingredient, allergen, and nutrition lookup. Tools include get product, search products",
   "type": "module",
   "mcpName": "io.github.mrfentmen/open-food-facts-mcp",

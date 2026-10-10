@@ -1,6 +1,6 @@
 {
   "name": "runtime-support-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Summarize runtime declarations across local manifests and CI files without returning versions, paths, or source.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/runtime-support-mcp",

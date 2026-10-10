@@ -53,3 +53,6 @@ export function formatSequence(s: Sequence, index?: number): string {
   ].filter(Boolean)
   return lines.join("\n")
 }
+
+// ---- muxC tools:
+

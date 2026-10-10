@@ -41,3 +41,22 @@ The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code
 ## Try it
 
 After building, connect the server through your MCP client. The repository root also contains `smoke-test.mjs` for projects covered by the shared harness. A typical tool call starts with `inspect_artifacts`.
+
+<!-- paywall -->
+## Premium tools
+
+These tools need a license key:
+
+* `inspect_directory_weights`
+* `inspect_size_budget`
+
+Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-artifact-gauge-mcp and set it in your MCP client config:
+
+```json
+"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
+```
+
+The key is checked against MCP Marketplace, cached for 24 hours, and keeps
+working offline once one check has succeeded. Every other tool on this server
+stays free.
+<!-- /paywall -->

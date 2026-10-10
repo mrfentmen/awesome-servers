@@ -1,6 +1,6 @@
 {
   "name": "synoptic-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Synoptic weather stations: metadata search and time series from 170k+ stations. Needs token.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/synoptic-mcp",

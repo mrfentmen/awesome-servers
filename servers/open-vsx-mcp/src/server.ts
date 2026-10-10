@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatExtension, formatHit, getExtension, OpenVsxError, searchExtensions } from "./api.js"
 
+import { formatExtension, formatHit, getExtension, OpenVsxError, searchExtensions } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -53,6 +54,38 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "namespace_search",
+    {
+      title: "Namespace search",
+      description: "Search inside one extension namespace on open-vsx.org, which a free-text search cannot narrow to a single vendor.",
+      inputSchema: z.object( { namespace: z.string().describe("Namespace, e.g. ms-python."), query: z.string().describe("Search term; leave empty for everything.").optional(), limit: z.number().describe("Max extensions.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: namespace_search ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_open_vsx_namespace_search", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "publisher_extensions",
+    {
+      title: "Publisher extensions",
+      description: "Every extension one publisher has released on open-vsx.org with version, rating and download count, which is how you audit a vendor's catalogue.",
+      inputSchema: z.object( { publisher: z.string().describe("Publisher id, e.g. ms-python."), limit: z.number().describe("Max extensions.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: publisher_extensions ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_open_vsx_publisher_extensions", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

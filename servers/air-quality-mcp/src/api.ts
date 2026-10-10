@@ -26,3 +26,35 @@ export async function airQuality(args: { lat?: number; lon?: number }): Promise<
   const level = LABELS[String(Math.min(Math.max(Math.ceil(aqi / 50) || 1, 1), 6))]
   return `Air quality at ${lat}, ${lon}\nUS AQI: ${aqi} (${level?.[0] ?? "unknown"} level)\n  ${level?.[1] ?? ""}\n\nPM2.5: ${c.pm2_5 ?? "n/a"} µg/m3\nPM10: ${c.pm10 ?? "n/a"} µg/m3\nNO2: ${c.nitrogen_dioxide ?? "n/a"} µg/m3\nO3: ${c.ozone ?? "n/a"} µg/m3\nCO: ${c.carbon_monoxide ?? "n/a"} µg/m3\nSO2: ${c.sulphur_dioxide ?? "n/a"} µg/m3`
 }
+
+// ---- muxA tools:
+
+// Indicative pollen-count bands, the scale weather services quote for grains/m3.
+// Not an official standard, so the numbers are always printed alongside the label.
+const POLLEN_BANDS: Array<[string, number]> = [
+  ["very high", 200],
+  ["high", 50],
+  ["moderate", 10],
+  ["low", 0],
+]
+
+const POLLEN: Record<string, string> = {
+  alder_pollen: "Alder",
+  birch_pollen: "Birch",
+  grass_pollen: "Grass",
+  mugwort_pollen: "Mugwort",
+  olive_pollen: "Olive",
+  ragweed_pollen: "Ragweed",
+}
+
+function pollenBand(value: number): string {
+  for (const [label, ceiling] of POLLEN_BANDS) {
+    if (value >= ceiling) return label
+  }
+  return "low"
+}
+
+function round1(value: number): number {
+  return Math.round(value * 10) / 10
+}
+

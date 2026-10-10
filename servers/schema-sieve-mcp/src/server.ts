@@ -2,6 +2,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { format, inspect, plan } from "./sieve.js"
 
+import { compareSchemas } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -30,5 +32,34 @@ export function createServer() {
     },
     async ({ file: target }) => { try { return text(format(await plan(target))) } catch (error) { return errorText(error) } }
   )
+  server.registerTool(
+    "validate_instance",
+    {
+      title: "Validate instance",
+      description: "Validate a JSON instance against a JSON Schema you supply, using a documented subset of draft keywords including local $ref, allOf, anyOf and oneOf. Violations are reported as paths and reasons; instance values, examples, defaults and sensitive-like property names are never returned.",
+      inputSchema: z.object( { schema: z.any().describe("JSON Schema as an object or a JSON string."), instance: z.any().describe("Instance to validate as an object, array or JSON string.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: validate_instance ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_schema_sieve_validate_instance", args)) } catch (e) { return textError(String(e)) }
+  }
+  )
+
+  server.registerTool(
+    "compare_schemas",
+    {
+      title: "Compare schemas",
+      description: "Diff two JSON Schemas you supply into added, removed and changed property paths with the type, enum size and constraint deltas for each change, plus a compatibility hint. Examples, defaults, const values and sensitive-like property names are never returned.",
+      inputSchema: z.object( { before: z.any().describe("Baseline JSON Schema as an object or a JSON string."), after: z.any().describe("Candidate JSON Schema as an object or a JSON string.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await compareSchemas(args)) } catch (error) { return errorText(error) }
+  }
+  )
+
   return server
 }

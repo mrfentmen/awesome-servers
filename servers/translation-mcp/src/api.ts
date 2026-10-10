@@ -25,3 +25,6 @@ export async function translate(args: { text?: string; from?: string; to?: strin
 export async function detectAndTranslate(args: { text?: string; to?: string }): Promise<string> {
   return translate({ text: args.text, from: "autodetect", to: args.to })
 }
+
+// ---- muxC tools:
+

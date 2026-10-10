@@ -1,9 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { compare } from "./api.js"
-import { describe } from "./api.js"
-import { sortVersions } from "./api.js"
 
+import { compare, describe, sortVersions } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -47,5 +46,37 @@ export function createServer(): McpServer {
     try { return text(await describe(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "latest_release",
+    {
+      title: "Latest release",
+      description: "The version npm currently publishes as latest for a package, with its declared license, engines and tarball size.",
+      inputSchema: z.object( { package: z.string().min(1).describe("npm package name, e.g. express.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: latest_release ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_semver_latest_release", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "release_version",
+    {
+      title: "Release version",
+      description: "What the npm registry holds for one exact version of a package, including whether the publisher has deprecated it.",
+      inputSchema: z.object( { package: z.string().min(1).describe("npm package name, e.g. express."), version: z.string().min(1).describe("Exact version, e.g. 4.18.1.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: release_version ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_semver_release_version", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

@@ -47,3 +47,81 @@ export async function addressInfo(args: { address?: string }): Promise<string> {
   const spent = (stats?.spent_txo_sum ?? 0) / 1e8
   return `Address: ${addr}\nBalance: ${(funded - spent).toFixed(8)} BTC\nReceived: ${funded.toFixed(8)} BTC\nSent: ${spent.toFixed(8)} BTC\nTransactions: ${stats?.tx_count ?? "n/a"}`
 }
+
+// ---- muxA tools:
+interface BtcVout {
+  scriptpubkey_address?: string;
+  value?: number;
+}
+
+interface BtcStatus {
+  confirmed?: boolean;
+  block_height?: number;
+  block_time?: number;
+}
+
+interface BtcTx {
+  txid?: string;
+  fee?: number;
+  vout?: BtcVout[];
+  status?: BtcStatus;
+}
+
+interface MempoolStats {
+  count?: number;
+  vsize?: number;
+  total_fee?: number;
+  fee_histogram?: Array<[number, number]>;
+}
+
+interface MempoolBlock {
+  id?: string;
+  height?: number;
+  timestamp?: number;
+  tx_count?: number;
+  size?: number;
+  weight?: number;
+  difficulty?: number;
+  extras?: { reward?: number };
+}
+
+const SATS = 1e8;
+
+function btc(amount: number): string {
+  return `${(amount / SATS).toFixed(8)} BTC`;
+}
+
+export interface AddressTxsArgs {
+  address?: string;
+  limit?: number;
+}
+
+export interface MempoolArgs {
+  bands?: number;
+}
+
+export interface RecentBlocksArgs {
+  limit?: number;
+}
+
+export async function recentBlocks(args: RecentBlocksArgs): Promise<string> {
+  const limit = Math.max(1, Math.min(Math.trunc(args.limit ?? 5) || 5, 15));
+  const blocks = await get<MempoolBlock[]>(`${MEMPOOL}/v1/blocks`);
+  if (!Array.isArray(blocks) || !blocks.length) return 'mempool.space returned no recent blocks.';
+  const rows = blocks.slice(0, limit).map((b) => {
+    const when = b.timestamp
+      ? new Date(b.timestamp * 1000).toISOString().replace('T', ' ').slice(0, 19)
+      : 'not reported';
+    const reward = typeof b.extras?.reward === 'number' ? btc(b.extras.reward) : 'not reported';
+    const difficulty =
+      typeof b.difficulty === 'number' ? b.difficulty.toExponential(6) : 'not reported';
+    return (
+      `      height ${b.height ?? '?'} | ${when}Z | ${b.tx_count ?? '?'} txs | ` +
+      `${((b.size ?? 0) / 1024).toFixed(1)} KB | reward ${reward} | difficulty ${difficulty}`
+    );
+  });
+  return [
+    `Latest ${rows.length} Bitcoin blocks (mempool.space):`,
+    rows.join('\n'),
+  ].join('\n');
+}

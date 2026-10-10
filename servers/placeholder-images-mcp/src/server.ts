@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { m0_imageUrl, m0_listImages, m1_list } from './api.js'
 
+import { m0_imageUrl, m0_listImages, m1_list } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -46,5 +47,37 @@ server.registerTool(
     try { return text(await m1_list(args)) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "image_info",
+    {
+      title: "Image info",
+      description: "One placeholder photo's full record: author, real dimensions, the Unsplash page behind it and the download url, which the url builder never shows.",
+      inputSchema: z.object( { id: z.union([z.string(), z.number()]).describe("picsum image id, e.g. 0."), }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: image_info ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_placeholder_images_image_info", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "page_images",
+    {
+      title: "Page images",
+      description: "Walk deeper into the picsum.photos placeholder catalogue by page, which the built-in listing never reaches past its first page.",
+      inputSchema: z.object( { page: z.number().describe("Catalogue page.").optional(), limit: z.number().describe("Images per page.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: page_images ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_placeholder_images_page_images", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }

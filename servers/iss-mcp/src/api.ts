@@ -67,3 +67,22 @@ export const m0_issPasses = m0.issPasses;
 export const m0_IssError = m0.IssError;
 export const m0_issNow = m0.issNow;
 export const m1_position = m1.position;
+
+// ---- muxG tools:
+
+interface NominatimPlace {
+  place_id?: number;
+  osm_type?: string;
+  osm_id?: number;
+  lat?: string;
+  lon?: string;
+  category?: string;
+  type?: string;
+  name?: string;
+  display_name?: string;
+  addresstype?: string;
+  importance?: number;
+  address?: Record<string, string>;
+  boundingbox?: string[];
+}
+

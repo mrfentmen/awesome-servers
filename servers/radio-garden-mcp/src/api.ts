@@ -43,3 +43,45 @@ export async function search(args: SearchArgs): Promise<string> {
   return `Radio Garden results for "${query}" (${list.length}):\n` +
     list.slice(0, 15).map((p, i) => `${i + 1}. ${p.title ?? '?'}`).join('\n');
 }
+
+// ---- muxB tools:
+
+const RG = 'https://radio.garden/api/ara/content'
+
+interface RgPlace {
+  title?: string;
+  country?: string;
+  id?: string;
+  url?: string;
+  geo?: [number, number];
+  size?: number;
+}
+
+async function rgAllPlaces(): Promise<RgPlace[]> {
+  const res = await fetch(`${RG}/places`, {
+    headers: { 'User-Agent': UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(40000),
+  })
+  if (!res.ok) throw new Error(`Radio Garden returned ${res.status}`)
+  const d = (await res.json()) as { data?: { list?: RgPlace[] } }
+  return d.data?.list ?? []
+}
+
+const rgRad = (deg: number) => (deg * Math.PI) / 180
+
+const rgText = (p: RgPlace, key: keyof RgPlace): string => {
+  const v = p?.[key]
+  return v != null && String(v).trim() ? String(v) : 'not reported'
+}
+
+export interface PlaceDetailArgs {
+  id?: string;
+}
+
+export interface PlacesNearArgs {
+  lat?: number;
+  lon?: number;
+  radiusKm?: number;
+  limit?: number;
+}
+

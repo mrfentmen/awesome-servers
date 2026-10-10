@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { FaunaError, listCollections, runQuery } from "./api.js"
+import { FaunaError, listCollections, runQuery, fqlLint, fqlCompare } from "./api.js"
+import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -46,6 +47,47 @@ export function createServer(): McpServer {
     async ({ fql }) => {
       try {
         return text(await runQuery(fql))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "fql_lint",
+    {
+      title: "Lint FQL",
+      description: "Check an FQL v10 expression without a database or a secret: does every bracket and string close, is any call left empty such as where() with no filter or take() with no count, which collection the chain starts from, which methods run in what order, and does anything in it write to the database.",
+      inputSchema: z.object({ fql: z.string().describe("FQL to check, e.g. 'Product.all().where(.price > 10).take(5)'") }),
+      annotations: READ_ONLY,
+    },
+    async ({ fql }) => {
+      // ---- paywall: fql_lint ----
+      const paywallMessage = await premiumRequired("fql_lint")
+      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
+      // ---- paywall: end ----
+      try {
+        return text(await fqlLint({ fql }))
+      } catch (e) {
+        return textError(errorMessage(e))
+      }
+    }
+  )
+
+  server.registerTool(
+    "fql_compare",
+    {
+      title: "Compare FQL",
+      description: "Compare two FQL expressions by structure rather than by text: which collection each reads, which chain methods were added or dropped and in what order, and which literal arguments appeared or vanished, plus the delimiter balance of each side. Neither the existing tool can do this, and both existing tools need a live database to do anything at all.",
+      inputSchema: z.object({
+        before: z.string().describe("The earlier FQL expression."),
+        after: z.string().describe("The later FQL expression."),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ before, after }) => {
+      try {
+        return text(await fqlCompare({ before, after }))
       } catch (e) {
         return textError(errorMessage(e))
       }

@@ -28,3 +28,42 @@ export async function matches(args: MatchesArgs = {}): Promise<string> {
       })
       .join('\n');
 }
+
+// ---- muxB tools:
+
+const LEAGUES = `${BASE}/getavailableleagues`;
+
+export interface ScorersArgs {
+  league?: string;
+  season?: number;
+  limit?: number;
+}
+
+export interface LeaguesArgs {
+  limit?: number;
+  sport?: string;
+}
+
+export async function leagues(args: LeaguesArgs = {}): Promise<string> {
+  const limit = Math.max(1, Math.min(Number(args.limit ?? 20) || 20, 100));
+  const sport = (args.sport ?? '').trim().toLowerCase();
+  const res = await fetch(LEAGUES, {
+    headers: { 'User-Agent': 'mrfentmen-openligadb-soccer-mcp/1.0', Accept: 'application/json' },
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!res.ok) throw new Error(`OpenLigaDB returned ${res.status}`);
+  const rows = (await res.json()) as Array<{
+    leagueName?: string;
+    leagueShortcut?: string;
+    leagueSeason?: string;
+    sport?: { sportName?: string };
+  }>;
+  if (!Array.isArray(rows) || !rows.length) return 'No leagues reported.';
+  const picked = sport ? rows.filter((r) => (r.sport?.sportName ?? '').toLowerCase().includes(sport)) : rows;
+  if (!picked.length) return `No OpenLigaDB league reported for sport "${sport}".`;
+  const shown = picked.slice(0, limit);
+  return `OpenLigaDB leagues${sport ? ` matching "${sport}"` : ''} (${shown.length} of ${picked.length} shown):\n` +
+    shown
+      .map((r, i) => `${i + 1}. ${r.leagueShortcut ?? '?'} ${r.leagueSeason ?? '?'} — ${r.leagueName ?? '?'}${r.sport?.sportName ? ` [${r.sport.sportName}]` : ''}`)
+      .join('\n');
+}

@@ -134,3 +134,16 @@ export function formatPoke(p: PokeEntry): string {
   ].filter(Boolean)
   return lines.join("\n")
 }
+
+// ---- muxB tools:
+
+export interface ByTypeArgs {
+  type: string;
+  limit?: number;
+}
+
+export interface ByAbilityArgs {
+  ability: string;
+  limit?: number;
+}
+

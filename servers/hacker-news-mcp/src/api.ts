@@ -64,34 +64,10 @@ export async function ask(args: { limit?: number }): Promise<string> {
   return (await list(ids, Math.min(args.limit ?? 10, 30))) || 'No ask threads right now';
 }
 
-export async function item(args: { id?: number }): Promise<string> {
-  const id = args.id;
-  if (id === undefined || !Number.isInteger(id)) throw new HnError('Provide an item ID');
-  const it = await getItem(id);
-  if (!it) throw new HnError(`Item ${id} not found`);
-  return [
-    `${it.title ?? 'untitled'} (id ${it.id})`,
-    `By ${it.by ?? 'n/a'} at ${it.time ? new Date(it.time * 1000).toISOString().slice(0, 16).replace('T', ' ') : 'n/a'}`,
-    `Points ${it.score ?? 0} | comments ${it.descendants ?? 0}`,
-    it.url ? `Link: ${it.url}` : '',
-    it.text ? `\n${it.text.slice(0, 1000)}` : '',
-  ].filter(Boolean).join('\n');
-}
-
 function formatHits(hits: HnHit[]): string {
   return hits
     .map((h, i) => `${i + 1}. ${h.title ?? 'untitled'} | ${h.points ?? 0} points | ${h.num_comments ?? 0} comments | ${h.author ?? ''} | ${(h.created_at ?? '').slice(0, 10)}${h.url ? `\n   ${h.url}` : ''}`)
     .join('\n');
-}
-
-export async function search(args: { query?: string; limit?: number }): Promise<string> {
-  const q = (args.query ?? '').trim();
-  if (!q) throw new HnError('Provide a search query.');
-  const limit = Math.max(1, Math.min(args.limit ?? 10, 30));
-  const d = await get<{ hits?: HnHit[]; nbHits?: number }>(`${ALGOLIA_BASE}/search?query=${encodeURIComponent(q)}&tags=story&hitsPerPage=${limit}`);
-  const hits = d.hits ?? [];
-  if (!hits.length) return `No Hacker News stories found for "${q}".`;
-  return `Hacker News results for "${q}" (${d.nbHits ?? hits.length} total, ${hits.length} shown):\n` + formatHits(hits);
 }
 
 export async function frontPage(args: { limit?: number }): Promise<string> {

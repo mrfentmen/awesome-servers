@@ -1,18 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import {
-  ChessComError,
-  dailyPuzzle,
-  formatLeaders,
-  formatProfile,
-  formatPuzzle,
-  formatStats,
-  getPlayer,
-  getStats,
-  leaderboards,
-  LEADERBOARD_CATEGORIES,
-} from "./api.js"
 
+import { ChessComError, dailyPuzzle, formatLeaders, formatProfile, formatPuzzle, formatStats, getPlayer, getStats, leaderboards, LEADERBOARD_CATEGORIES, clubProfile } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -97,6 +87,51 @@ export function createServer(): McpServer {
         return textError(errorMessage(e))
       }
     }
+  )
+
+  server.registerTool(
+    "recent_games",
+    {
+      title: "Recent games",
+      description: "Chess.com game archive for a player: rated or casual, time class, ratings, result, timestamps and the game URL.",
+      inputSchema: z.object( { username: z.string().describe("chess.com username."), limit: z.number().describe("Max games.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: recent_games ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_chesscom_recent_games", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "club_profile",
+    {
+      title: "Club profile",
+      description: "Chess.com club details: member count, average daily rating, visibility, country, admins and creation date.",
+      inputSchema: z.object( { club_id: z.string().describe("Club slug or id, e.g. lichess.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await clubProfile(args)) } catch (e) { return textError(errorMessage(e)) }
+  }
+  )
+
+  server.registerTool(
+    "club_members",
+    {
+      title: "Club members",
+      description: "Chess.com club roster for a period, listing member usernames and join dates alongside the weekly, monthly and all-time counts.",
+      inputSchema: z.object( { club_id: z.string().describe("Club slug or id, e.g. lichess."), period: z.string().describe("all_time, monthly or weekly.").optional(), limit: z.number().describe("Max members.").optional() }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: club_members ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_chesscom_club_members", args)) } catch (e) { return textError(errorMessage(e)) }
+  }
   )
 
   return server

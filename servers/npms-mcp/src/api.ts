@@ -70,3 +70,37 @@ export function formatScored(p: ScoredPackage, index?: number): string {
   ].filter(Boolean)
   return lines.join("\n")
 }
+
+// ---- muxC tools:
+
+interface NpmsDownloads {
+  analyzedAt?: string
+  collected?: {
+    metadata?: { name?: string; version?: string }
+    npm?: {
+      downloads?: Array<{ from?: string; to?: string; count?: number }>
+      starsCount?: number
+    }
+    github?: {
+      homepage?: string
+      starsCount?: number
+      forksCount?: number
+      subscribersCount?: number
+      issues?: { count?: number; openCount?: number; distribution?: Record<string, number> }
+    }
+    source?: {
+      files?: { readmeSize?: number; testsSize?: number; hasChangelog?: boolean }
+      linters?: string[]
+      coverage?: number
+      outdatedDependencies?: string | number
+    }
+  }
+}
+
+async function npmsPackage(name: string): Promise<{ pkg: NpmsDownloads; label: string }> {
+  const clean = (name ?? "").trim()
+  if (!clean) throw new NpmsError("Provide a package name, e.g. express")
+  const d = await getJson<NpmsDownloads>(`/package/${encodeURIComponent(clean)}`)
+  return { pkg: d, label: d?.collected?.metadata?.name ?? clean }
+}
+

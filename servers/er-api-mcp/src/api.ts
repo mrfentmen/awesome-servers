@@ -35,9 +35,6 @@ const m0 = (() => {
 const UA = 'mrfentmen-er-api-mcp/1.0';
 const BASE = 'https://open.er-api.com/v6/latest';
 
-
-
-
 async function latest(args: m0_BaseArg): Promise<string> {
   const base = String(args?.base ?? 'USD').toUpperCase();
   const res = await fetch(`${BASE}/${encodeURIComponent(base)}`, {
@@ -73,9 +70,6 @@ return { convert, latest };
 
 const m1 = (() => {
 const BASE = 'https://open.er-api.com/v6';
-
-
-
 
 async function latest(args: m1_LatestArgs = {}): Promise<string> {
   const base = (args.base ?? 'USD').toUpperCase();
@@ -120,3 +114,6 @@ export const m0_latest = m0.latest;
 export const m0_convert = m0.convert;
 export const m1_latest = m1.latest;
 export const m1_history = m1.history;
+
+// ---- muxC tools:
+

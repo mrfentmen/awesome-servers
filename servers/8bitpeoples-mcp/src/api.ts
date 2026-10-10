@@ -99,3 +99,68 @@ export function formatRelease(r: Release, index?: number): string {
   ].filter(Boolean)
   return lines.join("\n")
 }
+
+// ---- pay1 tools:
+
+/** Product slugs and artist slugs are plain lowercase words, so reject anything else. */
+function pathFor(kind: "product" | "artist", slug: string): string {
+  const clean = (slug ?? "")
+    .trim()
+    .replace(/^\/+/, "")
+    .replace(/^(products|artists)\//, "")
+  if (!/^[A-Za-z0-9._-]+$/.test(clean)) {
+    throw new BitError(`"${slug}" is not a valid 8bitpeoples ${kind} slug`)
+  }
+  return `/${kind}s/${clean}`
+}
+
+export interface Artist {
+  slug: string
+  name: string
+  url: string
+}
+
+/** The /artists index repeats every artist for its "Read more" link, so key by slug. */
+export function parseArtists(html: string): Artist[] {
+  const out = new Map<string, Artist>()
+  const re = /<a[^>]*href="(\/artists\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/g
+  let m: RegExpExecArray | null
+  while ((m = re.exec(html)) !== null) {
+    const name = cleanText(m[2])
+    if (!name || /read more/i.test(name)) continue
+    const slug = m[1].replace(/^\/artists\//, "")
+    if (!out.has(slug)) out.set(slug, { slug, name, url: `${BASE}${m[1]}` })
+  }
+  return [...out.values()]
+}
+
+export async function listArtists(limit = 100): Promise<string> {
+  const capped = Math.max(1, Math.min(Math.trunc(limit), 200))
+  const artists = parseArtists(await fetchText("/artists")).slice(0, capped)
+  if (!artists.length) return "No artists listed."
+  return (
+    `8bitpeoples artists (${artists.length} shown):\n\n` +
+    artists.map((a, i) => `${i + 1}. ${a.name} - ${a.url}`).join("\n")
+  )
+}
+
+/** Artist pages link their releases as /products/<id>-<slug>, twice each. */
+export function parseArtistReleases(html: string, limit: number): Release[] {
+  const seen = new Set<string>()
+  const releases: Release[] = []
+  const re = /href="(\/products\/[^"]+)"/g
+  let m: RegExpExecArray | null
+  while ((m = re.exec(html)) !== null) {
+    if (seen.has(m[1])) continue
+    seen.add(m[1])
+    releases.push({ slug: m[1], title: titleFromSlug(m[1]), url: `${BASE}${m[1]}` })
+  }
+  return releases.slice(0, limit)
+}
+
+export interface ReleaseTracks {
+  catalog?: string
+  title?: string
+  tracks: string[]
+}
+

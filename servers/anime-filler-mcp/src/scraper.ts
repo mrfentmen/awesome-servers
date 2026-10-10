@@ -190,6 +190,107 @@ export function verdict(info: ShowInfo, episode: number): string {
 }
 
 // ---------------------------------------------------------------------------
+// Filler analysis
+// ---------------------------------------------------------------------------
+
+/**
+ * The site labels episodes "Manga Canon", "Mixed Canon/Filler", "Anime Canon",
+ * "Filler" and "Semi-Filler". Only the labels that are filler and not canon
+ * count as skippable, so "Mixed Canon/Filler" stays in the canon side.
+ */
+function isFillerCategory(category: string): boolean {
+  const c = category.toLowerCase()
+  return c.includes("filler") && !c.includes("canon")
+}
+
+interface FillerRun {
+  from: number
+  to: number
+}
+
+/** Consecutive stretches of skippable episodes, in order. */
+function fillerRuns(info: ShowInfo): FillerRun[] {
+  const runs: FillerRun[] = []
+  const eps = [...info.episodes].sort((a, b) => a.number - b.number)
+  let start = 0
+  let prev = -1
+  for (const ep of eps) {
+    if (isFillerCategory(ep.category)) {
+      // a gap in numbering also breaks a run
+      if (start !== 0 && ep.number === prev + 1) {
+        prev = ep.number
+        continue
+      }
+      if (start !== 0) runs.push({ from: start, to: prev })
+      start = ep.number
+      prev = ep.number
+    } else {
+      if (start !== 0) runs.push({ from: start, to: prev })
+      start = 0
+      prev = -1
+    }
+  }
+  if (start !== 0) runs.push({ from: start, to: prev })
+  return runs
+}
+
+function rangeText(run: FillerRun): string {
+  return run.from === run.to ? `${run.from}` : `${run.from}-${run.to}`
+}
+
+export async function fillerRunAnalysis(args: { slug?: string }): Promise<string> {
+  const slug = (args.slug ?? "").trim()
+  if (!slug) throw new ScrapeError("Provide the anime slug, e.g. 'naruto-shippuden'")
+  const info = await getShow(slug)
+  if (info.episodes.length === 0) {
+    return `${info.title}: the site has no episode table to analyse yet.`
+  }
+  const runs = fillerRuns(info)
+  const fillerCount = info.episodes.filter((e) => isFillerCategory(e.category)).length
+  const pct = Math.round((fillerCount / info.episodes.length) * 100)
+  const longest = runs.reduce<FillerRun | null>(
+    (best, run) => (!best || run.to - run.from > best.to - best.from ? run : best),
+    null
+  )
+  return [
+    `${info.title} — ${info.episodes.length} episode(s) classified, ${fillerCount} skippable (${pct}%)`,
+    longest
+      ? `Longest filler run: ${longest.to - longest.from + 1} episode(s), eps ${rangeText(longest)}`
+      : "Longest filler run: none, the site labels every classified episode canon.",
+    runs.length > 0
+      ? `Filler stretches: ${runs.map(rangeText).join(", ").slice(0, 200)}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n")
+}
+
+export async function fillerEpisodeList(args: { slug?: string; limit?: number }): Promise<string> {
+  const slug = (args.slug ?? "").trim()
+  if (!slug) throw new ScrapeError("Provide the anime slug, e.g. 'naruto-shippuden'")
+  const limit = Math.max(1, Math.min(Math.round(args.limit ?? 40), 200))
+  const info = await getShow(slug)
+  if (info.episodes.length === 0) {
+    return `${info.title}: the site has no episode table to list from yet.`
+  }
+  const filler = info.episodes
+    .filter((e) => isFillerCategory(e.category))
+    .sort((a, b) => a.number - b.number)
+  if (filler.length === 0) {
+    return `${info.title}: the site labels none of its ${info.episodes.length} tracked episodes as filler.`
+  }
+  const shown = filler.slice(0, limit)
+  const body = shown
+    .map((e, i) => `${i + 1}. ep${e.number} [${e.category}] ${e.title.slice(0, 70)}`)
+    .join("\n")
+  const more =
+    filler.length > shown.length
+      ? `\n...and ${filler.length - shown.length} more skippable episode(s).`
+      : ""
+  return `${info.title}: ${filler.length} skippable episode(s) of ${info.episodes.length} classified.\n${body}${more}`
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 

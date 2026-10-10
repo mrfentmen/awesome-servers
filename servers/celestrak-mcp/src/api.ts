@@ -33,3 +33,67 @@ export async function satellite(args: { noradId?: number }): Promise<string> {
   if (!s) return `No satellite found for NORAD ${id}`
   return fmtSat(s, 0)
 }
+
+// ---- muxA tools:
+
+interface Record {
+  OBJECT_NAME?: string
+  OBJECT_ID?: string
+  NORAD_CAT_ID?: number
+  OBJECT_TYPE?: string
+  OPS_STATUS_CODE?: string
+  OWNER?: string
+  LAUNCH_DATE?: string
+  LAUNCH_SITE?: string
+  DECAY_DATE?: string
+  PERIOD?: number
+  INCLINATION?: number
+  APOGEE?: number
+  PERIGEE?: number
+  RCS?: string
+  ORBIT_CENTER?: string
+  ORBIT_TYPE?: number
+  DATA_STATUS_CODE?: string
+}
+
+function bound(value: number | undefined, fallback: number, max: number): number {
+  return Math.max(1, Math.min(Math.round(value ?? fallback), max))
+}
+
+export interface CatalogueArgs {
+  group?: string
+  limit?: number
+}
+
+export interface SearchArgs {
+  query: string
+  group?: string
+  limit?: number
+}
+
+export async function nameSearch(args: SearchArgs): Promise<string> {
+  const q = (args.query ?? '').trim().toLowerCase()
+  if (!q) throw new CelestrakError('Provide a name fragment to search for, e.g. "noaa" or "zarya"')
+  const g = (args.group ?? 'stations').trim()
+  const limit = bound(args.limit, 20, 100)
+  const d = await get<any[]>(`${BASE}?GROUP=${encodeURIComponent(g)}&FORMAT=json`)
+  const sats = d ?? []
+  if (!sats.length) return `CelesTrak returned no satellites for group ${g}.`
+  const hits = sats.filter((s) => String(s.OBJECT_NAME ?? '').toLowerCase().includes(q))
+  if (!hits.length) {
+    const sample = sats.slice(0, 10).map((s) => s.OBJECT_NAME).filter(Boolean).join(', ')
+    return `No satellite in group ${g} has "${args.query}" in its name. Sample names there: ${sample}`
+  }
+  const shown = hits.slice(0, limit)
+  return [
+    `${hits.length} of ${sats.length} satellite(s) in group ${g} match "${args.query}", showing ${shown.length}.`,
+    ...shown.map((s, i) =>
+      `${i + 1}. ${s.OBJECT_NAME ?? 'n/a'} | NORAD ${s.NORAD_CAT_ID ?? 'n/a'} | ${s.OBJECT_ID ?? 'n/a'}` +
+      ` | inc ${s.INCLINATION ?? 'n/a'} | period ${s.PERIOD ?? 'n/a'} min`,
+    ),
+    hits.length > shown.length ? `...and ${hits.length - shown.length} more.` : '',
+  ]
+    .filter(Boolean)
+    .join('\n')
+}
+

@@ -1,7 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { formatVulnerability, getVulnerability, OsvError, queryBatch, queryPackage } from "./api.js"
 
+import { formatVulnerability, getVulnerability, OsvError, queryBatch, queryPackage } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -62,6 +63,48 @@ export function createServer(): McpServer {
     try { return text(formatVulnerability(await getVulnerability(id))) } catch (e) { return textError(error(e)) }
   }
   )
+  server.registerTool(
+    "advisory_database",
+    {
+      title: "Advisory database",
+      description: "Search the GitHub Advisory Database: advisories affecting one package version, or the latest advisories for an ecosystem, with severity, CVSS, CWE and patch status.",
+      inputSchema: z.object({
+    ecosystem: z.string().min(1).optional().describe("GitHub ecosystem name: npm, pip, go, maven, nuget, rubygems, rust, packagist, actions. Defaults to npm."),
+    package_name: z.string().min(1).optional().describe("Package name to look up advisories for. Takes priority over ecosystem."),
+    version: z.string().min(1).optional().describe("Exact version of that package."),
+    severity: z.string().min(1).optional().describe("Severity filter: low, moderate, high or critical. Only used when no package name is given."),
+    limit: z.number().int().min(1).max(20).optional().describe("Max advisories, default 5."),
+  }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: advisory_database ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_osv_advisory_database", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "package_releases",
+    {
+      title: "Package releases",
+      description: "Release history for a package from deps.dev: how many versions exist, when each was published, and the licenses and advisory links for a specific version.",
+      inputSchema: z.object({
+    system: z.string().min(1).describe("deps.dev system name, for example npm, PyPI, Go, crates.io, NuGet or Maven."),
+    name: z.string().min(1).describe("Package name."),
+    version: z.string().min(1).optional().describe("Exact version to report licenses and advisories for."),
+  }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    // ---- paywall: package_releases ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_osv_package_releases", args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
   return server
 }
 

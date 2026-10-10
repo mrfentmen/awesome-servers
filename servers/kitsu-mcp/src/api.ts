@@ -58,3 +58,56 @@ export async function trending(args: TrendingArgs = {}): Promise<string> {
   if (!rows.length) return 'No trending anime right now.';
   return `Trending anime on Kitsu (${rows.length} shown):\n` + formatAnime(rows);
 }
+
+// ---- muxB tools:
+
+const MANGA = 'https://kitsu.io/api/edge/manga';
+
+interface KitsuSingle {
+  id?: string;
+  attributes?: {
+    canonicalTitle?: string;
+    synonyms?: string[];
+    titles?: Record<string, string>;
+    averageRating?: string;
+    userCount?: number;
+    favoritesCount?: number;
+    popularityRank?: number;
+    ratingRank?: number;
+    episodeCount?: number;
+    chapterCount?: number;
+    volumeCount?: number;
+    status?: string;
+    showType?: string;
+    ageRating?: string;
+    nsfw?: boolean;
+    startDate?: string;
+    endDate?: string;
+    synopsis?: string;
+    posterImage?: { large?: string };
+  };
+}
+
+interface KitsuGenre {
+  id?: string;
+  attributes?: { name?: string };
+}
+
+async function kitsuGet<T>(url: string): Promise<T> {
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'mrfentmen-kitsu-mcp/1.0', Accept: 'application/vnd.api+json' },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error(`Kitsu returned ${res.status}`);
+  return (await res.json()) as T;
+}
+
+export interface AnimeDetailsArgs {
+  id: string;
+}
+
+export interface MangaSearchArgs {
+  query: string;
+  limit?: number;
+}
+
