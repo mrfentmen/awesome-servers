@@ -46,19 +46,21 @@ for s in $SERVERS; do
     esac
   fi
 
-  if npm run build 2>&1 | tail -1 | grep -qi "error"; then
+  if ! npm run build >/tmp/build-log-$s.txt 2>&1; then
     if [ "$INSERTED" = "1" ] && [ -f "/tmp/backup-$s.ts" ]; then
       # insertion may have broken the build: revert and retry once
       cp "/tmp/backup-$s.ts" src/server.ts
       echo "   [tools] insert broke build - reverted, testing original"
       BUILD_AFTER_INSERT_FAIL=1
-      if npm run build 2>&1 | tail -1 | grep -qi "error"; then
+      if ! npm run build >/tmp/build-log-$s.txt 2>&1; then
         echo "   BUILD FAILED"
+        tail -3 /tmp/build-log-$s.txt
         echo "$s BUILD_FAIL" >> "$RESULTS"
         FAILED=$((FAILED+1)); cd "$WORK"; continue
       fi
     else
       echo "   BUILD FAILED"
+      tail -3 /tmp/build-log-$s.txt
       echo "$s BUILD_FAIL" >> "$RESULTS"
       FAILED=$((FAILED+1)); cd "$WORK"; continue
     fi
