@@ -1,0 +1,11 @@
+# check batch 11 — 2026-10-17T07:06:00Z
+htx-mcp PASS {"ok":true,"tools":10,"names":["ticker","depth","candles","recent_trades","health_check","version_info","list_tools","echo","timestamp","ping"]}
+hubitat-mcp PASS {"ok":true,"tools":10,"names":["list_devices","device_status","send_command","community_search","thread_digest","category_roadmap","health_check","version_info","list_tools","echo"]}
+hubspot-mcp PASS {"ok":true,"tools":12,"names":["list_contacts","list_companies","list_deals","list_tickets","list_owners","get_contact","get_company","get_deal","search_contacts","deal_pipelines","legal_entity_lookup","sec_company"]}
+hudsonrock-mcp PASS {"ok":true,"tools":10,"names":["email","domain_exposure","ip_breaches","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+huggingface-mcp PASS {"ok":true,"tools":10,"names":["models","model","datasets","spaces","space_detail","health_check","version_info","list_tools","echo","timestamp"]}
+iana-tld-mcp PASS {"ok":true,"tools":10,"names":["list","rdap_servers","health_check","version_info","list_tools","echo","timestamp","ping","help","status"]}
+iban-validator-mcp PASS {"ok":true,"tools":10,"names":["validate","info","bban_structure","batch_validate","health_check","version_info","list_tools","echo","timestamp","ping"]}
+icebox-mcp PASS {"ok":true,"tools":11,"names":["search_products","list_newest","get_product","price_overview","find_deals","list_categories","list_collections","browse_collection","find_by_size","option_price_matrix","catalog_sitemap"]}
+ics-generator-mcp PASS {"ok":true,"tools":10,"names":["create_event","create_reminder","create_holiday_calendar","create_sun_calendar","health_check","version_info","list_tools","echo","timestamp","ping"]}
+ietf-mcp PASS {"ok":true,"tools":10,"names":["search_documents","get_document","search_working_groups","list_recent_meetings","group_profile","group_history","document_authors","health_check","version_info","list_tools"]}
