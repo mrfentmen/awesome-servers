@@ -1,6 +1,6 @@
 {
   "name": "cricapi-mcp",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "MCP server for CricAPI: cricket matches, series, players. Free key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/cricapi-mcp",
