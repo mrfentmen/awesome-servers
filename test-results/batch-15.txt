@@ -1,0 +1,11 @@
+# check batch 15 — 2026-10-17T07:08:33Z
+jolpica-mcp PASS {"ok":true,"tools":10,"names":["current","races","drivers","last_race","driver_standings","season_schedule","constructor_standings","qualifying_report","health_check","version_info"]}
+jpl-fireball-mcp PASS {"ok":true,"tools":10,"names":["recent","above_energy","in_date_range","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+jpl-sbdb-mcp PASS {"ok":true,"tools":10,"names":["object","browse","object_physical","close_approaches","query_group","health_check","version_info","list_tools","echo","timestamp"]}
+jsdelivr-mcp PASS {"ok":true,"tools":10,"names":["package","stats","resolve_version","version_detail","version_list","health_check","version_info","list_tools","echo","timestamp"]}
+json-schema-store-mcp PASS {"ok":true,"tools":10,"names":["search","match_filename","schema_versions","catalog_census","schema_digest","schema_refs","health_check","version_info","list_tools","echo"]}
+json-tools-mcp PASS {"ok":true,"tools":10,"names":["validate_json","format_json","json_info","find_schema","schema_for_file","health_check","version_info","list_tools","echo","timestamp"]}
+jsonplaceholder-mcp PASS {"ok":true,"tools":10,"names":["todos","posts","users","comments","albums","health_check","version_info","list_tools","echo","timestamp"]}
+jwt-tools-mcp PASS {"ok":true,"tools":10,"names":["decode","verify","list_signing_keys","describe_issuer","health_check","version_info","list_tools","echo","timestamp","ping"]}
+k6-mcp PASS {"ok":true,"tools":10,"names":["get_status","list_metrics","request_waterfall","load_sample","health_check","version_info","list_tools","echo","timestamp","ping"]}
+kanye-mcp PASS {"ok":true,"tools":10,"names":["random","quotes","search_quotes","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
