@@ -1,6 +1,6 @@
 {
   "name": "amadeus-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "MCP server for Amadeus travel: flights, hotels, airports. Free test key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/amadeus-mcp",
