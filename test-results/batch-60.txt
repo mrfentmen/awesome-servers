@@ -1,0 +1,11 @@
+# check batch 60 — 2026-10-17T07:32:14Z
+wikimedia-commons-mcp PASS {"ok":true,"tools":10,"names":["search","file","random","file_categories","file_thumbnail","category_files","health_check","version_info","list_tools","echo"],"stderr":""}
+wikinews-mcp PASS {"ok":true,"tools":10,"names":["search","article","browse_categories","category_members","page_history","backlinks","health_check","version_info","list_tools","echo"],"stderr":""}
+wikipedia-mcp PASS {"ok":true,"tools":10,"names":["search","summary","random","article_outline","translations","page_history","health_check","version_info","list_tools","echo"],"stderr":""}
+wikiquote-mcp PASS {"ok":true,"tools":10,"names":["search_quotes","page_quotes","random_quote_page","page_languages","page_history","backlinks","health_check","version_info","list_tools","echo"],"stderr":""}
+wikisource-mcp PASS {"ok":true,"tools":10,"names":["search_texts","read_text","page_summary","page_categories","page_history","backlinks","health_check","version_info","list_tools","echo"],"stderr":"MCP server running on stdio\n"}
+wikispecies-mcp PASS {"ok":true,"tools":10,"names":["search","species_page","page_categories","page_history","backlinks","category_members","health_check","version_info","list_tools","echo"],"stderr":""}
+wikitrending-mcp PASS {"ok":true,"tools":10,"names":["featured","mostread","on_this_day","picture_of_the_day","article_pageviews","project_pageviews","health_check","version_info","list_tools","echo"],"stderr":""}
+wikivoyage-mcp PASS {"ok":true,"tools":10,"names":["search","guide_article","guide_sections","nearby_guides","page_history","backlinks","health_check","version_info","list_tools","echo"],"stderr":""}
+wiktionary-mcp PASS {"ok":true,"tools":10,"names":["define","word_languages","entry_sections","word_revisions","search_entries","entry_categories","health_check","version_info","list_tools","echo"],"stderr":""}
+wise-mcp PASS {"ok":true,"tools":10,"names":["list_profiles","get_balances","exchange_rate","service_health","incident_history","health_check","version_info","list_tools","echo","timestamp"],"stderr":"MCP server running on stdio\n"}
