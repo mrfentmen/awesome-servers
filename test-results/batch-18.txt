@@ -1,0 +1,11 @@
+# check batch 18 — 2026-10-17T07:09:50Z
+lifx-mcp PASS {"ok":true,"tools":10,"names":["list_lights","set_power","color_convert","kelvin_schedule","health_check","version_info","list_tools","echo","timestamp","ping"]}
+ligo-mcp PASS {"ok":true,"tools":10,"names":["list_events","get_event","list_catalogs","event_parameters","strain_files","data_segments","health_check","version_info","list_tools","echo"]}
+linear-mcp PASS {"ok":true,"tools":12,"names":["me","list_teams","search_issues","get_issue","team_issues","list_projects","my_issues","list_labels","create_issue","update_issue_title","package_adoption","project_scorecard"]}
+link-shortener-mcp PASS {"ok":true,"tools":10,"names":["shorten","expand","link_preview","link_screenshot","page_extract","redirect_chain","health_check","version_info","list_tools","echo"]}
+liquipedia-mcp PASS {"ok":true,"tools":10,"names":["search_pages","get_page","get_recent_changes","get_category_members","get_backlinks","wiki_search","page_info","health_check","version_info","list_tools"]}
+listenbrainz-mcp PASS {"ok":true,"tools":10,"names":["user","popular","playlists","top_recordings","health_check","version_info","list_tools","echo","timestamp","ping"]}
+listennotes-mcp PASS {"ok":true,"tools":10,"names":["search","best_podcasts","get_episode","just_listen","get_podcast","podcast_recommendations","list_genres","trending_searches","apple_podcast_search","podcast_feed_cadence"]}
+literal-mcp PASS {"ok":true,"tools":10,"names":["get_books","get_books_by_state","get_book","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+lobsters-mcp PASS {"ok":true,"tools":10,"names":["newest","top","tag_stories","story","health_check","version_info","list_tools","echo","timestamp","ping"]}
+lockstep-mcp PASS {"ok":true,"tools":10,"names":["inspect_reproducibility","health_check","version_info","list_tools","echo","timestamp","ping","help","status","info"]}
