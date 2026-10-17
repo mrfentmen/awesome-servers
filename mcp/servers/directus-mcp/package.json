@@ -1,6 +1,6 @@
 {
   "name": "directus-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Query your Directus instance (self-hosted or cloud; set DIRECTUS_URL + DIRECTUS_TOKEN, Bearer): collections, users. Endpoints per official docs.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/directus-mcp",

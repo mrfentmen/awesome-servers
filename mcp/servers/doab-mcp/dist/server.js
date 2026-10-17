@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { errorMessage, searchBooks, getItem, collectionItems } from "./api.js";
-import { premiumTool } from "./gateway.js";
+import { searchBooks, getItem, collectionItems } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -22,7 +21,7 @@ export function createServer() {
             return text(await searchBooks(query));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("get_item", {
@@ -38,7 +37,7 @@ export function createServer() {
             return text(await getItem(prefix, suffix));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("browse_directory", {
@@ -47,14 +46,12 @@ export function createServer() {
         inputSchema: z.object({ kind: z.string().describe("collections or communities.").optional(), parent: z.string().describe("Parent handle, e.g. 20.500.12854/6.").optional(), limit: z.number().describe("Max entries.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: browse_directory ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
+        // TODO: implement directory locally (paywall removed)
         try {
-            return text(await premiumTool("mcp_doab_browse_directory", args));
+            return textError("Not yet implemented: directory");
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("item_metadata", {
@@ -63,14 +60,12 @@ export function createServer() {
         inputSchema: z.object({ handle: z.string().describe("DOAB handle, e.g. 20.500.12854/70295.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: item_metadata ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
+        // TODO: implement metadata locally (paywall removed)
         try {
-            return text(await premiumTool("mcp_doab_item_metadata", args));
+            return textError("Not yet implemented: metadata");
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("collection_items", {
@@ -83,7 +78,7 @@ export function createServer() {
             return text(await collectionItems(args));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("item_files", {
@@ -92,14 +87,12 @@ export function createServer() {
         inputSchema: z.object({ item: z.string().describe("Item UUID from DOAB metadata."), limit: z.number().int().optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: item_files ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
+        // TODO: implement files locally (paywall removed)
         try {
-            return text(await premiumTool("mcp_doab_item_files", args));
+            return textError("Not yet implemented: files");
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     return server;

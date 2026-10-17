@@ -1,6 +1,6 @@
 {
   "name": "dnd5e-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Use this MCP server to the D&D 5e SRD, monsters, spells, classes, and equipment. Tools include get monster, get spell, list monsters",
   "type": "module",
   "mcpName": "io.github.mrfentmen/dnd5e-mcp",
