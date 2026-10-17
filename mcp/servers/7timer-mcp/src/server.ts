@@ -1,7 +1,7 @@
+successfully downloaded text file (SHA: 864ce492d6c6b414eb5616e68cf024f448b3679f)
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { forecast, forecastByPlace } from "./api.js"
-import { premiumTool } from "./gateway.js"
+import { forecast, forecastByPlace, forecastSummary, dailyOutlook } from "./api.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -31,9 +31,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: forecast_summary ----
-    try { return text(await premiumTool("mcp_7timer_forecast_summary", args)) } catch (e) { return textError(error(e)) }
-    // ---- paywall: end ----
+    try { return text(await forecastSummary(args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -46,9 +44,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: daily_outlook ----
-    try { return text(await premiumTool("mcp_7timer_daily_outlook", args)) } catch (e) { return textError(error(e)) }
-    // ---- paywall: end ----
+    try { return text(await dailyOutlook(args)) } catch (e) { return textError(error(e)) }
   }
   )
 
