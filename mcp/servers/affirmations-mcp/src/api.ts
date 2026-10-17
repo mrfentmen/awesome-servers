@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: 726d49028ecb309609dfd0ad33d3c8d1093ae92d)
 const UA = "mrfentmen-affirmations-mcp/1.0 (https://github.com/mrfentmen)"
 
 export class AffirmationError extends Error {}
@@ -86,3 +87,34 @@ export async function adviceById(args: SlipIdArgs): Promise<string> {
   return [`Advice slip ${slip.id ?? id}:`, slip.advice].join('\n');
 }
 
+
+
+export async function quoteOfTheDay(): Promise<string> {
+  const res = await fetch('https://zenquotes.io/api/today', {
+    headers: { 'User-Agent': 'awesome-mcps/1.0', Accept: 'application/json' },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) throw new Error('ZenQuotes returned ' + res.status);
+  const data = (await res.json()) as Array<{ q: string; a: string; h?: string }>;
+  const q = data?.[0];
+  if (!q) return 'No quote of the day available.';
+  return 'Quote of the day: "' + q.q + '" — ' + q.a;
+}
+
+export async function adviceSearch(args: { query: string; limit?: number }): Promise<string> {
+  const query = (args.query ?? '').trim();
+  if (!query) return 'Provide a search term.';
+  const res = await fetch('https://api.adviceslip.com/advice/search/' + encodeURIComponent(query), {
+    headers: { 'User-Agent': 'awesome-mcps/1.0', Accept: 'application/json' },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) throw new Error('Advice Slip returned ' + res.status);
+  const data = (await res.json()) as { total_results?: string; slips?: Array<{ id: number; advice: string; date?: string }> };
+  const slips = data.slips ?? [];
+  if (!slips.length) return 'No advice found for "' + query + '".';
+  const lines = ['Advice Slip search for "' + query + '", ' + (data.total_results ?? slips.length) + ' result(s):', ''];
+  for (const s of slips) {
+    lines.push('• [' + s.id + '] ' + s.advice + (s.date ? ' (' + s.date + ')' : ''));
+  }
+  return lines.join('\n');
+}
