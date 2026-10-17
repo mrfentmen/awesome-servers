@@ -1,0 +1,11 @@
+# check batch 47 — 2026-10-17T07:25:50Z
+spreaker-mcp PASS {"ok":true,"tools":10,"names":["get_show","list_show_episodes","get_episode","search_shows","create_show","publisher_profile","episode_search","health_check","version_info","list_tools"]}
+sql-formatter-mcp PASS {"ok":true,"tools":10,"names":["format","minify","analyse","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+sqlite-mcp SMOKE_FAIL {"ok":false,"stage":"exit","error":"server exited early (code 1)","stderr":"Usage: sqlite-mcp <db-file>  (or set SQLITE_DB_PATH)\n"}
+squarespace-mcp PASS {"ok":true,"tools":10,"names":["list_products","list_orders","domain_registration","page_validation","health_check","version_info","list_tools","echo","timestamp","ping"]}
+ssl-cert-mcp PASS {"ok":true,"tools":10,"names":["cert_info","tls_details","cert_expiry","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+ssl-labs-mcp PASS {"ok":true,"tools":10,"names":["analyze","certificate_log","caa_records","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+stadiumgoods-mcp PASS {"ok":true,"tools":11,"names":["search_products","list_newest","get_product","price_overview","find_deals","list_categories","list_collections","browse_collection","find_by_size","brand_census","size_availability"]}
+stapi-mcp PASS {"ok":true,"tools":10,"names":["search_characters","get_character","search_species","search_locations","search_organizations","list_series","health_check","version_info","list_tools","echo"]}
+star-wars-mcp PASS {"ok":true,"tools":10,"names":["people_info","planet_info","search_people","film_info","starship_info","search_planets","health_check","version_info","list_tools","echo"]}
+stardew-wiki-mcp PASS {"ok":true,"tools":10,"names":["search_wiki","get_page","random_page","category_members","page_links","page_sections","health_check","version_info","list_tools","echo"]}
