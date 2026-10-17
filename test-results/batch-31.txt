@@ -1,0 +1,11 @@
+# check batch 31 — 2026-10-17T07:16:23Z
+openrouter-mcp PASS {"ok":true,"tools":12,"names":["list_models","key_info","credits","get_model","search_models","free_models","longest_context","model_endpoints","generation_stats","prompt_cost_estimate","model_economics_matrix","deprecation_watch"]}
+openrouteservice-mcp PASS {"ok":true,"tools":10,"names":["geocode","reverse","directions","nominatim_lookup","osrm_route_steps","valhalla_mode_compare","health_check","version_info","list_tools","echo"]}
+opensearch-mcp PASS {"ok":true,"tools":16,"names":["check_health","list_indices","create_index","delete_index","get_index","search_index","search_raw","index_document","get_document","delete_document","get_stats","get_cluster_stats","get_tasks","get_mappings","list_shards","list_nodes"]}
+opensecrets-mcp PASS {"ok":true,"tools":10,"names":["search_candidates","candidate_summary","fec_candidate_search","fec_committee_search","health_check","version_info","list_tools","echo","timestamp","ping"]}
+opensky-mcp PASS {"ok":true,"tools":10,"names":["area","flights_near","flights_in_box","callsign_lookup","country_flights","airspace_summary","health_check","version_info","list_tools","echo"]}
+opentargets-mcp PASS {"ok":true,"tools":10,"names":["search","get_target","target_druggability","target_pathways","target_evidence","drug_profile","health_check","version_info","list_tools","echo"]}
+opentdb-mcp PASS {"ok":true,"tools":12,"names":["list_categories","category_counts","global_counts","get_questions","quiz","session_token","compare_categories","quiz_readiness","category_quality","question_fairness_audit","distractor_quality","quiz_exploitability"]}
+openverse-mcp PASS {"ok":true,"tools":10,"names":["search_images","source_index","search_audio","media_detail","health_check","version_info","list_tools","echo","timestamp","ping"]}
+openwhyd-mcp PASS {"ok":true,"tools":10,"names":["hot","hot_detail","search_tracks","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+opnsense-mcp PASS {"ok":true,"tools":10,"names":["get_firmware_status","get_interfaces","ip_ownership","known_exploited_check","package_availability","health_check","version_info","list_tools","echo","timestamp"]}
