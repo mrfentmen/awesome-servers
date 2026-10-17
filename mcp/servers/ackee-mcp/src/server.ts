@@ -1,7 +1,7 @@
-import { premiumTool } from "./gateway.js"
+successfully downloaded text file (SHA: 26eecbbef842f891917f19d9e6ab832d9a6665cd)
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { errorMessage, listDomains, getDomain, getTopBrowsers } from "./api.js"
+import { errorMessage, listDomains, getDomain, getTopBrowsers, appStoreSearch, appStoreReviews } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -83,11 +83,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: app_store_search ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_ackee_app_store_search", args));
+        return text(await appStoreSearch(args));
       } catch (e) {
         return textError(errorMessage(e));
       }
@@ -107,11 +104,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: app_store_reviews ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_ackee_app_store_reviews", args));
+        return text(await appStoreReviews(args));
       } catch (e) {
         return textError(errorMessage(e));
       }
