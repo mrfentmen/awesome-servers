@@ -1,0 +1,11 @@
+# check batch 27 — 2026-10-17T07:14:47Z
+nodered-mcp PASS {"ok":true,"tools":10,"names":["list_flows","get_flow","flow_graph_audit","wiring_report","flow_lint","health_check","version_info","list_tools","echo","timestamp"]}
+nominatim-mcp PASS {"ok":true,"tools":10,"names":["search","reverse","geocode","lookup_osm","health_check","version_info","list_tools","echo","timestamp","ping"]}
+nonprofit-mcp PASS {"ok":true,"tools":10,"names":["search","search_by_state","search_by_category","details","financial_summary","compare","search_by_subsection","filings","state_sector_census","filing_recency_audit"]}
+notion-mcp PASS {"ok":true,"tools":12,"names":["search","list_users","get_page","query_database","block_children","search_databases","get_user","append_block","update_page_title","create_page","notion_page_metadata","notion_id_audit"]}
+novu-mcp PASS {"ok":true,"tools":12,"names":["list_subscribers","get_subscriber","list_topics","topic_details","notifications","environments","integrations","layouts","feeds","blueprint_groups","notification_api_audit","novu_sdk_release_check"]}
+npms-mcp PASS {"ok":true,"tools":10,"names":["search_packages","get_package","package_downloads","package_health","health_check","version_info","list_tools","echo","timestamp","ping"]}
+nps-mcp PASS {"ok":true,"tools":10,"names":["search_parks","park_alerts","park_campgrounds","parks_by_state","park_things_to_do","health_check","version_info","list_tools","echo","timestamp"]}
+ns-mcp PASS {"ok":true,"tools":10,"names":["get_departures","search_stations","plan_journey","get_disruptions","get_fares","station_network_census","station_wikidata_profile","health_check","version_info","list_tools"]}
+ntfy-mcp PASS {"ok":true,"tools":12,"names":["publish","poll","health","account","poll_since","send_urgent","send_scheduled","send_email","send_call","publish_tags","ntfy_server_capabilities","topic_message_history"]}
+nuget-mcp PASS {"ok":true,"tools":10,"names":["search","package","package_versions","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
