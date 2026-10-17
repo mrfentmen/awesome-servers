@@ -1,6 +1,6 @@
 {
   "name": "beaconchain-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Ethereum beacon chain via beaconcha.in: chain state, validator rewards, latest epoch.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/beaconchain-mcp",

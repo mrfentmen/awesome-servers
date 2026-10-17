@@ -1,6 +1,6 @@
 {
   "name": "balenciaga-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Balenciaga resale listings from Fashionphile and Rebag. Keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/balenciaga-mcp",
