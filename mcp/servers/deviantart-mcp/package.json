@@ -1,6 +1,6 @@
 {
   "name": "deviantart-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "DeviantArt browse: hot, newest, tags, deviation metadata. Needs app credentials.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/deviantart-mcp",

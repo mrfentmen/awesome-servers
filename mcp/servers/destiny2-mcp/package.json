@@ -1,6 +1,6 @@
 {
   "name": "destiny2-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Bungie Destiny 2 API: search players, read profiles and characters, milestones and manifest.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/destiny2-mcp",
