@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: 0635c169b619baad4baf717705471c8a5aac8584)
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
@@ -106,10 +107,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: company_profile ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_alphavantage_company_profile", args)) } catch (e) { return textError(errorMessage(e)) }
+        try { return text(await companyProfile(args.symbol)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
