@@ -1,0 +1,11 @@
+# check batch 37 — 2026-10-17T07:18:49Z
+prada-mcp PASS {"ok":true,"tools":12,"names":["search_listings","list_newest","get_listing","price_overview","compare_prices","find_deals","brand_overview","list_collections","browse_collection","find_by_attribute","size_matrix","flag_report"]}
+prayer-times-mcp PASS {"ok":true,"tools":10,"names":["timings","month_calendar","hijri_date","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+predictit-mcp PASS {"ok":true,"tools":12,"names":["markets","search_markets","market_detail","contract_price","biggest_movers","market_summary","arbitrage_check","compare_markets","search_contracts","long_shots","expiry_ladder","spread_analysis"]}
+producthunt-mcp PASS {"ok":true,"tools":10,"names":["viewer","list_posts","show_hn_launches","github_footprint","competitive_scan","health_check","version_info","list_tools","echo","timestamp"]}
+protondb-mcp PASS {"ok":true,"tools":10,"names":["summary","game_details","find_app_id","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+prx-mcp PASS {"ok":true,"tools":10,"names":["list_podcasts","get_podcast","list_episodes","get_episode","podcasts_by_genre","recent_episodes","health_check","version_info","list_tools","echo"]}
+pubg-mcp PASS {"ok":true,"tools":10,"names":["get_player","get_match","get_seasons","get_lifetime_stats","get_season_stats","health_check","version_info","list_tools","echo","timestamp"]}
+publicwww-mcp PASS {"ok":true,"tools":10,"names":["search_snippets","code_snippet_search","snippet_profile","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+pusher-mcp PASS {"ok":true,"tools":10,"names":["list_channels","get_channel","get_channel_users","websocket_round_trip","websocket_payload_probe","health_check","version_info","list_tools","echo","timestamp"]}
+pvgis-mcp PASS {"ok":true,"tools":12,"names":["pv_yield","radiation","hourly_output","typical_weather","system_summary","compare_locations","size_system","horizon_profile","offgrid_sizing","optimal_tilt","solar_variability","diurnal_profile"]}
