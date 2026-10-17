@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: 722fee3e425c81b1724c61fdf476306c0d41fc3f)
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
@@ -82,10 +83,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: confidence_profile ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_alphafold_confidence_profile", args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await confidenceProfile(args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -100,10 +98,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: model_versions ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_alphafold_model_versions", args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await modelVersions(args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
 
@@ -116,10 +111,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: pae_summary ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_alphafold_pae_summary", args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await paeSummary(args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
