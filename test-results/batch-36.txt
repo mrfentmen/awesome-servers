@@ -1,0 +1,11 @@
+# check batch 36 — 2026-10-17T07:18:25Z
+pokeapi-mcp PASS {"ok":true,"tools":10,"names":["pokemon_info","search_pokemon","pokemon_evolution","type_matchup","pokemon_abilities","health_check","version_info","list_tools","echo","timestamp"]}
+pokemon-tcg-mcp PASS {"ok":true,"tools":10,"names":["search_cards","get_card","list_sets","get_set","cards_by_rarity","card_rarities","health_check","version_info","list_tools","echo"]}
+police-transparency-mcp PASS {"ok":true,"tools":10,"names":["summarize_complaints","use_of_force_summary","arrests_by_charge","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+poloniex-mcp PASS {"ok":true,"tools":10,"names":["ticker","markets","price_candles","order_book","health_check","version_info","list_tools","echo","timestamp","ping"]}
+polygon-mcp PASS {"ok":true,"tools":14,"names":["list_tickers","get_ticker","prev_close","aggregates","grouped_daily","open_close","rsi","macd","dividends","splits","news","gainers","sec_filings","sec_revenue"]}
+port-scanner-mcp PASS {"ok":true,"tools":10,"names":["scan_host","scan_common","summarize_scan_results","parse_port_spec","dns_records","network_origin","health_check","version_info","list_tools","echo"]}
+postcodes-mcp PASS {"ok":true,"tools":10,"names":["lookup","random","area_profile","nearest_postcodes","health_check","version_info","list_tools","echo","timestamp","ping"]}
+posthog-mcp PASS {"ok":true,"tools":12,"names":["me","list_projects","list_insights","insight_details","dashboards","actions","events","persons","flags","cohorts","certificate_transparency","markup_audit"]}
+postman-echo-mcp PASS {"ok":true,"tools":10,"names":["get","ip","status_probe","header_echo","redirect_probe","json_body_echo","health_check","version_info","list_tools","echo"]}
+postmark-mcp PASS {"ok":true,"tools":10,"names":["get_server","list_templates","list_outbound","blacklist_check","mail_policy_report","health_check","version_info","list_tools","echo","timestamp"]}
