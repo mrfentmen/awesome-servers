@@ -1,0 +1,11 @@
+# check batch 52 — 2026-10-17T07:28:58Z
+the-trivia-api-mcp PASS {"ok":true,"tools":10,"names":["questions","categories","health_check","version_info","list_tools","echo","timestamp","ping","help","status"],"stderr":""}
+theaudiodb-mcp PASS {"ok":true,"tools":10,"names":["artist","album","track","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":""}
+thegraph-mcp PASS {"ok":true,"tools":10,"names":["query_subgraph","get_subgraph_schema","get_latest_block","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":"MCP server running on stdio\n"}
+themealdb-mcp PASS {"ok":true,"tools":10,"names":["search","random","categories","filter_by_ingredient","search_recipes","by_ingredient","recipe_details","filter_by_category","filter_by_area","list_ingredients"],"stderr":""}
+themuse-mcp PASS {"ok":true,"tools":12,"names":["jobs","job","find_jobs","company_jobs","search_jobs","job_insights","list_companies","company_search","compare_companies","posting_age_census","market_concentration","requirements_scan"],"stderr":""}
+theoddsapi-mcp PASS {"ok":true,"tools":10,"names":["list_sports","game_odds","implied_probability","expected_value","fixture_form","health_check","version_info","list_tools","echo","timestamp"],"stderr":"MCP server running on stdio\n"}
+thesportsdb-mcp PASS {"ok":true,"tools":10,"names":["team","league","league_table","league_teams","player","health_check","version_info","list_tools","echo","timestamp"],"stderr":""}
+tides-mcp PASS {"ok":true,"tools":10,"names":["get_tide_predictions","get_water_levels","station_metadata","harmonic_constituents","tide_statistics","health_check","version_info","list_tools","echo","timestamp"],"stderr":"MCP server running on stdio\n"}
+tiingo-mcp PASS {"ok":true,"tools":10,"names":["stock_meta","stock_prices","crypto_meta","risk_metrics","drawdown_profile","return_correlation","health_check","version_info","list_tools","echo"],"stderr":"MCP server running on stdio\n"}
+time-tools-mcp PASS {"ok":true,"tools":10,"names":["now","from_timestamp","date_diff","week_info","add_duration","health_check","version_info","list_tools","echo","timestamp"],"stderr":""}
