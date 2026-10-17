@@ -1,0 +1,11 @@
+# check batch 33 — 2026-10-17T07:17:11Z
+package-registry-mcp PASS {"ok":true,"tools":10,"names":["npm_package","pypi_package","npm_search","npm_dist_tags","npm_publish_timeline","health_check","version_info","list_tools","echo","timestamp"]}
+packagist-mcp PASS {"ok":true,"tools":10,"names":["package_info","search_packages","release_history","package_metrics","requirement_scan","health_check","version_info","list_tools","echo","timestamp"]}
+paddle-mcp PASS {"ok":true,"tools":10,"names":["list_products","get_product","list_prices","list_fx_rates","convert_amount","fx_rate_history","health_check","version_info","list_tools","echo"]}
+password-breach-check-mcp PASS {"ok":true,"tools":10,"names":["check_password","check_hash","exposure_lookup","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+password-generator-mcp PASS {"ok":true,"tools":10,"names":["generate_password","passphrase","password_entropy","password_patterns","health_check","version_info","list_tools","echo","timestamp","ping"]}
+password-strength-mcp PASS {"ok":true,"tools":10,"names":["check_password","common_list_rank","keyboard_walk","variant_audit","health_check","version_info","list_tools","echo","timestamp","ping"]}
+patents-mcp PASS {"ok":true,"tools":10,"names":["search_patents","patent_details","patent_citations","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+paypal-mcp PASS {"ok":true,"tools":13,"names":["get_order","get_capture","list_plans","plan_details","list_products","product_details","subscription_details","payout_details","list_webhooks","dispute_details","payout_market_profile","payout_fx_trend","payout_market_scan"]}
+pbdb-mcp PASS {"ok":true,"tools":10,"names":["occurrences","taxa","taxon_ancestry","occurrence_list","health_check","version_info","list_tools","echo","timestamp","ping"]}
+pdf-generator-mcp PASS {"ok":true,"tools":10,"names":["create_pdf","create_report","url_to_pdf","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
