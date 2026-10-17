@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: 292dac45089553c54b0c6272da6222190ca1b894)
 /**
  * Alpha Vantage API client. Needs ALPHAVANTAGE_API_KEY
  * (free at https://www.alphavantage.co/support/#api-key, rate-limited tier).
@@ -185,4 +186,26 @@ export async function priceHistory(args: { symbol: string; days?: number; interv
     "",
     "Prices are as the service last refreshed them, not as of this call, and the daily series is split or dividend adjusted according to how the exchange reports it, which the payload does not state. A daily bar is the exchange's own aggregation, so its high and low are intraday extremes and its volume is that session's, not a closing print. The standard deviation is a simple one over the window, not an annualised volatility.",
   ].join("\n");
+}
+
+
+export async function companyProfile(symbol: string): Promise<string> {
+  if (!symbol.trim()) throw new AlphaVantageError("Symbol is empty.");
+  const data = await getJson({ function: "OVERVIEW", symbol: symbol.trim().toUpperCase() });
+  const lines = ['Company profile for ' + (data.Name ?? symbol) + ':'];
+  lines.push('  Symbol: ' + (data.Symbol ?? 'n/a'));
+  lines.push('  Description: ' + (data.Description ?? 'not reported').slice(0, 300));
+  lines.push('  Sector: ' + (data.Sector ?? 'n/a'));
+  lines.push('  Industry: ' + (data.Industry ?? 'n/a'));
+  lines.push('  Market cap: ' + (data.MarketCapitalization ?? 'n/a'));
+  lines.push('  P/E ratio: ' + (data.PERatio ?? 'n/a'));
+  lines.push('  Dividend yield: ' + (data.DividendYield ?? 'n/a'));
+  lines.push('  52-week high: ' + (data['52WeekHigh'] ?? 'n/a'));
+  lines.push('  52-week low: ' + (data['52WeekLow'] ?? 'n/a'));
+  lines.push('  Beta: ' + (data.Beta ?? 'n/a'));
+  lines.push('  EPS: ' + (data.EPS ?? 'n/a'));
+  lines.push('  Revenue (TTM): ' + (data.RevenueTTM ?? 'n/a'));
+  lines.push('  Profit margin: ' + (data.ProfitMargin ?? 'n/a'));
+  lines.push('  Website: ' + (data.OfficialSite ?? 'n/a'));
+  return lines.join('\n');
 }
