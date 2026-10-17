@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: 1ac69f8a7e607749ab0406d0ff681d696ae24bb3)
 /**
  * AlphaFold Protein Structure Database API client, keyless.
  * Docs: https://alphafold.ebi.ac.uk/api-docs
@@ -186,3 +187,94 @@ export interface PaeSummaryArgs {
   model?: number;
 }
 
+
+
+export async function confidenceProfile(args: { accession: string }): Promise<string> {
+  const { clean, rows: data } = await rows(args.accession);
+  const first = data[0];
+  const plddt = asNumber(first.globalMetricValue);
+  const veryHigh = asNumber(first.fractionPlddtVeryHigh);
+  const high = asNumber(first.fractionPlddtHigh);
+  const low = asNumber(first.fractionPlddtLow);
+  const veryLow = asNumber(first.fractionPlddtVeryLow);
+  const lines = [
+    'Confidence profile for ' + clean + ' (' + (first.modelEntityId ?? 'unknown') + '):',
+    '  Mean pLDDT: ' + (plddt !== null ? plddt.toFixed(2) : 'unknown'),
+    '  Very high confidence (>90): ' + pct(veryHigh),
+    '  Confident (70-90): ' + pct(high),
+    '  Low (50-70): ' + pct(low),
+    '  Very low (<50): ' + pct(veryLow),
+    '',
+    'Trustworthiness: ' + (veryHigh !== null && high !== null ? ((veryHigh + high) * 100).toFixed(1) + '% of residues are confident or better' : 'unknown'),
+    'Uncertainty: ' + (low !== null && veryLow !== null ? ((low + veryLow) * 100).toFixed(1) + '% of residues have low confidence' : 'unknown'),
+  ];
+  if (data.length > 1) {
+    lines.push('');
+    lines.push('Note: ' + data.length + ' models returned. Showing first model only.');
+  }
+  return lines.join('\n');
+}
+
+export async function modelVersions(args: { accession: string }): Promise<string> {
+  const { clean, rows: data } = await rows(args.accession);
+  const lines = ['AlphaFold model versions for ' + clean + ':', ''];
+  for (const r of data) {
+    const modelId = r.modelEntityId ?? 'unknown';
+    const version = r.modelVersion ?? 'unknown';
+    const files = r.fileUrls ?? {};
+    lines.push('Model: ' + modelId + ' (version ' + version + ')');
+    lines.push('  mmCIF: ' + (files.cif ?? 'not reported'));
+    lines.push('  PDB: ' + (files.pdb ?? 'not reported'));
+    lines.push('  BinaryCIF: ' + (files.bcif ?? 'not reported'));
+    lines.push('  PAE JSON: ' + (files.pae ?? 'not reported'));
+    lines.push('  pLDDT JSON: ' + (files.plddt ?? 'not reported'));
+    lines.push('  MSA: ' + (files.msa ?? 'not reported'));
+    lines.push('');
+  }
+  if (data.length === 1) {
+    lines.push('Only one model version available.');
+  } else {
+    lines.push(data.length + ' model versions available.');
+  }
+  return lines.join('\n');
+}
+
+export async function paeSummary(args: { accession: string; model?: number }): Promise<string> {
+  const { clean, rows: data } = await rows(args.accession);
+  const modelIdx = args.model != null ? Math.max(0, Math.min(data.length - 1, args.model - 1)) : 0;
+  const r = data[modelIdx];
+  const paeUrl = r.fileUrls?.pae ?? r.paeUrl;
+  if (!paeUrl) return 'No PAE file URL found for ' + clean + '.';
+
+  const res = await fetch(paeUrl, { headers: { 'User-Agent': 'awesome-mcps/1.0', Accept: 'application/json' }, signal: AbortSignal.timeout(30000) });
+  if (!res.ok) throw new AlphaFoldError('PAE fetch returned ' + res.status);
+  const pae = (await res.json()) as { predicted_aligned_error?: number[][]; max_predicted_aligned_error?: number };
+  const matrix = pae.predicted_aligned_error;
+  if (!matrix || !matrix.length) return 'PAE file is empty or unreadable.';
+
+  const n = matrix.length;
+  let diagSum = 0, offDiagSum = 0, offDiagCount = 0;
+  let maxPae = 0, maxI = 0, maxJ = 0;
+
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      const val = matrix[i][j];
+      if (i === j) diagSum += val;
+      else { offDiagSum += val; offDiagCount++; }
+      if (val > maxPae) { maxPae = val; maxI = i; maxJ = j; }
+    }
+  }
+
+  const meanDiag = diagSum / n;
+  const meanOffDiag = offDiagCount > 0 ? offDiagSum / offDiagCount : 0;
+
+  const lines = [
+    'PAE summary for ' + clean + ' (' + (r.modelEntityId ?? 'unknown') + '):',
+    '  Matrix size: ' + n + ' x ' + n + ' residues',
+    '  Mean PAE (diagonal): ' + meanDiag.toFixed(2) + ' (lower = more confident local structure)',
+    '  Mean PAE (off-diagonal): ' + meanOffDiag.toFixed(2) + ' (lower = better relative positioning)',
+    '  Max PAE: ' + maxPae.toFixed(2) + ' (between residues ' + (maxI + 1) + ' and ' + (maxJ + 1) + ')',
+    '  Max PAE reported: ' + (pae.max_predicted_aligned_error ?? 'n/a'),
+  ];
+  return lines.join('\n');
+}
