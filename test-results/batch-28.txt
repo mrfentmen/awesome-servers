@@ -1,0 +1,11 @@
+# check batch 28 — 2026-10-17T07:15:10Z
+number-tools-mcp PASS {"ok":true,"tools":10,"names":["convert_base","roman","spell_number","divisors","continued_fraction","health_check","version_info","list_tools","echo","timestamp"]}
+nutritionix-mcp PASS {"ok":true,"tools":10,"names":["search_foods","analyze_meal","nutrient_food_search","nutrient_food_profile","health_check","version_info","list_tools","echo","timestamp","ping"]}
+nyc-arrests-mcp PASS {"ok":true,"tools":13,"names":["search_arrests","arrest_details","historic_search","top_offenses","precinct_activity","borough_stats","recent_felonies","recent_misdemeanors","offense_lookup","arrest_map_data","dataset_coverage","arrest_trend","borough_category_matrix"]}
+nyc311-mcp PASS {"ok":true,"tools":10,"names":["search_requests","count_requests","agency_breakdown","borough_breakdown","open_by_type","health_check","version_info","list_tools","echo","timestamp"]}
+nylas-mcp PASS {"ok":true,"tools":10,"names":["get_grant","list_calendars","list_messages","grant_flow_audit","message_object_audit","health_check","version_info","list_tools","echo","timestamp"]}
+ocrspace-mcp PASS {"ok":true,"tools":10,"names":["parse_image_url","parse_image_post","ocr_cleanup","document_fields","ocr_confusion_audit","health_check","version_info","list_tools","echo","timestamp"]}
+odysee-mcp PASS {"ok":true,"tools":10,"names":["search_claims","search_channel","video_details","channel_profile","recent_uploads","supported_channels","health_check","version_info","list_tools","echo"]}
+oeis-mcp PASS {"ok":true,"tools":10,"names":["search_sequences","get_sequence","sequence_terms","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+office-quotes-mcp PASS {"ok":true,"tools":10,"names":["randomQuote","quoteById","showInfo","episodeList","show_seasons","show_crew","health_check","version_info","list_tools","echo"]}
+ogs-mcp PASS {"ok":true,"tools":10,"names":["search_players","get_player","recent_games","game_record","tournament_list","group_list","health_check","version_info","list_tools","echo"]}
