@@ -1,0 +1,11 @@
+# check batch 56 — 2026-10-17T07:30:35Z
+uptimerobot-mcp PASS {"ok":true,"tools":10,"names":["check_url","check_endpoints","port_monitor","ssl_expiry","dns_health","monitor_report","multi_region_check","vendor_uptime","health_check","version_info"],"stderr":"MCP server running on stdio\n"}
+urban-dictionary-mcp PASS {"ok":true,"tools":10,"names":["define","random","autocomplete","word_completions","health_check","version_info","list_tools","echo","timestamp","ping"],"stderr":""}
+urlhaus-mcp PASS {"ok":true,"tools":10,"names":["recent_urls","lookup_url","lookup_payload","search_tag","feed_digest","domain_reputation","health_check","version_info","list_tools","echo"],"stderr":"MCP server running on stdio\n"}
+usajobs-mcp PASS {"ok":true,"tools":10,"names":["search_jobs","hiring_rules","hiring_signal","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":"MCP server running on stdio\n"}
+usda-food-mcp PASS {"ok":true,"tools":10,"names":["search","search_food","food_details","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":""}
+uselessfacts-mcp PASS {"ok":true,"tools":10,"names":["fact","random_fact","daily_fact","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":""}
+usgs-earthquakes-mcp PASS {"ok":true,"tools":10,"names":["recent","byPlace","latest_quakes","query_quakes","nearby_quakes","event_detail","health_check","version_info","list_tools","echo"],"stderr":""}
+usgs-water-mcp PASS {"ok":true,"tools":10,"names":["get_streamflow","find_gauges","daily_values","latest_value","health_check","version_info","list_tools","echo","timestamp","ping"],"stderr":"MCP server running on stdio\n"}
+usps-mcp PASS {"ok":true,"tools":18,"names":["get_rate","create_label","track_package","validate_address","get_zip_code","get_address_info","schedule_pickup","get_service_standards","postal_lookup","address_geocode","health_check","version_info","list_tools","echo","timestamp","ping","help","status"],"stderr":"USPS MCP server running on stdio\n"}
+uuid-mcp PASS {"ok":true,"tools":10,"names":["generate_uuid","generate_many","validate_uuid","uuid_info","generate_time_uuid","generate_name_uuid","health_check","version_info","list_tools","echo"],"stderr":""}
