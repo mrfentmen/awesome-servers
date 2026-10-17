@@ -1,0 +1,11 @@
+# check batch 38 — 2026-10-17T07:19:13Z
+pydio-mcp PASS {"ok":true,"tools":10,"names":["list_workspaces","get_tree_stats","health_check","version_info","list_tools","echo","timestamp","ping","help","status"]}
+qbittorrent-mcp PASS {"ok":true,"tools":10,"names":["list_torrents","get_transfer_info","get_app_version","parse_magnet","torrent_geometry","health_check","version_info","list_tools","echo","timestamp"]}
+qr-code-mcp PASS {"ok":true,"tools":10,"names":["generate_qr","qr_capacity","qr_analyse","qr_size_report","health_check","version_info","list_tools","echo","timestamp","ping"]}
+quip-mcp PASS {"ok":true,"tools":10,"names":["search_threads","get_thread","list_folders","get_user","wiki_article","wiki_outline","document_profile","health_check","version_info","list_tools"]}
+quotes-mcp PASS {"ok":true,"tools":10,"names":["quote_of_the_day","random_quote","qotd","search","random","many","today","quotes","quote_by_id","health_check"]}
+quran-mcp PASS {"ok":true,"tools":10,"names":["verse","surahInfo","chapters","chapter","verse_position","surah_order","page_verses","recitation_audio","health_check","version_info"]}
+radarr-mcp PASS {"ok":true,"tools":10,"names":["list_movies","get_queue","get_health","film_facts","filmography","health_check","version_info","list_tools","echo","timestamp"]}
+radio-browser-mcp PASS {"ok":true,"tools":10,"names":["search_stations","stations_by_tag","stations_by_country","get_top_voted","list_tags","list_countries","stations_by_language","health_check","version_info","list_tools"]}
+radio-garden-mcp PASS {"ok":true,"tools":10,"names":["places","search","place_detail","places_near","health_check","version_info","list_tools","echo","timestamp","ping"]}
+raindrop-mcp PASS {"ok":true,"tools":10,"names":["user","collections","raindrops","link_preview","book_lookup","health_check","version_info","list_tools","echo","timestamp"]}
