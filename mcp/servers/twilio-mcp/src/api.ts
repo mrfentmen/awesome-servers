@@ -3,8 +3,8 @@
 // which needs an account SID and auth token. component_reliability reads Twilio's
 // own public status service instead, which needs no credentials at all, and
 // answers the question a developer asks when a message will not send: is Twilio
-// itself broken, and if so where and how badly. incident_history moved to the
-// licence gateway (src/gateway.ts).
+// itself broken, and if so where and how badly. incident_history uses the same
+// public status service.
 
 const TW_STATUS = "https://status.twilio.com/api/v2";
 const TW_UA = "mcfentmen-twilio-mcp/1.1 (https://github.com/mcfentmen/twilio-mcp)";

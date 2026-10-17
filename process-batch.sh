@@ -1,6 +1,7 @@
 #!/bin/bash
 # process-batch.sh: take next 10 MCP servers, install / bump version / build / publish,
 # then commit, push, and delete local copies. Only commits on full success.
+# Publish retries: E429 rate limit => wait 60s and retry (up to 3 tries).
 set -u
 cd /Users/test/awesome-servers-work || exit 1
 
@@ -13,6 +14,35 @@ echo "Batch servers: $(echo "$SERVERS" | tr '\n' ' ')"
 echo ""
 
 BUMP='import json;p="package.json";d=json.load(open(p));v=d["version"].split(".");v[2]=str(int(v[2])+1);d["version"]=".".join(v);json.dump(d,open(p,"w"),indent=2);print("   version:",d["version"])'
+
+publish_one() {
+  local try=0 max=4
+  while [ "$try" -lt "$max" ]; do
+    PUB=$(npm publish --access public 2>&1)
+    if echo "$PUB" | grep -q "^npm error"; then
+      if echo "$PUB" | grep -q "E429"; then
+        try=$((try+1))
+        if [ "$try" -lt "$max" ]; then echo "   rate limited (E429), waiting 60s..."; sleep 60; fi
+        continue
+      elif echo "$PUB" | grep -qE "previously (published|staged)"; then
+        python3 -c "$BUMP" >/dev/null
+        try=$((try+1))
+        continue
+      else
+        break
+      fi
+    else
+      break
+    fi
+  done
+  if echo "$PUB" | grep -q "^\+ "; then
+    echo "   $(echo "$PUB" | grep '^\+ ' | tail -1)"
+    return 0
+  else
+    echo "   PUBLISH FAILED: $(echo "$PUB" | grep '^npm error' | grep -v "log file" | head -1)"
+    return 1
+  fi
+}
 
 FAIL=0
 for s in $SERVERS; do
@@ -27,21 +57,10 @@ for s in $SERVERS; do
     npm run build 2>&1 | tail -3
     FAIL=1
   else
-    PUB=$(npm publish --access public 2>&1)
-    if echo "$PUB" | grep -q "^npm error"; then
-      # version conflict or transient issue: bump once and retry
-      python3 -c "$BUMP" >/dev/null
-      PUB=$(npm publish --access public 2>&1)
-    fi
-    if echo "$PUB" | grep -q "^npm error"; then
-      echo "   PUBLISH FAILED"
-      echo "$PUB" | grep -m1 "npm error"
-      FAIL=1
-    else
-      echo "   $(echo "$PUB" | grep '^\+ ' | tail -1)"
-    fi
+    publish_one || FAIL=1
   fi
   cd /Users/test/awesome-servers-work
+  sleep 5
 done
 echo ""
 
