@@ -1,0 +1,11 @@
+# check batch 21 — 2026-10-17T07:11:09Z
+marketstack-mcp PASS {"ok":true,"tools":10,"names":["get_latest_eod","get_eod_on_date","search_tickers","list_exchanges","get_dividends","symbol_dividend_ledger","price_window_review","health_check","version_info","list_tools"]}
+mast-mcp PASS {"ok":true,"tools":10,"names":["cone_search","resolve_name","health_check","version_info","list_tools","echo","timestamp","ping","help","status"]}
+mastodon-mcp PASS {"ok":true,"tools":10,"names":["instance","trends","account_lookup","hashtag_timeline","health_check","version_info","list_tools","echo","timestamp","ping"]}
+math-tools-mcp PASS {"ok":true,"tools":10,"names":["prime_factors","gcd_lcm","stats","sequence_lookup","evaluate_expression","health_check","version_info","list_tools","echo","timestamp"]}
+maven-info-mcp PASS {"ok":true,"tools":10,"names":["search","artifact","release_timeline","group_survey","dependency_block","health_check","version_info","list_tools","echo","timestamp"]}
+mbta-mcp PASS {"ok":true,"tools":10,"names":["routes","stops","alerts","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+mcp-auditor-mcp PASS {"ok":true,"tools":14,"names":["probe_keyless","audit_endpoint","audit_tools","compare_servers","check_listing","lint_source","generate_tool_registration","diff_tool_schema","registry_lookup","npm_package_check","call_tool","server_json_check","openapi_spec_audit","endpoint_latency_matrix"]}
+mcp-marketplace BUILD_FAIL
+mcstatus-mcp PASS {"ok":true,"tools":10,"names":["status","latest_versions","player_profile","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+mdn-search-mcp PASS {"ok":true,"tools":10,"names":["search","search_ranked","section_census","locale_coverage","health_check","version_info","list_tools","echo","timestamp","ping"]}
