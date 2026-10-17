@@ -1,0 +1,11 @@
+# check batch 7 — 2026-10-17T07:04:20Z
+gog-mcp PASS {"ok":true,"tools":10,"names":["browse_games","search_games","deals","top_rated","game_details","games_by_ids","price_check","browse_by_type","gog_news","steam_reception"]}
+gold-prices-mcp PASS {"ok":true,"tools":12,"names":["price","all","market_overview","symbols","convert","portfolio_value","metal_ratios","melt_value","premium_check","price_trend","tokenised_metal","futures_curve"]}
+google-autocomplete-mcp PASS {"ok":true,"tools":10,"names":["suggest","youtube_suggest","localized_suggest","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+google-books-mcp PASS {"ok":true,"tools":10,"names":["search_books","get_volume","isbn_lookup","author_works","health_check","version_info","list_tools","echo","timestamp","ping"]}
+google-fonts-mcp PASS {"ok":true,"tools":10,"names":["list_fonts","search_fonts","get_font","variable_axes","served_font_faces","health_check","version_info","list_tools","echo","timestamp"]}
+googlenews-mcp PASS {"ok":true,"tools":10,"names":["search","top_stories","topic_headlines","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+gopher-mcp PASS {"ok":true,"tools":10,"names":["open_menu","read_textfile","search_veronica","menu_inventory","menu_search","health_check","version_info","list_tools","echo","timestamp"]}
+gorjana-mcp PASS {"ok":true,"tools":10,"names":["search_products","list_newest","get_product","price_overview","find_deals","list_categories","list_collections","collection_products","health_check","version_info"]}
+got-mcp PASS {"ok":true,"tools":10,"names":["book","character","houses","list_books","list_characters","health_check","version_info","list_tools","echo","timestamp"]}
+gotify-mcp PASS {"ok":true,"tools":10,"names":["send_message","list_messages","list_apps","alert_payload","retry_schedule","health_check","version_info","list_tools","echo","timestamp"]}
