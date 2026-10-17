@@ -1,0 +1,11 @@
+# check batch 17 — 2026-10-17T07:09:26Z
+lago-mcp PASS {"ok":true,"tools":10,"names":["list_plans","list_customers","list_invoices","invoice_arithmetic","usage_bill","health_check","version_info","list_tools","echo","timestamp"]}
+languagetool-mcp PASS {"ok":true,"tools":10,"names":["check_text","list_languages","translate_text","word_lookup","word_pronunciation","usage_examples","health_check","version_info","list_tools","echo"]}
+lastfm-mcp PASS {"ok":true,"tools":10,"names":["top_artists","top_tracks","artist_info","musicbrainz_artist","artist_discography","cover_art","health_check","version_info","list_tools","echo"]}
+leetcode-mcp PASS {"ok":true,"tools":10,"names":["problems","search","question_detail","daily_challenge","health_check","version_info","list_tools","echo","timestamp","ping"]}
+lemmy-mcp PASS {"ok":true,"tools":10,"names":["communities","recent_posts","instance_info","search_communities","community_details","recent_comments","health_check","version_info","list_tools","echo"]}
+lemonsqueezy-mcp PASS {"ok":true,"tools":10,"names":["list_stores","list_products","get_product","fee_breakdown","payout_schedule","health_check","version_info","list_tools","echo","timestamp"]}
+lever-mcp PASS {"ok":true,"tools":11,"names":["postings","posting","search_postings","recent_postings","departments","teams","locations","grouped_postings","newest_since","hiring_velocity","company_comparison"]}
+librivox-mcp PASS {"ok":true,"tools":10,"names":["search","author_books","book_detail","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+license-boundary-mcp PASS {"ok":true,"tools":10,"names":["inspect_license_boundary","search_spdx","spdx_license","spdx_exception","npm_license_evidence","repo_license_evidence","health_check","version_info","list_tools","echo"]}
+lichess-mcp PASS {"ok":true,"tools":10,"names":["get_daily_puzzle","get_puzzle","get_player","get_top_players","live_tournaments","team_info","health_check","version_info","list_tools","echo"]}
