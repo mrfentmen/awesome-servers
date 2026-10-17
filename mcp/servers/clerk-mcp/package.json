@@ -1,6 +1,6 @@
 {
   "name": "clerk-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Query the Clerk Backend API (secret key; set CLERK_SECRET_KEY, Bearer): users, user details.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/clerk-mcp",

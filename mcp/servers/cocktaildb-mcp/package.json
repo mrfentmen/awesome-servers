@@ -1,6 +1,6 @@
 {
   "name": "cocktaildb-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "CocktailDB recipes: search, lookup, random, ingredients. Keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/cocktaildb-mcp",
