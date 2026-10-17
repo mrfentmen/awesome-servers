@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ashby-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Keyless MCP server for Ashby job boards: openings, departments, locations.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ashby-mcp",

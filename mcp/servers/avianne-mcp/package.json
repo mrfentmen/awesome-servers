@@ -1,6 +1,6 @@
 {
   "name": "avianne-mcp",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Avianne Jewelers catalog: search, products, prices. Keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/avianne-mcp",
