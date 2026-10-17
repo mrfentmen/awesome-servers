@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: 7979510792ea128af36cfe27430539a98047e1f3)
 # 7Timer MCP
 
 Weather forecasts from the public 7Timer API. No key required.
@@ -19,21 +20,9 @@ node dist/index.js
 
 Data comes from the public 7Timer API.
 
-<!-- paywall -->
-## Premium tools
+## Tools
 
-These tools need a license key:
-
-* `forecast_summary`
-* `daily_outlook`
-
-The tool bodies run on our gateway, not inside this package, so the key is what buys access. Buy one at https://buy.polar.sh/polar_cl_mrO7rS5LZxpqM7oAFFEA10i9121J240U40IIj4JRZO4 and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "polar_..." }
-```
-
-The gateway checks the key against Polar and gives every key 1,000 free premium
-calls a month before per-call billing starts. Every other tool on this server
-stays free.
-<!-- /paywall -->
+* `forecast`  Weather for coordinates.
+* `forecast_summary`  Summary of the civil series.
+* `daily_outlook`  Daily outlook.
+* `forecast_by_place`  Forecast by place name.
