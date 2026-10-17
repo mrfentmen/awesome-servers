@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: 1dfe6aaaedb8a6ca25fa4545a06ef8b9df1a24eb)
 const BASE = 'https://mainnet-api.algonode.cloud/v2/status';
 
 export interface StatusArgs {
@@ -71,3 +72,49 @@ export interface AssetArgs {
   assetId?: number;
 }
 
+
+
+export async function blockDetail(args: { round: number }): Promise<string> {
+  const round = Number(args.round);
+  if (!Number.isFinite(round) || round < 0) return 'Provide a valid block round number.';
+  const res = await fetch('https://mainnet-api.algonode.cloud/v2/blocks/' + round, {
+    headers: { 'User-Agent': 'awesome-mcps/1.0', Accept: 'application/json' },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error('Algorand API returned ' + res.status);
+  const data = (await res.json()) as Record<string, unknown>;
+  const block = (data.block ?? data) as Record<string, unknown>;
+  const lines = ['Algorand block #' + round + ':'];
+  lines.push('  Timestamp: ' + (block.timestamp ? new Date(Number(block.timestamp) * 1000).toISOString() : 'n/a'));
+  lines.push('  Transactions: ' + (block.txns?.length ?? block.num_txns ?? 'n/a'));
+  lines.push('  Previous block: ' + (block.previousBlockHash ?? block.prev ?? 'n/a'));
+  lines.push('  Seed: ' + (block.seed ?? 'n/a'));
+  lines.push('  Reward: ' + (block.reward ?? 'n/a'));
+  if (block.txns && Array.isArray(block.txns) && block.txns.length > 0) {
+    lines.push('  First few txns: ' + block.txns.slice(0, 5).map((t: any) => t.id ?? t.txid ?? '?').join(', '));
+  }
+  return lines.join('\n');
+}
+
+export async function assetDetail(args: { assetId: number }): Promise<string> {
+  const id = Number(args.assetId);
+  if (!Number.isFinite(id) || id < 0) return 'Provide a valid asset ID.';
+  const res = await fetch('https://mainnet-api.algonode.cloud/v2/assets/' + id, {
+    headers: { 'User-Agent': 'awesome-mcps/1.0', Accept: 'application/json' },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error('Algorand API returned ' + res.status);
+  const data = (await res.json()) as Record<string, unknown>;
+  const asset = (data.asset ?? data) as Record<string, unknown>;
+  const params = (asset.params ?? asset) as Record<string, unknown>;
+  const lines = ['Algorand asset #' + id + ':'];
+  lines.push('  Name: ' + (params.name ?? 'n/a'));
+  lines.push('  Unit: ' + (params['unit-name'] ?? params.unitName ?? 'n/a'));
+  lines.push('  Decimals: ' + (params.decimals ?? 'n/a'));
+  lines.push('  Total supply: ' + (params.total ?? 'n/a'));
+  lines.push('  Manager: ' + (params.manager ?? 'n/a'));
+  lines.push('  Reserve: ' + (params.reserve ?? 'n/a'));
+  lines.push('  Freeze: ' + (params.freeze ?? 'n/a'));
+  lines.push('  Clawback: ' + (params.clawback ?? 'n/a'));
+  return lines.join('\n');
+}
