@@ -1,9 +1,9 @@
+successfully downloaded text file (SHA: 5400c68db27d0eb6d563ed6bd9091e0b607f56d3)
 import { getStatus, getStats, getQueryLog } from "./instance.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
-import { errorMessage, filterRuleAudit } from "./api.js"
-import { premiumTool } from "./gateway.js"
+import { errorMessage, filterRuleAudit, domainCoverage, filterCatalog } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -93,10 +93,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: domain_coverage ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_adguardhome_domain_coverage", args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await domainCoverage(args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
@@ -109,10 +106,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: filter_catalog ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_adguardhome_filter_catalog", args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await filterCatalog(args)) } catch (e) { return textError(errorMessage(e)) }
   }
   )
 
