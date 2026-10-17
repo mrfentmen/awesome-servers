@@ -1,0 +1,11 @@
+# check batch 46 — 2026-10-17T07:25:24Z
+space-weather-mcp PASS {"ok":true,"tools":10,"names":["get_solar_wind","get_noaa_scales","get_alerts","latest","map","xrays","planetary_k_index","solar_wind_mag_field","health_check","version_info"]}
+spacedevs-mcp PASS {"ok":true,"tools":14,"names":["next_launches","launch_countdown","satellite_search","satellite_orbit","satellite_frequencies","space_news","space_blogs","space_weather","space_agencies","astronauts","launch_vehicles","upcoming_events","solar_flux_profile","aurora_reach"]}
+spaceflight-news-mcp PASS {"ok":true,"tools":10,"names":["articles","article","blogs","reports","health_check","version_info","list_tools","echo","timestamp","ping"]}
+spdx-mcp PASS {"ok":true,"tools":10,"names":["health_check","version_info","list_tools","echo","timestamp","ping","help","search_licenses","get_license","license_exceptions"]}
+speedrun-mcp PASS {"ok":true,"tools":10,"names":["search_games","get_world_records","get_leaderboard","get_categories","get_runner","latest_runs","player_pbs","health_check","version_info","list_tools"]}
+split-mcp PASS {"ok":true,"tools":10,"names":["list_workspaces","list_splits","list_segments","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+spoonacular-mcp PASS {"ok":true,"tools":10,"names":["search_recipes","get_recipe","guess_nutrition","product_search","barcode_lookup","health_check","version_info","list_tools","echo","timestamp"]}
+sports-scores-mcp PASS {"ok":true,"tools":10,"names":["nba_scores","nfl_scores","mlb_scores","nhl_scores","soccer_scores","health_check","version_info","list_tools","echo","timestamp"]}
+sportyandrich-mcp PASS {"ok":true,"tools":10,"names":["search_products","list_newest","get_product","price_overview","find_deals","list_categories","collection_census","store_policies","health_check","version_info"]}
+spotify-mcp PASS {"ok":true,"tools":12,"names":["search","get_artist","get_album","get_track","artist_top","artist_albums","new_releases","get_episode","get_show","browse_categories","artist_identity","music_charts"]}
