@@ -1,6 +1,6 @@
 {
   "name": "blubrry-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Blubrry podcast hosting: shows, media, download stats. Needs token.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/blubrry-mcp",

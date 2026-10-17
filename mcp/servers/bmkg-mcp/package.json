@@ -1,6 +1,6 @@
 {
   "name": "bmkg-mcp",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Keyless BMKG Indonesia: village-level 3-hourly forecasts plus felt and latest earthquakes.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/bmkg-mcp",

@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { errorMessage, getForecast, getFeltEarthquakes, getLatestEarthquakes, warningDetail } from "./api.js";
-import { premiumTool } from "./gateway.js";
+import { getForecast, getFeltEarthquakes, getLatestEarthquakes, warningDetail } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -22,7 +21,7 @@ export function createServer() {
             return text(await getForecast(adm4));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("get_felt_earthquakes", {
@@ -35,7 +34,7 @@ export function createServer() {
             return text(await getFeltEarthquakes());
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("get_latest_earthquakes", {
@@ -48,7 +47,7 @@ export function createServer() {
             return text(await getLatestEarthquakes());
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("latest_earthquake", {
@@ -57,14 +56,12 @@ export function createServer() {
         inputSchema: z.object({}),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: latest_earthquake ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
+        // TODO: implement earthquake locally (paywall removed)
         try {
-            return text(await premiumTool("mcp_bmkg_latest_earthquake", args));
+            return textError("Not yet implemented: earthquake");
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("weather_warnings", {
@@ -73,14 +70,12 @@ export function createServer() {
         inputSchema: z.object({ region: z.string().describe("Optional region name in the warning title.").optional(), limit: z.number().describe("Maximum warnings, 1-30.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: weather_warnings ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
+        // TODO: implement warnings locally (paywall removed)
         try {
-            return text(await premiumTool("mcp_bmkg_weather_warnings", args));
+            return textError("Not yet implemented: warnings");
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("warning_detail", {
@@ -93,7 +88,7 @@ export function createServer() {
             return text(await warningDetail(args));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     return server;
