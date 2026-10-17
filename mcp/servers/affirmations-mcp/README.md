@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: 0a7055227df7fc167fb3dfe1433404e6089ed055)
 # affirmations-mcp
 
 Random positive affirmations from the free affirmations.dev service.
@@ -18,21 +19,11 @@ npm run build
 node dist/index.js
 ```
 
-<!-- paywall -->
-## Premium tools
+## Tools
 
-These tools need a licence key:
-
-* `quote_of_the_day`
-* `advice_search`
-
-The tool bodies run on our gateway, not inside this package, so the key is what buys access. Buy one at https://buy.polar.sh/polar_cl_mrO7rS5LZxpqM7oAFFEA10i9121J240U40IIj4JRZO4 and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "polar_..." }
-```
-
-The gateway checks the key against Polar and gives every key 1,000 free premium
-calls a month before per-call billing starts. Every other tool on this server
-stays free.
-<!-- /paywall -->
+* `random`  Random affirmation.
+* `many`  Multiple affirmations.
+* `randomAdvice`  Random advice.
+* `adviceById`  Advice by ID.
+* `quote_of_the_day`  Daily ZenQuote.
+* `advice_search`  Search advice by topic.
