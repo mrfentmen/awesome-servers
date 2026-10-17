@@ -1,0 +1,11 @@
+# check batch 34 — 2026-10-17T07:17:36Z
+peakdesign-mcp PASS {"ok":true,"tools":10,"names":["search_products","list_newest","get_product","price_overview","find_deals","list_categories","list_collections","collection_variants","health_check","version_info"]}
+peertube-mcp PASS {"ok":true,"tools":10,"names":["searchVideos","instance","top_videos","video_detail","health_check","version_info","list_tools","echo","timestamp","ping"]}
+pexels-mcp PASS {"ok":true,"tools":10,"names":["search","health_check","version_info","list_tools","echo","timestamp","ping","help","status","info"]}
+phemex-mcp PASS {"ok":true,"tools":10,"names":["ticker","order_book","derivatives_metrics","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+phone-validator-mcp PASS {"ok":true,"tools":10,"names":["validate","zone_time","country_context","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+photon-mcp PASS {"ok":true,"tools":10,"names":["search","reverse_geocode","search_by_tag","geocode_in_box","health_check","version_info","list_tools","echo","timestamp","ping"]}
+picsum-mcp PASS {"ok":true,"tools":10,"names":["list_photos","get_photo","photo_url","author_photos","photo_batch","health_check","version_info","list_tools","echo","timestamp"]}
+pihole-mcp PASS {"ok":true,"tools":10,"names":["status","set_blocking","community_search","blocklist_audit","rule_match_test","health_check","version_info","list_tools","echo","timestamp"]}
+pinata-mcp PASS {"ok":true,"tools":10,"names":["list_pins","pin_json","unpin","decode_cid","compare_cids","convert_cid","health_check","version_info","list_tools","echo"]}
+pingdom-mcp PASS {"ok":true,"tools":10,"names":["check_url","response_times","check_redirects","certificate_expiry","broken_links","performance_report","security_headers","dns_records","health_check","version_info"]}
