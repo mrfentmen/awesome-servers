@@ -1,0 +1,11 @@
+# check batch 10 — 2026-10-17T07:05:33Z
+hiddenpalace-mcp PASS {"ok":true,"tools":10,"names":["search_pages","get_page","recent_changes","page_info","list_categories","category_members","health_check","version_info","list_tools","echo"]}
+hikingproject-mcp PASS {"ok":true,"tools":10,"names":["get_trails","get_trail_by_id","health_check","version_info","list_tools","echo","timestamp","ping","help","status"]}
+hipsum-mcp PASS {"ok":true,"tools":10,"names":["generate","generate_paragraphs","lexicon_census","placeholder_block","health_check","version_info","list_tools","echo","timestamp","ping"]}
+hn-reddit-mcp PASS {"ok":true,"tools":10,"names":["get_hn_top","get_hn_item","get_reddit_top","hn_search","hn_comments","reddit_search","health_check","version_info","list_tools","echo"]}
+holidays-mcp PASS {"ok":true,"tools":10,"names":["publicHolidays","nextHolidays","countries","openHolidays","holidays","available_countries","health_check","version_info","list_tools","echo"]}
+homebrew-mcp PASS {"ok":true,"tools":10,"names":["formula","cask","formula_bottles","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+html-meta-mcp PASS {"ok":true,"tools":10,"names":["meta","http_info","robots","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+html-to-markdown-mcp PASS {"ok":true,"tools":10,"names":["convert","convert_url","extract_links","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+http-inspector-mcp PASS {"ok":true,"tools":10,"names":["inspect_url","dns_records","redirect_chain","security_txt","health_check","version_info","list_tools","echo","timestamp","ping"]}
+httpbin-mcp PASS {"ok":true,"tools":10,"names":["get","ip","headers","base64_decode","echo_anything","status_check","health_check","version_info","list_tools","echo"]}
