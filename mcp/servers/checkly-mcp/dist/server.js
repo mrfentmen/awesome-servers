@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { assertContent, assertHeaders, assertStatus, brokenLinks, checkRedirects, checkUrl, errorMessage, assertResponseTime, assertJson, assertRedirect, a11yBasics } from "./api.js";
-import { premiumTool } from "./gateway.js";
+import { assertContent, assertHeaders, assertStatus, brokenLinks, checkRedirects, checkUrl, assertResponseTime, assertJson, assertRedirect, a11yBasics } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -21,7 +20,7 @@ export function createServer() {
             return text(await assertStatus(args));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("assert_headers", {
@@ -40,7 +39,7 @@ export function createServer() {
             return text(await assertHeaders(args));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("assert_content", {
@@ -57,7 +56,7 @@ export function createServer() {
             return text(await assertContent(args));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("check_url", {
@@ -72,7 +71,7 @@ export function createServer() {
             return text(await checkUrl(args));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("check_redirects", {
@@ -87,7 +86,7 @@ export function createServer() {
             return text(await checkRedirects(args));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("broken_links", {
@@ -103,7 +102,7 @@ export function createServer() {
             return text(await brokenLinks(args));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("assert_response_time", {
@@ -120,7 +119,7 @@ export function createServer() {
             return text(await assertResponseTime(args));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("assert_json", {
@@ -138,7 +137,7 @@ export function createServer() {
             return text(await assertJson(args));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("assert_redirect", {
@@ -155,7 +154,7 @@ export function createServer() {
             return text(await assertRedirect(args));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("http_security_report", {
@@ -167,14 +166,12 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: http_security_report ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
+        // TODO: implement report locally (paywall removed)
         try {
-            return text(await premiumTool("mcp_checkly_http_security_report", args));
+            return textError("Not yet implemented: report");
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("a11y_basics", {
@@ -190,7 +187,7 @@ export function createServer() {
             return text(await a11yBasics(args));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("seo_meta", {
@@ -203,14 +200,12 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: seo_meta ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
+        // TODO: implement meta locally (paywall removed)
         try {
-            return text(await premiumTool("mcp_checkly_seo_meta", args));
+            return textError("Not yet implemented: meta");
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     return server;

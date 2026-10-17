@@ -1,6 +1,6 @@
 {
   "name": "checkly-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Assertion checks for status, headers and content - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/checkly-mcp",
