@@ -21,7 +21,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import HELP, LocalAgent, route  # noqa: E402
 from data import (  # noqa: E402
@@ -421,59 +421,6 @@ class TurnTests(unittest.TestCase):
 
 
 
-class PremiumGateTests(unittest.TestCase):
-    def gateway(self, key, payload=None):
-        from acp_kit import GatewayClient
-        import json
-        self.calls = []
-        def fetch(url, body, headers):
-            self.calls.append((body, headers))
-            if key == "lic_live_but_rejected":
-                return {"result": {"isError": True, "content": [{"type": "text", "text": "Gateway says this licence is revoked."}], "structuredContent": {"licenceRefusal": True, "reason": "revoked"}}}
-            return {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
-        return GatewayClient(key=key, fetch=fetch)
-    def test_premium_no_key_attempts_gate(self):
-        import os
-        from unittest.mock import patch
-        with patch.dict(os.environ, {}, clear=True):
-            gateway=self.gateway(None)
-            with patch.object(gateway, "call", wraps=gateway.call) as call:
-                answer, artifact=LocalAgent(data=make_data()[0], gateway=gateway)._run_skill(*route("OSV advisories for requests 2.19.0 PyPI"), None)
-            call.assert_called_once_with("osv_advisory_board", {"packages": [{"name":"requests","version":"2.19.0","ecosystem":"PyPI"}]})
-        self.assertIn("MCP_LICENSE_KEY", answer); self.assertEqual(artifact["reason"], "missing_key"); self.assertEqual(self.calls, [])
-    def test_premium_rejected_preserves_gateway_wording(self):
-        gateway=self.gateway("lic_live_but_rejected")
-        answer, artifact=LocalAgent(data=make_data()[0], gateway=gateway)._run_skill(*route("OSV advisories for requests 2.19.0 PyPI"), None)
-        self.assertEqual(answer,"Gateway says this licence is revoked."); self.assertEqual(artifact["reason"],"denied"); self.assertEqual(len(self.calls),1)
-    def test_premium_good_key_preserves_numbers_and_arguments(self):
-        payload={"packages":[{"name":"requests","version":"2.19.0","ecosystem":"PyPI","advisory_count":1,"advisories":[{"id":"GHSA-1"}]}],"package_count":1,"vulnerable_packages":1,"total_advisories":1}
-        gateway=self.gateway("lic_good",payload)
-        answer, artifact=LocalAgent(data=make_data()[0], gateway=gateway)._run_skill(*route("OSV advisories for requests 2.19.0 PyPI"), None)
-        self.assertEqual(len(self.calls),1); self.assertIn("1 of 1",answer); self.assertTrue(artifact["premium"])
-        self.assertEqual(self.calls[0][0]["params"], {"name": "osv_advisory_board", "arguments": {"packages": [{"name":"requests","version":"2.19.0","ecosystem":"PyPI"}]}})
-    def test_free_question_never_calls_gateway(self):
-        from unittest.mock import patch
-        gateway=self.gateway("lic_good")
-        with patch.object(gateway,"call",side_effect=AssertionError("free question reached gateway")) as call:
-            LocalAgent(data=make_data()[0], gateway=gateway)._run_skill(*route("which ports are listening?"), None)
-        call.assert_not_called()
-    def test_remote_lookup_never_reads_machine_or_sends_paths(self):
-        from unittest.mock import Mock
-        gateway = self.gateway("lic_good", {})
-        data = Mock(spec=LocalData)
-        agent = LocalAgent(data=data, gateway=gateway)
-        agent._run_skill(*route("OSV advisories for requests 2.19.0 PyPI"), None)
-        self.assertEqual(data.mock_calls, [])
-        for packages in ([{"name":"/tmp/secret","version":"1","ecosystem":"npm"}],
-                         [{"name":"x","version":"1","ecosystem":"npm","path":"/tmp"}]):
-            with self.assertRaises(ValueError):
-                agent._osv({"packages": packages})
-        self.assertEqual(len(self.calls), 1)
-
-    def test_premium_unreadable_payload(self):
-        gateway=self.gateway("lic_good", {})
-        answer, artifact=LocalAgent(data=make_data()[0], gateway=gateway)._run_skill(*route("OSV advisories for requests 2.19.0 PyPI"), None)
-        self.assertTrue(artifact["failed"])
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

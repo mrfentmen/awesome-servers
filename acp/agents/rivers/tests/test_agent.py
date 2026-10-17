@@ -19,7 +19,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import RiversAgent, hours_from_text, route, site_from_text  # noqa: E402
 from data import (  # noqa: E402
@@ -374,69 +374,6 @@ class TurnTests(unittest.TestCase):
 
 
 
-class PremiumTests(unittest.TestCase):
-    args = {"latitude": 38.97, "longitude": -77.13}
-    payload = {"gauges": [{"site": "USGS-01646500", "flood_category": "no_flooding",
-        "discharge": {"value": 2900, "unit": "ft^3/s", "time": "2026-10-01T07:00:00Z"},
-        "stage": {"value": 3.01, "unit": "ft", "time": "2026-10-01T07:00:00Z"}}]}
-
-    def run_premium(self, gateway):
-        from agent import RiversAgent
-        skill, params = route('gauge board near 38.97,-77.13')
-        self.assertEqual(skill, 'river-gauge-board')
-        return RiversAgent(gateway=gateway)._gauge_board(params)
-
-    def test_no_key(self):
-        from acp_kit import GatewayClient, GatewayError
-        with unittest.mock.patch.dict(__import__('os').environ, {}, clear=True):
-            fetch = unittest.mock.Mock()
-            gateway = GatewayClient(fetch=fetch)
-            with self.assertRaises(GatewayError) as expected:
-                gateway.call('river_gauge_board', self.args)
-            with unittest.mock.patch.object(gateway, 'call', wraps=gateway.call) as call:
-                answer, artifact = self.run_premium(gateway)
-                call.assert_called_once_with('river_gauge_board', self.args)
-            self.assertEqual(answer, str(expected.exception))
-            self.assertIn('MCP_LICENSE_KEY', answer)
-            self.assertEqual(artifact['reason'], 'missing_key')
-            fetch.assert_not_called()
-
-    def test_rejected_key(self):
-        from acp_kit import GatewayClient
-        fetch = unittest.mock.Mock(return_value={"result": {"isError": True,
-            "structuredContent": {"licenceRefusal": True, "reason": "revoked"},
-            "content": [{"type": "text", "text": "gateway says key revoked"}]}})
-        answer, artifact = self.run_premium(GatewayClient(key='lic_live_but_rejected', fetch=fetch))
-        self.assertEqual(answer, 'gateway says key revoked')
-        self.assertEqual(artifact['reason'], 'denied')
-        self.assertEqual(fetch.call_args.args[2]['Authorization'], 'Bearer lic_live_but_rejected')
-
-    def test_good_key_and_real_fields(self):
-        from acp_kit import GatewayClient
-        fetch = unittest.mock.Mock(return_value={"result": {"content": [
-            {"type": "text", "text": json.dumps(self.payload)}]}})
-        answer, artifact = self.run_premium(GatewayClient(key='good', fetch=fetch))
-        self.assertEqual(fetch.call_count, 1)
-        self.assertEqual(fetch.call_args.args[1]['params'], {'name': 'river_gauge_board', 'arguments': self.args})
-        self.assertIn('2900 ft^3/s', answer)
-        self.assertTrue(artifact['premium'])
-
-    def test_free_question_never_calls_gateway(self):
-        from agent import RiversAgent
-        gateway = unittest.mock.Mock()
-        data = PayloadData(LATEST_PAYLOAD)
-        ctx = unittest.mock.Mock()
-        RiversAgent(data=data, gateway=gateway).prompt(ctx, [{"type": "text", "text": "gauge 06730500"}])
-        self.assertIn('0.3 ft^3/s', ctx.stream_text.call_args.args[0])
-        gateway.call.assert_not_called()
-
-    def test_unreadable_payload(self):
-        for payload in ({}, 'bad', {'gauges': [None]}, {'gauges': [{'site': 'x'}]}):
-            gateway = unittest.mock.Mock()
-            gateway.call.return_value = payload
-            answer, artifact = self.run_premium(gateway)
-            self.assertIn('no readable', answer)
-            self.assertTrue(artifact['failed'])
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

@@ -1,10 +1,10 @@
-"""The place agent: four free skills over two postal feeds, one behind the gate.
+"""The place agent: four free skills over two postal feeds, one on a hosted service that was removed.
 
   - uk-postcode:    a UK postcode to coordinates and its full administrative geography
   - outward-code:   every UK postcode under an outward code, such as SW1A
   - nearest-postcode: the UK postcodes around a point, with real distances
   - zip-code:       a postal code in any of zippopotam's ~65 countries, the US included
-  - catchment-area: the administrative shape of a neighbourhood around a point (premium)
+  - catchment-area: the administrative shape of a neighbourhood around a point (not implemented here)
 
 The two feeds do not overlap, and this agent does not pretend they do: postcodes.io is
 the United Kingdom and carries the ONS ward, parish, constituency and LSOA geography,
@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     MAX_RESULTS,
@@ -119,9 +119,9 @@ CARD_SKILLS = [
             "a radius of a point, and a tally of which region, district, county, ward, parish, "
             "constituency and electoral region each share of them falls into — so you can see which ward "
             "really covers the corner rather than which one the nearest postcode says. Premium: it "
-            "runs behind a licence check."
+            "runs on a hosted service that was removed."
         ),
-        "tags": ["place", "postcode", "uk", "catchment", "wards", "premium"],
+        "tags": ["place", "postcode", "uk", "catchment", "wards",],
         "examples": [
             "which ward covers the area around 53.4808,-2.2426?",
             "what is the administrative make-up around 51.5010,-0.1416?",
@@ -220,7 +220,7 @@ HELP = (
     "  • what postcodes are in SW1A?\n"
     "  • which postcodes are near 51.5010,-0.1416?\n"
     "  • what is ZIP code 11235?\n"
-    "  • which ward covers the area around 53.4808,-2.2426? (premium)\n"
+    "  • which ward covers the area around 53.4808,-2.2426? (not implemented here)\n"
     "The two feeds do not overlap. postcodes.io is the UK and gives you wards, parishes and "
     "constituencies; zippopotam is everywhere except the UK and gives you a place name."
 )
@@ -589,83 +589,14 @@ def run_zip_code(params: dict, client: PlaceClient) -> dict:
     }
 
 
-def run_catchment_area(params: dict, client: PlaceClient, gateway: GatewayClient) -> dict:
-    """The premium neighbourhood breakdown. The tally is made on the gateway.
-
-    Nothing here reads postcodes.io: the gateway does the work behind its licence
-    check and hands back the coverage, so a caller who has not paid gets the
-    gateway's own message and no tally.
-    """
-    lat, lon = client.check_point(params["point"])
-    try:
-        radius_km = client.check_radius_km(params.get("radius_km", 2))
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-    try:
-        limit = client.check_limit(params.get("limit") or 100, REVERSE_LIMIT)
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-
-    arguments = {"latitude": lat, "longitude": lon, "radius_km": radius_km, "limit": limit}
-    read, refused = premium_call(gateway, "a2a_place_catchment", arguments, {
-        "dataset": UK_DATASET, "point": f"{lat},{lon}", "radius_km": radius_km,
-    })
-    if refused:
-        return refused
-    if not isinstance(read, dict) or not read.get("postcodes_in_radius"):
-        return empty_premium_answer(
-            "The licence gateway answered without any postcode, so there is no area to describe.",
-            {"dataset": UK_DATASET, "point": f"{lat},{lon}"},
-        )
-
-    coverage = read.get("coverage") or {}
-    nearest = read.get("nearest") or {}
-    farthest = read.get("farthest") or {}
-    lines = [
-        f"Administrative make-up within {read.get('radius_km')} km of {lat},{lon}: "
-        f"{read.get('postcodes_in_radius')} UK postcode(s) read"
-        + (f", out to {farthest.get('distance_km')} km."
-           if farthest.get("distance_km") is not None else "."),
-        f"  • nearest postcode: {nearest.get('postcode', 'not reported')}"
-        + (f" in {nearest.get('admin_ward')} ward, {nearest.get('admin_district')}"
-           if nearest.get("admin_ward") else ""),
-    ]
-    for field, label in (("regions", "region"), ("admin_districts", "admin district"),
-                         ("counties", "county"), ("wards", "ward"), ("parishes", "parish"),
-                         ("parliamentary_constituencies", "constituency"),
-                         ("electoral_regions", "electoral region")):
-        entries = coverage.get(field) or []
-        if not entries:
-            continue
-        listing = ", ".join(f"{entry['name']} ({entry['postcodes']} pc, {entry['share']}%)"
-                            for entry in entries[:5])
-        extra = f" and {len(entries) - 5} more" if len(entries) > 5 else ""
-        lines.append(f"  • {label}: {listing}{extra}")
-    if read.get("postcodes_returned_by_feed", 0) < limit:
-        lines.append(
-            f"  • postcodes.io returned {read.get('postcodes_returned_by_feed')} postcode(s) for this "
-            f"radius; it caps the count, so this is everything it holds that close."
-        )
-    lines.append(
-        f"\nTallied on the MCP gateway behind its licence check, from the ONS Open Postcode Directory "
-        f"({UK_DATASET}). Shares are of the postcodes read, not of the land, so a large rural postcode "
-        f"weighs the same as a dense city one."
-    )
-    artifact = {
-        "dataset": UK_DATASET,
-        "source": "postcodes.io (ONS Open Postcode Directory)",
-        "premium": True,
-        "point": f"{lat},{lon}",
-        "radius_km": read.get("radius_km"),
-        "postcodes_in_radius": read.get("postcodes_in_radius"),
-        "postcodes_returned_by_feed": read.get("postcodes_returned_by_feed"),
-        "nearest": nearest,
-        "farthest": farthest,
-        "coverage": coverage,
-        "postcodes": read.get("postcodes"),
-        "generated_at": read.get("generated_at"),
+def run_catchment_area(params: dict, client: PlaceClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: catchment-area — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class PlaceAgent(SkillAgent):
@@ -676,15 +607,15 @@ class PlaceAgent(SkillAgent):
         "geography — ward, parish, constituency, LSOA — every postcode under an outward code, the UK "
         "postcodes nearest any point, and postal codes in about 65 other countries through zippopotam. "
         "One premium skill tallies which wards, districts and constituencies a whole neighbourhood "
-        "falls into, and it runs behind a licence check on the gateway."
+        "falls into, and it runs on a hosted service that was removed."
     )
     env_prefix = "PLACE"
     datasets = (UK_DATASET, WORLD_DATASET)
     card_skills = CARD_SKILLS
 
-    def __init__(self, client: PlaceClient | None = None, gateway: GatewayClient | None = None) -> None:
+    def __init__(self, client: PlaceClient | None = None, gateway: object | None = None) -> None:
         self.client = client or PlaceClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

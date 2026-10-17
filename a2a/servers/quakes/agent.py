@@ -4,7 +4,7 @@
   - quakes-near:        earthquakes within a radius of a point (or a known metro)
   - quakes-summary:     live counts by magnitude band (24h M2.5+/M4.5+, 7d M6.0+)
   - quakes-watch:       watch a place or a worldwide magnitude threshold, POST on a new quake
-  - quakes-aftershocks: what followed one mainshock, measured on the licence gateway (premium)
+  - quakes-aftershocks: what followed one mainshock, measured on a hosted service that was removed (not implemented here)
 
 Watch-capable: quakes-watch stores {"kind": "quakes-watch", min_magnitude, point/radius}
 with the current event-id list, so a new quake changes the observation and fires a push.
@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     DATASET,
@@ -145,9 +145,9 @@ CARD_SKILLS = [
             "mainshock in the hours after it, the largest of them, counts by size, how the sequence "
             "decayed over six-hour steps and how long since the last event. Name a mainshock by its "
             "USGS event id, or leave it out to measure the largest recent quake. Premium: it runs "
-            "behind a licence check."
+            "on a hosted service that was removed."
         ),
-        "tags": ["earthquake", "usgs", "aftershock", "sequence", "premium"],
+        "tags": ["earthquake", "usgs", "aftershock", "sequence",],
         "examples": [
             "How many aftershocks did us6000ty73 have?",
             '{"skill": "quakes-aftershocks", "quake_id": "us6000ty73", "hours": 72, "radius_km": 50}',
@@ -553,125 +553,14 @@ def _value(value) -> str:
     return str(value)
 
 
-def run_quakes_aftershocks(params: dict, client: USGSQuakeClient, gateway: GatewayClient) -> dict:
-    """The premium aftershock sequence. The counting happens on the gateway.
-
-    Nothing here measures the catalog for the sequence. The gateway does the work
-    behind its licence check, so a caller who has not paid gets the gateway's own
-    message, buy link included, and no figures at all.
-    """
-    quake_id = str(params.get("quake_id") or "").strip()
-    chosen = f"the largest quake of the last {DEFAULT_MAINSHOCK_HOURS} hours" if not quake_id else "as asked"
-    if not quake_id:
-        candidates = client.recent_quakes(
-            min_magnitude=DEFAULT_MAINSHOCK_MAGNITUDE,
-            hours=DEFAULT_MAINSHOCK_HOURS,
-            limit=1,
-        )
-        if not candidates:
-            return {
-                "final_state": "completed",
-                "message": (
-                    f"No earthquake at magnitude {DEFAULT_MAINSHOCK_MAGNITUDE} or above was recorded in the "
-                    f"last {DEFAULT_MAINSHOCK_HOURS} hours, so there is no sequence to measure. Name one by "
-                    "its USGS event id, such as us6000ty73, and I will measure that one instead."
-                ),
-                "artifact": {"dataset": DATASET, "premium": True, "reason": "no_mainshock"},
-                "watch": None,
-            }
-        quake_id = str(candidates[0].get("id") or "").strip()
-
-    try:
-        arguments: dict = {
-            "quake_id": quake_id,
-            "hours": client.check_aftershock_hours(params.get("hours") or DEFAULT_AFTERSHOCK_HOURS),
-            "radius_km": client.check_aftershock_radius_km(
-                params.get("radius_km") or DEFAULT_AFTERSHOCK_RADIUS_KM
-            ),
-        }
-        if params.get("min_magnitude") not in (None, ""):
-            arguments["min_magnitude"] = client.check_magnitude(params["min_magnitude"])
-    except ValueError as exc:
-        return {
-            "final_state": "failed",
-            "message": str(exc),
-            "artifact": {"dataset": DATASET, "premium": True, "quake_id": quake_id},
-            "watch": None,
-        }
-
-    read, refused = premium_call(
-        gateway,
-        "quake_aftershock_window",
-        arguments,
-        {"dataset": DATASET, "quake_id": quake_id, "mainshock_chosen": chosen},
-    )
-    if refused:
-        return refused
-
-    mainshock = read.get("mainshock") if isinstance(read, dict) else None
-    if not isinstance(mainshock, dict):
-        return empty_premium_answer(
-            "The licence gateway answered without a sequence, so there is nothing to report.",
-            {"dataset": DATASET, "quake_id": quake_id},
-        )
-
-    window = read.get("window") or {}
-    largest = read.get("largest") or {}
-    histogram = read.get("magnitudeHistogram") or []
-    buckets = read.get("perSixHours") or []
-    magnitude = mainshock.get("magnitude")
-    magnitude_text = f"M{magnitude}" if magnitude is not None else "an unnamed magnitude"
-    lines = [
-        f"Aftershocks of {magnitude_text} {mainshock.get('place') or 'at an unnamed place'} "
-        f"({mainshock.get('id') or quake_id}), which struck {mainshock.get('time') or 'at an unpublished time'} "
-        f"— {chosen}:"
-    ]
-    lines.append(
-        f"  • {_value(read.get('count'))} event(s) at or above M{_value(window.get('minMagnitude'))} within "
-        f"{_value(window.get('radiusKm'))} km in the {_value(window.get('hours'))} hours that followed"
-    )
-    if largest:
-        lines.append(
-            f"  • Largest: M{_value(largest.get('magnitude'))} — {largest.get('place') or 'unnamed place'} "
-            f"({largest.get('time') or 'no time'})"
-        )
-    if read.get("hoursSinceLastEvent") is not None:
-        lines.append(f"  • Last event {_value(read.get('hoursSinceLastEvent'))} hours ago. {read.get('decay')}.")
-    if histogram:
-        listed = ", ".join(f"{row.get('count')} at or above M{_value(row.get('atLeast'))}" for row in histogram[:5])
-        lines.append(f"  • Counts by size: {listed}")
-    if buckets:
-        listed = ", ".join(
-            f"{row.get('count')} in the {row.get('hours')} hours from {row.get('from')}"
-            for row in buckets[:MAX_LISTED_BUCKETS]
-        )
-        lines.append(f"  • Six-hour buckets: {listed}")
-    if window.get("cappedAtNow"):
-        lines.append(
-            f"  • The window stops at now, so it covers {_value(window.get('hours'))} of the "
-            f"{_value(window.get('requestedHours'))} hours asked for."
-        )
-    lines.append(
-        "\nMeasured on the MCP gateway behind its licence check, from the USGS catalog "
-        f"({DATASET}) — a catalog of located events, so a sequence that stopped being recorded "
-        "is not the same as a sequence that stopped."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "product": PRODUCT,
-        "source": "U.S. Geological Survey, computed on the licence gateway",
-        "premium": True,
-        "mainshock_chosen": chosen,
-        "mainshock": mainshock,
-        "window": window,
-        "count": read.get("count"),
-        "largest": largest or None,
-        "magnitude_histogram": histogram,
-        "per_six_hours": buckets,
-        "decay": read.get("decay"),
-        "hours_since_last_event": read.get("hoursSinceLastEvent"),
+def run_quakes_aftershocks(params: dict, client: USGSQuakeClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: quakes-aftershocks — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class USGSQuakeAgent(SkillAgent):
@@ -689,9 +578,9 @@ class USGSQuakeAgent(SkillAgent):
     watch_kinds = (SKILL_QUAKES_WATCH,)
 
     def __init__(self, client: USGSQuakeClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or USGSQuakeClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

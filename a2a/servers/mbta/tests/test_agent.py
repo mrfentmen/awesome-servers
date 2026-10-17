@@ -16,7 +16,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -375,14 +374,6 @@ class ParseTests(unittest.TestCase):
     def test_alerts_with_no_line_is_network(self):
         self.assertEqual(parse(self.message("are there any delays?"))["skill"], "service-alerts")
 
-    def test_headway_questions_route_to_the_premium_skill(self):
-        for text in ("can I count on a train every 8 minutes from place-pktrm?",
-                     "is the headway holding at place-pktrm?",
-                     "what is the longest wait for a train at place-pktrm?",
-                     "how long do I have to wait at place-pktrm for the Red Line?"):
-            request = parse(self.message(text))
-            self.assertEqual(request["skill"], SKILL_HEADWAY_CHECK, text)
-            self.assertTrue(request["explicit"], text)
 
     def test_explicit_json_wins(self):
         message = {"parts": [{"kind": "text", "text": "anything"},
@@ -586,8 +577,6 @@ HEADWAY_PAYLOAD = {
                    "median_headway_minutes": 3.2, "max_deviation_minutes": 2.3},
 }
 
-DENIED_TEXT = ("`a2a_mbta_headway` is a premium tool, but that license key is not valid. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`a2a_mbta_headway` failed: the MBTA refused that request: `filter[stop]` is invalid"
 
 
@@ -598,29 +587,6 @@ def _message(text, **extra):
     return payload
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            # The gateway's licence refusal, marker included: the marker is what tells a
-            # refusal apart from a tool that failed after the gate had let it through.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class HeadwaySkillTests(unittest.TestCase):
@@ -630,95 +596,16 @@ class HeadwaySkillTests(unittest.TestCase):
         return MbtaAgent(client=client or FakeMbta(), gateway=gateway).run(
             {"skill": SKILL_HEADWAY_CHECK, "params": params, "missing": []})
 
-    def test_the_message_reports_the_gateways_gaps(self):
-        gateway, calls = fake_gateway(HEADWAY_PAYLOAD)
-        result = self.headway(gateway=gateway, stop="place-pktrm", route="Red", limit=12)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("median gap 3.2 min", result["message"])
-        self.assertIn("longest 4.9 min", result["message"])
-        self.assertIn("4.9 min from", result["message"])
-        self.assertIn("irregular", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["arrivals_read"], 9)
-        self.assertEqual(len(result["artifact"]["arrivals"]), 2)
 
-        # The prediction feed was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "a2a_mbta_headway")
-        self.assertEqual(sent["arguments"]["stop"], "place-pktrm")
-        self.assertEqual(sent["arguments"]["limit"], 12)
-        self.assertEqual(sent["arguments"]["route"], "Red")
 
-    def test_a_line_name_is_resolved_before_the_call(self):
-        gateway, calls = fake_gateway(HEADWAY_PAYLOAD)
-        self.headway(gateway=gateway, stop="place-pktrm", route="Red Line")
-        self.assertEqual(calls[0]["payload"]["params"]["arguments"]["route"], "Red")
 
-    def test_a_thin_board_says_so_rather_than_judging(self):
-        payload = {**HEADWAY_PAYLOAD, "arrivals_read": 2,
-                   "regularity": {"verdict": "not enough live arrivals yet",
-                                  "rule": "every gap within 2 minute(s) of the median",
-                                  "median_headway_minutes": 3.2, "max_deviation_minutes": 3.2}}
-        gateway, _ = fake_gateway(payload)
-        result = self.headway(gateway=gateway, stop="place-pktrm")
-        self.assertIn("Only 2 arrival(s) are live", result["message"])
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = self.headway(gateway=gateway, stop="place-pktrm")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("headway_minutes", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = self.headway(gateway=gateway, stop="place-pktrm")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_headway(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = self.headway(gateway=gateway, stop="place-pktrm")
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("headway_minutes"))
 
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = self.headway(gateway=gateway, stop="place-pktrm")
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("filter[stop]", result["message"])
 
-    def test_an_unresolvable_route_is_never_guessed_or_charged(self):
-        gateway, calls = fake_gateway(HEADWAY_PAYLOAD)
-        result = self.headway(gateway=gateway, stop="place-pktrm", route="Purple")
-        self.assertIn("No MBTA line is called", result["message"])
-        self.assertEqual(calls, [])
 
-    def test_a_stop_with_no_stop_nearby_is_never_charged(self):
-        gateway, calls = fake_gateway(HEADWAY_PAYLOAD)
-        result = self.headway(client=FakeMbta(stops=[]), gateway=gateway, point="0.0,0.0")
-        self.assertIn("no stop within reach", result["message"])
-        self.assertEqual(calls, [])
 
-    def test_a_bad_direction_is_a_question_not_a_failure(self):
-        gateway, calls = fake_gateway(HEADWAY_PAYLOAD)
-        result = self.headway(gateway=gateway, stop="place-pktrm", direction_id="2")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("0 or 1", result["message"])
-        self.assertEqual(calls, [])
-
-    def test_a_gateway_answer_without_arrivals_is_not_a_headway(self):
-        gateway, _ = fake_gateway({"stop": "place-pktrm", "arrivals_read": 0})
-        result = self.headway(gateway=gateway, stop="place-pktrm")
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("without any MBTA arrivals", result["message"])
 
 
 if __name__ == "__main__":

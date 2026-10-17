@@ -24,7 +24,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import (  # noqa: E402
     group_from_text,
@@ -363,68 +363,6 @@ class TurnTests(unittest.TestCase):
         result, _, _ = self.turn("pollen in Xyzzyville", place={"results": []})
         self.assertIn("no place called", result["text"])
 
-class PremiumTests(unittest.TestCase):
-    args = {"latitude": 52.52, "longitude": 13.41}
-    payload = {"timezone": "Europe/Berlin", "threshold": 10, "days": [
-        {"date": "2026-10-01", "grade": "sustained", "above_threshold_hours": 14, "complete_hours": 24}]}
-
-    def run_premium(self, gateway):
-        from agent import PollenAgent
-        skill, params = route('pollen week grade at 52.52,13.41')
-        self.assertEqual(skill, 'pollen-week-grade')
-        return PollenAgent(gateway=gateway)._week_grade(params)
-
-    def test_no_key(self):
-        from acp_kit import GatewayClient, GatewayError
-        with unittest.mock.patch.dict(__import__('os').environ, {}, clear=True):
-            fetch = unittest.mock.Mock()
-            gateway = GatewayClient(fetch=fetch)
-            with self.assertRaises(GatewayError) as expected:
-                gateway.call('pollen_week_grade', self.args)
-            with unittest.mock.patch.object(gateway, 'call', wraps=gateway.call) as call:
-                answer, artifact = self.run_premium(gateway)
-                call.assert_called_once_with('pollen_week_grade', self.args)
-            self.assertEqual(answer, str(expected.exception))
-            self.assertIn('MCP_LICENSE_KEY', answer)
-            self.assertEqual(artifact['reason'], 'missing_key')
-            fetch.assert_not_called()
-
-    def test_rejected_key(self):
-        from acp_kit import GatewayClient
-        fetch = unittest.mock.Mock(return_value={"result": {"isError": True,
-            "structuredContent": {"licenceRefusal": True, "reason": "revoked"},
-            "content": [{"type": "text", "text": "gateway says key revoked"}]}})
-        answer, artifact = self.run_premium(GatewayClient(key='lic_live_but_rejected', fetch=fetch))
-        self.assertEqual(answer, 'gateway says key revoked')
-        self.assertEqual(artifact['reason'], 'denied')
-        self.assertEqual(fetch.call_args.args[2]['Authorization'], 'Bearer lic_live_but_rejected')
-
-    def test_good_key_and_real_fields(self):
-        from acp_kit import GatewayClient
-        fetch = unittest.mock.Mock(return_value={"result": {"content": [
-            {"type": "text", "text": json.dumps(self.payload)}]}})
-        answer, artifact = self.run_premium(GatewayClient(key='good', fetch=fetch))
-        self.assertEqual(fetch.call_count, 1)
-        self.assertEqual(fetch.call_args.args[1]['params'], {'name': 'pollen_week_grade', 'arguments': self.args})
-        self.assertIn('14 hours', answer)
-        self.assertTrue(artifact['premium'])
-
-    def test_free_question_never_calls_gateway(self):
-        from agent import PollenAgent
-        gateway = unittest.mock.Mock()
-        data, _ = make_data()
-        ctx = unittest.mock.Mock()
-        PollenAgent(data=data, gateway=gateway).prompt(ctx, [{"type": "text", "text": "pollen in Berlin"}])
-        self.assertIn('0.1 grains/m3', ctx.stream_text.call_args.args[0])
-        gateway.call.assert_not_called()
-
-    def test_unreadable_payload(self):
-        for payload in ({}, 'bad', {'days': [None]}, {'days': [{'date': 'x'}]}):
-            gateway = unittest.mock.Mock()
-            gateway.call.return_value = payload
-            answer, artifact = self.run_premium(gateway)
-            self.assertIn('no readable', answer)
-            self.assertTrue(artifact['failed'])
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

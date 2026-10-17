@@ -17,7 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text, GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import CATEGORIES, DATASET, STATE_CODES, STATE_FIPS, DroughtData, DroughtError  # noqa: E402
 
@@ -28,7 +28,7 @@ HELP = (
     "  - is Texas in drought right now?\n"
     "  - drought in CA over the last 8 weeks\n"
     "  - how dry is county 48201?\n"
-    "  - drought index for CA over the last 6 weeks ending 2026-09-22 (premium)\n"
+    "  - drought index for CA over the last 6 weeks ending 2026-09-22 (not implemented here)\n"
     "I report the categories as they are published - D1 means moderate drought *or worse*, so the\n"
     "numbers are cumulative - and I name the week they cover, because the monitor updates weekly.\n"
     "A whole-country figure is not available: the monitor has no national endpoint, and I do not\n"
@@ -134,10 +134,10 @@ class DroughtAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: DroughtData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or DroughtData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -176,7 +176,7 @@ class DroughtAgent(AcpAgent):
                 ctx.stream_text(body + "\n")
                 return STOP_END_TURN
             reading = self.data.read(params["place"], weeks=params.get("weeks") or 6)
-        except (DroughtError, GatewayError, ValueError) as exc:
+        except (DroughtError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the Drought Monitor: {exc}")
             return STOP_END_TURN
@@ -194,42 +194,9 @@ class DroughtAgent(AcpAgent):
         return STOP_END_TURN
 
     def _index(self, params: dict) -> tuple[str, dict]:
-        """Render the gateway's severity index and exact-category comparisons."""
-        place = str(params.get("place", params.get("state", ""))).lower()
-        code = STATE_FIPS.get(place) or STATE_CODES.get(place)
-        if not code:
-            raise ValueError("The drought index needs a US state name or two-letter code.")
-        state = next(k.upper() for k, v in STATE_CODES.items() if v == code)
-        arguments = {"state": state, "weeks": params.get("weeks", 6),
-                     "end_date": params.get("end_date", datetime.date.today().isoformat())}
-        data, refused = premium_call(self.gateway, "drought_weekly_index", arguments,
-                                     {"agent": "drought", "skill": "drought-index"})
-        if refused:
-            return refused
-        if (not isinstance(data, dict) or not isinstance(data.get("rows"), list)
-                or len(data["rows"]) < 2 or not isinstance(data.get("changes"), list)
-                or not isinstance(data.get("shiftCounts"), dict)
-                or not isinstance(data.get("categoryWeekCounts"), dict)
-                or any(not isinstance(r, dict) or not r.get("date")
-                       or not isinstance(r.get("dsci"), (int, float))
-                       or not isinstance(r.get("exact"), dict) for r in data["rows"])
-                or any(not isinstance(r, dict) or not r.get("direction") for r in data["changes"])):
-            return empty_premium_answer("The gateway returned no readable drought index.",
-                                        {"agent": "drought", "skill": "drought-index"})
-        lines = [f"Premium drought severity index for {data.get('state', state)} (0-500):"]
-        for row in data["rows"]:
-            lines.append(f"  {row['date']}: DSCI {row['dsci']}; exact category area %: {row['exact']}")
-        for change in data["changes"]:
-            delta = change.get("dsciChange")
-            lines.append(f"  {change.get('from')} to {change.get('to')}: {change['direction']}; "
-                         f"index change {delta if delta is not None else 'not computed across a gap'}")
-            if change.get("categoryChanges"):
-                lines.append(f"    Exact-category shifts (percentage points): {change['categoryChanges']}")
-        lines.append(f"Weekly shift counts: {data['shiftCounts']}")
-        lines.append(f"Weeks with nonzero exact category area: {data['categoryWeekCounts']}")
-        lines.append("Source: US Drought Monitor. " + str(data.get("note", "")))
-        return "\n".join(lines), {"summary": "premium drought severity index", "premium": True,
-                                   "agent": "drought", "skill": "drought-index", "data": data}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: index — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

@@ -23,8 +23,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (AcpClient, Connection, GatewayClient,  # noqa: E402
-                     STOP_END_TURN, STOP_REFUSAL)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import route  # noqa: E402
 from data import (FUELS, GridData, GridError, GridNotFound,  # noqa: E402
@@ -380,10 +379,7 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# The premium skill: grid-window
 #
-# No network: the licence check and the work both happen on the gateway, and the
-# gateway's own JSON-RPC answers are injected into the real GatewayClient.
 # ---------------------------------------------------------------------------
 
 #: What `grid_clean_window` answers for a 2 hour window: a clean 2 hour run at
@@ -427,139 +423,10 @@ WINDOW_DATA = {
 }
 
 #: The exact refusal the gateway sends for a key it will not accept.
-GATEWAY_DENIAL = ("`grid_clean_window` is a premium tool, but that licence key was rejected. "
-                  "Check MCP_LICENSE_KEY, or get a key at https://polar.sh/mrfentmen")
 
 
-def gateway_answer(text, is_error=False, structured=None):
-    """A fake transport that answers every premium call with one JSON-RPC reply."""
-    def fetch(url, payload, headers):
-        fetch.calls.append({"url": url, "payload": payload, "headers": headers})
-        result = {"content": [{"type": "text", "text": text}]}
-        if is_error:
-            result["isError"] = True
-        if structured is not None:
-            result["structuredContent"] = structured
-        return {"jsonrpc": "2.0", "id": payload.get("id", 1), "result": result}
-
-    fetch.calls = []
-    return fetch
 
 
-class PremiumTests(unittest.TestCase):
-    """No key, a bad key and a good key, plus the routing that gets there."""
-
-    WINDOW_QUESTION = "when should I run the dryer, in the next 2 hours?"
-    LONG_QUESTION = "when is the cleanest window in the next two days?"
-
-    def turn(self, text: str, fetch, key: str):
-        from agent import GridAgent
-
-        agent_conn, client_conn = connected_pair()
-        data, _feed = make_data()
-        gateway = GatewayClient(fetch=fetch, key=key, url="https://gateway.test/mcp")
-        agent = GridAgent(agent_conn, data, gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_answers_with_the_missing_key_wording(self):
-        fetch = gateway_answer("")
-        result, client = self.turn(self.WINDOW_QUESTION, fetch, "")
-        #: An answer, not a crash, and not a failed lookup either.
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertIn("no licence key is set", result["text"])
-        self.assertEqual(len(client.permission_requests), 1)
-        #: Nothing was spent on a call the gate was never going to let through.
-        self.assertEqual(fetch.calls, [])
-
-    def test_a_bad_key_returns_the_gateways_own_wording(self):
-        fetch = gateway_answer(GATEWAY_DENIAL, is_error=True,
-                               structured={"licenceRefusal": True, "reason": "denied"})
-        result, _ = self.turn(self.WINDOW_QUESTION, fetch, "not-a-real-key")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn(GATEWAY_DENIAL, result["text"])
-        self.assertIn("premium", result["text"])
-        self.assertEqual(len(fetch.calls), 1)
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["name"], "grid_clean_window")
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["arguments"], {"hours": 2.0})
-
-    def test_a_good_key_returns_the_window(self):
-        fetch = gateway_answer(json.dumps(WINDOW_DATA))
-        result, _ = self.turn(self.WINDOW_QUESTION, fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("when to use the UK grid over the next 2 hour(s)", result["text"])
-        self.assertIn("cleanest run: 13:00 to 14:30 UK time (2 h)", result["text"])
-        self.assertIn("average 50 gCO2/kWh, worst slot in it 52", result["text"])
-        self.assertIn("the feed calls that very low", result["text"])
-        self.assertIn("dirtiest run: 19:00 to 20:30 UK time (2 h)", result["text"])
-        self.assertIn("the whole window swings 257 gCO2/kWh", result["text"])
-        self.assertIn("UK National Grid carbon intensity API", result["text"])
-        #: The licence key travels in a header and is never echoed back.
-        self.assertEqual(fetch.calls[0]["headers"]["Authorization"], "Bearer k_paid")
-        self.assertNotIn("k_paid", result["text"])
-
-    def test_a_good_key_sends_the_length_it_was_asked_for(self):
-        fetch = gateway_answer(json.dumps(WINDOW_DATA))
-        #: 90 minutes is three half-hour slots, and it has to arrive at the gateway
-        #: as 1.5: truncating it to 1 would quietly halve the window asked about.
-        self.turn("what is the cleanest 90 minute window?", fetch, "k_paid")
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["arguments"], {"hours": 1.5})
-        fetch = gateway_answer(json.dumps(WINDOW_DATA))
-        self.turn(self.LONG_QUESTION, fetch, "k_paid")
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["arguments"], {"hours": 48.0})
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def fetch(url, payload, headers):
-            raise OSError("connection refused")
-
-        result, _ = self.turn(self.WINDOW_QUESTION, fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("I could not read the National Grid's data", result["text"])
-
-    def test_a_free_question_never_touches_the_gateway(self):
-        fetch = gateway_answer(json.dumps(WINDOW_DATA))
-        result, _ = self.turn("how green is the UK grid right now?", fetch, "k_paid")
-        self.assertIn("97 gCO2/kWh measured", result["text"])
-        self.assertEqual(fetch.calls, [])
-
-    def test_the_routing_is_narrow(self):
-        premium = [
-            "when is the cleanest window in the next two days?",
-            "when should I run the dryer, in the next 2 hours?",
-            "what is the cleanest 90 minute window?",
-            "when is the dirtiest window in the next 3 hours?",
-        ]
-        for text in premium:
-            self.assertEqual(route(text)[0], "grid-window", text)
-
-        free = [
-            ("how green is the UK grid right now?", "grid-now"),
-            ("what is the grid burning right now?", "grid-mix"),
-            ("what does the forecast look like today?", "grid-forecast"),
-            ("what does the forecast look like in 2 hours?", "grid-forecast"),
-            ("which region of the UK is the dirtiest right now?", "grid-regions"),
-            ("is Scotland cleaner than Wales?", "grid-regions"),
-            ("when is the cleanest window?", "help"),
-            ("what can you do?", "help"),
-            ("", "help"),
-        ]
-        for text, expected in free:
-            self.assertEqual(route(text)[0], expected, text)
-
-    def test_the_premium_skill_id_is_published(self):
-        from agent import SKILLS
-
-        self.assertIn("grid-window", SKILLS)
-        self.assertIn("grid-now", SKILLS)
 
 
 if __name__ == "__main__":

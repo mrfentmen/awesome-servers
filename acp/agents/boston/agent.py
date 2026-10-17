@@ -17,9 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, RED_LINE_STOPS, BostonData, BostonError,  # noqa: E402
                   BostonNotFound, station_from_text)
@@ -33,7 +31,7 @@ HELP = (
     "  - which stations are on the Red Line?\n"
     "  - how many trains leave South Station each hour of the day?\n"
     "How long do I actually wait for a train at Park Street at 8am, and what is the worst gap? "
-    "(premium - the timetable has the answer but it has to be worked out)\n"
+    "(not implemented here)\n"
     "An arrival's `status` is MBTA's own late flag, and `arrival_uncertainty` is how many minutes "
     "either side of that time the train may actually land.\n"
     "Only the Red Line is covered, and only its 22 stations: MBTA rate-limits a keyless caller hard "
@@ -287,9 +285,7 @@ class BostonAgent(AcpAgent):
                  gateway=None) -> None:
         super().__init__(connection)
         self.data = data or BostonData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -313,7 +309,7 @@ class BostonAgent(AcpAgent):
             return STOP_END_TURN
 
         tool = f"call_{skill.replace('-', '_')}"
-        label = ("Ask the licence gateway for the wait profile" if skill == "boston-wait"
+        label = ("Ask about the wait profile" if skill == "boston-wait"
                  else "Read MBTA's public API")
         ctx.tool_call(tool, label, kind="fetch", name=skill, raw_input=dict(params))
         if not ctx.ask_permission(tool, "Allow Boston to read the MBTA's public data?",
@@ -366,7 +362,7 @@ class BostonAgent(AcpAgent):
             ctx.tool_call_update(tool, status="completed", content=ctx.text_content(str(exc)))
             ctx.message(f"The MBTA answered, but published nothing for that. {exc}")
             return STOP_END_TURN
-        except (BostonError, GatewayError, ValueError) as exc:
+        except (BostonError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the MBTA's public data: {exc}")
             return STOP_END_TURN
@@ -379,41 +375,9 @@ class BostonAgent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        data, refused = premium_call(self.gateway, "boston_wait_profile",
-                                    {"stop_id": params["stop_id"]}, {"agent": "boston"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not data.get("station"):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back a wait profile for that station.",
-                {"agent": "boston"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a wait profile out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_wait(data)
-        peak = data.get("peak_hour") or {}
-        summary = (f"{data['station']}: busiest {peak.get('hour', '?')}:00, median wait "
-                   f"{_num(peak.get('median_gap_min'))} min")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message("\nSource: the published MBTA timetable, fitted on the licence gateway. This is a "
-                    "timetable figure, not a crowd count: MBTA does not publish how many people are on "
-                    "a train, so 'packed' here means trains are close together, not that they are "
-                    "full. The worst gap is a real risk to a deadline, because that is the one wait "
-                    "that is not roughly the median.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

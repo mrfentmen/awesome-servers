@@ -23,7 +23,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import route, state_code_from_text  # noqa: E402
 from data import (SnowData, SnowpackError, SnowpackNotFound, last_value,  # noqa: E402
@@ -317,69 +317,6 @@ class TurnTests(unittest.TestCase):
 
 
 
-class PremiumTests(unittest.TestCase):
-    args = {"huc": "10190005", "date": "2026-04-01"}
-    payload = {"stations": [{"triplet": "663:CO:SNTL", "name": "Niwot", "swe_in": 3.3,
-                            "median_in": 12.2, "percent_of_median": 27.05}]}
-
-    def run_premium(self, gateway):
-        from agent import SnowpackAgent
-        skill, params = route('snow basin board 10190005 on 2026-04-01')
-        self.assertEqual(skill, 'snowpack-basin-board')
-        return SnowpackAgent(gateway=gateway)._basin_board(params)
-
-    def test_no_key(self):
-        from acp_kit import GatewayClient, GatewayError
-        with unittest.mock.patch.dict(__import__('os').environ, {}, clear=True):
-            fetch = unittest.mock.Mock()
-            gateway = GatewayClient(fetch=fetch)
-            with self.assertRaises(GatewayError) as expected:
-                gateway.call('snowpack_basin_board', self.args)
-            with unittest.mock.patch.object(gateway, 'call', wraps=gateway.call) as call:
-                answer, artifact = self.run_premium(gateway)
-                call.assert_called_once_with('snowpack_basin_board', self.args)
-            self.assertEqual(answer, str(expected.exception))
-            self.assertIn('MCP_LICENSE_KEY', answer)
-            self.assertEqual(artifact['reason'], 'missing_key')
-            fetch.assert_not_called()
-
-    def test_rejected_key(self):
-        from acp_kit import GatewayClient
-        fetch = unittest.mock.Mock(return_value={"result": {"isError": True,
-            "structuredContent": {"licenceRefusal": True, "reason": "revoked"},
-            "content": [{"type": "text", "text": "gateway says key revoked"}]}})
-        answer, artifact = self.run_premium(GatewayClient(key='lic_live_but_rejected', fetch=fetch))
-        self.assertEqual(answer, 'gateway says key revoked')
-        self.assertEqual(artifact['reason'], 'denied')
-        self.assertEqual(fetch.call_args.args[2]['Authorization'], 'Bearer lic_live_but_rejected')
-
-    def test_good_key_and_real_fields(self):
-        from acp_kit import GatewayClient
-        fetch = unittest.mock.Mock(return_value={"result": {"content": [
-            {"type": "text", "text": json.dumps(self.payload)}]}})
-        answer, artifact = self.run_premium(GatewayClient(key='good', fetch=fetch))
-        self.assertEqual(fetch.call_count, 1)
-        self.assertEqual(fetch.call_args.args[1]['params'], {'name': 'snowpack_basin_board', 'arguments': self.args})
-        self.assertIn('3.3 in SWE', answer)
-        self.assertIn('27.05%', answer)
-        self.assertTrue(artifact['premium'])
-
-    def test_free_question_never_calls_gateway(self):
-        from agent import SnowpackAgent
-        gateway = unittest.mock.Mock()
-        data, _ = make_data()
-        ctx = unittest.mock.Mock()
-        SnowpackAgent(data=data, gateway=gateway).prompt(ctx, [{"type": "text", "text": "snow water equivalent at station 301:CA:SNTL"}])
-        self.assertIn('snow water equivalent: 0.5 in', ctx.stream_text.call_args.args[0])
-        gateway.call.assert_not_called()
-
-    def test_unreadable_payload(self):
-        for payload in ({}, 'bad', {'stations': [None]}, {'stations': [{'triplet': 'x'}]}):
-            gateway = unittest.mock.Mock()
-            gateway.call.return_value = payload
-            answer, artifact = self.run_premium(gateway)
-            self.assertIn('no readable', answer)
-            self.assertTrue(artifact['failed'])
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

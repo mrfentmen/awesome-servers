@@ -23,8 +23,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (AcpClient, Connection, GatewayClient,  # noqa: E402
-                     STOP_END_TURN, STOP_REFUSAL)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import route  # noqa: E402
 from data import (GroundwaterData, GroundwaterError, GroundwaterNotFound,  # noqa: E402
@@ -316,10 +315,7 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# The premium skill: groundwater-trends
 #
-# No network: the licence check and the work both happen on the gateway, and the
-# gateway's own JSON-RPC answers are injected into the real GatewayClient.
 # ---------------------------------------------------------------------------
 
 WELL_ID = "OH015-395847084085500"
@@ -348,126 +344,10 @@ TREND_DATA = {
 }
 
 #: The exact refusal the gateway sends for a key it will not accept.
-GATEWAY_DENIAL = ("`groundwater_trends` is a premium tool, but that licence key was rejected. "
-                  "Check MCP_LICENSE_KEY, or get a key at https://polar.sh/mrfentmen")
 
 
-def gateway_answer(text, is_error=False, structured=None):
-    """A fake transport that answers every premium call with one JSON-RPC reply."""
-    def fetch(url, payload, headers):
-        fetch.calls.append({"url": url, "payload": payload, "headers": headers})
-        result = {"content": [{"type": "text", "text": text}]}
-        if is_error:
-            result["isError"] = True
-        if structured is not None:
-            result["structuredContent"] = structured
-        return {"jsonrpc": "2.0", "id": payload.get("id", 1), "result": result}
-
-    fetch.calls = []
-    return fetch
 
 
-class PremiumTests(unittest.TestCase):
-    """No key, a bad key and a good key, plus the routing that gets there."""
-
-    def turn(self, text: str, fetch, key: str):
-        from agent import GroundwaterAgent
-
-        agent_conn, client_conn = connected_pair()
-        data, _feed = make_data()
-        gateway = GatewayClient(fetch=fetch, key=key, url="https://gateway.test/mcp")
-        agent = GroundwaterAgent(agent_conn, data, gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_answers_with_the_missing_key_wording(self):
-        fetch = gateway_answer("")
-        result, client = self.turn(f"what is the trend at {WELL_ID}?", fetch, "")
-        #: An answer, not a crash, and not a failed lookup either.
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertIn("no licence key is set", result["text"])
-        self.assertEqual(len(client.permission_requests), 1)
-        #: Nothing was spent on a call the gate was never going to let through.
-        self.assertEqual(fetch.calls, [])
-
-    def test_a_bad_key_returns_the_gateways_own_wording(self):
-        fetch = gateway_answer(GATEWAY_DENIAL, is_error=True,
-                               structured={"licenceRefusal": True, "reason": "denied"})
-        result, _ = self.turn(f"what is the trend at {WELL_ID}?", fetch, "not-a-real-key")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn(GATEWAY_DENIAL, result["text"])
-        self.assertIn("premium", result["text"])
-        self.assertEqual(len(fetch.calls), 1)
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["name"], "groundwater_trends")
-
-    def test_a_good_key_returns_the_fitted_trend(self):
-        fetch = gateway_answer(json.dumps(TREND_DATA))
-        result, _ = self.turn(f"what is the trend at {WELL_ID}?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("dropping at 36.52 ft a year", result["text"])
-        self.assertIn("0.1 ft a day", result["text"])
-        self.assertIn("depth now: 10.1 ft below land surface", result["text"])
-        self.assertIn("shallowest 9.9 ft", result["text"])
-        self.assertIn("not a forecast", result["text"])
-        self.assertIn("USGS Water Data OGC API", result["text"])
-        #: The licence key travels in a header and is never echoed back.
-        self.assertEqual(fetch.calls[0]["headers"]["Authorization"], "Bearer k_paid")
-        self.assertNotIn("k_paid", result["text"])
-
-    def test_a_good_key_sends_the_window_it_was_asked_for(self):
-        fetch = gateway_answer(json.dumps(TREND_DATA))
-        self.turn(f"how fast is the water table dropping at {WELL_ID} over the last 30 days?",
-                  fetch, "k_paid")
-        arguments = fetch.calls[0]["payload"]["params"]["arguments"]
-        self.assertEqual(arguments, {"location_id": WELL_ID, "days": 30})
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def fetch(url, payload, headers):
-            raise OSError("connection refused")
-
-        result, _ = self.turn(f"what is the trend at {WELL_ID}?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("I could not read USGS's water data", result["text"])
-
-    def test_the_routing_is_narrow(self):
-        premium = [
-            f"what is the trend at {WELL_ID}?",
-            f"how fast is the water table dropping at {WELL_ID}?",
-            f"what is the slope at {WELL_ID} over the last 90 days?",
-            f"where will the water table be at {WELL_ID}?",
-        ]
-        for text in premium:
-            skill, params = route(text)
-            self.assertEqual(skill, "groundwater-trends", text)
-            self.assertEqual(params["identifier"], WELL_ID, text)
-
-        free = [
-            ("water level at site 395847084085500", "groundwater-well"),
-            (f"well {WELL_ID} over the last 30 days", "groundwater-well"),
-            (f"is the water table rising at {WELL_ID}?", "groundwater-well"),
-            (f"how deep is it at {WELL_ID}?", "groundwater-well"),
-            (f"what is the trend in Kansas?", "groundwater-state"),
-            ("how deep is the water table in Kansas?", "groundwater-state"),
-            ("is the water table dropping in Arizona?", "groundwater-state"),
-            ("what can you do?", "help"),
-            ("", "help"),
-        ]
-        for text, expected in free:
-            self.assertEqual(route(text)[0], expected, text)
-
-    def test_the_premium_skill_id_is_published(self):
-        from agent import SKILLS
-
-        self.assertIn("groundwater-trends", SKILLS)
 
 
 if __name__ == "__main__":

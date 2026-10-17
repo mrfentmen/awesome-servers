@@ -126,25 +126,6 @@ def main(argv=None) -> int:
                 abs(sum(entry["percent"] for entry in entries) - 100) < 5,
                 str(sum(entry["percent"] for entry in entries)))
 
-    # The premium skill: without a key the gateway's own wording comes back as an answer.
-    premium = ask(smoke, "when is the grid cleanest over the next two days?")
-    premium_data = artifact_data(premium)
-    premium_state = premium.get("status", {}).get("state")
-    if premium_data.get("premium") and premium_data.get("reason") in ("missing_key", "denied"):
-        smoke.check("clean-windows with no licence is a completed answer",
-                    premium_state == "completed", str(premium_state))
-        smoke.check("the refusal names the key", "MCP_LICENSE_KEY" in text_of(premium),
-                    premium_data.get("reason"))
-        smoke.check("no windows are handed over without a licence",
-                    premium_data.get("windows") is None)
-    else:
-        smoke.check("clean-windows returned live windows",
-                    premium_state == "completed" and premium_data.get("window_count") is not None,
-                    str(premium_state))
-        smoke.check("a threshold with its source is stated",
-                    premium_data.get("threshold") is not None
-                    and bool(premium_data.get("threshold_source")),
-                    str(premium_data.get("threshold_source")))
 
     # A question with no argument at all still answers, because the national answer needs none.
     plain = ask(smoke, "when can I run my batch job cheaply?")

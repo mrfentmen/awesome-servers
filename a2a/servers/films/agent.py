@@ -22,12 +22,7 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import (  # noqa: E402  (path setup must come first)
-    GatewayClient,
-    SkillAgent,
-    empty_premium_answer,
-    premium_call,
-)
+from a2a_kit import SkillAgent
 from a2a_kit.errors import UpstreamError  # noqa: E402
 
 from data import (  # noqa: E402
@@ -57,7 +52,7 @@ HELP = (
     "  • films by fritz lang\n"
     "  • 1940s noir I can watch for free\n"
     "  • what is in scarlet_street_ipod\n"
-    "  • which decade has the most noir films (premium — needs a licence key)\n"
+    "  • which decade has the most noir films (not implemented here)\n"
     "Wikidata is a community wiki, so a fact it does not carry is reported as not reported. "
     "The Archive's shelf is mixed: many titles are public domain and the collection does not "
     "say which, so I never promise a print is free to reuse."
@@ -374,59 +369,14 @@ def run_item(params: dict, client: FilmsClient) -> dict:
             "watch": None}
 
 
-def run_index(params: dict, gateway: GatewayClient) -> dict:
-    """Premium: the decade index is computed on the gateway, not here."""
-    keyword = params.get("keyword")
-    data, refused = premium_call(
-        gateway,
-        PREMIUM_TOOL,
-        {"keyword": keyword, "decades": PREMIUM_DECADES},
-        {"dataset": DATASET_ARCHIVE, "skill": SKILL_INDEX, "asked": keyword},
-    )
-    if refused:
-        return refused
-    decades = data.get("decades") if isinstance(data, dict) else None
-    if not isinstance(decades, list) or not decades:
-        return empty_premium_answer(
-            "The licence gateway returned no decades for that shelf, so I have nothing to "
-            "report. Try a subject word like 'noir' or 'western'.",
-            {"dataset": DATASET_ARCHIVE, "skill": SKILL_INDEX, "asked": keyword},
-        )
-    artifact = {
-        "dataset": DATASET_ARCHIVE,
-        "skill": SKILL_INDEX,
-        "premium": True,
-        "summary": f"premium decade index for {keyword or 'the collection'}: "
-                   f"{len(decades)} decades, best {data.get('bestDecade', {}).get('decade')}",
-        "keyword": keyword,
-        "decades": decades,
-        "scanned": data.get("scanned"),
-        "best_decade": data.get("bestDecade"),
-        "most_downloaded": data.get("mostDownloaded"),
+def run_index(params: dict, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: index — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    lines = [f"Premium decade index over the Archive's feature films"
-             f"{' tagged ' + keyword if keyword else ''} "
-             "(computed on the licence gateway):"]
-    for entry in decades:
-        top = entry.get("mostDownloaded") or {}
-        lines.append(
-            f"  • {entry.get('decade')}: {entry.get('count')} films, top-ten average "
-            f"{int(entry.get('averageDownloads') or 0):,} downloads"
-            + (f", most downloaded {top.get('title')}" if top.get("title") else "")
-        )
-    best, most = data.get("bestDecade") or {}, data.get("mostDownloaded") or {}
-    if best:
-        lines.append(f"\nMost films: {best.get('decade')} with {best.get('count')} titles.")
-    if most:
-        lines.append(f"Single most downloaded: {most.get('title')} "
-                     f"({int(most.get('downloads') or 0):,} downloads).")
-    lines.append(
-        f"\nSource: {DATASET_ARCHIVE}, read on the licence gateway ({data.get('scanned', 0):,} "
-        "titles counted). Same shelf as the free skills — the gateway adds the decade tally, "
-        "and a caller without a key never gets the numbers."
-    )
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact,
-            "watch": None}
 
 
 def run_help() -> dict:
@@ -448,7 +398,7 @@ class FilmsAgent(SkillAgent):
         "credits a filmmaker with, feature films you can actually watch (most downloaded "
         "first, optionally by subject or decade), and one Archive item's metadata and film "
         "files. Wikidata is a community wiki, so a fact it does not carry is reported as not "
-        "reported. A decade index over the Archive's shelf runs behind a licence check on the "
+        "reported. A decade index over the Archive's shelf runs on a hosted service that was removed on the "
         "gateway."
     )
     env_prefix = "FILMS"
@@ -520,15 +470,15 @@ class FilmsAgent(SkillAgent):
         },
         {
             "id": SKILL_INDEX,
-            "name": "Decade index over the Archive (premium)",
+            "name": "Decade index over the Archive (not implemented here)",
             "description": (
                 "How many feature films the Archive's shelf holds in each of the last six "
                 "decades, the top-ten average downloads per decade, and the single most "
                 "downloaded title, optionally for a subject word like 'noir'. Premium: it runs "
-                "behind a licence check on the gateway, so the numbers only exist for a caller "
+                "on a hosted service that was removed, so the numbers only exist for a caller "
                 "with a key."
             ),
-            "tags": ["films", "archive", "premium", "decades", "index"],
+            "tags": ["films", "archive", "decades", "index"],
             "examples": [
                 "Which decade has the most noir films?",
                 '{"skill": "film-index", "keyword": "noir"}',
@@ -552,9 +502,9 @@ class FilmsAgent(SkillAgent):
     ]
 
     def __init__(self, client: FilmsClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or FilmsClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

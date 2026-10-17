@@ -22,8 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import DATASET, BuoysError, FIELD_NOTES, NdbcData, station_id  # noqa: E402
 
@@ -33,7 +32,7 @@ HELP = (
     "  • how big are the waves at the Monterey buoy?\n"
     "  • what buoys are near Monterey?\n"
     "  • last few reports from 46042\n"
-    "  • compare nearest 3 buoys at 36.6,-122.0 (premium)\n"
+    "  • compare nearest 3 buoys at 36.6,-122.0 (not implemented here)\n"
     "I report what the buoy sent, in NDBC's own units, and I say 'not reported' when a sensor "
     "is down rather than inventing a zero."
 )
@@ -141,10 +140,10 @@ class BuoysAgent(AcpAgent):
     title = "Buoys — NDBC sea and wave reports"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: NdbcData | None = None, gateway: GatewayClient | None = None) -> None:
+    def __init__(self, connection=None, data: NdbcData | None = None, gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or NdbcData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -179,7 +178,7 @@ class BuoysAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (BuoysError, ValueError, GatewayError) as exc:
+        except (BuoysError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the NDBC feed: {exc}")
             return STOP_END_TURN
@@ -206,26 +205,9 @@ class BuoysAgent(AcpAgent):
         return HELP, {"summary": "help", "dataset": None}
 
     def _compare(self, params: dict) -> tuple[str, dict]:
-        """Compare nearby buoy observations on the licence gateway."""
-        arguments = {"latitude": float(params["latitude"]), "longitude": float(params["longitude"]),
-                     "count": int(params.get("count", 3))}
-        context = {"agent": "buoys", "skill": "buoy-compare"}
-        data, refused = premium_call(self.gateway, "buoys_nearest_board", arguments, context)
-        if refused:
-            return refused
-        rows = data.get("buoys") if isinstance(data, dict) else None
-        if not isinstance(rows, list) or not rows or not all(
-                isinstance(r, dict) and isinstance(r.get("id"), str)
-                and all(r.get(k) is None or (isinstance(r[k], (int, float)) and not isinstance(r[k], bool))
-                        for k in ("waveHeightM", "windMps", "waterTempC", "distanceKm")) for r in rows):
-            return empty_premium_answer("The gateway returned no readable buoy comparison.", context)
-        lines = ["Premium nearest-buoy comparison, calmest reported waves first:"]
-        for row in rows:
-            lines.append(f"  • {row['id']} ({row.get('name', row['id'])}), {_number(row.get('distanceKm'))} km: "
-                         f"waves {_number(row.get('waveHeightM'))} m; wind {_number(row.get('windMps'))} m/s; "
-                         f"water {_number(row.get('waterTempC'))} degC; {row.get('timeUtc') or 'no report'}")
-        lines.append(str(data.get("note") or "Source: NOAA NDBC. Missing readings are not zero."))
-        return "\n".join(lines), {**context, "premium": True, "summary": f"compared {len(rows)} nearby buoys", "buoys": rows}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: compare — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def _station_or_ask(self, params: dict) -> tuple[str | None, str | None, tuple[str, dict] | None]:
         """(station id, how it was chosen, None) or (None, None, an answer to send instead)."""

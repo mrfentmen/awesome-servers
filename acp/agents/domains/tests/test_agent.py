@@ -26,7 +26,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import domain_from_text, ip_from_text, route  # noqa: E402
 from data import (  # noqa: E402
@@ -325,55 +325,6 @@ class TurnTests(unittest.TestCase):
 
 
 
-class PremiumTests(unittest.TestCase):
-    turn = TurnTests.turn
-    def gateway(self, key, payload=None):
-        from acp_kit import GatewayClient
-        def fetch(url, request, headers):
-            if key == "lic_live_but_rejected":
-                return {"result": {"isError": True, "content": [{"type": "text", "text": "Gateway says this licence is revoked."}],
-                                   "structuredContent": {"licenceRefusal": True, "reason": "revoked"}}}
-            self.assertEqual(headers["Authorization"], "Bearer lic_good")
-            return {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
-        with patch.dict(os.environ, {}, clear=True):
-            gateway = GatewayClient(key=key, fetch=fetch)
-        gateway.call = Mock(wraps=gateway.call)
-        return gateway
-
-    def test_premium_no_key(self):
-        gateway = self.gateway(None)
-        result, _, feed = self.turn('portfolio report for github.com, example.org', gateway=gateway)
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertIn("is a premium skill and no licence key is set", result["text"])
-        gateway.call.assert_called_once_with('rdap_domain_portfolio', {'domains': ['github.com', 'example.org']})
-        self.assertEqual(feed.calls, [])
-
-    def test_premium_rejected_key(self):
-        gateway = self.gateway("lic_live_but_rejected")
-        result, _, feed = self.turn('portfolio report for github.com, example.org', gateway=gateway)
-        self.assertIn("Gateway says this licence is revoked.", result["text"])
-        gateway.call.assert_called_once_with('rdap_domain_portfolio', {'domains': ['github.com', 'example.org']})
-        self.assertEqual(feed.calls, [])
-
-    def test_premium_good_key(self):
-        gateway = self.gateway("lic_good", {'domains': [{'domain': 'github.com', 'registered': True, 'registrar': 'MarkMonitor', 'expiration': '2028-10-09T18:20:50.000Z', 'status': ['active']}], 'registeredCount': 1, 'missingCount': 0})
-        result, _, feed = self.turn('portfolio report for github.com, example.org', gateway=gateway)
-        self.assertIn('2028-10-09T18:20:50.000Z', result["text"])
-        gateway.call.assert_called_once_with('rdap_domain_portfolio', {'domains': ['github.com', 'example.org']})
-        self.assertEqual(feed.calls, [])
-
-    def test_premium_free_question_never_calls_gateway(self):
-        gateway = self.gateway("lic_good")
-        self.turn('when does github.com expire?', gateway=gateway)
-        gateway.call.assert_not_called()
-
-    def test_premium_empty_payload(self):
-        from agent import DomainsAgent
-        gateway = self.gateway("lic_good", {})
-        answer, artifact = DomainsAgent(gateway=gateway)._portfolio({'domains': ['github.com', 'example.org']})
-        self.assertTrue(artifact["failed"])
-        self.assertTrue(artifact["premium"])
-        self.assertIn("no readable", answer)
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -23,7 +23,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text, GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (  # noqa: E402
     DATASET_LATEST,
@@ -39,7 +39,7 @@ HELP = (
     "  • what is the Colorado River doing at gauge 09380000 right now?\n"
     "  • has gauge 06730500 been rising in the last 24 hours?\n"
     "  • what gauges are near 40.71,-74.01?\n"
-    "  • gauge board near 38.97,-77.13 (premium)\n"
+    "  • gauge board near 38.97,-77.13 (not implemented here)\n"
     "I report what one gauge measured at one time. I am not a flood forecast - for those, "
     "read the National Weather Service."
 )
@@ -123,10 +123,10 @@ class RiversAgent(AcpAgent):
     title = "Rivers — USGS stream gauges"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: RiversData | None = None, gateway: GatewayClient | None = None) -> None:
+    def __init__(self, connection=None, data: RiversData | None = None, gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or RiversData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -162,7 +162,7 @@ class RiversAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (RiversError, ValueError, GatewayError) as exc:
+        except (RiversError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the USGS water feed: {exc}")
             return STOP_END_TURN
@@ -189,37 +189,9 @@ class RiversAgent(AcpAgent):
         return HELP, {"summary": "help", "dataset": None}
 
     def _gauge_board(self, params: dict) -> tuple[str, dict]:
-        """Compare current gauges and exact-ID flood status on the gateway."""
-        arguments = {"latitude": params["latitude"], "longitude": params["longitude"]}
-        data, refused = premium_call(self.gateway, "river_gauge_board", arguments,
-                                     {"agent": "rivers", "skill": "river-gauge-board"})
-        if refused:
-            return refused
-        rows = data.get("gauges") if isinstance(data, dict) else None
-        def valid_reading(reading):
-            return reading is None or (isinstance(reading, dict) and
-                type(reading.get("value")) in (int, float) and isinstance(reading.get("unit"), str)
-                and isinstance(reading.get("time"), str))
-        if not isinstance(rows, list) or len(rows) > 3 or any(
-                not isinstance(r, dict) or not isinstance(r.get("site"), str) or
-                not isinstance(r.get("flood_category"), str) or
-                not valid_reading(r.get("stage")) or not valid_reading(r.get("discharge")) for r in rows):
-            return empty_premium_answer("The gateway returned no readable gauge board.",
-                                        {"agent": "rivers", "skill": "river-gauge-board"})
-        lines = ["Gauge board: flood category first, then discharge."]
-        def shown(reading):
-            if reading is None:
-                return "not reported"
-            return f"{reading['value']} {reading['unit']} at {reading['time']}"
-        for row in rows:
-            lines.append(f"  {row['site']}: discharge {shown(row.get('discharge'))}; "
-                         f"stage {shown(row.get('stage'))}; NWPS {row['flood_category']} "
-                         f"at {row.get('nwps_time') or 'unavailable'}")
-        if not rows:
-            lines.append("No gauges with recent numeric readings in this radius.")
-        lines.append(str(data.get("note") or "Unknown flood status is not no flooding. Observations, not forecasts."))
-        return "\n".join(lines), {"summary": f"{len(rows)} gauges compared", "premium": True,
-                                  "agent": "rivers", "skill": "river-gauge-board", "data": data}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: gauge-board — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     @staticmethod
     def _need_site(params: dict) -> str | None:

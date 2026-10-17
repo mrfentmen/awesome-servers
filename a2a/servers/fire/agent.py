@@ -5,7 +5,7 @@
   - fire-summary:   national or per-state totals, acres and uncontained counts
   - fire-lookup:    find an incident by name and show its details
   - fire-watch:     watch a state for new large fires and get POSTed when they appear
-  - fire-discovery: when the fires now on the map were discovered (premium)
+  - fire-discovery: when the fires now on the map were discovered (not implemented here)
 
 Watch-capable: fire-watch stores {"kind": "fire-watch", state, min_acres, observed} where
 observed is the set of incident ids that qualify plus their names. Those change only when
@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     CITY_COORDS,
@@ -123,15 +123,15 @@ CARD_SKILLS = [
     },
     {
         "id": SKILL_FIRE_DISCOVERY,
-        "name": "When the fires were discovered (premium)",
+        "name": "When the fires were discovered (not implemented here)",
         "description": (
             "The fires now on the national map read as a discovery timeline: how many and how "
             "many acres were discovered on each day of a window, the busiest day, the states and "
             "causes behind them, the largest fires still burning with how long each has burned, "
             "how many are not yet half contained, and the personnel committed. Premium: it runs "
-            "behind a licence check."
+            "on a hosted service that was removed."
         ),
-        "tags": ["wildfire", "fire", "discovery", "timeline", "premium"],
+        "tags": ["wildfire", "fire", "discovery", "timeline",],
         "examples": [
             "When were the current fires discovered over the last month?",
             '{"skill": "fire-discovery", "days": 30}',
@@ -584,109 +584,14 @@ def run_fire_watch(params: dict, client: WildfireClient) -> dict:
     return {"final_state": "completed", "message": message, "artifact": artifact, "watch": watch}
 
 
-def run_fire_discovery(params: dict, client: WildfireClient, gateway: GatewayClient) -> dict:
-    """The premium discovery timeline. The figures are worked out on the gateway.
-
-    The gateway reads NIFC's incident layer behind its licence check and hands back the
-    day-by-day figures, so a caller who has not paid gets the gateway's own message and
-    no figures at all.
-    """
-    # A bad argument is the caller's to fix, so it comes back as a question rather than
-    # as an internal error.
-    try:
-        days = client.check_discovery_days(params.get("days") or DEFAULT_DISCOVERY_DAYS)
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-    read, refused = premium_call(
-        gateway, "fire_discovery_timeline", {"days": days},
-        {"dataset": DATASET, "days": days},
-    )
-    if refused:
-        return refused
-    daily = read.get("daily") if isinstance(read, dict) else None
-    if not isinstance(daily, list) or not daily:
-        return empty_premium_answer(
-            "The licence gateway answered without any daily figures, so there is nothing to report.",
-            {"dataset": DATASET, "days": days},
-        )
-
-    busiest = read.get("busiestDay") or {}
-    not_half = read.get("notHalfContained") or {}
-    largest = read.get("largestFires") or []
-    lines = [
-        f"{read.get('firesDiscoveredInWindow')} fire(s) now on the national map were discovered in "
-        f"the {read.get('windowDays')} days from {read.get('windowStart')}, covering "
-        f"{read.get('acresDiscoveredInWindow')} acres.",
-        f"  • Busiest day {busiest.get('date')} with {busiest.get('fires')} fire(s) and "
-        f"{busiest.get('acres')} acres.",
-        f"  • {read.get('incidentsOnMap')} incident(s) on the map in all, "
-        f"{read.get('undatedOnMap')} of them with no discovery date published.",
-    ]
-    lines.append("  • Discoveries by day:")
-    for row in daily[:MAX_LISTED_DISCOVERY_DAYS]:
-        lines.append(f"      {row.get('date')}  {row.get('fires')} fire(s), {row.get('acres')} acres")
-    if len(daily) > MAX_LISTED_DISCOVERY_DAYS:
-        lines.append(f"      ... {len(daily) - MAX_LISTED_DISCOVERY_DAYS} more day(s) are in the artifact.")
-    by_state = read.get("byState") or []
-    if by_state:
-        lines.append(
-            "  • By state: "
-            + ", ".join(f"{row.get('label')} {row.get('fires')} ({row.get('acres')} acres)"
-                        for row in by_state)
-            + "."
-        )
-    by_cause = read.get("byCause") or []
-    if by_cause:
-        lines.append(
-            "  • By cause: "
-            + ", ".join(f"{row.get('label')} {row.get('fires')}" for row in by_cause)
-            + "."
-        )
-    if largest:
-        lines.append("  • Largest fires still on the map:")
-        for row in largest[:MAX_LISTED_FIRES]:
-            lines.append(
-                f"      {row.get('name')} ({row.get('state')}) — {row.get('acres')} acres, "
-                f"{row.get('containedPercent')}% contained, burning {row.get('daysBurning')} day(s)"
-            )
-    if not_half.get("count"):
-        top = not_half.get("largest") or {}
-        lines.append(
-            f"  • {not_half.get('count')} fire(s) are not yet half contained; the largest is "
-            f"{top.get('name')} at {top.get('acres')} acres ({top.get('containedPercent')}% contained)."
-        )
-    else:
-        lines.append("  • Every fire on the map is at least half contained.")
-    lines.append(f"  • {read.get('personnelCommitted')} person(s) committed across the map.")
-    if read.get("note"):
-        lines.append(f"  • {read.get('note')}.")
-    lines.append(
-        "\nComputed on the MCP gateway behind its licence check, from NIFC's interagency "
-        f"WFIGS incident layer ({DATASET}). The map holds what is burning now, so a fire that "
-        "has been contained and dropped off it is absent from this window entirely — the daily "
-        "counts are discoveries among today's active fires, not a full history of the season."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": "National Interagency Fire Center (WFIGS incident locations), computed on the licence gateway",
-        "premium": True,
-        "window_days": read.get("windowDays"),
-        "window_start": read.get("windowStart"),
-        "incidents_on_map": read.get("incidentsOnMap"),
-        "fires_discovered_in_window": read.get("firesDiscoveredInWindow"),
-        "acres_discovered_in_window": read.get("acresDiscoveredInWindow"),
-        "undated_on_map": read.get("undatedOnMap"),
-        "busiest_day": busiest,
-        "daily": daily,
-        "by_state": by_state,
-        "by_cause": by_cause,
-        "by_type": read.get("byType"),
-        "largest_fires": largest,
-        "not_half_contained": not_half,
-        "personnel_committed": read.get("personnelCommitted"),
-        "note": read.get("note"),
+def run_fire_discovery(params: dict, client: WildfireClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: fire-discovery — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class WildfireAgent(SkillAgent):
@@ -705,9 +610,9 @@ class WildfireAgent(SkillAgent):
     watch_kinds = (SKILL_FIRE_WATCH,)
 
     def __init__(self, client: WildfireClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or WildfireClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

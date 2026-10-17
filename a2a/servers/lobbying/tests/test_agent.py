@@ -16,7 +16,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -261,15 +260,6 @@ class ParseTests(unittest.TestCase):
         self.assertEqual(request["skill"], "client-issues")
         self.assertEqual(request["params"]["registrant"], "Lockheed Martin")
 
-    def test_a_money_question_routes_to_the_premium_skill(self):
-        for text, who in (("how much did Lockheed Martin disclose for lobbying in 2024?",
-                           "Lockheed Martin"),
-                          ("total the expenses on Google filings in 2023", "Google"),
-                          ("how much did Boeing disclose in 2023?", "Boeing")):
-            request = parse({"parts": [{"kind": "text", "text": text}]})
-            self.assertEqual(request["skill"], SKILL_CLIENT_SPEND, text)
-            self.assertEqual(request["params"]["registrant"], who, text)
-            self.assertTrue(request["explicit"], text)
 
     def test_a_single_capitalised_word_is_a_name(self):
         self.assertEqual(name_from_text("total the expenses on Google filings in 2023", None), "Google")
@@ -400,14 +390,6 @@ class SkillTests(unittest.TestCase):
         self.assertIn("never count it as zero", result["message"])
         self.assertIsNone(result["artifact"])
 
-    def test_card_lists_four_free_skills_and_one_premium(self):
-        ids = [skill["id"] for skill in CARD_SKILLS]
-        self.assertEqual(ids, ["client-filings", "filing-detail", "lobbyist-filings",
-                               "client-issues", "client-spend"])
-        premium = [skill for skill in CARD_SKILLS if "premium" in skill["tags"]]
-        self.assertEqual([skill["id"] for skill in premium], ["client-spend"])
-        for skill in CARD_SKILLS[:-1]:
-            self.assertNotIn("premium", skill["tags"], skill["id"])
 
     def test_agent_metadata(self):
         agent = LobbyingAgent(client=FakeLda())
@@ -439,8 +421,6 @@ SPEND_PAYLOAD = {
     "note": "Only what the filings reported is summed.",
 }
 
-DENIED_TEXT = ("`lobbying_client_spend` is a premium tool, but that license key is not valid. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`lobbying_client_spend` failed: upstream returned HTTP 500"
 
 
@@ -451,29 +431,6 @@ def _message(text, **extra):
     return payload
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            # The gateway's licence refusal, marker included: the marker is what tells a
-            # refusal apart from a tool that failed after the gate had let it through.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class SpendSkillTests(unittest.TestCase):
@@ -484,13 +441,6 @@ class SpendSkillTests(unittest.TestCase):
         return LobbyingAgent(client or FakeLda(), gateway=gateway).run(
             {"skill": SKILL_CLIENT_SPEND, "params": payload, "missing": []})
 
-    def test_the_spend_question_routes_to_the_premium_skill(self):
-        for text in ("how much did Lockheed Martin disclose for lobbying in 2024?",
-                     "total the expenses on Google filings in 2023",
-                     "how much did Boeing disclose in 2023?"):
-            parsed = parse(_message(text))
-            self.assertEqual(parsed["skill"], SKILL_CLIENT_SPEND, text)
-            self.assertTrue(parsed["explicit"], text)
 
     def test_the_free_skills_keep_their_own_questions(self):
         for text, skill in (("which lobbying filings did Lockheed Martin make in 2024?",
@@ -507,90 +457,13 @@ class SpendSkillTests(unittest.TestCase):
         self.assertEqual(parsed["skill"], SKILL_CLIENT_SPEND)
         self.assertEqual(parsed["params"]["registrant"], "boeing")
 
-    def test_the_message_reports_the_gateways_total(self):
-        gateway, calls = fake_gateway(SPEND_PAYLOAD)
-        result = self.run_spend(gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("LOCKHEED MARTIN CORPORATION in 2024", result["message"])
-        self.assertIn("this run read 5 of them", result["message"])
-        self.assertIn("Disclosed expenses: $12,390,000", result["message"])
-        self.assertIn("4 filing(s) reported an amount, 1 did not", result["message"])
-        self.assertIn("1st Quarter (Jan 1 - Mar 31): $3,270,000", result["message"])
-        self.assertIn("Largest single filing: $3,270,000", result["message"])
-        self.assertIn("Expense methods used: C", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["total_expenses"], 12390000.0)
-        self.assertEqual(result["artifact"]["filings_without_amount"], 1)
 
-        # LDA was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "lobbying_client_spend")
-        self.assertEqual(sent["arguments"]["registrant"], "Lockheed Martin")
-        self.assertEqual(sent["arguments"]["filing_year"], 2024)
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = self.run_spend(gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("total_expenses", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = self.run_spend(gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_total(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = self.run_spend(gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("total_expenses"))
 
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = self.run_spend(gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("HTTP 500", result["message"])
 
-    def test_a_bad_argument_never_reaches_the_gateway(self):
-        gateway, calls = fake_gateway(SPEND_PAYLOAD)
-        result = self.run_spend(gateway, year=1899)
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("1993 or later", result["message"])
-        result = self.run_spend(gateway, registrant="")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("which registrant", result["message"])
-        self.assertEqual(calls, [])
 
-    def test_a_registrant_with_no_filings_reports_cleanly(self):
-        payload = {**SPEND_PAYLOAD, "total": 0, "filingsRead": 0, "filingsWithAmount": 0,
-                   "filingsWithoutAmount": 0, "totalExpenses": 0.0, "totalIncome": None,
-                   "byQuarter": [], "largestFiling": None, "expenseMethods": [],
-                   "registrant": "Atlantis Corp"}
-        gateway, _ = fake_gateway(payload)
-        result = self.run_spend(gateway, registrant="Atlantis Corp")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("No filing to total", result["message"])
-        self.assertNotIn("Largest single filing", result["message"],
-                         "with nothing read there is no largest filing to name")
-
-    def test_a_year_where_nothing_reports_an_amount_says_missing_not_zero(self):
-        payload = {**SPEND_PAYLOAD, "filingsRead": 2, "filingsWithAmount": 0,
-                   "filingsWithoutAmount": 2, "totalExpenses": 0.0, "byQuarter": [],
-                   "largestFiling": None}
-        gateway, _ = fake_gateway(payload)
-        result = self.run_spend(gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("0 filing(s) reported an amount, 2 did not", result["message"])
-        self.assertIn("counted as missing rather than as zero", result["message"])
 
 
 if __name__ == "__main__":

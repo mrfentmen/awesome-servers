@@ -4,7 +4,7 @@
   - filing-detail:   one filing — its issues, its lobbyists, their covered positions
   - lobbyist-filings: the filings a named lobbyist appears on
   - client-issues:   the issue areas a registrant's filings cover, read from them
-  - client-spend:    a registrant's disclosed money across a year (premium)
+  - client-spend:    a registrant's disclosed money across a year (not implemented here)
 
 The tally is premium because it is the one question the free skills do not answer:
 `client-filings` lists the filings and each row carries its own expenses, and reading
@@ -12,7 +12,7 @@ four of those rows is the caller's arithmetic. Adding them up properly means pag
 the whole year, separating the quarterly expense reports from the registrations and
 amendments that report no amount, saying which quarters are actually in, and
 reporting a null as "not reported" rather than as zero. That is done on the licence
-gateway, so an unpaid caller gets the gateway's own message and no total.
+gateway, so an unpaid caller gets a not-implemented stub message and no total.
 
 LDA has no issue filter: `issue`, `issue_specific`, `search` and `general_issue_code`
 are all accepted and all silently ignored, returning the unfiltered count. So the
@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     CLIENTS_DATASET,
@@ -126,9 +126,9 @@ CARD_SKILLS = [
             "A registrant's disclosed money across a year: the total expenses reported, the largest "
             "single filing and its period, the expenses per quarter with the quarters that reported "
             "no amount named as missing rather than counted as zero, and how many filings and "
-            "lobbyists the year covers. Premium: the total is computed on a licence-gated gateway."
+            "lobbyists the year covers. Premium: the total is computed on a removed hosted service."
         ),
-        "tags": ["lobbying", "senate", "lda", "spending", "totals", "analysis", "premium"],
+        "tags": ["lobbying", "senate", "lda", "spending", "totals", "analysis",],
         "examples": [
             "how much did Lockheed Martin disclose for lobbying in 2024?",
             "total the expenses on Google's lobbying filings in 2023",
@@ -184,7 +184,7 @@ HELP = (
     "  • show me filing 9ad88323-8325-40eb-9036-eb5ea7c6827f\n"
     "  • which filings is the lobbyist Smith on in 2024?\n"
     "  • what issues did Lockheed Martin lobby on in 2024?\n"
-    "  • how much did Lockheed Martin disclose for lobbying in 2024?  (premium)\n"
+    "  • how much did Lockheed Martin disclose for lobbying in 2024?  (not implemented here)\n"
     "A registrant is the lobbying firm and a client is who pays it; they are different\n"
     "and I report both. A filing that reports no amount says so — I never count it as zero.\n"
     "LDA has no issue search, so issues come from inside each filing."
@@ -505,94 +505,14 @@ def run_client_issues(params: dict, client: LdaClient) -> dict:
     }
 
 
-def run_client_spend(params: dict, client: LdaClient, gateway: GatewayClient) -> dict:
-    """The premium spending tally. Nothing here reads LDA.
-
-    The gateway pages the registrant's whole year and does the arithmetic behind its
-    licence check, so a caller who has not paid gets the gateway's own message and no
-    total at all.
-    """
-    try:
-        registrant = client.check_name(params.get("registrant"), "registrant")
-        year = client.check_year(params.get("year") or DEFAULT_YEAR)
-        limit = client.check_limit(params.get("limit") or 100)
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-    read, refused = premium_call(
-        gateway, GATEWAY_TOOL,
-        {"registrant": registrant, "filing_year": year, "limit": limit},
-        {"dataset": DATASET, "registrant": registrant, "filing_year": year},
-    )
-    if refused:
-        return refused
-    if not isinstance(read, dict) or read.get("filingsRead") is None:
-        return empty_premium_answer(
-            "The licence gateway answered without a spending total, so there is nothing to report.",
-            {"dataset": DATASET, "registrant": registrant, "filing_year": year},
-        )
-
-    lines = [
-        f"{read.get('registrant') or registrant} in {read.get('filingYear') or year}: LDA holds "
-        f"{read.get('total')} filing(s) for that name, and this run read {read.get('filingsRead')} "
-        f"of them."
-    ]
-    if not read.get("filingsRead"):
-        lines.append("  • No filing to total. The registrant name has to be part of the name LDA files.")
-    else:
-        lines.append(
-            f"  • Disclosed expenses: {_money(read.get('totalExpenses'))}"
-            + (f" (and {_money(read.get('totalIncome'))} income)"
-               if read.get("totalIncome") is not None else "")
-        )
-        lines.append(
-            f"  • {read.get('filingsWithAmount')} filing(s) reported an amount, "
-            f"{read.get('filingsWithoutAmount')} did not."
-        )
-        by_quarter = read.get("byQuarter") or []
-        if by_quarter:
-            lines.append("  • By period:")
-            for row in by_quarter[:MAX_LISTED]:
-                lines.append(
-                    f"      {row.get('label') or 'period not reported'}: "
-                    + (_money(row.get("expenses")) if row.get("expenses") is not None
-                       else "no amount reported")
-                    + (f" ({row.get('filings')} filing(s))" if row.get("filings") is not None else "")
-                )
-        largest = read.get("largestFiling") or {}
-        if largest:
-            lines.append(
-                f"  • Largest single filing: {_money(largest.get('expenses'))} in the "
-                f"{largest.get('label') or 'period not reported'}, posted "
-                f"{str(largest.get('posted') or 'not reported')[:10]}."
-            )
-        else:
-            lines.append("  • Largest single filing: none reported an amount.")
-        if read.get("expenseMethods"):
-            lines.append("  • Expense methods used: "
-                         + ", ".join(str(method) for method in read["expenseMethods"]))
-    lines.append(
-        "\nTotalled on the MCP gateway behind its licence check, from LDA's own filings "
-        f"({DATASET}). A registration or amendment reports no amount, and those filings are counted "
-        "as missing rather than as zero, so the total is the sum of what was disclosed and not an "
-        "estimate of what was spent."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": SOURCE,
-        "premium": True,
-        "registrant": read.get("registrant"),
-        "filing_year": read.get("filingYear"),
-        "total": read.get("total"),
-        "filings_read": read.get("filingsRead"),
-        "filings_with_amount": read.get("filingsWithAmount"),
-        "filings_without_amount": read.get("filingsWithoutAmount"),
-        "total_expenses": read.get("totalExpenses"),
-        "total_income": read.get("totalIncome"),
-        "by_quarter": read.get("byQuarter"),
-        "largest_filing": read.get("largestFiling"),
-        "expense_methods": read.get("expenseMethods"),
+def run_client_spend(params: dict, client: LdaClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: client-spend — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class LobbyingAgent(SkillAgent):
@@ -602,7 +522,7 @@ class LobbyingAgent(SkillAgent):
         "Read-only agent over the US Senate's Lobbying Disclosure Act filings: a lobbying firm's "
         "filings for a year with their reported money, one filing in full with its issue areas and "
         "the lobbyists on them, the filings a named lobbyist appears on, and the issue areas a "
-        "registrant covered — plus a spending tally computed on a licence-gated gateway that "
+        "registrant covered — plus a spending tally computed on a removed hosted service that "
         "separates what was disclosed from what was never reported. Every answer is read live from "
         "LDA."
     )
@@ -611,9 +531,9 @@ class LobbyingAgent(SkillAgent):
     card_skills = CARD_SKILLS
 
     def __init__(self, client: LdaClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or LdaClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

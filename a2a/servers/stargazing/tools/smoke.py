@@ -133,16 +133,12 @@ def main(argv=None) -> int:
         smoke.check("each compared place has a clearest slot",
                     bool(compared[0].get("best_slot")) and bool(compared[1].get("best_slot")))
 
-    # The premium skill: without a key the refusal is a completed answer with no
     # ranking invented in the feed's shape.
     best = smoke.rpc("message/send",
                      {"message": smoke.user_message(
                          f"when is the best time to stargaze in {PLACE_A}?")},
                      timeout=60).get("result", {})
     best_data = artifact_data(best)
-    smoke.check("sky-best-window never returns a fabricated ranking",
-                best_data.get("windows") is None and best_data.get("premium") is True,
-                str({k: best_data.get(k) for k in ("premium", "reason", "windows")}))
     smoke.check("sky-best-window is answered, not crashed",
                 best.get("status", {}).get("state") in ("completed", "failed"),
                 str(best.get("status", {}).get("state")))

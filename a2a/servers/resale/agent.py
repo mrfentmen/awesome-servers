@@ -3,7 +3,7 @@
   - resale-search: cheapest matches for a brand and/or a word, across both stores
   - brand-market:  what one brand's resale market looks like right now
   - piece-lookup:  one listing by handle, from the store's own product endpoint
-  - price-index:   a cross-brand price index, computed on the licence gateway (premium)
+  - price-index:   a cross-brand price index, computed on a hosted service that was removed (not implemented here)
   - help:          what this agent reads and what it will not guess
 
 No watch: a price changes on the scale of days and this server does not poll two storefronts to
@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     DATASET_FASHIONPHILE,
@@ -51,7 +51,7 @@ HELP = (
     "  • show me rolex watches\n"
     "  • what is the chanel market like right now\n"
     "  • pull the listing handbags-hermes-maxibox-bag-294167871\n"
-    "  • compare chanel, gucci and prada (premium — needs a licence key)\n"
+    "  • compare chanel, gucci and prada (not implemented here)\n"
     "Prices are the stores' own variant prices in US dollars; a listing that has sold stays in "
     "the catalogue, so I report how many are still available. I never estimate a price myself."
 )
@@ -464,70 +464,14 @@ def run_piece(params: dict, client: ResaleClient) -> dict:
     raise UpstreamError("; ".join(errors) or "no catalogue has that handle")
 
 
-def run_index(params: dict, client: ResaleClient, gateway: GatewayClient) -> dict:
-    """The premium skill. The index is computed on the gateway, not here."""
-    brands = [client.check_brand(name) for name in (params.get("brands") or [])]
-    brands = [name for name in brands if name]
-    if len(brands) < 2:
-        return {
-            "final_state": "input-required",
-            "message": ("The premium index compares two to four brands at once — name them, like "
-                        "'compare chanel, gucci and prada'."),
-            "artifact": None,
-            "watch": None,
-        }
-    wanted = brands[:MAX_INDEX_BRANDS]
-    data, refused = premium_call(
-        gateway,
-        PREMIUM_TOOL,
-        {"brands": wanted, "pages": PREMIUM_PAGES},
-        {"dataset": list(DATASETS), "skill": SKILL_INDEX, "tool": PREMIUM_TOOL},
-    )
-    if refused:
-        return refused
-    board = data.get("brands") if isinstance(data, dict) else None
-    if not isinstance(board, list) or not board:
-        return empty_premium_answer(
-            "The licence gateway returned no brands for that comparison, so I have nothing to "
-            "report. Try two to four brand names from my list.",
-            {"dataset": list(DATASETS), "skill": SKILL_INDEX},
-        )
-    dearest = data.get("dearest") or {}
-    cheapest = data.get("cheapest") or {}
-    most = data.get("mostListed") or {}
-    artifact = {
-        "dataset": list(DATASETS),
-        "source": "Fashionphile (fashionphile.com) and Rebag (shop.rebag.com), "
-                  "computed on the licence gateway",
-        "premium": True,
-        "skill": SKILL_INDEX,
-        "brands": board,
-        "scanned": data.get("scanned"),
-        "dearest": dearest,
-        "cheapest": cheapest,
-        "most_listed": most,
+def run_index(params: dict, client: ResaleClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: index — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    lines = ["Premium cross-brand resale index (computed on the licence gateway):"]
-    for entry in board:
-        lines.append(
-            f"  • {entry.get('brand')}: {entry.get('count')} listings "
-            f"({entry.get('available')} available), median {usd(entry.get('median'))}, "
-            f"range {usd(entry.get('low'))}–{usd(entry.get('high'))} across "
-            f"{', '.join(entry.get('sources') or [])}"
-        )
-    if dearest.get("brand"):
-        lines.append(f"\nHighest median asking price: {dearest.get('brand')} at "
-                     f"{usd(dearest.get('median'))}. Lowest: {cheapest.get('brand')} at "
-                     f"{usd(cheapest.get('median'))}.")
-    if most.get("brand"):
-        lines.append(f"Most listings: {most.get('brand')} with {most.get('count')}.")
-    lines.append(
-        f"\nSource: the licence gateway read {data.get('scanned') or 0:,} catalogue products "
-        "across the two stores. Same catalogues as the free skills — the gateway adds the "
-        "cross-brand comparison, and a caller without a key never gets the numbers."
-    )
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact,
-            "watch": None}
 
 
 def run_help() -> dict:
@@ -547,7 +491,7 @@ class ResaleAgent(SkillAgent):
         "cheapest live listings for a brand and/or a word with the store's own variant prices and "
         "availability, a whole brand's market (counts, asking-price range, median, conditions, "
         "types), and one listing by handle. Every price is quoted as the store states it, in US "
-        "dollars. A cross-brand price index runs behind a licence check on the gateway."
+        "dollars. A cross-brand price index runs on a hosted service that was removed."
     )
     env_prefix = "RESALE"
     datasets = (DATASET_FASHIONPHILE, DATASET_REBAG)
@@ -604,15 +548,15 @@ class ResaleAgent(SkillAgent):
         },
         {
             "id": SKILL_INDEX,
-            "name": "Cross-brand price index (premium)",
+            "name": "Cross-brand price index (not implemented here)",
             "description": (
                 "Two to four brands compared at once over the same catalogues: listings and "
                 "availability per brand, median and range of asking prices, which brand carries the "
                 "highest and lowest median, and which has the most listings. Premium: it runs "
-                "behind a licence check on the gateway, so the numbers only exist for a caller "
+                "on a hosted service that was removed, so the numbers only exist for a caller "
                 "with a key."
             ),
-            "tags": ["resale", "index", "compare", "premium", "median"],
+            "tags": ["resale", "index", "compare", "median"],
             "examples": [
                 "Compare chanel, gucci and prada",
                 '{"skill": "price-index", "brands": ["chanel", "hermes", "rolex"]}',
@@ -636,9 +580,9 @@ class ResaleAgent(SkillAgent):
     ]
 
     def __init__(self, client: ResaleClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or ResaleClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)
@@ -664,7 +608,7 @@ class ResaleAgent(SkillAgent):
                     "'handbags-hermes-maxibox-bag-294167871' or a product URL.")
         if skill == SKILL_INDEX:
             return ("The premium index needs two to four brands — name them, like 'compare chanel, "
-                    "gucci and prada'. It needs a licence key.")
+                    "gucci and prada'. It is not implemented here.")
         return ("What should I look for? Give me a brand, a word, or both — 'chanel flap', 'rolex "
                 "submariner', 'cartier bracelet' — and I will read both catalogues.")
 

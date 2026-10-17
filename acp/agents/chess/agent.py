@@ -4,7 +4,7 @@ Lichess publishes every player's rating in every time control plus their public 
 keyless, and nobody asks it from an editor. "what is thibault's rating?" gets every category
 with the deviation beside it, because a rating with 3 games behind it is not the same claim as
 one with 12000. Grouping a player's own games by the openings Lichess names in the headers -
-and what they actually score in each - is the premium skill.
+and what they actually score in each - is a separate skill.
 """
 
 from __future__ import annotations
@@ -17,9 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (CATEGORIES, DATASET, ChessData, ChessError,  # noqa: E402
                   ChessNotFound, _category_name, category_from_text, game_id_from_text,
@@ -35,7 +33,7 @@ HELP = (
     "Lichess looks players up by username, not by real name, so ask for the handle the player\n"
     "registered. A rating is printed with the number of games behind it and its rating\n"
     "deviation, because 1774 from 3 games is not the same claim as 1774 from 12000.\n"
-    "Grouping a player's own games by opening is the premium skill."
+    "Grouping a player's own games by opening is a separate skill."
 )
 
 PERMISSION_KEY = "chess-read-lichess-public-api"
@@ -253,9 +251,7 @@ class ChessAgent(AcpAgent):
     def __init__(self, connection=None, data: ChessData | None = None, gateway=None) -> None:
         super().__init__(connection)
         self.data = data or ChessData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -306,7 +302,7 @@ class ChessAgent(AcpAgent):
                 summary = (f"@{player['username']}: "
                            + (f"{_category_name(wanted)} {best['rating']}"
                               if best else f"{len(player['perfs'])} rating(s)"))
-        except (ChessError, GatewayError, ValueError) as exc:
+        except (ChessError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read Lichess's API: {exc}")
             return STOP_END_TURN
@@ -319,43 +315,9 @@ class ChessAgent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        arguments: dict = {"player": params["player"]}
-        if params.get("games"):
-            arguments["games"] = int(params["games"])
-
-        data, refused = premium_call(self.gateway, "chess_opening_report", arguments,
-                                     {"agent": "chess"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not data.get("openings"):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back an opening report for that player.",
-                {"agent": "chess"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read an opening report out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_openings(data)
-        summary = (f"@{data['player']}: {data.get('gamesRead', 'not reported')} game(s), "
-                   f"{data.get('distinctOpenings', 'not reported')} opening(s)")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message(f"\nSource: {data.get('source', DATASET)}, worked out on the licence gateway. "
-                    "The openings are the ones Lichess itself names in the game headers, and a "
-                    "score over two games is shown beside its sample size rather than as a claim "
-                    "about how someone plays.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

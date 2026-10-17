@@ -4,7 +4,7 @@
   - taf:             an airport's forecast periods and the raw TAF text
   - aviation-nearby: the reporting stations within a radius of a place or point, nearest first
   - aviation-watch:  watch one airport's reported flight category and POST when it changes
-  - taf-timeline:    when the TAF expects conditions to worsen, and for how long (premium)
+  - taf-timeline:    when the TAF expects conditions to worsen, and for how long (not implemented here)
 
 Watch-capable: aviation-watch stores {"kind": "aviation-watch", station, observed} where observed
 is {"stations": {code: {flight_category, report_time, raw}}}. Temperature, wind and visibility are
@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     AIRPORTS,
@@ -523,128 +523,14 @@ def run_watch(params: dict, client: AviationWeatherClient) -> dict:
     return {"final_state": "completed", "message": message, "artifact": artifact, "watch": watch}
 
 
-def run_taf_timeline(params: dict, client: AviationWeatherClient, gateway: GatewayClient) -> dict:
-    """The premium flight-category timeline. The figures are worked out on the gateway.
-
-    The gateway reads the TAF and the current observation behind its licence check and
-    hands back the timeline, so a caller who has not paid gets the gateway's own message
-    and no categories at all.
-    """
-    codes = client.check_airports(params.get("airports") or [])
-    if not codes:
-        return {
-            "final_state": "input-required",
-            "message": ("Which station's timeline? Give me one ICAO code (KDEN, KJFK, EGLL) or a "
-                        "city from this server's list."),
-            "artifact": None,
-            "watch": None,
-        }
-    if len(codes) > 1:
-        return {
-            "final_state": "input-required",
-            "message": ("A category timeline is drawn for one station at a time; give me a single "
-                        f"ICAO code, not {', '.join(codes)}."),
-            "artifact": None,
-            "watch": None,
-        }
-    station = codes[0]
-    read, refused = premium_call(
-        gateway, "taf_flight_category_timeline", {"station": station},
-        {"dataset": DATASET, "station": station, "endpoint": TAF_PATH},
-    )
-    if refused:
-        return refused
-    periods = read.get("timeline") if isinstance(read, dict) else None
-    if not isinstance(periods, list) or not periods:
-        return empty_premium_answer(
-            "The licence gateway answered without any forecast periods, so there is nothing to report.",
-            {"dataset": DATASET, "station": station, "endpoint": TAF_PATH},
-        )
-
-    hours = read.get("hoursByCategory") or {}
-    worst = read.get("worstPeriod") or {}
-    first_below = read.get("firstPeriodBelowVfr") or None
-    transitions = read.get("transitions") or []
-    observation = read.get("observation") or {}
-    hours_text = ", ".join(f"{name} {value} h" for name, value in hours.items()) or "none published"
-    lines = [
-        f"{read.get('station') or station} — flight category over the TAF "
-        f"(issued {read.get('issuedAt') or 'at an unstated time'}, valid "
-        f"{read.get('validFrom') or '?'} to {read.get('validTo') or '?'}):",
-        f"  • Worst period {worst.get('category')} from {worst.get('from')} to {worst.get('to')} "
-        f"({_ceiling_phrase(worst.get('ceilingFt'))}, visibility "
-        f"{_visibility_phrase(worst.get('visibilitySm'), False)}).",
-        f"  • Hours by category: {hours_text}.",
-    ]
-    if first_below:
-        lines.append(
-            f"  • First period below VFR: {first_below.get('category')} from "
-            f"{first_below.get('from')}"
-            + (", a conditional (TEMPO/PROB) period" if first_below.get("conditional")
-               else ", an unconditional period")
-            + "."
-        )
-    else:
-        lines.append("  • No period in this forecast drops below VFR.")
-    if transitions:
-        lines.append("  • Category changes:")
-        for row in transitions[:MAX_LISTED_TRANSITIONS]:
-            lines.append(
-                f"      {row.get('at')} — {row.get('from')} to {row.get('to')} "
-                f"({row.get('direction')}, {row.get('cause')})"
-            )
-        if len(transitions) > MAX_LISTED_TRANSITIONS:
-            lines.append(f"      ... {len(transitions) - MAX_LISTED_TRANSITIONS} more change(s) are in the artifact.")
-    else:
-        lines.append("  • The category does not change across the headline periods.")
-    lines.append("  • Forecast periods:")
-    for period in periods[:MAX_LISTED_PERIODS]:
-        lines.append(
-            f"      {period.get('from')} to {period.get('to')} — {period.get('category')}"
-            + (f" ({period.get('change')})" if period.get("change") else "")
-            + f", visibility {_visibility_phrase(period.get('visibilitySm'), False)}, "
-            f"{_ceiling_phrase(period.get('ceilingFt'))}"
-            + (", conditional" if period.get("conditional") else "")
-        )
-    if len(periods) > MAX_LISTED_PERIODS:
-        lines.append(f"      ... {len(periods) - MAX_LISTED_PERIODS} more period(s) are in the artifact.")
-    if observation.get("at") is not None or observation.get("serviceCategory"):
-        agrees = observation.get("agrees")
-        shape = "agrees with" if agrees else "differs from" if agrees is False else "cannot be compared with"
-        lines.append(
-            f"  • The service's own category for the observation at {observation.get('at')} is "
-            f"{observation.get('serviceCategory') or 'not published'}, which {shape} the derived "
-            f"{observation.get('derivedForFirstPeriod') or 'first period'}."
-        )
-    lines.append(f"  • Categories here are derived from {read.get('limits')}.")
-    if read.get("note"):
-        lines.append(f"  • {read.get('note')}.")
-    lines.append(
-        "\nComputed on the MCP gateway behind its licence check, from the Aviation Weather "
-        f"Center's TAF and METAR feeds ({DATASET}). A TAF is a forecast, so a category change it "
-        "announces is what the forecaster expects, not what a pilot will see; TEMPO and PROB "
-        "periods are reported but left out of the headline because the aerodrome is not expected "
-        "to sit in them for the whole window."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": "Aviation Weather Center (aviationweather.gov), computed on the licence gateway",
-        "endpoint": TAF_PATH,
-        "premium": True,
-        "station": read.get("station") or station,
-        "issued_at": read.get("issuedAt"),
-        "valid_from": read.get("validFrom"),
-        "valid_to": read.get("validTo"),
-        "limits": read.get("limits"),
-        "hours_by_category": hours,
-        "worst_period": worst,
-        "first_period_below_vfr": first_below,
-        "transitions": transitions,
-        "observation": observation,
-        "periods": periods,
-        "note": read.get("note"),
+def run_taf_timeline(params: dict, client: AviationWeatherClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: taf-timeline — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class AviationAgent(SkillAgent):
@@ -728,15 +614,15 @@ class AviationAgent(SkillAgent):
         },
         {
             "id": SKILL_TAF_TIMELINE,
-            "name": "Flight-category timeline (premium)",
+            "name": "Flight-category timeline (not implemented here)",
             "description": (
                 "A station's TAF read as a timeline of flight categories: every forecast period with "
                 "its visibility, ceiling and derived VFR/MVFR/IFR/LIFR category, the moments it "
                 "changes category and which way, how many hours it sits in each, and the service's "
                 "own category for the current observation beside the derived one. Premium: it runs "
-                "behind a licence check."
+                "on a hosted service that was removed."
             ),
-            "tags": ["taf", "aviation", "timeline", "flight-category", "ifr", "premium"],
+            "tags": ["taf", "aviation", "timeline", "flight-category", "ifr",],
             "examples": [
                 "When does KDEN go IFR in the forecast, and for how long?",
                 '{"skill": "taf-timeline", "station": "KDEN"}',
@@ -748,9 +634,9 @@ class AviationAgent(SkillAgent):
     watch_kinds = (SKILL_WATCH,)
 
     def __init__(self, client: AviationWeatherClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or AviationWeatherClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

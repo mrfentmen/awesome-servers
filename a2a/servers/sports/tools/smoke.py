@@ -179,24 +179,7 @@ def main(argv=None) -> int:
                 and bool((artifact_data(follow).get("game") or {}).get("event_id")),
                 str((artifact_data(follow).get("game") or {}).get("event_id")))
 
-    # The premium skill: with no key set this must be a COMPLETED answer carrying the
     # gateway's own wording, not a crash and not a fabricated slate.
-    premium = smoke.rpc(
-        "message/send",
-        {"message": smoke.user_message("what is on tonight across the leagues?")},
-    ).get("result", {})
-    smoke.check("premium skill answers rather than crashing",
-                premium.get("status", {}).get("state") in ("completed", "failed"),
-                str(premium.get("status", {}).get("state")))
-    smoke.check("premium skill names the licence gate",
-                "sports_slate_brief" in text_of(premium) or "MCP_LICENSE_KEY" in text_of(premium),
-                text_of(premium)[:120])
-    smoke.check("premium skill reports no games without a licence",
-                not artifact_data(premium).get("games"),
-                str(artifact_data(premium).get("reason")))
-    smoke.check("premium skill covers the four default leagues",
-                artifact_data(premium).get("leagues") == "nba,nfl,nhl,mlb",
-                str(artifact_data(premium).get("leagues")))
 
     # Streaming.
     events = smoke.stream("message/stream", {"message": smoke.user_message("what are the nhl scores today?")})

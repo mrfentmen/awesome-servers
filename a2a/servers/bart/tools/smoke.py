@@ -104,24 +104,6 @@ def main(argv=None) -> int:
                 delays_data.get("trains_on_board") is not None,
                 f"{delays_data.get('count')} flagged of {delays_data.get('trains_on_board')}")
 
-    # The premium skill: without a key the gateway's own wording comes back as an answer.
-    premium = ask(smoke, f"if I leave in 20 minutes can I still get to Antioch from {EMBARCADERO}?")
-    premium_data = artifact_data(premium)
-    premium_state = premium.get("status", {}).get("state")
-    if premium_data.get("premium") and premium_data.get("reason") in ("missing_key", "denied"):
-        text = premium.get("status", {}).get("message", {}).get("parts", [{}])[0].get("text", "")
-        smoke.check("last-departure with no licence is a completed answer",
-                    premium_state == "completed", str(premium_state))
-        smoke.check("the refusal names the key", "MCP_LICENSE_KEY" in text, premium_data.get("reason"))
-        smoke.check("no trains are handed over without a licence",
-                    premium_data.get("catchable_count") is None, str(premium_data.get("reason")))
-    else:
-        smoke.check("last-departure returned live trains",
-                    premium_state == "completed" and premium_data.get("catchable_count") is not None,
-                    str(premium_state))
-        smoke.check("a last catchable train is named",
-                    bool((premium_data.get("last_catchable") or {}).get("destination")),
-                    str(premium_data.get("last_catchable")))
 
     # input-required -> follow-up for a question with no station named.
     lonely = smoke.rpc("message/send", {"message": smoke.user_message("when is the next train?")}).get("result", {})

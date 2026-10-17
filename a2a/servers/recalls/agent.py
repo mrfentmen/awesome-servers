@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     DATASET,
@@ -131,14 +131,14 @@ CARD_SKILLS = [
     },
     {
         "id": SKILL_TREND,
-        "name": "Recall activity month by month (premium)",
+        "name": "Recall activity month by month (not implemented here)",
         "description": (
             "Month-by-month recall activity for one FDA scope (drug, food or device): how many "
             "recalls were reported each month, the busiest and quietest complete month, how the "
             "latest complete month compares with the one before it, and the Class I/II/III mix "
-            "with the Class I share. Premium: it runs behind a licence check."
+            "with the Class I share. Premium: it runs on a hosted service that was removed."
         ),
-        "tags": ["recalls", "openfda", "trend", "monthly", "premium"],
+        "tags": ["recalls", "openfda", "trend", "monthly",],
         "examples": [
             "How has food recall activity trended this year?",
             '{"skill": "recall-trend", "scope": "drug", "months": 12}',
@@ -635,95 +635,14 @@ def run_recalls_watch(params: dict, client: OpenFdaRecallsClient) -> dict:
     }
 
 
-def run_recall_trend(params: dict, client: OpenFdaRecallsClient, gateway: GatewayClient) -> dict:
-    """The premium month-by-month trend. The board is worked out on the gateway.
-
-    The gateway reads openFDA's counts behind its licence check and hands back the
-    monthly figures, so a caller who has not paid gets the gateway's own message and
-    no figures at all.
-    """
-    scope = check_scope(params.get("scope", "all"))
-    asked_for_all = scope == "all"
-    if asked_for_all:
-        # openFDA counts these one scope at a time, so "all" is answered as the default scope
-        # and the answer says so rather than adding three scopes together.
-        scope = DEFAULT_TREND_SCOPE
-    # A bad argument is the caller's to fix, so it comes back as a question rather than
-    # as an internal error.
-    try:
-        months = client.check_months(params.get("months") or DEFAULT_TREND_MONTHS)
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-    read, refused = premium_call(
-        gateway, "recall_trend_board", {"scope": scope, "months": months},
-        {"dataset": DATASET.format(scope=scope), "scope": scope, "months": months},
-    )
-    if refused:
-        return refused
-    monthly = read.get("monthly") if isinstance(read, dict) else None
-    if not isinstance(monthly, list) or not monthly:
-        return empty_premium_answer(
-            "The licence gateway answered without any monthly counts, so there is nothing to report.",
-            {"dataset": DATASET.format(scope=scope), "scope": scope},
-        )
-
-    label = SCOPE_LABELS.get(scope, scope)
-    busiest = read.get("busiestMonth") or {}
-    quietest = read.get("quietestMonth") or {}
-    latest = read.get("latestCompleteMonth") or {}
-    mix = read.get("classification") or {}
-    mix_text = ", ".join(f"{name} {count}" for name, count in mix.items()) or "none published"
-    lines = [
-        f"{read.get('monthsReported')} month(s) of {label} recall activity from openFDA "
-        f"(openFDA's own counts last updated {read.get('latestReportDate') or 'at an unstated time'}):",
-        f"  • {read.get('trend')}.",
-        f"  • Busiest complete month {busiest.get('month')} with {busiest.get('recalls')} recalls; "
-        f"quietest {quietest.get('month')} with {quietest.get('recalls')}.",
-        f"  • Latest complete month {latest.get('month')}: {latest.get('recalls')} recalls, "
-        f"{latest.get('changeVsPreviousMonth')} against {latest.get('previousMonth')} "
-        f"({latest.get('changePercent')}%).",
-        f"  • Classification mix: {mix_text}; Class I share {read.get('classOneShare')}%.",
-    ]
-    if asked_for_all:
-        lines.append(
-            f"  • openFDA counts these one scope at a time, so this is the {scope} picture; ask "
-            "for drug or device for theirs."
-        )
-    lines.append("  • Month by month:")
-    for row in monthly[:MAX_LISTED_MONTHS]:
-        lines.append(
-            f"      {row.get('month')}  {row.get('recalls')} recall(s)"
-            + ("" if row.get("complete") else f"  (still filling in: {row.get('buckets')} weekly bucket(s))")
-        )
-    if len(monthly) > MAX_LISTED_MONTHS:
-        lines.append(f"      ... {len(monthly) - MAX_LISTED_MONTHS} more month(s) are in the artifact.")
-    lines.append(
-        "\nCounted on the MCP gateway behind its licence check, from openFDA's open enforcement "
-        f"reports ({DATASET.format(scope=scope)}), which the FDA publishes unvalidated: a count "
-        "here is recalls reported, not recalls that turned out to be necessary. openFDA groups "
-        "its dated counts into weekly buckets, so a month is only treated as finished once it "
-        "holds four or more of them."
-    )
-    artifact = {
-        "dataset": DATASET.format(scope=scope),
-        "source": f"{SOURCE}, counted on the licence gateway",
-        "premium": True,
-        "scope": scope,
-        "scope_label": label,
-        "scope_widened_from_all": asked_for_all,
-        "months_requested": read.get("monthsRequested"),
-        "months_reported": read.get("monthsReported"),
-        "latest_report_date": read.get("latestReportDate"),
-        "total_recalls": read.get("totalRecalls"),
-        "monthly": monthly,
-        "busiest_month": busiest,
-        "quietest_month": quietest,
-        "latest_complete_month": latest,
-        "classification": mix,
-        "class_one_share": read.get("classOneShare"),
-        "trend": read.get("trend"),
+def run_recall_trend(params: dict, client: OpenFdaRecallsClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: recall-trend — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class RecallsAgent(SkillAgent):
@@ -741,9 +660,9 @@ class RecallsAgent(SkillAgent):
     watch_kinds = (SKILL_WATCH,)
 
     def __init__(self, client: OpenFdaRecallsClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or OpenFdaRecallsClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

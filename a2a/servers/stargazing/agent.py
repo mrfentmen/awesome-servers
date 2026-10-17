@@ -3,7 +3,7 @@
   - sky-tonight:      the coming hours at one place, with a verdict
   - sky-forecast:     the whole 72-hour run, slot by slot
   - sky-compare:      two places side by side for the coming night
-  - sky-best-window:  the ranked usable windows over three days (premium)
+  - sky-best-window:  the ranked usable windows over three days (not implemented here)
 
 Premium: `sky-best-window` scores every 3-hour slot and ranks the contiguous
 runs worth going out for. That is the whole run walked and ordered, which is the
@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     DATASET,
@@ -253,11 +253,11 @@ CARD_SKILLS = [
             "The whole 72-hour run scored slot by slot and grouped into contiguous runs, so the "
             "answer is a ranked list of the windows with the steadiest sky rather than one lucky "
             "hour. Wet slots are dropped and a slot with an unpublished index scores nothing "
-            "rather than zero. Premium: the scoring and ranking run behind a licence check on the "
+            "rather than zero. Premium: the scoring and ranking run on a hosted service that was removed on the "
             "gateway. A window is a run of good sky, not of darkness, and the moon is in none of "
             "these indices."
         ),
-        "tags": ["stargazing", "astronomy", "windows", "ranking", "premium"],
+        "tags": ["stargazing", "astronomy", "windows", "ranking",],
         "examples": [
             "when is the best time to stargaze in New York?",
             "what is the optimal night for stargazing in Berlin?",
@@ -449,67 +449,14 @@ def run_compare(params: dict, client: StargazingClient) -> dict:
             "artifact": artifact, "watch": None}
 
 
-def run_best_window(params: dict, client: StargazingClient, gateway: GatewayClient) -> dict:
-    """The premium window ranking. Nothing here scores: the gateway does.
-
-    A free skill reads the same feed and names the clearest single slot. This
-    scores every slot and ranks the contiguous runs, which is the whole run
-    walked and ordered, and it happens on the gateway behind its licence check.
-    """
-    missing = _need_place(params)
-    if missing:
-        return missing
-    latitude, longitude = params["latitude"], params["longitude"]
-    read, refused = premium_call(gateway, GATEWAY_TOOL, {
-        "lat": latitude,
-        "lon": longitude,
-    }, {"dataset": DATASET, "latitude": latitude, "longitude": longitude})
-    if refused:
-        return refused
-    if not isinstance(read, dict) or not isinstance(read.get("rated"), list):
-        return empty_premium_answer(
-            "The licence gateway answered without a sky ranking, so there is nothing to report.",
-            {"dataset": DATASET},
-        )
-
-    label = params.get("label") or f"{latitude}, {longitude}"
-    windows = read.get("windows") or []
-    lines = [
-        f"7Timer's astronomical forecast for {label}: {read.get('slotCount')} slots of "
-        f"{read.get('slotHours')} hours, {read.get('eligibleSlots')} of them usable at a cloud "
-        f"cover of {read.get('minCloud')} or better.",
-    ]
-    if not windows:
-        lines.append("  • No contiguous run of usable slots in the whole 72 hours.")
-    for index, window in enumerate(windows, start=1):
-        lines.append(
-            f"  • Window {index}: {window.get('startUtc')} to {window.get('endUtc')} "
-            f"({window.get('hours')} hours, {window.get('slots')} slot(s), mean score "
-            f"{window.get('meanScore')}, best {window.get('bestScore')}, cloudiest slot "
-            f"{window.get('worstCloud')})"
-        )
-    best = read.get("bestWindow")
-    if best:
-        lines.append(
-            f"\nThe best of them starts {best.get('startUtc')} and runs {best.get('hours')} hours."
-        )
-    lines.append(
-        f"\nScored and ranked on the MCP gateway behind its licence check, from {DATASET}. Each "
-        "slot scores cloud cover doubled plus seeing plus transparency, because all three run "
-        "bigger-is-better and cloud is the one that blocks everything; a wet slot is never usable. "
-        f"{_MOON_NOTE} {_DAYLIGHT_NOTE} A window is a run of good sky, not a run of night, so it "
-        "can span a night and the following day."
-    )
-    artifact = _artifact(client, label=label, premium=True, latitude=latitude,
-                         longitude=longitude, init=read.get("init"),
-                         started_utc=read.get("startedUtc"), slot_hours=read.get("slotHours"),
-                         slot_count=read.get("slotCount"), eligible_slots=read.get("eligibleSlots"),
-                         min_cloud=read.get("minCloud"), windows=windows,
-                         window_count=read.get("windowCount"), best_window=best,
-                         rated=read.get("rated"), covers_moon=False, covers_daylight=False,
-                         daylight_caveat=read.get("daylightCaveat"), method=read.get("method"))
-    return {"final_state": "completed", "message": "\n".join(lines),
-            "artifact": artifact, "watch": None}
+def run_best_window(params: dict, client: StargazingClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: best-window — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
+    }
 
 
 class StargazingAgent(SkillAgent):
@@ -528,9 +475,9 @@ class StargazingAgent(SkillAgent):
     card_skills = CARD_SKILLS
 
     def __init__(self, client: StargazingClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or StargazingClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

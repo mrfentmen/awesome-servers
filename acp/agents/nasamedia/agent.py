@@ -17,9 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, MEDIA_TYPES, NasaMediaData, NasaMediaError,  # noqa: E402
                   NasaMediaNotFound, normalise_media_type)
@@ -334,9 +332,7 @@ class NasaMediaAgent(AcpAgent):
                  gateway=None) -> None:
         super().__init__(connection)
         self.data = data or NasaMediaData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -389,7 +385,7 @@ class NasaMediaAgent(AcpAgent):
                                           year_end=params.get("year_end"))
                 body = render_search(result, limit=params.get("limit") or 5)
                 summary = f"{result['query']}: {result['returned']} item(s)"
-        except (NasaMediaError, GatewayError, ValueError) as exc:
+        except (NasaMediaError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read NASA's image library: {exc}")
             return STOP_END_TURN
@@ -402,53 +398,9 @@ class NasaMediaAgent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        arguments: dict = {"query": params["query"]}
-        if params.get("media_type"):
-            arguments["media_type"] = params["media_type"]
-        if params.get("year_start"):
-            arguments["year_start"] = int(params["year_start"])
-        if params.get("year_end"):
-            arguments["year_end"] = int(params["year_end"])
-        if params.get("pages"):
-            arguments["pages"] = int(params["pages"])
-        elif params.get("limit"):
-            arguments["items"] = int(params["limit"])
-
-        data, refused = premium_call(self.gateway, "nasamedia_coverage_board", arguments,
-                                    {"agent": "nasamedia"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not data.get("query"):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back a coverage board for that search.",
-                {"agent": "nasamedia"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a coverage board out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_coverage(data)
-        counts = data.get("counts") or {}
-        summary = (f"{data.get('query')}: {_num(data.get('items_read'))} item(s) over "
-                   f"{_num(data.get('pages_read'))} page(s), "
-                   f"{len(counts)} media type(s)")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message(f"\nSource: {data.get('source', DATASET)}, counted on the licence gateway. "
-                    "The counts are only as complete as the pages the gateway managed to read, "
-                    "so the sampled line says which is which. NASA leaves `date_created` empty "
-                    "on some items, which is why a decade can come back as not reported.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

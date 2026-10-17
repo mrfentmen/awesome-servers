@@ -18,9 +18,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, FUELS, INDEX_ORDER, UNIT, GridData, GridError,  # noqa: E402
                   GridNotFound)
@@ -31,8 +29,7 @@ HELP = (
     "  - what is the grid burning right now?\n"
     "  - what does the forecast look like today?\n"
     "  - which region of the UK is the dirtiest right now?\n"
-    "When is the cleanest window in the next two days, and when is the dirtiest? (premium - a "
-    "forecast list cannot answer it)\n"
+    "When is the cleanest window in the next two days, and when is the dirtiest? (not implemented here)\n"
     "Everything is grams of CO2 per kilowatt-hour, straight from the feed: 0 is a zero-carbon "
     "minute, 400 or more is a coal minute. The index words (very low to very high) are the "
     "feed's own.\n"
@@ -295,9 +292,7 @@ class GridAgent(AcpAgent):
                  gateway=None) -> None:
         super().__init__(connection)
         self.data = data or GridData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -320,7 +315,7 @@ class GridAgent(AcpAgent):
             return STOP_END_TURN
 
         tool = f"call_{skill.replace('-', '_')}"
-        label = ("Ask the licence gateway for the clean and dirty windows"
+        label = ("Ask about the clean and dirty windows"
                  if skill == "grid-window" else "Read the National Grid carbon intensity API")
         ctx.tool_call(tool, label, kind="fetch", name=skill, raw_input=dict(params))
         if not ctx.ask_permission(tool, "Allow Grid to read the National Grid's public data?",
@@ -360,7 +355,7 @@ class GridAgent(AcpAgent):
                 body = render_now(reading, mix)
                 summary = (f"{_show(reading['actual'])} {reading['unit']} now, index "
                            f"{reading['index']}")
-        except (GridError, GatewayError, ValueError) as exc:
+        except (GridError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the National Grid's data: {exc}")
             return STOP_END_TURN
@@ -373,42 +368,9 @@ class GridAgent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        data, refused = premium_call(self.gateway, "grid_clean_window",
-                                    {"hours": float(params["hours"])}, {"agent": "grid"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not data.get("cleanest"):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back a window for that length.",
-                {"agent": "grid"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a window out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_window(data)
-        cleanest = data.get("cleanest") or {}
-        summary = (f"cleanest {data.get('hours')} h window: {cleanest.get('start_local')} to "
-                   f"{cleanest.get('end_local')} UK, avg {_show(cleanest.get('average'))} "
-                   f"{data.get('unit', UNIT)}")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message("\nSource: the National Grid forecast, worked out on the licence gateway. This "
-                    "is a forecast the feed published, not a measurement: weather and demand move, "
-                    "and the cleanest hour of a forecast is the hour that was cleanest when the "
-                    "forecast was made. Shifting a load by half an hour inside the same window "
-                    "will not change much, and the direction of the advice is the durable part.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

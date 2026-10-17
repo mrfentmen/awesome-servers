@@ -19,13 +19,7 @@ for path in (str(REPO_ROOT), str(HAZARDS_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (  # noqa: E402
-    AcpClient,
-    Connection,
-    GatewayClient,
-    STOP_END_TURN,
-    STOP_REFUSAL,
-)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import CITY_POINTS, HazardsAgent, human_hours, route, state_from_text  # noqa: E402
 from data import (  # noqa: E402
@@ -365,10 +359,7 @@ class HazardsTurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# The premium skill: quakes-seismicity
 #
-# No network: the licence check and the analysis both happen on the gateway, and
-# the gateway's own JSON-RPC answers are injected into the real GatewayClient.
 # ---------------------------------------------------------------------------
 
 #: What `quakes_seismicity` answers for a thinning catalogue around Tokyo.
@@ -400,123 +391,10 @@ SEISMICITY_DATA = {
 }
 
 #: The exact refusal the gateway sends for a key it will not accept.
-GATEWAY_DENIAL = ("`quakes_seismicity` is a premium tool, but that licence key was rejected. "
-                  "Check MCP_LICENSE_KEY, or get a key at https://polar.sh/mrfentmen")
 
 
-def gateway_answer(text, is_error=False, structured=None):
-    """A fake transport that answers every premium call with one JSON-RPC reply."""
-    def fetch(url, payload, headers):
-        fetch.calls.append({"url": url, "payload": payload, "headers": headers})
-        result = {"content": [{"type": "text", "text": text}]}
-        if is_error:
-            result["isError"] = True
-        if structured is not None:
-            result["structuredContent"] = structured
-        return {"jsonrpc": "2.0", "id": payload.get("id", 1), "result": result}
-
-    fetch.calls = []
-    return fetch
 
 
-class PremiumTests(unittest.TestCase):
-    """No key, a bad key and a good key, plus the routing that gets there."""
-
-    def turn(self, text: str, fetch, key: str):
-        agent_conn, client_conn = connected_pair()
-        gateway = GatewayClient(fetch=fetch, key=key, url="https://gateway.test/mcp")
-        agent = HazardsAgent(agent_conn, FakeData(), gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_answers_with_the_missing_key_wording(self):
-        fetch = gateway_answer("")
-        turn, client = self.turn("was there an aftershock sequence near Tokyo?", fetch, "")
-        self.assertEqual(turn["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", turn["text"])
-        self.assertIn("MCP_LICENSE_KEY", turn["text"])
-        self.assertEqual(len(client.permission_requests), 1)
-        self.assertEqual(fetch.calls, [])
-
-    def test_a_bad_key_returns_the_gateways_own_wording(self):
-        fetch = gateway_answer(GATEWAY_DENIAL, is_error=True,
-                               structured={"licenceRefusal": True, "reason": "denied"})
-        turn, _ = self.turn("was there an aftershock sequence near Tokyo?", fetch, "not-a-real-key")
-        self.assertEqual(turn["stopReason"], STOP_END_TURN)
-        self.assertIn(GATEWAY_DENIAL, turn["text"])
-        self.assertEqual(len(fetch.calls), 1)
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["name"], "quakes_seismicity")
-
-    def test_a_good_key_returns_the_analysis(self):
-        fetch = gateway_answer(json.dumps(SEISMICITY_DATA))
-        turn, _ = self.turn("was there an aftershock sequence near Tokyo?", fetch, "k_paid")
-        self.assertEqual(turn["stopReason"], STOP_END_TURN)
-        self.assertIn("24 event(s)", turn["text"])
-        self.assertIn("largest: M6.1", turn["text"])
-        self.assertIn("aftershocks: 3 within a week of it", turn["text"])
-        self.assertIn("Gutenberg-Richter b-value: 0.86", turn["text"])
-        self.assertIn("3 at M4 or above", turn["text"])
-        self.assertIn("not an official sequence membership", turn["text"])
-        self.assertIn("USGS FDSNWS event catalog", turn["text"])
-        tools = [u for u in turn["updates"] if u.get("sessionUpdate") == "tool_call"]
-        self.assertEqual(tools[0]["name"], "quakes-seismicity")
-
-    def test_a_good_key_sends_the_area_and_window_it_was_asked_for(self):
-        fetch = gateway_answer(json.dumps(SEISMICITY_DATA))
-        self.turn("was there an aftershock sequence near Tokyo within 200 km in the last 48 hours?",
-                  fetch, "k_paid")
-        arguments = fetch.calls[0]["payload"]["params"]["arguments"]
-        self.assertEqual(arguments, {"point": "35.68,139.69", "radius_km": 200.0,
-                                     "hours": 48.0, "min_magnitude": 2.0})
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def fetch(url, payload, headers):
-            raise OSError("connection refused")
-
-        turn, _ = self.turn("was there an aftershock sequence near Tokyo?", fetch, "k_paid")
-        self.assertEqual(turn["stopReason"], STOP_END_TURN)
-        self.assertIn("I could not read the feed", turn["text"])
-
-    def test_a_gateway_with_nothing_to_say_is_still_an_answer(self):
-        fetch = gateway_answer("the catalogue was empty")
-        turn, _ = self.turn("was there an aftershock sequence near Tokyo?", fetch, "k_paid")
-        self.assertEqual(turn["stopReason"], STOP_END_TURN)
-        self.assertIn("did not send back any seismicity", turn["text"])
-
-    def test_the_routing_is_narrow(self):
-        for text in ("was there an aftershock sequence near Tokyo?",
-                     "what is the b-value near Tokyo?",
-                     "is there a seismic swarm near Tokyo within 200 km?",
-                     "were those Tokyo earthquakes a cluster?"):
-            skill, params = route(text)
-            self.assertEqual(skill, "quakes-seismicity", text)
-            self.assertEqual(params["point"], "35.68,139.69", text)
-            self.assertEqual(params["place"], "tokyo", text)
-
-        free = [
-            ("has anything shaken near Tokyo this month?", "quakes-near"),
-            ("how many earthquakes near Tokyo?", "quakes-near"),
-            ("any earthquakes above magnitude 4.5 in the last 24 hours?", "quakes-recent"),
-            ("any weather alerts in NY right now?", "alerts-active"),
-            ("how many alerts are active nationwide?", "alerts-counts"),
-            ("any weather alerts in NY right now?", "alerts-active"),
-            ("what can you do?", "help"),
-            ("", "help"),
-        ]
-        for text, expected in free:
-            self.assertEqual(route(text)[0], expected, text)
-
-    def test_the_premium_skill_id_is_published(self):
-        from agent import SKILLS
-
-        self.assertIn("quakes-seismicity", SKILLS)
 
 
 if __name__ == "__main__":

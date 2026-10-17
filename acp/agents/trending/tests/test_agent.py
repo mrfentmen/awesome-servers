@@ -22,7 +22,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import TrendingAgent, article_from_text, project_from_text, route  # noqa: E402
 from data import TrendingData, TrendingError, readable_title, yesterday  # noqa: E402
@@ -254,75 +254,6 @@ class TurnTests(unittest.TestCase):
         self.assertIn("I could not read the metrics", result["text"])
 
 
-class PremiumTests(unittest.TestCase):
-    def gateway(self, key, payload=None):
-        from acp_kit import GatewayClient
-        import json
-        calls = []
-        def fetch(url, request, headers):
-            calls.append((request, headers))
-            if key == "lic_live_but_rejected":
-                return {"result": {"isError": True, "content": [{"type": "text", "text": "Gateway says this licence was revoked."}],
-                                   "structuredContent": {"licenceRefusal": True, "reason": "denied"}}}
-            return {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
-        return GatewayClient(fetch=fetch, key=key), calls
-
-    def test_no_key_attempts_premium_call_without_authorizing(self):
-        import os
-        from unittest.mock import patch
-        with patch.dict(os.environ, {}, clear=True):
-            gateway, calls = self.gateway(None)
-            with patch.object(gateway, "call", wraps=gateway.call) as attempted:
-                answer, artifact = TrendingAgent(gateway=gateway)._board(route("compare pageviews for Ada Lovelace and Lizzie Borden this week")[1])
-                attempted.assert_called_once()
-        self.assertIn("MCP_LICENSE_KEY", answer)
-        self.assertEqual(answer, artifact["summary"])
-        self.assertEqual(artifact["reason"], "missing_key")
-        self.assertEqual(calls, [])
-
-    def test_rejected_key_preserves_gateway_wording(self):
-        gateway, calls = self.gateway("lic_live_but_rejected")
-        answer, artifact = TrendingAgent(gateway=gateway)._board(route("compare pageviews for Ada Lovelace and Lizzie Borden this week")[1])
-        self.assertEqual(answer, "Gateway says this licence was revoked.")
-        self.assertEqual(artifact["reason"], "denied")
-        self.assertEqual(len(calls), 1)
-
-    def test_good_key_sends_arguments_and_displays_payload_numbers(self):
-        payload = {"articles": [{"title": "Ada Lovelace", "total": 12345, "average": 1763.57, "peak": {"date": "2026-09-30", "views": 3001}}], "leader": {"title": "Ada Lovelace"}, "topArticles": [{"article": "Example", "views": 456789, "rank": 2}]}
-        gateway, calls = self.gateway("lic_good", payload)
-        answer, artifact = TrendingAgent(gateway=gateway)._board(route("compare pageviews for Ada Lovelace and Lizzie Borden this week")[1])
-        self.assertEqual(len(calls), 1)
-        self.assertEqual(calls[0][0]["params"], {"name": "pageview_board", "arguments": {"articles": ["Ada Lovelace", "Lizzie Borden"], "days": 7}})
-        self.assertIn("12,345", answer); self.assertIn("456,789", answer)
-        self.assertTrue(artifact["premium"])
-
-    def test_free_question_never_reaches_gateway(self):
-        from unittest.mock import Mock
-        gateway = Mock()
-        from unittest.mock import Mock
-        data, _ = make_data()
-        ctx = Mock()
-        ctx.ask_permission.return_value = True
-        TrendingAgent(data=data, gateway=gateway).prompt(ctx, [{"type": "text", "text": "what is trending on Wikipedia today?"}])
-        gateway.call.assert_not_called()
-
-    def test_empty_payload_is_reported(self):
-        gateway, _ = self.gateway("lic_good", {})
-        answer, artifact = TrendingAgent(gateway=gateway)._board({"articles": ["Ada Lovelace", "Lizzie Borden"]})
-        self.assertTrue(artifact["failed"])
-        self.assertIn("no readable", answer)
-
-    def test_premium_prompt_routes_to_gateway_and_tool_errors_are_not_refusals(self):
-        from unittest.mock import Mock
-        from acp_kit import GatewayError
-        gateway = Mock()
-        gateway.call.side_effect = GatewayError("tool_error", "upstream returned HTTP 503")
-        ctx = Mock()
-        ctx.ask_permission.return_value = True
-        result = TrendingAgent(gateway=gateway).prompt(ctx, [{"type": "text", "text": "compare pageviews for Ada Lovelace and Lizzie Borden this week"}])
-        self.assertEqual(result, STOP_END_TURN)
-        gateway.call.assert_called_once_with("pageview_board", {"articles": ["Ada Lovelace", "Lizzie Borden"], "days": 7})
-        ctx.message.assert_called_with("I could not read the metrics: upstream returned HTTP 503")
 
 
 class BoardRouteTests(unittest.TestCase):

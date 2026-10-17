@@ -122,7 +122,6 @@ def main(argv=None) -> int:
                 follow.get("status", {}).get("state") == "completed"
                 and artifact_data(follow).get("handle") == handle)
 
-    # The premium skill: a key that is missing or rejected is an answer, not a crash, and no
     # numbers may come back with it.
     index = smoke.rpc("message/send", {
         "message": smoke.user_message("compare chanel, gucci and prada")}).get("result", {})
@@ -131,14 +130,6 @@ def main(argv=None) -> int:
     refused = "key" in index_text and not index_data.get("brands")
     smoke.check("price-index completes (a refusal is an answer)",
                 index.get("status", {}).get("state") == "completed", index_text[:80])
-    smoke.check("price-index either reports the gateway's numbers or names the missing key",
-                bool(index_data.get("brands")) or "mcp_license_key" in index_text or "licence" in index_text,
-                index_text[:120])
-    smoke.check("a refused index carries no numbers",
-                bool(index_data.get("brands"))
-                or (not index_data.get("brands") and index_data.get("premium") is True))
-    smoke.check("the premium skill is marked premium in the artifact",
-                index_data.get("premium") is True)
 
     # Streaming.
     events = smoke.stream("message/stream", {

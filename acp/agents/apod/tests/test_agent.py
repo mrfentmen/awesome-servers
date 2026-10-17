@@ -32,13 +32,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (  # noqa: E402
-    AcpClient,
-    Connection,
-    GatewayClient,
-    STOP_END_TURN,
-    STOP_REFUSAL,
-)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import (  # noqa: E402
     ATTACH_LIMIT,
@@ -478,7 +472,6 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# Premium: apod-archive digests a span of days on the licence gateway
 # ---------------------------------------------------------------------------
 
 DIGEST_PAYLOAD = {
@@ -495,10 +488,6 @@ DIGEST_PAYLOAD = {
     ],
 }
 
-REFUSAL_TEXT = (
-    "This is a premium skill and needs a valid license key. "
-    "Get one at https://polar.sh/mrfentmen and set MCP_LICENSE_KEY."
-)
 
 
 def mcp_result(payload, is_error=False, structured=None):
@@ -510,143 +499,8 @@ def mcp_result(payload, is_error=False, structured=None):
     return {"jsonrpc": "2.0", "id": 1, "result": result}
 
 
-def make_gateway(key, result):
-    """A real GatewayClient with the transport injected - no network, ever."""
-    calls = []
-
-    def fetch(url, payload, headers):
-        calls.append({"tool": payload["params"]["name"],
-                      "arguments": payload["params"]["arguments"],
-                      "authorized": "Authorization" in headers})
-        return result
-
-    client = GatewayClient(fetch=fetch, url="http://127.0.0.1:8787/mcp", key=key)
-    client.calls = calls
-    return client
 
 
-class PremiumArchiveTests(unittest.TestCase):
-    def archive_turn(self, text, gateway, permission="allow-once", **kw):
-        from agent import ApodAgent
-
-        agent_conn, client_conn = connected_pair()
-        data, feed = data_for(**kw)
-        agent = ApodAgent(agent_conn, data, gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission=permission)
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client, feed
-        finally:
-            client.stop()
-
-    def test_no_key_returns_the_gateways_own_wording(self):
-        saved = os.environ.pop("MCP_LICENSE_KEY", None)
-        try:
-            result, _, _ = self.archive_turn("every APOD between 2022-07-12 and 2022-07-16",
-                                             make_gateway("", mcp_result(DIGEST_PAYLOAD)))
-        finally:
-            if saved is not None:
-                os.environ["MCP_LICENSE_KEY"] = saved
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-
-    def test_a_bad_key_is_answered_not_crashed(self):
-        gateway = make_gateway("lic_rejected", mcp_result(
-            REFUSAL_TEXT, is_error=True,
-            structured={"licenceRefusal": True, "reason": "denied"}))
-        result, _, _ = self.archive_turn("every APOD between 2022-07-12 and 2022-07-16", gateway)
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("polar.sh/mrfentmen", result["text"])
-        self.assertIn("needs a valid license key", result["text"])
-
-    def test_a_good_key_returns_the_digest(self):
-        gateway = make_gateway("lic_granted", mcp_result(DIGEST_PAYLOAD))
-        result, client, feed = self.archive_turn(
-            "every APOD between 2022-07-12 and 2022-07-16", gateway)
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("5 day(s) published, 2 listed", result["text"])
-        self.assertIn("2022-07-12: Webb's First Deep Field [image]", result["text"])
-        self.assertIn("2022-07-13: A Video from the Deep [video]", result["text"])
-        self.assertIn("4 image, 1 video", result["text"])
-        tools = [u for u in result["updates"] if u.get("sessionUpdate") == "tool_call"]
-        self.assertEqual(tools[0]["name"], "apod-archive")
-        self.assertEqual(gateway.calls[0]["tool"], "apod_archive_digest")
-        self.assertTrue(gateway.calls[0]["authorized"])
-        self.assertEqual(gateway.calls[0]["arguments"],
-                         {"start_date": "2022-07-12", "end_date": "2022-07-16"})
-        # The digest lists days: NASA itself was never asked for a picture.
-        self.assertEqual(feed.calls, [])
-
-    def test_a_missing_field_reads_as_not_reported(self):
-        thin = dict(DIGEST_PAYLOAD, days=[{"date": "2022-07-12", "title": None,
-                                           "media_type": None, "credit": None,
-                                           "summary": None, "page": None}],
-                    byMediaType={})
-        gateway = make_gateway("lic_granted", mcp_result(thin))
-        result, _, _ = self.archive_turn("every APOD between 2022-07-12 and 2022-07-16", gateway)
-        self.assertIn("2022-07-12: not reported [not reported]", result["text"])
-
-    def test_a_truncated_digest_says_so(self):
-        gateway = make_gateway("lic_granted", mcp_result(dict(DIGEST_PAYLOAD, truncated=True)))
-        result, _, _ = self.archive_turn("every APOD between 2022-07-12 and 2022-07-16", gateway)
-        self.assertIn("this is a part of it", result["text"])
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def boom(url, payload, headers):
-            raise OSError("connection refused")
-
-        client = GatewayClient(fetch=boom, url="http://127.0.0.1:8787/mcp", key="lic_granted")
-        result, _, _ = self.archive_turn("every APOD between 2022-07-12 and 2022-07-16", client)
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("could not finish that on the licence gateway", result["text"])
-        statuses = [u.get("status") for u in result["updates"]
-                    if u.get("sessionUpdate") == "tool_call_update"]
-        self.assertIn("failed", statuses)
-
-    def test_permission_is_asked_before_the_gateway(self):
-        gateway = make_gateway("lic_granted", mcp_result(DIGEST_PAYLOAD))
-        result, _, _ = self.archive_turn("every APOD between 2022-07-12 and 2022-07-16",
-                                         gateway, permission="reject")
-        self.assertEqual(result["stopReason"], STOP_REFUSAL)
-        self.assertIn("need permission", result["text"])
-        self.assertEqual(gateway.calls, [], "a rejected permission must not call the gateway")
-
-    def test_routing_is_narrow_and_free_skills_keep_their_questions(self):
-        # A span of days is the premium digest.
-        self.assertEqual(route("every APOD between 2022-07-12 and 2022-07-16")[0], "apod-archive")
-        self.assertEqual(route("show me July 2021 in APOD")[0], "apod-archive")
-        self.assertEqual(route("what did APOD publish from 2021-01-01 to 2021-01-05?")[0], "apod-archive")
-        # A single day, a random set and help stay exactly where they were.
-        self.assertEqual(route("the apod for 1996-01-01")[0], "apod-picture")
-        self.assertEqual(route("show me NASA's picture for July 20 1996")[0], "apod-picture")
-        self.assertEqual(route("show me NASA's picture of the day")[0], "apod-picture")
-        self.assertEqual(route("show me 3 random space pictures")[0], "apod-random")
-        self.assertEqual(route("what can you do?")[0], "apod-help")
-        # A day before the archive began is still reported, not digested.
-        self.assertEqual(route("the apod for 1969-07-20")[0], "apod-nodate")
-
-    def test_the_range_is_read_from_the_text(self):
-        self.assertEqual(route("every APOD between 2022-07-12 and 2022-07-16")[1],
-                         {"start_date": "2022-07-12", "end_date": "2022-07-16"})
-        # Reversed phrasing is normalised so the range still reads forwards.
-        self.assertEqual(route("every APOD between 2022-07-16 and 2022-07-12")[1]["start_date"],
-                         "2022-07-12")
-        self.assertEqual(route("show me July 2021 in APOD")[1],
-                         {"start_date": "2021-07-01", "end_date": "2021-07-31"})
-        # A December month rolls the year over rather than landing in month 13.
-        self.assertEqual(route("show me December 2021 in APOD")[1]["end_date"], "2021-12-31")
-
-    def test_free_skills_never_reach_the_gateway(self):
-        gateway = make_gateway("lic_granted", mcp_result(DIGEST_PAYLOAD))
-        for text in ("the apod for 1996-01-01", "show me 3 random space pictures",
-                     "what can you do?"):
-            result, _, _ = self.archive_turn(text, gateway)
-            self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertEqual(gateway.calls, [])
 
 
 if __name__ == "__main__":

@@ -22,8 +22,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (AcpClient, Connection, GatewayClient,  # noqa: E402
-                     STOP_END_TURN, STOP_REFUSAL)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import route  # noqa: E402
 from data import (COUNTRIES, NO_COVERAGE, ZipData, ZipError, ZipNotFound,  # noqa: E402
@@ -331,10 +330,7 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# The premium skill: zip-reach
 #
-# No network: the licence check and the work both happen on the gateway, and the
-# gateway's own JSON-RPC answers are injected into the real GatewayClient.
 # ---------------------------------------------------------------------------
 
 #: What `zip_reach` answers for 11235 to 10001: 18.65 km, 11.59 miles, bearing
@@ -371,131 +367,10 @@ REACH_DATA = {
 }
 
 #: The exact refusal the gateway sends for a key it will not accept.
-GATEWAY_DENIAL = ("`zip_reach` is a premium tool, but that licence key was rejected. "
-                  "Check MCP_LICENSE_KEY, or get a key at https://polar.sh/mrfentmen")
 
 
-def gateway_answer(text, is_error=False, structured=None):
-    """A fake transport that answers every premium call with one JSON-RPC reply."""
-    def fetch(url, payload, headers):
-        fetch.calls.append({"url": url, "payload": payload, "headers": headers})
-        result = {"content": [{"type": "text", "text": text}]}
-        if is_error:
-            result["isError"] = True
-        if structured is not None:
-            result["structuredContent"] = structured
-        return {"jsonrpc": "2.0", "id": payload.get("id", 1), "result": result}
-
-    fetch.calls = []
-    return fetch
 
 
-class PremiumTests(unittest.TestCase):
-    """No key, a bad key and a good key, plus the routing that gets there."""
-
-    REACH_QUESTION = "how far is ZIP 11235 from ZIP 10001?"
-
-    def turn(self, text: str, fetch, key: str):
-        from agent import ZipAgent
-
-        agent_conn, client_conn = connected_pair()
-        data, _feed = make_data()
-        gateway = GatewayClient(fetch=fetch, key=key, url="https://gateway.test/mcp")
-        agent = ZipAgent(agent_conn, data, gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_answers_with_the_missing_key_wording(self):
-        fetch = gateway_answer("")
-        result, client = self.turn(self.REACH_QUESTION, fetch, "")
-        #: An answer, not a crash, and not a failed lookup either.
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertIn("no licence key is set", result["text"])
-        self.assertEqual(len(client.permission_requests), 1)
-        #: Nothing was spent on a call the gate was never going to let through.
-        self.assertEqual(fetch.calls, [])
-
-    def test_a_bad_key_returns_the_gateways_own_wording(self):
-        fetch = gateway_answer(GATEWAY_DENIAL, is_error=True,
-                               structured={"licenceRefusal": True, "reason": "denied"})
-        result, _ = self.turn(self.REACH_QUESTION, fetch, "not-a-real-key")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn(GATEWAY_DENIAL, result["text"])
-        self.assertIn("premium", result["text"])
-        self.assertEqual(len(fetch.calls), 1)
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["name"], "zip_reach")
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["arguments"],
-                         {"from": "11235", "to": "10001", "country": "us"})
-
-    def test_a_good_key_returns_the_distance(self):
-        fetch = gateway_answer(json.dumps(REACH_DATA))
-        result, _ = self.turn(self.REACH_QUESTION, fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("11235 to 10001:", result["text"])
-        self.assertIn("straight line: 18.65 km / 11.59 mi", result["text"])
-        self.assertIn("direction: 349 degrees (N) from Brooklyn to New York City", result["text"])
-        self.assertIn("walking at 5 km/h: 3 h 44 min", result["text"])
-        self.assertIn("driving at 80 km/h: 14 min", result["text"])
-        self.assertIn("same country, so the distance is a domestic one", result["text"])
-        self.assertIn("Zippopotam postal code directory", result["text"])
-        #: The licence key travels in a header and is never echoed back.
-        self.assertEqual(fetch.calls[0]["headers"]["Authorization"], "Bearer k_paid")
-        self.assertNotIn("k_paid", result["text"])
-
-    def test_a_mile_question_leads_with_miles(self):
-        fetch = gateway_answer(json.dumps(REACH_DATA))
-        result, _ = self.turn("how far is ZIP 11235 from ZIP 10001, in miles?", fetch, "k_paid")
-        self.assertIn("(asked in miles)", result["text"])
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def fetch(url, payload, headers):
-            raise OSError("connection refused")
-
-        result, _ = self.turn(self.REACH_QUESTION, fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("I could not read the postal code directory", result["text"])
-
-    def test_a_free_question_never_touches_the_gateway(self):
-        fetch = gateway_answer(json.dumps(REACH_DATA))
-        result, _ = self.turn("what places are in ZIP 11235?", fetch, "k_paid")
-        self.assertIn("Brooklyn, New York, NY", result["text"])
-        self.assertEqual(fetch.calls, [])
-
-    def test_the_routing_is_narrow(self):
-        premium = [
-            "how far is ZIP 11235 from ZIP 10001?",
-            "how far apart are 10001 and 90210?",
-            "what is the distance between 1012 and 100-0001?",
-        ]
-        for text in premium:
-            self.assertEqual(route(text)[0], "zip-reach", text)
-
-        free = [
-            ("what places are in ZIP 11235?", "zip-places"),
-            ("which places does 90210 cover?", "zip-places"),
-            ("where is 100-0001 in Japan?", "zip-where"),
-            ("what are the coordinates of 11235?", "zip-where"),
-            ("which countries does this directory cover?", "zip-countries"),
-            ("what can you do?", "help"),
-            ("", "help"),
-        ]
-        for text, expected in free:
-            self.assertEqual(route(text)[0], expected, text)
-
-    def test_the_premium_skill_id_is_published(self):
-        from agent import SKILLS
-
-        self.assertIn("zip-reach", SKILLS)
-        self.assertIn("zip-places", SKILLS)
 
 
 if __name__ == "__main__":

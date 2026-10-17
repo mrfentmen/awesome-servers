@@ -16,8 +16,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, NUTRIENTS, FoodData, FoodError, barcode_from_text,  # noqa: E402
                   clean_name, nutrient_from_text)
@@ -29,7 +28,7 @@ HELP = (
     "  - salt per 100g in Cheerios\n"
     "  - how many calories in a Snickers bar?\n"
     "  - is there milk in Oreos? (allergens)\n"
-    "  - nutrition board for 3017620422003 and 5449000000996 (premium)\n"
+    "  - nutrition board for 3017620422003 and 5449000000996 (not implemented here)\n"
     "Everything I report is per 100 g, because most products in the database carry no serving\n"
     "size; and when a nutrient was never recorded I say so instead of calling it zero."
 )
@@ -203,10 +202,10 @@ class FoodAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: FoodData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or FoodData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -259,7 +258,7 @@ class FoodAgent(AcpAgent):
                     found = self.data.search(params["name"], limit=params.get("limit") or 3)
                 body = render_find(found, nutrient_key, params.get("allergen", ""))
                 summary = f"{len(found['rows'])} match(es) for {params['name']}"
-        except (FoodError, GatewayError, ValueError) as exc:
+        except (FoodError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read Open Food Facts: {exc}")
             return STOP_END_TURN
@@ -273,42 +272,9 @@ class FoodAgent(AcpAgent):
         return STOP_END_TURN
 
     def _board(self, params: dict) -> tuple[str, dict]:
-        """Render a cross-product comparison calculated by the gateway."""
-        codes = params.get("barcodes")
-        if (not isinstance(codes, list) or not 2 <= len(codes) <= 5 or
-                any(not isinstance(code, str) or not re.fullmatch(r"[0-9]{8,14}", code) for code in codes) or
-                len(set(codes)) != len(codes)):
-            raise ValueError("a nutrition board needs 2 to 5 distinct product barcodes")
-        context = {"agent": "food", "skill": "food-board"}
-        data, refused = premium_call(self.gateway, "food_nutrition_board", {"barcodes": codes}, context)
-        if refused:
-            return refused
-        products = data.get("products") if isinstance(data, dict) else None
-        if (not isinstance(products, list) or len(products) < 2 or
-                any(not isinstance(row, dict) or not row.get("barcode") for row in products) or
-                not all(isinstance(data.get(key), dict) for key in ("sugar", "salt"))):
-            return empty_premium_answer("The gateway returned no readable nutrition comparison.", context)
-        def value(number):
-            return "not recorded" if number is None else str(number)
-        lines = ["Premium nutrition comparison board (nutrients per 100 g):"]
-        for row in products:
-            lines.append(f"  - {row.get('name') or row['barcode']} ({row['barcode']}): "
-                         f"Nutri-Score {value(row.get('nutri_score'))}; "
-                         f"sugar {value(row.get('sugars_g_per_100g'))} g; "
-                         f"salt {value(row.get('salt_g_per_100g'))} g; "
-                         f"additives {value(row.get('additives_count'))}.")
-            tags = row.get("additives")
-            lines.append("    Additive tags: " + (", ".join(str(tag) for tag in tags) if isinstance(tags, list) and tags
-                                                   else "none recorded" if tags == [] else "not recorded"))
-        for label, key in (("Sugar", "sugar"), ("Salt", "salt")):
-            comparison = data[key]
-            lines.append(f"{label} spread: {value(comparison.get('spread'))} g per 100 g; "
-                         f"lowest recorded: {', '.join(comparison.get('lowest') or []) or 'not recorded'} "
-                         f"({value(comparison.get('reported'))} products with data).")
-        lines.append(f"Best recorded Nutri-Score: {value(data.get('best_recorded_grade'))}.")
-        lines.append(str(data.get("note") or "Missing values are not zero; labels are crowdsourced."))
-        lines.append(f"Source: {data.get('source') or DATASET}.")
-        return "\n".join(lines), {**data, **context, "premium": True, "summary": "premium nutrition comparison"}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: board — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

@@ -17,9 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, RecipesData, RecipesError, RecipesNotFound,  # noqa: E402
                   _area_from_text, _title)
@@ -238,9 +236,7 @@ class RecipesAgent(AcpAgent):
     def __init__(self, connection=None, data: RecipesData | None = None, gateway=None) -> None:
         super().__init__(connection)
         self.data = data or RecipesData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -297,7 +293,7 @@ class RecipesAgent(AcpAgent):
                 meals = self.data.by_area(area, limit=8)
                 body = render_list(meals, f"{len(meals)} recipe(s) from {area}:")
                 summary = f"{len(meals)} recipe(s) from {area}"
-        except (RecipesError, GatewayError, ValueError) as exc:
+        except (RecipesError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read TheMealDB: {exc}")
             return STOP_END_TURN
@@ -319,41 +315,9 @@ class RecipesAgent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        arguments: dict = {"ingredients": [str(item) for item in params["ingredients"]]}
-
-        data, refused = premium_call(self.gateway, "recipes_pantry_match", arguments,
-                                     {"agent": "recipes"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not data.get("recipes"):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back a recipe for that cupboard.",
-                {"agent": "recipes"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a match out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_pantry(data)
-        summary = (f"{len(data.get('youHave') or [])} ingredient(s) in, "
-                   f"{data.get('recipesFound', 'not reported')} recipe(s) out")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message(f"\nSource: {data.get('source', DATASET)}, matched on the licence gateway. A "
-                    "match is a substring test on the ingredient names, so \"chicken\" counts as "
-                    "having \"chicken breast\", and a shopping list is what is genuinely missing "
-                    "rather than what the recipe would prefer.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

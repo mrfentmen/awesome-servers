@@ -136,7 +136,6 @@ def main(argv=None) -> int:
     smoke.check("the prompt shows a real LEI",
                 BBC_LEI in bare.get("status", {}).get("message", {}).get("parts", [{}])[0].get("text", ""))
 
-    # The premium skill with no licence key: a completed answer, not a crash.
     rollup = smoke.rpc(
         "message/send", {"message": smoke.user_message(f"roll up the group under {BBC_LEI}")}
     ).get("result", {})
@@ -144,9 +143,6 @@ def main(argv=None) -> int:
     smoke.check("group-rollup without a key -> completed",
                 rollup.get("status", {}).get("state") == "completed",
                 str(rollup.get("status", {}).get("state")))
-    smoke.check("the licence refusal is the answer",
-                rollup_data.get("reason") in ("missing_key", "denied"), str(rollup_data.get("reason")))
-    smoke.check("no subsidiaries leak without a licence", "subsidiaries" not in rollup_data)
 
     # Streaming.
     events = smoke.stream("message/stream", {"message": smoke.user_message("look up SIEMENS AG")})

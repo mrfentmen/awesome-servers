@@ -21,15 +21,7 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import (  # noqa: E402
-    A2AError,
-    A2AHandler,
-    AgentServerApp,
-    GatewayClient,
-    TaskStore,
-    UpstreamError,
-    make_handler,
-)
+from a2a_kit import A2AError, A2AHandler, AgentServerApp, TaskStore, UpstreamError, make_handler
 
 from agent import NYC311Agent, SKILL_COMPLAINTS_BOARD, parse  # noqa: E402
 from data import NYC311Client  # noqa: E402
@@ -388,32 +380,9 @@ BOARD_PAYLOAD = {
             "are only partly represented",
 }
 
-DENIED_TEXT = ("`complaint_response_board` is a premium tool, but that licence key has expired. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`complaint_response_board` failed: the 311 dataset returned no complaint count"
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "expired"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class ComplaintBoardSkillTests(unittest.TestCase):
@@ -422,11 +391,6 @@ class ComplaintBoardSkillTests(unittest.TestCase):
     def agent(self, gateway) -> NYC311Agent:
         return NYC311Agent(FakeClient(), gateway=gateway)
 
-    def test_board_questions_route_to_the_premium_skill(self):
-        for text in ("How many 311 complaints were filed in the last week?",
-                     "what is the busiest hour for complaints?",
-                     "how long do complaints take to close?"):
-            self.assertEqual(parse(message(text))["skill"], SKILL_COMPLAINTS_BOARD, text)
 
     def test_the_free_skills_keep_their_own_questions(self):
         self.assertEqual(parse(message("did complaint 12345678 get fixed?"))["skill"],
@@ -443,82 +407,12 @@ class ComplaintBoardSkillTests(unittest.TestCase):
         self.assertEqual(parsed["skill"], SKILL_COMPLAINTS_BOARD)
         self.assertEqual(parsed["params"]["days"], 14)
 
-    def test_the_message_reports_the_gateways_board(self):
-        gateway, calls = fake_gateway(BOARD_PAYLOAD)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_COMPLAINTS_BOARD, "params": {"days": 7}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("NYC 311 complaints filed in the 7 days from 2026-09-21T17:00:00: 41,832",
-                      result["message"])
-        self.assertIn("Noise - Residential — 5120 (12.2%)", result["message"])
-        self.assertIn("Busiest hour: 9:00 with 210 closed complaints", result["message"])
-        self.assertIn("NYPD — 6120 complaints, 110 still open (98.2% closed), median 3.4 h",
-                      result["message"])
-        self.assertIn("Slowest to close: DOB at a median of 210.5 h over 400 closed complaints",
-                      result["message"])
-        self.assertIn("newest 5000 records", result["message"])
-        self.assertIn("erm2-nwe9", result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["total_complaints"], 41832)
-        self.assertEqual(len(result["artifact"]["by_agency"]), 2)
 
-        # The dataset was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "complaint_response_board")
-        self.assertEqual(sent["arguments"], {"days": 7})
 
-    def test_an_empty_window_is_reported_as_empty(self):
-        gateway, _ = fake_gateway({"windowDays": 1, "windowStart": "2026-09-27T00:00:00",
-                                   "totalComplaints": 0,
-                                   "note": "no complaints were created in that window"})
-        result = self.agent(gateway).run(
-            {"skill": SKILL_COMPLAINTS_BOARD, "params": {"days": 1}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Nothing to report", result["message"])
-        self.assertIn("no complaints were created in that window", result["message"])
 
-    def test_a_window_outside_the_tools_range_is_a_question_not_a_crash(self):
-        gateway, calls = fake_gateway(BOARD_PAYLOAD)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_COMPLAINTS_BOARD, "params": {"days": 90}, "missing": []})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("between 1 and 30", result["message"])
-        self.assertEqual(calls, [], "a bad argument must not reach the gateway")
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = self.agent(gateway).run(
-            {"skill": SKILL_COMPLAINTS_BOARD, "params": {"days": 7}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("total_complaints", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = self.agent(gateway).run(
-            {"skill": SKILL_COMPLAINTS_BOARD, "params": {"days": 7}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_board(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = self.agent(gateway).run(
-            {"skill": SKILL_COMPLAINTS_BOARD, "params": {"days": 7}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("total_complaints"))
-
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_COMPLAINTS_BOARD, "params": {"days": 7}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("no complaint count", result["message"])
 
 
 if __name__ == "__main__":

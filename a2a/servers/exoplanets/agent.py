@@ -4,11 +4,11 @@
   - system-planets:   every known planet around one star
   - planet-search:    find planets by host, discovery method, or discovery years
   - planet-extremes:  the biggest, smallest, hottest, closest, by one parameter
-  - catalogue-survey: the whole catalogue as a picture (premium)
+  - catalogue-survey: the whole catalogue as a picture (not implemented here)
 
-Premium: `catalogue-survey` runs on the licence gateway. Reading the composite
+Premium: `catalogue-survey` runs on a hosted service that was removed. Reading the composite
 table is about half a megabyte of JSON and the counting across all of it is the
-work, so that happens there behind the licence check. Every other skill asks the
+work, so that happens there on a hosted service that was removed. Every other skill asks the
 archive one bounded question and stays free.
 
 A note on missing numbers: the archive publishes one row per planet with the best
@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     DATASET,
@@ -398,7 +398,7 @@ CARD_SKILLS = [
             "habitable band, and the extremes that hold the records. Premium: it runs behind a "
             "licence check on the gateway, which does the full-table read and the counting."
         ),
-        "tags": ["exoplanets", "nasa", "survey", "statistics", "catalogue", "premium"],
+        "tags": ["exoplanets", "nasa", "survey", "statistics", "catalogue",],
         "examples": [
             "give me an overview of the exoplanet catalogue",
             "how many exoplanets are there and how were they found?",
@@ -649,75 +649,14 @@ def limit_label(direction: str) -> str:
     return "Smallest" if direction == "asc" else "Largest"
 
 
-def run_survey(params: dict, client: ExoplanetClient, gateway: GatewayClient) -> dict:
-    """The premium catalogue survey. Nothing here counts: the gateway does.
-
-    The free skills each ask the archive one bounded question. This asks for the
-    whole composite table - about half a megabyte - and counts across it, which
-    happens on the gateway behind its licence check.
-    """
-    read, refused = premium_call(gateway, GATEWAY_TOOL, {}, {
-        "dataset": DATASET, "table_rows": FULL_TABLE_ROWS,
-    })
-    if refused:
-        return refused
-    if not isinstance(read, dict) or not isinstance(read.get("byDiscoveryMethod"), list):
-        return empty_premium_answer(
-            "The licence gateway answered without a catalogue survey, so there is nothing to report.",
-            {"dataset": DATASET},
-        )
-
-    lines = [
-        f"NASA's Exoplanet Archive composite table holds {read.get('totalPlanets')} planets around "
-        f"{read.get('totalSystems')} stars.",
-    ]
-    methods = read.get("byDiscoveryMethod") or []
-    if methods:
-        lines.append("  • By discovery method: " + ", ".join(
-            f"{row.get('name')} {row.get('count')} ({row.get('pct')}%)" for row in methods[:8]))
-    decades = read.get("byDecade") or []
-    if decades:
-        lines.append("  • By decade: " + ", ".join(
-            f"{row.get('name')} {row.get('count')}" for row in decades))
-    types = read.get("bySpectralType") or []
-    if types:
-        lines.append("  • By host spectral type: " + ", ".join(
-            f"{row.get('name')} {row.get('count')}" for row in types[:8]))
-    band = read.get("habitableBand")
-    if band:
-        lines.append(
-            f"  • {band.get('count')} planet(s) fall in a rough insolation band of "
-            f"{band.get('low')}-{band.get('high')} Earth insolation. The archive publishes no "
-            "habitable flag, so that is our own stated band and not a verdict.")
-    records = read.get("records") or {}
-    for key, label in (("largest", "largest radius"), ("smallestPeriod", "shortest period"),
-                       ("hottest", "highest temperature"), ("nearest", "nearest"),
-                       ("mostMassive", "most massive")):
-        row = records.get(key)
-        if row:
-            lines.append(f"  • Record {label}: {row.get('planet')} "
-                         f"({row.get('value')} {row.get('unit')})")
-    lines.append(
-        f"\nCounted on the MCP gateway behind its licence check, from {DATASET} - the composite "
-        "table the archive publishes from the literature, not a claim about how many planets exist. "
-        "Parameters a planet has no published value for are excluded from that parameter's ranking."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": SOURCE,
-        "premium": True,
-        "total_planets": read.get("totalPlanets"),
-        "total_systems": read.get("totalSystems"),
-        "total_rows_read": read.get("rowsRead"),
-        "by_discovery_method": methods,
-        "by_decade": decades,
-        "by_spectral_type": types,
-        "habitable_band": band,
-        "records": records,
-        "years_covered": read.get("yearsCovered"),
-        "method": read.get("method"),
+def run_survey(params: dict, client: ExoplanetClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: survey — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class ExoplanetAgent(SkillAgent):
@@ -735,9 +674,9 @@ class ExoplanetAgent(SkillAgent):
     card_skills = CARD_SKILLS
 
     def __init__(self, client: ExoplanetClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or ExoplanetClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

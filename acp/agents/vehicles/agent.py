@@ -25,8 +25,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (  # noqa: E402
     DATASET_COMPLAINTS,
@@ -40,7 +39,7 @@ from data import (  # noqa: E402
 HELP = (
     "I read NHTSA's public safety data — the agency that tracks recalls and owner complaints.\n"
     "Ask me:\n"
-    "  • recall board for Honda Civic years 2015 and 2016 (premium)\n"
+    "  • recall board for Honda Civic years 2015 and 2016 (not implemented here)\n"
     "  • does a 2020 Honda Civic have recalls?\n"
     "  • what do owners complain about on a 2018 Ford F-150?\n"
     "  • what models did Toyota sell in 2024?\n"
@@ -194,10 +193,10 @@ class VehiclesAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: VehicleData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or VehicleData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -231,7 +230,7 @@ class VehiclesAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (VehicleError, ValueError, GatewayError) as exc:
+        except (VehicleError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the NHTSA dataset: {exc}")
             return STOP_END_TURN
@@ -260,35 +259,9 @@ class VehiclesAgent(AcpAgent):
         return HELP, {"summary": "help", "dataset": None}
 
     def _recall_board(self, params: dict) -> tuple[str, dict]:
-        """Compare two explicitly named model years on the gateway."""
-        context = {"agent": "vehicles", "skill": "vehicle-recall-board"}
-        if not params.get("make") or not params.get("model") or not isinstance(params.get("years"), list):
-            return ("Use: recall board for Honda Civic years 2015 and 2016. "
-                    'Quote multiword makes, e.g. "Land Rover" Discovery.',
-                    {**context, "summary": "explicit make, model and two years required"})
-        args = {"make": str(params["make"]).strip(), "model": str(params["model"]).strip(),
-                "years": [VehicleData.check_year(y) for y in params["years"]]}
-        data, refused = premium_call(self.gateway, "vehicle_recall_year_board", args, context)
-        if refused:
-            return refused
-        rows = data.get("years") if isinstance(data, dict) else None
-        comparison = data.get("comparison") if isinstance(data, dict) else None
-        if (not isinstance(rows, list) or len(rows) != 2 or
-                any(not isinstance(row, dict) or any(type(row.get(k)) is not int or row[k] < 0
-                    for k in ("year", "recallCount", "complaintCount")) for row in rows) or
-                not isinstance(comparison, dict) or
-                any(type(comparison.get(k)) is not int for k in ("recallChange", "complaintChange"))):
-            return empty_premium_answer("The gateway returned no readable two-year recall comparison.", context)
-        lines = [f"NHTSA recall board: {args['make']} {args['model']}"]
-        for row in rows:
-            lines.append(f"{row['year']}: {row['recallCount']} recall record(s), "
-                         f"{row['complaintCount']} complaint(s).")
-        lines.append(f"Later minus earlier year: {comparison['recallChange']:+d} recalls, "
-                     f"{comparison['complaintChange']:+d} complaints.")
-        lines.append(data.get("note") or "Counts are records, not safety rates or VIN-specific open recalls.")
-        lines.append("Source: NHTSA recalls and complaints, compared on the licence gateway.")
-        return "\n".join(lines), {**context, "premium": True, "summary": "premium two-year recall board",
-                                  "board": data}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: recall-board — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def _missing_vehicle(self, make: str | None) -> tuple[str, dict]:
         """No model given: read NHTSA's own model list and ask, instead of guessing."""

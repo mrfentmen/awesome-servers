@@ -8,7 +8,7 @@ zero.
 
 The question the free skills do not answer is how fast a number moved: growth rates over a
 window, and where that country sits among its peers. That is arithmetic over a series, and
-it is the premium skill, licensed on the gateway.
+it is a separate skill, licensed on the gateway.
 """
 
 from __future__ import annotations
@@ -21,9 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, WDI_SOURCE, WorldBankData, WorldBankError,  # noqa: E402
                   WorldBankNotFound, country_from_text, indicator_default_for,
@@ -36,7 +34,7 @@ HELP = (
     "  - compare GDP per capita in Kenya, Ghana and Nigeria\n"
     "  - Nigeria's GDP per capita over the last 10 years\n"
     "  - which indicator measures life expectancy at birth?\n"
-    "  - how fast is Nigeria's GDP per capita growing, and where does it rank? (premium)\n"
+    "  - how fast is Nigeria's GDP per capita growing, and where does it rank? (not implemented here)\n"
     "I always report the newest year the Bank actually has a value for, not the newest year\n"
     "in the file, and I print the indicator id with every figure, because that id is the only\n"
     "unambiguous way to ask again."
@@ -296,9 +294,7 @@ class WorldBankAgent(AcpAgent):
                  gateway=None) -> None:
         super().__init__(connection)
         self.data = data or WorldBankData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -363,7 +359,7 @@ class WorldBankAgent(AcpAgent):
                 found = self.data.search_indicators(params["term"], limit=8)
                 body = render_indicators(found)
                 summary = f"{len(found['indicators'])} indicator(s) for {found['term']!r}"
-        except (WorldBankError, GatewayError, ValueError) as exc:
+        except (WorldBankError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the World Bank's data: {exc}")
             return STOP_END_TURN
@@ -386,44 +382,9 @@ class WorldBankAgent(AcpAgent):
         return found["indicators"][0]["id"] if found["indicators"] else None
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        arguments: dict = {"country": params["country"], "indicator": params["indicator"],
-                           "years": int(params.get("years") or 10)}
-        if params.get("peers"):
-            arguments["compare_with"] = list(params["peers"])[:8]
-
-        data, refused = premium_call(self.gateway, "worldbank_growth", arguments,
-                                    {"agent": "worldbank"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not data.get("years_used"):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back a growth rate for that country.",
-                {"agent": "worldbank"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a growth figure out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_growth(data)
-        summary = (f"{data.get('country', '?')}: {data.get('cagr_pct')}% a year over "
-                   f"{data.get('years_used', 0)} year(s)")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message("\nSource: World Bank, computed on the licence gateway. A compound rate is "
-                    "arithmetic on the first and last values of the window, so a year the Bank "
-                    "skipped changes the rate, and the peer rows are the same calculation for "
-                    "each country rather than a ranking the Bank publishes.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

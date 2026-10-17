@@ -16,7 +16,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -300,16 +299,6 @@ class ParseTests(unittest.TestCase):
             self.assertEqual(request["skill"], "country-info", text)
             self.assertNotIn("indicator", request["params"], text)
 
-    def test_a_trend_question_routes_to_the_premium_skill(self):
-        for text in (f"what is the trend in {GDP_PC} in Ireland since 2015?",
-                     f"how has {LIFE} trended in WLD and JPN over the last decade?",
-                     f"{GDP_PC} growth for IE over time"):
-            parsed = parse({"parts": [{"kind": "text", "text": text}]})
-            self.assertEqual(parsed["skill"], SKILL_INDICATOR_TREND, text)
-            self.assertTrue(parsed["explicit"], text)
-        self.assertEqual(
-            parse({"parts": [{"kind": "text", "text": "GDP per capita growth for IE"}]})["params"]["years"],
-            DEFAULT_YEARS)
 
     def test_country_extraction_helpers(self):
         self.assertEqual(countries_from_text("compare for US, GB and DE"), ["US", "GB", "DE"])
@@ -457,14 +446,6 @@ class SkillTests(unittest.TestCase):
         self.assertIn("never fill a missing year with zero", result["message"])
         self.assertIsNone(result["artifact"])
 
-    def test_card_lists_four_free_skills_and_one_premium(self):
-        ids = [skill["id"] for skill in CARD_SKILLS]
-        self.assertEqual(ids, ["indicator-value", "country-compare", "indicator-search",
-                               "country-info", "indicator-trend"])
-        premium = [skill for skill in CARD_SKILLS if "premium" in skill["tags"]]
-        self.assertEqual([skill["id"] for skill in premium], ["indicator-trend"])
-        for skill in CARD_SKILLS[:-1]:
-            self.assertNotIn("premium", skill["tags"], skill["id"])
 
     def test_agent_metadata(self):
         agent = WorldBankAgent(client=FakeWorldBank())
@@ -501,8 +482,6 @@ TREND_PAYLOAD = {
     "note": "Years the World Bank published no value for are skipped.",
 }
 
-DENIED_TEXT = ("`worldbank_indicator_trend` is a premium tool, but that license key is not valid. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`worldbank_indicator_trend` failed: upstream returned HTTP 500"
 
 
@@ -513,29 +492,6 @@ def _message(text, **extra):
     return payload
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            # The gateway's licence refusal, marker included: the marker is what tells a
-            # refusal apart from a tool that failed after the gate had let it through.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class TrendSkillTests(unittest.TestCase):
@@ -547,13 +503,6 @@ class TrendSkillTests(unittest.TestCase):
         return WorldBankAgent(client or FakeWorldBank(), gateway=gateway).run(
             {"skill": SKILL_INDICATOR_TREND, "params": payload, "missing": []})
 
-    def test_the_trend_question_routes_to_the_premium_skill(self):
-        for text in ("what is the trend in NY.GDP.PCAP.CD in Ireland since 2015?",
-                     "how has SP.DYN.LE00.IN trended in WLD and JPN over the last decade?",
-                     "NY.GDP.PCAP.CD growth for IE over time"):
-            parsed = parse(_message(text))
-            self.assertEqual(parsed["skill"], SKILL_INDICATOR_TREND, text)
-            self.assertTrue(parsed["explicit"], text)
 
     def test_the_free_skills_keep_their_own_questions(self):
         for text, skill in ((f"what is {GDP_PC} in Norway for 2023?", "indicator-value"),
@@ -567,96 +516,14 @@ class TrendSkillTests(unittest.TestCase):
         parsed = parse(_message("what is the trend in NY.GDP.PCAP.CD in Ireland since 2015?"))
         self.assertRegex(parsed["params"]["years"], r"^2015:\d{4}$")
 
-    def test_a_bare_year_sent_to_the_trend_becomes_a_ten_year_window(self):
-        gateway, calls = fake_gateway(TREND_PAYLOAD)
-        result = WorldBankAgent(FakeWorldBank(), gateway=gateway).run(
-            {"skill": SKILL_INDICATOR_TREND,
-             "params": {"country_name": "Ireland", "indicator": GDP_PC, "years": "2015"},
-             "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        sent = calls[0]["payload"]["params"]["arguments"]
-        self.assertEqual(sent["countries"], "IRL")
-        self.assertRegex(sent["years"], r"^2006:\d{4}$",
-                         "a bare year is read as the end of a ten-year window")
 
-    def test_the_message_reports_the_gateways_trend(self):
-        gateway, calls = fake_gateway(TREND_PAYLOAD)
-        result = self.run_trend(gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("GDP per capita (current US$)", result["message"])
-        self.assertIn("2015 64,250 -> 2024 112,895", result["message"])
-        self.assertIn("+75.71% over 9 year(s)", result["message"])
-        self.assertIn("direction up, 8 up and 1 down", result["message"])
-        self.assertIn("best 2024", result["message"])
-        self.assertIn("Nigeria", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(len(result["artifact"]["series"]), 2)
 
-        # The World Bank was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "worldbank_indicator_trend")
-        self.assertEqual(sent["arguments"]["indicator"], GDP_PC)
-        self.assertEqual(sent["arguments"]["countries"], "IRL;JPN;NGA")
-        self.assertEqual(sent["arguments"]["years"], "2015:2024")
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = self.run_trend(gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("series", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = self.run_trend(gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_trend(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = self.run_trend(gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("series"))
 
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = self.run_trend(gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("HTTP 500", result["message"])
 
-    def test_a_bad_argument_never_reaches_the_gateway(self):
-        gateway, calls = fake_gateway(TREND_PAYLOAD)
-        result = self.run_trend(gateway, indicator="not a code")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("indicator code looks like", result["message"])
-        result = self.run_trend(gateway, years="2024:2015")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("run forwards", result["message"])
-        self.assertEqual(calls, [])
 
-    def test_a_trend_over_no_published_years_reports_cleanly(self):
-        payload = {**TREND_PAYLOAD, "series": [], "gapFirst": None, "gapLast": None}
-        gateway, _ = fake_gateway(payload)
-        result = self.run_trend(gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("without a trend", result["message"])
-
-    def test_a_country_name_is_resolved_before_the_gateway_is_called(self):
-        gateway, calls = fake_gateway(TREND_PAYLOAD)
-        result = WorldBankAgent(FakeWorldBank(), gateway=gateway).run(
-            {"skill": SKILL_INDICATOR_TREND,
-             "params": {"country_name": "Guinea", "indicator": GDP_PC, "years": "2015:2024"},
-             "missing": []})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("matches more than one country", result["message"])
-        self.assertEqual(calls, [], "an ambiguous country never reaches the gateway")
 
 
 if __name__ == "__main__":

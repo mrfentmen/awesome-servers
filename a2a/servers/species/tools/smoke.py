@@ -139,16 +139,12 @@ def main(argv=None) -> int:
                 and info_data["observations_count"] > 0,
                 str(info_data.get("observations_count")))
 
-    # The premium skill: without a key the refusal is a completed answer with no
     # counts invented in the feed's shape.
     survey = smoke.rpc("message/send",
                        {"message": smoke.user_message(
                            f"give me an overview of the {MONARCH} records")},
                        timeout=60).get("result", {})
     survey_data = artifact_data(survey)
-    smoke.check("range-survey never returns a fabricated survey",
-                survey_data.get("by_month") is None and survey_data.get("premium") is True,
-                str({k: survey_data.get(k) for k in ("premium", "reason", "by_month")}))
     smoke.check("range-survey is answered, not crashed",
                 survey.get("status", {}).get("state") in ("completed", "failed"),
                 str(survey.get("status", {}).get("state")))

@@ -3,7 +3,7 @@
 No ACP agent could read a resale catalogue before this one. It reads the keyless catalogues of
 Fashionphile and Rebag and answers three questions a shopper actually has: what a piece costs
 right now, what a whole brand's market looks like, and what one listing is. The fourth skill,
-a cross-brand price index, runs on the licence gateway.
+a cross-brand price index, runs on a hosted service that was removed.
 
 Deterministic on purpose: routing is rules, the prices are the stores' own variant prices, and
 nothing is invented. Fashionphile does not publish a condition in its catalogue JSON, so those
@@ -20,17 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (  # noqa: E402
-    STOP_END_TURN,
-    STOP_REFUSAL,
-    AcpAgent,
-    GatewayClient,
-    GatewayError,
-    SessionContext,
-    empty_premium_answer,
-    premium_call,
-    prompt_text,
-)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (  # noqa: E402
     DATASET_FASHIONPHILE,
@@ -48,7 +38,7 @@ HELP = (
     "  • show me rolex watches\n"
     "  • what is the chanel market like right now\n"
     "  • pull the listing handbags-hermes-maxibox-bag-294167871\n"
-    "  • compare chanel, gucci and prada (premium — needs a licence key)\n"
+    "  • compare chanel, gucci and prada (not implemented here)\n"
     "Prices are the stores' own variant prices in US dollars; a listing that has sold stays "
     "in the catalogue, so I report how many are still available."
 )
@@ -150,10 +140,10 @@ class ResaleAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: ResaleData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or ResaleData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -189,7 +179,7 @@ class ResaleAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (ResaleError, ValueError, GatewayError) as exc:
+        except (ResaleError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the resale catalogues: {exc}")
             return STOP_END_TURN
@@ -373,62 +363,9 @@ class ResaleAgent(AcpAgent):
         raise ResaleError("; ".join(errors) or "no catalogue has that handle")
 
     def _index(self, params: dict) -> tuple[str, dict]:
-        """Premium: the cross-brand index is computed on the gateway, not here."""
-        brands = params.get("brands") or []
-        if len(brands) < 2:
-            return (
-                "The premium index compares two to four brands at once — name them, like "
-                "'compare chanel, gucci and prada'.",
-                {"summary": "too few brands for the index", "known": False},
-            )
-        data, refused = premium_call(
-            self.gateway,
-            "resale_price_index",
-            {"brands": brands[:4], "pages": 2},
-            {"agent": "resale", "skill": "price-index", "brands": brands[:4]},
-        )
-        if refused:
-            return refused
-        board = data.get("brands") if isinstance(data, dict) else None
-        if not isinstance(board, list) or not board:
-            return empty_premium_answer(
-                "The licence gateway returned no brands for that comparison, so I have nothing to "
-                "report. Try two to four brand names from my list.",
-                {"agent": "resale", "skill": "price-index"},
-            )
-        artifact = {
-            "summary": f"premium index over {len(board)} brands: "
-                       f"dearest median {usd((data.get('dearest') or {}).get('median'))}, "
-                       f"most listed {data.get('mostListed', {}).get('brand')}",
-            "premium": True,
-            "brands": board,
-            "scanned": data.get("scanned"),
-            "dearest": data.get("dearest"),
-            "cheapest": data.get("cheapest"),
-            "most_listed": data.get("mostListed"),
-        }
-        lines = ["Premium cross-brand resale index (computed on the licence gateway):"]
-        for entry in board:
-            lines.append(
-                f"  • {entry.get('brand')}: {entry.get('count')} listings "
-                f"({entry.get('available')} available), median "
-                f"{usd(entry.get('median'))}, range {usd(entry.get('low'))}–"
-                f"{usd(entry.get('high'))} across {', '.join(entry.get('sources') or [])}"
-            )
-        dearest, cheapest = data.get("dearest") or {}, data.get("cheapest") or {}
-        most = data.get("mostListed") or {}
-        if board:
-            lines.append(f"\nHighest median asking price: {dearest.get('brand')} at "
-                         f"{usd(dearest.get('median'))}. Lowest: {cheapest.get('brand')} at "
-                         f"{usd(cheapest.get('median'))}.")
-            if most:
-                lines.append(f"Most listings: {most.get('brand')} with {most.get('count')}.")
-        lines.append(
-            f"\nSource: the licence gateway read {data.get('scanned', 0):,} catalogue products "
-            "across the two stores. Same catalogues as the free skills — the gateway adds the "
-            "cross-brand comparison, and a caller without a key never gets the numbers."
-        )
-        return "\n".join(lines), artifact
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: index — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
 
 def main(argv=None) -> int:

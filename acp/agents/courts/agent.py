@@ -20,9 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, PAGE_SIZE, CourtsData, CourtsError,  # noqa: E402
                   CourtsNotFound, case_name_from_text, court_name_from_text,
@@ -35,7 +33,7 @@ HELP = (
     "  - how many opinions mention fourth amendment?\n"
     "  - opinions on privacy in the Ninth Circuit\n"
     "  - what is the citation string for the D.C. Circuit?\n"
-    "  - which courts rule most on privacy? (premium)\n"
+    "  - which courts rule most on privacy? (not implemented here)\n"
     "Every search is limited to *opinions*, not dockets, and the count I report is the\n"
     "whole-corpus number CourtListener holds, not the number of pages I read."
 )
@@ -253,9 +251,7 @@ class CourtsAgent(AcpAgent):
                  gateway=None) -> None:
         super().__init__(connection)
         self.data = data or CourtsData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -316,7 +312,7 @@ class CourtsAgent(AcpAgent):
                                f"{found['query']!r}")
                 if found.get("note"):
                     body = found["note"] + "\n" + body
-        except (CourtsError, GatewayError, ValueError) as exc:
+        except (CourtsError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read CourtListener: {exc}")
             return STOP_END_TURN
@@ -345,40 +341,9 @@ class CourtsAgent(AcpAgent):
         return (directory.get("court") or {}).get("id")
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        arguments: dict = {"query": params["query"]}
-
-        data, refused = premium_call(self.gateway, "courts_topic_courts", arguments,
-                                    {"agent": "courts"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not (data.get("courts") or data.get("opinions_sampled")):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back a court breakdown for that topic.",
-                {"agent": "courts"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a breakdown out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_topic_courts(data)
-        summary = (f"{len(data.get('courts') or [])} court(s) sampled across "
-                   f"{data.get('opinions_sampled', 0)} opinion(s) on {data.get('query', '?')!r}")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message("\nSource: CourtListener, aggregated on the licence gateway. The share is "
-                    "of the opinions the gateway sampled, which CourtListener returns best-"
-                    "first, so a topic with thousands of matches is a *sample*, not a census.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one search, one answer

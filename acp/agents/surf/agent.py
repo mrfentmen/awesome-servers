@@ -23,8 +23,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text,
-                     GatewayClient, GatewayError, premium_call, empty_premium_answer)  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import DATASET, SURF_SPOTS, GROUNDSWELL_PERIOD_S, SurfData, SurfError, compass  # noqa: E402
 
@@ -34,7 +33,7 @@ HELP = (
     "  • when is it worth surfing at Nazare in the next two days?\n"
     "  • what is the swell doing at Pipeline?\n"
     "  • which spots do you know?\n"
-    "  • surf window board at Santa Cruz (premium)\n"
+    "  • surf window board at Santa Cruz (not implemented here)\n"
     "I give you the model's wave height, period and direction, the wind, and how the wind "
     "sits against the swell. I do not know how any particular beach faces, and I do not tell "
     "you whether a wave is safe or worth paddling into."
@@ -97,10 +96,10 @@ class SurfAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: SurfData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or SurfData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -135,7 +134,7 @@ class SurfAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (SurfError, GatewayError, ValueError) as exc:
+        except (SurfError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the marine model: {exc}")
             return STOP_END_TURN
@@ -263,35 +262,9 @@ class SurfAgent(AcpAgent):
         return "\n".join(lines), artifact
 
     def _window_board(self, params: dict) -> tuple[str, dict]:
-        """Display the gateway's week of combined wave and wind grades."""
-        located, ask = self._spot_or_ask(params)
-        if ask:
-            return ask
-        point, label = located
-        latitude, longitude = map(float, point.split(","))
-        data, refused = premium_call(
-            self.gateway, "surf_window_board",
-            {"latitude": latitude, "longitude": longitude, "days": 7},
-            {"agent": "surf", "skill": "surf-window-board"})
-        if refused:
-            return refused
-        rows = data.get("days") if isinstance(data, dict) else None
-        if (not isinstance(rows, list) or not rows or
-                any(not isinstance(row, dict) or not isinstance(row.get("date"), str) or
-                    any(key not in row or (row.get(key) is not None and (not isinstance(row.get(key), (int, float)) or
-                        isinstance(row.get(key), bool) or not math.isfinite(row[key])))
-                        for key in ("waveHeightM", "periodS", "windKmh", "score"))
-                    for row in rows) or not any(row.get("score") is not None for row in rows)):
-            return empty_premium_answer("The gateway returned no readable surf window grades.",
-                                        {"agent": "surf", "skill": "surf-window-board"})
-        lines = [f"Premium surf window board for {label} (UTC, best score first):"]
-        for row in rows:
-            lines.append(f"  • {row['date']}: score {row['score']}, "
-                         f"{row['waveHeightM']} m, {row['periodS']} s, wind {row['windKmh']} km/h"
-                         if row.get("score") is not None else f"  • {row['date']}: no complete hourly readings")
-        lines.append(str(data.get("note") or "Model output, not a beach safety assessment."))
-        return "\n".join(lines), {"summary": lines[0], "premium": True,
-                                  "dataset": DATASET, "days": rows, "best_day": data.get("bestDay")}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: window-board — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def _spots(self, params: dict) -> tuple[str, dict]:
         names = sorted(SURF_SPOTS)

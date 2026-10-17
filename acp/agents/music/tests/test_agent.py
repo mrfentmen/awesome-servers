@@ -23,8 +23,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (AcpClient, Connection, GatewayClient,  # noqa: E402
-                     STOP_END_TURN, STOP_REFUSAL)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import route  # noqa: E402
 from data import (MusicData, MusicError, MusicNotFound,  # noqa: E402
@@ -252,12 +251,6 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(route("what is charting on Deezer?"), ("music-chart", {}))
         self.assertEqual(route("deezer chart"), ("music-chart", {}))
 
-    def test_a_set_request_goes_to_the_premium_skill(self):
-        self.assertEqual(route("build me a 45 minute Radiohead set"),
-                         ("music-set", {"artist": "Radiohead", "max_minutes": 45}))
-        self.assertEqual(route("make me a 1 hour clean Radiohead playlist"),
-                         ("music-set", {"artist": "Radiohead", "max_minutes": 60,
-                                        "allow_explicit": False}))
 
     def test_help_and_another_subject(self):
         self.assertEqual(route("")[0], "help")
@@ -368,10 +361,7 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# The premium skill: music-set
 #
-# No network: the licence check and the work both happen on the gateway, and the
-# gateway's own JSON-RPC answers are injected into the real GatewayClient.
 # ---------------------------------------------------------------------------
 
 #: What `music_listening_set` answers for a 45-minute clean Radiohead set.
@@ -401,134 +391,10 @@ SET_DATA = {
 }
 
 #: The exact refusal the gateway sends for a key it will not accept.
-GATEWAY_DENIAL = ("`music_listening_set` is a premium tool, but that licence key was rejected. "
-                  "Check MCP_LICENSE_KEY, or get a key at https://polar.sh/mrfentmen")
 
 
-def gateway_answer(text, is_error=False, structured=None):
-    """A fake transport that answers every premium call with one JSON-RPC reply."""
-    def fetch(url, payload, headers):
-        fetch.calls.append({"url": url, "payload": payload, "headers": headers})
-        result = {"content": [{"type": "text", "text": text}]}
-        if is_error:
-            result["isError"] = True
-        if structured is not None:
-            result["structuredContent"] = structured
-        return {"jsonrpc": "2.0", "id": payload.get("id", 1), "result": result}
-
-    fetch.calls = []
-    return fetch
 
 
-class PremiumTests(unittest.TestCase):
-    """No key, a bad key and a good key, plus the routing that gets there."""
-
-    def turn(self, text: str, fetch, key: str, **kw):
-        from agent import MusicAgent
-
-        agent_conn, client_conn = connected_pair()
-        data, _feed = make_data(**kw)
-        gateway = GatewayClient(fetch=fetch, key=key, url="https://gateway.test/mcp")
-        agent = MusicAgent(agent_conn, data, gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_answers_with_the_missing_key_wording(self):
-        fetch = gateway_answer("")
-        result, client = self.turn("build me a 45 minute Radiohead set", fetch, "")
-        #: An answer, not a crash, and not a failed lookup either.
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertIn("no licence key is set", result["text"])
-        self.assertEqual(len(client.permission_requests), 1)
-        #: Nothing was spent on a call the gate was never going to let through.
-        self.assertEqual(fetch.calls, [])
-
-    def test_a_bad_key_returns_the_gateways_own_wording(self):
-        fetch = gateway_answer(GATEWAY_DENIAL, is_error=True,
-                               structured={"licenceRefusal": True, "reason": "denied"})
-        result, _ = self.turn("build me a 45 minute Radiohead set", fetch, "not-a-real-key")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn(GATEWAY_DENIAL, result["text"])
-        self.assertIn("premium", result["text"])
-        self.assertEqual(len(fetch.calls), 1)
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["name"], "music_listening_set")
-
-    def test_a_good_key_returns_the_built_set(self):
-        fetch = gateway_answer(json.dumps(SET_DATA))
-        result, _ = self.turn("build me a 45 minute Radiohead set", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("Radiohead - listening set", result["text"])
-        self.assertIn("10 track(s), 44.4 min of a 45 min budget", result["text"])
-        self.assertIn("1. Harder, Better, Faster, Stronger [OK Computer]  (3.8 min)",
-                      result["text"])
-        self.assertIn("left out (2)", result["text"])
-        self.assertIn("Creep (Remastered 2011) - live, remix, remaster or other "
-                      "alternate version", result["text"])
-        #: The licence key travels in a header and is never echoed back.
-        self.assertEqual(fetch.calls[0]["headers"]["Authorization"], "Bearer k_paid")
-        self.assertNotIn("k_paid", result["text"])
-
-    def test_a_good_key_sends_the_budget_it_was_asked_for(self):
-        fetch = gateway_answer(json.dumps(SET_DATA))
-        self.turn("make me a 90 minute clean Radiohead playlist", fetch, "k_paid")
-        arguments = fetch.calls[0]["payload"]["params"]["arguments"]
-        self.assertEqual(arguments, {"artist": "Radiohead", "max_minutes": 90,
-                                    "allow_explicit": False})
-
-    def test_a_set_with_no_artist_asks_instead_of_inventing_one(self):
-        fetch = gateway_answer(json.dumps(SET_DATA))
-        result, _ = self.turn("give me a playlist for my drive", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("Tell me which artist", result["text"])
-        #: The gateway was never asked, so nothing was spent on a guess.
-        self.assertEqual(fetch.calls, [])
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def fetch(url, payload, headers):
-            raise OSError("connection refused")
-
-        result, _ = self.turn("build me a 45 minute Radiohead set", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("I could not read Deezer's catalogue", result["text"])
-
-    def test_the_routing_is_narrow(self):
-        #: A free question keeps its own free skill even when it is about songs by an artist.
-        free = [
-            ("find songs by Radiohead", "music-search"),
-            ("tell me about Radiohead", "music-artist"),
-            ("what is on Kid A?", "music-album"),
-            ("what is the album Jaguar II", "music-album"),
-            ("what is charting on Deezer?", "music-chart"),
-            ("songs from Back in Black", "music-search"),
-            ("search creep", "music-search"),
-            ("what can you do?", "help"),
-            ("", "help"),
-        ]
-        for text, expected in free:
-            self.assertEqual(route(text)[0], expected, text)
-
-        premium = [
-            "build me a 45 minute Radiohead set",
-            "make me a Radiohead playlist",
-            "queue up some Radiohead for my commute",
-            "mix me something from Radiohead",
-        ]
-        for text in premium:
-            self.assertEqual(route(text)[0], "music-set", text)
-
-    def test_the_premium_skill_id_is_published(self):
-        from agent import SKILLS
-
-        self.assertIn("music-set", SKILLS)
 
 
 if __name__ == "__main__":

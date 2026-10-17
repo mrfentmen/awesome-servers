@@ -21,9 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import NWS_DATASET, SEVERITY_ORDER, STATE_CODES, USGS_DATASET, HazardData, HazardDataError  # noqa: E402
 
@@ -34,7 +32,7 @@ HELP = (
     "  • how many alerts are active nationwide?\n"
     "  • any earthquakes above magnitude 4.5 in the last 24 hours?\n"
     "  • has anything shaken near Tokyo this month?\n"
-    "  • were those Tokyo earthquakes an aftershock sequence, and what is the b-value? (premium)\n"
+    "  • were those Tokyo earthquakes an aftershock sequence, and what is the b-value? (not implemented here)\n"
     "I only read what the agencies publish; I do not forecast and I do not warn you."
 )
 
@@ -247,7 +245,7 @@ class HazardsAgent(AcpAgent):
         self.data = data or HazardData()
         # The licence check is the gateway's job, so no line here can be deleted
         # to make the premium answer free.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -280,7 +278,7 @@ class HazardsAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (HazardDataError, GatewayError, ValueError) as exc:
+        except (HazardDataError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the feed: {exc}")
             return STOP_END_TURN
@@ -411,53 +409,9 @@ class HazardsAgent(AcpAgent):
                         "freshness": freshness, "place": place, "quakes": quakes}
 
     def _quakes_seismicity(self, params: dict) -> tuple[str, dict]:
-        """Premium: the analysis behind a list of events, run on the licence gateway."""
-        arguments: dict = {"point": params["point"], "radius_km": float(params.get("radius_km", 300)),
-                           "hours": float(params.get("hours", 720)),
-                           "min_magnitude": float(params.get("min_magnitude", 2.0))}
-        data, refused = premium_call(self.gateway, "quakes_seismicity", arguments,
-                                    {"agent": "hazards"})
-        if refused:
-            #: Already an (answer, artifact) pair, worded by the gateway itself.
-            return refused
-        if not isinstance(data, dict) or not data.get("mainshock"):
-            return empty_premium_answer(
-                "The licence gateway did not send back any seismicity for that area.",
-                {"agent": "hazards"})
-
-        place = params["place"].title() if params.get("place") else f"the point {params['point']}"
-        window = human_hours(arguments["hours"])
-        mainshock = data["mainshock"]
-        aftershocks = data.get("aftershocks") or {}
-        lines = [f"Earthquakes M{arguments['min_magnitude']:g}+ within "
-                 f"{arguments['radius_km']:g} km of {place} in the last {window}: "
-                 f"{data.get('events', 0)} event(s) over "
-                 f"{_num((data.get('window') or {}).get('span_days'))} day(s) of record.",
-                 f"  largest: M{_num(mainshock.get('magnitude'))} — {mainshock.get('place', 'not reported')}"
-                 f" at {mainshock.get('time', 'not reported')}"
-                 + (f" ({mainshock.get('depth_km'):g} km deep)"
-                    if isinstance(mainshock.get("depth_km"), (int, float)) else ""),
-                 f"  aftershocks: {aftershocks.get('count', 0)} within a week of it"
-                 + (f", the largest M{_num(aftershocks.get('largest'))}"
-                    if aftershocks.get("largest") is not None else ""),
-                 f"  magnitudes: smallest M{_num((data.get('magnitude') or {}).get('min'))}, "
-                 f"median M{_num((data.get('magnitude') or {}).get('median'))}, "
-                 f"{data.get('events_m4_plus', 0)} at M4 or above",
-                 f"  depth: {_num((data.get('depth_km') or {}).get('min'))} to "
-                 f"{_num((data.get('depth_km') or {}).get('max'))} km, median "
-                 f"{_num((data.get('depth_km') or {}).get('median'))} km",
-                 f"  Gutenberg-Richter b-value: {_num(data.get('b_value'))}"]
-        if data.get("truncated"):
-            lines.append("  (the catalog returned the most recent events it would give, so the count "
-                         "is a floor, not a total)")
-        lines.append(f"\nSource: {data.get('source', USGS_DATASET)}, analysed on the licence gateway. "
-                     "The aftershock count is a time count around the largest event, not an official "
-                     "sequence membership, and a b-value needs a catalogue with real weight behind it, "
-                     "so a short window reports one only when it can.")
-        summary = (f"{place}: {data.get('events', 0)} M{arguments['min_magnitude']:g}+ event(s), "
-                   f"largest M{_num(mainshock.get('magnitude'))}, b={_num(data.get('b_value'))}")
-        return "\n".join(lines), {"summary": summary, "dataset": data.get("source", USGS_DATASET),
-                                  "premium": True, "place": place, "mainshock": mainshock}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: quakes-seismicity — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     @staticmethod
     def _quake_line(quake: dict) -> str:

@@ -23,8 +23,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (AcpClient, Connection, GatewayClient,  # noqa: E402
-                     STOP_END_TURN, STOP_REFUSAL)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import route  # noqa: E402
 from data import F1Data, F1Error, F1NotFound, driver_from_text  # noqa: E402
@@ -210,11 +209,6 @@ class RouteTests(unittest.TestCase):
                          ("f1-driver", {"driver_id": "max_verstappen"}))
         self.assertEqual(route("F1 schedule 2025"), ("f1-next", {"season": "2025"}))
 
-    def test_a_projection_question_goes_to_the_premium_skill(self):
-        self.assertEqual(route("who will win the 2026 title?"),
-                         ("f1-projection", {"season": "2026"}))
-        self.assertEqual(route("project the championship"),
-                         ("f1-projection", {"season": "current"}))
 
     def test_help_and_another_subject(self):
         self.assertEqual(route("")[0], "help")
@@ -336,10 +330,7 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# The premium skill: f1-projection
 #
-# No network: the licence check and the work both happen on the gateway, and the
-# gateway's own JSON-RPC answers are injected into the real GatewayClient.
 # ---------------------------------------------------------------------------
 
 #: What `f1_championship_projection` answers for 2026 after round 15 with 5 races left.
@@ -367,129 +358,10 @@ PROJECTION_DATA = {
 }
 
 #: The exact refusal the gateway sends for a key it will not accept.
-GATEWAY_DENIAL = ("`f1_championship_projection` is a premium tool, but that licence key was "
-                  "rejected. Check MCP_LICENSE_KEY, or get a key at https://polar.sh/mrfentmen")
 
 
-def gateway_answer(text, is_error=False, structured=None):
-    """A fake transport that answers every premium call with one JSON-RPC reply."""
-    def fetch(url, payload, headers):
-        fetch.calls.append({"url": url, "payload": payload, "headers": headers})
-        result = {"content": [{"type": "text", "text": text}]}
-        if is_error:
-            result["isError"] = True
-        if structured is not None:
-            result["structuredContent"] = structured
-        return {"jsonrpc": "2.0", "id": payload.get("id", 1), "result": result}
-
-    fetch.calls = []
-    return fetch
 
 
-class PremiumTests(unittest.TestCase):
-    """No key, a bad key and a good key, plus the routing that gets there."""
-
-    def turn(self, text: str, fetch, key: str, **kw):
-        from agent import F1Agent
-
-        agent_conn, client_conn = connected_pair()
-        data, _feed = make_data(**kw)
-        gateway = GatewayClient(fetch=fetch, key=key, url="https://gateway.test/mcp")
-        agent = F1Agent(agent_conn, data, gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_answers_with_the_missing_key_wording(self):
-        fetch = gateway_answer("")
-        result, client = self.turn("who will win the title?", fetch, "")
-        #: An answer, not a crash, and not a failed lookup either.
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertIn("no licence key is set", result["text"])
-        self.assertEqual(len(client.permission_requests), 1)
-        #: Nothing was spent on a call the gate was never going to let through.
-        self.assertEqual(fetch.calls, [])
-
-    def test_a_bad_key_returns_the_gateways_own_wording(self):
-        fetch = gateway_answer(GATEWAY_DENIAL, is_error=True,
-                               structured={"licenceRefusal": True, "reason": "denied"})
-        result, _ = self.turn("who will win the title?", fetch, "not-a-real-key")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn(GATEWAY_DENIAL, result["text"])
-        self.assertIn("premium", result["text"])
-        self.assertEqual(len(fetch.calls), 1)
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["name"],
-                         "f1_championship_projection")
-
-    def test_a_good_key_returns_the_projection(self):
-        fetch = gateway_answer(json.dumps(PROJECTION_DATA))
-        result, _ = self.turn("who will win the 2026 title?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("2026 championship projection after round 15", result["text"])
-        self.assertIn("races remaining: 5", result["text"])
-        self.assertIn("projected champion: Andrea Kimi Antonelli, by 13.3 point(s)",
-                      result["text"])
-        self.assertIn("P2 George Russell - Mercedes: 280 now, 18.67 a race, 373.3 projected, "
-                      "22 behind the leader", result["text"])
-        self.assertIn("method: each driver keeps the average points a race", result["text"])
-        self.assertIn("a real assumption about the future", result["text"])
-        #: The licence key travels in a header and is never echoed back.
-        self.assertEqual(fetch.calls[0]["headers"]["Authorization"], "Bearer k_paid")
-        self.assertNotIn("k_paid", result["text"])
-
-    def test_a_good_key_sends_the_season_it_was_asked_for(self):
-        fetch = gateway_answer(json.dumps(PROJECTION_DATA))
-        self.turn("who will win the 2024 title?", fetch, "k_paid")
-        arguments = fetch.calls[0]["payload"]["params"]["arguments"]
-        self.assertEqual(arguments, {"season": 2024})
-        fetch2 = gateway_answer(json.dumps(PROJECTION_DATA))
-        self.turn("project the championship", fetch2, "k_paid")
-        #: No season named means the feed's own current season, so nothing is sent.
-        self.assertEqual(fetch2.calls[0]["payload"]["params"]["arguments"], {})
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def fetch(url, payload, headers):
-            raise OSError("connection refused")
-
-        result, _ = self.turn("who will win the title?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("I could not read the F1 feed", result["text"])
-
-    def test_the_routing_is_narrow(self):
-        free = [
-            ("when is the next F1 race?", "f1-next"),
-            ("who won the last race?", "f1-last"),
-            ("what are the driver standings?", "f1-standings"),
-            ("who are the constructor standings?", "f1-constructors"),
-            ("who is leading the championship?", "f1-standings"),
-            ("tell me about max_verstappen", "f1-driver"),
-            ("F1 schedule 2025", "f1-next"),
-            ("what can you do?", "help"),
-            ("", "help"),
-        ]
-        for text, expected in free:
-            self.assertEqual(route(text)[0], expected, text)
-
-        premium = [
-            "who will win the 2026 title?",
-            "project the championship",
-            "where do the points end up by the end of the season?",
-        ]
-        for text in premium:
-            self.assertEqual(route(text)[0], "f1-projection", text)
-
-    def test_the_premium_skill_id_is_published(self):
-        from agent import SKILLS
-
-        self.assertIn("f1-projection", SKILLS)
 
 
 if __name__ == "__main__":

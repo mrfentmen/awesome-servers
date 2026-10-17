@@ -7,7 +7,7 @@ with the observation counts and the records themselves.
 Deterministic on purpose: routing is rules, the numbers are the feed's, and nothing is
 guessed. It reports a plan, opens one tool call per lookup, asks permission before its
 first read, streams the answer, and closes the tool call with a one-line summary.
-The premium region board aggregates monthly histograms on the licence gateway.
+The premium region board aggregates monthly histograms on a hosted service that was removed.
 """
 
 from __future__ import annotations
@@ -20,8 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import DATASET, MAX_RADIUS_KM, SpeciesData, SpeciesError  # noqa: E402
 
@@ -30,7 +29,7 @@ HELP = (
     "  • how many monarch butterflies are there?\n"
     "  • recent sightings of Danaus plexippus\n"
     "  • what has been seen near 40.71,-74.01 within 10 km?\n"
-    "  • region board place 1 taxon 47158 observer 1 from 2024-01 to 2024-03 (premium)\n"
+    "  • region board place 1 taxon 47158 observer 1 from 2024-01 to 2024-03 (not implemented here)\n"
     "Answers carry the count the feed reports and the newest records, with the grade "
     "(research or needs_id) shown as iNaturalist records it."
 )
@@ -151,10 +150,10 @@ class SpeciesAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: SpeciesData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or SpeciesData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -190,7 +189,7 @@ class SpeciesAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (SpeciesError, ValueError, GatewayError) as exc:
+        except (SpeciesError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the iNaturalist feed: {exc}")
             return STOP_END_TURN
@@ -217,50 +216,9 @@ class SpeciesAgent(AcpAgent):
         return HELP, {"summary": "help", "dataset": None}
 
     def _board(self, params: dict) -> tuple[str, dict]:
-        """Render the gateway's monthly region, taxon and observer comparison."""
-        context = {"agent": "species", "skill": "species-board"}
-        fields = ("place_id", "taxon_id", "user_id", "start_month", "end_month")
-        if any(field not in params for field in fields):
-            return ("Use region board place 1 taxon 47158 observer 1 from 2024-01 to 2024-03; "
-                    "supply iNaturalist IDs and 2 to 24 whole months.",
-                    {"summary": "region board needs IDs and months", **context})
-        args = {field: params[field] for field in fields}
-        data, refused = premium_call(self.gateway, "species_region_board", args, context)
-        if refused:
-            return refused
-        rows = data.get("monthly") if isinstance(data, dict) else None
-        totals = data.get("totals") if isinstance(data, dict) else None
-        def count(value):
-            return type(value) is int and value >= 0
-        if (not isinstance(rows, list) or not 2 <= len(rows) <= 24
-                or not isinstance(totals, dict)
-                or any(not count(totals.get(key)) for key in ("region", "taxon", "observer"))
-                or any(not isinstance(row, dict) or not isinstance(row.get("month"), str)
-                       or any(not count(row.get(key)) for key in
-                              ("region_count", "taxon_count", "observer_count"))
-                       or any(row.get(key) is not None and
-                              (type(row.get(key)) not in (int, float) or not 0 <= row[key] <= 100)
-                              for key in ("taxon_share_percent", "observer_share_percent"))
-                       for row in rows)
-                or any(type(data.get(key)) is not int for key in
-                       ("taxon_net_change", "observer_net_change"))):
-            return empty_premium_answer("The gateway returned no readable monthly region board.", context)
-        lines = [f"Premium iNaturalist region board for place {args['place_id']}, "
-                 f"taxon {args['taxon_id']}, observer {args['user_id']}:",
-                 f"Window totals: {totals['region']:,} region observations; "
-                 f"{totals['taxon']:,} taxon; {totals['observer']:,} by this observer of this taxon."]
-        def share(value):
-            return "not defined" if value is None else f"{value}%"
-        for row in rows:
-            lines.append(f"  {row['month']}: region {row['region_count']:,}; "
-                         f"taxon {row['taxon_count']:,} ({share(row.get('taxon_share_percent'))} of region); "
-                         f"observer {row['observer_count']:,} ({share(row.get('observer_share_percent'))} of taxon).")
-        lines.append(f"First-to-last month change: taxon {data['taxon_net_change']:+,}; "
-                     f"observer {data['observer_net_change']:+,} observations.")
-        lines.append("Source: iNaturalist monthly histograms, all quality grades by observation date. "
-                     "This is recording effort, affected by seasonality, not population change.")
-        return "\n".join(lines), {"summary": f"premium region board: {totals['taxon']} taxon observations",
-                                  "premium": True, "data": data, **context}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: board — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     @staticmethod
     def _name(row: dict) -> str:

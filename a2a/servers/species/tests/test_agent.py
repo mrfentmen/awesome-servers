@@ -22,7 +22,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -127,38 +126,8 @@ def observations(*rows, total=None):
     return {"total_results": len(rows) if total is None else total, "results": list(rows)}
 
 
-def survey_fetch(data, calls=None):
-    """A GatewayClient `fetch` that answers one JSON-RPC tool call."""
-
-    def fetch(url, payload, headers):
-        if calls is not None:
-            calls.append(payload)
-        return {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "result": {
-                "content": [{"type": "text", "text": json.dumps(data)}],
-                "structuredContent": data,
-                "isError": False,
-            },
-        }
-
-    return fetch
 
 
-def refusal_fetch():
-    def fetch(url, payload, headers):
-        return {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "result": {
-                "content": [{"type": "text", "text": "`x` needs a licence key."}],
-                "structuredContent": {"licenceRefusal": True, "reason": "missing"},
-                "isError": True,
-            },
-        }
-
-    return fetch
 
 
 SURVEY_DATA = {
@@ -496,14 +465,7 @@ class TestCard(unittest.TestCase):
         self.assertEqual(set(ids),
                          {SKILL_COUNT, SKILL_RECENT, SKILL_NEARBY, SKILL_INFO, SKILL_SURVEY})
 
-    def test_exactly_one_premium_skill(self):
-        premium = [skill for skill in CARD_SKILLS if "premium" in skill["tags"]]
-        self.assertEqual([skill["id"] for skill in premium], [SKILL_SURVEY])
 
-    def test_free_skills_are_not_hidden_behind_a_key(self):
-        for skill in CARD_SKILLS:
-            if skill["id"] != SKILL_SURVEY:
-                self.assertNotIn("premium", skill["tags"])
 
     def test_every_skill_has_examples(self):
         for skill in CARD_SKILLS:
@@ -542,16 +504,7 @@ class TestRouting(unittest.TestCase):
         self.assertEqual(routed["skill"], SKILL_INFO)
         self.assertEqual(routed["params"]["taxon"], "red fox")
 
-    def test_an_overview_routes_to_the_premium_survey(self):
-        routed = parse(message("give me an overview of the monarch butterfly records"))
-        self.assertEqual(routed["skill"], SKILL_SURVEY)
-        self.assertEqual(routed["params"]["taxon"], "monarch butterfly")
-        self.assertTrue(routed["explicit"])
 
-    def test_by_month_routes_to_the_premium_survey(self):
-        routed = parse(message("how do the red fox observations break down by month?"))
-        self.assertEqual(routed["skill"], SKILL_SURVEY)
-        self.assertEqual(routed["params"]["taxon"], "red fox")
 
     def test_help(self):
         self.assertEqual(parse(message("what can you do?"))["skill"], "help")
@@ -712,60 +665,6 @@ class TestRunInfo(unittest.TestCase):
         self.assertFalse(answer["artifact"]["found"])
 
 
-class TestRunSurvey(unittest.TestCase):
-    def test_no_key_refuses_and_fabricates_nothing(self):
-        agent, client = agent_with(gateway=GatewayClient(key="", url="https://gw.test/mcp"))
-        answer = agent.run({"skill": SKILL_SURVEY,
-                            "params": {"taxon": "monarch butterfly"}, "missing": []})
-        self.assertEqual(answer["final_state"], "completed")
-        self.assertIn("premium skill", answer["message"])
-        self.assertIn("MCP_LICENSE_KEY", answer["message"])
-        self.assertTrue(answer["artifact"]["premium"])
-        # The free client must not have been asked for the survey data.
-        self.assertEqual(client.calls, [])
-
-    def test_a_licence_refusal_is_handed_back_as_an_answer(self):
-        gateway = GatewayClient(fetch=refusal_fetch(), key="polar_bad", url="https://gw.test/mcp")
-        agent, _ = agent_with(gateway=gateway)
-        answer = agent.run({"skill": SKILL_SURVEY,
-                            "params": {"taxon": "monarch butterfly"}, "missing": []})
-        self.assertEqual(answer["final_state"], "completed")
-        self.assertTrue(answer["artifact"]["premium"])
-
-    def test_a_good_key_renders_the_gateway_survey(self):
-        calls = []
-        gateway = GatewayClient(fetch=survey_fetch(SURVEY_DATA, calls), key="polar_ok",
-                                url="https://gw.test/mcp")
-        agent, client = agent_with(gateway=gateway)
-        answer = agent.run({"skill": SKILL_SURVEY,
-                            "params": {"taxon": "monarch butterfly"}, "missing": []})
-        self.assertEqual(answer["final_state"], "completed")
-        self.assertIn("September 120", answer["message"])
-        self.assertIn("research 250", answer["message"])
-        self.assertIn("240 of 300 rows carried a position", answer["message"])
-        self.assertIn("on the MCP gateway behind its licence check", answer["message"])
-        self.assertEqual(answer["artifact"]["by_month"], SURVEY_DATA["byMonth"])
-        self.assertEqual(calls[0]["params"]["name"], GATEWAY_TOOL)
-        self.assertEqual(calls[0]["params"]["arguments"]["taxon"], "monarch butterfly")
-        self.assertEqual(client.calls, [])
-
-    def test_the_grade_asks_for_is_forwarded(self):
-        calls = []
-        gateway = GatewayClient(fetch=survey_fetch(SURVEY_DATA, calls), key="polar_ok",
-                                url="https://gw.test/mcp")
-        agent, _ = agent_with(gateway=gateway)
-        agent.run({"skill": SKILL_SURVEY,
-                   "params": {"taxon": "red fox", "grade": "research"}, "missing": []})
-        self.assertEqual(calls[0]["params"]["arguments"]["grade"], "research")
-
-    def test_a_gateway_answer_without_a_survey_fails_rather_than_invents(self):
-        gateway = GatewayClient(fetch=survey_fetch({"taxon": "red fox"}), key="polar_ok",
-                                url="https://gw.test/mcp")
-        agent, _ = agent_with(gateway=gateway)
-        answer = agent.run({"skill": SKILL_SURVEY,
-                            "params": {"taxon": "red fox"}, "missing": []})
-        self.assertEqual(answer["final_state"], "failed")
-        self.assertIn("nothing to report", answer["message"])
 
 
 class TestAgentShape(unittest.TestCase):

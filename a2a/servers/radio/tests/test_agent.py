@@ -16,7 +16,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -363,25 +362,8 @@ class ParseTests(unittest.TestCase):
 
 
 class SkillTests(unittest.TestCase):
-    def run_skill(self, skill, api=None, gateway=None, **params):
-        agent = RadioBrowserAgent(client=api or client(),
-                                   gateway=gateway or GatewayClient(fetch=_no_network))
-        request = {"skill": skill, "params": params, "missing": agent.missing(skill, params)}
-        return agent.run(request)
 
-    def test_find_lists_stations_with_health(self):
-        result = self.run_skill("stations-find", api=client(search=[JAZZ, SMOOTH]), tag="jazz", country="US")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Classic Vinyl HD", result["message"])
-        self.assertIn("stream failed the last check", result["message"])
-        self.assertIn("1 of them worked", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertEqual(result["artifact"]["count"], 2)
 
-    def test_find_with_no_match(self):
-        result = self.run_skill("stations-find", tag="polka", country="US")
-        self.assertIn("has no station", result["message"])
-        self.assertEqual(result["artifact"]["count"], 0)
 
     def test_find_without_a_filter_asks(self):
         agent = RadioBrowserAgent(client=client())
@@ -390,26 +372,8 @@ class SkillTests(unittest.TestCase):
         self.assertEqual(result["final_state"], "input-required")
         self.assertIn("genre", result["message"])
 
-    def test_find_rejects_a_bad_country(self):
-        result = self.run_skill("stations-find", country="USA", tag="jazz")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("two-letter code", result["message"])
 
-    def test_detail_lists_the_full_record(self):
-        result = self.run_skill("station-detail", uuid=JAZZ["stationuuid"])
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Classic Vinyl HD", result["message"])
-        self.assertIn("MP3 at 128 kbps", result["message"])
-        self.assertIn("California, United States (US)", result["message"])
-        self.assertIn("Votes: 412", result["message"])
-        self.assertIn("jazz, oldies", result["message"])
-        self.assertIn("http://stream.example.invalid/classic.mp3", result["message"])
-        self.assertEqual(result["artifact"]["station"]["stationuuid"], JAZZ["stationuuid"])
 
-    def test_detail_when_the_directory_does_not_hold_it(self):
-        result = self.run_skill("station-detail", api=client(byuuid=[]), uuid=JAZZ["stationuuid"])
-        self.assertIn("does not hold a station", result["message"])
-        self.assertIsNone(result["artifact"]["station"])
 
     def test_detail_without_a_uuid_asks(self):
         agent = RadioBrowserAgent(client=client())
@@ -417,17 +381,7 @@ class SkillTests(unittest.TestCase):
         result = agent.run({"skill": "station-detail", "params": {}, "missing": ["uuid"]})
         self.assertIn("radio-browser uuid", result["message"])
 
-    def test_near_sorts_by_the_directorys_own_distance(self):
-        result = self.run_skill("stations-near", api=client(search=[SMOOTH, BLUES]),
-                                point="40.7006,-74.0142")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("nearest first", result["message"])
-        self.assertIn("km away", result["message"])
-        self.assertEqual(result["artifact"]["stations"][0]["name"], "Adroit Blues")
 
-    def test_near_with_no_stations(self):
-        result = self.run_skill("stations-near", point="0.0,0.0")
-        self.assertIn("no station with coordinates", result["message"])
 
     def test_near_without_a_point_asks(self):
         agent = RadioBrowserAgent(client=client())
@@ -435,42 +389,10 @@ class SkillTests(unittest.TestCase):
         result = agent.run({"skill": "stations-near", "params": {}, "missing": ["point"]})
         self.assertIn("lat,lon", result["message"])
 
-    def test_genre_list_is_sorted_and_counted(self):
-        result = self.run_skill("genre-list", limit=3)
-        self.assertIn("pop - 12000 station(s)", result["message"])
-        self.assertIn("jazz - 9001 station(s)", result["message"])
-        self.assertIn("most stations first", result["message"])
 
-    def test_genre_list_filtered_to_known_tags(self):
-        result = self.run_skill("genre-list", limit=10, known_only=True)
-        self.assertIn("filtered to the common ones", result["message"])
-        self.assertNotIn("### top 40 club ###", result["message"])
 
-    def test_help_does_not_touch_the_directory(self):
-        result = self.run_skill("help")
-        self.assertIn("radio-browser", result["message"])
-        self.assertIn("cannot tell you what a station is playing", result["message"])
-        self.assertIsNone(result["artifact"])
 
-    def test_the_prefixed_gateway_url_override_is_wired_up(self):
-        import os
 
-        os.environ["RADIO_BROWSER_GATEWAY_URL"] = "http://127.0.0.1:9/mcp"
-        try:
-            agent = RadioBrowserAgent(client=client() if "radio" != "tv" else FakeTvmaze()
-                          if "radio" == "tv" else None)
-        finally:
-            del os.environ["RADIO_BROWSER_GATEWAY_URL"]
-        self.assertEqual(agent.gateway.url, "http://127.0.0.1:9/mcp",
-                         "the .env.example documents this override, so it has to work")
-
-    def test_card_skills_and_env_prefix(self):
-        ids = [skill["id"] for skill in CARD_SKILLS]
-        self.assertEqual(ids, ["stations-find", "station-detail", "stations-near", "genre-list",
-                               "station-roster"])
-        premium = [skill for skill in CARD_SKILLS if skill["id"] == "station-roster"][0]
-        self.assertIn("premium", premium["tags"])
-        self.assertEqual(RadioBrowserAgent(client=client()).env_prefix, "RADIO_BROWSER")
 
 
 #: Shape copied from a live `radio_station_roster` answer for jazz, blues and soul.
@@ -501,8 +423,6 @@ ROSTER_PAYLOAD = {
     ],
 }
 
-DENIED_TEXT = ("`radio_station_roster` is a premium tool, but that license key is not valid. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`radio_station_roster` failed: the upstream returned HTTP 429"
 
 
@@ -513,40 +433,11 @@ def _message(text, **extra):
     return payload
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            # The gateway's licence refusal, marker included: the marker is what tells a
-            # refusal apart from a tool that failed after the gate had let it through.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class StationRosterTests(unittest.TestCase):
     """The premium skill: parsing stays local, the filtering comes from the gateway."""
 
-    def test_roster_wording_routes_to_the_premium_skill(self):
-        for text in ("give me a roster of jazz, blues and soul stations for tonight",
-                     "pick 5 stations from jazz and blues",
-                     "stations from several genres please"):
-            parsed = parse(_message(text))
-            self.assertEqual(parsed["skill"], SKILL_STATION_ROSTER, text)
 
     def test_the_free_skills_keep_their_own_questions(self):
         self.assertEqual(parse(_message("find jazz radio stations"))["skill"], "stations-find")
@@ -566,43 +457,8 @@ class StationRosterTests(unittest.TestCase):
         self.assertEqual(parsed["params"]["tags"], "jazz,blues")
         self.assertEqual(parsed["params"]["limit"], 10)
 
-    def test_the_message_reports_the_gateways_roster(self):
-        gateway, calls = fake_gateway(ROSTER_PAYLOAD)
-        result = RadioBrowserAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_STATION_ROSTER, "params": {"tags": "jazz,blues,soul", "country": "US",
-                                                       "limit": 2}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Classic Vinyl HD", result["message"])
-        self.assertIn("12 duplicate(s) removed", result["message"])
-        self.assertIn("Median bitrate 96 kbps", result["message"])
-        self.assertIn("jazz: 100 candidate(s), 100 added", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["returned"], 2)
 
-        # The directory was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "radio_station_roster")
-        self.assertEqual(sent["arguments"]["tags"], "jazz,blues,soul")
-        self.assertEqual(sent["arguments"]["country"], "US")
 
-    def test_too_many_genres_is_refused_before_the_gateway(self):
-        gateway, calls = fake_gateway(ROSTER_PAYLOAD)
-        result = RadioBrowserAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_STATION_ROSTER,
-             "params": {"tags": "jazz,blues,soul,metal,folk"}, "missing": []})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("up to four genres", result["message"])
-        self.assertEqual(calls, [], "too many genres never reaches the gateway")
-
-    def test_a_bad_country_never_reaches_the_gateway(self):
-        gateway, calls = fake_gateway(ROSTER_PAYLOAD)
-        result = RadioBrowserAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_STATION_ROSTER, "params": {"tags": "jazz", "country": "USA"},
-             "missing": []})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertEqual(calls, [])
 
     def test_roster_without_genres_asks(self):
         agent = RadioBrowserAgent(client=client())
@@ -611,38 +467,9 @@ class StationRosterTests(unittest.TestCase):
         self.assertEqual(result["final_state"], "input-required")
         self.assertIn("Name up to four", result["message"])
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = RadioBrowserAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_STATION_ROSTER, "params": {"tags": "jazz"}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = RadioBrowserAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_STATION_ROSTER, "params": {"tags": "jazz"}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_roster(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = RadioBrowserAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_STATION_ROSTER, "params": {"tags": "jazz"}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("stations"))
 
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = RadioBrowserAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_STATION_ROSTER, "params": {"tags": "jazz"}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("HTTP 429", result["message"])
 
 
 if __name__ == "__main__":

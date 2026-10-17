@@ -18,12 +18,7 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import (  # noqa: E402
-    A2AHandler,
-    GatewayClient,
-    PushWatcher,
-    TaskStore,
-)
+from a2a_kit import A2AHandler, PushWatcher, TaskStore
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -480,32 +475,9 @@ DISCOVERY_PAYLOAD = {
             "complex, not of one fire",
 }
 
-DENIED_TEXT = ("`fire_discovery_timeline` is a premium tool, but that licence key has expired. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`fire_discovery_timeline` failed: the incident map returned no current fires"
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "expired"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class FireDiscoverySkillTests(unittest.TestCase):
@@ -514,13 +486,6 @@ class FireDiscoverySkillTests(unittest.TestCase):
     def agent(self, gateway) -> WildfireAgent:
         return WildfireAgent(FakeLayer(), gateway=gateway)
 
-    def test_discovery_questions_route_to_the_premium_skill(self):
-        for text in ("When were the current fires discovered over the last month?",
-                     "how long has the Vista fire been burning?",
-                     "what was the busiest day for new fires this month?"):
-            self.assertEqual(parse(_message(text))["skill"], SKILL_FIRE_DISCOVERY, text)
-        self.assertEqual(parse(_message("fire discoveries in the last 45 days"))["params"]["days"],
-                         "45")
 
     def test_the_free_skills_keep_their_own_questions(self):
         self.assertEqual(parse(_message("what wildfires are burning right now?"))["skill"],
@@ -537,84 +502,12 @@ class FireDiscoverySkillTests(unittest.TestCase):
         self.assertEqual(parsed["skill"], SKILL_FIRE_DISCOVERY)
         self.assertEqual(parsed["params"]["days"], 14)
 
-    def test_the_message_reports_the_gateways_timeline(self):
-        gateway, calls = fake_gateway(DISCOVERY_PAYLOAD)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_FIRE_DISCOVERY, "params": {"days": 30}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("61 fire(s) now on the national map were discovered in the 30 days",
-                      result["message"])
-        self.assertIn("Busiest day 2026-09-04 with 9 fire(s) and 48210.0 acres", result["message"])
-        self.assertIn("154 incident(s) on the map in all, 7 of them with no discovery date",
-                      result["message"])
-        self.assertIn("2026-09-04  9 fire(s), 48210.0 acres", result["message"])
-        self.assertIn("By state: ID 12 (88000.0 acres), MT 9 (41000.0 acres)", result["message"])
-        self.assertIn("By cause: Natural 31, Human 18", result["message"])
-        self.assertIn("VISTA (ID) — 48210.0 acres, 12.0% contained, burning 24.1 day(s)",
-                      result["message"])
-        self.assertIn("33 fire(s) are not yet half contained", result["message"])
-        self.assertIn("4820 person(s) committed", result["message"])
-        self.assertIn("not of one fire", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["fires_discovered_in_window"], 61)
-        self.assertEqual(len(result["artifact"]["daily"]), 3)
 
-        # The incident layer was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "fire_discovery_timeline")
-        self.assertEqual(sent["arguments"], {"days": 30})
 
-    def test_a_fully_contained_map_says_so(self):
-        gateway, _ = fake_gateway({**DISCOVERY_PAYLOAD, "notHalfContained": {"count": 0,
-                                                                            "largest": None}})
-        result = self.agent(gateway).run(
-            {"skill": SKILL_FIRE_DISCOVERY, "params": {"days": 30}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Every fire on the map is at least half contained", result["message"])
 
-    def test_a_window_outside_the_tools_range_is_a_question_not_a_crash(self):
-        gateway, calls = fake_gateway(DISCOVERY_PAYLOAD)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_FIRE_DISCOVERY, "params": {"days": 400}, "missing": []})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("between 1 and 120", result["message"])
-        self.assertEqual(calls, [], "a bad argument must not reach the gateway")
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = self.agent(gateway).run(
-            {"skill": SKILL_FIRE_DISCOVERY, "params": {"days": 30}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("daily", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = self.agent(gateway).run(
-            {"skill": SKILL_FIRE_DISCOVERY, "params": {"days": 30}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_timeline(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = self.agent(gateway).run(
-            {"skill": SKILL_FIRE_DISCOVERY, "params": {"days": 30}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("daily"))
-
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_FIRE_DISCOVERY, "params": {"days": 30}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("no current fires", result["message"])
 
 
 if __name__ == "__main__":

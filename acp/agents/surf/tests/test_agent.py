@@ -21,7 +21,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import SurfAgent, route, _number  # noqa: E402
 from data import (  # noqa: E402
@@ -299,60 +299,6 @@ class TurnTests(unittest.TestCase):
         self.assertIn("failed", statuses)
 
 
-class PremiumTests(unittest.TestCase):
-    def gateway(self, key, payload=None):
-        from acp_kit import GatewayClient
-        import json
-        calls = []
-        def fetch(url, request, headers):
-            calls.append((request, headers))
-            if key == "lic_live_but_rejected":
-                return {"result": {"isError": True, "content": [{"type": "text", "text": "Gateway says this licence was revoked."}],
-                                   "structuredContent": {"licenceRefusal": True, "reason": "denied"}}}
-            return {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
-        return GatewayClient(fetch=fetch, key=key), calls
-
-    def test_no_key_attempts_premium_call_without_authorizing(self):
-        import os
-        from unittest.mock import patch
-        with patch.dict(os.environ, {}, clear=True):
-            gateway, calls = self.gateway(None)
-            with patch.object(gateway, "call", wraps=gateway.call) as attempted:
-                answer, artifact = SurfAgent(gateway=gateway)._run_skill(*route("surf window board at Santa Cruz"))
-                attempted.assert_called_once()
-        self.assertIn("MCP_LICENSE_KEY", answer)
-        self.assertEqual(answer, artifact["summary"])
-        self.assertEqual(artifact["reason"], "missing_key")
-        self.assertEqual(calls, [])
-
-    def test_rejected_key_preserves_gateway_wording(self):
-        gateway, calls = self.gateway("lic_live_but_rejected")
-        answer, artifact = SurfAgent(gateway=gateway)._run_skill(*route("surf window board at Santa Cruz"))
-        self.assertEqual(answer, "Gateway says this licence was revoked.")
-        self.assertEqual(artifact["reason"], "denied")
-        self.assertEqual(len(calls), 1)
-
-    def test_good_key_sends_arguments_and_displays_payload_numbers(self):
-        payload = {"days": [{"date": "2026-10-02", "waveHeightM": 2.17, "periodS": 11.2, "windKmh": 8.3, "score": 34.1}]}
-        gateway, calls = self.gateway("lic_good", payload)
-        answer, artifact = SurfAgent(gateway=gateway)._run_skill(*route("surf window board at Santa Cruz"))
-        self.assertEqual(len(calls), 1)
-        self.assertEqual(calls[0][0]["params"], {"name": "surf_window_board", "arguments": {"latitude": 36.95, "longitude": -122.03, "days": 7}})
-        self.assertIn("2.17 m", answer); self.assertIn("34.1", answer)
-        self.assertTrue(artifact["premium"])
-
-    def test_free_question_never_reaches_gateway(self):
-        from unittest.mock import Mock
-        gateway = Mock()
-        data, _ = live_data()
-        SurfAgent(data=data, gateway=gateway)._run_skill(*route("how big are the waves at Santa Cruz right now?"))
-        gateway.call.assert_not_called()
-
-    def test_empty_payload_is_reported(self):
-        gateway, _ = self.gateway("lic_good", {})
-        answer, artifact = SurfAgent(gateway=gateway)._window_board({"spot": "Santa Cruz"})
-        self.assertTrue(artifact["failed"])
-        self.assertIn("no readable", answer)
 
 
 if __name__ == "__main__":

@@ -21,7 +21,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import GatewayClient, AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import ArtAgent, query_from_text, route  # noqa: E402
 from data import (  # noqa: E402
@@ -265,78 +265,6 @@ class TurnTests(unittest.TestCase):
         self.assertIn("failed", statuses)
 
 
-class PremiumIndexTests(unittest.TestCase):
-    payload = {"movements": [{"movement": "impressionism", "totalMatches": 93, "sampled": 5,
-               "museums": [{"museum": "Chicago", "matches": 40, "sampled": 2},
-                           {"museum": "Cleveland", "matches": 23, "sampled": 1},
-                           {"museum": "The Met", "matches": 30, "sampled": 2}],
-               "topArtist": {"artist": "Claude Monet", "works": 3}}],
-               "note": "Search matches; artist rankings are sampled."}
-
-    def gateway(self, key, result):
-        calls = []
-        def fetch(url, payload, headers):
-            calls.append({"tool": payload["params"]["name"], "arguments": payload["params"]["arguments"],
-                          "authorized": "Authorization" in headers})
-            return result
-        gateway = GatewayClient(fetch=fetch, url="http://gateway.test", key=key)
-        gateway.calls = calls
-        return gateway
-
-    def turn(self, gateway, text="movement index: Impressionism"):
-        agent_conn, client_conn = connected_pair()
-        agent = ArtAgent(agent_conn, FakeData(), gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start(); client.initialize(); sid = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, sid)
-        finally:
-            client.stop()
-
-    def test_no_key_attempted_without_authorization(self):
-        with patch.dict(os.environ):
-            os.environ.pop("MCP_LICENSE_KEY", None)
-            gateway = self.gateway(None, {})
-            with patch.object(gateway, "call", wraps=gateway.call) as attempted:
-                result = self.turn(gateway)
-                attempted.assert_called_once_with("art_movement_index", {"movements": ["impressionism"]})
-        self.assertIn("`art_movement_index` is a premium skill and no licence key is set. Put a Polar key in MCP_LICENSE_KEY and ask again.", result["text"])
-        self.assertNotIn("Authorization", gateway.headers())
-        self.assertEqual(gateway.calls, [])
-
-    def test_rejected_key_preserves_wording(self):
-        wording = "Gateway says revoked: set MCP_LICENSE_KEY to a valid key."
-        gateway = self.gateway("lic_live_but_rejected", {"result": {"isError": True, "content": [{"type": "text", "text": wording}], "structuredContent": {"licenceRefusal": True, "reason": "denied"}}})
-        self.assertEqual(self.turn(gateway)["text"], wording)
-        self.assertEqual(len(gateway.calls), 1)
-
-    def test_good_key_real_numbers(self):
-        gateway = self.gateway("lic_granted", {"result": {"content": [{"type": "text", "text": json.dumps(self.payload)}]}})
-        result = self.turn(gateway)
-        for text in ("93 search matches", "5 sampled works", "Claude Monet (3 works)", "23 matches"):
-            self.assertIn(text, result["text"])
-        self.assertEqual(gateway.calls, [{"tool": "art_movement_index", "arguments": {"movements": ["impressionism"]}, "authorized": True}])
-        _, artifact = ArtAgent(gateway=gateway)._index({"movements": ["impressionism"]})
-        self.assertTrue(artifact["premium"])
-
-    def test_free_question_never_calls_gateway(self):
-        gateway = self.gateway("lic_granted", {})
-        with patch.object(gateway, "call", side_effect=AssertionError("free question reached gateway")) as call:
-            self.assertIn("Water Lilies", self.turn(gateway, "paintings by Monet")["text"])
-            call.assert_not_called()
-
-    def test_empty_and_malformed_index(self):
-        for payload in ({}, {"movements": [None]}, {"movements": [{"movement": "impressionism", "museums": []}]}):
-            gateway = self.gateway("lic_granted", {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}})
-            answer, artifact = ArtAgent(gateway=gateway)._index({"movements": ["impressionism"]})
-            self.assertIn("no readable museum index", answer)
-            self.assertTrue(artifact["failed"])
-
-    def test_route_and_failed_upstream(self):
-        self.assertEqual(route("movement index: Impressionism and Baroque"), ("art-index", {"movements": ["Impressionism", "Baroque"]}))
-        gateway = self.gateway("lic_granted", {"result": {"isError": True, "content": [{"type": "text", "text": "museum offline"}]}})
-        self.assertIn("could not read the museum collections: museum offline", self.turn(gateway)["text"])
 
 
 if __name__ == "__main__":

@@ -24,8 +24,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (AcpClient, Connection, GatewayClient,  # noqa: E402
-                     STOP_END_TURN, STOP_REFUSAL)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import route  # noqa: E402
 from data import (EARTH_MU, SatelliteData, SatelliteError, SatelliteNotFound,  # noqa: E402
@@ -343,10 +342,7 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# The premium skill: satellites-orbit-shell
 #
-# No network: the licence check and the work both happen on the gateway, and the
-# gateway's own JSON-RPC answers are injected into the real GatewayClient.
 # ---------------------------------------------------------------------------
 
 #: What `satellites_orbit_shell_board` answers for the stations group.
@@ -371,124 +367,10 @@ SHELL_DATA = {
 }
 
 #: The exact refusal the gateway sends for a key it will not accept.
-GATEWAY_DENIAL = ("`satellites_orbit_shell_board` is a premium tool, but that licence key was "
-                  "rejected. Check MCP_LICENSE_KEY, or get a key at https://polar.sh/mrfentmen")
 
 
-def gateway_answer(text, is_error=False, structured=None):
-    """A fake transport that answers every premium call with one JSON-RPC reply."""
-    def fetch(url, payload, headers):
-        fetch.calls.append({"url": url, "payload": payload, "headers": headers})
-        result = {"content": [{"type": "text", "text": text}]}
-        if is_error:
-            result["isError"] = True
-        if structured is not None:
-            result["structuredContent"] = structured
-        return {"jsonrpc": "2.0", "id": payload.get("id", 1), "result": result}
-
-    fetch.calls = []
-    return fetch
 
 
-class PremiumTests(unittest.TestCase):
-    """No key, a bad key and a good key, plus the routing that gets there."""
-
-    def turn(self, text: str, fetch, key: str):
-        from agent import SatellitesAgent
-
-        agent_conn, client_conn = connected_pair()
-        data, _feed = make_data()
-        gateway = GatewayClient(fetch=fetch, key=key, url="https://gateway.test/mcp")
-        agent = SatellitesAgent(agent_conn, data, gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_answers_with_the_missing_key_wording(self):
-        fetch = gateway_answer("")
-        result, client = self.turn("which orbital shell is the ISS in?", fetch, "")
-        #: An answer, not a crash, and not a failed lookup either.
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertIn("no licence key is set", result["text"])
-        self.assertEqual(len(client.permission_requests), 1)
-        #: Nothing was spent on a call the gate was never going to let through.
-        self.assertEqual(fetch.calls, [])
-
-    def test_a_bad_key_returns_the_gateways_own_wording(self):
-        fetch = gateway_answer(GATEWAY_DENIAL, is_error=True,
-                               structured={"licenceRefusal": True, "reason": "denied"})
-        result, _ = self.turn("which orbital shell is the ISS in?", fetch, "not-a-real-key")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn(GATEWAY_DENIAL, result["text"])
-        self.assertIn("premium", result["text"])
-        self.assertEqual(len(fetch.calls), 1)
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["name"],
-                         "satellites_orbit_shell_board")
-
-    def test_a_good_key_returns_the_orbit_board(self):
-        fetch = gateway_answer(json.dumps(SHELL_DATA))
-        result, _ = self.turn("which orbital shell is the ISS in?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("element sets read: 22 of 22 in the group", result["text"])
-        self.assertIn("shell at 427.7 km, period 92.98 min: 9 object(s)", result["text"])
-        self.assertIn("ISS (ZARYA)  [cat 25544]", result["text"])
-        self.assertIn("the ISS shell is 427.7 km", result["text"])
-        self.assertIn("9 of the group sit within 25 km of it", result["text"])
-        self.assertIn("inclination spread: 41.5 to 98.7 deg", result["text"])
-        self.assertIn("so it is a mean", result["text"])
-        self.assertIn("altitude, not the height at any one moment", result["text"])
-        #: The licence key travels in a header and is never echoed back.
-        self.assertEqual(fetch.calls[0]["headers"]["Authorization"], "Bearer k_paid")
-        self.assertNotIn("k_paid", result["text"])
-
-    def test_a_group_asked_for_by_name_is_sent_to_the_gateway(self):
-        fetch = gateway_answer(json.dumps(SHELL_DATA))
-        self.turn("how high are the geostationary satellites?", fetch, "k_paid")
-        arguments = fetch.calls[0]["payload"]["params"]["arguments"]
-        self.assertEqual(arguments["group"], "geo")
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def fetch(url, payload, headers):
-            raise OSError("connection refused")
-
-        result, _ = self.turn("which orbital shell is the ISS in?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("I could not read Celestrak's elements", result["text"])
-
-    def test_the_routing_is_narrow(self):
-        premium = [
-            "which orbital shell is the ISS in?",
-            "how high is the ISS?",
-            "how many satellites share the ISS orbit?",
-            "group the stations by orbit shell",
-        ]
-        for text in premium:
-            self.assertEqual(route(text)[0], "satellites-orbit-shell", text)
-
-        free = [
-            ("what satellites are overhead?", "satellites-stations"),
-            ("cat id 25544", "satellites-lookup"),
-            ("1998-067A", "satellites-lookup"),
-            ("tell me about the ISS", "satellites-name"),
-            ("give me the TLE for cat id 25544", "satellites-tle"),
-            ("what can you do?", "help"),
-            ("", "help"),
-        ]
-        for text, expected in free:
-            self.assertEqual(route(text)[0], expected, text)
-
-    def test_the_premium_skill_id_is_published(self):
-        from agent import SKILLS
-
-        self.assertIn("satellites-orbit-shell", SKILLS)
 
 
 if __name__ == "__main__":

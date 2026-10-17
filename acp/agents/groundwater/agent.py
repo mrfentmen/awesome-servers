@@ -15,9 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, GroundwaterData, GroundwaterError,  # noqa: E402
                   GroundwaterNotFound, identifier_from_text, state_from_text)
@@ -213,9 +211,7 @@ class GroundwaterAgent(AcpAgent):
                  gateway=None) -> None:
         super().__init__(connection)
         self.data = data or GroundwaterData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -261,7 +257,7 @@ class GroundwaterAgent(AcpAgent):
                 body = render_state(overview)
                 summary = (f"{overview['state']}: {overview['wells']} well(s), median "
                            f"{overview['median_ft']:g} ft")
-        except (GroundwaterError, GatewayError, ValueError) as exc:
+        except (GroundwaterError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read USGS's water data: {exc}")
             return STOP_END_TURN
@@ -275,43 +271,9 @@ class GroundwaterAgent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        arguments: dict = {"location_id": params["identifier"]}
-        days = params.get("days")
-        if days:
-            arguments["days"] = int(days)
-
-        data, refused = premium_call(self.gateway, "groundwater_trends", arguments,
-                                    {"agent": "groundwater"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not data.get("location_id"):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back any trend for that well.", {"agent": "groundwater"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a trend out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_trend(data)
-        summary = (f"{data['location_id']}: {data.get('trend', 'not reported')}, "
-                   f"{_num(data.get('rate_per_year_ft'))} ft/year")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message(f"\nSource: {data.get('source', DATASET)}, fitted on the licence gateway. A "
-                    "larger number means a *deeper* water table, and the fit is a line through the "
-                    "readings, not a forecast: a well that was dry half the window says more about "
-                    "the gauge than about the aquifer.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

@@ -19,9 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, HEALTH_FIELDS, QUALITY_NOTES, PostcodeData,  # noqa: E402
                   PostcodeError, PostcodeNotFound, normalise, outcode_from_text,
@@ -34,7 +32,7 @@ HELP = (
     "  - who is the MP for M1 1AE?\n"
     "  - what is in the postcode district LS1?\n"
     "Which postcodes are near EC1A 1BB, how far is each one, and which of them fall in a "
-    "different district or NHS area? (premium - one postcode record cannot answer that)\n"
+    "different district or NHS area? (not implemented here)\n"
     "A postcode's `quality` is not a score: 1 means live and receiving mail, and 4 or 5 mean the "
     "postcode was withdrawn, so a withdrawn one is reported as withdrawn rather than looked up "
     "as if it were live.\n"
@@ -300,9 +298,7 @@ class UkPostcodeAgent(AcpAgent):
                  gateway=None) -> None:
         super().__init__(connection)
         self.data = data or PostcodeData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -326,7 +322,7 @@ class UkPostcodeAgent(AcpAgent):
             return STOP_END_TURN
 
         tool = f"call_{skill.replace('-', '_')}"
-        label = ("Ask the licence gateway for the neighbouring postcodes" if skill == "uk-nearby"
+        label = ("Ask about the neighbouring postcodes" if skill == "uk-nearby"
                  else "Read the ONS Postcodes Directory")
         ctx.tool_call(tool, label, kind="fetch", name=skill, raw_input=dict(params))
         if not ctx.ask_permission(tool, "Allow UK Postcode to read the Postcodes Directory?",
@@ -360,7 +356,7 @@ class UkPostcodeAgent(AcpAgent):
                     summary = (f"{record['postcode']}: "
                                f"{_show(record.get('admin_district'))}, "
                                f"{_show(record.get('region'))}")
-        except (PostcodeError, GatewayError, ValueError) as exc:
+        except (PostcodeError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the Postcodes Directory: {exc}")
             return STOP_END_TURN
@@ -374,43 +370,9 @@ class UkPostcodeAgent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str, want_miles: bool) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        arguments: dict = {"postcode": normalise(params["postcode"])}
-        if params.get("radius_km"):
-            arguments["radius_km"] = round(float(params["radius_km"]), 2)
-
-        data, refused = premium_call(self.gateway, "uk_postcode_nearby", arguments,
-                                    {"agent": "uk-postcode"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not data.get("postcode"):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back the neighbouring postcodes.",
-                {"agent": "uk-postcode"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a neighbourhood out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_nearby(data, want_miles)
-        summary = (f"{data['postcode']}: {_num(data.get('found'))} postcodes within "
-                   f"{_num(data.get('radius_km'))} km")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message("\nSource: the ONS Postcodes Directory, worked out on the licence gateway. Every "
-                    "distance is a straight line between the two postcodes' published centroids, so "
-                    "a figure here is not a walking distance and a street can cross a district "
-                    "boundary the centroid distance says it does not.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

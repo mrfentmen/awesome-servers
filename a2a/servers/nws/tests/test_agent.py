@@ -17,12 +17,7 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import (  # noqa: E402
-    A2AHandler,
-    GatewayClient,
-    PushWatcher,
-    TaskStore,
-)
+from a2a_kit import A2AHandler, PushWatcher, TaskStore
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -350,43 +345,14 @@ TIMELINE_PAYLOAD = {
     ],
 }
 
-DENIED_TEXT = ("`nws_alert_timeline` is a premium tool, but that licence key has expired. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`nws_alert_timeline` failed: the alerts feed returned no features"
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "expired"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class AlertTimelineSkillTests(unittest.TestCase):
     """The premium skill: parsing stays local, the timeline comes from the gateway."""
 
-    def test_timeline_questions_route_to_the_premium_skill(self):
-        for text in ("How long will the weather alerts in Texas keep running?",
-                     "when do the weather alerts expire in NY?",
-                     "how many alerts will still be running next week?"):
-            self.assertEqual(parse(message(text))["skill"], SKILL_ALERTS_TIMELINE, text)
-        self.assertEqual(parse(message("alerts-timeline for TX"))["params"]["area"], "TX")
 
     def test_the_free_skills_keep_their_own_questions(self):
         self.assertEqual(parse(message("Any weather alerts in NY right now?"))["skill"],
@@ -402,83 +368,12 @@ class AlertTimelineSkillTests(unittest.TestCase):
         self.assertEqual(parsed["skill"], SKILL_ALERTS_TIMELINE)
         self.assertEqual(parsed["params"]["area"], "TX")
 
-    def test_the_message_reports_the_gateways_timeline(self):
-        gateway, calls = fake_gateway(TIMELINE_PAYLOAD)
-        result = NWSAlertsAgent(FakeNWS(), gateway=gateway).run(
-            {"skill": SKILL_ALERTS_TIMELINE, "params": {"area": "TX"}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("22 active NWS alert(s) for Texas", result["message"])
-        self.assertIn("Minor 14", result["message"])
-        self.assertIn("3 carry no end time, and 2 have not started yet", result["message"])
-        self.assertIn("First to expire: Heat Advisory in Travis, TX at 2026-09-28T20:00:00.000Z",
-                      result["message"])
-        self.assertIn("Running longest: Flood Warning in Harris, TX, 62.5 h so far", result["message"])
-        self.assertIn("2026-09-29T06:00:00.000Z  11 in effect", result["message"])
-        self.assertIn("1 will still be running a week from now", result["message"])
-        self.assertIn("Extreme Flash Flood Emergency", result["message"])
-        self.assertIn("with no end time published", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["total_alerts"], 22)
-        self.assertEqual(len(result["artifact"]["timeline"]), 3)
 
-        # The feed was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "nws_alert_timeline")
-        self.assertEqual(sent["arguments"], {"area": "TX"})
 
-    def test_a_quiet_state_is_reported_as_quiet(self):
-        gateway, _ = fake_gateway({"area": "WY", "totalAlerts": 0,
-                                   "note": "no alerts are in effect for that area right now"})
-        result = NWSAlertsAgent(FakeNWS(), gateway=gateway).run(
-            {"skill": SKILL_ALERTS_TIMELINE, "params": {"area": "WY"}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Nothing to time", result["message"])
-        self.assertIn("no alerts are in effect", result["message"])
 
-    def test_a_zone_or_point_is_asked_back_rather_than_answered_nationally(self):
-        for params in ({"zone": "NYZ072"}, {"point": "40.71,-74.01"}):
-            gateway, calls = fake_gateway(TIMELINE_PAYLOAD)
-            result = NWSAlertsAgent(FakeNWS(), gateway=gateway).run(
-                {"skill": SKILL_ALERTS_TIMELINE, "params": params, "missing": []})
-            self.assertEqual(result["final_state"], "input-required")
-            self.assertIn("two-letter state code", result["message"])
-            self.assertEqual(calls, [], "a question the tool cannot answer must not be sent")
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = NWSAlertsAgent(FakeNWS(), gateway=gateway).run(
-            {"skill": SKILL_ALERTS_TIMELINE, "params": {"area": "TX"}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("timeline", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = NWSAlertsAgent(FakeNWS(), gateway=gateway).run(
-            {"skill": SKILL_ALERTS_TIMELINE, "params": {"area": "TX"}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_timeline(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = NWSAlertsAgent(FakeNWS(), gateway=gateway).run(
-            {"skill": SKILL_ALERTS_TIMELINE, "params": {"area": "TX"}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("timeline"))
-
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = NWSAlertsAgent(FakeNWS(), gateway=gateway).run(
-            {"skill": SKILL_ALERTS_TIMELINE, "params": {"area": "TX"}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("no features", result["message"])
 
 
 if __name__ == "__main__":

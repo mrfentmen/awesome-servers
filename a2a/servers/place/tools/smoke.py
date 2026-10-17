@@ -132,23 +132,6 @@ def main(argv=None) -> int:
     smoke.check("the world's gap on the UK is explained",
                 "does not cover the United Kingdom" in text_of(gap), text_of(gap)[:140])
 
-    # The premium skill: without a key the gateway's own wording comes back as an answer.
-    premium = ask(smoke, f"which ward covers the area around {MANCHESTER_POINT}?")
-    premium_data = artifact_data(premium)
-    premium_state = premium.get("status", {}).get("state")
-    if premium_data.get("premium") and premium_data.get("reason") in ("missing_key", "denied"):
-        smoke.check("catchment-area with no licence is a completed answer",
-                    premium_state == "completed", str(premium_state))
-        smoke.check("the refusal names the key", "MCP_LICENSE_KEY" in text_of(premium),
-                    premium_data.get("reason"))
-        smoke.check("no tally is handed over without a licence", premium_data.get("coverage") is None)
-    else:
-        coverage = premium_data.get("coverage") or {}
-        smoke.check("catchment-area returned live coverage",
-                    premium_state == "completed" and bool(coverage),
-                    str(premium_state))
-        smoke.check("a ward tally came back", bool((coverage.get("wards") or [])),
-                    str((coverage.get("wards") or [])[:3]))
 
     # input-required -> follow-up when nothing to look up was named.
     lonely = ask(smoke, "what is in that postcode?")

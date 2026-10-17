@@ -19,8 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import DATASET_AIC, DATASET_MET, ArtData, ArtError  # noqa: E402
 
@@ -29,7 +28,7 @@ HELP = (
     "  • paintings by Monet\n"
     "  • find art about the sea\n"
     "  • surprise me with a piece\n"
-    "  • movement index: Impressionism and Baroque (premium)\n"
+    "  • movement index: Impressionism and Baroque (not implemented here)\n"
     "I answer with the work, the artist, the date and a link; the random pick is "
     "public-domain and comes from The Met."
 )
@@ -91,10 +90,10 @@ class ArtAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: ArtData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or ArtData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -130,7 +129,7 @@ class ArtAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (ArtError, GatewayError, ValueError) as exc:
+        except (ArtError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the museum collections: {exc}")
             return STOP_END_TURN
@@ -155,44 +154,9 @@ class ArtAgent(AcpAgent):
         return HELP, {"summary": "help", "dataset": None}
 
     def _index(self, params: dict) -> tuple[str, dict]:
-        """Read the gateway's cross-museum movement index."""
-        movements = params.get("movements")
-        if (not isinstance(movements, list) or not 1 <= len(movements) <= 2
-                or any(not isinstance(m, str) or not 2 <= len(m.strip()) <= 60 for m in movements)):
-            raise ValueError("give one or two movement names, e.g. movement index: Impressionism and Baroque")
-        arguments = {"movements": [m.strip().lower() for m in movements]}
-        context = {"agent": "art", "skill": "art-index"}
-        data, refused = premium_call(self.gateway, "art_movement_index", arguments, context)
-        if refused:
-            return refused
-        rows = data.get("movements") if isinstance(data, dict) else None
-        def count(value):
-            return type(value) is int and value >= 0
-        def valid(row):
-            if not isinstance(row, dict) or not isinstance(row.get("movement"), str):
-                return False
-            museums = row.get("museums")
-            top = row.get("topArtist")
-            return (count(row.get("totalMatches")) and count(row.get("sampled"))
-                    and isinstance(museums, list) and len(museums) == 3
-                    and all(isinstance(m, dict) and isinstance(m.get("museum"), str)
-                            and count(m.get("matches")) and count(m.get("sampled"))
-                            for m in museums)
-                    and (top is None or isinstance(top, dict)
-                         and isinstance(top.get("artist"), str) and count(top.get("works"))))
-        if (not isinstance(rows, list) or len(rows) != len(movements)
-                or not all(valid(row) for row in rows) or not isinstance(data.get("note"), str)):
-            return empty_premium_answer("The gateway returned no readable museum index.", context)
-        lines = ["Premium cross-museum movement query index:"]
-        for row in rows:
-            lines.append(f"  • {row['movement']}: {row['totalMatches']} search matches; {row['sampled']} sampled works.")
-            for museum in row["museums"]:
-                lines.append(f"    {museum['museum']}: {museum['matches']} matches, {museum['sampled']} sampled.")
-            top = row.get("topArtist")
-            lines.append(f"    Top artist in sample: {top['artist']} ({top['works']} works)."
-                         if top else "    Top artist in sample: not reported.")
-        lines.append(data["note"])
-        return "\n".join(lines), {**context, "summary": "premium cross-museum index", "premium": True, "data": data}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: index — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     @staticmethod
     def _line(piece: dict) -> str:

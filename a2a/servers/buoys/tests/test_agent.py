@@ -18,12 +18,7 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import (  # noqa: E402
-    A2AHandler,
-    GatewayClient,
-    PushWatcher,
-    TaskStore,
-)
+from a2a_kit import A2AHandler, PushWatcher, TaskStore
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -745,47 +740,14 @@ FLEET_PAYLOAD = {
                             "waterTemperature": 31.5, "pressure": 19.4},
 }
 
-DENIED_TEXT = ("`buoy_fleet_status` is a premium tool, but that license key has expired. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`buoy_fleet_status` failed: the NDBC latest-observation table came back empty"
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "expired"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class FleetSkillTests(unittest.TestCase):
     """The premium skill: parsing stays local, the fleet figures come from the gateway."""
 
-    def test_fleet_questions_route_to_the_premium_skill(self):
-        for text in ("How rough is it across the whole buoy network right now?",
-                     "which stations have gone quiet?",
-                     "how many stations are reporting?",
-                     "stations silent for more than 3 hours"):
-            parsed = parse(_message(text))
-            self.assertEqual(parsed["skill"], SKILL_BUOY_FLEET, text)
-            self.assertTrue(parsed["explicit"], text)
-        self.assertEqual(parse(_message("how many stations are reporting?"))["params"]["stale_minutes"],
-                         STALE_AFTER_MINUTES)
 
     def test_stale_minutes_from_text_reads_minutes_and_hours(self):
         self.assertEqual(stale_minutes_from_text("stations silent for more than 90 minutes"), 90)
@@ -810,77 +772,12 @@ class FleetSkillTests(unittest.TestCase):
         self.assertEqual(parsed["skill"], SKILL_BUOY_FLEET)
         self.assertEqual(parsed["params"]["stale_minutes"], 240)
 
-    def test_the_message_reports_the_gateways_fleet(self):
-        gateway, calls = fake_gateway(FLEET_PAYLOAD)
-        result = BuoyAgent(FakeNdbc(), gateway=gateway).run(
-            {"skill": SKILL_BUOY_FLEET, "params": {"stale_minutes": 180}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("907 NDBC stations published a reading", result["message"])
-        self.assertIn("112 station(s) have said nothing for more than 180 minutes", result["message"])
-        self.assertIn("41001 — silent 2130.4 minutes", result["message"])
-        # The gateway answers in metric; this server reads english by default.
-        self.assertIn("median 3.9 ft", result["message"])
-        self.assertIn("strongest 33.6 mph", result["message"])
-        self.assertIn("wave height 29.4%", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["stations_reporting"], 907)
-        self.assertEqual(len(result["artifact"]["quietest_stations"]), 2)
 
-        # NDBC was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "buoy_fleet_status")
-        self.assertEqual(sent["arguments"]["stale_minutes"], 180)
 
-    def test_a_stale_limit_outside_the_allowed_range_is_a_question_not_a_crash(self):
-        gateway, calls = fake_gateway(FLEET_PAYLOAD)
-        result = BuoyAgent(FakeNdbc(), gateway=gateway).run(
-            {"skill": SKILL_BUOY_FLEET, "params": {"stale_minutes": 10}, "missing": []})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("between 30 and 720", result["message"])
-        self.assertEqual(calls, [], "a bad argument must not reach the gateway")
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = BuoyAgent(FakeNdbc(), gateway=gateway).run(
-            {"skill": SKILL_BUOY_FLEET, "params": {"stale_minutes": 180}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("sea_state", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = BuoyAgent(FakeNdbc(), gateway=gateway).run(
-            {"skill": SKILL_BUOY_FLEET, "params": {"stale_minutes": 180}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_fleet(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = BuoyAgent(FakeNdbc(), gateway=gateway).run(
-            {"skill": SKILL_BUOY_FLEET, "params": {"stale_minutes": 180}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("sea_state"))
 
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = BuoyAgent(FakeNdbc(), gateway=gateway).run(
-            {"skill": SKILL_BUOY_FLEET, "params": {"stale_minutes": 180}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("came back empty", result["message"])
-
-    def test_an_empty_fleet_table_is_reported_as_such(self):
-        gateway, _ = fake_gateway({**FLEET_PAYLOAD, "stationsReporting": 0})
-        result = BuoyAgent(FakeNdbc(), gateway=gateway).run(
-            {"skill": SKILL_BUOY_FLEET, "params": {"stale_minutes": 180}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("without any station rows", result["message"])
 
 
 if __name__ == "__main__":

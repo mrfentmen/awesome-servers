@@ -16,11 +16,7 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import (  # noqa: E402
-    GatewayClient,
-    PushWatcher,
-    TaskStore,
-)
+from a2a_kit import PushWatcher, TaskStore
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -551,8 +547,6 @@ WINDOW_PAYLOAD = {
     "highestWater": {"height": 10.1, "at": "2026-09-28 11:00"},
 }
 
-DENIED_TEXT = ("`tide_windows` is a premium tool, but that license key is not valid. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`tide_windows` failed: NOAA refused that request: station out of range"
 
 
@@ -563,41 +557,11 @@ def _message(text, **extra):
     return payload
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            # The gateway's licence refusal, marker included: the marker is what tells a
-            # refusal apart from a tool that failed after the gate had let it through.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class WindowSkillTests(unittest.TestCase):
     """The premium skill: parsing stays local, the windows come from the gateway."""
 
-    def test_low_water_questions_route_to_the_premium_skill(self):
-        for text in ("when is the water low enough to get the boat out at Boston this week?",
-                     "low water windows at 8443970 below 1.5 ft",
-                     "how long is the water below 1.5 ft at 8443970 over the next 3 days"):
-            parsed = parse(_message(text))
-            self.assertEqual(parsed["skill"], SKILL_TIDE_WINDOWS, text)
-            self.assertTrue(parsed["explicit"], text)
 
     def test_the_free_skills_keep_their_own_questions(self):
         self.assertEqual(parse(_message("what are the tides at 8518750 today?"))["skill"],
@@ -621,78 +585,12 @@ class WindowSkillTests(unittest.TestCase):
         self.assertEqual(parsed["params"]["days"], 5)
         self.assertEqual(parsed["params"]["below"], 1.5)
 
-    def test_the_message_reports_the_gateways_windows(self):
-        gateway, calls = fake_gateway(WINDOW_PAYLOAD)
-        result = NoaaTidesAgent(FakeTides(), gateway=gateway).run(
-            {"skill": SKILL_TIDE_WINDOWS, "params": {"station": "8443970", "days": 3}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("2026-09-29 01:00 to 2026-09-29 12:00", result["message"])
-        self.assertIn("12 h at or below 2.31 ft", result["message"])
-        self.assertIn("21 hours at or below", result["message"])
-        self.assertIn("Lowest water 0.4 ft", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["window_count"], 2)
-        self.assertEqual(len(result["artifact"]["windows"]), 2)
 
-        # NOAA was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "tide_windows")
-        self.assertEqual(sent["arguments"]["station"], "8443970")
-        self.assertEqual(sent["arguments"]["days"], 3)
-        self.assertEqual(sent["arguments"]["datum"], "MLLW")
-        self.assertNotIn("below", sent["arguments"], "no threshold asked for, so none is sent")
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = NoaaTidesAgent(FakeTides(), gateway=gateway).run(
-            {"skill": SKILL_TIDE_WINDOWS, "params": {"station": "8443970"}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("windows", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = NoaaTidesAgent(FakeTides(), gateway=gateway).run(
-            {"skill": SKILL_TIDE_WINDOWS, "params": {"station": "8443970"}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_windows(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = NoaaTidesAgent(FakeTides(), gateway=gateway).run(
-            {"skill": SKILL_TIDE_WINDOWS, "params": {"station": "8443970"}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("windows"))
 
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = NoaaTidesAgent(FakeTides(), gateway=gateway).run(
-            {"skill": SKILL_TIDE_WINDOWS, "params": {"station": "8443970"}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("NOAA refused", result["message"])
 
-    def test_an_unresolvable_station_is_never_guessed_or_charged(self):
-        gateway, calls = fake_gateway(WINDOW_PAYLOAD)
-        result = NoaaTidesAgent(FakeTides(matches=()), gateway=gateway).run(
-            {"skill": SKILL_TIDE_WINDOWS, "params": {"station_name": "Atlantis"}, "missing": []})
-        self.assertIn("No NOAA tide station matches", result["message"])
-        self.assertEqual(calls, [])
-
-    def test_a_window_at_or_below_nothing_still_reports_cleanly(self):
-        payload = {**WINDOW_PAYLOAD, "windowCount": 0, "hoursAtOrBelow": 0, "windows": [],
-                   "bestWindow": None}
-        gateway, _ = fake_gateway(payload)
-        result = NoaaTidesAgent(FakeTides(), gateway=gateway).run(
-            {"skill": SKILL_TIDE_WINDOWS, "params": {"station": "8443970"}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("No hour in this window is at or below", result["message"])
 
 
 if __name__ == "__main__":

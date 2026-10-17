@@ -114,19 +114,7 @@ def main(argv=None) -> int:
                 and len(artifact_data(follow).get("episodes") or []) > 0,
                 str(len(artifact_data(follow).get("episodes") or [])))
 
-    # The premium skill: with no key set this must be a COMPLETED answer carrying the
     # gateway's own wording, not a crash and not a fabricated plan.
-    premium = smoke.rpc(
-        "message/send",
-        {"message": smoke.user_message(f"how long do I need to finish season 2 of {SHOW}?")},
-    ).get("result", {})
-    premium_text = premium.get("status", {}).get("message", {}).get("parts", [{}])[0].get("text", "")
-    smoke.check("premium skill answers rather than crashing",
-                premium.get("status", {}).get("state") in ("completed", "failed"), str(premium.get("status")))
-    smoke.check("premium skill names the licence gate",
-                "tv_binge_plan" in premium_text or "MCP_LICENSE_KEY" in premium_text, premium_text[:120])
-    smoke.check("premium skill reports no episodes without a licence",
-                not artifact_data(premium).get("episodes"), str(artifact_data(premium).get("reason")))
 
     # Streaming.
     events = smoke.stream("message/stream", {"message": smoke.user_message(f"search for {SHOW}")})

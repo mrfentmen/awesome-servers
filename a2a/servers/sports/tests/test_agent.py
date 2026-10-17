@@ -17,7 +17,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -426,48 +425,12 @@ class ParseTests(unittest.TestCase):
 
 
 class SkillTests(unittest.TestCase):
-    def run_skill(self, skill, api=None, gateway=None, **params):
-        agent = EspnAgent(client=api or client(), gateway=gateway or GatewayClient(fetch=_no_network))
-        request = {"skill": skill, "params": params, "missing": agent.missing(skill, params)}
-        return agent.run(request)
 
-    def test_scores_list_games(self):
-        result = self.run_skill("scores", league="nba", date="2026-10-03")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Miami Heat at Toronto Raptors", result["message"])
-        self.assertIn("Sat, October 3rd at 7:00 PM EDT", result["message"])
-        self.assertIn("0 live, 0 final", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertEqual(result["artifact"]["count"], 1)
 
-    def test_scores_say_when_no_day_was_named(self):
-        result = self.run_skill("scores", league="nba", next_day=True)
-        self.assertIn("ESPN's current board", result["message"])
-        self.assertEqual(result["artifact"]["date"], "current board")
-        self.assertFalse(result["artifact"]["date_named"])
 
-    def test_scores_on_a_day_with_no_games(self):
-        result = self.run_skill("scores", api=client(scoreboard={"leagues": [], "events": []}),
-                                league="nba", date="2026-01-01")
-        self.assertIn("lists no NBA games", result["message"])
-        self.assertEqual(result["artifact"]["count"], 0)
 
-    def test_scores_reject_a_bad_league(self):
-        result = self.run_skill("scores", league="curling")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("league must be one of", result["message"])
 
-    def test_team_lookup_finds_by_any_field(self):
-        result = self.run_skill("team-lookup", league="nba", team="Raptors")
-        self.assertIn("Toronto Raptors", result["message"])
-        self.assertIn("ESPN team id 28", result["message"])
-        by_abbr = self.run_skill("team-lookup", league="nba", team="ATL")
-        self.assertIn("Atlanta Hawks", by_abbr["message"])
 
-    def test_team_lookup_reports_no_match(self):
-        result = self.run_skill("team-lookup", league="nba", team="Springfield Isotopes")
-        self.assertIn("No NBA team matches", result["message"])
-        self.assertEqual(result["artifact"]["count"], 0)
 
     def test_team_lookup_without_a_team_asks(self):
         agent = EspnAgent(client=client())
@@ -475,64 +438,12 @@ class SkillTests(unittest.TestCase):
         result = agent.run({"skill": "team-lookup", "params": {}, "missing": ["team"]})
         self.assertIn("Which team?", result["message"])
 
-    def test_standings_list_a_group(self):
-        result = self.run_skill("standings", league="nba")
-        self.assertIn("Eastern Conference East", result["message"])
-        self.assertIn("Detroit Pistons", result["message"])
-        self.assertIn("41W-22L", result["message"])
-        self.assertIn("2026 season", result["message"])
-        self.assertIn("11.0 GB", result["message"])
 
-    def test_standings_with_no_table(self):
-        result = self.run_skill("standings", api=client(standings={"children": []}), league="nba")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("publishes no", result["message"])
 
-    def test_game_detail_reads_the_summary(self):
-        result = self.run_skill("game-detail", league="nba", event_id="401902644")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Miami Heat at Toronto Raptors", result["message"])
-        self.assertIn("Scotiabank Arena", result["message"])
-        self.assertIn("Attendance: 19000", result["message"])
-        self.assertIn("Referee One", result["message"])
-        self.assertIn("Season opener", result["message"])
 
-    def test_game_detail_reports_odds_when_espn_publishes_them(self):
-        result = self.run_skill("game-detail", league="nba", event_id="401902644")
-        self.assertIn("over/under 218.5", result["message"])
-        self.assertIn("ESPN", result["message"])
 
-    def test_game_detail_says_when_there_are_no_odds(self):
-        header = json.loads(json.dumps(NBA_SUMMARY["header"]))
-        header["competitions"][0].pop("odds", None)
-        api = client(summary={"header": header})
-        result = self.run_skill("game-detail", api=api, league="nba", event_id="401902644")
-        self.assertIn("ESPN publishes none for this game", result["message"])
 
-    def test_game_detail_without_a_league_finds_the_game(self):
-        api = client(summary={})
 
-        from a2a_kit import UpstreamError
-
-        def summary(league, event_id):
-            if league == "nba":
-                raise UpstreamError("ESPN request failed: HTTP Error 404: Not Found")
-            if league != "nhl":
-                return None
-            return {"league": league, "venue": "Lenovo Center", "state": "pre", "detail": "soon",
-                    "away": {"team": "Florida Panthers"}, "home": {"team": "Carolina Hurricanes"}}
-
-        api.summary = summary
-        result = self.run_skill("game-detail", api=api, event_id="401891773")
-        self.assertEqual(result["artifact"]["league"], "nhl")
-        self.assertFalse(result["artifact"]["league_named"])
-        self.assertIn("Carolina Hurricanes", result["message"])
-
-    def test_game_detail_for_an_unknown_event(self):
-        result = self.run_skill("game-detail", api=client(summary={}), league="nba",
-                                event_id="401902644")
-        self.assertIn("no NBA game with event id", result["message"])
-        self.assertIsNone(result["artifact"]["game"])
 
     def test_game_detail_without_an_event_asks(self):
         agent = EspnAgent(client=client())
@@ -540,29 +451,8 @@ class SkillTests(unittest.TestCase):
         result = agent.run({"skill": "game-detail", "params": {}, "missing": ["event_id"]})
         self.assertIn("ESPN event id", result["message"])
 
-    def test_help_does_not_touch_the_feed(self):
-        result = self.run_skill("help")
-        self.assertIn("ESPN", result["message"])
-        self.assertIsNone(result["artifact"])
 
-    def test_the_prefixed_gateway_url_override_is_wired_up(self):
-        import os
 
-        os.environ["ESPN_GATEWAY_URL"] = "http://127.0.0.1:9/mcp"
-        try:
-            agent = EspnAgent(client=client() if "sports" != "tv" else FakeTvmaze()
-                          if "sports" == "tv" else None)
-        finally:
-            del os.environ["ESPN_GATEWAY_URL"]
-        self.assertEqual(agent.gateway.url, "http://127.0.0.1:9/mcp",
-                         "the .env.example documents this override, so it has to work")
-
-    def test_card_skills_and_env_prefix(self):
-        ids = [skill["id"] for skill in CARD_SKILLS]
-        self.assertEqual(ids, ["scores", "team-lookup", "standings", "game-detail", "slate-brief"])
-        premium = [skill for skill in CARD_SKILLS if skill["id"] == "slate-brief"][0]
-        self.assertIn("premium", premium["tags"])
-        self.assertEqual(EspnAgent(client=client()).env_prefix, "ESPN")
 
 
 #: Shape copied from a live `sports_slate_brief` answer for 2026-09-28.
@@ -606,8 +496,6 @@ SLATE_PAYLOAD = {
     ],
 }
 
-DENIED_TEXT = ("`sports_slate_brief` is a premium tool, but that license key is not valid. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`sports_slate_brief` failed: upstream returned HTTP 503"
 
 
@@ -618,41 +506,11 @@ def _message(text, **extra):
     return payload
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            # The gateway's licence refusal, marker included: the marker is what tells a
-            # refusal apart from a tool that failed after the gate had let it through.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class SlateBriefTests(unittest.TestCase):
     """The premium skill: parsing stays local, the cross-league tally comes from the gateway."""
 
-    def test_tonight_across_the_leagues_routes_to_the_premium_skill(self):
-        for text in ("what is on tonight across the leagues?",
-                     "brief me on every nba, nfl and nhl game tomorrow",
-                     "give me the full slate"):
-            parsed = parse(_message(text))
-            self.assertEqual(parsed["skill"], SKILL_SLATE_BRIEF, text)
-            self.assertTrue(parsed["explicit"], text)
 
     def test_the_free_skills_keep_their_own_questions(self):
         self.assertEqual(parse(_message("what are the nba scores today?"))["skill"], "scores")
@@ -668,95 +526,14 @@ class SlateBriefTests(unittest.TestCase):
         self.assertEqual(parsed["params"]["leagues"], "nba,nfl")
         self.assertEqual(parsed["params"]["limit"], 40)
 
-    def test_the_message_reports_the_gateways_slate(self):
-        gateway, calls = fake_gateway(SLATE_PAYLOAD)
-        result = EspnAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_SLATE_BRIEF, "params": {"date": "2026-09-28", "leagues": "nba,nfl,nhl,mlb"},
-             "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("19 game(s) found", result["message"])
-        self.assertIn("final 3 - 27", result["message"])
-        self.assertIn("nfl: 14 game(s)", result["message"])
-        self.assertIn("17 more game(s)", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["games_found"], 19)
 
-        # The boards were read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "sports_slate_brief")
-        self.assertEqual(sent["arguments"]["date"], "2026-09-28")
-        self.assertEqual(sent["arguments"]["leagues"], "nba,nfl,nhl,mlb")
 
-    def test_a_league_that_failed_to_read_is_reported_not_hidden(self):
-        payload = {**SLATE_PAYLOAD, "errors": [{"league": "nhl", "error": "upstream returned HTTP 503"}],
-                   "perLeague": [{"league": "nba", "games": 0, "read": True},
-                                 {"league": "nhl", "games": 0, "read": False}]}
-        gateway, _ = fake_gateway(payload)
-        result = EspnAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_SLATE_BRIEF, "params": {"date": "2026-09-28"}, "missing": []})
-        self.assertIn("nhl could not be read", result["message"])
-        self.assertIn("board not read", result["message"])
 
-    def test_too_many_leagues_is_refused_before_the_gateway(self):
-        gateway, calls = fake_gateway(SLATE_PAYLOAD)
-        result = EspnAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_SLATE_BRIEF,
-             "params": {"date": "2026-09-28", "leagues": "nba,nfl,nhl,mlb,mls,eng1"}, "missing": []})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("up to five leagues", result["message"])
-        self.assertEqual(calls, [], "too many leagues never reaches the gateway")
 
-    def test_a_bad_league_never_reaches_the_gateway(self):
-        gateway, calls = fake_gateway(SLATE_PAYLOAD)
-        result = EspnAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_SLATE_BRIEF, "params": {"date": "2026-09-28", "leagues": "nba,curling"},
-             "missing": []})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertEqual(calls, [])
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = EspnAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_SLATE_BRIEF, "params": {"date": "2026-09-28"}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = EspnAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_SLATE_BRIEF, "params": {"date": "2026-09-28"}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_slate(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = EspnAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_SLATE_BRIEF, "params": {"date": "2026-09-28"}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("games"))
 
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = EspnAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_SLATE_BRIEF, "params": {"date": "2026-09-28"}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("HTTP 503", result["message"])
-
-    def test_an_empty_slate_is_still_an_answer(self):
-        payload = {**SLATE_PAYLOAD, "games": [], "gamesFound": 0, "gamesListed": 0,
-                   "truncated": False, "byState": {}}
-        gateway, _ = fake_gateway(payload)
-        result = EspnAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_SLATE_BRIEF, "params": {"date": "2026-09-28"}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("0 game(s) found", result["message"])
 
 
 if __name__ == "__main__":

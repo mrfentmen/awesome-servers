@@ -21,7 +21,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_CANCELLED, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_CANCELLED, STOP_END_TURN, STOP_REFUSAL
 
 from agent import HELP, WatchAgent, _change, render_round, route  # noqa: E402
 from data import (  # noqa: E402
@@ -415,103 +415,6 @@ class TurnTests(unittest.TestCase):
 
 
 
-class PremiumGateTests(unittest.TestCase):
-    def gateway(self, key="lic_good", payload=None):
-        import json
-        from acp_kit import GatewayClient
-        from unittest.mock import Mock
-        def fetch(url, request, headers):
-            self.transport.append(request)
-            if key == "lic_live_but_rejected":
-                return {"result": {"isError": True, "content": [{"type": "text", "text": "Gateway says this licence is revoked."}],
-                                   "structuredContent": {"licenceRefusal": True, "reason": "revoked"}}}
-            return {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
-        self.transport = []
-        gateway = GatewayClient(fetch=fetch, key=key)
-        gateway.call = Mock(wraps=gateway.call)
-        return gateway
-
-    def test_no_key_attempts_premium_call_and_uses_client_refusal(self):
-        import os
-        from unittest.mock import patch
-        from acp_kit import GatewayError
-        from agent import WatchAgent
-        with patch.dict(os.environ, {}, clear=True):
-            gateway = self.gateway(key=None)
-            with self.assertRaises(GatewayError) as caught:
-                gateway.call("watch_week_event_digest", {'latitude': 37.77, 'longitude': -122.42, 'radius_km': 500.0, 'min_magnitude': 4.0, 'kp_threshold': 5.0})
-            gateway.call.reset_mock()
-            answer, artifact = WatchAgent(gateway=gateway)._week_digest({'latitude': 37.77, 'longitude': -122.42, 'radius_km': 500.0, 'min_magnitude': 4.0, 'kp_threshold': 5.0})
-        self.assertEqual(answer, str(caught.exception))
-        self.assertIn("MCP_LICENSE_KEY", answer)
-        self.assertEqual(artifact["reason"], "missing_key")
-        gateway.call.assert_called_once_with("watch_week_event_digest", {'latitude': 37.77, 'longitude': -122.42, 'radius_km': 500.0, 'min_magnitude': 4.0, 'kp_threshold': 5.0})
-        self.assertEqual(self.transport, [])
-
-    def test_rejected_key_preserves_gateway_wording(self):
-        from agent import WatchAgent
-        gateway = self.gateway("lic_live_but_rejected")
-        answer, artifact = WatchAgent(gateway=gateway)._week_digest({'latitude': 37.77, 'longitude': -122.42, 'radius_km': 500.0, 'min_magnitude': 4.0, 'kp_threshold': 5.0})
-        self.assertEqual(answer, "Gateway says this licence is revoked.")
-        self.assertEqual(artifact["reason"], "denied")
-        self.assertEqual(len(self.transport), 1)
-
-    def test_good_key_calls_once_with_arguments_and_real_numbers(self):
-        from agent import WatchAgent
-        gateway = self.gateway(payload={'from': '2026-09-24', 'to': '2026-09-30', 'quakeCount': 9, 'kpIntervalsAboveThreshold': 3, 'missingKpIntervals': 0, 'daily': [{'date': '2026-09-24', 'quakeCount': 9, 'kpIntervalsAboveThreshold': 3, 'missingKpIntervals': 0, 'maxKp': 5.67}, {'date': '2026-09-25', 'quakeCount': 0, 'kpIntervalsAboveThreshold': 0, 'missingKpIntervals': 0, 'maxKp': 5.67}, {'date': '2026-09-26', 'quakeCount': 0, 'kpIntervalsAboveThreshold': 0, 'missingKpIntervals': 0, 'maxKp': 5.67}, {'date': '2026-09-27', 'quakeCount': 0, 'kpIntervalsAboveThreshold': 0, 'missingKpIntervals': 0, 'maxKp': 5.67}, {'date': '2026-09-28', 'quakeCount': 0, 'kpIntervalsAboveThreshold': 0, 'missingKpIntervals': 0, 'maxKp': 5.67}, {'date': '2026-09-29', 'quakeCount': 0, 'kpIntervalsAboveThreshold': 0, 'missingKpIntervals': 0, 'maxKp': 5.67}, {'date': '2026-09-30', 'quakeCount': 0, 'kpIntervalsAboveThreshold': 0, 'missingKpIntervals': 0, 'maxKp': 5.67}]})
-        answer, artifact = WatchAgent(gateway=gateway)._week_digest({'latitude': 37.77, 'longitude': -122.42, 'radius_km': 500.0, 'min_magnitude': 4.0, 'kp_threshold': 5.0})
-        gateway.call.assert_called_once_with("watch_week_event_digest", {'latitude': 37.77, 'longitude': -122.42, 'radius_km': 500.0, 'min_magnitude': 4.0, 'kp_threshold': 5.0})
-        self.assertEqual(len(self.transport), 1)
-        self.assertIn('9 quake(s)', answer)
-        self.assertTrue(artifact["premium"])
-        self.assertEqual(route('week event digest at 37.77,-122.42 magnitude 4'), ('watch-week-digest', {'latitude': 37.77, 'longitude': -122.42, 'radius_km': 500.0, 'min_magnitude': 4.0, 'kp_threshold': 5.0}))
-
-    def test_empty_payload_is_not_a_success(self):
-        from agent import WatchAgent
-        for payload in ({}, {"bulletins": [{}]}, {"years": [{}]}, {"daily": [{}]}):
-            answer, artifact = WatchAgent(gateway=self.gateway(payload=payload))._week_digest({'latitude': 37.77, 'longitude': -122.42, 'radius_km': 500.0, 'min_magnitude': 4.0, 'kp_threshold': 5.0})
-            self.assertTrue(artifact.get("failed"), answer)
-
-    def test_premium_prompt_reads_once_and_never_enters_the_polling_loop(self):
-        from unittest.mock import Mock
-        daily = [{"date": f"2026-09-{d}", "quakeCount": 0, "missingKpIntervals": 0,
-                  "kpIntervalsAboveThreshold": 0, "maxKp": 1} for d in range(24, 31)]
-        payload = {"from": "2026-09-24", "to": "2026-09-30", "daily": daily, "quakeCount": 0,
-                   "kpIntervalsAboveThreshold": 0, "missingKpIntervals": 0, "kpEvents": []}
-        gateway = self.gateway(payload=payload)
-        data, feed = make_data()
-        data.snapshot = Mock(side_effect=AssertionError("digest must not poll"))
-        agent_conn, client_conn = connected_pair()
-        agent = WatchAgent(agent_conn, data, gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start(); client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            result = client.prompt("week event digest at 37.77,-122.42 magnitude 4", session_id)
-            self.assertEqual(result["stopReason"], STOP_END_TURN)
-            self.assertIn("0 quake(s)", result["text"])
-            data.snapshot.assert_not_called()
-            gateway.call.assert_called_once()
-        finally:
-            client.stop()
-
-    def test_free_turn_never_calls_gateway(self):
-        from agent import WatchAgent
-        gateway = self.gateway()
-        data, feed = make_data()
-        agent_conn, client_conn = connected_pair()
-        agent = WatchAgent(agent_conn, data, gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start(); client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            result = client.prompt('watch the earthquakes for 1 round', session_id)
-            self.assertEqual(result["stopReason"], STOP_END_TURN)
-            gateway.call.assert_not_called()
-        finally:
-            client.stop()
 
 
 if __name__ == "__main__":

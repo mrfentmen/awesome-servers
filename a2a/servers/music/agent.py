@@ -9,8 +9,8 @@
 Artist-timeline is the one question the free skills cannot answer. `artist-albums`
 hands back Deezer's own page of an artist's releases, which is unordered by date and
 says nothing about the gaps. The timeline needs every album sorted by release date,
-grouped by year, with the gaps measured, so that work runs behind the licence gateway
-and a caller who has not paid gets the gateway's own message and no dates at all.
+grouped by year, with the gaps measured, so that work runs on a hosted service that was removed
+and a caller who has not paid gets a not-implemented stub message and no dates at all.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from __future__ import annotations
 import os
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, UpstreamError, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent, UpstreamError
 
 from data import (
     DATASET,
@@ -108,9 +108,9 @@ CARD_SKILLS = [
         "description": (
             "When an artist actually put things out: every release in date order with its record type, "
             "grouped by year, how many releases each year brought, the longest gap between two releases "
-            "in months, and the total hours of music. Premium: it runs behind a licence check."
+            "in months, and the total hours of music. Premium: it runs on a hosted service that was removed."
         ),
-        "tags": ["music", "artist", "timeline", "releases", "discography", "premium"],
+        "tags": ["music", "artist", "timeline", "releases", "discography",],
         "examples": [
             "when did Radiohead actually release things?",
             "build me a release timeline for Radiohead",
@@ -652,96 +652,14 @@ def run_chart(params: dict, client: DeezerClient) -> dict:
     }
 
 
-def run_artist_timeline(params: dict, client: DeezerClient, gateway: GatewayClient) -> dict:
-    """The premium release timeline. The ordering and the arithmetic run on the gateway.
-
-    Nothing here reads Deezer's album list: the gateway resolves the artist, sorts
-    the releases by date and measures the gaps behind its licence check, so a caller
-    who has not paid gets the gateway's own message and no dates at all.
-    """
-    identifier = params.get("artist") or params.get("artist_id")
-    if not identifier:
-        return _missing_artist()
-    try:
-        arguments = {"artist": str(identifier)}
-        if params.get("limit") is not None:
-            arguments["limit"] = client.check_limit(params["limit"])
-    except (TypeError, ValueError) as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-
-    read, refused = premium_call(gateway, "music_artist_timeline", arguments, {
-        "dataset": DATASET, "artist": str(identifier),
-    })
-    if refused:
-        return refused
-    if not isinstance(read, dict) or not read.get("artist"):
-        return empty_premium_answer(
-            "The licence gateway answered without naming the artist, so there is nothing to report.",
-            {"dataset": DATASET, "artist": str(identifier)},
-        )
-
-    name = read.get("artist")
-    releases = read.get("releases") or []
-    lines = [
-        f"{name}: {read.get('releasesRead')} release(s) read of {read.get('releasesFound')} Deezer lists, "
-        f"from {read.get('firstRelease') or 'no date'} to {read.get('latestRelease') or 'no date'}.",
-    ]
-    for release in releases[:MAX_LISTED]:
-        bits = [f"  • {release.get('releaseDate') or 'no release date'}"]
-        bits.append(str(release.get("title") or "untitled"))
-        bits.append(str(release.get("recordType") or "record type not reported"))
-        if release.get("tracks") is not None:
-            bits.append(f"{release['tracks']} tracks")
-        lines.append(" - ".join(str(bit) for bit in bits))
-    if len(releases) > MAX_LISTED:
-        lines.append(f"  • ... {len(releases) - MAX_LISTED} more release(s) are in the artifact.")
-    by_year = read.get("byYear") or []
-    if by_year:
-        lines.append(
-            "  • By year: " + ", ".join(f"{row.get('year')}: {row.get('releases')}" for row in by_year[:12])
-        )
-    gap = read.get("longestGap")
-    if gap:
-        lines.append(
-            f"  • Longest gap {gap.get('months')} months, from {gap.get('from')} to {gap.get('to')} "
-            f"between {gap.get('between')}."
-        )
-    if read.get("totalHours") is not None:
-        lines.append(
-            f"  • {read.get('totalTracks')} tracks, {read.get('totalHours')} h of music in all"
-            + (f"; {read.get('albumsMissingRuntime')} release(s) have no published runtime."
-               if read.get("albumsMissingRuntime") else ".")
-        )
-    else:
-        lines.append(f"  • Total runtime: {read.get('runtimeSource') or 'not reported'}.")
-    if read.get("releasesUndated"):
-        lines.append(f"  • {read['releasesUndated']} release(s) carry no release date and are not in the order.")
-    lines.append(
-        "\nComputed on the MCP gateway behind its licence check, from Deezer's catalogue "
-        f"({DATASET}). Deezer's list pages are not date-ordered and a release can be dated later than "
-        "it shipped, so read this as a catalogue history rather than a press timeline."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": SOURCE,
-        "premium": True,
-        "artist": name,
-        "artist_id": read.get("artistId"),
-        "releases_read": read.get("releasesRead"),
-        "releases_found": read.get("releasesFound"),
-        "releases_undated": read.get("releasesUndated"),
-        "first_release": read.get("firstRelease"),
-        "latest_release": read.get("latestRelease"),
-        "span_years": read.get("spanYears"),
-        "total_tracks": read.get("totalTracks"),
-        "total_hours": read.get("totalHours"),
-        "longest_gap": gap,
-        "runtime_source": read.get("runtimeSource"),
-        "releases_by_type": read.get("releasesByType"),
-        "by_year": by_year,
-        "releases": releases,
+def run_artist_timeline(params: dict, client: DeezerClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: artist-timeline — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class DeezerAgent(SkillAgent):
@@ -757,11 +675,9 @@ class DeezerAgent(SkillAgent):
     card_skills = CARD_SKILLS
 
     def __init__(self, client: DeezerClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or DeezerClient()
-        # The documented <PREFIX>_GATEWAY_URL override is passed in explicitly:
-        # the shared client otherwise only looks at A2A_GATEWAY_URL.
-        self.gateway = gateway or GatewayClient(url=os.environ.get(f"{self.env_prefix}_GATEWAY_URL"))
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

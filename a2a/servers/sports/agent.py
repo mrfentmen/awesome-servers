@@ -9,8 +9,8 @@
 Slate-brief is the one question the free skills cannot answer. They each read one
 league, because that is one request. "What is on tonight" is a question about several
 leagues at once, and the answer has to count what is live, what is final and what has
-not started across all of them, so that work runs behind the licence gateway and a
-caller who has not paid gets the gateway's own message and no games at all.
+not started across all of them, so that work runs on a hosted service that was removed and a
+caller who has not paid gets a not-implemented stub message and no games at all.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ import os
 import re
 from datetime import datetime, timedelta, timezone
 
-from a2a_kit import GatewayClient, SkillAgent, UpstreamError, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent, UpstreamError
 
 from data import (
     DATASET,
@@ -117,7 +117,7 @@ CARD_SKILLS = [
             "plus how many games each league contributed and the totals. Premium: it runs behind a "
             "licence check."
         ),
-        "tags": ["sports", "slate", "tonight", "schedule", "multi-league", "premium"],
+        "tags": ["sports", "slate", "tonight", "schedule", "multi-league",],
         "examples": [
             "what is on tonight across the leagues?",
             "brief me on every nba, nfl and nhl game tomorrow",
@@ -693,105 +693,14 @@ def run_game_detail(params: dict, client: EspnClient) -> dict:
     }
 
 
-def run_slate_brief(params: dict, client: EspnClient, gateway: GatewayClient) -> dict:
-    """The premium cross-league slate. The reading and the tally run on the gateway.
-
-    Nothing here reads a scoreboard: the gateway reads up to five leagues, flattens the
-    games and counts the states behind its licence check, so a caller who has not paid
-    gets the gateway's own message and no games at all.
-    """
-    try:
-        raw_leagues = params.get("leagues")
-        if not raw_leagues:
-            names = list(DEFAULT_LEAGUES)
-        else:
-            names = [part.strip() for part in str(raw_leagues).split(",") if part.strip()]
-        leagues = [client.check_league(name) for name in names]
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-    if not leagues:
-        return _missing_league()
-    if len(leagues) > 5:
-        return {
-            "final_state": "input-required",
-            "message": "Name up to five leagues at a time; the brief reads one board per league.",
-            "artifact": None,
-            "watch": None,
-        }
-    try:
-        day = _resolve_day(params, client) or datetime.now(timezone.utc).date().isoformat()
-        arguments = {"date": day, "leagues": ",".join(leagues)}
-        if params.get("limit") is not None:
-            arguments["limit"] = client.check_limit(params["limit"], default=40)
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-
-    read, refused = premium_call(gateway, "sports_slate_brief", arguments, {
-        "dataset": DATASET, "leagues": ",".join(leagues),
-    })
-    if refused:
-        return refused
-    if not isinstance(read, dict) or read.get("games") is None:
-        return empty_premium_answer(
-            "The licence gateway answered without any games, so there is nothing to report.",
-            {"dataset": DATASET, "leagues": ",".join(leagues)},
-        )
-
-    games = read.get("games") or []
-    date = read.get("date") or arguments["date"]
-    lines = [
-        f"Slate for {date} across {len(read.get('leaguesRead') or [])} league(s): "
-        f"{read.get('gamesFound')} game(s) found, {read.get('gamesListed')} listed "
-        f"({read.get('liveNow')} live, {read.get('finals')} final, {read.get('stillToCome')} still to come).",
-    ]
-    for game in games[:MAX_LISTED]:
-        away = game.get("away") or {}
-        home = game.get("home") or {}
-        bits = [f"  • [{str(game.get('league') or '?').upper()}]"]
-        bits.append(f"{away.get('team') or 'away not reported'} at {home.get('team') or 'home not reported'}")
-        state = game.get("state")
-        if state == "post":
-            bits.append(f"final {away.get('score') or '?'} - {home.get('score') or '?'}")
-        elif state == "in":
-            bits.append(f"LIVE {game.get('clock') or ''}".strip())
-            bits.append(f"{away.get('score') or '?'} - {home.get('score') or '?'}")
-        else:
-            bits.append(str(game.get("detail") or "time not reported"))
-        lines.append(" - ".join(str(bit) for bit in bits))
-    if read.get("truncated"):
-        lines.append(f"  • ... {read.get('gamesFound') - read.get('gamesListed', 0)} more game(s) "
-                     "are in the artifact.")
-    for row in (read.get("perLeague") or [])[:MAX_LISTED]:
-        if not row.get("read"):
-            lines.append(f"  • {row.get('league')}: board not read")
-        else:
-            lines.append(f"  • {row.get('league')}: {row.get('games')} game(s)")
-    for problem in read.get("errors") or []:
-        lines.append(f"  • {problem.get('league')} could not be read: {problem.get('error')}")
-    lines.append(
-        "\nComputed on the MCP gateway behind its licence check, from ESPN's public boards "
-        f"({DATASET}). Each league is read on its own board, so one empty league says nothing about "
-        "the others; start times are the venues' own local times."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": SOURCE,
-        "premium": True,
-        "date": date,
-        "leagues": read.get("leagues") or leagues,
-        "leagues_read": read.get("leaguesRead"),
-        "per_league": read.get("perLeague"),
-        "errors": read.get("errors"),
-        "games_found": read.get("gamesFound"),
-        "games_listed": read.get("gamesListed"),
-        "truncated": read.get("truncated"),
-        "by_state": read.get("byState"),
-        "live_now": read.get("liveNow"),
-        "finals": read.get("finals"),
-        "still_to_come": read.get("stillToCome"),
-        "games": games,
+def run_slate_brief(params: dict, client: EspnClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: slate-brief — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 def _team_matches(team: dict, needle: str) -> bool:
@@ -827,11 +736,9 @@ class EspnAgent(SkillAgent):
     card_skills = CARD_SKILLS
 
     def __init__(self, client: EspnClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or EspnClient()
-        # The documented <PREFIX>_GATEWAY_URL override is passed in explicitly:
-        # the shared client otherwise only looks at A2A_GATEWAY_URL.
-        self.gateway = gateway or GatewayClient(url=os.environ.get(f"{self.env_prefix}_GATEWAY_URL"))
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

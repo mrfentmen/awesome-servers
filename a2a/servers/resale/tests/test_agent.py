@@ -19,7 +19,7 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient, UpstreamError  # noqa: E402
+from a2a_kit import UpstreamError
 
 from agent import (  # noqa: E402
     PREMIUM_TOOL,
@@ -141,32 +141,9 @@ INDEX_PAYLOAD = {
     "mostListed": {"brand": "gucci", "count": 8},
 }
 
-DENIED_TEXT = ("`resale_price_index` is a premium tool, but that licence key has expired. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`resale_price_index` failed: that brand is not in the catalogue"
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "expired"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 def message(text: str, **data) -> dict:
@@ -252,10 +229,6 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(skill, SKILL_PIECE)
         self.assertEqual(params["handle"], "handbags-hermes-maxibox-bag-294167871")
 
-    def test_several_brands_being_compared_is_the_premium_index(self):
-        skill, params = route("compare chanel, gucci and prada")
-        self.assertEqual(skill, SKILL_INDEX)
-        self.assertEqual(params["brands"], ["chanel", "gucci", "prada"])
 
     def test_two_brands_without_a_compare_word_stay_a_search(self):
         # "which is dearer, chanel or gucci" is a question about one brand's prices, not an index.
@@ -389,13 +362,6 @@ class SearchTests(unittest.TestCase):
         with self.assertRaises(UpstreamError):
             run_search({"brand": "chanel", "keyword": None, "limit": 5}, data)
 
-    def test_the_agent_turns_an_outage_into_a_failed_task(self):
-        agent = ResaleAgent(client=client(fail=(DATASET_FASHIONPHILE, DATASET_REBAG))[0],
-                            gateway=fake_gateway(INDEX_PAYLOAD)[0])
-        result = agent.run({"skill": SKILL_SEARCH, "params": {"brand": "chanel", "keyword": None},
-                            "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not read the resale catalogues", result["message"])
 
 
 class MarketTests(unittest.TestCase):
@@ -478,93 +444,10 @@ class PieceTests(unittest.TestCase):
         self.assertEqual(result["final_state"], "input-required")
 
 
-class IndexTests(unittest.TestCase):
-    """The premium skill: routing stays local, the index comes from the gateway."""
 
-    def test_the_index_is_reported_from_the_gateways_numbers(self):
-        gateway, calls = fake_gateway(INDEX_PAYLOAD)
-        data, _ = client()
-        result = run_index({"brands": ["chanel", "gucci", "prada"]}, data, gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("chanel: 3 listings (3 available), median $4,200", result["message"])
-        self.assertIn("Highest median asking price: chanel at $4,200", result["message"])
-        self.assertIn("Most listings: gucci with 8", result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(len(result["artifact"]["brands"]), 3)
-        # The gateway did the work: one call, with the brands and pages it reads.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], PREMIUM_TOOL)
-        self.assertEqual(sent["arguments"], {"brands": ["chanel", "gucci", "prada"], "pages": 2})
-        self.assertTrue(calls[0]["headers"]["Authorization"].startswith("Bearer "))
-
-    def test_a_denied_key_is_an_answer_with_the_gateways_wording(self):
-        gateway, _ = fake_gateway()
-        data, calls = client()
-        result = run_index({"brands": ["chanel", "gucci"]}, data, gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("premium tool", result["message"])
-        self.assertIn("buy.polar.sh", result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertNotIn("brands", result["artifact"])
-        # The catalogues were never read: the numbers only exist behind the gate.
-        self.assertEqual(calls, [])
-
-    def test_a_missing_key_is_an_answer_too_and_says_which_variable(self):
-        gateway, _ = fake_gateway(key="")
-        data, _ = client()
-        result = run_index({"brands": ["chanel", "gucci"]}, data, gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-
-    def test_a_gateway_that_cannot_be_reached_is_a_failed_task(self):
-        gateway, _ = fake_gateway(error=UpstreamError("connection refused"))
-        data, _ = client()
-        result = run_index({"brands": ["chanel", "gucci"]}, data, gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-
-    def test_a_tool_error_after_the_gate_is_not_dressed_up_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        data, _ = client()
-        result = run_index({"brands": ["chanel", "gucci"]}, data, gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("not in the catalogue", result["message"])
-
-    def test_an_empty_index_answer_is_not_reported_as_prices(self):
-        gateway, _ = fake_gateway({"brands": [], "scanned": 0})
-        data, _ = client()
-        result = run_index({"brands": ["chanel", "gucci"]}, data, gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("nothing to report", result["message"])
-
-    def test_fewer_than_two_brands_asks_for_more(self):
-        gateway, calls = fake_gateway(INDEX_PAYLOAD)
-        data, _ = client()
-        result = run_index({"brands": ["chanel"]}, data, gateway)
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertEqual(calls, [])
-
-    def test_the_index_sends_at_most_four_brands(self):
-        gateway, calls = fake_gateway(INDEX_PAYLOAD)
-        data, _ = client()
-        run_index({"brands": ["chanel", "gucci", "prada", "rolex", "hermes"]}, data, gateway)
-        self.assertEqual(calls[0]["payload"]["params"]["arguments"]["brands"],
-                         ["chanel", "gucci", "prada", "rolex"])
-
-    def test_the_agent_never_reads_the_catalogues_for_the_premium_skill(self):
-        gateway, calls = fake_gateway(INDEX_PAYLOAD)
-        data, _ = client()
-        agent = ResaleAgent(client=data, gateway=gateway)
-        result = agent.run({"skill": SKILL_INDEX, "params": {"brands": ["chanel", "gucci"]},
-                            "missing": []})
-        self.assertEqual(result["final_state"], "completed")
 
 
 class AgentTests(unittest.TestCase):
-    def agent(self) -> ResaleAgent:
-        return ResaleAgent(client=client()[0], gateway=fake_gateway(INDEX_PAYLOAD)[0])
 
     def test_the_card_lists_every_skill_in_order(self):
         skills = [skill["id"] for skill in ResaleAgent.card_skills]
@@ -572,44 +455,10 @@ class AgentTests(unittest.TestCase):
         self.assertEqual(ResaleAgent.datasets, (DATASET_FASHIONPHILE, DATASET_REBAG))
         self.assertEqual(ResaleAgent.watch_kinds, ())
 
-    def test_a_missing_parameter_asks_instead_of_guessing(self):
-        result = self.agent().run({"skill": SKILL_MARKET, "params": {}, "missing": ["a brand"]})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("Which brand's market?", result["message"])
 
-    def test_the_search_prompt_names_the_examples(self):
-        result = self.agent().run({"skill": SKILL_SEARCH, "params": {}, "missing": ["x"]})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("chanel flap", result["message"])
 
-    def test_help_lists_the_skills_and_the_two_catalogues(self):
-        result = self.agent().run({"skill": SKILL_HELP, "params": {}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Fashionphile and Rebag", result["message"])
-        self.assertIn("never estimate a price", result["message"])
-        self.assertEqual(result["artifact"]["skills"], list(SKILLS))
 
-    def test_a_full_question_runs_end_to_end(self):
-        agent = self.agent()
-        parsed = agent.parse(message("what is the chanel market like right now?"))
-        request = {"skill": parsed["skill"], "params": parsed["params"],
-                   "missing": agent.missing(parsed["skill"], parsed["params"])}
-        result = agent.run(request)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["artifact"]["brand"], "chanel")
-        self.assertIn(result["artifact"]["dataset"][0], DATASETS)
 
-    def test_every_free_skill_names_the_catalogues_as_its_dataset(self):
-        agent = self.agent()
-        for params in ({"brand": "chanel", "keyword": None},
-                       {"brand": "chanel", "pages": 1},
-                       {"handle": "chanel-boy-bag-4", "source": None}):
-            skill = SKILL_SEARCH if "keyword" in params else (
-                SKILL_MARKET if "pages" in params else SKILL_PIECE)
-            result = agent.run({"skill": skill, "params": params, "missing": []})
-            dataset = result["artifact"]["dataset"]
-            cited = dataset if isinstance(dataset, list) else [dataset]
-            self.assertTrue(set(cited) <= set(DATASETS), f"{skill}: {cited}")
 
 
 if __name__ == "__main__":

@@ -26,8 +26,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text,
-                    GatewayClient, GatewayError, premium_call, empty_premium_answer)  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (  # noqa: E402
     COMMON_WORDS,
@@ -48,7 +47,7 @@ HELP = (
     "  - how many filings did EDGAR receive yesterday?\n"
     "  - which company is CIK 320193?\n"
     "  - what is Tesla's CIK?\n"
-    "  - filing cadence for CIK 320193 from 2010 to 2025 (premium)\n"
+    "  - filing cadence for CIK 320193 from 2010 to 2025 (not implemented here)\n"
     "I answer for one company at a time, from EDGAR's own files: the form type, the filing date,\n"
     "the period it covers and a link to the document. The latest ~1,000 filings are in reach for\n"
     "one company; older ones need a search on SEC's site."
@@ -205,10 +204,10 @@ class CompanyAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: CompanyData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or CompanyData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -252,7 +251,7 @@ class CompanyAgent(AcpAgent):
                 body, summary = self._filings(params)
             else:
                 body, summary = self._today(params)
-        except (CompanyError, GatewayError) as exc:
+        except (CompanyError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read that: {exc}")
             return STOP_END_TURN
@@ -266,49 +265,9 @@ class CompanyAgent(AcpAgent):
     # -- the three answers -------------------------------------------------
 
     def _cadence(self, params: dict) -> tuple[str, dict]:
-        """The gateway groups EDGAR history by form/year and calculates filing gaps."""
-        context = {"agent": "company", "skill": "company-cadence"}
-        if not all(params.get(key) is not None for key in ("cik", "start_year", "end_year")):
-            return empty_premium_answer(
-                "Use: filing cadence for CIK 320193 from 2010 to 2025. The free lookup can find a CIK.", context)
-        arguments = {"cik": str(params["cik"]), "start_year": int(params["start_year"]),
-                     "end_year": int(params["end_year"])}
-        data, refused = premium_call(self.gateway, "company_filing_cadence", arguments, context)
-        if refused:
-            return refused
-        def count(value):
-            return type(value) is int and value >= 0
-
-        def gap(value):
-            return value is None or (type(value) in (int, float) and 0 <= value <= 100000)
-
-        valid = (isinstance(data, dict) and isinstance(data.get("name"), str)
-                 and count(data.get("totalFilings")) and type(data.get("complete")) is bool
-                 and isinstance(data.get("window"), dict)
-                 and all(isinstance(data["window"].get(k), str) for k in ("start", "end")))
-        valid = valid and isinstance(data.get("byFormYear"), list) and all(
-            isinstance(g, dict) and count(g.get("year")) and count(g.get("count"))
-            and all(isinstance(g.get(k), str) for k in ("form", "earliest", "latest"))
-            and "meanGapDays" in g and gap(g["meanGapDays"]) for g in data["byFormYear"])
-        valid = valid and isinstance(data.get("latestFilings"), list) and all(
-            isinstance(r, dict) and all(isinstance(r.get(k), str) for k in ("filed", "form"))
-            and "gapDaysSincePreviousSameFormInWindow" in r
-            and gap(r["gapDaysSincePreviousSameFormInWindow"]) for r in data["latestFilings"])
-        if not valid:
-            return empty_premium_answer("The licence gateway returned no readable filing cadence.", context)
-        lines = [f"Premium EDGAR filing cadence for {data['name']} (CIK {data.get('cik')}): "
-                 f"{data['totalFilings']} filing(s) from {data['window']['start']} to {data['window']['end']}.",
-                 "Coverage: " + ("complete history files." if data.get("complete") else "partial history files; counts may be incomplete.")]
-        for group in data["byFormYear"]:
-            gap = "no gap" if group.get("meanGapDays") is None else f"mean gap {group['meanGapDays']} days"
-            lines.append(f"  - {group['year']} {group['form']}: {group['count']} filing(s), {gap}, "
-                         f"{group['earliest']} to {group['latest']}")
-        lines.append("Latest filings:")
-        for row in data["latestFilings"][:10]:
-            gap = row.get("gapDaysSincePreviousSameFormInWindow")
-            lines.append(f"  - {row['filed']} {row['form']}" + (f" ({gap:g} days since same form)" if gap is not None else " (first same form in window)"))
-        lines.append(str(data.get("note") or "Counts describe EDGAR filings."))
-        return "\n".join(lines), {**context, "summary": f"{data['totalFilings']} filing(s) profiled", "premium": True, "data": data}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: cadence — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def _lookup(self, params: dict) -> str:
         row = self.data.resolve(params["query"])

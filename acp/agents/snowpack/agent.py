@@ -15,7 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text, GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, STATE_CODES, STATE_NAMES, SnowData, SnowpackError,  # noqa: E402
                   SnowpackNotFound)
@@ -26,7 +26,7 @@ HELP = (
     "  - how much water is in the California snowpack?\n"
     "  - snow water equivalent at station 301:CA:SNTL\n"
     "  - snow depth in Colorado right now\n"
-    "  - snow basin board 10190005 on 2026-04-01 (premium)\n"
+    "  - snow basin board 10190005 on 2026-04-01 (not implemented here)\n"
     "  - snow at 301:CA:SNTL over the last 60 days\n"
     "The headline figure is *snow water equivalent*: the water in the snow, in inches, with each\n"
     "value's own median beside it, so percent of normal is real. Snow depth is a different number\n"
@@ -168,10 +168,10 @@ class SnowpackAgent(AcpAgent):
     title = "Snowpack - water in the mountain snow, from NRCS's snow network"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: SnowData | None = None, gateway: GatewayClient | None = None) -> None:
+    def __init__(self, connection=None, data: SnowData | None = None, gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or SnowData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -205,13 +205,6 @@ class SnowpackAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
 
         if skill == "snowpack-basin-board":
-            try:
-                body, artifact = self._basin_board(params)
-                ctx.tool_call_update(tool, status="completed", content=ctx.text_content(artifact.get("summary", "basin board")))
-                ctx.stream_text(body + "\n")
-            except GatewayError as exc:
-                ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
-                ctx.message(f"I could not finish the basin board: {exc}")
             return STOP_END_TURN
 
         try:
@@ -244,31 +237,9 @@ class SnowpackAgent(AcpAgent):
         return STOP_END_TURN
 
     def _basin_board(self, params: dict) -> tuple[str, dict]:
-        """Render a same-date HUC station comparison from the gateway."""
-        arguments = {"huc": params["huc"], "date": params["date"]}
-        data, refused = premium_call(self.gateway, "snowpack_basin_board", arguments,
-                                     {"agent": "snowpack", "skill": "snowpack-basin-board"})
-        if refused:
-            return refused
-        rows = data.get("stations") if isinstance(data, dict) else None
-        def number_or_none(v):
-            return v is None or type(v) in (int, float)
-        if not isinstance(rows, list) or len(rows) > 100 or any(
-                not isinstance(r, dict) or not isinstance(r.get("triplet"), str) or
-                not isinstance(r.get("name"), str) or
-                any(k not in r or not number_or_none(r[k]) for k in ("swe_in", "median_in", "percent_of_median")) for r in rows):
-            return empty_premium_answer("The gateway returned no readable basin board.",
-                                        {"agent": "snowpack", "skill": "snowpack-basin-board"})
-        lines = [f"Snow basin {params['huc']} on {params['date']}, highest percent of median first:"]
-        for row in rows:
-            swe = 'not reported' if row['swe_in'] is None else f"{row['swe_in']} in SWE"
-            percent = 'undefined' if row['percent_of_median'] is None else f"{row['percent_of_median']}%"
-            lines.append(f"  {row['name']} ({row['triplet']}): {swe}; median {row['median_in']}; {percent} of median")
-        if not rows:
-            lines.append("No SNOTEL stations returned for this HUC basin.")
-        lines.append(str(data.get("note") or "Station comparison, not basin water volume; missing medians are undefined."))
-        return "\n".join(lines), {"summary": f"{len(rows)} stations compared", "premium": True,
-                                  "agent": "snowpack", "skill": "snowpack-basin-board", "data": data}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: basin-board — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

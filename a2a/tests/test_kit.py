@@ -20,24 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from a2a_kit import (  # noqa: E402
-    A2AError,
-    A2AHandler,
-    DEFAULT_USER_AGENT,
-    DENIED,
-    GatewayClient,
-    GatewayError,
-    MISSING_KEY,
-    PROTOCOL_ERROR,
-    TOOL_ERROR,
-    PushWatcher,
-    SkillAgent,
-    SocrataClient,
-    TaskStore,
-    UNREACHABLE,
-    UpstreamError,
-    soql_escape,
-)
+from a2a_kit import A2AError, A2AHandler, DEFAULT_USER_AGENT, PushWatcher, SkillAgent, SocrataClient, TaskStore, UpstreamError, soql_escape
 
 DATING = "2026-09-22T00:00:00Z"
 
@@ -450,113 +433,6 @@ class SocrataTests(unittest.TestCase):
         self.assertEqual(list(picked), ["a", "b", "dataset"])
 
 
-class GatewayClientTests(unittest.TestCase):
-    """The premium path: a licence key travels to the gateway, nothing runs locally."""
-
-    class Recorder:
-        """Stands in for the HTTP POST; records what would have been sent."""
-
-        def __init__(self, response):
-            self.response = response
-            self.calls = []
-
-        def __call__(self, url, payload, headers):
-            self.calls.append({"url": url, "payload": payload, "headers": headers})
-            if isinstance(self.response, Exception):
-                raise self.response
-            return self.response
-
-    @staticmethod
-    def _ok(text):
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": text}]}}
-
-    def test_no_key_is_refused_before_any_request_is_made(self):
-        recorder = self.Recorder(self._ok("should never be asked for"))
-        with mock.patch.dict(os.environ, {}, clear=True):
-            client = GatewayClient(fetch=recorder)
-        self.assertEqual(client.key, "")
-        with self.assertRaises(GatewayError) as caught:
-            client.call("air_outlook", {"latitude": 1, "longitude": 2})
-        self.assertEqual(caught.exception.reason, MISSING_KEY)
-        self.assertIn("MCP_LICENSE_KEY", str(caught.exception))
-        self.assertEqual(recorder.calls, [], "a missing key must not reach the gateway")
-
-    def test_key_rides_in_the_authorization_header_and_the_tool_name_is_sent(self):
-        recorder = self.Recorder(self._ok(json.dumps({"days": 3})))
-        client = GatewayClient(fetch=recorder, key="polar_test_key", url="https://gw.test/mcp")
-        self.assertEqual(client.call("air_outlook", {"latitude": 39.74, "longitude": -104.99}), {"days": 3})
-        call = recorder.calls[0]
-        self.assertEqual(call["url"], "https://gw.test/mcp")
-        self.assertEqual(call["headers"]["Authorization"], "Bearer polar_test_key")
-        self.assertEqual(call["headers"]["Content-Type"], "application/json")
-        # Cloudflare's edge answers 403 to "Python-urllib/3.x", so a real UA is required.
-        self.assertEqual(call["headers"]["User-Agent"], DEFAULT_USER_AGENT)
-        self.assertEqual(call["payload"]["params"]["name"], "air_outlook")
-        self.assertEqual(call["payload"]["params"]["arguments"]["latitude"], 39.74)
-
-    def test_a_refused_call_keeps_the_gateways_own_wording(self):
-        message = "`air_outlook` is a premium tool, but that license key has expired. Get a key at https://buy.example"
-        recorder = self.Recorder(
-            {"jsonrpc": "2.0", "id": 1,
-             "result": {"content": [{"type": "text", "text": message}],
-                        "structuredContent": {"licenceRefusal": True, "reason": "expired"},
-                        "isError": True}}
-        )
-        client = GatewayClient(fetch=recorder, key="k")
-        with self.assertRaises(GatewayError) as caught:
-            client.call("air_outlook")
-        self.assertEqual(caught.exception.reason, DENIED)
-        self.assertEqual(str(caught.exception), message)
-
-    def test_a_missing_key_at_the_gateway_reads_as_a_missing_key(self):
-        message = "`air_outlook` needs a licence key."
-        recorder = self.Recorder(
-            {"jsonrpc": "2.0", "id": 1,
-             "result": {"content": [{"type": "text", "text": message}],
-                        "structuredContent": {"licenceRefusal": True, "reason": "missing"},
-                        "isError": True}}
-        )
-        client = GatewayClient(fetch=recorder, key="k")
-        with self.assertRaises(GatewayError) as caught:
-            client.call("air_outlook")
-        self.assertEqual(caught.exception.reason, MISSING_KEY)
-
-    def test_a_failed_tool_is_not_dressed_up_as_a_licence_problem(self):
-        # The gate let this through and the tool itself failed, so the caller must
-        # not be told to go and buy a key.
-        recorder = self.Recorder(
-            {"jsonrpc": "2.0", "id": 1,
-             "result": {"content": [{"type": "text", "text": "`air_outlook` failed: NOAA refused that request"}],
-                        "isError": True}}
-        )
-        client = GatewayClient(fetch=recorder, key="k")
-        with self.assertRaises(GatewayError) as caught:
-            client.call("air_outlook")
-        self.assertEqual(caught.exception.reason, TOOL_ERROR)
-        self.assertIn("NOAA refused", str(caught.exception))
-
-    def test_an_unreachable_gateway_is_reported_as_such(self):
-        client = GatewayClient(fetch=self.Recorder(OSError("connection refused")), key="k")
-        with self.assertRaises(GatewayError) as caught:
-            client.call("air_outlook")
-        self.assertEqual(caught.exception.reason, UNREACHABLE)
-        self.assertIn("could not be reached", str(caught.exception))
-
-    def test_a_json_rpc_error_is_not_mistaken_for_data(self):
-        client = GatewayClient(
-            fetch=self.Recorder({"jsonrpc": "2.0", "id": 1, "error": {"code": -32602, "message": "Unknown tool: nope"}}),
-            key="k",
-        )
-        with self.assertRaises(GatewayError) as caught:
-            client.call("nope")
-        self.assertEqual(caught.exception.reason, PROTOCOL_ERROR)
-        self.assertIn("Unknown tool", str(caught.exception))
-
-    def test_the_gateway_url_can_be_pointed_somewhere_else(self):
-        with mock.patch.dict(os.environ, {"A2A_GATEWAY_URL": "http://127.0.0.1:9999/mcp", "MCP_LICENSE_KEY": "k"}):
-            client = GatewayClient(fetch=self.Recorder(self._ok("ok")))
-        self.assertEqual(client.url, "http://127.0.0.1:9999/mcp")
-        self.assertEqual(client.key, "k")
 
 
 if __name__ == "__main__":

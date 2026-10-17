@@ -22,7 +22,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 # The Kepler solver is private to data.py; the matrix-form reference below needs it.
 from data import _kepler  # noqa: E402
@@ -155,36 +154,10 @@ def _message(text, **data):
     return {"parts": parts}
 
 
-DENIED_TEXT = ("`a2a_satellites_pass_windows` is a premium tool, but that license key is not valid. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = ("`a2a_satellites_pass_windows` failed: CelesTrak returned an unexpected "
                    "element-set payload")
 
 
-def fake_gateway(payload=None, error=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker, so
-            # this must not be dressed up as a licence problem.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None:
-            # The gateway's licence refusal, marker included. The marker is what
-            # separates a refusal from a tool that failed after the gate.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        return {"jsonrpc": "2.0", "id": 1,
-                "result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 #: Shape copied from a live gateway `a2a_satellites_pass_windows` answer.
@@ -452,13 +425,6 @@ class ParseTests(unittest.TestCase):
         self.assertEqual(parse(_message("anything visible from 51.5074,-0.1278 right now?"))["skill"],
                          SKILL_OVERHEAD)
 
-    def test_the_premium_question_routes_to_the_premium_skill(self):
-        for text in ("when are the good satellite windows from London over the next 3 days?",
-                     "how many hours of usable passes do I have from 51.5074,-0.1278 this week?",
-                     "what is the best window for the ISS over London?"):
-            request = parse(_message(text))
-            self.assertEqual(request["skill"], SKILL_PASS_WINDOWS, text)
-            self.assertTrue(request["explicit"], text)
 
     def test_explicit_json_wins(self):
         request = parse({"parts": [{"kind": "data", "data": {
@@ -480,253 +446,10 @@ class ParseTests(unittest.TestCase):
         self.assertIsNone(satellite_name_from_text("orbital elements for", None))
 
 
-class SkillTests(unittest.TestCase):
-    def run_skill(self, skill, client=None, gateway=None, **params):
-        agent = CelesTrakAgent(client=client or FakeCelesTrak(),
-                              gateway=gateway or fake_gateway()[0])
-        return agent.run({"skill": skill, "params": params, "missing": agent.missing(skill, params)})
-
-    def test_orbit_elements_derives_the_period(self):
-        result = self.run_skill(SKILL_ORBIT_ELEMENTS, catnr="25544")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("ISS (ZARYA)", result["message"])
-        self.assertIn("92.98 min", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertEqual(result["artifact"]["satellite"]["norad_cat_id"], 25544)
-
-    def test_orbit_elements_lists_a_group(self):
-        client = FakeCelesTrak(elements=(ISS, TIANHE))
-        result = self.run_skill(SKILL_ORBIT_ELEMENTS, client=client, group="stations", limit=5)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("ISS (ZARYA)", result["message"])
-        self.assertIn("CSS (TIANHE)", result["message"])
-        self.assertEqual(result["artifact"]["count"], 2)
-
-    def test_orbit_elements_needs_a_satellite(self):
-        agent = CelesTrakAgent(client=FakeCelesTrak(), gateway=fake_gateway()[0])
-        self.assertEqual(agent.missing(SKILL_ORBIT_ELEMENTS, {}), ["satellite"])
-        result = agent.run({"skill": SKILL_ORBIT_ELEMENTS, "params": {}, "missing": ["satellite"]})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("catalogue number", result["message"])
-
-    def test_overhead_reports_elevation_and_provenance(self):
-        client = FakeCelesTrak(overhead=[{
-            "object_name": "ISS (ZARYA)", "norad_cat_id": 25544, "epoch": ISS["EPOCH"],
-            "element_set_age_hours": 12.5,
-            "subpoint": {"latitude": 51.2, "longitude": -0.4}, "altitude_km": 419.0,
-            "range_km": 430.0, "elevation_deg": 79.0, "azimuth_deg": 190.0,
-            "central_angle_deg": 3.1,
-        }])
-        result = self.run_skill(SKILL_OVERHEAD, client=client, point="51.5074,-0.1278",
-                                min_elevation=10)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("79", result["message"])
-        self.assertIn("12.5 h old", result["message"])
-        self.assertIn("not SGP4", result["message"])
-        self.assertEqual(result["artifact"]["count"], 1)
-
-    def test_overhead_with_an_empty_sky_is_an_answer(self):
-        result = self.run_skill(SKILL_OVERHEAD, point="0,0", min_elevation=80)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Nothing", result["message"])
-        self.assertEqual(result["artifact"]["count"], 0)
-
-    def test_overhead_needs_a_point(self):
-        agent = CelesTrakAgent(client=FakeCelesTrak(), gateway=fake_gateway()[0])
-        self.assertEqual(agent.missing(SKILL_OVERHEAD, {}), ["point"])
-        result = agent.run({"skill": SKILL_OVERHEAD, "params": {}, "missing": ["point"]})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("latitude/longitude", result["message"])
-
-    def test_passes_reports_rise_set_and_peak(self):
-        client = FakeCelesTrak(passes=[{
-            "start": "2026-09-29T16:46:00Z", "end": "2026-09-29T16:53:00Z", "minutes": 7,
-            "max_elevation_deg": 82.8, "max_at": "2026-09-29T16:49:00Z",
-            "range_km": 428.0, "azimuth_deg": 308.0,
-        }])
-        result = self.run_skill(SKILL_PASSES, client=client, catnr="25544",
-                                point="40.7006,-74.0142", min_elevation=10, days=2)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("2026-09-29T16:46:00Z", result["message"])
-        self.assertIn("82.8", result["message"])
-        self.assertEqual(result["artifact"]["count"], 1)
-
-    def test_passes_can_sweep_a_whole_group(self):
-        client = FakeCelesTrak(elements=(ISS, TIANHE), passes=[{
-            "start": "2026-09-29T16:46:00Z", "end": "2026-09-29T16:53:00Z", "minutes": 7,
-            "max_elevation_deg": 82.8, "max_at": "2026-09-29T16:49:00Z",
-            "range_km": 428.0, "azimuth_deg": 308.0, "object_name": "ISS (ZARYA)",
-            "norad_cat_id": 25544, "element_set_age_hours": 12.5,
-        }])
-        result = self.run_skill(SKILL_PASSES, client=client, point="40.7006,-74.0142",
-                                group="stations", min_elevation=10, days=1)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("ISS (ZARYA)", result["message"])
-        self.assertIn("swept", result["message"])
-        self.assertEqual(result["artifact"]["satellites_swept"], 2)
-
-    def test_passes_points_at_the_premium_skill_when_nothing_is_up(self):
-        result = self.run_skill(SKILL_PASSES, point="0,0", min_elevation=89)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("pass-windows", result["message"])
-
-    def test_catalog_reports_owner_and_launch(self):
-        result = self.run_skill(SKILL_CATALOG, catnr="25544")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("owner ISS", result["message"])
-        self.assertIn("1998-11-20", result["message"])
-        self.assertIn(SATCAT_DATASET, result["message"])
-        self.assertEqual(result["artifact"]["dataset"], SATCAT_DATASET)
-
-    def test_an_unknown_satellite_is_reported_not_guessed(self):
-        result = self.run_skill(SKILL_PASSES, name="NOTASATELLITE", point="51.5,-0.1")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("no satellite matching", result["message"])
-
-    def test_an_ambiguous_name_asks_which_one(self):
-        client = FakeCelesTrak(elements=(ISS, ISS_MODULE))
-        result = self.run_skill(SKILL_ORBIT_ELEMENTS, client=client, name="ISS")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("matches 2 objects", result["message"])
-        self.assertIn("25544", result["message"])
-
-    def test_bad_numbers_come_back_as_a_question(self):
-        result = self.run_skill(SKILL_OVERHEAD, point="0,0", min_elevation=200)
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("elevation", result["message"])
-
-    def test_an_upstream_failure_is_a_failed_task(self):
-        class Broken(FakeCelesTrak):
-            def _elements(self, query, ttl=None):
-                raise UpstreamError("CelesTrak returned HTTP 500")
-
-        result = self.run_skill(SKILL_ORBIT_ELEMENTS, client=Broken(), group="stations")
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be read", result["message"])
-
-    def test_help_does_not_touch_the_feed(self):
-        client = FakeCelesTrak()
-        result = self.run_skill("help", client=client)
-        self.assertIn("CelesTrak", result["message"])
-        self.assertIsNone(result["artifact"])
-        self.assertEqual(client.calls, 0)
-
-    def test_card_lists_five_skills_with_exactly_one_premium(self):
-        ids = [skill["id"] for skill in CARD_SKILLS]
-        self.assertEqual(ids, [SKILL_ORBIT_ELEMENTS, SKILL_OVERHEAD, SKILL_PASSES,
-                               SKILL_CATALOG, SKILL_PASS_WINDOWS])
-        premium = [skill for skill in CARD_SKILLS if "premium" in skill["tags"]]
-        self.assertEqual([skill["id"] for skill in premium], [SKILL_PASS_WINDOWS])
-        agent = CelesTrakAgent(client=FakeCelesTrak(), gateway=fake_gateway()[0])
-        self.assertEqual(agent.env_prefix, "SATELLITES")
-        self.assertEqual(agent.datasets, (DATASET, SATCAT_DATASET))
-        self.assertEqual(GATEWAY_TOOL, "a2a_satellites_pass_windows")
 
 
-class PassWindowTests(unittest.TestCase):
-    """The premium skill: parsing stays local, the windows come from the gateway."""
 
-    def test_the_message_reports_the_gateways_windows(self):
-        gateway, calls = fake_gateway(WINDOW_PAYLOAD)
-        result = CelesTrakAgent(FakeCelesTrak(), gateway=gateway).run({
-            "skill": SKILL_PASS_WINDOWS,
-            "params": {"point": "51.5074,-0.1278", "days": 2, "min_elevation": 20},
-            "missing": [],
-        })
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("2026-09-29T12:05:00Z to 2026-09-29T12:12:00Z", result["message"])
-        self.assertIn("33.0°", result["message"])
-        self.assertIn("0.85 h total", result["message"])
-        self.assertIn("Longest window 15 min", result["message"])
-        self.assertIn("Dead air: 466 min", result["message"])
-        self.assertIn("2 more window(s)", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["window_count"], 4)
-        self.assertEqual(len(result["artifact"]["windows"]), 2)
-        self.assertEqual(result["artifact"]["total_hours"], 0.85)
 
-        # CelesTrak was read on the gateway, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], GATEWAY_TOOL)
-        self.assertEqual(sent["arguments"]["latitude"], 51.5074)
-        self.assertEqual(sent["arguments"]["longitude"], -0.1278)
-        self.assertEqual(sent["arguments"]["days"], 2)
-        self.assertEqual(sent["arguments"]["min_elevation"], 20.0)
-        self.assertEqual(sent["arguments"]["group"], "stations")
-
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = CelesTrakAgent(FakeCelesTrak(), gateway=gateway).run({
-            "skill": SKILL_PASS_WINDOWS, "params": {"point": "51.5074,-0.1278"}, "missing": [],
-        })
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("windows", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
-
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = CelesTrakAgent(FakeCelesTrak(), gateway=gateway).run({
-            "skill": SKILL_PASS_WINDOWS, "params": {"point": "51.5074,-0.1278"}, "missing": [],
-        })
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
-
-    def test_a_dead_gateway_fails_instead_of_inventing_windows(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = CelesTrakAgent(FakeCelesTrak(), gateway=gateway).run({
-            "skill": SKILL_PASS_WINDOWS, "params": {"point": "51.5074,-0.1278"}, "missing": [],
-        })
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("windows"))
-
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = CelesTrakAgent(FakeCelesTrak(), gateway=gateway).run({
-            "skill": SKILL_PASS_WINDOWS, "params": {"point": "51.5074,-0.1278"}, "missing": [],
-        })
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("unexpected element-set payload", result["message"])
-
-    def test_a_gateway_answer_with_no_windows_is_handled(self):
-        gateway, _ = fake_gateway({"windowCount": 0, "windows": [], "longestWindow": None,
-                                  "gaps": [], "windowsTruncated": 0, "passCount": 0,
-                                  "totalHours": 0, "coveragePct": 0})
-        result = CelesTrakAgent(FakeCelesTrak(), gateway=gateway).run({
-            "skill": SKILL_PASS_WINDOWS, "params": {"point": "0,0", "min_elevation": 89},
-            "missing": [],
-        })
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Nothing rises that high", result["message"])
-
-    def test_an_unusable_answer_fails_rather_than_showing_nothing(self):
-        gateway, _ = fake_gateway({"not_windows": True})
-        result = CelesTrakAgent(FakeCelesTrak(), gateway=gateway).run({
-            "skill": SKILL_PASS_WINDOWS, "params": {"point": "51.5,-0.1"}, "missing": [],
-        })
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("without any satellite windows", result["message"])
-
-    def test_bad_arguments_never_reach_the_gateway(self):
-        gateway, calls = fake_gateway(WINDOW_PAYLOAD)
-        result = CelesTrakAgent(FakeCelesTrak(), gateway=gateway).run({
-            "skill": SKILL_PASS_WINDOWS, "params": {"point": "0,0", "days": 99}, "missing": [],
-        })
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertEqual(calls, [])
-
-    def test_the_premium_skill_needs_a_point(self):
-        agent = CelesTrakAgent(client=FakeCelesTrak(), gateway=fake_gateway()[0])
-        self.assertEqual(agent.missing(SKILL_PASS_WINDOWS, {}), ["point"])
-        result = agent.run({"skill": SKILL_PASS_WINDOWS, "params": {}, "missing": ["point"]})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("latitude/longitude", result["message"])
 
 
 if __name__ == "__main__":

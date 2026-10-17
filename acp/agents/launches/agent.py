@@ -21,8 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (  # noqa: E402
     DATASET_DETAIL,
@@ -34,7 +33,7 @@ from data import (  # noqa: E402
 
 HELP = (
     "I read Launch Library 2, the launch schedule the trackers use (keyless). Ask me:\n"
-    "  • launch cadence board from 2026-10-01 (premium)\n"
+    "  • launch cadence board from 2026-10-01 (not implemented here)\n"
     "  • what is the next launch?\n"
     "  • when is the next Starlink launch?\n"
     "  • what launched in the last few days?\n"
@@ -119,10 +118,10 @@ class LaunchesAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: LaunchesData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or LaunchesData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -157,7 +156,7 @@ class LaunchesAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (LaunchesError, ValueError, GatewayError) as exc:
+        except (LaunchesError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the launch schedule: {exc}")
             return STOP_END_TURN
@@ -184,35 +183,9 @@ class LaunchesAgent(AcpAgent):
         return HELP, {"summary": "help", "dataset": None}
 
     def _cadence(self, params: dict) -> tuple[str, dict]:
-        data, refused = premium_call(self.gateway, "launch_cadence_board", {"start": params.get("start")},
-                                     {"agent": "launches", "skill": "launches-cadence"})
-        if refused:
-            return refused
-        if (not isinstance(data, dict) or
-                any(not isinstance(data.get(key), dict) or
-                    any(type(data[key].get(field)) is not int for field in ("examined", "reported_total"))
-                    for key in ("upcoming", "recent")) or
-                not isinstance(data.get("recent_outcomes"), dict) or
-                any(type(data["recent_outcomes"].get(key)) is not int for key in
-                    ("success", "failure", "partial", "unresolved")) or
-                any(not isinstance(data.get(key), list) or any(not isinstance(row, dict) or
-                    not isinstance(row.get("name"), str) or type(row.get("count")) is not int
-                    for row in data[key]) for key in ("by_provider", "by_country", "by_vehicle"))):
-            return empty_premium_answer("The gateway returned no readable launch cadence board.",
-                                        {"agent": "launches", "skill": "launches-cadence"})
-        lines = [f"Premium launch cadence: {data['upcoming']['examined']} scheduled launches examined "
-                 f"from {data.get('start')} to {data.get('end_exclusive')} (exclusive)."]
-        for key in ("by_provider", "by_country", "by_vehicle"):
-            lines.append(key.replace("_", " ") + ": " + "; ".join(f"{r['name']}: {r['count']}" for r in data[key]))
-        record = data["recent_outcomes"]
-        lines.append(f"Previous 90 days: {record['success']} successes, {record['failure']} failures, "
-                     f"{record['partial']} partial failures, {record['unresolved']} unresolved; "
-                     f"success rate {record.get('success_percent')}% of resolved outcomes.")
-        for key in ("upcoming", "recent"):
-            lines.append(f"{key} coverage: {data[key]['examined']} of {data[key]['reported_total']}; "
-                         f"truncated: {data[key].get('truncated')}.")
-        lines.append(str(data.get("note", "")))
-        return "\n".join(lines), {**data, "summary": lines[0], "premium": True}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: cadence — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     @staticmethod
     def _one_line(launch: dict) -> str:

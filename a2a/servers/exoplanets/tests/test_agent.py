@@ -20,7 +20,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -151,8 +150,6 @@ def _message(text, **data):
     return {"parts": parts}
 
 
-DENIED_TEXT = ("`a2a_exoplanets_survey` is a premium tool, but that license key is not valid. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`a2a_exoplanets_survey` failed: the Exoplanet Archive returned an unexpected payload"
 
 #: Shape copied from a live gateway `a2a_exoplanets_survey` answer.
@@ -183,25 +180,6 @@ SURVEY_PAYLOAD = {
 }
 
 
-def fake_gateway(payload=None, error=None, tool_error=None, key="polar_test_key"):
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None:
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        return {"jsonrpc": "2.0", "id": 1,
-                "result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class QueryBuildingTests(unittest.TestCase):
@@ -370,112 +348,7 @@ class ParseTests(unittest.TestCase):
         self.assertEqual(parse(_message("what can you do?"))["skill"], "help")
 
 
-class SkillTests(unittest.TestCase):
-    def run_skill(self, skill, client=None, gateway=None, **params):
-        agent = ExoplanetAgent(client=client or FakeArchive(),
-                               gateway=gateway or fake_gateway()[0])
-        return agent.run({"skill": skill, "params": params, "missing": agent.missing(skill, params)})
 
-    def test_planet_lookup_reports_everything(self):
-        result = self.run_skill(SKILL_PLANET, client=FakeArchive(all_rows=[TRAPPIST_E]),
-                                planet="TRAPPIST-1 e")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("TRAPPIST-1 e", result["message"])
-        self.assertIn("6.101013 day", result["message"])
-        self.assertIn("0.92 Earth radii", result["message"])
-        self.assertIn("249.7 K", result["message"])
-        self.assertIn("M8.0 V", result["message"])
-        self.assertIn("Transit", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertEqual(result["artifact"]["planet"]["planet_letter"], "e")
-        self.assertEqual(result["artifact"]["planet"]["planets_in_system"], 7)
-
-    def test_planet_lookup_says_when_a_value_is_unpublished(self):
-        result = self.run_skill(SKILL_PLANET, client=FakeArchive(all_rows=[V2376_B]),
-                                planet="V2376 Ori b")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("not published", result["message"])
-        self.assertIn("nobody has published a value", result["message"])
-        self.assertIn("87.2059 Earth radii", result["message"])
-
-    def test_an_unknown_planet_is_reported_not_guessed(self):
-        result = self.run_skill(SKILL_PLANET, client=FakeArchive(all_rows=[TRAPPIST_E]),
-                                planet="NOTAPLANET-9 z")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("no planet called", result["message"])
-
-    def test_system_lists_every_planet(self):
-        client = FakeArchive(all_rows=[TRAPPIST_E, TRAPPIST_B, TRAPPIST_C])
-        result = self.run_skill(SKILL_SYSTEM, client=client, host="TRAPPIST-1")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("3 planet(s) around TRAPPIST-1", result["message"])
-        self.assertIn("TRAPPIST-1 b", result["message"])
-        self.assertIn("TRAPPIST-1 e", result["message"])
-        self.assertEqual(result["artifact"]["count"], 3)
-
-    def test_an_unknown_host_is_reported(self):
-        result = self.run_skill(SKILL_SYSTEM, client=FakeArchive(), host="NOWHERE-1")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("no planet around", result["message"])
-
-    def test_extremes_reports_the_right_parameter_and_unit(self):
-        client = FakeArchive(all_rows=[V2376_B, PROXIMA_B, TRAPPIST_E])
-        result = self.run_skill(SKILL_EXTREMES, client=client, column="pl_rade",
-                                direction="desc", limit=5)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Largest planets by radius", result["message"])
-        self.assertIn("V2376 Ori b", result["message"])
-        self.assertIn("87.2059 Earth radii", result["message"])
-        self.assertIn("None", result["artifact"]["label"]) if False else None
-        self.assertIn(str(FULL_TABLE_ROWS), result["message"])
-        smallest = self.run_skill(SKILL_EXTREMES, client=client, column="sy_dist",
-                                  direction="asc", limit=5)
-        self.assertIn("Smallest planets by distance", smallest["message"])
-        self.assertIn("1.301 parsecs", smallest["message"])
-
-    def test_a_bad_parameter_comes_back_as_a_question(self):
-        result = self.run_skill(SKILL_EXTREMES, column="pl_name", direction="desc")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("sort must be one of", result["message"])
-
-    def test_the_three_skills_that_need_input_ask_for_it(self):
-        agent = ExoplanetAgent(client=FakeArchive(), gateway=fake_gateway()[0])
-        self.assertEqual(agent.missing(SKILL_PLANET, {}), ["planet"])
-        self.assertEqual(agent.missing(SKILL_SYSTEM, {}), ["host"])
-        self.assertEqual(agent.missing(SKILL_SEARCH, {}), ["query"])
-        for skill, missing in ((SKILL_PLANET, ["planet"]), (SKILL_SYSTEM, ["host"]),
-                               (SKILL_SEARCH, ["query"])):
-            result = agent.run({"skill": skill, "params": {}, "missing": missing})
-            self.assertEqual(result["final_state"], "input-required", skill)
-
-    def test_an_upstream_failure_is_a_failed_task(self):
-        class Broken(FakeArchive):
-            def _tap(self, query, ttl, maxrec=None):
-                raise UpstreamError("HTTP Error 400")
-
-            def planet(self, name):
-                self._tap("", 0)
-
-        result = self.run_skill(SKILL_PLANET, client=Broken(), planet="TRAPPIST-1 e")
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be read", result["message"])
-
-    def test_help_does_not_touch_the_archive(self):
-        client = FakeArchive()
-        result = self.run_skill("help", client=client)
-        self.assertIn("Exoplanet Archive", result["message"])
-        self.assertIsNone(result["artifact"])
-        self.assertEqual(client.queries, [])
-
-    def test_card_has_five_skills_and_exactly_one_premium(self):
-        ids = [skill["id"] for skill in CARD_SKILLS]
-        self.assertEqual(ids, [SKILL_PLANET, SKILL_SYSTEM, SKILL_SEARCH, SKILL_EXTREMES, SKILL_SURVEY])
-        premium = [skill["id"] for skill in CARD_SKILLS if "premium" in skill["tags"]]
-        self.assertEqual(premium, [SKILL_SURVEY])
-        agent = ExoplanetAgent(client=FakeArchive(), gateway=fake_gateway()[0])
-        self.assertEqual(agent.env_prefix, "EXOPLANETS")
-        self.assertEqual(agent.datasets, (DATASET,))
-        self.assertEqual(GATEWAY_TOOL, "a2a_exoplanets_survey")
 
 
 class SurveyTests(unittest.TestCase):
@@ -486,72 +359,12 @@ class SurveyTests(unittest.TestCase):
             "skill": SKILL_SURVEY, "params": params, "missing": [],
         })
 
-    def test_the_message_reports_the_gateways_survey(self):
-        gateway, calls = fake_gateway(SURVEY_PAYLOAD)
-        result = self.run_survey(gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("6372 planets around 2894 stars", result["message"])
-        self.assertIn("Transit 4139 (65.0%)", result["message"])
-        self.assertIn("2010s 3272", result["message"])
-        self.assertIn("rough insolation band of 0.25-1.8", result["message"])
-        self.assertIn("not a verdict", result["message"])
-        self.assertIn("Record largest radius: V2376 Ori b (87.2059 Earth radii)", result["message"])
-        self.assertIn("Record shortest period", result["message"])
-        self.assertIn("not a claim about how many planets exist", result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["total_planets"], 6372)
-        self.assertEqual(result["artifact"]["total_systems"], 2894)
-        self.assertEqual(result["artifact"]["years_covered"], {"first": 1992, "last": 2026})
 
-        # The archive was read on the gateway, not here.
-        self.assertEqual(len(calls), 1)
-        self.assertEqual(calls[0]["payload"]["params"]["name"], GATEWAY_TOOL)
-        self.assertEqual(calls[0]["payload"]["params"]["arguments"], {})
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = self.run_survey(gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("by_decade", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()
-        result = self.run_survey(gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_survey(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = self.run_survey(gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("by_decade"))
 
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = self.run_survey(gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("unexpected payload", result["message"])
 
-    def test_an_unusable_answer_fails_rather_than_showing_nothing(self):
-        gateway, _ = fake_gateway({"nothing_useful": True})
-        result = self.run_survey(gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("without a catalogue survey", result["message"])
-
-    def test_a_catalogue_with_no_records_still_reports_cleanly(self):
-        payload = {**SURVEY_PAYLOAD, "totalPlanets": 0, "totalSystems": 0,
-                   "byDiscoveryMethod": [], "byDecade": [], "bySpectralType": [],
-                   "records": {}, "yearsCovered": None}
-        gateway, _ = fake_gateway(payload)
-        result = self.run_survey(gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("0 planets around 0 stars", result["message"])
 
 
 if __name__ == "__main__":

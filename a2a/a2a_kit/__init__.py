@@ -7,17 +7,6 @@ task lifecycle, webhook push notifications, SQLite persistence).
 
 from .cli import run_agent_server
 from .errors import A2AError, ERROR_CODES, SkillAgent, UpstreamError, agent_message, error, new_id, now_iso
-from .gateway import (
-    DENIED,
-    MISSING_KEY,
-    PROTOCOL_ERROR,
-    TOOL_ERROR,
-    UNREACHABLE,
-    GatewayClient,
-    GatewayError,
-    empty_premium_answer,
-    premium_call,
-)
 from .httpd import PROTOCOL_VERSION, AgentServerApp, build_agent_card, make_handler, serve
 from .jsonapi import DEFAULT_USER_AGENT, JsonApiClient
 from .protocol import A2AHandler
@@ -30,24 +19,15 @@ __all__ = [
     "A2AHandler",
     "AgentServerApp",
     "DEFAULT_USER_AGENT",
-    "DENIED",
     "ERROR_CODES",
-    "GatewayClient",
-    "GatewayError",
-    "empty_premium_answer",
-    "premium_call",
     "INTERRUPTED_STATES",
     "JsonApiClient",
-    "MISSING_KEY",
-    "PROTOCOL_ERROR",
     "PROTOCOL_VERSION",
-    "TOOL_ERROR",
     "PushWatcher",
     "SocrataClient",
     "SkillAgent",
     "TERMINAL_STATES",
     "TaskStore",
-    "UNREACHABLE",
     "UpstreamError",
     "agent_message",
     "build_agent_card",

@@ -16,9 +16,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, TvData, TvError, TvNotFound, season_from_text,  # noqa: E402
                   show_query_from_text)
@@ -34,7 +32,7 @@ HELP = (
     "Air times come from TVMaze's own air dates, in UTC where the feed gives UTC.\n"
     "TVMaze only holds an air date once a slot is booked, so a show between seasons has no\n"
     "next episode and I say that rather than guess one. Catch-up arithmetic - how many hours\n"
-    "you are behind and when you would finish - is the premium skill."
+    "you are behind and when you would finish - is a separate skill."
 )
 
 PERMISSION_KEY = "tv-read-tvmaze-schedule"
@@ -268,9 +266,7 @@ class TvAgent(AcpAgent):
     def __init__(self, connection=None, data: TvData | None = None, gateway=None) -> None:
         super().__init__(connection)
         self.data = data or TvData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -328,7 +324,7 @@ class TvAgent(AcpAgent):
                 show = self.data.show(params["query"])
                 body = render_show(show)
                 summary = f"{show['name']}: {show['status'] or 'status not reported'}"
-        except (TvError, GatewayError, ValueError) as exc:
+        except (TvError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read TVMaze's schedule: {exc}")
             return STOP_END_TURN
@@ -341,46 +337,9 @@ class TvAgent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        arguments: dict = {"show": params["show"]}
-        if params.get("per_week"):
-            arguments["per_week"] = int(params["per_week"])
-        if params.get("season"):
-            arguments["season"] = int(params["season"])
-
-        data, refused = premium_call(self.gateway, "tv_catchup_plan", arguments,
-                                     {"agent": "tv"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not data.get("show"):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back a catch-up plan for that show.",
-                {"agent": "tv"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a plan out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_catchup(data)
-        latest = data.get("latestEpisode") or {}
-        summary = (f"{data['show']}: {data.get('episodesAired', 'not reported')} episode(s), "
-                   f"{_num(data.get('totalHours'))} h, latest "
-                   f"{latest.get('airedOn', 'not reported')}")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message(f"\nSource: {data.get('source', DATASET)}, worked out on the licence gateway. "
-                    "A projection, not a schedule: it holds only if you keep the pace and the "
-                    "show keeps airing on TVMaze's recorded rhythm.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

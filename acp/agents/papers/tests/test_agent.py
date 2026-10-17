@@ -23,7 +23,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import PapersAgent, _author_line, route, topic_from_text  # noqa: E402
 from data import (  # noqa: E402
@@ -347,65 +347,7 @@ class TurnTests(unittest.TestCase):
 import json
 import os
 from unittest.mock import Mock, patch
-from acp_kit import GatewayClient, GatewayError
 
-class PremiumTests(unittest.TestCase):
-    question = 'topic board for CRISPR from 2022 to 2024'
-    arguments = {'query': 'CRISPR', 'start_year': 2022, 'end_year': 2024}
-    payload = {'query': 'CRISPR', 'crossref': {'total': 9580, 'annual': [{'year': 2022, 'count': 3055}, {'year': 2023, 'count': 3162}, {'year': 2024, 'count': 3363}], 'venues': [{'venue': 'Nature', 'count': 152}], 'top_cited': [{'title': 'CRISPR technology', 'doi': '10.1126/science.add8643', 'citations': 1058}]}, 'europe_pmc': {'total': 23754, 'annual': [{'year': 2022, 'count': 7825}, {'year': 2023, 'count': 8000}, {'year': 2024, 'count': 7929}], 'venues': [{'venue': 'Nature', 'count': 9}], 'top_cited': [{'title': 'CRISPR study', 'id': 'MED/12345', 'citations': 444}]}}
-
-    def run_premium(self, gateway):
-        data, _ = make_data()
-        agent = PapersAgent(data=data, gateway=gateway)
-        return agent._run_skill(*route(self.question))
-
-    def test_no_key_attempts_premium_and_preserves_client_wording(self):
-        with patch.dict(os.environ, {}, clear=True):
-            fetch = Mock(side_effect=AssertionError("must not authorize"))
-            gateway = GatewayClient(fetch=fetch)
-            with self.assertRaises(GatewayError) as expected:
-                gateway.call('papers_topic_board', self.arguments)
-            with patch.object(gateway, "call", wraps=gateway.call) as call:
-                answer, artifact = self.run_premium(gateway)
-                call.assert_called_once_with('papers_topic_board', self.arguments)
-            self.assertEqual(answer, str(expected.exception))
-            self.assertIn("MCP_LICENSE_KEY", answer)
-            self.assertEqual(artifact["reason"], "missing_key")
-            fetch.assert_not_called()
-
-    def test_rejected_key_preserves_gateway_wording(self):
-        message = "Gateway says this key was revoked. Get a key at https://example.test/buy"
-        fetch = Mock(return_value={"result": {"isError": True,
-                     "structuredContent": {"licenceRefusal": True, "reason": "revoked"},
-                     "content": [{"type": "text", "text": message}]}})
-        answer, artifact = self.run_premium(GatewayClient(key="lic_live_but_rejected", fetch=fetch))
-        self.assertEqual(answer, message)
-        self.assertEqual(artifact["reason"], "denied")
-        self.assertEqual(fetch.call_args.args[2]["Authorization"], "Bearer lic_live_but_rejected")
-
-    def test_good_key_calls_once_and_reports_real_numbers(self):
-        fetch = Mock(return_value={"result": {"content": [{"type": "text", "text": json.dumps(self.payload)}]}})
-        answer, artifact = self.run_premium(GatewayClient(key="test-good", fetch=fetch))
-        self.assertEqual(fetch.call_count, 1)
-        self.assertEqual(fetch.call_args.args[1]["params"], {"name": 'papers_topic_board', "arguments": self.arguments})
-        for number in ['9,580', '23,754', '1,058 citations', 'Nature: 9']:
-            self.assertIn(number, answer)
-        self.assertTrue(artifact["premium"])
-
-    def test_free_question_never_calls_gateway(self):
-        gateway = Mock()
-        data, _ = make_data()
-        answer, _ = PapersAgent(data=data, gateway=gateway)._run_skill(*route('papers about CRISPR sickle cell'))
-        self.assertIn('2 PubMed papers', answer)
-        gateway.call.assert_not_called()
-
-    def test_unreadable_payload_has_no_invented_numbers(self):
-        for payload in ({}, {"annual": [None]}, "bad"):
-            gateway = Mock()
-            gateway.call.return_value = payload
-            answer, artifact = self.run_premium(gateway)
-            self.assertIn("no readable", answer)
-            self.assertTrue(artifact["failed"])
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@
 Jolpica publishes the whole Formula 1 calendar, every result, both championship tables and
 every driver's record, keyless, and nobody asks it from an editor. "when is the next race?"
 gets the race and every session of its weekend. "who won last week?" gets the finishing order
-with the times. Where the title goes from here is the premium skill.
+with the times. Where the title goes from here is a separate skill.
 """
 
 from __future__ import annotations
@@ -16,9 +16,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, F1Data, F1Error, F1NotFound,  # noqa: E402
                   _season, driver_from_text)
@@ -33,7 +31,7 @@ HELP = (
     "  - tell me about max_verstappen\n"
     "Times are UTC where the feed publishes UTC. A driver who did not finish has no race time\n"
     "in the feed at all, so it is reported as did not finish rather than invented.\n"
-    "Projecting where the championship lands is the premium skill."
+    "Projecting where the championship lands is a separate skill."
 )
 
 PERMISSION_KEY = "f1-read-jolpica-ergast"
@@ -221,9 +219,7 @@ class F1Agent(AcpAgent):
     def __init__(self, connection=None, data: F1Data | None = None, gateway=None) -> None:
         super().__init__(connection)
         self.data = data or F1Data()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -285,7 +281,7 @@ class F1Agent(AcpAgent):
                 driver = self.data.driver(params["driver_id"])
                 body = render_driver(driver)
                 summary = f"{driver['name']} ({driver.get('nationality') or 'not reported'})"
-        except (F1Error, GatewayError, ValueError) as exc:
+        except (F1Error, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the F1 feed: {exc}")
             return STOP_END_TURN
@@ -298,43 +294,9 @@ class F1Agent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        arguments: dict = {}
-        if params.get("season") and params["season"] != "current":
-            arguments["season"] = int(params["season"])
-
-        data, refused = premium_call(self.gateway, "f1_championship_projection", arguments,
-                                     {"agent": "f1"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not data.get("drivers"):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back a championship projection.",
-                {"agent": "f1"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a projection out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_projection(data)
-        summary = (f"{data.get('season', 'not reported')}: {data.get('projectedChampion', 'not reported')} "
-                   f"projected on {data.get('racesRemaining', 'not reported')} race(s) left")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message(f"\nSource: {data.get('source', DATASET)}, worked out on the licence gateway. "
-                    "A projection, not a result: it holds each driver to the average points a "
-                    "race they have scored so far, which is a real assumption about the future "
-                    "and not a fact about it.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

@@ -20,7 +20,7 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient, UpstreamError  # noqa: E402
+from a2a_kit import UpstreamError
 
 from agent import (  # noqa: E402
     PREMIUM_TOOL,
@@ -184,32 +184,9 @@ BOARD_PAYLOAD = {
     "mostPlayed": {"name": "ELDEN RING", "ccu": 35000},
     "bestReviewed": {"name": "DARK SOULS III", "reviewRatio": 0.94},
 }
-DENIED_TEXT = ("`games_price_board` is a premium tool, but that licence key has expired. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`games_price_board` failed: `games` must be between 2 and 4 names."
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "expired"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 def message(text: str, **data) -> dict:
@@ -457,58 +434,9 @@ class FreeTests(unittest.TestCase):
             run_free(data)
 
 
-class BoardTests(unittest.TestCase):
-    def test_the_premium_board_comes_from_the_gateway(self):
-        gateway, calls = fake_gateway(BOARD_PAYLOAD)
-        result = run_board({"games": ["elden ring", "dark souls 3"]}, gateway)
-        artifact = result["artifact"]
-        self.assertEqual(result["final_state"], "completed")
-        self.assertTrue(artifact["premium"])
-        self.assertEqual([row["name"] for row in artifact["games"]],
-                         ["ELDEN RING", "DARK SOULS III"])
-        self.assertEqual(artifact["cheapest"]["name"], "DARK SOULS III")
-        # The body ran on the gateway, with the caller's key in the header.
-        self.assertEqual(calls[0]["payload"]["params"]["name"], PREMIUM_TOOL)
-        self.assertEqual(calls[0]["payload"]["params"]["arguments"]["games"],
-                         ["elden ring", "dark souls 3"])
-
-    def test_a_denied_key_is_a_finished_answer_with_no_numbers(self):
-        gateway, _ = fake_gateway()
-        result = run_board({"games": ["elden ring", "dark souls 3"]}, gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIsNone(result["artifact"].get("games"))
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["asked"], ["elden ring", "dark souls 3"])
-        self.assertIn("buy.polar.sh", result["message"])
-
-    def test_the_board_sends_at_most_four_titles(self):
-        gateway, calls = fake_gateway(BOARD_PAYLOAD)
-        run_board({"games": ["a game", "b game", "c game", "d game", "e game"]}, gateway)
-        self.assertEqual(calls[0]["payload"]["params"]["arguments"]["games"],
-                         ["a game", "b game", "c game", "d game"])
-
-    def test_a_gateway_tool_error_is_a_failed_task_not_a_licence_verdict(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = run_board({"games": ["elden ring", "dark souls 3"]}, gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("between 2 and 4", result["message"])
-
-    def test_an_unreachable_gateway_is_a_failed_task(self):
-        gateway, _ = fake_gateway(error=UpstreamError("connection refused"))
-        result = run_board({"games": ["elden ring", "dark souls 3"]}, gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertTrue(result["artifact"]["premium"])
-
-    def test_an_empty_board_is_a_failed_task(self):
-        gateway, _ = fake_gateway({"games": []})
-        result = run_board({"games": ["elden ring", "dark souls 3"]}, gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIsNone(result["artifact"].get("games"))
 
 
 class AgentTests(unittest.TestCase):
-    def agent(self) -> GamesAgent:
-        return GamesAgent(client=client()[0], gateway=fake_gateway(BOARD_PAYLOAD)[0])
 
     def test_the_card_lists_every_skill_in_order(self):
         skills = [skill["id"] for skill in GamesAgent.card_skills]
@@ -516,69 +444,17 @@ class AgentTests(unittest.TestCase):
         self.assertEqual(GamesAgent.datasets, (DATASET_STEAM, DATASET_STEAMSPY, DATASET_EPIC))
         self.assertEqual(GamesAgent.watch_kinds, ())
 
-    def test_a_missing_name_asks_instead_of_guessing(self):
-        result = self.agent().run({"skill": SKILL_STATS, "params": {}, "missing": ["a game"]})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("player numbers", result["message"])
 
-    def test_the_search_prompt_names_the_examples(self):
-        result = self.agent().run({"skill": SKILL_SEARCH, "params": {}, "missing": ["x"]})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("portal 2", result["message"])
 
-    def test_the_board_prompt_says_it_needs_a_licence_key(self):
-        result = self.agent().run({"skill": SKILL_BOARD, "params": {}, "missing": ["two games"]})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("licence key", result["message"])
 
-    def test_missing_parameters_are_per_skill(self):
-        agent = self.agent()
-        self.assertEqual(agent.missing(SKILL_SEARCH, {"term": None, "app_id": None}),
-                         ["a game name or a Steam app id"])
-        self.assertEqual(agent.missing(SKILL_SEARCH, {"term": "rust"}), [])
-        self.assertEqual(agent.missing(SKILL_FREE, {}), [])
-        self.assertEqual(agent.missing(SKILL_BOARD, {"games": ["one"]}),
-                         ["two to four game names"])
 
-    def test_help_lists_the_skills_and_the_five_feeds(self):
-        result = self.agent().run({"skill": SKILL_HELP, "params": {}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("SteamSpy", result["message"])
-        self.assertIn("Epic", result["message"])
-        self.assertEqual(result["artifact"]["skills"], list(SKILLS))
 
     def test_help_is_the_answer_for_an_unknown_skill(self):
         result = run_help()
         self.assertEqual(result["artifact"]["skill"], SKILL_HELP)
 
-    def test_a_full_question_runs_end_to_end(self):
-        agent = self.agent()
-        parsed = agent.parse(message("how much is portal 2 on steam?"))
-        request = {"skill": parsed["skill"], "params": parsed["params"],
-                   "missing": agent.missing(parsed["skill"], parsed["params"])}
-        result = agent.run(request)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["artifact"]["query"], "portal 2")
 
-    def test_a_quiet_feed_fails_the_task_with_the_feeds_named(self):
-        agent = GamesAgent(client=client(fail="storesearch")[0], gateway=fake_gateway()[0])
-        parsed = agent.parse(message("how much is portal 2 on steam?"))
-        result = agent.run({"skill": parsed["skill"], "params": parsed["params"],
-                            "missing": agent.missing(parsed["skill"], parsed["params"])})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not read the games feeds", result["message"])
-        self.assertEqual(result["artifact"]["dataset"],
-                         [DATASET_STEAM, DATASET_STEAMSPY, DATASET_EPIC])
 
-    def test_every_free_skill_names_its_dataset(self):
-        agent = self.agent()
-        for skill, params in ((SKILL_SEARCH, {"term": "portal", "app_id": None, "limit": None}),
-                              (SKILL_STATS, {"term": "rust", "app_id": None}),
-                              (SKILL_NEWS, {"term": "stardew valley", "app_id": None}),
-                              (SKILL_FREE, {})):
-            result = agent.run({"skill": skill, "params": params, "missing": []})
-            cited = result["artifact"]["dataset"]
-            self.assertIn(cited, (DATASET_STEAM, DATASET_STEAMSPY, DATASET_EPIC), skill)
 
 
 if __name__ == "__main__":

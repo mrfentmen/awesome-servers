@@ -4,14 +4,14 @@
   - bill-lookup:       bills by search term, type or status
   - member-lookup:     members by state, party, role or current/past
   - committee-lookup:  committees by name, abbreviation or code
-  - chamber-scorecard: a chamber's votes rolled up (premium)
+  - chamber-scorecard: a chamber's votes rolled up (not implemented here)
 
 The scorecard is premium because it is the one question the free skills cannot answer:
 `roll-call-votes` hands back rows, and turning a page of them into a chamber's
 behaviour — the pass rate, the average margin, how often the parties voted as one
 block, which kinds of vote decide or do not, and the longest run of one-way outcomes —
-is the caller's arithmetic. It is computed on the licence gateway, so an unpaid caller
-gets the gateway's own message and no scorecard at all.
+is the caller's arithmetic. It is computed on a hosted service that was removed, so an unpaid caller
+gets a not-implemented stub message and no scorecard at all.
 
 GovTrack has no id for a vote, only the number it gave it and a human link, and it
 refuses to filter votes by category, number or order, so nothing here claims to sort
@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     BILL_DATASET,
@@ -125,9 +125,9 @@ CARD_SKILLS = [
             "A chamber's votes rolled up: how many it held and how many passed, the average margin, "
             "how often the parties voted as a single block, the outcome and average margin per vote "
             "category, the most and least contested votes, and the longest run of one-way outcomes. "
-            "Premium: the roll-up runs behind a licence check on the gateway."
+            "Premium: the roll-up runs on a hosted service that was removed."
         ),
-        "tags": ["votes", "govtrack", "congress", "scorecard", "analysis", "premium"],
+        "tags": ["votes", "govtrack", "congress", "scorecard", "analysis",],
         "examples": [
             "score the Senate's votes in the 119th Congress",
             "how often did the House vote as one party last congress?",
@@ -214,7 +214,7 @@ HELP = (
     "  • bills about infrastructure in the 119th Congress\n"
     "  • who are the current Democratic senators from California?\n"
     "  • which committee handles appropriations?\n"
-    "  • score the Senate's votes in the 119th Congress  (premium)\n"
+    "  • score the Senate's votes in the 119th Congress  (not implemented here)\n"
     "Votes come back in GovTrack's own order — it will not sort them, and it has no\n"
     "id for a vote, only the number it gave it. Margins and party figures are\n"
     "GovTrack's own, not the chamber's."
@@ -537,116 +537,14 @@ def run_committee_lookup(params: dict, client: GovTrackClient) -> dict:
     }
 
 
-def run_chamber_scorecard(params: dict, client: GovTrackClient, gateway: GatewayClient) -> dict:
-    """The premium scorecard. Nothing here reads GovTrack.
-
-    The gateway pages the chamber's votes and does the arithmetic behind its licence
-    check, so a caller who has not paid gets the gateway's own message and no scorecard
-    at all.
-    """
-    try:
-        congress = client.check_congress(params.get("congress") or DEFAULT_CONGRESS)
-        chamber = client.check_chamber(params.get("chamber") or "senate")
-        limit = client.check_limit(params.get("limit") or 200, ceiling=300)
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-    read, refused = premium_call(
-        gateway, GATEWAY_TOOL,
-        {"congress": congress, "chamber": chamber, "limit": limit},
-        {"dataset": DATASET, "congress": congress, "chamber": chamber},
-    )
-    if refused:
-        return refused
-    if not isinstance(read, dict) or read.get("votesRead") is None:
-        return empty_premium_answer(
-            "The licence gateway answered without a scorecard, so there is nothing to report.",
-            {"dataset": DATASET, "congress": congress, "chamber": chamber},
-        )
-
-    lines = [
-        f"{read.get('chamber') or chamber} vote scorecard for the "
-        f"{_ordinal(read.get('congress') or congress)} Congress: GovTrack holds "
-        f"{read.get('totalVotes')} vote(s), and this run read {read.get('votesRead')} of them."
-    ]
-    if not read.get("votesRead"):
-        lines.append("  • No vote to score. Try a congress GovTrack covers, 93 onwards.")
-    else:
-        lines.append(
-            f"  • {read.get('passed', 0)} passed and {read.get('failed', 0)} failed of the "
-            f"{read.get('decided', 0)} with a recorded outcome "
-            f"({_percent(read.get('passRate'))} passed); {read.get('noResult')} published no result."
-        )
-        margin = read.get("averageMargin")
-        lines.append(
-            f"  • Average margin {margin:.2f} percentage points across the "
-            f"{read.get('withMargin')} vote(s) that published one."
-            if isinstance(margin, (int, float))
-            else "  • Average margin: not published for these votes."
-        )
-        lines.append(
-            f"  • The parties voted as one block on {read.get('partyLine', 0)} of "
-            f"{read.get('withPartyUniformity')} vote(s) that published a party figure "
-            f"({_percent(read.get('partyLineRate'))})."
-        )
-        by_category = read.get("byCategory") or []
-        if by_category:
-            lines.append("  • By category:")
-            for row in by_category[:MAX_SCORECARD_ROWS]:
-                lines.append(
-                    f"      {row.get('category') or 'not reported'}: {row.get('count')} vote(s), "
-                    f"{row.get('passed')} passed, average margin "
-                    + (f"{row['averageMargin']:.2f}"
-                       if isinstance(row.get("averageMargin"), (int, float)) else "not published")
-                )
-        contested = read.get("mostContested") or {}
-        closest = read.get("closestVote") or {}
-        if contested:
-            lines.append(
-                f"  • Widest margin: {contested.get('question') or 'question not reported'} "
-                f"({contested.get('margin')} points, #{contested.get('number')})."
-            )
-        if closest:
-            lines.append(
-                f"  • Closest vote: {closest.get('question') or 'question not reported'} "
-                f"({closest.get('margin')} points, #{closest.get('number')})."
-            )
-        streak = read.get("longestRun")
-        if streak:
-            lines.append(
-                f"  • Longest run of one-way outcomes: {streak.get('count')} "
-                f"{streak.get('outcome') or 'of one result'}, ending on vote "
-                f"#{streak.get('endNumber') or 'not reported'}."
-            )
-    lines.append(
-        "\nRolled up on the MCP gateway behind its licence check, from GovTrack's own votes "
-        f"({DATASET}). Margins, party-line figures and outcomes are GovTrack's calculations on the "
-        "chambers' published counts, and a vote with no published result is counted as undecided "
-        "rather than as a failure."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": SOURCE,
-        "premium": True,
-        "congress": read.get("congress"),
-        "chamber": read.get("chamber"),
-        "total_votes": read.get("totalVotes"),
-        "votes_read": read.get("votesRead"),
-        "passed": read.get("passed"),
-        "failed": read.get("failed"),
-        "no_result": read.get("noResult"),
-        "decided": read.get("decided"),
-        "pass_rate": read.get("passRate"),
-        "average_margin": read.get("averageMargin"),
-        "with_margin": read.get("withMargin"),
-        "party_line": read.get("partyLine"),
-        "with_party_uniformity": read.get("withPartyUniformity"),
-        "party_line_rate": read.get("partyLineRate"),
-        "by_category": read.get("byCategory"),
-        "most_contested": read.get("mostContested"),
-        "closest_vote": read.get("closestVote"),
-        "longest_run": read.get("longestRun"),
+def run_chamber_scorecard(params: dict, client: GovTrackClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: chamber-scorecard — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class VotesAgent(SkillAgent):
@@ -656,7 +554,7 @@ class VotesAgent(SkillAgent):
         "Read-only agent over GovTrack's congressional records: the roll-call votes of a congress "
         "and chamber with the chamber's own result wording, bill lookup by term, type or status, "
         "members by state and party, and the committee list with each committee's published "
-        "jurisdiction — plus a chamber scorecard computed on a licence-gated gateway. Every answer "
+        "jurisdiction — plus a chamber scorecard computed on a removed hosted service. Every answer "
         "is read live from GovTrack, and GovTrack's own margin and party-line figures are labelled "
         "as its calculations."
     )
@@ -665,9 +563,9 @@ class VotesAgent(SkillAgent):
     card_skills = CARD_SKILLS
 
     def __init__(self, client: GovTrackClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or GovTrackClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

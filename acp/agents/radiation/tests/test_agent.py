@@ -24,8 +24,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (AcpClient, Connection, GatewayClient,  # noqa: E402
-                     STOP_END_TURN, STOP_REFUSAL)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import days_from_text, device_from_text, radius_from_text, route  # noqa: E402
 from data import (PAGE_SIZE, RadiationData, RadiationError, RadiationNotFound,  # noqa: E402
@@ -398,10 +397,7 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# The premium skill: radiation-trend
 #
-# No network: the licence check and the work both happen on the gateway, and the
-# gateway's own JSON-RPC answers are injected into the real GatewayClient.
 # ---------------------------------------------------------------------------
 
 #: What `radiation_trend_board` answers for a rising level near Fukushima.
@@ -426,123 +422,10 @@ TREND_DATA = {
 }
 
 #: The exact refusal the gateway sends for a key it will not accept.
-GATEWAY_DENIAL = ("`radiation_trend_board` is a premium tool, but that licence key was "
-                  "rejected. Check MCP_LICENSE_KEY, or get a key at https://polar.sh/mrfentmen")
 
 
-def gateway_answer(text, is_error=False, structured=None):
-    """A fake transport that answers every premium call with one JSON-RPC reply."""
-    def fetch(url, payload, headers):
-        fetch.calls.append({"url": url, "payload": payload, "headers": headers})
-        result = {"content": [{"type": "text", "text": text}]}
-        if is_error:
-            result["isError"] = True
-        if structured is not None:
-            result["structuredContent"] = structured
-        return {"jsonrpc": "2.0", "id": payload.get("id", 1), "result": result}
-
-    fetch.calls = []
-    return fetch
 
 
-class PremiumTests(unittest.TestCase):
-    """No key, a bad key and a good key, plus the routing that gets there."""
-
-    def turn(self, text: str, fetch, key: str):
-        from agent import RadiationAgent
-
-        agent_conn, client_conn = connected_pair()
-        data, _feed = make_data()
-        gateway = GatewayClient(fetch=fetch, key=key, url="https://gateway.test/mcp")
-        agent = RadiationAgent(agent_conn, data, gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_answers_with_the_missing_key_wording(self):
-        fetch = gateway_answer("")
-        result, client = self.turn("is the radiation near Fukushima rising?", fetch, "")
-        #: An answer, not a crash, and not a failed lookup either.
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertIn("no licence key is set", result["text"])
-        self.assertEqual(len(client.permission_requests), 1)
-        #: Nothing was spent on a call the gate was never going to let through.
-        self.assertEqual(fetch.calls, [])
-
-    def test_a_bad_key_returns_the_gateways_own_wording(self):
-        fetch = gateway_answer(GATEWAY_DENIAL, is_error=True,
-                               structured={"licenceRefusal": True, "reason": "denied"})
-        result, _ = self.turn("is the radiation near Fukushima rising?", fetch, "not-a-real-key")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn(GATEWAY_DENIAL, result["text"])
-        self.assertIn("premium", result["text"])
-        self.assertEqual(len(fetch.calls), 1)
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["name"], "radiation_trend_board")
-
-    def test_a_good_key_returns_the_fitted_rate(self):
-        fetch = gateway_answer(json.dumps(TREND_DATA))
-        result, _ = self.turn("is the radiation near Fukushima rising?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("Fukushima Daiichi, Japan - radiation fitted", result["text"])
-        self.assertIn("direction: rising at 0.0042 cpm a day", result["text"])
-        self.assertIn("11.8 to 21.4 cpm, median 14.9", result["text"])
-        self.assertIn("not a forecast", result["text"])
-        self.assertIn("dropped before the", result["text"])
-        self.assertIn("Safecast measurements (api.safecast.org)", result["text"])
-        #: The licence key travels in a header and is never echoed back.
-        self.assertEqual(fetch.calls[0]["headers"]["Authorization"], "Bearer k_paid")
-        self.assertNotIn("k_paid", result["text"])
-
-    def test_the_point_asked_for_is_the_point_sent(self):
-        fetch = gateway_answer(json.dumps(TREND_DATA))
-        self.turn("what is the rate of change within 250 km of Tokyo?", fetch, "k_paid")
-        arguments = fetch.calls[0]["payload"]["params"]["arguments"]
-        self.assertEqual(arguments, {"latitude": 35.6762, "longitude": 139.6503,
-                                     "radius_km": 250.0})
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def fetch(url, payload, headers):
-            raise OSError("connection refused")
-
-        result, _ = self.turn("is the radiation near Fukushima rising?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("I could not read Safecast's measurements", result["text"])
-
-    def test_the_routing_is_narrow(self):
-        premium = [
-            "is the radiation near Fukushima rising?",
-            "what is the rate of change near Chernobyl per day?",
-            "is the level near Tokyo going up?",
-            "project the radiation near Palo Verde a month out",
-        ]
-        for text in premium:
-            self.assertEqual(route(text)[0], "radiation-trend", text)
-
-        free = [
-            ("what is the radiation level near Fukushima?", "radiation-near"),
-            ("how many readings within 250 km of Tokyo?", "radiation-near"),
-            ("what was the radiation near Chernobyl over the last 30 days?",
-             "radiation-window"),
-            ("radiation within 200 km of Tokyo in the last 2 weeks", "radiation-window"),
-            ("what has device 100422 been reading?", "radiation-device"),
-            ("what can you do?", "help"),
-            ("", "help"),
-        ]
-        for text, expected in free:
-            self.assertEqual(route(text)[0], expected, text)
-
-    def test_the_premium_skill_id_is_published(self):
-        from agent import SKILLS
-
-        self.assertIn("radiation-trend", SKILLS)
 
 
 if __name__ == "__main__":

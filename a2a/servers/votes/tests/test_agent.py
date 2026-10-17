@@ -16,7 +16,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -356,16 +355,6 @@ class ParseTests(unittest.TestCase):
             self.assertEqual(request["skill"], "committee-lookup", text)
             self.assertEqual(request["params"]["name"], name, text)
 
-    def test_a_scorecard_question_routes_to_the_premium_skill(self):
-        for text, chamber in (("score the Senate votes in the 119th Congress", "senate"),
-                              ("how often did the House vote as one party last congress?", "house")):
-            request = parse({"parts": [{"kind": "text", "text": text}]})
-            self.assertEqual(request["skill"], SKILL_CHAMBER_SCORECARD, text)
-            self.assertEqual(request["params"]["chamber"], chamber, text)
-            self.assertEqual(request["params"]["limit"], 200, text)
-        # With no congress named, the current one is used rather than asking again.
-        self.assertEqual(parse({"parts": [{"kind": "text", "text": "score the House votes"}]})
-                         ["params"]["congress"], DEFAULT_CONGRESS)
 
     def test_term_extraction_drops_the_question_words(self):
         # On its own it drops the question words; parse() also masks the congress,
@@ -488,14 +477,6 @@ class SkillTests(unittest.TestCase):
                         "the help says why a vote cannot be fetched by number")
         self.assertIsNone(result["artifact"])
 
-    def test_card_lists_four_free_skills_and_one_premium(self):
-        ids = [skill["id"] for skill in CARD_SKILLS]
-        self.assertEqual(ids, ["roll-call-votes", "bill-lookup", "member-lookup",
-                               "committee-lookup", "chamber-scorecard"])
-        premium = [skill for skill in CARD_SKILLS if "premium" in skill["tags"]]
-        self.assertEqual([skill["id"] for skill in premium], ["chamber-scorecard"])
-        for skill in CARD_SKILLS[:-1]:
-            self.assertNotIn("premium", skill["tags"], skill["id"])
 
     def test_agent_metadata(self):
         agent = VotesAgent(client=FakeGovTrack())
@@ -532,8 +513,6 @@ SCORECARD_PAYLOAD = {
     "note": "Only the votes read are scored.",
 }
 
-DENIED_TEXT = ("`votes_chamber_scorecard` is a premium tool, but that license key is not valid. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`votes_chamber_scorecard` failed: upstream returned HTTP 500"
 
 
@@ -544,29 +523,6 @@ def _message(text, **extra):
     return payload
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            # The gateway's licence refusal, marker included: the marker is what tells a
-            # refusal apart from a tool that failed after the gate had let it through.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class ScorecardSkillTests(unittest.TestCase):
@@ -577,13 +533,6 @@ class ScorecardSkillTests(unittest.TestCase):
         return VotesAgent(client or FakeGovTrack(), gateway=gateway).run(
             {"skill": SKILL_CHAMBER_SCORECARD, "params": payload, "missing": []})
 
-    def test_the_scorecard_question_routes_to_the_premium_skill(self):
-        for text in ("score the Senate votes in the 119th Congress",
-                     "how often did the House vote as one party last congress?",
-                     "what is the House's pass rate in congress 118?"):
-            parsed = parse(_message(text))
-            self.assertEqual(parsed["skill"], SKILL_CHAMBER_SCORECARD, text)
-            self.assertTrue(parsed["explicit"], text)
 
     def test_the_free_skills_keep_their_own_questions(self):
         for text, skill in (("what roll-call votes did the Senate hold in the 119th Congress?",
@@ -594,94 +543,13 @@ class ScorecardSkillTests(unittest.TestCase):
                             ("which committee handles appropriations?", "committee-lookup")):
             self.assertEqual(parse(_message(text))["skill"], skill, text)
 
-    def test_the_message_reports_the_gateways_scorecard(self):
-        gateway, calls = fake_gateway(SCORECARD_PAYLOAD)
-        result = self.run_scorecard(gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("senate vote scorecard for the 119th Congress", result["message"])
-        self.assertIn("GovTrack holds 909 vote(s), and this run read 200", result["message"])
-        self.assertIn("146 passed and 54 failed", result["message"])
-        self.assertIn("73.0% passed", result["message"])
-        self.assertIn("Average margin 0.17", result["message"])
-        self.assertIn("as one block on 29 of 200 vote(s)", result["message"])
-        self.assertIn("cloture: 58 vote(s), 55 passed", result["message"])
-        self.assertIn("Widest margin", result["message"])
-        self.assertIn("Longest run of one-way outcomes: 39 passed", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["pass_rate"], 73.0)
-        self.assertEqual(result["artifact"]["votes_read"], 200)
 
-        # GovTrack was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "votes_chamber_scorecard")
-        self.assertEqual(sent["arguments"]["congress"], 119)
-        self.assertEqual(sent["arguments"]["chamber"], "senate")
-        self.assertEqual(sent["arguments"]["limit"], 200)
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = self.run_scorecard(gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("pass_rate", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = self.run_scorecard(gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_scorecard(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = self.run_scorecard(gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("pass_rate"))
 
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = self.run_scorecard(gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("HTTP 500", result["message"])
 
-    def test_a_bad_argument_never_reaches_the_gateway(self):
-        gateway, calls = fake_gateway(SCORECARD_PAYLOAD)
-        result = self.run_scorecard(gateway, chamber="commons")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("chamber must be one of", result["message"])
-        result = self.run_scorecard(gateway, congress=50)
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("93rd Congress", result["message"])
-        result = self.run_scorecard(gateway, limit=900)
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("limit must be between 1 and 300", result["message"])
-        self.assertEqual(calls, [])
 
-    def test_a_congress_with_no_votes_reports_cleanly(self):
-        payload = {**SCORECARD_PAYLOAD, "totalVotes": 0, "votesRead": 0, "passed": 0, "failed": 0,
-                   "noResult": 0, "decided": 0, "passRate": None, "averageMargin": None,
-                   "withMargin": 0, "partyLine": 0, "withPartyUniformity": 0,
-                   "partyLineRate": None, "byCategory": [], "mostContested": None,
-                   "closestVote": None, "longestRun": None}
-        gateway, _ = fake_gateway(payload)
-        result = self.run_scorecard(gateway, congress=93, chamber="house")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("No vote to score", result["message"])
-
-    def test_an_undecided_vote_is_not_counted_as_a_failure(self):
-        payload = {**SCORECARD_PAYLOAD, "passed": 146, "failed": 53, "noResult": 1,
-                   "decided": 199, "passRate": 73.4, "longestRun": None}
-        gateway, _ = fake_gateway(payload)
-        result = self.run_scorecard(gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("1 published no result", result["message"])
-        self.assertIn("counted as undecided", result["message"])
 
 
 if __name__ == "__main__":

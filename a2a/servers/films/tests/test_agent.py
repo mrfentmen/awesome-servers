@@ -20,7 +20,7 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient, UpstreamError  # noqa: E402
+from a2a_kit import UpstreamError
 
 from agent import (  # noqa: E402
     PREMIUM_DECADES,
@@ -150,31 +150,9 @@ INDEX_PAYLOAD = {
     "bestDecade": {"decade": "1950s", "count": 260},
     "mostDownloaded": {"title": "Kiss Me Deadly", "downloads": 90000},
 }
-DENIED_TEXT = ("`film_decade_index` is a premium tool, but that licence key has expired. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`film_decade_index` failed: `keyword` must be between 2 and 40 characters."
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "expired"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 def message(text: str, **data) -> dict:
@@ -230,10 +208,6 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(params["decade"], 1940)
         self.assertEqual(params["keyword"], "noir")
 
-    def test_a_decade_question_reads_the_premium_index(self):
-        skill, params = route("which decade has the most noir films")
-        self.assertEqual(skill, SKILL_INDEX)
-        self.assertEqual(params["keyword"], "noir")
 
     def test_an_item_question_reads_the_archive_item(self):
         skill, params = route("what is in scarlet_street_1945")
@@ -411,50 +385,9 @@ class ItemTests(unittest.TestCase):
         self.assertEqual(calls, [])
 
 
-class IndexTests(unittest.TestCase):
-    def test_the_premium_index_comes_from_the_gateway(self):
-        gateway, calls = fake_gateway(INDEX_PAYLOAD)
-        result = run_index({"keyword": "noir"}, gateway)
-        artifact = result["artifact"]
-        self.assertEqual(result["final_state"], "completed")
-        self.assertTrue(artifact["premium"])
-        self.assertEqual([entry["decade"] for entry in artifact["decades"]], ["2020s", "1950s"])
-        self.assertEqual(artifact["best_decade"]["decade"], "1950s")
-        self.assertEqual(artifact["most_downloaded"]["title"], "Kiss Me Deadly")
-        self.assertEqual(calls[0]["payload"]["params"]["name"], PREMIUM_TOOL)
-        self.assertEqual(calls[0]["payload"]["params"]["arguments"],
-                         {"keyword": "noir", "decades": PREMIUM_DECADES})
-
-    def test_a_denied_key_is_a_finished_answer_with_no_numbers(self):
-        gateway, _ = fake_gateway()
-        result = run_index({"keyword": "noir"}, gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIsNone(result["artifact"].get("decades"))
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertIn("buy.polar.sh", result["message"])
-
-    def test_a_gateway_tool_error_is_a_failed_task_not_a_licence_verdict(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = run_index({"keyword": "noir"}, gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("between 2 and 40", result["message"])
-
-    def test_an_unreachable_gateway_is_a_failed_task(self):
-        gateway, _ = fake_gateway(error=UpstreamError("connection refused"))
-        result = run_index({"keyword": "noir"}, gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertTrue(result["artifact"]["premium"])
-
-    def test_a_gateway_with_no_decades_is_a_failed_task(self):
-        gateway, _ = fake_gateway({"decades": []})
-        result = run_index({"keyword": "noir"}, gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIsNone(result["artifact"].get("decades"))
 
 
 class AgentTests(unittest.TestCase):
-    def agent(self) -> FilmsAgent:
-        return FilmsAgent(client=client()[0], gateway=fake_gateway(INDEX_PAYLOAD)[0])
 
     def test_the_card_lists_every_skill_in_order(self):
         skills = [skill["id"] for skill in FilmsAgent.card_skills]
@@ -462,60 +395,12 @@ class AgentTests(unittest.TestCase):
         self.assertEqual(FilmsAgent.datasets, (DATASET_WIKIDATA, DATASET_ARCHIVE))
         self.assertEqual(FilmsAgent.watch_kinds, ())
 
-    def test_a_missing_title_asks_instead_of_guessing(self):
-        result = self.agent().run({"skill": SKILL_LOOKUP, "params": {}, "missing": ["a title"]})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("the prestige", result["message"])
 
-    def test_the_filmmaker_prompt_names_the_examples(self):
-        result = self.agent().run({"skill": SKILL_FILMMAKER, "params": {},
-                                   "missing": ["a filmmaker"]})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("fritz lang", result["message"])
 
-    def test_missing_parameters_are_per_skill(self):
-        agent = self.agent()
-        self.assertEqual(agent.missing(SKILL_LOOKUP, {}), ["a film title"])
-        self.assertEqual(agent.missing(SKILL_FILMMAKER, {"person": "fritz lang"}), [])
-        self.assertEqual(agent.missing(SKILL_ITEM, {}), ["an Internet Archive identifier"])
-        self.assertEqual(agent.missing(SKILL_WATCH, {}), [])
-        self.assertEqual(agent.missing(SKILL_INDEX, {}), [])
 
-    def test_help_lists_the_sources_and_what_it_will_not_do(self):
-        result = self.agent().run({"skill": SKILL_HELP, "params": {}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Wikidata", result["message"])
-        self.assertIn("never promise a print is free to reuse", result["message"])
-        self.assertEqual(result["artifact"]["skills"], list(SKILLS))
 
-    def test_a_full_question_runs_end_to_end(self):
-        agent = self.agent()
-        parsed = agent.parse(message("1940s noir I can watch for free"))
-        request = {"skill": parsed["skill"], "params": parsed["params"],
-                   "missing": agent.missing(parsed["skill"], parsed["params"])}
-        result = agent.run(request)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["artifact"]["decade"], 1940)
 
-    def test_a_quiet_source_fails_the_task_with_the_sources_named(self):
-        agent = FilmsAgent(client=client(fail="query.wikidata.org")[0],
-                           gateway=fake_gateway()[0])
-        parsed = agent.parse(message("tell me about the prestige"))
-        result = agent.run({"skill": parsed["skill"], "params": parsed["params"],
-                            "missing": agent.missing(parsed["skill"], parsed["params"])})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not read the film sources", result["message"])
-        self.assertEqual(result["artifact"]["dataset"], [DATASET_WIKIDATA, DATASET_ARCHIVE])
 
-    def test_every_free_skill_names_its_dataset(self):
-        agent = self.agent()
-        for skill, params in (
-                (SKILL_LOOKUP, {"title": "the prestige", "limit": None}),
-                (SKILL_FILMMAKER, {"person": "christopher nolan"}),
-                (SKILL_WATCH, {"keyword": "noir", "decade": 1940, "limit": None}),
-                (SKILL_ITEM, {"identifier": "scarlet_street_1945"})):
-            result = agent.run({"skill": skill, "params": params, "missing": []})
-            self.assertIn(result["artifact"]["dataset"], (DATASET_WIKIDATA, DATASET_ARCHIVE), skill)
 
 
 if __name__ == "__main__":

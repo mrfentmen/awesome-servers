@@ -556,22 +556,19 @@ the same trick: its table can now carry prompt blocks, so `attach` is probed wit
 - Things this repo already covers, so a new agent would duplicate: earthquakes (`hazards`),
   NYC water (`civic`), drug labels (`labels`), bike share (`bikes`), streams (`rivers`).
 
-## Session 7 — 2026-09-30: designer resale, video games and cinema, each with its premium half on the gateway
+## Session 7 — 2026-09-30: designer resale, video games and cinema
 
-Three agents, each the first of its kind here, each ending in a skill that runs on the
-licence-gated gateway rather than in this repository. 74 → 77 agents, 2222 → 2315 tests,
+Three agents, each the first of its kind here, each ending in a premium skill now answered by a stub (its hosted implementation was removed). 74 → 77 agents, 2222 → 2315 tests,
 73 → 76 live probes.
 
 | Agent | Ask it | Feed that answered (probed 2026-09-30) |
 |---|---|---|
-| `resale` | "what does a chanel flap cost", "what is the chanel market like right now", "compare chanel, gucci and prada" (premium) | Fashionphile + Rebag Shopify catalogues (250 products a page; 1,000 read for the probe) |
-| `games` | "how much is portal 2 on steam", "how many people play rust right now", "what is free on epic this week", "compare elden ring and dark souls 3" (premium) | Steam store (keyless), SteamSpy appdetails, Epic free promotions |
-| `films` | "who directed inception", "films by fritz lang", "1940s noir I can watch for free", "which decade has the most noir films?" (premium) | Wikidata (`wikibase:mwapi` EntitySearch) + Internet Archive `feature_films` (28,562 titles) |
+| `resale` | "what does a chanel flap cost", "what is the chanel market like right now", "compare chanel, gucci and prada" (not implemented here) | Fashionphile + Rebag Shopify catalogues (250 products a page; 1,000 read for the probe) |
+| `games` | "how much is portal 2 on steam", "how many people play rust right now", "what is free on epic this week", "compare elden ring and dark souls 3" (not implemented here) | Steam store (keyless), SteamSpy appdetails, Epic free promotions |
+| `films` | "who directed inception", "films by fritz lang", "1940s noir I can watch for free", "which decade has the most noir films?" (not implemented here) | Wikidata (`wikibase:mwapi` EntitySearch) + Internet Archive `feature_films` (28,562 titles) |
 
-The premium skills are not in this repository: `resale_price_index`, `games_price_board` and
-`film_decade_index` live in the gateway's `tools-acp-g.js`, so deleting a check from here buys
-nothing. The gateway's `licence-coverage` test proves all three refuse a missing key without
-touching an upstream, and the refusal wording is the gateway's own.
+The premium skills (`resale_price_index`, `games_price_board` and `film_decade_index`) were removed in the paywall cleanup; all three now
+answer with a not-implemented stub.
 
 ### What the feeds forced the answers to say
 

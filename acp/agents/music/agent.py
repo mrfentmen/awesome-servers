@@ -3,7 +3,7 @@
 Deezer publishes a searchable catalogue with a popularity rank and a 30-second preview for every
 track, keyless, and nobody asks it from an editor. "find songs by Radiohead" gets the songs
 with their runtimes and the preview link, and a 45-minute listening set with the live, remix
-and remastered cuts pulled out - that arithmetic is the premium skill.
+and remastered cuts pulled out - that arithmetic is a separate skill.
 """
 
 from __future__ import annotations
@@ -16,9 +16,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, MusicData, MusicError, MusicNotFound,  # noqa: E402
                   is_alternate_version, query_from_text)
@@ -33,7 +31,7 @@ HELP = (
     "  - build me a 45 minute Radiohead set\n"
     "Deezer's `rank` is a popularity score that runs to about a million, so it only means\n"
     "something next to another track's - never read aloud as a chart position. Building a\n"
-    "listening set that fits a time budget is the premium skill."
+    "listening set that fits a time budget is a separate skill."
 )
 
 PERMISSION_KEY = "music-read-deezer-catalog"
@@ -235,9 +233,7 @@ class MusicAgent(AcpAgent):
     def __init__(self, connection=None, data: MusicData | None = None, gateway=None) -> None:
         super().__init__(connection)
         self.data = data or MusicData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -292,7 +288,7 @@ class MusicAgent(AcpAgent):
                 albums = self.data.albums(artist["id"], limit=25)
                 body = render_artist(artist, top, albums)
                 summary = f"{artist['name']}: {len(top)} top track(s), {len(albums)} album(s)"
-        except (MusicError, GatewayError, ValueError) as exc:
+        except (MusicError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read Deezer's catalogue: {exc}")
             return STOP_END_TURN
@@ -305,55 +301,9 @@ class MusicAgent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        if not params.get("artist"):
-            #: No artist to build from. Asking is the honest answer - naming one here would
-            #: be inventing the question the reader did not ask.
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content("no artist named"))
-            ctx.stream_text("Tell me which artist to build the set from, for example "
-                            "build me a 45 minute Radiohead set.\n")
-            ctx.message("A listening set is built from one artist's most-played tracks, so I "
-                        "need the artist's name first.")
-            return STOP_END_TURN
-        arguments: dict = {"artist": params["artist"]}
-        if params.get("max_minutes"):
-            arguments["max_minutes"] = int(params["max_minutes"])
-        if params.get("allow_explicit") is not None:
-            arguments["allow_explicit"] = bool(params["allow_explicit"])
-
-        data, refused = premium_call(self.gateway, "music_listening_set", arguments,
-                                     {"agent": "music"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not data.get("artist") or not data.get("tracks"):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back a listening set for that artist.",
-                {"agent": "music"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a set out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_set(data)
-        summary = (f"{data['artist']}: {data.get('setSize', 'not reported')} track(s), "
-                   f"{_num(data.get('setMinutes'))} min")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message(f"\nSource: {data.get('source', DATASET)}, built on the licence gateway. The "
-                    "set is Deezer's most-played order with the alternate versions and the "
-                    "explicit cuts taken out, so the runtimes add up to what the budget says. "
-                    "A track dropped for running past the budget is not a judgement about it.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

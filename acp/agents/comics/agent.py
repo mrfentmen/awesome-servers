@@ -3,7 +3,7 @@
 xkcd publishes every comic's metadata, image and alt text as keyless JSON, and nobody asks it
 from an editor. "show me the latest xkcd" is one request, because xkcd's `info.0.json` is the
 newest comic rather than comic zero. "tell me about xkcd 3000" gets the joke in words, which
-is the alt text. What xkcd keeps coming back to across a run of comics is the premium skill.
+is the alt text. What xkcd keeps coming back to across a run of comics is a separate skill.
 """
 
 from __future__ import annotations
@@ -16,9 +16,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, ComicsData, ComicsError, ComicsNotFound,  # noqa: E402
                   count_from_text, number_from_text, range_from_text)
@@ -33,7 +31,7 @@ HELP = (
     "The alt text is the joke in words, and it is published for every comic. xkcd also\n"
     "published transcripts for the early run only - comic 1600 has one and 1650 does not - so\n"
     "for a recent comic there is no transcript and I do not invent one. Mining the recurring\n"
-    "words out of a run of comics is the premium skill."
+    "words out of a run of comics is a separate skill."
 )
 
 PERMISSION_KEY = "comics-read-xkcd-api"
@@ -167,9 +165,7 @@ class ComicsAgent(AcpAgent):
     def __init__(self, connection=None, data: ComicsData | None = None, gateway=None) -> None:
         super().__init__(connection)
         self.data = data or ComicsData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -221,7 +217,7 @@ class ComicsAgent(AcpAgent):
                 comics = self.data.run(first, last)
                 body = render_run(comics)
                 summary = f"xkcd {comics[0]['num']}-{comics[-1]['num']}: {len(comics)} comic(s)"
-        except (ComicsError, GatewayError, ValueError) as exc:
+        except (ComicsError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read xkcd's API: {exc}")
             return STOP_END_TURN
@@ -234,41 +230,9 @@ class ComicsAgent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        arguments: dict = {"from": int(params["from"]), "to": int(params["to"])}
-
-        data, refused = premium_call(self.gateway, "comics_recurring_terms", arguments,
-                                     {"agent": "comics"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not data.get("comicsRead"):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back any recurring words for that run.",
-                {"agent": "comics"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a word count out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_recurring(data)
-        summary = (f"xkcd {data.get('from')}-{data.get('to')}: "
-                   f"{data.get('termsFound', 0)} recurring word(s) over "
-                   f"{data.get('comicsRead', 0)} comic(s)")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message(f"\nSource: {data.get('source', DATASET)}, counted on the licence gateway. The "
-                    "words are counted from xkcd's own text, and a word in one comic is not a "
-                    "recurring word, so anything listed here really does come back.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

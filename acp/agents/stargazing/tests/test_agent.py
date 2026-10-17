@@ -23,8 +23,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (AcpClient, Connection, GatewayClient,  # noqa: E402
-                     STOP_END_TURN, STOP_REFUSAL)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import hours_from_text, route  # noqa: E402
 from data import (SLOT_HOURS, SLOTS, StargazingData, StargazingError,  # noqa: E402
@@ -340,10 +339,7 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# The premium skill: stargazing-best-window
 #
-# No network: the licence check and the work both happen on the gateway, and the
-# gateway's own JSON-RPC answers are injected into the real GatewayClient.
 # ---------------------------------------------------------------------------
 
 #: What `stargazing_best_window_board` answers for a clear run over 24 hours.
@@ -373,128 +369,10 @@ WINDOW_DATA = {
 }
 
 #: The exact refusal the gateway sends for a key it will not accept.
-GATEWAY_DENIAL = ("`stargazing_best_window_board` is a premium tool, but that licence key was "
-                  "rejected. Check MCP_LICENSE_KEY, or get a key at https://polar.sh/mrfentmen")
 
 
-def gateway_answer(text, is_error=False, structured=None):
-    """A fake transport that answers every premium call with one JSON-RPC reply."""
-    def fetch(url, payload, headers):
-        fetch.calls.append({"url": url, "payload": payload, "headers": headers})
-        result = {"content": [{"type": "text", "text": text}]}
-        if is_error:
-            result["isError"] = True
-        if structured is not None:
-            result["structuredContent"] = structured
-        return {"jsonrpc": "2.0", "id": payload.get("id", 1), "result": result}
-
-    fetch.calls = []
-    return fetch
 
 
-class PremiumTests(unittest.TestCase):
-    """No key, a bad key and a good key, plus the routing that gets there."""
-
-    def turn(self, text: str, fetch, key: str):
-        from agent import StargazingAgent
-
-        agent_conn, client_conn = connected_pair()
-        data, _feed = make_data()
-        gateway = GatewayClient(fetch=fetch, key=key, url="https://gateway.test/mcp")
-        agent = StargazingAgent(agent_conn, data, gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_answers_with_the_missing_key_wording(self):
-        fetch = gateway_answer("")
-        result, client = self.turn("when is the best time to stargaze in New York tonight?",
-                                   fetch, "")
-        #: An answer, not a crash, and not a failed lookup either.
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertIn("no licence key is set", result["text"])
-        self.assertEqual(len(client.permission_requests), 1)
-        #: Nothing was spent on a call the gate was never going to let through.
-        self.assertEqual(fetch.calls, [])
-
-    def test_a_bad_key_returns_the_gateways_own_wording(self):
-        fetch = gateway_answer(GATEWAY_DENIAL, is_error=True,
-                               structured={"licenceRefusal": True, "reason": "denied"})
-        result, _ = self.turn("when is the best time to stargaze in New York tonight?",
-                              fetch, "not-a-real-key")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn(GATEWAY_DENIAL, result["text"])
-        self.assertIn("premium", result["text"])
-        self.assertEqual(len(fetch.calls), 1)
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["name"],
-                         "stargazing_best_window_board")
-
-    def test_a_good_key_returns_the_ranked_windows(self):
-        fetch = gateway_answer(json.dumps(WINDOW_DATA))
-        result, _ = self.turn("when is the best time to stargaze in New York tonight?", fetch,
-                              "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("Observing windows for New York, New York", result["text"])
-        self.assertIn("1. 2026-09-28T21:00:00Z to 2026-09-29T00:00:00Z", result["text"])
-        self.assertIn("score 0.81", result["text"])
-        self.assertIn("9 cloud, 7 seeing, 6 transparency, 6 h long", result["text"])
-        self.assertIn("cloud 0.5, seeing 0.2, transparency 0.3", result["text"])
-        self.assertIn("a chosen", result["text"])
-        self.assertIn("a bright Moon could spoil a window", result["text"])
-        #: The licence key travels in a header and is never echoed back.
-        self.assertEqual(fetch.calls[0]["headers"]["Authorization"], "Bearer k_paid")
-        self.assertNotIn("k_paid", result["text"])
-
-    def test_the_window_asked_for_is_the_window_sent(self):
-        fetch = gateway_answer(json.dumps(WINDOW_DATA))
-        self.turn("which hour is clearest in London over the next 72 hours?", fetch, "k_paid")
-        arguments = fetch.calls[0]["payload"]["params"]["arguments"]
-        self.assertEqual(arguments["hours"], 72)
-        self.assertAlmostEqual(arguments["latitude"], 51.5074)
-        self.assertEqual(arguments["label"], "London, United Kingdom")
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def fetch(url, payload, headers):
-            raise OSError("connection refused")
-
-        result, _ = self.turn("when is the best time to stargaze in New York tonight?", fetch,
-                              "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("I could not read 7Timer's forecast", result["text"])
-
-    def test_the_routing_is_narrow(self):
-        premium = [
-            "when is the best time to stargaze in New York tonight?",
-            "which hour is clearest in London?",
-            "what is the optimal night for stargazing in Berlin?",
-            "when should I go out stargazing in Tokyo?",
-        ]
-        for text in premium:
-            self.assertEqual(route(text)[0], "stargazing-best-window", text)
-
-        free = [
-            ("is tonight good for stargazing in New York?", "stargazing-tonight"),
-            ("what is the cloud cover in Chicago tonight?", "stargazing-tonight"),
-            ("three day stargazing forecast for London", "stargazing-forecast"),
-            ("compare stargazing in New York and Los Angeles tonight", "stargazing-compare"),
-            ("what can you do?", "help"),
-            ("", "help"),
-        ]
-        for text, expected in free:
-            self.assertEqual(route(text)[0], expected, text)
-
-    def test_the_premium_skill_id_is_published(self):
-        from agent import SKILLS
-
-        self.assertIn("stargazing-best-window", SKILLS)
 
 
 if __name__ == "__main__":

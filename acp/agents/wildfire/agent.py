@@ -24,8 +24,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text,  # noqa: E402
-                     GatewayClient, GatewayError, premium_call, empty_premium_answer)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (  # noqa: E402
     CITY_COORDS,
@@ -41,7 +40,7 @@ HELP = (
     "  • any fires within 150 miles of Denver?\n"
     "  • how much fire is burning in the country right now?\n"
     "  • tell me about the Timber fire\n"
-    "  • premium: season board in CA from 2026-09-01 to 2026-09-30\n"
+    "  • season board in CA from 2026-09-01 to 2026-09-30\n"
     "Every answer names the layer it came from and the acreage agencies reported. I am not an "
     "evacuation notice — follow local authorities for that."
 )
@@ -221,10 +220,10 @@ class WildfireAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: WildfireData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or WildfireData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -259,10 +258,6 @@ class WildfireAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except GatewayError as exc:
-            ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
-            ctx.message(f"I could not build the season board on the licence gateway: {exc}")
-            return STOP_END_TURN
         except (WildfireError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the wildfire layer: {exc}")
@@ -292,39 +287,9 @@ class WildfireAgent(AcpAgent):
         return HELP, {"summary": "help", "dataset": None}
 
     def _season_board(self, params: dict) -> tuple[str, dict]:
-        """Summarize a discovery window on the licence gateway."""
-        arguments = {"start_date": params.get("start_date", ""),
-                     "end_date": params.get("end_date", "")}
-        if params.get("state"):
-            arguments["state"] = params["state"]
-        data, refused = premium_call(self.gateway, "wildfire_season_board", arguments,
-                                     {"agent": "wildfire", "skill": "wildfire-season-board"})
-        if refused:
-            return refused
-        if (not isinstance(data, dict) or type(data.get("incidents")) is not int
-                or data["incidents"] < 0 or not all(
-                    isinstance(data.get(key), list) and all(isinstance(row, dict) for row in data[key])
-                    for key in ("byState", "bySize", "byContainment"))):
-            return empty_premium_answer("The gateway returned no readable wildfire season board.",
-                                        {"agent": "wildfire", "skill": "wildfire-season-board"})
-
-        def shown(value):
-            return "not reported" if value is None else str(value)
-
-        lines = [f"Premium wildfire season board: {data.get('state') or 'United States'}, "
-                 f"discoveries {data.get('start')} to {data.get('end')}.",
-                 f"{data['incidents']} incidents; {shown(data.get('reportedAcres'))} reported acres; "
-                 f"{shown(data.get('missingAcres'))} missing sizes; "
-                 f"{shown(data.get('missingContainment'))} missing containment readings."]
-        for key, field, label in (("byState", "state", "State"), ("bySize", "sizeClass", "Size class"),
-                                  ("byContainment", "containment", "Containment")):
-            for row in data[key]:
-                lines.append(f"{label} {row.get(field)}: {shown(row.get('incidents'))} incidents, "
-                             f"{shown(row.get('reportedAcres'))} reported acres.")
-        lines.extend([str(data.get("note", "")), f"Source: {data.get('source')}"])
-        summary = f"premium season board: {data['incidents']} incidents"
-        return "\n".join(lines), {"summary": summary, "premium": True, "data": data,
-                                   "agent": "wildfire", "skill": "wildfire-season-board"}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: season-board — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def _active(self, params: dict) -> tuple[str, dict]:
         result = self.data.incidents(state=params.get("state"), min_acres=params.get("min_acres"),

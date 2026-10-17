@@ -23,13 +23,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (  # noqa: E402
-    AcpClient,
-    Connection,
-    GatewayClient,
-    STOP_END_TURN,
-    STOP_REFUSAL,
-)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 import render_values  # noqa: E402
 from agent import MAX_ROUNDS, bounds, render_alert, route  # noqa: E402
@@ -420,7 +414,6 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# Premium: alert-risk grades the coming hours on the licence gateway
 # ---------------------------------------------------------------------------
 
 RISK_PAYLOAD = {
@@ -437,10 +430,6 @@ RISK_PAYLOAD = {
     "modelHorizonHours": 72,
 }
 
-REFUSAL_TEXT = (
-    "This is a premium skill and needs a valid license key. "
-    "Get one at https://polar.sh/mrfentmen and set MCP_LICENSE_KEY."
-)
 
 
 def mcp_result(payload, is_error=False, structured=None):
@@ -452,157 +441,8 @@ def mcp_result(payload, is_error=False, structured=None):
     return {"jsonrpc": "2.0", "id": 1, "result": result}
 
 
-def make_gateway(key, result):
-    """A real GatewayClient with the transport injected - no network, ever."""
-    calls = []
-
-    def fetch(url, payload, headers):
-        calls.append({"tool": payload["params"]["name"],
-                      "arguments": payload["params"]["arguments"],
-                      "authorized": "Authorization" in headers})
-        return result
-
-    client = GatewayClient(fetch=fetch, url="http://127.0.0.1:8787/mcp", key=key)
-    client.calls = calls
-    return client
 
 
-class PremiumRiskTests(unittest.TestCase):
-    def risk_turn(self, text, gateway, permission="allow-once", **kw):
-        from agent import AlertAgent
-
-        agent_conn, client_conn = connected_pair()
-        data = FakeAlert(**kw)
-        agent = AlertAgent(agent_conn, data, gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission=permission)
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client, data
-        finally:
-            client.stop()
-
-    def test_no_key_returns_the_gateways_own_wording(self):
-        saved = os.environ.pop("MCP_LICENSE_KEY", None)
-        try:
-            result, _, _ = self.risk_turn("will the air quality in Delhi pass 200 tomorrow?",
-                                           make_gateway("", mcp_result(RISK_PAYLOAD)))
-        finally:
-            if saved is not None:
-                os.environ["MCP_LICENSE_KEY"] = saved
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-
-    def test_a_bad_key_is_answered_not_crashed(self):
-        gateway = make_gateway("lic_rejected", mcp_result(
-            REFUSAL_TEXT, is_error=True,
-            structured={"licenceRefusal": True, "reason": "denied"}))
-        result, _, _ = self.risk_turn("will the air quality in Delhi pass 200 tomorrow?", gateway)
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("polar.sh/mrfentmen", result["text"])
-        self.assertIn("needs a valid license key", result["text"])
-        statuses = [u.get("status") for u in result["updates"]
-                    if u.get("sessionUpdate") == "tool_call_update"]
-        self.assertIn("completed", statuses, "a refusal is a finished answer, not a failure")
-
-    def test_a_good_key_returns_the_graded_window(self):
-        gateway = make_gateway("lic_granted", mcp_result(RISK_PAYLOAD))
-        result, _, data = self.risk_turn("will the air quality in Delhi pass 200 tomorrow?", gateway)
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("above 200 is reached in this window", result["text"])
-        self.assertIn("First crossing at 2026-09-30T09:00", result["text"])
-        self.assertIn("Met for 6 of 48 hour(s)", result["text"])
-        self.assertIn("Peak 213", result["text"])
-        # The place was geocoded locally, then handed to the gateway as a point.
-        self.assertEqual(data.geocodes, ["Delhi"])
-        self.assertEqual(gateway.calls[0]["tool"], "alert_risk_window")
-        self.assertTrue(gateway.calls[0]["authorized"])
-        self.assertEqual(gateway.calls[0]["arguments"]["latitude"], 28.6139)
-        self.assertEqual(gateway.calls[0]["arguments"]["threshold"], 200.0)
-        tools = [u for u in result["updates"] if u.get("sessionUpdate") == "tool_call"]
-        self.assertEqual(tools[0]["name"], "alert-risk")
-
-    def test_a_window_that_never_trips_says_so(self):
-        calm = dict(RISK_PAYLOAD, willTrigger=False, hoursMet=0, firstCrossing=None,
-                    verdict="above 200 is not reached in this window")
-        gateway = make_gateway("lic_granted", mcp_result(calm))
-        result, _, _ = self.risk_turn("will the air quality in Delhi pass 200 tomorrow?", gateway)
-        self.assertIn("Never reaches it in the window", result["text"])
-        self.assertIn("Closest approach: 196", result["text"])
-        self.assertIn("a margin of 4", result["text"])
-
-    def test_a_missing_field_reads_as_not_reported(self):
-        thin = dict(RISK_PAYLOAD, willTrigger=False, hoursMet=0, firstCrossing=None,
-                    closestApproach={"time": None, "value": None, "margin": None},
-                    peak={"value": None, "time": None}, low={"value": None, "time": None},
-                    mean=None)
-        gateway = make_gateway("lic_granted", mcp_result(thin))
-        result, _, _ = self.risk_turn("will the air quality in Delhi pass 200 tomorrow?", gateway)
-        self.assertIn("Peak not reported at not reported", result["text"])
-
-    def test_a_truncated_window_says_it_is_short(self):
-        gateway = make_gateway("lic_granted", mcp_result(
-            dict(RISK_PAYLOAD, hoursCovered=12, truncated=True)))
-        result, _, _ = self.risk_turn("will the air quality in Delhi pass 200 tomorrow?", gateway)
-        self.assertIn("shorter than the window you asked for", result["text"])
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def boom(url, payload, headers):
-            raise OSError("connection refused")
-
-        client = GatewayClient(fetch=boom, url="http://127.0.0.1:8787/mcp", key="lic_granted")
-        result, _, _ = self.risk_turn("will the air quality in Delhi pass 200 tomorrow?", client)
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("could not finish that on the licence gateway", result["text"])
-        statuses = [u.get("status") for u in result["updates"]
-                    if u.get("sessionUpdate") == "tool_call_update"]
-        self.assertIn("failed", statuses)
-
-    def test_permission_is_asked_before_the_gateway(self):
-        gateway = make_gateway("lic_granted", mcp_result(RISK_PAYLOAD))
-        result, _, _ = self.risk_turn("will the air quality in Delhi pass 200 tomorrow?",
-                                      gateway, permission="reject")
-        self.assertEqual(result["stopReason"], STOP_REFUSAL)
-        self.assertIn("need permission", result["text"])
-        self.assertEqual(gateway.calls, [], "a rejected permission must not call the gateway")
-
-    def test_routing_is_narrow_and_the_free_watcher_keeps_its_questions(self):
-        # Forward-looking, no "watch me" wording -> the premium window.
-        self.assertEqual(route("will the air quality in Delhi pass 200 tomorrow?")[0], "alert-risk")
-        self.assertEqual(route("is the temperature in Phoenix likely to go above 40 in the next 3 days")[0],
-                         "alert-risk")
-        # "when"/"alert me" means the user wants to be woken: still the free watcher.
-        self.assertEqual(route("alert me when the air quality in Delhi passes 200")[0], "alert-watch")
-        self.assertEqual(route("tell me when the temperature in Phoenix goes above 40")[0], "alert-watch")
-        self.assertEqual(route("when will the air quality in Delhi pass 200?")[0], "alert-watch")
-        # Every other free skill is untouched.
-        self.assertEqual(route("alert me when quakes above 5 happen")[0], "alert-watch")
-        self.assertEqual(route("tell me when gauge 07010000 reaches flood stage")[0], "alert-watch")
-        self.assertEqual(route("what can you do?")[0], "help")
-        self.assertEqual(route("")[0], "help")
-
-    def test_risk_horizon_is_read_and_clamped(self):
-        skill, params = route("is the temperature in Phoenix likely to go above 40 in the next 3 days?")
-        self.assertEqual(skill, "alert-risk")
-        self.assertEqual(params["hours"], 72)
-        self.assertEqual(params["direction"], "above")
-        # A horizon past the model's reach is clamped rather than sent and refused.
-        self.assertEqual(route("will the air quality in Delhi pass 200 in the next 30 days?")[1]["hours"],
-                         168)
-        # A forward-looking question with no threshold is not this skill's.
-        self.assertEqual(route("will the air quality in Delhi get better tomorrow?")[0], "help")
-
-    def test_free_watches_never_reach_the_gateway(self):
-        gateway = make_gateway("lic_granted", mcp_result(RISK_PAYLOAD))
-        for text in ("alert me when the air quality in Delhi passes 200",
-                     "alert me when quakes above 5 happen",
-                     "what can you do?"):
-            result, _, _ = self.risk_turn(text, gateway, met=True)
-            self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertEqual(gateway.calls, [])
 
 
 if __name__ == "__main__":

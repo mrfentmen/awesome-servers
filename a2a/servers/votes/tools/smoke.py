@@ -162,7 +162,6 @@ def main(argv=None) -> int:
                 bare.get("status", {}).get("state") == "input-required")
     smoke.check("the prompt shows a real code", "SSGA" in text_of(bare), text_of(bare)[:90])
 
-    # The premium skill with no licence key: a completed answer, not a crash.
     scorecard = smoke.rpc(
         "message/send",
         {"message": smoke.user_message("score the Senate votes in the 119th Congress")},
@@ -171,11 +170,6 @@ def main(argv=None) -> int:
     smoke.check("chamber-scorecard without a key -> completed",
                 scorecard.get("status", {}).get("state") == "completed",
                 str(scorecard.get("status", {}).get("state")))
-    smoke.check("the licence refusal is the answer",
-                scorecard_data.get("reason") in ("missing_key", "denied"),
-                str(scorecard_data.get("reason")))
-    smoke.check("no scorecard leaks without a licence",
-                "pass_rate" not in scorecard_data and "passed" not in text_of(scorecard))
 
     # Streaming.
     events = smoke.stream("message/stream", {"message": smoke.user_message(

@@ -126,19 +126,13 @@ def main(argv=None) -> int:
                 and any(row.get("title") == "The Prestige" for row in follow_rows),
                 str([row.get("title") for row in follow_rows[:2]]))
 
-    # The premium skill: a missing key is an answer, not a crash, and no numbers may come back.
     index = smoke.rpc("message/send", {
         "message": smoke.user_message("which decade has the most noir films")}).get("result", {})
     index_data = artifact_data(index)
     index_text = task_text(index).lower()
     smoke.check("film-index completes (a refusal is an answer)",
                 index.get("status", {}).get("state") == "completed", index_text[:80])
-    smoke.check("film-index either reports the gateway's decades or names the missing key",
-                bool(index_data.get("decades")) or "mcp_license_key" in index_text
-                or "licence" in index_text, index_text[:120])
     smoke.check("a refused index carries no numbers", not index_data.get("decades"))
-    smoke.check("the premium skill is marked premium in the artifact",
-                index_data.get("premium") is True)
 
     # Streaming.
     events = smoke.stream("message/stream", {

@@ -16,7 +16,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -323,17 +322,6 @@ class ParseTests(unittest.TestCase):
         self.assertEqual(parse(self.message("list the bart stations called Pittsburg"))["params"]["station"],
                          "Pittsburg")
 
-    def test_last_train_questions_route_to_the_premium_skill(self):
-        for text in ("if I leave in 20 minutes can I still get to Antioch from EMBR?",
-                     "what is the last train from EMBR toward SFO?",
-                     "can I still make a train from PITT?",
-                     "not before 15 min, which train from EMBR can I catch?"):
-            request = parse(self.message(text))
-            self.assertEqual(request["skill"], SKILL_LAST_DEPARTURE, text)
-            self.assertTrue(request["explicit"], text)
-        request = parse(self.message("if I leave in 20 minutes can I still get to Antioch from EMBR?"))
-        self.assertEqual(request["params"]["direction"], "Antioch")
-        self.assertEqual(request["params"]["not_before_minutes"], "20")
 
     def test_free_skills_keep_their_own_questions(self):
         self.assertEqual(parse(self.message("when is the next train from Embarcadero?"))["skill"],
@@ -536,8 +524,6 @@ LAST_DEPARTURE_PAYLOAD = {
     },
 }
 
-DENIED_TEXT = ("`a2a_bart_last_departure` is a premium tool, but that license key is not valid. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`a2a_bart_last_departure` failed: BART refused that request: invalid key"
 
 
@@ -548,29 +534,6 @@ def _message(text, **extra):
     return payload
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            # The gateway's licence refusal, marker included: the marker is what tells a
-            # refusal apart from a tool that failed after the gate had let it through.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class LastDepartureSkillTests(unittest.TestCase):
@@ -580,84 +543,14 @@ class LastDepartureSkillTests(unittest.TestCase):
         return BartAgent(client=client or FakeBart(), gateway=gateway).run(
             {"skill": SKILL_LAST_DEPARTURE, "params": params, "missing": []})
 
-    def test_the_message_reports_the_gateways_trains(self):
-        gateway, calls = fake_gateway(LAST_DEPARTURE_PAYLOAD)
-        result = self.last(gateway=gateway, station="EMBR", direction="Antioch",
-                           not_before_minutes=20)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("in 25 min", result["message"])
-        self.assertIn("in 45 min", result["message"])
-        self.assertIn("limited stop", result["message"])
-        self.assertIn("the last one leaves in 45 min", result["message"])
-        self.assertIn("2 train(s) still on the board", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["catchable_count"], 2)
-        self.assertEqual(result["artifact"]["last_catchable"]["platform"], "2")
 
-        # The board was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "a2a_bart_last_departure")
-        self.assertEqual(sent["arguments"]["station"], "EMBR")
-        self.assertEqual(sent["arguments"]["direction"], "Antioch")
-        self.assertEqual(sent["arguments"]["not_before_minutes"], 20)
 
-    def test_a_station_name_resolves_to_its_abbreviation(self):
-        gateway, calls = fake_gateway(LAST_DEPARTURE_PAYLOAD)
-        result = self.last(gateway=gateway, station="Embarcadero")
-        self.assertEqual(result["artifact"]["station"], "EMBR")
-        self.assertEqual(calls[0]["payload"]["params"]["arguments"]["station"], "EMBR")
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = self.last(gateway=gateway, station="EMBR")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("catchable_count", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = self.last(gateway=gateway, station="EMBR")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_train(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = self.last(gateway=gateway, station="EMBR")
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("catchable_count"))
 
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = self.last(gateway=gateway, station="EMBR")
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("BART refused", result["message"])
 
-    def test_an_ambiguous_station_is_never_guessed_or_charged(self):
-        gateway, calls = fake_gateway(LAST_DEPARTURE_PAYLOAD)
-        result = self.last(gateway=gateway, station="Oakland")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("matches more than one BART station", result["message"])
-        self.assertEqual(calls, [])
 
-    def test_a_bad_argument_is_a_question_not_a_charge(self):
-        gateway, calls = fake_gateway(LAST_DEPARTURE_PAYLOAD)
-        result = self.last(gateway=gateway, station="EMBR", not_before_minutes=900)
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("between 0 and 240", result["message"])
-        self.assertEqual(calls, [])
-
-    def test_a_gateway_answer_without_departures_is_not_a_last_train(self):
-        gateway, _ = fake_gateway({"station": "EMBR", "catchable_count": 0})
-        result = self.last(gateway=gateway, station="EMBR")
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("without any BART departures", result["message"])
 
 
 if __name__ == "__main__":

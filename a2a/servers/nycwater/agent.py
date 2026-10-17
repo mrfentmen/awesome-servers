@@ -3,7 +3,7 @@
   - water-quality: sample chemistry + coliform/E. coli detections for a site or citywide
   - water-sites:   the monitoring site codes and how recently each was sampled
   - water-watch:   watch one site and get POSTed when a new sample is logged
-  - water-trend:   the spread of the measured values in a window (premium)
+  - water-trend:   the spread of the measured values in a window (not implemented here)
 
 Watch-capable: water-watch stores {"kind": "water-watch", "site": "..."} and the
 server POSTs to your webhook when a newer sample number appears for that site.
@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     DATASET_WATER,
@@ -86,15 +86,15 @@ CARD_SKILLS = [
     },
     {
         "id": SKILL_WATER_TREND,
-        "name": "How the measurements were distributed (premium)",
+        "name": "How the measurements were distributed (not implemented here)",
         "description": (
             "A window of the drinking-water monitoring record read as a spread: per analyte the "
             "number of readings, the minimum, mean, median, 90th percentile and maximum, how the "
             "values moved from the first half of the window to the second, which sites were "
             "sampled most, and the sample-class mix. Anchored to the newest sample in the dataset "
-            "rather than to today. Premium: it runs behind a licence check."
+            "rather than to today. Premium: it runs on a hosted service that was removed."
         ),
-        "tags": ["nyc", "water", "drinking-water", "trend", "distribution", "premium"],
+        "tags": ["nyc", "water", "drinking-water", "trend", "distribution",],
         "examples": [
             "How did free chlorine levels move over the last 90 days?",
             '{"skill": "water-trend", "site": "55450", "days": 90}',
@@ -320,106 +320,14 @@ def _observation(sample: dict | None) -> dict:
     }
 
 
-def run_water_trend(params: dict, client: WaterClient, gateway: GatewayClient) -> dict:
-    """The premium distribution view. The figures are worked out on the gateway.
-
-    The gateway reads the DEP dataset behind its licence check and hands back the
-    distribution, so a caller who has not paid gets the gateway's own message and no
-    numbers at all.
-    """
-    site = params.get("site")
-    # A bad argument is the caller's to fix, so it comes back as a question rather than
-    # as an internal error.
-    try:
-        days = client.check_trend_days(params.get("days") or DEFAULT_TREND_DAYS)
-        site = client.check_site(site) if site else None
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-    arguments: dict = {"days": days}
-    if site:
-        arguments["site"] = site
-    read, refused = premium_call(gateway, "water_analyte_trend", arguments, {
-        "dataset": DATASET_WATER, "dataset_title": DATASET_WATER_TITLE, "site": site, "days": days,
-    })
-    if refused:
-        return refused
-    if not isinstance(read, dict) or read.get("samples") is None:
-        return empty_premium_answer(
-            "The licence gateway answered without any samples, so there is nothing to report.",
-            {"dataset": DATASET_WATER, "site": site, "days": days},
-        )
-
-    where = f"site {read.get('site')}" if site else "every reported site"
-    analytes = read.get("analytes") or {}
-    chlorine = analytes.get("freeChlorine") or {}
-    turbidity = analytes.get("turbidity") or {}
-    coliform = read.get("coliform") or {}
-    split = read.get("halfWindowSplit") or {}
-    free_move = split.get("meanFreeChlorine") or {}
-    murk_move = split.get("meanTurbidity") or {}
-    lines = [
-        f"{read.get('samples')} drinking-water sample(s) for {where} in the {read.get('windowDays')} "
-        f"days before the newest sample in the dataset ({read.get('latestSampleDate')}, "
-        f"{read.get('daysSinceLatestSample')} day(s) ago):",
-        f"  • Free chlorine ({chlorine.get('unit')}): {chlorine.get('readings')} reading(s), "
-        f"min {chlorine.get('min')}, mean {chlorine.get('mean')}, median {chlorine.get('median')}, "
-        f"90th percentile {chlorine.get('p90')}, max {chlorine.get('max')}; "
-        f"{chlorine.get('belowReportingLimit')} below the reporting limit.",
-        f"  • Turbidity ({turbidity.get('unit')}): {turbidity.get('readings')} reading(s), "
-        f"min {turbidity.get('min')}, mean {turbidity.get('mean')}, median {turbidity.get('median')}, "
-        f"90th percentile {turbidity.get('p90')}, max {turbidity.get('max')}; "
-        f"{turbidity.get('belowReportingLimit')} below the reporting limit.",
-        f"  • Coliform: {coliform.get('atLeastOnePer100ml')} sample(s) at 1 MPN/100 mL or more, "
-        f"{coliform.get('belowReportingLimit')} below the reporting limit.",
-        f"  • First half to second half of the window (split at {split.get('at')}): free chlorine "
-        f"{free_move.get('first')} to {free_move.get('second')} ({free_move.get('direction')}), "
-        f"turbidity {murk_move.get('first')} to {murk_move.get('second')} "
-        f"({murk_move.get('direction')}).",
-    ]
-    top = read.get("topSites") or []
-    if top:
-        lines.append(f"  • Most sampled site(s) of the {read.get('sitesSampled')} in the window:")
-        for row in top[:MAX_LISTED_TREND_SITES]:
-            lines.append(
-                f"      {row.get('site')} — {row.get('samples')} sample(s), mean turbidity "
-                f"{row.get('meanTurbidity')} NTU"
-            )
-        if len(top) > MAX_LISTED_TREND_SITES:
-            lines.append(f"      ... {len(top) - MAX_LISTED_TREND_SITES} more are in the artifact.")
-    classes = read.get("sampleClasses") or {}
-    if classes:
-        lines.append("  • Sample classes: " + ", ".join(f"{name} {count}" for name, count in classes.items()) + ".")
-    if read.get("sampleCoversWindow") is False:
-        lines.append(
-            "  • The window held more records than one page returns, so these figures cover the "
-            "records the dataset handed back rather than every sample in the window."
-        )
-    lines.append(
-        "\nComputed on the MCP gateway behind its licence check, from DEP's published "
-        f"distribution-monitoring record ({DATASET_WATER}, \"{DATASET_WATER_TITLE}\"). "
-        "The window is anchored to the newest sample in the dataset, not to today, so a quiet "
-        "publishing spell does not read as clean water. " + CAVEAT
-    )
-    artifact = {
-        "dataset": DATASET_WATER,
-        "dataset_title": DATASET_WATER_TITLE,
-        "premium": True,
-        "site": read.get("site"),
-        "window_days": read.get("windowDays"),
-        "window_start": read.get("windowStart"),
-        "latest_sample_date": read.get("latestSampleDate"),
-        "days_since_latest_sample": read.get("daysSinceLatestSample"),
-        "samples": read.get("samples"),
-        "sample_covers_window": read.get("sampleCoversWindow"),
-        "sites_sampled": read.get("sitesSampled"),
-        "sample_classes": classes,
-        "analytes": analytes,
-        "coliform": coliform,
-        "top_sites": top,
-        "half_window_split": split,
-        "caveat": CAVEAT,
+def run_water_trend(params: dict, client: WaterClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: water-trend — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class WaterAgent(SkillAgent):
@@ -438,9 +346,9 @@ class WaterAgent(SkillAgent):
     watch_kinds = (SKILL_WATER_WATCH,)
 
     def __init__(self, client: WaterClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or WaterClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

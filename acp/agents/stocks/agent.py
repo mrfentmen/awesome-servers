@@ -20,8 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import DATASET, StockData, StockError, money  # noqa: E402
 
@@ -31,7 +30,7 @@ HELP = (
     "  - price of MSFT\n"
     "  - how has Tesla moved this month?\n"
     "  - what is NVDA's 52 week range?\n"
-    "  - what stock is symbol BRK-B?\n  - compare AAPL, MSFT from 2026-04-01 to 2026-04-30 (premium)\n"
+    "  - what stock is symbol BRK-B?\n  - compare AAPL, MSFT from 2026-04-01 to 2026-04-30 (not implemented here)\n"
     "One honest note that comes with every answer: that endpoint is the one Yahoo's own page "
     "calls, it is not a supported API, and it can change without notice."
 )
@@ -175,10 +174,10 @@ class StockAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: StockData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or StockData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -228,7 +227,7 @@ class StockAgent(AcpAgent):
                 body = render_quote(reading)
                 summary = (f"{reading['instrument']['symbol']} at "
                            f"{money(reading['price'], reading['currency'])}")
-        except (StockError, ValueError, GatewayError) as exc:
+        except (StockError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read that quote: {exc}")
             return STOP_END_TURN
@@ -241,38 +240,9 @@ class StockAgent(AcpAgent):
         return STOP_END_TURN
 
     def _board(self, params: dict) -> tuple[str, dict]:
-        """Render the gateway comparison of explicit ticker charts."""
-        context = {"agent": "stocks", "skill": "stocks-board"}
-        arguments = {"tickers": params["tickers"], "start_date": params["start_date"],
-                     "end_date": params["end_date"]}
-        data, refused = premium_call(self.gateway, "stocks_window_board", arguments, context)
-        if refused:
-            return refused
-        board = data.get("board") if isinstance(data, dict) else None
-        numeric = ("first_close", "last_close", "return_percent", "high", "low", "range_percent")
-        def number(v):
-            return type(v) in (int, float) and math.isfinite(v)
-        if (not isinstance(board, list) or not 2 <= len(board) <= 5 or
-                type(data.get("trading_days")) is not int or data["trading_days"] < 4 or
-                any(not isinstance(row, dict) or not isinstance(row.get("ticker"), str) or
-                    not isinstance(row.get("currency"), str) or
-                    any(not number(row.get(k)) for k in numeric) or
-                    "volume_change_percent" not in row or
-                    (row["volume_change_percent"] is not None and not number(row["volume_change_percent"])) for row in board) or
-                len({r["ticker"] for r in board}) != len(board) or
-                {r["ticker"] for r in board} != {t.upper() for t in params["tickers"]}):
-            return empty_premium_answer("The gateway returned no readable ticker comparison.", context)
-        lines = [f"Yahoo ticker board, {params['start_date']} to {params['end_date']}: "
-                 f"{data['trading_days']} shared trading dates, highest price return first."]
-        for row in board:
-            volume = (f"{row['volume_change_percent']:+g}% average daily volume change"
-                      if row['volume_change_percent'] is not None else "volume change undefined (initial average zero)")
-            lines.append(f"  {row['ticker']} ({row['currency']}): {row['first_close']:g} -> {row['last_close']:g}; "
-                         f"{row['return_percent']:+g}% price return; range {row['low']:g}-{row['high']:g} "
-                         f"({row['range_percent']:g}%); {volume}.")
-        lines.append(str(data.get("note") or "Yahoo unofficial daily prices; returns exclude dividends. Volume compares equal first/last halves of shared dates."))
-        return "\n".join(lines), {"summary": f"{len(board)} tickers compared", "premium": True,
-                                  "data": data, **context}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: board — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

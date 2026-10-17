@@ -18,9 +18,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (BART_STATIONS, DATASET, BartData, BartError,  # noqa: E402
                   BartNotFound, all_stations, station_from_text)
@@ -33,7 +31,7 @@ HELP = (
     "  - which BART stations are there?\n"
     "  - where is EMBR?\n"
     "If I need to get somewhere in 25 minutes, which BART train out of Embarcadero should I get on, "
-    "and how much slack do I have? (premium - a board cannot answer it)\n"
+    "and how much slack do I have? (not implemented here)\n"
     "BART's `delay` is not a flag: it is the number of seconds the feed believes that train is "
     "running behind, so 608 means over ten minutes late, not 'late'.\n"
     "The board is BART's own and it moves, so 'no train' is a real answer and never an error."
@@ -271,9 +269,7 @@ class BayAreaAgent(AcpAgent):
                  gateway=None) -> None:
         super().__init__(connection)
         self.data = data or BartData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -296,7 +292,7 @@ class BayAreaAgent(AcpAgent):
             return STOP_END_TURN
 
         tool = f"call_{skill.replace('-', '_')}"
-        label = ("Ask the licence gateway for the plan" if skill == "bayarea-plan"
+        label = ("Ask about the plan" if skill == "bayarea-plan"
                  else "Read BART's departure board")
         ctx.tool_call(tool, label, kind="fetch", name=skill, raw_input=dict(params))
         if not ctx.ask_permission(tool, "Allow Bay Area to read BART's public board?",
@@ -338,7 +334,7 @@ class BayAreaAgent(AcpAgent):
                     first = board["trains"][0]
                     summary = (f"{board['name']}: next {_in_words(first['minutes'])} to "
                                f"{first['destination']}")
-        except (BartError, GatewayError, ValueError) as exc:
+        except (BartError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read BART's board: {exc}")
             return STOP_END_TURN
@@ -351,42 +347,9 @@ class BayAreaAgent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        data, refused = premium_call(self.gateway, "bayarea_deadline_plan", {
-            "station": params["abbr"],
-            "minutes": int(params["minutes"]),
-        }, {"agent": "bayarea"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not data.get("station"):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back a plan for that station.",
-                {"agent": "bayarea"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a plan out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_plan(data)
-        catch = data.get("last_catchable") or {}
-        summary = (f"{data['station']}: last catchable train "
-                   f"{_in_words(catch.get('minutes'))} to {catch.get('destination', 'not reported')}")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message("\nSource: BART's live departure board, worked out on the licence gateway. The "
-                    "board only ever shows the next few trains, so this plan is only as good as the "
-                    "end of that list: a train that is not on the board yet is not counted, and "
-                    "nothing here is a promise about the line further along.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

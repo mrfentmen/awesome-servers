@@ -1,6 +1,6 @@
 """Free USNO phase times and sunrise-sunset.org sun times, with their clocks named.
 
-The premium phase calendar compares daily phases and darkness on the licence gateway.
+The premium phase calendar compares daily phases and darkness on a hosted service that was removed.
 """
 
 from __future__ import annotations
@@ -15,8 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
-from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import BIG_PHASES, PHASES, MoonData, MoonError  # noqa: E402
 
@@ -28,7 +27,7 @@ HELP = (
     "  - when does it get dark in Denver tonight?\n"
     "  - sunrise in Tokyo tomorrow\n"
     "  - how much daylight is there in Oslo today?\n"
-    "  - phase calendar for Denver from 2026-10-01 for 7 nights (premium)\n"
+    "  - phase calendar for Denver from 2026-10-01 for 7 nights (not implemented here)\n"
     "Phase times are the observatory's own, in UT; sun times are the place's own clock with its "
     "UTC offset shown."
 )
@@ -152,10 +151,10 @@ class MoonAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: MoonData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or MoonData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -192,7 +191,7 @@ class MoonAgent(AcpAgent):
         if skill == "phase-calendar":
             try:
                 body, artifact = self._phase_calendar(params)
-            except (GatewayError, ValueError) as exc:
+            except (ValueError) as exc:
                 ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
                 ctx.message(f"I could not read that: {exc}")
                 return STOP_END_TURN
@@ -225,51 +224,9 @@ class MoonAgent(AcpAgent):
         return STOP_END_TURN
 
     def _phase_calendar(self, params: dict) -> tuple[str, dict]:
-        """Render the gateway's comparison of daily phases and darkness windows."""
-        context = {"agent": "moon", "skill": "phase-calendar"}
-        arguments = {"place": str(params.get("place") or "").strip(),
-                     "start": params.get("start") or datetime.date.today().isoformat(),
-                     "nights": params.get("nights", 7)}
-        data, refused = premium_call(self.gateway, "moon_phase_calendar", arguments, context)
-        if refused:
-            return refused
-        rows = data.get("days") if isinstance(data, dict) else None
-        def valid_number(value, maximum):
-            return (type(value) in (int, float) and math.isfinite(value)
-                    and 0 <= value <= maximum)
-        if (not isinstance(rows, list) or not 2 <= len(rows) <= 7
-                or not isinstance(data.get("place"), str)
-                or any(not isinstance(row, dict) or not isinstance(row.get("date"), str)
-                       or not isinstance(row.get("timezone"), str)
-                       or (row.get("illumination_percent") is not None
-                           and not valid_number(row["illumination_percent"], 100))
-                       or (row.get("darkness") is not None
-                           and (not isinstance(row["darkness"], dict)
-                                or not all(key in row["darkness"] for key in
-                                           ("start_local", "end_local", "minutes"))
-                                or not valid_number(row["darkness"].get("minutes"), 1440))) for row in rows)):
-            return empty_premium_answer("The licence gateway returned no readable phase calendar.", context)
-        def shown(value):
-            return "not reported" if value is None else str(value)
-        lines = [f"Premium phase calendar for {data['place']}:"]
-        for row in rows:
-            lines.append(f"  - {row['date']}: {shown(row.get('phase'))}; illumination "
-                         f"{shown(row.get('illumination_percent'))}% ({row['timezone']})")
-            lines.append(f"    Moonrise {shown(row.get('moonrise'))}, moonset "
-                         f"{shown(row.get('moonset'))}; sunrise {shown(row.get('sunrise'))}, "
-                         f"sunset {shown(row.get('sunset'))}")
-            dark = row.get("darkness")
-            lines.append(f"    Darkness {dark['start_local']} to {dark['end_local']}: "
-                         f"{dark['minutes']} minutes" if dark else "    Darkness not reported")
-        ranked = data.get("ranked_dates")
-        if isinstance(ranked, list) and ranked:
-            lines.append("Lowest illumination, then longest darkness: " + ", ".join(map(str, ranked)))
-        lines.append(f"Known darkness total: {shown(data.get('total_darkness_minutes'))} minutes.")
-        lines.append("Source: SunriseSunset.io; Open-Meteo geocoding. Daily phase labels are not "
-                     "exact phase-event times. Darkness is last light to next-day first light; "
-                     "moon-up intervals and weather are not subtracted. Missing events stay unknown.")
-        return "\n".join(lines), {**context, "premium": True, "data": data,
-                                  "summary": f"premium phase calendar: {len(rows)} nights"}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: phase-calendar — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

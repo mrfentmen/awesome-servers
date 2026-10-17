@@ -16,7 +16,7 @@ from __future__ import annotations
 import re
 from datetime import datetime, timezone
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     CITY_COORDS,
@@ -153,7 +153,7 @@ CARD_SKILLS = [
             "strongest winds, and how much of each field is missing. Premium: it runs behind a "
             "licence check."
         ),
-        "tags": ["buoy", "ndbc", "fleet", "sea state", "premium"],
+        "tags": ["buoy", "ndbc", "fleet", "sea state",],
         "examples": [
             "How rough is it across the whole buoy network right now?",
             '{"skill": "buoy-fleet", "stale_minutes": 240}',
@@ -843,93 +843,14 @@ _FLEET_MISSING_LABELS = {
 }
 
 
-def run_buoy_fleet(params: dict, client: BuoyClient, gateway: GatewayClient) -> dict:
-    """The premium fleet view. The fleet is read and summarised on the gateway.
-
-    Nothing here touches NDBC: the gateway does the work behind its licence check and
-    hands back the figures, so a caller who has not paid gets the gateway's own
-    message and no data at all.
-    """
-    # A bad argument is the caller's to fix, so it comes back as a question rather than
-    # as an internal error.
-    try:
-        stale_minutes = client.check_stale_minutes(params.get("stale_minutes") or STALE_AFTER_MINUTES)
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-    read, refused = premium_call(gateway, "buoy_fleet_status", {"stale_minutes": stale_minutes}, {
-        "dataset": DATASET, "stale_minutes": stale_minutes,
-    })
-    if refused:
-        return refused
-    if not isinstance(read, dict) or not read.get("stationsReporting"):
-        return empty_premium_answer(
-            "The licence gateway answered without any station rows, so there is nothing to report.",
-            {"dataset": DATASET, "stale_minutes": stale_minutes},
-        )
-
-    seas = read.get("seaState") or {}
-    winds = read.get("wind") or {}
-    missing = read.get("missingSharePercent") or {}
-    wave_unit = client.distance_unit()
-    wind_unit = client.wind_unit()
-
-    def wave(value):
-        return _number(None if value is None else client.distance(value), wave_unit)
-
-    def wind_speed(value):
-        return _number(None if value is None else client.wind(value), wind_unit)
-
-    lines = [
-        f"{read.get('stationsReporting')} NDBC stations published a reading: the newest is "
-        f"{read.get('freshestObservation')}, the oldest {read.get('oldestObservation')}.",
-        f"  • {read.get('staleStations')} station(s) have said nothing for more than "
-        f"{read.get('staleMinutes')} minutes.",
-    ]
-    for row in (read.get("quietestStations") or [])[:MAX_LISTED_FLEET]:
-        lines.append(f"      {row.get('station')} — silent {row.get('silentForMinutes')} minutes")
-    lines.append(
-        f"  • Wave heights across {seas.get('stationsReportingWaves')} reporting stations: median "
-        f"{wave(seas.get('medianWaveMetres'))}, ninetieth percentile "
-        f"{wave(seas.get('ninetiethPercentileMetres'))}, highest {wave(seas.get('highestWaveMetres'))}."
-    )
-    for row in (seas.get("highestByStation") or [])[:MAX_LISTED_FLEET]:
-        lines.append(
-            f"      {row.get('station')} — {wave(row.get('waveMetres'))} waves, wind "
-            f"{wind_speed(row.get('windMetresPerSecond'))}, seen {row.get('at')}"
-        )
-    lines.append(
-        f"  • Winds across {winds.get('stationsReportingWind')} reporting stations: median "
-        f"{wind_speed(winds.get('medianWindMetresPerSecond'))}, strongest "
-        f"{wind_speed(winds.get('strongestWindMetresPerSecond'))}, strongest gust "
-        f"{wind_speed(winds.get('strongestGustMetresPerSecond'))}."
-    )
-    if missing:
-        lines.append(
-            "  • Share of stations publishing nothing for each field: "
-            + ", ".join(f"{_FLEET_MISSING_LABELS.get(key, key)} {value}%"
-                        for key, value in missing.items())
-            + "."
-        )
-    lines.append(
-        "\nComputed on the MCP gateway behind its licence check, from NDBC's latest-observation "
-        f"table ({DATASET}), which is the whole fleet in one page. A station that has gone quiet is "
-        "reported as quiet rather than dropped, so a gap in the numbers is never mistaken for calm."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": "NOAA National Data Buoy Center latest observations, computed on the licence gateway",
-        "premium": True,
-        "stale_minutes": stale_minutes,
-        "stations_reporting": read.get("stationsReporting"),
-        "stale_stations": read.get("staleStations"),
-        "freshest_observation": read.get("freshestObservation"),
-        "oldest_observation": read.get("oldestObservation"),
-        "quietest_stations": read.get("quietestStations"),
-        "sea_state": seas,
-        "wind": winds,
-        "missing_share_percent": missing,
+def run_buoy_fleet(params: dict, client: BuoyClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: buoy-fleet — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class BuoyAgent(SkillAgent):
@@ -949,9 +870,9 @@ class BuoyAgent(SkillAgent):
     watch_kinds = (SKILL_BUOY_WATCH,)
 
     def __init__(self, client: BuoyClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or BuoyClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

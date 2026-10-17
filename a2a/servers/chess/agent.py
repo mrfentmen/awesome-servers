@@ -10,7 +10,7 @@ Player-form is the one question the free skills cannot answer. `recent-games` ha
 back game after game and leaves the counting to the reader; a form report needs every
 game folded into one record - results by colour, results by time control, the openings
 actually reached with a record in each, the rating change across the run. That work runs
-behind the licence gateway, so a caller who has not paid gets the gateway's own message
+on a hosted service that was removed, so a caller who has not paid gets a not-implemented stub message
 and no form report at all.
 """
 
@@ -19,7 +19,7 @@ from __future__ import annotations
 import os
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, UpstreamError, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent, UpstreamError
 
 from data import (
     DATASET,
@@ -112,9 +112,9 @@ CARD_SKILLS = [
             "A form report worked out over a run of a player's games: wins, draws and losses with a "
             "win rate, the same split by whether they had white, results by time control, the rating "
             "change across the run, the longest winning streak, and the openings they actually reached "
-            "with a record in each. Premium: it runs behind a licence check."
+            "with a record in each. Premium: it runs on a hosted service that was removed."
         ),
-        "tags": ["chess", "form", "analysis", "opening repertoire", "premium"],
+        "tags": ["chess", "form", "analysis", "opening repertoire",],
         "examples": [
             "is thibault improving at the moment?",
             "build me a form report for thibault over 30 games",
@@ -702,98 +702,14 @@ def run_opening_lookup(params: dict, client: LichessClient) -> dict:
     }
 
 
-def run_player_form(params: dict, client: LichessClient, gateway: GatewayClient) -> dict:
-    """The premium form report. The counting runs on the gateway.
-
-    Nothing here reads the game list: the gateway reads the games, folds them into one
-    record and judges the run behind its licence check, so a caller who has not paid gets
-    the gateway's own message and no form report at all.
-    """
-    identifier = params.get("player")
-    if not identifier:
-        return _missing_player()
-    try:
-        arguments = {"player": client.check_player(identifier)}
-        if params.get("count") is not None:
-            arguments["max"] = client.check_max(params["count"])
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-
-    read, refused = premium_call(gateway, "chess_player_form", arguments, {
-        "dataset": DATASET, "player": arguments["player"],
-    })
-    if refused:
-        return refused
-    if not isinstance(read, dict) or not read.get("player"):
-        return empty_premium_answer(
-            "The licence gateway answered without naming the player, so there is nothing to report.",
-            {"dataset": DATASET, "player": arguments["player"]},
-        )
-
-    name = read.get("player")
-    lines = [
-        f"{name}: {read.get('gamesRead')} rated game(s) read - {read.get('wins')}W "
-        f"{read.get('draws')}D {read.get('losses')}L, a {read.get('winRate')}% win rate, so "
-        f"{read.get('verdict')}.",
-    ]
-    as_white = read.get("asWhite") or {}
-    as_black = read.get("asBlack") or {}
-    lines.append(
-        "  • With white: "
-        + f"{as_white.get('wins')}W {as_white.get('draws')}D {as_white.get('losses')}L; "
-        + "with black: "
-        + f"{as_black.get('wins')}W {as_black.get('draws')}D {as_black.get('losses')}L."
-    )
-    by_speed = read.get("bySpeed") or {}
-    if by_speed:
-        lines.append("  • By time control: " + ", ".join(
-            f"{speed} {row.get('wins')}W-{row.get('draws')}D-{row.get('losses')}L "
-            f"({row.get('total')})"
-            for speed, row in list(by_speed.items())[:8]))
-    if read.get("ratingChange") is not None:
-        lines.append(
-            f"  • Rating change over the run: {read['ratingChange']:+d} across "
-            f"{read.get('gamesWithRatingChange')} game(s)."
-        )
-    if read.get("longestWinStreak"):
-        lines.append(f"  • Longest winning streak in the run: {read['longestWinStreak']}.")
-    repertoire = read.get("repertoire") or []
-    if repertoire:
-        lines.append(f"  • Openings reached ({read.get('openingsPlayed')} in all):")
-        for entry in repertoire[:8]:
-            lines.append(
-                f"    - {entry.get('eco') or 'ECO not reported'} {entry.get('openingName') or entry.get('name')}: "
-                f"{entry.get('games')} game(s), {entry.get('wins')}W {entry.get('draws')}D "
-                f"{entry.get('losses')}L"
-            )
-    if read.get("note"):
-        lines.append(f"  • {read['note']}")
-    lines.append(
-        "\nComputed on the MCP gateway behind its licence check, from the games Lichess exported "
-        f"({DATASET})."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": SOURCE,
-        "premium": True,
-        "player": name,
-        "title": read.get("title"),
-        "games_read": read.get("gamesRead"),
-        "wins": read.get("wins"),
-        "draws": read.get("draws"),
-        "losses": read.get("losses"),
-        "win_rate": read.get("winRate"),
-        "verdict": read.get("verdict"),
-        "longest_win_streak": read.get("longestWinStreak"),
-        "rating_change": read.get("ratingChange"),
-        "as_white": as_white,
-        "as_black": as_black,
-        "by_speed": by_speed,
-        "openings_played": read.get("openingsPlayed"),
-        "repertoire": repertoire,
-        "ratings": read.get("ratings"),
+def run_player_form(params: dict, client: LichessClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: player-form — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class LichessAgent(SkillAgent):
@@ -810,11 +726,9 @@ class LichessAgent(SkillAgent):
     card_skills = CARD_SKILLS
 
     def __init__(self, client: LichessClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or LichessClient()
-        # The documented <PREFIX>_GATEWAY_URL override is passed in explicitly:
-        # the shared client otherwise only looks at A2A_GATEWAY_URL.
-        self.gateway = gateway or GatewayClient(url=os.environ.get(f"{self.env_prefix}_GATEWAY_URL"))
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

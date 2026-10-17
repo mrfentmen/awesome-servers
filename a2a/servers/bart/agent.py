@@ -1,17 +1,17 @@
-"""The BART agent: four free skills over BART's public API, one behind the gate.
+"""The BART agent: four free skills over BART's public API, one on a hosted service that was removed.
 
   - departures: the live departure board at a station, train by train
   - lines:      the destinations and directions a station serves, read off that board
   - stations:   the BART station directory, by name, city or abbreviation
   - delays:     the cancelled, limited and live-estimated trains on a board
-  - last-departure: given when you can leave, which trains you can still catch (premium)
+  - last-departure: given when you can leave, which trains you can still catch (not implemented here)
 
 Fare note: BART's `cmd=fare` answers HTTP 500 from its own server, so there is no
 fare skill here rather than a guessed one. Every answer quotes the board as BART
 published it, in BART's own clock.
 
 The premium skill sends the request to the licence gateway, which reads the same
-board behind the gate and works out the catchability, so an unlicensed caller gets
+board on a hosted service that was removed and works out the catchability, so an unlicensed caller gets
 the gateway's wording and no answer.
 """
 
@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     DATASET,
@@ -118,10 +118,10 @@ CARD_SKILLS = [
         "description": (
             "The catchability answer: given the earliest you can leave, every train on the board from "
             "that moment on, the last one you can still catch, and how many trains that leaves you — "
-            "with that train's platform, direction, line colour and limited or cancelled flag. Premium: "
-            "it runs behind a licence check."
+            "with that train's platform, direction, line colour and limited or cancelled flag. "
+            "it runs on a hosted service that was removed."
         ),
-        "tags": ["bart", "transit", "last-train", "catchable", "planning", "premium"],
+        "tags": ["bart", "transit", "last-train", "catchable", "planning",],
         "examples": [
             "if I leave the office in 20 minutes can I still get to Antioch from Embarcadero?",
             "what is the last train from EMBR toward SFO?",
@@ -192,7 +192,7 @@ HELP = (
     "  • what lines does Embarcadero serve?\n"
     "  • which bart station is in Berkeley?\n"
     "  • any cancelled trains at PITT?\n"
-    "  • if I leave in 20 minutes can I still get to Antioch from EMBR? (premium)\n"
+    "  • if I leave in 20 minutes can I still get to Antioch from EMBR? (not implemented here)\n"
     "Times are BART's own estimates in BART's clock. Stations are three or four letters (EMBR, PITT, "
     "MLBR) or a name. BART's fare command is broken upstream, so I do not quote fares."
 )
@@ -604,89 +604,14 @@ def run_stations(params: dict, client: BartClient) -> dict:
     }
 
 
-def run_last_departure(params: dict, client: BartClient, gateway: GatewayClient) -> dict:
-    """The premium catchability answer. The work happens on the gateway.
-
-    Nothing here reads the board: the gateway does the work behind its licence check
-    and hands back the trains you can still catch, so a caller who has not paid gets
-    the gateway's own message and no answer.
-    """
-    station, problem = _resolve_station(params, client)
-    if problem:
-        return problem
-    abbr = station["abbr"]
-    try:
-        limit = client.check_limit(params.get("limit") or MAX_DEPARTURES)
-        not_before = client.check_minutes(params.get("not_before_minutes", 0))
-        direction = client.check_direction(params.get("direction"))
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-
-    label = _label(station, abbr)
-    arguments: dict = {"station": abbr, "not_before_minutes": not_before, "limit": limit}
-    if direction:
-        arguments["direction"] = direction
-    read, refused = premium_call(gateway, "a2a_bart_last_departure", arguments, {
-        "dataset": DATASET, "station": abbr, "place": label, "direction": direction,
-    })
-    if refused:
-        return refused
-    if not isinstance(read, dict) or not read.get("catchable_count"):
-        return empty_premium_answer(
-            "The licence gateway answered without any BART departures, so there is nothing to catch.",
-            {"dataset": DATASET, "station": abbr, "place": label},
-        )
-
-    last = read.get("last_catchable") or {}
-    clock = read.get("bart_clock") or {}
-    lines = [
-        f"What you can still catch from {label} ({read.get('station') or abbr}), "
-        f"{clock.get('date') or 'date not reported'} {clock.get('time') or ''} BART time, "
-        f"if you cannot leave for {not_before} min and you are going {read.get('direction')}:",
-    ]
-    for departure in (read.get("departures") or [])[:MAX_LISTED]:
-        line = (f"  • in {departure.get('minutes')} min  {departure.get('destination')}"
-                + (f", platform {departure['platform']}" if departure.get("platform") else "")
-                + (f", {departure.get('line_colour')} line" if departure.get("line_colour") else ""))
-        if departure.get("limited"):
-            line += " — limited stop"
-        if departure.get("cancelled"):
-            line += " — CANCELLED"
-        lines.append(line)
-    lines.append(
-        f"  • {read.get('catchable_count')} train(s) still on the board"
-        + (f"; the last one leaves in {last.get('minutes')} min"
-           f" toward {last.get('destination')}"
-           + (f" from platform {last['platform']}" if last.get("platform") else "")
-           + "." if last.get("minutes") is not None else ".")
-    )
-    board_last = read.get("board_last_overall") or {}
-    if board_last and not direction:
-        lines.append(
-            f"  • The last train on the whole board leaves in {board_last.get('minutes')} min toward "
-            f"{board_last.get('destination')}."
-        )
-    lines.append(
-        f"\nWorked out on the MCP gateway behind its licence check, from BART's live departure "
-        f"board ({DATASET}). BART's board holds a handful of estimates and no timetable, so this is "
-        f"the board as it stands, not a promise about later trains."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": SOURCE,
-        "premium": True,
-        "station": abbr,
-        "place": label,
-        "direction": read.get("direction"),
-        "not_before_minutes": not_before,
-        "bart_clock": clock,
-        "departures_read": read.get("departures_read"),
-        "departures": read.get("departures"),
-        "catchable_count": read.get("catchable_count"),
-        "last_catchable": last,
-        "board_last_overall": board_last or None,
+def run_last_departure(params: dict, client: BartClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: last-departure — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class BartAgent(SkillAgent):
@@ -697,15 +622,15 @@ class BartAgent(SkillAgent):
         "the destinations and platforms that station serves, the station directory by name or city, "
         "and the cancellations and limited runs BART is flagging — in BART's own clock and with BART's "
         "own flags. One premium skill answers the catchability question from that board, and it runs "
-        "behind a licence check on the gateway."
+        "on a hosted service that was removed."
     )
     env_prefix = "BART"
     datasets = (DATASET,)
     card_skills = CARD_SKILLS
 
-    def __init__(self, client: BartClient | None = None, gateway: GatewayClient | None = None) -> None:
+    def __init__(self, client: BartClient | None = None, gateway: object | None = None) -> None:
         self.client = client or BartClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

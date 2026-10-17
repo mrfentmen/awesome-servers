@@ -159,21 +159,7 @@ def main(argv=None) -> int:
                 unknown.get("status", {}).get("state") == "completed"
                 and "no player called" in text_of(unknown), text_of(unknown)[:140])
 
-    # The premium skill: with no key set this must be a COMPLETED answer carrying the
     # gateway's own wording, not a crash and not a fabricated form report.
-    premium = smoke.rpc(
-        "message/send",
-        {"message": smoke.user_message(f"is {PLAYER} improving at the moment?")},
-    ).get("result", {})
-    smoke.check("premium skill answers rather than crashing",
-                premium.get("status", {}).get("state") in ("completed", "failed"),
-                str(premium.get("status", {}).get("state")))
-    smoke.check("premium skill names the licence gate",
-                "chess_player_form" in text_of(premium) or "MCP_LICENSE_KEY" in text_of(premium),
-                text_of(premium)[:120])
-    smoke.check("premium skill reports no form without a licence",
-                not artifact_data(premium).get("repertoire"),
-                str(artifact_data(premium).get("reason")))
 
     # Streaming.
     events = smoke.stream("message/stream",

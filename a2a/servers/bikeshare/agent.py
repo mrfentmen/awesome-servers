@@ -1,4 +1,4 @@
-"""The bike-share agent: four free skills over Citi Bike's GBFS feeds, one behind the gate.
+"""The bike-share agent: four free skills over Citi Bike's GBFS feeds, one on a hosted service that was removed.
 
   - bikes-near:     bikes and free docks at the stations around a point
   - nearest-stations: the closest stations to a point, whatever state they are in
@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     DATASET,
@@ -113,9 +113,9 @@ CARD_SKILLS = [
             "A whole ride answered at once: the nearest station to your start point that has a bike "
             "free and is renting, the nearest station to your destination that has a free dock and is "
             "accepting returns, both walking distances, and the runner-up pairs. Premium: it runs "
-            "behind a licence check."
+            "on a hosted service that was removed."
         ),
-        "tags": ["bikeshare", "citi-bike", "ride", "plan", "route", "premium"],
+        "tags": ["bikeshare", "citi-bike", "ride", "plan", "route",],
         "examples": [
             "can I bike from 40.7484,-73.9857 to 40.7580,-73.9855?",
             "where do I pick up and drop off for that trip?",
@@ -181,7 +181,7 @@ HELP = (
     "  • which bike stations are closest to 40.7580,-73.9855?\n"
     "  • what is at Broadway & W 48 St?\n"
     "  • how many bikes are there right now?\n"
-    "  • can I bike from 40.7484,-73.9857 to 40.7580,-73.9855? (premium)\n"
+    "  • can I bike from 40.7484,-73.9857 to 40.7580,-73.9855? (not implemented here)\n"
     "Counts are the feed's own and move every few seconds. A station that holds bikes but is not "
     "renting is reported as out of service, not as stock."
 )
@@ -491,83 +491,14 @@ def run_availability(params: dict, client: BikeShareClient) -> dict:
     }
 
 
-def run_ride_pair(params: dict, client: BikeShareClient, gateway: GatewayClient) -> dict:
-    """The premium ride pairing. The pairing happens on the gateway.
-
-    Nothing here reads the GBFS feeds: the gateway matches a pickup to a drop-off
-    behind its licence check, so a caller who has not paid gets the gateway's own
-    message and no ride at all.
-    """
-    origin_lat, origin_lon = client.check_point(params["origin"])
-    dest_lat, dest_lon = client.check_point(params["destination"])
-    try:
-        search_km = client.check_search_km(params.get("search_km", DEFAULT_SEARCH_KM))
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-
-    arguments = {
-        "origin_latitude": origin_lat,
-        "origin_longitude": origin_lon,
-        "destination_latitude": dest_lat,
-        "destination_longitude": dest_lon,
-        "search_km": search_km,
+def run_ride_pair(params: dict, client: BikeShareClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: ride-pair — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    read, refused = premium_call(gateway, "a2a_bikeshare_ride_pair", arguments, {
-        "dataset": DATASET, "origin": f"{origin_lat},{origin_lon}", "destination": f"{dest_lat},{dest_lon}",
-    })
-    if refused:
-        return refused
-    if not isinstance(read, dict) or not read.get("best"):
-        return empty_premium_answer(
-            "The licence gateway answered without a ride pair, so there is nothing to plan.",
-            {"dataset": DATASET, "origin": f"{origin_lat},{origin_lon}",
-             "destination": f"{dest_lat},{dest_lon}"},
-        )
-
-    best = read["best"]
-    pickup, dropoff = best["pickup"], best["dropoff"]
-    lines = [
-        f"A ride from {origin_lat},{origin_lon} to {dest_lat},{dest_lon}, matched over "
-        f"{read.get('stations_read')} Citi Bike station(s) within {read.get('search_km')} km of each end:",
-        f"  • Pick up at {pickup.get('name')}"
-        + (f" ({pickup['short_name']})" if pickup.get("short_name") else "")
-        + f" — {pickup.get('walk_km')} km walk, {pickup.get('bikes_available')} bike(s) free"
-        + (f" ({pickup.get('ebikes_available')} e-bike)" if pickup.get("ebikes_available") else "")
-        + ("" if pickup.get("renting") else ", NOT renting") + ".",
-        f"  • Drop off at {dropoff.get('name')}"
-        + (f" ({dropoff['short_name']})" if dropoff.get("short_name") else "")
-        + f" — {dropoff.get('walk_km')} km walk, {dropoff.get('docks_available')} free dock(s)"
-        + ("" if dropoff.get("returning") else ", NOT accepting returns") + ".",
-        f"  • {best.get('total_walk_km')} km of walking in total, across "
-        f"{read.get('pairs_compared')} pair(s) considered.",
-    ]
-    alternatives = read.get("alternatives") or []
-    if alternatives:
-        for other in alternatives[:3]:
-            lines.append(
-                f"  • also: {other['pickup'].get('name')} ({other['pickup'].get('walk_km')} km) to "
-                f"{other['dropoff'].get('name')} ({other['dropoff'].get('walk_km')} km), "
-                f"{other.get('total_walk_km')} km total."
-            )
-    lines.append(
-        f"\nMatched on the MCP gateway behind its licence check, from Citi Bike's GBFS feeds "
-        f"({DATASET}), which last reported at {read.get('feed_last_updated')}. Counts move every few "
-        f"seconds and the walks are straight-line, so confirm at the dock before you set off."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": SOURCE,
-        "premium": True,
-        "origin": f"{origin_lat},{origin_lon}",
-        "destination": f"{dest_lat},{dest_lon}",
-        "search_km": read.get("search_km"),
-        "stations_read": read.get("stations_read"),
-        "pairs_compared": read.get("pairs_compared"),
-        "best": best,
-        "alternatives": alternatives,
-        "generated_at": read.get("generated_at"),
-    }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class BikeShareAgent(SkillAgent):
@@ -584,9 +515,9 @@ class BikeShareAgent(SkillAgent):
     datasets = (DATASET,)
     card_skills = CARD_SKILLS
 
-    def __init__(self, client: BikeShareClient | None = None, gateway: GatewayClient | None = None) -> None:
+    def __init__(self, client: BikeShareClient | None = None, gateway: object | None = None) -> None:
         self.client = client or BikeShareClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

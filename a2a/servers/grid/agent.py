@@ -1,10 +1,10 @@
-"""The grid agent: four free skills over the GB carbon intensity API, one behind the gate.
+"""The grid agent: four free skills over the GB carbon intensity API, one on a hosted service that was removed.
 
   - grid-now:      the current half-hour's national carbon intensity
   - grid-forecast: the national forecast 48 hours forward, half-hour by half-hour
   - grid-regional: every GB distribution region for the current half-hour, or one
   - grid-mix:      the national generation mix for the current half-hour
-  - clean-windows: the low-carbon windows in that forecast, worked out (premium)
+  - clean-windows: the low-carbon windows in that forecast, worked out (not implemented here)
 
 Two things this agent is careful about. The band ("very low" to "very high") is NESO's
 own on every record and is never derived here: on a forecast record NESO widens the
@@ -13,7 +13,7 @@ And `/regional` only ever holds the current half-hour, so there is no regional h
 to offer and the card says so.
 
 The premium skill sends the request to the licence gateway, which reads the same
-forecast behind the gate and works out the windows, so an unlicensed caller gets the
+forecast on a hosted service that was removed and works out the windows, so an unlicensed caller gets the
 gateway's wording and no windows.
 """
 
@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     DATASET,
@@ -119,9 +119,9 @@ CARD_SKILLS = [
             "The 48-hour forecast read as low-carbon windows rather than as a list: the contiguous runs "
             "at or below a gCO2/kWh threshold, when each starts and ends, how long each lasts, the "
             "cleanest stretch, the dirtiest, and what share of the window is clean enough. Premium: it "
-            "runs behind a licence check."
+            "runs on a hosted service that was removed."
         ),
-        "tags": ["grid", "carbon", "windows", "scheduling", "uk", "premium"],
+        "tags": ["grid", "carbon", "windows", "scheduling", "uk",],
         "examples": [
             "when is the grid cleanest over the next two days?",
             "give me the low-carbon windows above 100 gCO2/kWh",
@@ -190,7 +190,7 @@ HELP = (
     "  • where is the grid dirtiest?\n"
     "  • which region is SW1A in?\n"
     "  • what is the UK generating right now?\n"
-    "  • when is the grid cleanest over the next two days? (premium)\n"
+    "  • when is the grid cleanest over the next two days? (not implemented here)\n"
     "Intensity is gCO2 per kWh and the band is NESO's own on every record. This API only publishes "
     "the current half-hour for regions, so I cannot give you a regional history."
 )
@@ -550,98 +550,14 @@ def run_grid_mix(params: dict, client: GridClient) -> dict:
     }
 
 
-def run_clean_windows(params: dict, client: GridClient, gateway: GatewayClient) -> dict:
-    """The premium low-carbon windows. The work happens on the gateway.
-
-    Nothing here reads the forecast: the gateway does the work behind its licence check
-    and hands back the windows, so a caller who has not paid gets the gateway's own
-    message and no windows at all.
-    """
-    try:
-        hours = client.check_hours(params.get("hours", 48))
-        series = client.check_series(params.get("series", "forecast"))
-        arguments = {"hours": hours, "source": series}
-        if params.get("threshold") is not None:
-            arguments["threshold"] = client.check_threshold(params["threshold"])
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-
-    read, refused = premium_call(gateway, "a2a_grid_clean_windows", arguments, {
-        "dataset": DATASET, "hours": hours, "series": series,
-    })
-    if refused:
-        return refused
-    if not isinstance(read, dict) or not read.get("half_hours_read"):
-        return empty_premium_answer(
-            "The licence gateway answered without any carbon intensity, so there are no windows to report.",
-            {"dataset": DATASET, "hours": hours, "series": series},
-        )
-
-    window = read.get("window") or {}
-    intensity = read.get("intensity") or {}
-    longest = read.get("longest_window") or {}
-    cleanest = read.get("cleanest") or {}
-    dirtiest = read.get("dirtiest") or {}
-    lines = [
-        f"Low-carbon windows over Great Britain's {read.get('half_hours_read')} half-hour(s) from "
-        f"{window.get('from')} to {window.get('to')}, on the {read.get('series')} series.",
-        f"  • Clean enough means at or below {read.get('threshold')} gCO2/kWh "
-        f"(threshold from {read.get('threshold_source')}).",
-    ]
-    windows = read.get("windows") or []
-    if windows:
-        for entry in windows[:MAX_LISTED]:
-            lines.append(
-                f"  • {entry.get('start')} to {entry.get('end')} — {entry.get('half_hours')} half-hour(s) "
-                f"({entry.get('hours')} h), lowest {entry.get('lowest')} gCO2/kWh at {entry.get('lowest_at')}"
-            )
-        if read.get("windows_omitted"):
-            lines.append(f"  • ... {read['windows_omitted']} more window(s) are in the artifact.")
-    else:
-        lines.append("  • No half-hour in this window is at or below that threshold.")
-    if longest:
-        lines.append(
-            f"  • Longest window: {longest.get('start')} to {longest.get('end')}, {longest.get('hours')} h, "
-            f"bottoming at {longest.get('lowest')} gCO2/kWh."
-        )
-    lines.append(
-        f"  • {read.get('clean_half_hours')} of {read.get('half_hours_read')} half-hour(s) are clean "
-        f"enough ({read.get('clean_share')}%)."
-    )
-    lines.append(
-        f"  • Cleanest half-hour {cleanest.get('value')} gCO2/kWh at {cleanest.get('at')} "
-        f"({cleanest.get('band')}); dirtiest {dirtiest.get('value')} at {dirtiest.get('at')} "
-        f"({dirtiest.get('band')})."
-    )
-    lines.append(
-        f"  • Across the window: lowest {intensity.get('min')}, highest {intensity.get('max')}, "
-        f"mean {intensity.get('mean')} gCO2/kWh. (A mean is ours, so it carries no band.)"
-    )
-    lines.append(
-        f"\nWorked out on the MCP gateway behind its licence check, from NESO's published forecast "
-        f"({DATASET}). Bands are NESO's own; the clean-share figure is a count of half-hours, not an "
-        f"area or a volume. A forecast moves as generation is dispatched, so re-read it before you commit."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": SOURCE,
-        "premium": True,
-        "series": read.get("series"),
-        "window": window,
-        "half_hours_read": read.get("half_hours_read"),
-        "threshold": read.get("threshold"),
-        "threshold_source": read.get("threshold_source"),
-        "clean_half_hours": read.get("clean_half_hours"),
-        "clean_share": read.get("clean_share"),
-        "window_count": read.get("window_count"),
-        "longest_window": longest,
-        "windows": windows,
-        "intensity": intensity,
-        "cleanest": cleanest,
-        "dirtiest": dirtiest,
-        "generated_at": read.get("generated_at"),
+def run_clean_windows(params: dict, client: GridClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: clean-windows — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class GridAgent(SkillAgent):
@@ -652,15 +568,15 @@ class GridAgent(SkillAgent):
         "half-hour's intensity, the 48-hour forecast half-hour by half-hour, all 18 distribution regions "
         "with their own generation mix, and what the country is generating right now. Every band is "
         "NESO's own rather than derived. One premium skill turns the forecast into low-carbon windows, "
-        "and it runs behind a licence check on the gateway."
+        "and it runs on a hosted service that was removed."
     )
     env_prefix = "GRID"
     datasets = (DATASET,)
     card_skills = CARD_SKILLS
 
-    def __init__(self, client: GridClient | None = None, gateway: GatewayClient | None = None) -> None:
+    def __init__(self, client: GridClient | None = None, gateway: object | None = None) -> None:
         self.client = client or GridClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

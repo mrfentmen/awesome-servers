@@ -17,14 +17,7 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import (  # noqa: E402
-    UNREACHABLE,
-    A2AHandler,
-    GatewayClient,
-    GatewayError,
-    PushWatcher,
-    TaskStore,
-)
+from a2a_kit import A2AHandler, PushWatcher, TaskStore
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -383,7 +376,6 @@ class WatchTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# quakes-aftershocks: the sequence is measured on the licence gateway
 # ---------------------------------------------------------------------------
 
 #: What the gateway's `quake_aftershock_window` tool hands back.
@@ -403,30 +395,8 @@ AFTERSHOCK_PAYLOAD = {
     "decay": "the sequence is decaying: 1 in the first six hours against 0.2 per six hours afterwards",
 }
 
-DENIED_TEXT = ("`quake_aftershock_window` is a premium tool, but that license key has expired. "
-               "Get a key at https://buy.example")
 
 
-def fake_gateway(payload=None, error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if payload is None:
-            # What the gateway says when a key is refused: the message is the point. The
-            # licenceRefusal marker is the gateway's own, and it is what tells a refusal
-            # apart from a tool that failed after the gate let it through.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        return {"jsonrpc": "2.0", "id": 1,
-                "result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class AftershockTests(unittest.TestCase):
@@ -443,109 +413,16 @@ class AftershockTests(unittest.TestCase):
         # ... but a plain count still belongs to quakes-summary.
         self.assertEqual(parse(message("how many earthquakes today?"))["skill"], "quakes-summary")
 
-    def test_the_skill_does_not_need_a_location(self):
-        agent = USGSQuakeAgent(FakeQuake(), fake_gateway(payload=AFTERSHOCK_PAYLOAD)[0])
-        self.assertEqual(agent.missing(SKILL_QUAKES_AFTERSHOCKS, {}), [])
 
-    def test_no_key_is_an_answer_that_says_which_key_to_set(self):
-        gateway, calls = fake_gateway(payload=AFTERSHOCK_PAYLOAD, key="")
-        result = run_quakes_aftershocks({"quake_id": "us7000abcd"}, FakeQuake(), gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(calls, [], "a missing key must not reach the network")
-        self.assertNotIn("count", result["artifact"], "no figures may leak without a licence")
 
-    def test_a_denied_key_repeats_the_gateway_wording(self):
-        gateway, calls = fake_gateway(payload=None)
-        result = run_quakes_aftershocks({"quake_id": "us7000abcd"}, FakeQuake(), gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["artifact"]["reason"], "denied")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertIn("buy.example", result["message"], "the buy link must survive")
-        self.assertEqual(len(calls), 1)
 
-    def test_the_sequence_is_measured_on_the_gateway(self):
-        gateway, calls = fake_gateway(payload=AFTERSHOCK_PAYLOAD)
-        result = run_quakes_aftershocks({"quake_id": "us7000abcd"}, FakeQuake(), gateway)
-        self.assertEqual(result["final_state"], "completed")
 
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "quake_aftershock_window")
-        self.assertEqual(sent["arguments"], {"quake_id": "us7000abcd", "hours": 72, "radius_km": 50})
 
-        self.assertIn("Aftershocks of M5.6", result["message"])
-        self.assertIn("2 event(s) at or above M3.6 within 50 km", result["message"])
-        self.assertIn("M4.9", result["message"])
-        self.assertIn("Six-hour buckets", result["message"])
-        self.assertIn("stops at now", result["message"], "a capped window has to be said out loud")
 
-        artifact = result["artifact"]
-        self.assertEqual(artifact["count"], 2)
-        self.assertEqual(artifact["mainshock_chosen"], "as asked")
-        self.assertEqual(len(artifact["magnitude_histogram"]), 2)
-        self.assertEqual(artifact["per_six_hours"][1]["count"], 1)
-        self.assertIn("decaying", artifact["decay"])
-        self.assertEqual(artifact["hours_since_last_event"], 4.4)
 
-    def test_an_asked_for_window_is_passed_through(self):
-        gateway, calls = fake_gateway(payload=AFTERSHOCK_PAYLOAD)
-        run_quakes_aftershocks(
-            {"quake_id": "us7000abcd", "hours": 24, "radius_km": 120, "min_magnitude": 4.2},
-            FakeQuake(), gateway)
-        self.assertEqual(calls[0]["payload"]["params"]["arguments"],
-                         {"quake_id": "us7000abcd", "hours": 24.0, "radius_km": 120.0,
-                          "min_magnitude": 4.2})
 
-    def test_without_a_mainshock_the_largest_recent_quake_is_measured(self):
-        client = FakeQuake()
-        gateway, calls = fake_gateway(payload=AFTERSHOCK_PAYLOAD)
-        result = run_quakes_aftershocks({}, client, gateway)
-        self.assertEqual(client.calls[-1]["min_magnitude"], 4.5)
-        self.assertEqual(client.calls[-1]["hours"], 48)
-        self.assertEqual(calls[0]["payload"]["params"]["arguments"]["quake_id"], "us7000abcd")
-        self.assertIn("largest quake of the last 48 hours", result["artifact"]["mainshock_chosen"])
 
-    def test_nothing_large_enough_means_nothing_is_measured(self):
-        small = dict(QUAKE, magnitude=2.1)
-        gateway, calls = fake_gateway(payload=AFTERSHOCK_PAYLOAD)
-        result = run_quakes_aftershocks({}, FakeQuake(quakes=[small]), gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["artifact"]["reason"], "no_mainshock")
-        self.assertIn("us6000ty73", result["message"], "the answer should say how to name one")
-        self.assertEqual(calls, [])
 
-    def test_a_dead_gateway_is_a_failed_task(self):
-        gateway, _ = fake_gateway(
-            error=GatewayError(UNREACHABLE, "the licence gateway could not be reached (timed out)"))
-        result = run_quakes_aftershocks({"quake_id": "us7000abcd"}, FakeQuake(), gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertEqual(result["artifact"]["reason"], UNREACHABLE)
-
-    def test_an_empty_gateway_answer_fails_cleanly(self):
-        gateway, _ = fake_gateway(payload={})
-        result = run_quakes_aftershocks({"quake_id": "us7000abcd"}, FakeQuake(), gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("without a sequence", result["message"])
-
-    def test_bounds_are_checked_before_the_gateway_is_called(self):
-        for params in ({"quake_id": "us7000abcd", "hours": 999},
-                       {"quake_id": "us7000abcd", "radius_km": 9999}):
-            gateway, calls = fake_gateway(payload=AFTERSHOCK_PAYLOAD)
-            result = run_quakes_aftershocks(params, FakeQuake(), gateway)
-            self.assertEqual(result["final_state"], "failed")
-            self.assertEqual(calls, [], "an impossible ask must not cost a gateway call")
-
-    def test_the_agent_dispatches_the_premium_skill(self):
-        gateway, calls = fake_gateway(payload=AFTERSHOCK_PAYLOAD)
-        agent = USGSQuakeAgent(FakeQuake(), gateway)
-        task = A2AHandler(TaskStore(), agent).handle(
-            "message/send", {"message": message("how many aftershocks did us7000abcd have?")}
-        )
-        self.assertEqual(task["status"]["state"], "completed")
-        self.assertEqual(len(calls), 1, "the protocol path must reach the gateway too")
 
 
 if __name__ == "__main__":

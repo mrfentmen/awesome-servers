@@ -23,8 +23,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (AcpClient, Connection, GatewayClient,  # noqa: E402
-                     STOP_END_TURN, STOP_REFUSAL)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import route  # noqa: E402
 from data import RecipesData, RecipesError, RecipesNotFound  # noqa: E402
@@ -192,12 +191,6 @@ class RouteTests(unittest.TestCase):
                          ("recipes-by-area", {"query": "what do Italians eat?"}))
         self.assertEqual(route("what areas do you have?"), ("recipes-list", {}))
 
-    def test_a_cupboard_question_goes_to_the_premium_skill(self):
-        self.assertEqual(
-            route("I have chicken, rice and coconut milk in the cupboard, what can I make?"),
-            ("recipes-pantry", {"ingredients": ["chicken", "rice", "coconut milk"]}))
-        self.assertEqual(route("I only have bread and butter, what should I cook?"),
-                         ("recipes-pantry", {"ingredients": ["bread", "butter"]}))
 
     def test_help_and_another_subject(self):
         self.assertEqual(route("")[0], "help")
@@ -312,10 +305,7 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# The premium skill: recipes-pantry
 #
-# No network: the licence check and the work both happen on the gateway, and the
-# gateway's own JSON-RPC answers are injected into the real GatewayClient.
 # ---------------------------------------------------------------------------
 
 #: What `recipes_pantry_match` answers for chicken, rice and coconut milk.
@@ -351,126 +341,10 @@ PANTRY_DATA = {
 }
 
 #: The exact refusal the gateway sends for a key it will not accept.
-GATEWAY_DENIAL = ("`recipes_pantry_match` is a premium tool, but that licence key was rejected. "
-                  "Check MCP_LICENSE_KEY, or get a key at https://polar.sh/mrfentmen")
 
 
-def gateway_answer(text, is_error=False, structured=None):
-    """A fake transport that answers every premium call with one JSON-RPC reply."""
-    def fetch(url, payload, headers):
-        fetch.calls.append({"url": url, "payload": payload, "headers": headers})
-        result = {"content": [{"type": "text", "text": text}]}
-        if is_error:
-            result["isError"] = True
-        if structured is not None:
-            result["structuredContent"] = structured
-        return {"jsonrpc": "2.0", "id": payload.get("id", 1), "result": result}
-
-    fetch.calls = []
-    return fetch
 
 
-class PremiumTests(unittest.TestCase):
-    """No key, a bad key and a good key, plus the routing that gets there."""
-
-    def turn(self, text: str, fetch, key: str, **kw):
-        from agent import RecipesAgent
-
-        agent_conn, client_conn = connected_pair()
-        data, _feed = make_data(**kw)
-        gateway = GatewayClient(fetch=fetch, key=key, url="https://gateway.test/mcp")
-        agent = RecipesAgent(agent_conn, data, gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_answers_with_the_missing_key_wording(self):
-        fetch = gateway_answer("")
-        result, client = self.turn("I have chicken, rice and coconut milk, what can I make?",
-                                   fetch, "")
-        #: An answer, not a crash, and not a failed lookup either.
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertIn("no licence key is set", result["text"])
-        self.assertEqual(len(client.permission_requests), 1)
-        #: Nothing was spent on a call the gate was never going to let through.
-        self.assertEqual(fetch.calls, [])
-
-    def test_a_bad_key_returns_the_gateways_own_wording(self):
-        fetch = gateway_answer(GATEWAY_DENIAL, is_error=True,
-                               structured={"licenceRefusal": True, "reason": "denied"})
-        result, _ = self.turn("I have chicken, rice and coconut milk, what can I make?",
-                              fetch, "not-a-real-key")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn(GATEWAY_DENIAL, result["text"])
-        self.assertIn("premium", result["text"])
-        self.assertEqual(len(fetch.calls), 1)
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["name"], "recipes_pantry_match")
-
-    def test_a_good_key_returns_the_matched_recipes(self):
-        fetch = gateway_answer(json.dumps(PANTRY_DATA))
-        result, _ = self.turn("I have chicken, rice and coconut milk in the cupboard, "
-                              "what can I make?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("You have: chicken, rice, coconut milk", result["text"])
-        self.assertIn("scored 47 candidate recipe(s), tolerating at most 3 missing",
-                      result["text"])
-        self.assertIn("Thai coconut chicken - Thai - Chicken", result["text"])
-        self.assertIn("you have: Chicken, Coconut Milk, Rice", result["text"])
-        self.assertIn("to buy: 1 stalk Lemongrass, 2 tbsp Fish Sauce", result["text"])
-        self.assertIn("source: not published by TheMealDB", result["text"])
-        self.assertIn("source: https://www.bbcgoodfood.com/recipes/biryani", result["text"])
-        #: The licence key travels in a header and is never echoed back.
-        self.assertEqual(fetch.calls[0]["headers"]["Authorization"], "Bearer k_paid")
-        self.assertNotIn("k_paid", result["text"])
-
-    def test_a_good_key_sends_the_cupboard_it_was_asked_about(self):
-        fetch = gateway_answer(json.dumps(PANTRY_DATA))
-        self.turn("I only have bread and butter, what should I cook?", fetch, "k_paid")
-        arguments = fetch.calls[0]["payload"]["params"]["arguments"]
-        self.assertEqual(arguments, {"ingredients": ["bread", "butter"]})
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def fetch(url, payload, headers):
-            raise OSError("connection refused")
-
-        result, _ = self.turn("I have chicken, rice and coconut milk, what can I make?",
-                              fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("I could not read TheMealDB", result["text"])
-
-    def test_the_routing_is_narrow(self):
-        #: A free question keeps its own free skill even when it mentions an ingredient.
-        free = [
-            ("how do I cook chicken handi?", "recipes-by-name"),
-            ("recipe for Spicy Arrabiata Penne", "recipes-by-name"),
-            ("what can I make with chicken breast?", "recipes-by-ingredient"),
-            ("what do Italians eat?", "recipes-by-area"),
-            ("what areas do you have?", "recipes-list"),
-            ("what can you do?", "help"),
-            ("", "help"),
-        ]
-        for text, expected in free:
-            self.assertEqual(route(text)[0], expected, text)
-
-        premium = [
-            "I have chicken, rice and coconut milk in the cupboard, what can I make?",
-            "I only have bread and butter, what should I cook?",
-        ]
-        for text in premium:
-            self.assertEqual(route(text)[0], "recipes-pantry", text)
-
-    def test_the_premium_skill_id_is_published(self):
-        from agent import SKILLS
-
-        self.assertIn("recipes-pantry", SKILLS)
 
 
 if __name__ == "__main__":

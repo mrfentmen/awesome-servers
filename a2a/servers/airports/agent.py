@@ -5,7 +5,7 @@
   - airports-closures: every closed airport with its start and reopen times
   - airport-watch:     watch an airport (or the whole system) and POST when a delay or closure
                        appears or clears
-  - nas-board:         the whole command-centre picture read as one board (premium)
+  - nas-board:         the whole command-centre picture read as one board (not implemented here)
 
 Watch-capable: airport-watch stores {"kind": "airport-watch", airport, observed} where observed
 is {"entries": {id: description}}. Delay averages are revised every few minutes, so only the set
@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     AIRPORTS,
@@ -128,15 +128,15 @@ CARD_SKILLS = [
     },
     {
         "id": SKILL_NAS_BOARD,
-        "name": "National disruption board (premium)",
+        "name": "National disruption board (not implemented here)",
         "description": (
             "The FAA command centre feed read as one board: every ground stop, ground delay "
             "programme, general arrival or departure delay and airport closure at once, with each "
             "airport's reasons, average and longest delay in minutes, which airport is worst hit, "
             "the reasons behind the system, and how many of them mention weather. Premium: it runs "
-            "behind a licence check."
+            "on a hosted service that was removed."
         ),
-        "tags": ["airport", "faa", "nas", "disruption", "board", "premium"],
+        "tags": ["airport", "faa", "nas", "disruption", "board",],
         "examples": [
             "Give me the whole national disruption board.",
             '{"skill": "nas-board"}',
@@ -482,103 +482,14 @@ def run_airport_watch(params: dict, client: AirportStatusClient) -> dict:
     return {"final_state": "completed", "message": message, "artifact": artifact, "watch": watch}
 
 
-def run_nas_board(params: dict, client: AirportStatusClient, gateway: GatewayClient) -> dict:
-    """The premium national board. The whole picture is assembled on the gateway.
-
-    The gateway reads the FAA feed behind its licence check and hands back the board,
-    so a caller who has not paid gets the gateway's own message and no figures at all.
-    """
-    read, refused = premium_call(
-        gateway, "nas_disruption_board", {},
-        {"dataset": DATASET, "scope": "the national system"},
-    )
-    if refused:
-        return refused
-    if not isinstance(read, dict) or not isinstance(read.get("counts"), dict):
-        return empty_premium_answer(
-            "The licence gateway answered without a disruption board, so there is nothing to report.",
-            {"dataset": DATASET, "scope": "the national system"},
-        )
-
-    counts = read.get("counts") or {}
-    rows = read.get("airports") or []
-    reasons = read.get("reasons") or {}
-    weather_reasons = read.get("reasonsMentioningWeather") or []
-    worst = read.get("worstAirport") or None
-    lines = [
-        f"FAA command-centre board as of {read.get('updatedAt') or 'an unstated time'}: "
-        f"{read.get('board')}",
-        f"  • {counts.get('airportsAffected')} airport(s) affected: "
-        f"{counts.get('groundStops')} ground stop(s), "
-        f"{counts.get('groundDelayProgrammes')} ground delay programme(s), "
-        f"{counts.get('airportsWithGeneralDelays')} with general delays, "
-        f"{counts.get('airportClosures')} closed.",
-        f"  • {read.get('totalDelayMinutes')} minutes of delay across the board in all.",
-    ]
-    if worst:
-        lines.append(
-            f"  • Worst hit: {worst.get('airport')} at {worst.get('worstDelayMinutes')} minutes "
-            f"({worst.get('reason') or 'reason not stated'})."
-        )
-    if rows:
-        lines.append("  • Airports, worst delay first:")
-        for row in rows[:MAX_LISTED_BOARD]:
-            bits = []
-            stop = row.get("groundStop") or None
-            delay = row.get("groundDelay") or None
-            closure = row.get("closure") or None
-            if stop:
-                bits.append(f"ground stop ({stop.get('reason') or 'reason not stated'}"
-                            + (f", until {stop.get('endsAt')}" if stop.get("endsAt") else "") + ")")
-            if delay:
-                bits.append(
-                    f"ground delay programme (avg {delay.get('averageText') or '?'}, "
-                    f"max {delay.get('maxText') or '?'}, {delay.get('reason') or 'reason not stated'})"
-                )
-            for leg in row.get("departureDelays") or []:
-                bits.append(
-                    f"{(leg.get('direction') or 'general').lower()} delay "
-                    f"{leg.get('minMinutes')}-{leg.get('maxMinutes')} min "
-                    f"({leg.get('reason') or 'reason not stated'}"
-                    + (f", {leg.get('trend')}" if leg.get("trend") else "") + ")"
-                )
-            if closure:
-                bits.append(f"closure ({closure.get('reason') or 'reason not stated'}"
-                            + (f", reopens {closure.get('reopens')}" if closure.get("reopens") else "") + ")")
-            lines.append(
-                f"      {row.get('airport')} — worst delay {row.get('worstDelayMinutes')} min — "
-                + "; ".join(bits)
-            )
-        if len(rows) > MAX_LISTED_BOARD:
-            lines.append(f"      ... {len(rows) - MAX_LISTED_BOARD} more airport(s) are in the artifact.")
-    if reasons:
-        ranked = sorted(reasons.items(), key=lambda item: -item[1])[:5]
-        lines.append("  • Reasons behind the system: " + ", ".join(f"{text} ({count})" for text, count in ranked) + ".")
-    lines.append(
-        f"  • {len(weather_reasons)} reason(s) mention weather"
-        + (f": {', '.join(weather_reasons)}" if weather_reasons else "")
-        + "."
-    )
-    lines.append(
-        "\nAssembled on the MCP gateway behind its licence check, from the FAA command centre "
-        f"feed ({DATASET}). It is a snapshot: the FAA rewrites these figures every few minutes, "
-        "and a delay figure here is the longest currently reported, not a forecast."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": "FAA Air Traffic Control System Command Center (fly.faa.gov), assembled on the licence gateway",
-        "premium": True,
-        "updated_at": read.get("updatedAt"),
-        "counts": counts,
-        "total_delay_minutes": read.get("totalDelayMinutes"),
-        "worst_airport": worst,
-        "reasons": reasons,
-        "reasons_mentioning_weather": weather_reasons,
-        "airports": rows,
-        "airports_shown": read.get("airportsShown"),
-        "board": read.get("board"),
+def run_nas_board(params: dict, client: AirportStatusClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: nas-board — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class AirportAgent(SkillAgent):
@@ -597,9 +508,9 @@ class AirportAgent(SkillAgent):
     watch_kinds = (SKILL_AIRPORT_WATCH,)
 
     def __init__(self, client: AirportStatusClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or AirportStatusClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

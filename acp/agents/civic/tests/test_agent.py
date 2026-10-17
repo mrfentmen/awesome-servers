@@ -21,9 +21,8 @@ for path in (str(REPO_ROOT), str(CIVIC_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
-from acp_kit import GatewayClient
 from agent import CivicAgent
 
 from agent import CivicAgent, route  # noqa: E402
@@ -254,64 +253,7 @@ class CivicTurnTests(unittest.TestCase):
 
 
 
-PREMIUM_PAYLOAD = {'agency': 'DOT', 'totalComplaints': 10, 'closedWithDuration': 6, 'medianDaysToClose': 3, 'window': {'start': '2026-08-01', 'end': '2026-09-01'}, 'byType': [{'type': 'Street', 'count': 5, 'closedWithDuration': 4, 'medianDaysToClose': 4}]}
 
-class PremiumGatewayTests(unittest.TestCase):
-    def gateway(self, key="lic_granted", payload=PREMIUM_PAYLOAD, refusal=None):
-        self.fetch_calls = []
-        def fetch(url, message, headers):
-            self.fetch_calls.append((message["params"], headers))
-            result = {"content": [{"type": "text", "text": refusal or json.dumps(payload)}]}
-            if refusal:
-                result.update(isError=True, structuredContent={"licenceRefusal": True, "reason": "revoked"})
-            return {"jsonrpc": "2.0", "id": 1, "result": result}
-        gateway = GatewayClient(key=key, fetch=fetch)
-        gateway.call = Mock(wraps=gateway.call)
-        return gateway
-
-    def run_premium(self, gateway):
-        skill, params = route('agency resolution profile for DOT last 1 month ending 2026-09')
-        self.assertEqual(skill, 'agency-resolution')
-        return CivicAgent(data=FakeData(), gateway=gateway)._resolution(params)
-
-    def test_no_key_attempt_is_not_authorized(self):
-        with patch.dict(os.environ, {}, clear=True):
-            gateway = self.gateway(None)
-            answer, artifact = self.run_premium(gateway)
-        self.assertIn("MCP_LICENSE_KEY", answer)
-        self.assertEqual(artifact["reason"], "missing_key")
-        gateway.call.assert_called_once()
-        self.assertEqual(self.fetch_calls, [])
-
-    def test_rejected_key_preserves_gateway_wording(self):
-        message = "Gateway says revoked; set MCP_LICENSE_KEY to a valid key."
-        gateway = self.gateway("lic_live_but_rejected", refusal=message)
-        answer, artifact = self.run_premium(gateway)
-        self.assertEqual(answer, message)
-        self.assertEqual(artifact["reason"], "denied")
-        gateway.call.assert_called_once()
-
-    def test_good_key_returns_numbers_and_exact_arguments(self):
-        gateway = self.gateway()
-        answer, artifact = self.run_premium(gateway)
-        gateway.call.assert_called_once_with('civic_agency_resolution_profile', {'agency': 'DOT', 'months': 1, 'end_month': '2026-09'})
-        for number in ['10 complaints', 'median 4 whole days']:
-            self.assertIn(number, answer)
-        self.assertTrue(artifact["premium"])
-        self.assertEqual(self.fetch_calls[0][1]["Authorization"], "Bearer lic_granted")
-
-    def test_free_question_never_calls_gateway(self):
-        gateway = self.gateway()
-        agent = CivicAgent(data=FakeData(), gateway=gateway)
-        skill, params = route('did complaint 12345678 get fixed?')
-        self.assertEqual(skill, 'complaint-status')
-        agent._run_skill(skill, params, None)
-        gateway.call.assert_not_called()
-
-    def test_unreadable_payload_is_not_a_zero(self):
-        answer, artifact = self.run_premium(self.gateway(payload={}))
-        self.assertTrue(artifact["failed"])
-        self.assertIn("no readable", answer)
 
 if __name__ == "__main__":
     unittest.main()

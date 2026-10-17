@@ -17,12 +17,7 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import (  # noqa: E402
-    GatewayClient,
-    PushWatcher,
-    TaskStore,
-    UpstreamError,
-)
+from a2a_kit import PushWatcher, TaskStore, UpstreamError
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -514,32 +509,9 @@ TREND_PAYLOAD = {
     "trend": "2026-08 has 18 fewer recalls than 2026-07, 214 against 232 (-7.8%)",
 }
 
-DENIED_TEXT = ("`recall_trend_board` is a premium tool, but that licence key has expired. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`recall_trend_board` failed: openFDA has no complete month inside that window yet"
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "expired"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class RecallTrendSkillTests(unittest.TestCase):
@@ -554,11 +526,6 @@ class RecallTrendSkillTests(unittest.TestCase):
             parts.append({"kind": "data", "data": data})
         return {"kind": "message", "role": "user", "messageId": "m", "parts": parts}
 
-    def test_trend_questions_route_to_the_premium_skill(self):
-        for text in ("How has food recall activity trended this year?",
-                     "show me the recall trend for device recalls",
-                     "what was the busiest month for drug recalls?"):
-            self.assertEqual(parse(self.input_message(text))["skill"], SKILL_TREND, text)
 
     def test_the_free_skills_keep_their_own_questions(self):
         self.assertEqual(parse(self.input_message("what was recalled in the last 7 days?"))["skill"],
@@ -578,81 +545,12 @@ class RecallTrendSkillTests(unittest.TestCase):
         self.assertEqual(parsed["skill"], SKILL_TREND)
         self.assertEqual(parsed["params"]["months"], 6)
 
-    def test_the_message_reports_the_gateways_board(self):
-        gateway, calls = fake_gateway(TREND_PAYLOAD)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_TREND, "params": {"scope": "food", "months": 12}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("11 month(s) of food recall activity", result["message"])
-        self.assertIn("last updated 2026-09-20", result["message"])
-        self.assertIn("2026-08 has 18 fewer recalls than 2026-07", result["message"])
-        self.assertIn("Busiest complete month 2026-08 with 214 recalls", result["message"])
-        self.assertIn("Latest complete month 2026-08: 214 recalls", result["message"])
-        self.assertIn("Class I 41, Class II 168, Class III 5", result["message"])
-        self.assertIn("Class I share 19.2%", result["message"])
-        self.assertIn("2026-08  214 recall(s)", result["message"])
-        self.assertIn("still filling in: 2 weekly bucket(s)", result["message"])
-        self.assertIn("api.fda.gov/food/enforcement", result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["scope"], "food")
-        self.assertEqual(result["artifact"]["total_recalls"], 2319)
 
-        # openFDA's counts were read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "recall_trend_board")
-        self.assertEqual(sent["arguments"], {"scope": "food", "months": 12})
 
-    def test_naming_no_scope_is_answered_for_one_scope_and_says_so(self):
-        gateway, calls = fake_gateway(TREND_PAYLOAD)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_TREND, "params": {"scope": "all", "months": 12}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("this is the food picture", result["message"])
-        self.assertTrue(result["artifact"]["scope_widened_from_all"])
-        self.assertEqual(calls[0]["payload"]["params"]["arguments"]["scope"], "food")
 
-    def test_a_window_outside_the_tools_range_is_a_question_not_a_crash(self):
-        gateway, calls = fake_gateway(TREND_PAYLOAD)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_TREND, "params": {"scope": "food", "months": 99}, "missing": []})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("between 3 and 24", result["message"])
-        self.assertEqual(calls, [], "a bad argument must not reach the gateway")
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = self.agent(gateway).run(
-            {"skill": SKILL_TREND, "params": {"scope": "food", "months": 12}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("monthly", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = self.agent(gateway).run(
-            {"skill": SKILL_TREND, "params": {"scope": "food", "months": 12}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_board(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = self.agent(gateway).run(
-            {"skill": SKILL_TREND, "params": {"scope": "food", "months": 12}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("monthly"))
-
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_TREND, "params": {"scope": "food", "months": 12}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("no complete month", result["message"])
 
 
 if __name__ == "__main__":

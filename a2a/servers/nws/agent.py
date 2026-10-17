@@ -3,7 +3,7 @@
   - alerts-active:   active watches/warnings/advisories, most severe first
   - alerts-summary:  authoritative live counts (national and per state)
   - alerts-watch:    watch a state, zone or point and get POSTed when a new alert appears
-  - alerts-timeline: how long the alerts in effect will keep running (premium)
+  - alerts-timeline: how long the alerts in effect will keep running (not implemented here)
 
 Watch-capable: alerts-watch stores {"kind": "alerts-watch", area/zone/point} with the
 current alert id set, and the server POSTs when that set changes.
@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     DATASET,
@@ -88,9 +88,9 @@ CARD_SKILLS = [
             "The active National Weather Service alerts read as a timeline: counts by severity, how "
             "many are still in effect at each six-hour mark ahead, which one expires first, which has "
             "been running longest, how many have no end time published, how many will still be running "
-            "a week out, and the most severe of them. Premium: it runs behind a licence check."
+            "a week out, and the most severe of them. Premium: it runs on a hosted service that was removed."
         ),
-        "tags": ["weather", "nws", "alerts", "timeline", "duration", "premium"],
+        "tags": ["weather", "nws", "alerts", "timeline", "duration",],
         "examples": [
             "How long will the weather alerts in Texas keep running?",
             '{"skill": "alerts-timeline", "area": "TX"}',
@@ -405,119 +405,14 @@ def run_alerts_watch(params: dict, client: NWSAlertsClient) -> dict:
     }
 
 
-def run_alerts_timeline(params: dict, client: NWSAlertsClient, gateway: GatewayClient) -> dict:
-    """The premium alert timeline. The figures are worked out on the gateway.
-
-    The gateway reads the NWS feed behind its licence check and hands back the
-    timeline, so a caller who has not paid gets the gateway's own message and no
-    figures at all.
-    """
-    # The gateway's timeline is drawn per state or nationally, so a caller who named a
-    # zone or a point is told that rather than quietly being answered for the country.
-    if not params.get("area") and (params.get("zone") or params.get("point")):
-        return {
-            "final_state": "input-required",
-            "message": (
-                "The alert timeline is drawn per state or for the country as a whole. Give me a "
-                "two-letter state code such as TX, or ask without one for the national picture."
-            ),
-            "artifact": None,
-            "watch": None,
-        }
-    area = params.get("area")
-    # A bad argument is the caller's to fix, so it comes back as a question rather than
-    # as an internal error.
-    try:
-        area = client.check_area(area) if area else None
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-    place = NWSAlertsClient.place_label(area)
-    read, refused = premium_call(
-        gateway, "nws_alert_timeline", {"area": area} if area else {},
-        {"dataset": DATASET, "place": place, "area": area},
-    )
-    if refused:
-        return refused
-    if not isinstance(read, dict) or read.get("totalAlerts") is None:
-        return empty_premium_answer(
-            "The licence gateway answered without an alert count, so there is nothing to report.",
-            {"dataset": DATASET, "place": place, "area": area},
-        )
-
-    total = int(read.get("totalAlerts") or 0)
-    by_severity = read.get("bySeverity") or {}
-    soonest = read.get("soonestToExpire") or None
-    longest = read.get("longestRunning") or None
-    timeline = read.get("timeline") or []
-    most_severe = read.get("mostSevere") or []
-    artifact = {
-        "dataset": DATASET,
-        "product": f"{PRODUCT} (read as a timeline on the licence gateway)",
-        "source": "National Weather Service, computed on the licence gateway",
-        "premium": True,
-        "place": place,
-        "area": area,
-        "total_alerts": total,
-        "by_severity": by_severity,
-        "open_ended": read.get("openEnded"),
-        "starting_later": read.get("startingLater"),
-        "soonest_to_expire": soonest,
-        "longest_running": longest,
-        "still_running_next_week": read.get("stillRunningNextWeek"),
-        "timeline": timeline,
-        "most_severe": most_severe,
-        "note": read.get("note"),
+def run_alerts_timeline(params: dict, client: NWSAlertsClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: alerts-timeline — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    if not total:
-        return {
-            "final_state": "completed",
-            "message": (
-                f"Nothing to time: {read.get('note') or 'no alerts are in effect'} for {place}."
-            ),
-            "artifact": artifact,
-            "watch": None,
-        }
-
-    breakdown = ", ".join(f"{name} {count}" for name, count in by_severity.items())
-    lines = [
-        f"{total} active NWS alert(s) for {place}"
-        + (f" ({breakdown})" if breakdown else "")
-        + ":",
-        f"  • {read.get('openEnded')} carry no end time, and {read.get('startingLater')} have not "
-        f"started yet.",
-    ]
-    if soonest:
-        lines.append(
-            f"  • First to expire: {soonest.get('event')} in {soonest.get('area')} at "
-            f"{soonest.get('endsAt')}."
-        )
-    else:
-        lines.append("  • None of them carries an end time, so none of them expires on its own.")
-    if longest:
-        lines.append(
-            f"  • Running longest: {longest.get('event')} in {longest.get('area')}, "
-            f"{longest.get('hoursSoFar')} h so far since {longest.get('beganAt')}."
-        )
-    if timeline:
-        lines.append("  • Alerts still in effect at each six-hour mark ahead:")
-        for row in timeline[:MAX_LISTED_TIMELINE]:
-            lines.append(f"      {row.get('at')}  {row.get('inEffect')} in effect")
-        if len(timeline) > MAX_LISTED_TIMELINE:
-            lines.append(f"      ... {len(timeline) - MAX_LISTED_TIMELINE} more mark(s) are in the artifact.")
-    lines.append(f"  • {read.get('stillRunningNextWeek')} will still be running a week from now.")
-    if most_severe:
-        lines.append("  • Most severe:")
-        for row in most_severe[:5]:
-            lines.append(
-                f"      {row.get('severity')} {row.get('event')} — {row.get('area')}, ends "
-                f"{row.get('endsAt') or 'with no end time published'}"
-            )
-    lines.append(
-        "\nComputed on the MCP gateway behind its licence check, from the live NWS alerts "
-        f"feed ({DATASET}). It is a snapshot of the alerts in effect at the moment of the call, "
-        "so an alert NWS extends or drops later will not be reflected here."
-    )
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class NWSAlertsAgent(SkillAgent):
@@ -535,9 +430,9 @@ class NWSAlertsAgent(SkillAgent):
     watch_kinds = (SKILL_ALERTS_WATCH,)
 
     def __init__(self, client: NWSAlertsClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or NWSAlertsClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

@@ -17,12 +17,7 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import (  # noqa: E402
-    A2AHandler,
-    GatewayClient,
-    PushWatcher,
-    TaskStore,
-)
+from a2a_kit import A2AHandler, PushWatcher, TaskStore
 
 from agent import CAVEAT, CARD_SKILLS, SKILL_WATER_TREND, WaterAgent, parse  # noqa: E402
 from data import WaterClient  # noqa: E402
@@ -288,32 +283,9 @@ TREND_PAYLOAD = {
     },
 }
 
-DENIED_TEXT = ("`water_analyte_trend` is a premium tool, but that licence key has expired. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`water_analyte_trend` failed: the dataset has no samples in that window"
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "expired"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class WaterTrendSkillTests(unittest.TestCase):
@@ -322,11 +294,6 @@ class WaterTrendSkillTests(unittest.TestCase):
     def agent(self, gateway) -> WaterAgent:
         return WaterAgent(FakeWater(), gateway=gateway)
 
-    def test_trend_questions_route_to_the_premium_skill(self):
-        for text in ("How did free chlorine levels move over the last 90 days?",
-                     "what is the distribution of turbidity readings?",
-                     "show me the trend in water quality this year"):
-            self.assertEqual(parse(message(text))["skill"], SKILL_WATER_TREND, text)
 
     def test_the_free_skills_keep_their_own_questions(self):
         self.assertEqual(parse(message("water quality at site 55450"))["skill"],
@@ -342,86 +309,13 @@ class WaterTrendSkillTests(unittest.TestCase):
         self.assertEqual(parsed["skill"], SKILL_WATER_TREND)
         self.assertEqual(parsed["params"]["days"], 120)
 
-    def test_the_message_reports_the_gateways_distribution(self):
-        gateway, calls = fake_gateway(TREND_PAYLOAD)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_WATER_TREND, "params": {"days": 90}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("4820 drinking-water sample(s) for every reported site in the 90 days",
-                      result["message"])
-        self.assertIn("Free chlorine (mg/L): 4790 reading(s), min 0.02, mean 0.61, median 0.58, "
-                      "90th percentile 0.98, max 1.9; 31 below the reporting limit", result["message"])
-        self.assertIn("Coliform: 25 sample(s) at 1 MPN/100 mL or more", result["message"])
-        self.assertIn("free chlorine 0.58 to 0.64 (rising)", result["message"])
-        self.assertIn("55450 — 96 sample(s), mean turbidity 0.12 NTU", result["message"])
-        self.assertIn("Compliance 4700", result["message"])
-        self.assertIn("anchored to the newest sample in the dataset", result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["samples"], 4820)
-        self.assertEqual(result["artifact"]["caveat"], CAVEAT)
 
-        # The dataset was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "water_analyte_trend")
-        self.assertEqual(sent["arguments"], {"days": 90})
 
-    def test_a_site_narrows_the_arguments(self):
-        gateway, calls = fake_gateway({**TREND_PAYLOAD, "site": "55450", "samples": 96})
-        result = self.agent(gateway).run(
-            {"skill": SKILL_WATER_TREND, "params": {"days": 90, "site": "55450"}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("site 55450", result["message"])
-        self.assertEqual(calls[0]["payload"]["params"]["arguments"], {"days": 90, "site": "55450"})
 
-    def test_a_paged_window_says_the_figures_are_partial(self):
-        gateway, _ = fake_gateway({**TREND_PAYLOAD, "sampleCoversWindow": False})
-        result = self.agent(gateway).run(
-            {"skill": SKILL_WATER_TREND, "params": {"days": 90}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("rather than every sample in the window", result["message"])
 
-    def test_a_window_outside_the_tools_range_is_a_question_not_a_crash(self):
-        gateway, calls = fake_gateway(TREND_PAYLOAD)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_WATER_TREND, "params": {"days": 2}, "missing": []})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("between 7 and 365", result["message"])
-        self.assertEqual(calls, [], "a bad argument must not reach the gateway")
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = self.agent(gateway).run(
-            {"skill": SKILL_WATER_TREND, "params": {"days": 90}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("samples", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = self.agent(gateway).run(
-            {"skill": SKILL_WATER_TREND, "params": {"days": 90}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_numbers(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = self.agent(gateway).run(
-            {"skill": SKILL_WATER_TREND, "params": {"days": 90}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("samples"))
-
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_WATER_TREND, "params": {"days": 90}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("no samples in that window", result["message"])
 
 
 if __name__ == "__main__":

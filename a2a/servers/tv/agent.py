@@ -8,8 +8,8 @@
 
 Binge-plan is the one question the free skills cannot answer. They each answer one
 read: a list, a date, a day. "How long do I need to clear season 2" needs all of
-them at once plus arithmetic, so that work runs behind the licence gateway and a
-caller who has not paid gets the gateway's own message and no episode list at all.
+them at once plus arithmetic, so that work runs on a hosted service that was removed and a
+caller who has not paid gets a not-implemented stub message and no episode list at all.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ import os
 import re
 from datetime import datetime, timedelta, timezone
 
-from a2a_kit import GatewayClient, SkillAgent, UpstreamError, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent, UpstreamError
 
 from data import (
     DAY_NAMES,
@@ -112,7 +112,7 @@ CARD_SKILLS = [
             "the date you would finish at the number of episodes a day you name. Premium: it runs behind a "
             "licence check."
         ),
-        "tags": ["tv", "binge", "season", "plan", "catch-up", "premium"],
+        "tags": ["tv", "binge", "season", "plan", "catch-up",],
         "examples": [
             "how long do I need to finish season 2 of Severance?",
             "I am on episode 3 of Severance season 2, two episodes a night",
@@ -652,119 +652,14 @@ def run_schedule_day(params: dict, client: TvmazeClient) -> dict:
     }
 
 
-def run_binge_plan(params: dict, client: TvmazeClient, gateway: GatewayClient) -> dict:
-    """The premium finish-the-season plan. The work runs on the gateway.
-
-    Nothing here reads TVMaze's episode list: the gateway resolves the show, reads
-    the season and does the arithmetic behind its licence check, so a caller who has
-    not paid gets the gateway's own message and no episodes at all.
-    """
-    identifier = params.get("show") or params.get("show_id")
-    if not identifier:
-        return _missing_show()
-    try:
-        arguments = {"show": str(identifier)}
-        if params.get("season") is not None:
-            arguments["season"] = client.check_season(params["season"])
-        if params.get("from_episode") is not None:
-            arguments["from_episode"] = client.check_episode(params["from_episode"])
-        if params.get("episodes_per_day") is not None:
-            per_day = float(params["episodes_per_day"])
-            if not 0.5 <= per_day <= 20:
-                raise ValueError("episodes a day must be between 0.5 and 20")
-            arguments["episodes_per_day"] = per_day
-    except (TypeError, ValueError) as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-
-    read, refused = premium_call(gateway, "tv_binge_plan", arguments, {
-        "dataset": DATASET, "show": str(identifier),
-    })
-    if refused:
-        return refused
-    if not isinstance(read, dict) or not read.get("show"):
-        return empty_premium_answer(
-            "The licence gateway answered without naming the show, so there is nothing to report.",
-            {"dataset": DATASET, "show": str(identifier)},
-        )
-
-    show_name = read.get("show")
-    left = read.get("episodesLeft")
-    total_hours = read.get("totalHours")
-    if not isinstance(left, int) or left == 0:
-        verdict = read.get("verdict") or f"Season {read.get('season')} of {show_name} is already finished."
-        return {
-            "final_state": "completed",
-            "message": f"{verdict}\nComputed on the MCP gateway behind its licence check, from {DATASET}.",
-            "artifact": {
-                "dataset": DATASET,
-                "source": SOURCE,
-                "premium": True,
-                "show": show_name,
-                "season": read.get("season"),
-                "episodes_left": 0,
-            },
-            "watch": None,
-        }
-
-    lines = [
-        f"{show_name}, season {read.get('season')}: {left} episode(s) left"
-        + (f" after episode {read.get('fromEpisode')}" if read.get("fromEpisode") is not None else "")
-        + (f", {total_hours} h of screen time." if total_hours is not None else "."),
-    ]
-    episodes = read.get("episodes") or []
-    for episode in episodes[:MAX_LISTED_EPISODES]:
-        when = str(episode.get("airdate") or "no airdate")
-        if episode.get("airtime"):
-            when += f" {episode['airtime']}"
-        runtime = f", {episode['runtime']} min" if episode.get("runtime") else ""
-        lines.append(
-            f"  • {episode.get('label') or 'episode not numbered'}"
-            + (f" “{episode.get('name')}”" if episode.get("name") else "")
-            + f" on {when}{runtime}"
-        )
-    if len(episodes) > MAX_LISTED_EPISODES:
-        lines.append(f"  • ... {len(episodes) - MAX_LISTED_EPISODES} more episode(s) are in the artifact.")
-    if read.get("lastAirdate"):
-        lines.append(f"  • Season finale airs {read['lastAirdate']}."
-                    if read.get("seasonFinaleAirstamp")
-                    else f"  • Last listed airdate {read['lastAirdate']}.")
-    if read.get("finishDate"):
-        lines.append(
-            f"  • At {read.get('episodesPerDay')} episode(s) a day you finish around {read['finishDate']}."
-        )
-    if read.get("scheduleDay"):
-        slot = f"{read['scheduleDay']}"
-        if read.get("scheduleTime"):
-            slot += f" at {read['scheduleTime']}"
-        lines.append(f"  • TVMaze schedules this show {slot}.")
-    if read.get("note"):
-        lines.append(f"  • {read['note']}")
-    lines.append(
-        "\nComputed on the MCP gateway behind its licence check, from TVMaze's published schedule "
-        f"({DATASET}). A broadcaster can move an episode, so read the dates as a plan."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": SOURCE,
-        "premium": True,
-        "show": show_name,
-        "show_id": read.get("showId"),
-        "season": read.get("season"),
-        "status": read.get("status"),
-        "station": read.get("network"),
-        "episodes_left": left,
-        "episode_count": read.get("episodeCount"),
-        "total_minutes": read.get("totalMinutes"),
-        "total_hours": total_hours,
-        "episodes_per_day": read.get("episodesPerDay"),
-        "days_needed": read.get("daysNeeded"),
-        "finish_date": read.get("finishDate"),
-        "last_airdate": read.get("lastAirdate"),
-        "schedule_day": read.get("scheduleDay"),
-        "schedule_time": read.get("scheduleTime"),
-        "episodes": episodes,
+def run_binge_plan(params: dict, client: TvmazeClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: binge-plan — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class TvMazeAgent(SkillAgent):
@@ -781,11 +676,9 @@ class TvMazeAgent(SkillAgent):
     card_skills = CARD_SKILLS
 
     def __init__(self, client: TvmazeClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or TvmazeClient()
-        # The documented <PREFIX>_GATEWAY_URL override is passed in explicitly:
-        # the shared client otherwise only looks at A2A_GATEWAY_URL.
-        self.gateway = gateway or GatewayClient(url=os.environ.get(f"{self.env_prefix}_GATEWAY_URL"))
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

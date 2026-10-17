@@ -17,12 +17,7 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import (  # noqa: E402
-    A2AHandler,
-    GatewayClient,
-    PushWatcher,
-    TaskStore,
-)
+from a2a_kit import A2AHandler, PushWatcher, TaskStore
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -534,32 +529,9 @@ BOARD_PAYLOAD = {
              "programme, 5 with general delays and 1 closed",
 }
 
-DENIED_TEXT = ("`nas_disruption_board` is a premium tool, but that licence key has expired. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`nas_disruption_board` failed: the FAA feed did not return airport status"
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "expired"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class NasBoardSkillTests(unittest.TestCase):
@@ -568,11 +540,6 @@ class NasBoardSkillTests(unittest.TestCase):
     def agent(self, gateway) -> AirportAgent:
         return AirportAgent(FakeFaa(), gateway=gateway)
 
-    def test_board_questions_route_to_the_premium_skill(self):
-        for text in ("Give me the whole national disruption board.",
-                     "how many ground stops are there right now?",
-                     "what are the reasons behind the delays today?"):
-            self.assertEqual(parse(_message(text))["skill"], SKILL_NAS_BOARD, text)
 
     def test_the_free_skills_keep_their_own_questions(self):
         self.assertEqual(parse(_message("What are the worst airport delays in the country?"))["skill"],
@@ -583,80 +550,11 @@ class NasBoardSkillTests(unittest.TestCase):
         self.assertEqual(parse(_message("Tell me when SFO gets a ground delay program."))["skill"],
                          "airport-watch")
 
-    def test_the_message_reports_the_gateways_board(self):
-        gateway, calls = fake_gateway(BOARD_PAYLOAD)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_NAS_BOARD, "params": {}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("FAA command-centre board as of Thu Sep 28 17:55:00 2026 GMT", result["message"])
-        self.assertIn("9 airports are affected", result["message"])
-        self.assertIn("1 ground stop(s), 3 ground delay programme(s)", result["message"])
-        self.assertIn("412 minutes of delay across the board", result["message"])
-        self.assertIn("Worst hit: EWR at 121 minutes (weather / volume)", result["message"])
-        self.assertIn("ground delay programme (avg 1 hour and 18 minutes, max 2 hours and 1 minute",
-                      result["message"])
-        self.assertIn("ground stop (runway, until 1800Z)", result["message"])
-        self.assertIn("closure (runway 28L closed for maintenance, reopens 2200Z)", result["message"])
-        self.assertIn("weather / volume (4)", result["message"])
-        self.assertIn("1 reason(s) mention weather: weather / volume", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["counts"]["airportsAffected"], 9)
-        self.assertEqual(len(result["artifact"]["airports"]), 2)
 
-        # The FAA feed was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "nas_disruption_board")
-        self.assertEqual(sent["arguments"], {})
 
-    def test_a_quiet_system_is_reported_as_quiet(self):
-        gateway, _ = fake_gateway({**BOARD_PAYLOAD,
-                                   "counts": {"groundStops": 0, "groundDelayProgrammes": 0,
-                                              "airportsWithGeneralDelays": 0, "airportClosures": 0,
-                                              "airportsAffected": 0},
-                                   "airports": [], "worstAirport": None, "reasons": {},
-                                   "reasonsMentioningWeather": [], "totalDelayMinutes": 0,
-                                   "board": "no ground stops, delay programmes or closures are in effect"})
-        result = self.agent(gateway).run(
-            {"skill": SKILL_NAS_BOARD, "params": {}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("no ground stops, delay programmes or closures are in effect", result["message"])
-        self.assertIn("0 reason(s) mention weather", result["message"])
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = self.agent(gateway).run(
-            {"skill": SKILL_NAS_BOARD, "params": {}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("counts", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = self.agent(gateway).run(
-            {"skill": SKILL_NAS_BOARD, "params": {}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_board(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = self.agent(gateway).run(
-            {"skill": SKILL_NAS_BOARD, "params": {}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("counts"))
-
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_NAS_BOARD, "params": {}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("did not return airport status", result["message"])
 
 
 if __name__ == "__main__":

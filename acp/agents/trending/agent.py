@@ -20,8 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text,
-                     GatewayClient, GatewayError, premium_call, empty_premium_answer)  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import DATASET, PROJECTS, TrendingData, TrendingError  # noqa: E402
 
@@ -32,7 +31,7 @@ HELP = (
     "  - what is Germany reading today?\n"
     "  - how many people read the Lizzie Borden article this week?\n"
     "  - pageviews for Ada Lovelace over the last 30 days\n"
-    "  - compare pageviews for Ada Lovelace and Lizzie Borden this week (premium)\n"
+    "  - compare pageviews for Ada Lovelace and Lizzie Borden this week (not implemented here)\n"
     "The numbers are yesterday's (they lag a day), and I leave out the front page and search "
     "titles - and say how many I left out."
 )
@@ -164,10 +163,10 @@ class TrendingAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: TrendingData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or TrendingData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -214,7 +213,7 @@ class TrendingAgent(AcpAgent):
                                         limit=params.get("limit") or 10)
                 body = render_top(reading)
                 summary = f"top {len(reading['rows'])} for {reading['date']}"
-        except (TrendingError, GatewayError, ValueError) as exc:
+        except (TrendingError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the metrics: {exc}")
             return STOP_END_TURN
@@ -228,46 +227,9 @@ class TrendingAgent(AcpAgent):
         return STOP_END_TURN
 
     def _board(self, params: dict) -> tuple[str, dict]:
-        """Render article comparisons and project rankings from the gateway."""
-        articles = params.get("articles") or []
-        if len(articles) < 2:
-            return "Name at least two articles to compare.", {"summary": "two articles required"}
-        arguments = {"articles": articles, "days": int(params.get("days") or 7)}
-        for key in ("project", "end_date"):
-            if params.get(key):
-                arguments[key] = params[key]
-        data, refused = premium_call(self.gateway, "pageview_board", arguments,
-                                     {"agent": "trending", "skill": "trending-board"})
-        if refused:
-            return refused
-        rows = data.get("articles") if isinstance(data, dict) else None
-        top = data.get("topArticles") if isinstance(data, dict) else None
-        def numeric(value):
-            return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
-        if (not isinstance(rows, list) or not rows or
-                any(not isinstance(row, dict) or not isinstance(row.get("title"), str) or
-                    not numeric(row.get("total")) or not numeric(row.get("average")) or
-                    not isinstance(row.get("peak"), dict) or not numeric(row["peak"].get("views"))
-                    for row in rows) or
-                not isinstance(top, list) or not top or
-                any(not isinstance(row, dict) or not isinstance(row.get("article"), str) or
-                    not numeric(row.get("views")) or not numeric(row.get("rank")) for row in top) or
-                not isinstance(data.get("leader"), dict) or not isinstance(data["leader"].get("title"), str)):
-            return empty_premium_answer("The gateway returned no readable pageview comparison.",
-                                        {"agent": "trending", "skill": "trending-board"})
-        lines = [f"Premium pageview comparison on {data.get('project')} ({data.get('from')} to {data.get('to')}):"]
-        for row in rows:
-            lines.append(f"  - {row['title']}: {row['total']:,} total, {row['average']:,} daily average, peak {row['peak']['views']:,} on {row['peak'].get('date')}")
-            if row.get("missingDays"):
-                lines.append(f"    {row['missingDays']} day(s) missing; total covers reported days only.")
-            if row.get("topRank") is not None:
-                lines.append(f"    End-date project rank: {row['topRank']} ({row.get('topDayViews')} top-list views).")
-        lines.append(f"Leader by reported total: {data['leader']['title']}.")
-        lines.append("Project top articles on the end date:")
-        for row in top:
-            lines.append(f"  - #{row['rank']} {row['article']}: {row['views']:,} views")
-        lines.append(str(data.get("note") or "Wikimedia metrics lag by a day (UTC)."))
-        return "\n".join(lines), {"summary": lines[0], "premium": True, "dataset": DATASET, "comparison": data}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: board — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

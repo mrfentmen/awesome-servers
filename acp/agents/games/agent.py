@@ -3,7 +3,7 @@
 No ACP agent could read a games catalogue before this one. It reads Steam's keyless store
 API, SteamSpy's owner and concurrent-player estimates, Steam's per-app news feed and Epic's
 public free-promotions feed. The fifth skill, a cross-title price and popularity board, runs
-on the licence gateway.
+on a hosted service that was removed.
 
 Deterministic on purpose: routing is rules, the prices are Steam's own cents, and nothing is
 invented. SteamSpy publishes ownership as a range, so the answers quote the range; a playtime
@@ -21,17 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (  # noqa: E402
-    STOP_END_TURN,
-    STOP_REFUSAL,
-    AcpAgent,
-    GatewayClient,
-    GatewayError,
-    SessionContext,
-    empty_premium_answer,
-    premium_call,
-    prompt_text,
-)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (  # noqa: E402
     DATASET_EPIC,
@@ -49,7 +39,7 @@ HELP = (
     "  • is hades well reviewed\n"
     "  • what is free on epic this week\n"
     "  • any news for stardew valley\n"
-    "  • compare elden ring and dark souls 3 (premium — needs a licence key)\n"
+    "  • compare elden ring and dark souls 3 (not implemented here)\n"
     "Prices are Steam's own US store prices in dollars; ownership is SteamSpy's published "
     "range, not a count."
 )
@@ -174,10 +164,10 @@ class GamesAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: GamesData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or GamesData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -214,7 +204,7 @@ class GamesAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (GamesError, ValueError, GatewayError) as exc:
+        except (GamesError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the games feeds: {exc}")
             return STOP_END_TURN
@@ -407,67 +397,9 @@ class GamesAgent(AcpAgent):
         return "\n".join(lines), artifact
 
     def _board(self, params: dict) -> tuple[str, dict]:
-        """Premium: the cross-title board is computed on the gateway, not here."""
-        games = params.get("games") or []
-        if len(games) < 2:
-            return (
-                "The premium board compares two to four titles at once — name them, like "
-                "'compare elden ring and dark souls 3'.",
-                {"summary": "too few titles for the board", "known": False},
-            )
-        data, refused = premium_call(
-            self.gateway,
-            "games_price_board",
-            {"games": games[:4]},
-            {"agent": "games", "skill": "price-board", "games": games[:4]},
-        )
-        if refused:
-            return refused
-        board = data.get("games") if isinstance(data, dict) else None
-        if not isinstance(board, list) or not board:
-            return empty_premium_answer(
-                "The licence gateway returned no titles for that comparison, so I have nothing to "
-                "report. Try two to four game names.",
-                {"agent": "games", "skill": "price-board"},
-            )
-        artifact = {
-            "summary": f"premium board over {len(board)} titles: cheapest "
-                       f"{(data.get('cheapest') or {}).get('name')}, most played "
-                       f"{(data.get('mostPlayed') or {}).get('name')}",
-            "premium": True,
-            "games": board,
-            "cheapest": data.get("cheapest"),
-            "dearest": data.get("dearest"),
-            "most_played": data.get("mostPlayed"),
-            "best_reviewed": data.get("bestReviewed"),
-        }
-        lines = ["Premium cross-title board (computed on the licence gateway):"]
-        for entry in board:
-            ratio = entry.get("reviewRatio")
-            lines.append(
-                f"  • {entry.get('name')} (asked: {entry.get('query')}): "
-                f"{usd(entry.get('price'))}"
-                + (f" — {ratio * 100:.0f}% of reviews positive" if ratio is not None else "")
-                + f"; owners {entry.get('owners') or 'not reported'}, "
-                  f"{int(entry.get('ccu') or 0):,} playing now"
-            )
-        cheapest, dearest = data.get("cheapest") or {}, data.get("dearest") or {}
-        most, best = data.get("mostPlayed") or {}, data.get("bestReviewed") or {}
-        lines.append(f"\nCheapest: {cheapest.get('name')} at {usd(cheapest.get('price'))}. "
-                     f"Dearest: {dearest.get('name')} at {usd(dearest.get('price'))}.")
-        if most:
-            lines.append(f"Most played right now: {most.get('name')} with "
-                         f"{int(most.get('ccu') or 0):,} players.")
-        if best:
-            ratio = best.get("reviewRatio")
-            if ratio is not None:
-                lines.append(f"Best reviewed: {best.get('name')} at {ratio * 100:.1f}% positive.")
-        lines.append(
-            f"\nSource: {DATASET_STEAM} and {DATASET_STEAMSPY}, read on the licence gateway. Same "
-            "feeds as the free skills — the gateway adds the cross-title comparison, and a caller "
-            "without a key never gets the numbers."
-        )
-        return "\n".join(lines), artifact
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: board — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
 
 def main(argv=None) -> int:

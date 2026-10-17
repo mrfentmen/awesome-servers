@@ -4,7 +4,7 @@ NASA publishes every near-Earth object with a close approach, keyless, and nobod
 it from an editor. "which asteroids pass Earth this week?" lists them day by day with
 the miss distance, the size and NASA's own hazard flag, and "how big is 2026 AB?" looks
 one object up. Whether an object has come this close before, and how its whole
-approach history compares, is the premium skill.
+approach history compares, is a separate skill.
 """
 
 from __future__ import annotations
@@ -18,9 +18,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, MAX_DAYS, AsteroidData, AsteroidError,  # noqa: E402
                   AsteroidRateLimited, designation_in, window_dates)
@@ -258,9 +256,7 @@ class AsteroidsAgent(AcpAgent):
                  gateway=None) -> None:
         super().__init__(connection)
         self.data = data or AsteroidData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -306,7 +302,7 @@ class AsteroidsAgent(AcpAgent):
                 summary = (f"{overview['start_date']} to {overview['end_date']}: "
                            f"{overview['count']} close approach(es), "
                            f"{overview['hazardous']} hazardous")
-        except (AsteroidRateLimited, AsteroidError, GatewayError, ValueError) as exc:
+        except (AsteroidRateLimited, AsteroidError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read NASA's NEO feed: {exc}")
             return STOP_END_TURN
@@ -321,46 +317,9 @@ class AsteroidsAgent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        arguments: dict = {"start_date": str(params["start_date"]),
-                           "end_date": str(params["end_date"])}
-        if params.get("designation"):
-            arguments["designation"] = str(params["designation"])
-
-        data, refused = premium_call(self.gateway, "asteroids_approach_history_board", arguments,
-                                    {"agent": "asteroids"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or "objects" not in data:
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back an approach history.",
-                {"agent": "asteroids"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a history out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_history(data)
-        summary = (f"{params['start_date']} to {params['end_date']}: "
-                   f"{data.get('objects_ranked', 0)} object(s), "
-                   f"{data.get('approaches_read', 0)} approach(es) read")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message(f"\nSource: {data.get('source', DATASET)}, read on the licence gateway. "
-                    "One request per object is what makes this expensive, because each object "
-                    "carries its own decades of recorded approaches. 'Closest ever' is the "
-                    "closest NASA has on record, not the closest the object will ever come: "
-                    "orbits change, and only the passes NASA has published are counted.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

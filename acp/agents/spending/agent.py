@@ -6,7 +6,7 @@ matching awards with the agency and the amount; "how much did NASA obligate?" ge
 agency's whole-book numbers, which is a different question from any single award.
 
 The question the free skills do not answer is the shape of a recipient's whole award
-book: every award, every agency, how concentrated the money is. That is the premium skill,
+book: every award, every agency, how concentrated the money is. That is a separate skill,
 and its licence is checked on the gateway.
 """
 
@@ -20,9 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (AWARD_TYPE_CODES, DATASET, EARLIEST_AWARD_DATE,  # noqa: E402
                   SpendingData, SpendingError, fiscal_year_from_text,
@@ -37,7 +35,7 @@ HELP = (
     "  - biggest awards performed in Texas\n"
     "  - how much did the Department of Defense obligate?\n"
     "  - which agencies obligate the most money?\n"
-    "  - profile Lockheed Martin's federal awards in 2024 (premium)\n"
+    "  - profile Lockheed Martin's federal awards in 2024 (not implemented here)\n"
     "A federal fiscal year runs 1 October to 30 September, so \"2024\" means\n"
     "2023-10-01 to 2024-09-30. Award searches only reach back to 2007-10-01.\n"
     "Amounts are *obligations* - what the government promised to pay - which is not the\n"
@@ -434,9 +432,7 @@ class SpendingAgent(AcpAgent):
                  gateway=None) -> None:
         super().__init__(connection)
         self.data = data or SpendingData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -497,7 +493,7 @@ class SpendingAgent(AcpAgent):
                 body = render_awards(found)
                 summary = (f"{found['count']} award(s) for {found['keyword']!r} in FY"
                            f"{found['fiscal_year']}, {_usd_short(sum_money(row['amount'] for row in found['rows']))}")
-        except (SpendingError, GatewayError, ValueError) as exc:
+        except (SpendingError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read USAspending: {exc}")
             return STOP_END_TURN
@@ -511,43 +507,9 @@ class SpendingAgent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        arguments: dict = {"recipient": params["recipient"],
-                           "fiscal_year": int(params["fiscal_year"])}
-
-        data, refused = premium_call(self.gateway, "spending_recipient_profile", arguments,
-                                    {"agent": "spending"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not data.get("awards_read"):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back an award profile for that recipient.",
-                {"agent": "spending"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a profile out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_profile(data)
-        summary = (f"{data.get('recipient', 'recipient not reported')}: "
-                   f"{data.get('awards_read', 0)} award(s) across "
-                   f"{data.get('distinct_agencies', 0)} agency(ies), "
-                   f"{_usd_short(data.get('total_obligated'))} read")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message("\nSource: USAspending, read across pages on the licence gateway. The total is "
-                    "the sum of the awards the gateway read, not every federal dollar the "
-                    "recipient has, and a federal award is an obligation rather than a payment.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one search, one answer

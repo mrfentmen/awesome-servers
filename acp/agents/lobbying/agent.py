@@ -26,9 +26,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, FILING_TYPES, PAGE_SIZE, LobbyingData,  # noqa: E402
                   LobbyingError, LobbyingNotFound, span_from_text, sum_money)
@@ -39,7 +37,7 @@ HELP = (
     "  - what issues does Boeing lobby on?\n"
     "  - show me the Q1 filings from 2024\n"
     "  - how many lobbying filings were there in 2024?\n"
-    "  - how much did Microsoft spend on lobbying in total from 2021 to 2023? (premium)\n"
+    "  - how much did Microsoft spend on lobbying in total from 2021 to 2023? (not implemented here)\n"
     "Two things the Senate's own API does not do, so I do not pretend to: it accepts a text\n"
     "search and an issue filter and ignores both - every variation returns the whole year -\n"
     "so a question about lobbying *on a topic* cannot be filtered, only a question about a\n"
@@ -318,9 +316,7 @@ class LobbyingAgent(AcpAgent):
                  gateway=None) -> None:
         super().__init__(connection)
         self.data = data or LobbyingData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -375,7 +371,7 @@ class LobbyingAgent(AcpAgent):
                 found = self.data.count(params["year"])
                 body = render_count(found)
                 summary = f"{found['count']} filing(s) in {found['year']}"
-        except (LobbyingError, GatewayError, ValueError) as exc:
+        except (LobbyingError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the Senate's filings: {exc}")
             return STOP_END_TURN
@@ -389,43 +385,9 @@ class LobbyingAgent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        arguments: dict = {"registrant": params["registrant"],
-                           "from_year": int(params["from_year"]),
-                           "to_year": int(params["to_year"])}
-
-        data, refused = premium_call(self.gateway, "lobbying_registrant_totals", arguments,
-                                    {"agent": "lobbying"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not data.get("filings_read"):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back a total for that registrant.",
-                {"agent": "lobbying"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a total out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_totals(data)
-        summary = (f"{data.get('registrant', '?')}: {data.get('filings_read', 0)} filing(s) "
-                   f"read, {_usd_short(data.get('total_expenses'))} of expenses")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message("\nSource: Senate LDA, read across pages on the licence gateway. The totals "
-                    "are the sum of the filings the gateway read and are only as complete as that "
-                    "read, and a registration report contributes no amount because it carries "
-                    "none.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

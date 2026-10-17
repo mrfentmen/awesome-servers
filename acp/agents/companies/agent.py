@@ -7,7 +7,7 @@ was first issued; "who owns this legal entity?" walks what the registry itself r
 
 The question the free skills do not answer is "which one is it?" - a broad name matches
 hundreds of entities in hundreds of countries, and answering that means reading across
-every page of the match and counting. That is the premium skill, licensed on the gateway.
+every page of the match and counting. That is a separate skill, licensed on the gateway.
 """
 
 from __future__ import annotations
@@ -20,9 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, PAGE_SIZE, CompaniesData, CompaniesError,  # noqa: E402
                   CompaniesNotFound, lei_from_text, name_from_text)
@@ -33,7 +31,7 @@ HELP = (
     "  - look up LEI 549300APXY32KXB1KC12\n"
     "  - who owns Bank of America National Association?\n"
     "  - what subsidiaries does Apple Inc. own?\n"
-    "  - which Apple is it, and how many are there? (premium)\n"
+    "  - which Apple is it, and how many are there? (not implemented here)\n"
     "A legal name search is a *contains* match, so a broad name matches a lot: I rank what\n"
     "comes back - exact name, then a name starting with yours, then one containing it - and\n"
     "tell you how many entities share the name. An LEI identifies a legal entity, not a brand,\n"
@@ -267,9 +265,7 @@ class CompaniesAgent(AcpAgent):
                  gateway=None) -> None:
         super().__init__(connection)
         self.data = data or CompaniesData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -325,7 +321,7 @@ class CompaniesAgent(AcpAgent):
                 body = render_lookup(found)
                 summary = (f"{len(found['records'])} of {found['total']} GLEIF record(s) for "
                            f"{found['query']!r}")
-        except (CompaniesError, GatewayError, ValueError) as exc:
+        except (CompaniesError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the GLEIF registry: {exc}")
             return STOP_END_TURN
@@ -346,40 +342,9 @@ class CompaniesAgent(AcpAgent):
         return found["records"][0]["id"]
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        arguments: dict = {"name": params["name"]}
-
-        data, refused = premium_call(self.gateway, "companies_resolve", arguments,
-                                    {"agent": "companies"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not data.get("records_read"):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back a resolution for that name.",
-                {"agent": "companies"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a resolution out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_resolve(data)
-        summary = (f"{data.get('name', '?')!r}: {data.get('records_read', 0)} record(s) read, "
-                   f"{len(data.get('countries') or [])} countries")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message("\nSource: GLEIF, read across pages on the licence gateway. The resolved "
-                    "entity is the closest legal name the registry holds, which is a guess about "
-                    "which one was meant - it is not proof.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one lookup, one answer

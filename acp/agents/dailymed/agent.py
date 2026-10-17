@@ -4,7 +4,7 @@ Every prescription drug in the US has a Structured Product Label on DailyMed, an
 DailyMed publishes it keyless. "show me the official label for LIPITOR" answers with
 who files each label, when it was last published, and its own table of contents, then
 prints the section asked for straight out of the label document. One drug usually has
-several labels from different manufacturers, and comparing them is the premium skill.
+several labels from different manufacturers, and comparing them is a separate skill.
 """
 
 from __future__ import annotations
@@ -17,9 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, SECTION_PATTERN, DrugLabelData, DrugLabelError,  # noqa: E402
                   DrugLabelNotFound, manufacturer_from_title, phrase_pattern,
@@ -281,9 +279,7 @@ class DailymedAgent(AcpAgent):
                  gateway=None) -> None:
         super().__init__(connection)
         self.data = data or DrugLabelData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -335,7 +331,7 @@ class DailymedAgent(AcpAgent):
                                          labeler=params.get("labeler"))
                 body = render_search(found)
                 summary = (f"{found['query'] or found['labeler']}: {found['returned']} label(s)")
-        except (DrugLabelError, GatewayError, ValueError) as exc:
+        except (DrugLabelError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read DailyMed's labels: {exc}")
             return STOP_END_TURN
@@ -355,48 +351,9 @@ class DailymedAgent(AcpAgent):
         return found["labels"]
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        arguments: dict = {}
-        if params.get("drug"):
-            arguments["drug"] = str(params["drug"])
-        if params.get("labeler"):
-            arguments["labeler"] = str(params["labeler"])
-        if params.get("section"):
-            arguments["section"] = str(params["section"])
-
-        data, refused = premium_call(self.gateway, "dailymed_label_comparison_board", arguments,
-                                    {"agent": "dailymed"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or "labels" not in data:
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back a label comparison.",
-                {"agent": "dailymed"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a comparison out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_compare(data)
-        summary = (f"{data.get('drug', 'not reported')}: {data.get('labels_compared', 0)} label(s), "
-                   f"{len(data.get('differing_sections') or [])} section(s) differ")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message(f"\nSource: {data.get('source', DATASET)}, compared on the licence gateway. "
-                    "A character count is not a measure of safety: a longer section can mean a "
-                    "stricter trial requirement or a new warning, and only someone who reads "
-                    "both labels can say which. Two manufacturers' wording may differ and both "
-                    "may be perfectly current.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one index read, one answer

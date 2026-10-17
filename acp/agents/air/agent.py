@@ -20,17 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (  # noqa: E402
-    STOP_END_TURN,
-    STOP_REFUSAL,
-    AcpAgent,
-    GatewayClient,
-    GatewayError,
-    SessionContext,
-    empty_premium_answer,
-    premium_call,
-    prompt_text,
-)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import DATASET, AirQualityData, AirQualityError, aqi_band, pm25_band  # noqa: E402
 
@@ -163,10 +153,10 @@ class AirAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: AirQualityData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or AirQualityData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -202,7 +192,7 @@ class AirAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (AirQualityError, ValueError, GatewayError) as exc:
+        except (AirQualityError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the air quality feed: {exc}")
             return STOP_END_TURN
@@ -340,77 +330,9 @@ class AirAgent(AcpAgent):
         return "\n".join(lines), artifact
 
     def _outlook(self, params: dict) -> tuple[str, dict]:
-        """Premium: the gateway grades every day of a multi-day window.
-
-        Nothing is computed here. The window is summarised on the gateway behind the
-        licence check, so a copy of this repository still cannot answer the question.
-        """
-        point, ask = self._point_or_ask(params)
-        if ask:
-            return ask
-        try:
-            latitude, longitude = (float(part) for part in AirQualityData.check_point(point).split(","))
-        except ValueError as exc:
-            return f"{exc}.", {"summary": "bad point", "dataset": DATASET}
-        days = int(params.get("days") or 7)
-
-        data, refused = premium_call(
-            self.gateway,
-            "air_outlook",
-            {"latitude": latitude, "longitude": longitude, "days": days},
-            {"agent": "air", "skill": "air-outlook", "point": point},
-        )
-        if refused:
-            return refused
-        daily = data.get("daily") if isinstance(data, dict) else None
-        if not isinstance(daily, list) or not daily:
-            return empty_premium_answer(
-                "The licence gateway graded no days for that window, so I have nothing to "
-                "report. Try a point inside the model's grid.",
-                {"agent": "air", "skill": "air-outlook", "dataset": DATASET},
-            )
-
-        def shown(value, suffix: str = "") -> str:
-            return "not reported" if value is None else f"{value}{suffix}"
-
-        worst = data.get("worstDay") or {}
-        cleanest = data.get("cleanestDay") or {}
-        artifact = {
-            "summary": f"premium outlook, {len(daily)}d at {point}: worst {shown(worst.get('maxAqi'))} "
-                       f"({shown(worst.get('band'))}) on {shown(worst.get('date'))}, "
-                       f"cleanest {shown(cleanest.get('maxAqi'))} on {shown(cleanest.get('date'))}",
-            "dataset": DATASET,
-            "premium": True,
-            "point": point,
-            "days": len(daily),
-            "worst_day": worst,
-            "cleanest_day": cleanest,
-            "trend": data.get("trend"),
-            "missing_hours": data.get("missingHours"),
-            "daily": daily,
-        }
-        lines = [f"Premium {len(daily)}-day air-quality outlook for {point} "
-                 f"(gateway-graded, {data.get('timezone') or 'UTC'}):"]
-        for day in daily:
-            lines.append(
-                f"  • {shown(day.get('date'))}: worst AQI {shown(day.get('maxAqi'))} "
-                f"({shown(day.get('maxAqiBand'))}) at {shown(day.get('maxAqiHour'))}; "
-                f"mean {shown(day.get('meanAqi'))}, peak PM2.5 {shown(day.get('maxPm25'))} ug/m3"
-            )
-        lines.append(f"\nWorst day: {shown(worst.get('date'))} at AQI {shown(worst.get('maxAqi'))} "
-                     f"({shown(worst.get('band'))}).")
-        lines.append(f"Cleanest day: {shown(cleanest.get('date'))} at AQI {shown(cleanest.get('maxAqi'))} "
-                     f"({shown(cleanest.get('band'))}).")
-        if data.get("trend"):
-            lines.append(f"Trend: {data['trend']}.")
-        if data.get("missingHours"):
-            lines.append(f"{data['missingHours']} hour(s) in the window were not reported and are "
-                         "left out of the daily figures.")
-        lines.append(
-            f"\nSource: {DATASET}, summarised on the licence gateway. Same CAMS model as the free "
-            "skills - the gateway adds the per-day grading, not new observations."
-        )
-        return "\n".join(lines), artifact
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: outlook — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
 
 def main(argv=None) -> int:

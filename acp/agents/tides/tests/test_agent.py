@@ -25,7 +25,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import TidesAgent, _number, coords_from_text, place_from_text, route  # noqa: E402
 from data import (  # noqa: E402
@@ -382,60 +382,6 @@ class TurnTests(unittest.TestCase):
         self.assertIn("failed", statuses)
 
 
-class PremiumTests(unittest.TestCase):
-    def gateway(self, key, payload=None):
-        from acp_kit import GatewayClient
-        import json
-        calls = []
-        def fetch(url, request, headers):
-            calls.append((request, headers))
-            if key == "lic_live_but_rejected":
-                return {"result": {"isError": True, "content": [{"type": "text", "text": "Gateway says this licence was revoked."}],
-                                   "structuredContent": {"licenceRefusal": True, "reason": "denied"}}}
-            return {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
-        return GatewayClient(fetch=fetch, key=key), calls
-
-    def test_no_key_attempts_premium_call_without_authorizing(self):
-        import os
-        from unittest.mock import patch
-        with patch.dict(os.environ, {}, clear=True):
-            gateway, calls = self.gateway(None)
-            with patch.object(gateway, "call", wraps=gateway.call) as attempted:
-                answer, artifact = TidesAgent(gateway=gateway)._run_skill(*route("tide extremes table for 8518750 in 2026-10"))
-                attempted.assert_called_once()
-        self.assertIn("MCP_LICENSE_KEY", answer)
-        self.assertEqual(answer, artifact["summary"])
-        self.assertEqual(artifact["reason"], "missing_key")
-        self.assertEqual(calls, [])
-
-    def test_rejected_key_preserves_gateway_wording(self):
-        gateway, calls = self.gateway("lic_live_but_rejected")
-        answer, artifact = TidesAgent(gateway=gateway)._run_skill(*route("tide extremes table for 8518750 in 2026-10"))
-        self.assertEqual(answer, "Gateway says this licence was revoked.")
-        self.assertEqual(artifact["reason"], "denied")
-        self.assertEqual(len(calls), 1)
-
-    def test_good_key_sends_arguments_and_displays_payload_numbers(self):
-        payload = {"month": "2026-10", "daily": [{"date": "2026-10-02", "rangeFt": 6.25}], "highest": {"time": "2026-10-02 06:00", "heightFt": 5.75}, "lowest": {"time": "2026-10-02 12:00", "heightFt": -0.5}, "nextBigRangeDay": {"date": "2026-10-02", "rangeFt": 6.25}}
-        gateway, calls = self.gateway("lic_good", payload)
-        answer, artifact = TidesAgent(gateway=gateway)._run_skill(*route("tide extremes table for 8518750 in 2026-10"))
-        self.assertEqual(len(calls), 1)
-        self.assertEqual(calls[0][0]["params"], {"name": "tide_extremes_table", "arguments": {"station": "8518750", "month": "2026-10"}})
-        self.assertIn("5.75 ft", answer); self.assertIn("6.25 ft", answer)
-        self.assertTrue(artifact["premium"])
-
-    def test_free_question_never_reaches_gateway(self):
-        from unittest.mock import Mock
-        gateway = Mock()
-        data, _ = make_data()
-        TidesAgent(data=data, gateway=gateway)._run_skill(*route("when is the next high tide in Boston?"))
-        gateway.call.assert_not_called()
-
-    def test_empty_payload_is_reported(self):
-        gateway, _ = self.gateway("lic_good", {})
-        answer, artifact = TidesAgent(gateway=gateway)._extremes({"station": "8518750"})
-        self.assertTrue(artifact["failed"])
-        self.assertIn("no readable", answer)
 
 
 if __name__ == "__main__":

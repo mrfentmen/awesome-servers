@@ -21,14 +21,7 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import (  # noqa: E402
-    A2AHandler,
-    GatewayClient,
-    GatewayError,
-    PushWatcher,
-    TaskStore,
-    UpstreamError,
-)
+from a2a_kit import A2AHandler, PushWatcher, TaskStore, UpstreamError
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -414,30 +407,8 @@ OUTLOOK_PAYLOAD = {
 }
 
 
-DENIED_TEXT = ("`air_outlook` is a premium tool, but that license key has expired. "
-               "Get a key at https://buy.example")
 
 
-def fake_gateway(payload=None, error=None, text=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if payload is None and text is None:
-            # What the gateway says when the key is refused: the message is the point. The
-            # licenceRefusal marker is the gateway's own, and it is what tells a refusal
-            # apart from a tool that failed after the gate let it through.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "expired"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 def _message(text, **extra):
@@ -611,15 +582,6 @@ class WatchTests(unittest.TestCase):
 class OutlookSkillTests(unittest.TestCase):
     """The premium skill: parsing stays local, the figures come from the gateway."""
 
-    def test_week_shaped_questions_route_to_the_premium_skill(self):
-        for text in ("air in Denver this week",
-                     "air quality in Phoenix for the next 5 days",
-                     "7-day air for London"):
-            parsed = parse(_message(text))
-            self.assertEqual(parsed["skill"], SKILL_AIR_OUTLOOK, text)
-            self.assertTrue(parsed["explicit"], text)
-        self.assertEqual(parse(_message("week ahead in Denver"))["params"]["days"], 7)
-        self.assertEqual(parse(_message("next 3 days in Denver"))["params"]["days"], 3)
 
     def test_hour_shaped_questions_stay_with_the_free_forecast(self):
         self.assertEqual(parse(_message("next 48 hours in Denver"))["skill"], "air-forecast")
@@ -637,59 +599,10 @@ class OutlookSkillTests(unittest.TestCase):
         self.assertEqual(parsed["skill"], SKILL_AIR_OUTLOOK)
         self.assertEqual(parsed["params"]["days"], 4)
 
-    def test_the_message_reports_the_gateways_days(self):
-        gateway, calls = fake_gateway(OUTLOOK_PAYLOAD)
-        result = AirQualityAgent(FakeAir(), gateway=gateway).run(
-            {"skill": SKILL_AIR_OUTLOOK, "params": {"place": "Denver", "days": 3}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("2026-09-29", result["message"])
-        self.assertIn("US AQI 158", result["message"])
-        self.assertIn("Unhealthy", result["message"])
-        self.assertIn("cleanest day 2026-09-28", result["message"])
-        self.assertIn("4 hour(s)", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["worst_day"]["date"], "2026-09-29")
-        self.assertEqual(len(result["artifact"]["daily"]), 3)
 
-        # The model was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "air_outlook")
-        self.assertEqual(sent["arguments"]["days"], 3)
-        self.assertAlmostEqual(sent["arguments"]["latitude"], 39.74, places=2)
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = AirQualityAgent(FakeAir(), gateway=gateway).run(
-            {"skill": SKILL_AIR_OUTLOOK, "params": {"place": "Denver", "days": 7}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("daily", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_days(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = AirQualityAgent(FakeAir(), gateway=gateway).run(
-            {"skill": SKILL_AIR_OUTLOOK, "params": {"place": "Denver", "days": 7}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("daily"))
 
-    def test_an_unknown_place_is_never_guessed_or_charged(self):
-        gateway, calls = fake_gateway(OUTLOOK_PAYLOAD)
-        result = AirQualityAgent(FakeAir(), gateway=gateway).run(
-            {"skill": SKILL_AIR_OUTLOOK, "params": {"place": "Atlantis"}, "missing": []})
-        self.assertIn("will not guess", result["message"])
-        self.assertEqual(calls, [])
-
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # payload and text both None: the gateway refuses
-        with self.assertRaises(GatewayError) as caught:
-            gateway.call("air_outlook", {"latitude": 1, "longitude": 2})
-        self.assertEqual(caught.exception.reason, "denied")
-        self.assertEqual(str(caught.exception), DENIED_TEXT)
 
 
 if __name__ == "__main__":

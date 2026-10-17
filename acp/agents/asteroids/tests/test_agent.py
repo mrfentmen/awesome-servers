@@ -26,8 +26,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (AcpClient, Connection, GatewayClient,  # noqa: E402
-                     STOP_END_TURN, STOP_REFUSAL)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import route, span_from_text  # noqa: E402
 from data import (LUNAR_DISTANCE_KM, MAX_DAYS, AsteroidData, AsteroidError,  # noqa: E402
@@ -365,10 +364,7 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# The premium skill: asteroids-approach-history
 #
-# No network: the licence check and the work both happen on the gateway, and the
-# gateway's own JSON-RPC answers are injected into the real GatewayClient.
 # ---------------------------------------------------------------------------
 
 #: What `asteroids_approach_history_board` answers for a 7-day window.
@@ -397,125 +393,10 @@ HISTORY_DATA = {
 }
 
 #: The exact refusal the gateway sends for a key it will not accept.
-GATEWAY_DENIAL = ("`asteroids_approach_history_board` is a premium tool, but that licence key "
-                  "was rejected. Check MCP_LICENSE_KEY, or get a key at "
-                  "https://polar.sh/mrfentmen")
 
 
-def gateway_answer(text, is_error=False, structured=None):
-    """A fake transport that answers every premium call with one JSON-RPC reply."""
-    def fetch(url, payload, headers):
-        fetch.calls.append({"url": url, "payload": payload, "headers": headers})
-        result = {"content": [{"type": "text", "text": text}]}
-        if is_error:
-            result["isError"] = True
-        if structured is not None:
-            result["structuredContent"] = structured
-        return {"jsonrpc": "2.0", "id": payload.get("id", 1), "result": result}
-
-    fetch.calls = []
-    return fetch
 
 
-class PremiumTests(unittest.TestCase):
-    """No key, a bad key and a good key, plus the routing that gets there."""
-
-    def turn(self, text: str, fetch, key: str):
-        from agent import AsteroidsAgent
-
-        agent_conn, client_conn = connected_pair()
-        data, _feed = make_data()
-        gateway = GatewayClient(fetch=fetch, key=key, url="https://gateway.test/mcp")
-        agent = AsteroidsAgent(agent_conn, data, gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_answers_with_the_missing_key_wording(self):
-        fetch = gateway_answer("")
-        result, client = self.turn("has 523934 ever come this close before?", fetch, "")
-        #: An answer, not a crash, and not a failed lookup either.
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertIn("no licence key is set", result["text"])
-        self.assertEqual(len(client.permission_requests), 1)
-        #: Nothing was spent on a call the gate was never going to let through.
-        self.assertEqual(fetch.calls, [])
-
-    def test_a_bad_key_returns_the_gateways_own_wording(self):
-        fetch = gateway_answer(GATEWAY_DENIAL, is_error=True,
-                               structured={"licenceRefusal": True, "reason": "denied"})
-        result, _ = self.turn("has 523934 ever come this close before?", fetch, "not-a-real-key")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn(GATEWAY_DENIAL, result["text"])
-        self.assertIn("premium", result["text"])
-        self.assertEqual(len(fetch.calls), 1)
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["name"],
-                         "asteroids_approach_history_board")
-
-    def test_a_good_key_returns_the_history(self):
-        fetch = gateway_answer(json.dumps(HISTORY_DATA))
-        result, _ = self.turn("has 523934 ever come this close before?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("3 object(s) ranked, 42 recorded approach(es) read", result["text"])
-        self.assertIn("closest ever: 15393501 km on 2026-09-28", result["text"])
-        self.assertIn("recorded approaches: 16, from 1925-09-15 to 2179-10-02", result["text"])
-        self.assertIn("no - this window is the closest", result["text"])
-        self.assertIn("yes, 4 time(s) in the record", result["text"])
-        self.assertIn("5 of 42", result["text"])
-        #: The licence key travels in a header and is never echoed back.
-        self.assertEqual(fetch.calls[0]["headers"]["Authorization"], "Bearer k_paid")
-        self.assertNotIn("k_paid", result["text"])
-
-    def test_the_window_asked_for_is_the_window_sent(self):
-        fetch = gateway_answer(json.dumps(HISTORY_DATA))
-        self.turn("which asteroids are the riskiest over the next 3 days?", fetch, "k_paid")
-        arguments = fetch.calls[0]["payload"]["params"]["arguments"]
-        start = datetime.date.fromisoformat(arguments["start_date"])
-        end = datetime.date.fromisoformat(arguments["end_date"])
-        self.assertEqual((end - start).days + 1, 3)
-        self.assertNotIn("designation", arguments)
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def fetch(url, payload, headers):
-            raise OSError("connection refused")
-
-        result, _ = self.turn("has 523934 ever come this close before?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("I could not read NASA's NEO feed", result["text"])
-
-    def test_the_routing_is_narrow(self):
-        premium = [
-            "has 523934 ever come this close before?",
-            "which asteroids are the riskiest this week?",
-            "what is the close-approach history for near earth objects this week?",
-            "which near earth objects are on the Sentry risk list?",
-        ]
-        for text in premium:
-            self.assertEqual(route(text)[0], "asteroids-approach-history", text)
-
-        free = [
-            ("which asteroids pass Earth this week?", "asteroids-window"),
-            ("any hazardous asteroids passing this month?", "asteroids-hazardous"),
-            ("how big is 2026 AB?", "asteroids-lookup"),
-            ("tell me about 523934", "asteroids-lookup"),
-            ("what can you do?", "help"),
-            ("", "help"),
-        ]
-        for text, expected in free:
-            self.assertEqual(route(text)[0], expected, text)
-
-    def test_the_premium_skill_id_is_published(self):
-        from agent import SKILLS
-
-        self.assertIn("asteroids-approach-history", SKILLS)
 
 
 if __name__ == "__main__":

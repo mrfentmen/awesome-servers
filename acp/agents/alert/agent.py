@@ -21,17 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (  # noqa: E402
-    STOP_END_TURN,
-    STOP_REFUSAL,
-    AcpAgent,
-    GatewayClient,
-    GatewayError,
-    SessionContext,
-    empty_premium_answer,
-    premium_call,
-    prompt_text,
-)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 import render_values as values  # noqa: E402  (the agent's own directory is on sys.path)
 from data import AIR_DATASET, CONDITIONS, TEMP_DATASET, AlertData, AlertError  # noqa: E402
@@ -52,7 +42,7 @@ HELP = (
     f"I can watch: {', '.join(f'{name} ({what})' for name, what in CONDITIONS.items())}.\n"
     f"Limits: {MAX_ROUNDS} checks, {MAX_INTERVAL:.0f}s apart at most. Cancel the turn and I stop "
     "at once - nothing keeps checking after it ends.\n"
-    "I can also look forward instead of waiting (premium, graded on the licence gateway):\n"
+    "I can also look forward instead of waiting (premium, graded on a hosted service that was removed):\n"
     "  - will the air quality in Delhi pass 200 tomorrow?\n"
     "  - is the temperature in Phoenix likely to go above 40 in the next 3 days?"
 )
@@ -128,7 +118,7 @@ def route(text: str) -> tuple[str, dict]:
         return "help", {}
     if not _ALERT_WORDS.search(stripped):
         # No request to be woken up, so the free watcher has nothing to do. A
-        # forward-looking question is the premium skill's, and only a question that
+        # forward-looking question is a separate skill's, and only a question that
         # never said "watch"/"alert me" gets here - "when will it pass" still goes
         # to the free watcher, because the user asked to be told.
         if _FORWARD_RE.search(stripped):
@@ -297,10 +287,10 @@ class AlertAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: AlertData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or AlertData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -358,7 +348,7 @@ class AlertAgent(AcpAgent):
                     break
                 if index < rounds and ctx.session.cancel.wait(gap):
                     ctx.check_cancelled()
-        except (AlertError, ValueError, GatewayError) as exc:
+        except (AlertError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I stopped: {exc}")
             return STOP_END_TURN
@@ -377,12 +367,12 @@ class AlertAgent(AcpAgent):
         ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
         return STOP_END_TURN
 
-    # -- premium: forward-looking risk -------------------------------------
+    # -- forward-looking risk -------------------------------------
 
     def _run_risk(self, ctx: SessionContext, params: dict) -> str:
         """The one question the free watcher cannot answer: what is coming, not what is.
 
-        The sweep happens on the licence gateway, so the answer cannot be reproduced
+        The sweep happens on a hosted service that was removed, so the answer cannot be reproduced
         from this repository. A missing or rejected key is a finished answer, not a
         failure, and a dead gateway is reported as a failed lookup.
         """
@@ -393,7 +383,7 @@ class AlertAgent(AcpAgent):
                       raw_input={"condition": condition, "threshold": params["threshold"],
                                  "place": params["place"], "hours": params["hours"],
                                  "direction": params.get("direction", "above")})
-        if not ctx.ask_permission(tool, "Allow Alert to grade this window on the licence gateway?",
+        if not ctx.ask_permission(tool, "Allow Alert to grade this window on a hosted service that was removed?",
                                   remember_key=PERMISSION_KEY):
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content("permission denied"))
             ctx.message("I need permission to ask the licence gateway before I can grade the window.")
@@ -407,93 +397,15 @@ class AlertAgent(AcpAgent):
             ctx.message(f"I could not place {params['place']!r}: {exc}")
             return STOP_END_TURN
 
-        try:
-            answer, artifact = self._risk(condition, spot, params)
-        except GatewayError as exc:
-            ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
-            ctx.message(f"I could not finish that on the licence gateway: {exc}")
-            return STOP_END_TURN
         ctx.check_cancelled()
         ctx.tool_call_update(tool, status="completed", content=ctx.text_content(artifact["summary"]))
         ctx.stream_text(answer)
         return STOP_END_TURN
 
     def _risk(self, condition: str, spot: dict, params: dict) -> tuple[str, dict]:
-        hours = int(params.get("hours") or 48)
-        threshold = float(params["threshold"])
-        direction = params.get("direction", "above")
-        unit = " degC" if condition == "temperature" else ""
-
-        data, refused = premium_call(
-            self.gateway,
-            "alert_risk_window",
-            {"latitude": spot["latitude"], "longitude": spot["longitude"],
-             "condition": condition, "threshold": threshold,
-             "direction": direction, "hours": hours},
-            {"agent": "alert", "skill": "alert-risk", "place": params["place"]},
-        )
-        if refused:
-            return refused
-        if not isinstance(data, dict) or data.get("hoursCovered") is None:
-            return empty_premium_answer(
-                "The licence gateway sent back something I could not read, so I have no window "
-                "to report.",
-                {"agent": "alert", "skill": "alert-risk", "dataset": AIR_DATASET},
-            )
-
-        def shown(value, suffix: str = "") -> str:
-            return "not reported" if value is None else f"{values.number(value)}{suffix}"
-
-        first = data.get("firstCrossing") or {}
-        closest = data.get("closestApproach") or {}
-        peak = data.get("peak") or {}
-        low = data.get("low") or {}
-        covered = data.get("hoursCovered")
-        artifact = {
-            "summary": (f"premium {hours}h risk for {params['place']}: "
-                        f"{data.get('verdict') or 'no verdict'}"
-                        + (f", first at {first.get('time')}" if first.get("time") else "")),
-            "dataset": AIR_DATASET if condition == "aqi" else TEMP_DATASET,
-            "premium": True,
-            "place": spot.get("name") or params["place"],
-            "condition": condition,
-            "direction": direction,
-            "threshold": threshold,
-            "hours_requested": hours,
-            "hours_covered": covered,
-            "truncated": data.get("truncated"),
-            "verdict": data.get("verdict"),
-            "will_trigger": data.get("willTrigger"),
-            "first_crossing": first or None,
-            "hours_met": data.get("hoursMet"),
-            "closest_approach": closest or None,
-            "peak": peak or None,
-            "low": low or None,
-            "mean": data.get("mean"),
-        }
-        lines = [f"Premium {covered} hour(s) graded for {artifact['place']} "
-                 f"({data.get('timezone') or 'UTC'}): {data.get('verdict') or 'no verdict'}."]
-        if first.get("time"):
-            lines.append(f"  • First crossing at {first['time']} - "
-                         f"{shown(first.get('value'), unit)}.")
-            lines.append(f"  • Met for {data.get('hoursMet')} of {covered} hour(s).")
-        else:
-            lines.append(f"  • Never reaches it in the window. Closest approach: "
-                         f"{shown(closest.get('value'), unit)} at {shown(closest.get('time'))}, "
-                         f"a margin of {shown(closest.get('margin'), unit)}.")
-        lines.append(f"  • Peak {shown(peak.get('value'), unit)} at {shown(peak.get('time'))}; "
-                     f"low {shown(low.get('value'), unit)} at {shown(low.get('time'))}; "
-                     f"mean {shown(data.get('mean'), unit)}.")
-        if data.get("truncated"):
-            lines.append(f"  • Only {covered} hour(s) exist in the model horizon, so this is "
-                         "shorter than the window you asked for.")
-        lines.append(
-            f"\nSource: the hourly model behind {artifact['dataset']}, swept on the licence "
-            "gateway. It is a model forecast, not an observation - smoke and weather fronts "
-            "move faster than any model. Ask me to 'alert me when' instead if you want to be "
-            "woken the moment it happens."
-        )
-        return "\n".join(lines), artifact
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: risk — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         """Nothing to clean up: the wait is on the session's own cancel event."""

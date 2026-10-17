@@ -4,7 +4,7 @@
   - volcano-list:   every monitored volcano, filtered by region or alert level
   - volcano-lookup: one volcano by name: level, colour code, threat, region and last notice
   - volcano-watch:  watch a region or a volcano and POST when an alert level changes
-  - volcano-threat: the catalogue read as a risk picture, observatory by observatory (premium)
+  - volcano-threat: the catalogue read as a risk picture, observatory by observatory (not implemented here)
 
 Watch-capable: volcano-watch stores {"kind": "volcano-watch", region/name, observed} where
 observed is {"levels": {volcano: level}, "elevated": [...]}. Levels move on observatory
@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     DATASET,
@@ -129,14 +129,14 @@ CARD_SKILLS = [
     },
     {
         "id": SKILL_VOLCANO_THREAT,
-        "name": "The catalogue as a risk picture (premium)",
+        "name": "The catalogue as a risk picture (not implemented here)",
         "description": (
             "The monitored volcano catalogue read as a risk picture: how many volcanoes each "
             "observatory and region watches, the alert-level and threat-score mix, the high-threat "
             "volcanoes that are sitting at normal, and how long the currently elevated ones have "
-            "been elevated. Premium: it runs behind a licence check."
+            "been elevated. Premium: it runs on a hosted service that was removed."
         ),
-        "tags": ["volcano", "usgs", "threat", "risk", "observatory", "premium"],
+        "tags": ["volcano", "usgs", "threat", "risk", "observatory",],
         "examples": [
             "Which high-threat volcanoes are still sitting at normal?",
             '{"skill": "volcano-threat"}',
@@ -534,100 +534,14 @@ def run_volcano_watch(params: dict, client: VolcanoClient) -> dict:
     return {"final_state": "completed", "message": message, "artifact": artifact, "watch": watch}
 
 
-def run_volcano_threat(params: dict, client: VolcanoClient, gateway: GatewayClient) -> dict:
-    """The premium risk picture. The figures are worked out on the gateway.
-
-    The gateway reads the USGS catalogue behind its licence check and hands back the
-    picture, so a caller who has not paid gets the gateway's own message and no figures
-    at all.
-    """
-    read, refused = premium_call(
-        gateway, "volcano_threat_ranking", {},
-        {"dataset": DATASET, "scope": "the monitored catalogue"},
-    )
-    if refused:
-        return refused
-    if not isinstance(read, dict) or read.get("monitoredVolcanoes") is None:
-        return empty_premium_answer(
-            "The licence gateway answered without a catalog count, so there is nothing to report.",
-            {"dataset": DATASET},
-        )
-
-    levels = read.get("byAlertLevel") or {}
-    threats = read.get("byThreatScore") or {}
-    observatories = read.get("byObservatory") or []
-    regions = read.get("byRegion") or []
-    elevated = read.get("elevated") or {}
-    elevated_rows = elevated.get("volcanoes") or []
-    at_normal = read.get("highThreatSittingAtNormal") or {}
-    lines = [
-        f"{read.get('monitoredVolcanoes')} monitored volcano(s) and seamount(s) in the USGS "
-        f"catalogue.",
-        "  • Alert levels: "
-        + (", ".join(f"{name} {count}" for name, count in levels.items()) or "none published")
-        + ".",
-        "  • Threat scores: "
-        + (", ".join(f"{name} {count}" for name, count in threats.items()) or "none published")
-        + ".",
-    ]
-    if observatories:
-        lines.append(
-            "  • Observatories: "
-            + ", ".join(f"{row.get('label')} {row.get('count')}" for row in observatories)
-            + "."
-        )
-    if regions:
-        lines.append(
-            "  • Regions: " + ", ".join(f"{row.get('label')} {row.get('count')}" for row in regions)
-            + "."
-        )
-    if elevated_rows:
-        lines.append(f"  • {elevated.get('count')} volcano(s) are above normal right now:")
-        for row in elevated_rows[:MAX_LISTED_THREAT]:
-            days = row.get("daysAtThisLevel")
-            lines.append(
-                f"      {row.get('name')} — {row.get('level')}/{row.get('colorCode')} "
-                f"({row.get('threat')}), {row.get('region')}"
-                + (f", {days} day(s) at this level" if days is not None
-                   else ", no date published for this level")
-            )
-        if len(elevated_rows) > MAX_LISTED_THREAT:
-            lines.append(f"      ... {len(elevated_rows) - MAX_LISTED_THREAT} more are in the artifact.")
-    else:
-        lines.append("  • No volcano in the catalogue is above normal right now.")
-    lines.append(
-        f"  • {read.get('highThreatCount')} volcano(s) carry a high or very high threat score, "
-        f"and {at_normal.get('count')} of those are sitting at normal."
-    )
-    for row in (at_normal.get("volcanoes") or [])[:MAX_LISTED_THREAT]:
-        lines.append(
-            f"      {row.get('name')} — {row.get('threat')}, {row.get('region')} "
-            f"({row.get('observatory')})"
-        )
-    lines.append(
-        f"  • {read.get('levelsNeverAssigned')} volcano(s) have no alert level assigned at all."
-    )
-    lines.append(
-        "\nRanked on the MCP gateway behind its licence check, from the USGS Volcano Science "
-        f"Center's monitored-volcano catalogue ({DATASET}). A threat score describes how much a "
-        "volcano has done over thousands of years, not what it is doing now — a very high threat "
-        "volcano sitting at NORMAL is exactly what the score is designed to allow for."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": "USGS Volcano Science Center, ranked on the licence gateway",
-        "premium": True,
-        "monitored_volcanoes": read.get("monitoredVolcanoes"),
-        "by_alert_level": levels,
-        "by_threat_score": threats,
-        "by_observatory": observatories,
-        "by_region": regions,
-        "elevated": elevated,
-        "high_threat_count": read.get("highThreatCount"),
-        "high_threat_sitting_at_normal": at_normal,
-        "levels_never_assigned": read.get("levelsNeverAssigned"),
+def run_volcano_threat(params: dict, client: VolcanoClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: volcano-threat — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class VolcanoAgent(SkillAgent):
@@ -646,9 +560,9 @@ class VolcanoAgent(SkillAgent):
     watch_kinds = (SKILL_VOLCANO_WATCH,)
 
     def __init__(self, client: VolcanoClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or VolcanoClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

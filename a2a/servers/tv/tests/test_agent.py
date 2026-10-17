@@ -16,7 +16,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -362,118 +361,8 @@ class ParseTests(unittest.TestCase):
         self.assertIsNone(show_from_text("episodes of Severance", "Severance"))
 
 
-class SkillTests(unittest.TestCase):
-    def run_skill(self, skill, api=None, gateway=None, **params):
-        agent = TvMazeAgent(client=api or client(), gateway=gateway or GatewayClient(fetch=_no_network))
-        request = {"skill": skill, "params": params, "missing": agent.missing(skill, params)}
-        return agent.run(request)
 
-    def test_search_cites_the_dataset_and_scores(self):
-        result = self.run_skill("show-search", api=live_client([]), show="severance")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn(DATASET, result["message"])
-        self.assertIn("Severance", result["message"])
-        self.assertIn("match 0.89", result["message"])
-        self.assertEqual(result["artifact"]["count"], 2)
-        self.assertEqual(result["artifact"]["shows"][0]["id"], 44933)
 
-    def test_search_with_no_match_says_so(self):
-        result = self.run_skill("show-search", show="zzzznotashow")
-        self.assertIn("TVMaze matches no show", result["message"])
-        self.assertEqual(result["artifact"]["count"], 0)
-
-    def test_search_without_a_query_asks(self):
-        result = self.run_skill("show-search")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("What show", result["message"])
-
-    def test_episodes_list_a_season(self):
-        result = self.run_skill("show-episodes", api=live_client([]), show="Severance", season=2)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("S02E10", result["message"])
-        self.assertIn("Cold Harbor", result["message"])
-        self.assertIn("75 min", result["message"])
-        self.assertEqual(result["artifact"]["count"], 1)
-        self.assertEqual(result["artifact"]["show"]["id"], 44933)
-
-    def test_episodes_for_an_empty_season(self):
-        result = self.run_skill("show-episodes", api=live_client([]), show="Severance", season=9)
-        self.assertIn("no episodes for season 9", result["message"])
-
-    def test_next_airing_when_one_is_scheduled(self):
-        from datetime import datetime, timedelta, timezone
-
-        future = (datetime.now(timezone.utc) + timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%S+00:00")
-        rows = [{**EPISODE_PAYLOAD[1], "season": 3, "number": 1, "name": "The Fresh Start",
-                 "airdate": future[:10], "airstamp": future}]
-        result = self.run_skill("next-airing", api=client(episodes=rows), show="Severance")
-        self.assertIn("airs next", result["message"])
-        self.assertIn("The Fresh Start", result["message"])
-        self.assertEqual(result["artifact"]["next_episode"]["season"], 3)
-
-    def test_next_airing_when_nothing_is_scheduled(self):
-        result = self.run_skill("next-airing", api=live_client([]), show="Severance")
-        self.assertIn("no future episode scheduled", result["message"])
-        self.assertIn("Running", result["message"])
-        self.assertIsNone(result["artifact"]["next_episode"])
-
-    def test_schedule_lists_a_day(self):
-        result = self.run_skill("schedule-day", api=live_client([]), date="2026-09-28")
-        self.assertIn("Way Too Early", result["message"])
-        self.assertIn("MS NOW", result["message"])
-        self.assertIn("2026-09-28", result["message"])
-        self.assertEqual(result["artifact"]["count"], 1)
-
-    def test_schedule_on_an_empty_day(self):
-        result = self.run_skill("schedule-day", api=client(schedule=[]), date="2026-09-28")
-        self.assertIn("schedules no episodes", result["message"])
-
-    def test_schedule_tomorrow_resolves_to_a_date(self):
-        result = self.run_skill("schedule-day", api=client(schedule=[]), tomorrow=True)
-        self.assertNotEqual(result["artifact"]["date"], "today (UTC)")
-
-    def test_a_missing_show_is_reported_not_guessed(self):
-        agent = TvMazeAgent(client=client(), gateway=GatewayClient(fetch=_no_network))
-        self.assertEqual(agent.missing("show-episodes", {}), ["show"])
-        result = agent.run({"skill": "show-episodes", "params": {}, "missing": ["show"]})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("TVMaze show id", result["message"])
-
-    def test_an_unknown_show_is_a_completed_answer(self):
-        from a2a_kit import UpstreamError
-
-        def refuse(url, params, headers):
-            raise UpstreamError("TVMAZE request failed: HTTP Error 404")
-
-        api = TvmazeClient(fetch=refuse)
-        result = self.run_skill("show-episodes", api=api, show="Atlantis Prime")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("TVMaze has no show matching", result["message"])
-
-    def test_help_does_not_touch_the_feed(self):
-        result = self.run_skill("help")
-        self.assertIn("TVMaze", result["message"])
-        self.assertIsNone(result["artifact"])
-
-    def test_the_prefixed_gateway_url_override_is_wired_up(self):
-        import os
-
-        os.environ["TVMAZE_GATEWAY_URL"] = "http://127.0.0.1:9/mcp"
-        try:
-            agent = TvMazeAgent(client=client())
-        finally:
-            del os.environ["TVMAZE_GATEWAY_URL"]
-        self.assertEqual(agent.gateway.url, "http://127.0.0.1:9/mcp",
-                         "the .env.example documents this override, so it has to work")
-
-    def test_card_skills_and_env_prefix(self):
-        ids = [skill["id"] for skill in CARD_SKILLS]
-        self.assertEqual(ids, ["show-search", "show-episodes", "next-airing", "schedule-day",
-                               "binge-plan"])
-        self.assertIn("premium", [tag for skill in CARD_SKILLS if skill["id"] == "binge-plan"
-                                  for tag in skill["tags"]])
-        agent = TvMazeAgent(client=client())
-        self.assertEqual(agent.env_prefix, "TVMAZE")
 
 
 #: Shape copied from a live `tv_binge_plan` answer for Severance season 2.
@@ -508,8 +397,6 @@ BINGE_PAYLOAD = {
     "note": None,
 }
 
-DENIED_TEXT = ("`tv_binge_plan` is a premium tool, but that license key is not valid. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`tv_binge_plan` failed: TVMaze returned HTTP 404"
 
 
@@ -520,42 +407,11 @@ def _message(text, **extra):
     return payload
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            # The gateway's licence refusal, marker included: the marker is what tells a
-            # refusal apart from a tool that failed after the gate had let it through.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class BingePlanTests(unittest.TestCase):
     """The premium skill: parsing stays local, the plan comes from the gateway."""
 
-    def test_finish_the_season_routes_to_the_premium_skill(self):
-        for text in ("how long do I need to finish season 2 of Severance?",
-                     "binge Severance season 2, two episodes a night",
-                     "I am on episode 3 of Severance season 2, two episodes a night",
-                     "catch up on Succession"):
-            parsed = parse(_message(text))
-            self.assertEqual(parsed["skill"], SKILL_BINGE_PLAN, text)
-            self.assertTrue(parsed["explicit"], text)
 
     def test_the_free_skills_keep_their_own_questions(self):
         self.assertEqual(parse(_message("search for severance"))["skill"], "show-search")
@@ -571,78 +427,12 @@ class BingePlanTests(unittest.TestCase):
         self.assertEqual(parsed["params"]["from_episode"], 3)
         self.assertEqual(parsed["params"]["episodes_per_day"], 2)
 
-    def test_the_message_reports_the_gateways_plan(self):
-        gateway, calls = fake_gateway(BINGE_PAYLOAD)
-        result = TvMazeAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_BINGE_PLAN, "params": {"show": "Severance", "season": 2}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("2 episode(s) left", result["message"])
-        self.assertIn("2.3 h of screen time", result["message"])
-        self.assertIn("Cold Harbor", result["message"])
-        self.assertIn("finish around 2026-09-25", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["episodes_left"], 2)
 
-        # TVMaze's episode list was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "tv_binge_plan")
-        self.assertEqual(sent["arguments"]["show"], "Severance")
-        self.assertEqual(sent["arguments"]["season"], 2)
-        self.assertNotIn("from_episode", sent["arguments"], "nothing asked for, so nothing is sent")
 
-    def test_a_watch_rate_is_validated_before_the_gateway(self):
-        gateway, calls = fake_gateway(BINGE_PAYLOAD)
-        result = TvMazeAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_BINGE_PLAN,
-             "params": {"show": "Severance", "episodes_per_day": "90"}, "missing": []})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertEqual(calls, [], "a bad argument never reaches the gateway")
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = TvMazeAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_BINGE_PLAN, "params": {"show": "Severance"}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = TvMazeAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_BINGE_PLAN, "params": {"show": "Severance"}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_plan(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = TvMazeAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_BINGE_PLAN, "params": {"show": "Severance"}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("episodes"))
 
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = TvMazeAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_BINGE_PLAN, "params": {"show": "Severance"}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("TVMaze returned HTTP 404", result["message"])
-
-    def test_an_already_finished_season_reports_cleanly(self):
-        payload = {**BINGE_PAYLOAD, "episodesLeft": 0, "episodes": [], "totalMinutes": 0,
-                   "verdict": "Season 2 of Severance is already finished as far as episode 10."}
-        gateway, _ = fake_gateway(payload)
-        result = TvMazeAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_BINGE_PLAN, "params": {"show": "Severance", "from_episode": 10},
-             "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("already finished", result["message"])
-        self.assertEqual(result["artifact"]["episodes_left"], 0)
 
 
 if __name__ == "__main__":

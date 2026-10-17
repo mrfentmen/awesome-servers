@@ -21,7 +21,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import BuoysAgent, compass, place_from_text, route, station_from_text  # noqa: E402
 from data import DATASET, BuoysError, NdbcData, reading, station_id  # noqa: E402
@@ -288,81 +288,6 @@ class TurnTests(unittest.TestCase):
 
 
 
-class PremiumGatewayTests(unittest.TestCase):
-    def gateway(self, key, payload=None, refused=False):
-        import json
-        from acp_kit import GatewayClient
-        class RecordingGateway(GatewayClient):
-            def call(self, tool, arguments=None):
-                self.attempts.append((tool, arguments, bool(self.key)))
-                return super().call(tool, arguments)
-        def fetch(url, request, headers):
-            self.requests.append((request, headers))
-            if refused:
-                return {"result": {"isError": True, "content": [{"type": "text", "text": "Gateway says this premium tool needs a valid license key."}],
-                                  "structuredContent": {"licenceRefusal": True, "reason": "denied"}}}
-            return {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
-        self.requests = []
-        gateway = RecordingGateway(key=key, fetch=fetch)
-        gateway.attempts = []
-        return gateway
-
-    def turn(self, text, gateway):
-        from agent import BuoysAgent
-        agent_conn, client_conn = connected_pair()
-        agent = BuoysAgent(agent_conn, live_data()[0], gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id)
-        finally:
-            client.stop()
-
-    def test_premium_no_key(self):
-        import os
-        from unittest.mock import patch
-        from acp_kit import GatewayError
-        with patch.dict(os.environ, {}, clear=True):
-            gateway = self.gateway("")
-            with self.assertRaises(GatewayError) as caught:
-                gateway.call('buoys_nearest_board', {'latitude': 36.6, 'longitude': -122.0, 'count': 3})
-            wording = str(caught.exception)
-            gateway.attempts.clear()
-            result = self.turn('compare nearest 3 buoys at 36.6,-122.0', gateway)
-        self.assertIn(wording, result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertEqual(gateway.attempts, [('buoys_nearest_board', {'latitude': 36.6, 'longitude': -122.0, 'count': 3}, False)])
-        self.assertEqual(self.requests, [])
-
-    def test_premium_rejected_key(self):
-        gateway = self.gateway("lic_live_but_rejected", refused=True)
-        result = self.turn('compare nearest 3 buoys at 36.6,-122.0', gateway)
-        self.assertIn("Gateway says this premium tool needs a valid license key.", result["text"])
-        self.assertEqual(len(gateway.attempts), 1)
-
-    def test_premium_granted_key(self):
-        gateway = self.gateway("lic_granted", {'buoys': [{'id': '46042', 'name': 'Monterey', 'distanceKm': 43.2, 'waveHeightM': 1.7, 'windMps': 5.4, 'waterTempC': 15.6, 'timeUtc': '2026-10-01T07:00:00Z'}]})
-        result = self.turn('compare nearest 3 buoys at 36.6,-122.0', gateway)
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn('waves 1.7 m; wind 5.4 m/s', result["text"])
-        self.assertEqual(gateway.attempts, [('buoys_nearest_board', {'latitude': 36.6, 'longitude': -122.0, 'count': 3}, True)])
-        self.assertEqual(len(self.requests), 1)
-        self.assertEqual(self.requests[0][1]["Authorization"], "Bearer lic_granted")
-        self.assertEqual(route('compare nearest 3 buoys at 36.6,-122.0')[0], 'buoy-compare')
-
-    def test_premium_empty_payload(self):
-        gateway = self.gateway("lic_granted", {})
-        result = self.turn('compare nearest 3 buoys at 36.6,-122.0', gateway)
-        self.assertIn("no readable", result["text"])
-
-    def test_free_never_calls_gateway(self):
-        gateway = self.gateway("lic_granted", {'buoys': [{'id': '46042', 'name': 'Monterey', 'distanceKm': 43.2, 'waveHeightM': 1.7, 'windMps': 5.4, 'waterTempC': 15.6, 'timeUtc': '2026-10-01T07:00:00Z'}]})
-        result = self.turn('what are the conditions at buoy 41025?', gateway)
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertEqual(gateway.attempts, [])
 
 if __name__ == "__main__":
     unittest.main()

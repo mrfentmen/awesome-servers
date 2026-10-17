@@ -19,7 +19,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, GatewayClient, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import AirAgent, route  # noqa: E402
 from data import (  # noqa: E402
@@ -299,7 +299,6 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# Premium: the air-outlook window is graded on the licence gateway
 # ---------------------------------------------------------------------------
 
 #: What `air_outlook` on the gateway hands back for a two-day window.
@@ -321,10 +320,6 @@ OUTLOOK_PAYLOAD = {
 
 #: The gateway words its own refusals, buy link included, and the agent must not
 #: rewrite them.
-REFUSAL_TEXT = (
-    "This is a premium skill and needs a valid license key. "
-    "Get one at https://polar.sh/mrfentmen and set MCP_LICENSE_KEY."
-)
 
 
 def mcp_result(payload, is_error=False, structured=None):
@@ -336,106 +331,8 @@ def mcp_result(payload, is_error=False, structured=None):
     return {"jsonrpc": "2.0", "id": 1, "result": result}
 
 
-def make_gateway(key, result):
-    """A real GatewayClient with the transport injected - no network, ever."""
-    calls = []
-
-    def fetch(url, payload, headers):
-        calls.append({"tool": payload["params"]["name"],
-                      "arguments": payload["params"]["arguments"],
-                      "authorized": "Authorization" in headers})
-        return result
-
-    client = GatewayClient(fetch=fetch, url="http://127.0.0.1:8787/mcp", key=key)
-    client.calls = calls
-    return client
 
 
-class PremiumOutlookTests(unittest.TestCase):
-    def premium_turn(self, text, gateway, permission="allow-once"):
-        agent_conn, client_conn = connected_pair()
-        agent = AirAgent(agent_conn, FakeData(), gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission=permission)
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_returns_the_gateways_own_wording(self):
-        saved = os.environ.pop("MCP_LICENSE_KEY", None)
-        try:
-            result, _ = self.premium_turn("how is the air in Delhi this week?",
-                                          make_gateway("", mcp_result(OUTLOOK_PAYLOAD)))
-        finally:
-            if saved is not None:
-                os.environ["MCP_LICENSE_KEY"] = saved
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-
-    def test_a_bad_key_is_answered_not_crashed(self):
-        gateway = make_gateway("lic_live_but_rejected", mcp_result(
-            REFUSAL_TEXT, is_error=True,
-            structured={"licenceRefusal": True, "reason": "denied"}))
-        result, _ = self.premium_turn("how is the air in Delhi this week?", gateway)
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("polar.sh/mrfentmen", result["text"])
-        self.assertIn("needs a valid license key", result["text"])
-
-    def test_a_good_key_returns_the_graded_window(self):
-        gateway = make_gateway("lic_granted", mcp_result(OUTLOOK_PAYLOAD))
-        result, client = self.premium_turn("how is the air in Delhi this week?", gateway)
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("Premium 2-day air-quality outlook for 28.61,77.21", result["text"])
-        self.assertIn("2026-09-24: worst AQI 158 (Unhealthy)", result["text"])
-        self.assertIn("Worst day: 2026-09-24 at AQI 158 (Unhealthy)", result["text"])
-        self.assertIn("Cleanest day: 2026-09-23 at AQI 44 (Good)", result["text"])
-        tools = [u for u in result["updates"] if u.get("sessionUpdate") == "tool_call"]
-        self.assertEqual(tools[0]["name"], "air-outlook")
-        updates = [u for u in result["updates"] if u.get("sessionUpdate") == "tool_call_update"]
-        self.assertIn("completed", [u.get("status") for u in updates])
-        # The key travelled as a bearer header, and the arguments were bounded.
-        self.assertEqual(gateway.calls[0]["tool"], "air_outlook")
-        self.assertTrue(gateway.calls[0]["authorized"])
-        self.assertEqual(gateway.calls[0]["arguments"]["latitude"], 28.61)
-        self.assertEqual(gateway.calls[0]["arguments"]["days"], 7)
-
-    def test_a_missing_field_reads_as_not_reported(self):
-        thin = dict(OUTLOOK_PAYLOAD, daily=[{"date": "2026-09-24", "maxAqi": None,
-                                             "maxAqiBand": None, "maxAqiHour": None,
-                                             "meanAqi": None, "maxPm25": None}],
-                    worstDay={"date": "2026-09-24"}, cleanestDay={}, trend=None)
-        gateway = make_gateway("lic_granted", mcp_result(thin))
-        result, _ = self.premium_turn("air quality in Delhi next 3 days", gateway)
-        self.assertIn("worst AQI not reported (not reported)", result["text"])
-        self.assertIn("peak PM2.5 not reported ug/m3", result["text"])
-        self.assertEqual(gateway.calls[0]["arguments"]["days"], 3)
-
-    def test_routing_is_narrow_and_free_skills_keep_their_questions(self):
-        # The premium window only claims an explicit multi-day span with a point.
-        self.assertEqual(route("how is the air in Delhi this week?")[0], "air-outlook")
-        self.assertEqual(route("air quality in Delhi for the next 3 days")[0], "air-outlook")
-        self.assertEqual(route("multi-day air outlook for 40.71,-74.01")[0], "air-outlook")
-        # Everything a free skill already answers stays free.
-        self.assertEqual(route("how is the air quality in Delhi right now?")[0], "air-now")
-        self.assertEqual(route("when does the air get worse today in Delhi?")[0], "air-hours")
-        self.assertEqual(route("what is the pm2.5 at 40.71,-74.01?")[0], "air-now")
-        self.assertEqual(route("next 12 hours in Delhi")[0], "air-hours")
-        self.assertEqual(route("what can you do?")[0], "help")
-        # A multi-day phrasing with no point we can read is not the premium skill's.
-        self.assertNotEqual(route("how is the air this week?")[0], "air-outlook")
-
-    def test_free_skills_never_reach_the_gateway(self):
-        gateway = make_gateway("lic_granted", mcp_result(OUTLOOK_PAYLOAD))
-        for text in ("how is the air quality in Delhi right now?",
-                     "when does the air get worse today in Delhi?"):
-            result, _ = self.premium_turn(text, gateway)
-            self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertEqual(gateway.calls, [])
 
 
 if __name__ == "__main__":

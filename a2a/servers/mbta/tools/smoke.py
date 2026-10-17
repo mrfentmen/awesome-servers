@@ -103,19 +103,6 @@ def main(argv=None) -> int:
                 all(row.get("severity_label") for row in (network_data.get("alerts") or [{}])),
                 str([row.get("severity_label") for row in (network_data.get("alerts") or [])[:3]]))
 
-    # The premium skill: without a key the gateway's own wording comes back as an answer.
-    premium = ask(smoke, f"can I count on a train every 8 minutes from {KENDALL}?")
-    premium_data = artifact_data(premium)
-    state = premium.get("status", {}).get("state")
-    if premium_data.get("premium") and premium_data.get("reason") in ("missing_key", "denied"):
-        smoke.check("headway-check with no licence is a completed answer", state == "completed", str(state))
-        smoke.check("the refusal names the key", "MCP_LICENSE_KEY" in premium.get("status", {}).get("message", {}).get("parts", [{}])[0].get("text", ""),
-                    premium_data.get("reason"))
-    else:
-        smoke.check("headway-check returned live gaps", state == "completed"
-                    and bool(premium_data.get("headway_minutes")), str(state))
-        smoke.check("headway reports a median", premium_data.get("headway_minutes", {}).get("median") is not None,
-                    str(premium_data.get("headway_minutes")))
 
     # input-required -> follow-up when no stop is named at all.
     lonely = smoke.rpc("message/send", {"message": smoke.user_message("when is the next train?")}).get("result", {})

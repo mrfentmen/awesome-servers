@@ -21,7 +21,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import GatewayClient, AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import AuroraAgent, place_from_text, route  # noqa: E402
 from data import (  # noqa: E402
@@ -375,78 +375,6 @@ class TurnTests(unittest.TestCase):
         self.assertIn("storm is in progress", result["text"])
 
 
-class PremiumDigestTests(unittest.TestCase):
-    payload = {"historyStart": "2026-09-02", "historyEnd": "2026-10-01", "historyDays": 30,
-               "completeHistoryDays": 29, "stormDayCount": 1,
-               "stormDays": [{"date": "2026-09-18", "maxKp": 6.67, "grade": "G2 (moderate)", "periods": 8}],
-               "forecastDays": [{"start": f"2026-10-0{d}T06:00:00Z", "maxKp": 5.33, "grade": "G1 (minor)", "periods": 8} for d in (1, 2, 3)],
-               "bestWindow": {"start": "2026-10-01T06:00:00Z", "end": "2026-10-01T12:00:00Z", "meanKp": 5.16, "peakKp": 5.33, "grade": "G1 (minor)"},
-               "note": "NOAA SWPC; a geomagnetic opportunity, not local visibility."}
-
-    def gateway(self, key, result):
-        calls = []
-        def fetch(url, payload, headers):
-            calls.append({"tool": payload["params"]["name"], "arguments": payload["params"]["arguments"],
-                          "authorized": "Authorization" in headers})
-            return result
-        gateway = GatewayClient(fetch=fetch, url="http://gateway.test", key=key)
-        gateway.calls = calls
-        return gateway
-
-    def turn(self, gateway, text="storm digest"):
-        agent_conn, client_conn = connected_pair()
-        agent = AuroraAgent(agent_conn, FakeData(), gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start(); client.initialize(); sid = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, sid)
-        finally:
-            client.stop()
-
-    def test_no_key_attempted_without_authorization(self):
-        with patch.dict(os.environ):
-            os.environ.pop("MCP_LICENSE_KEY", None)
-            gateway = self.gateway(None, {})
-            with patch.object(gateway, "call", wraps=gateway.call) as attempted:
-                result = self.turn(gateway)
-                attempted.assert_called_once_with("aurora_storm_digest", {})
-        self.assertIn("`aurora_storm_digest` is a premium skill and no licence key is set. Put a Polar key in MCP_LICENSE_KEY and ask again.", result["text"])
-        self.assertNotIn("Authorization", gateway.headers())
-        self.assertEqual(gateway.calls, [])
-
-    def test_rejected_key_preserves_wording(self):
-        wording = "Gateway says revoked: set MCP_LICENSE_KEY to a valid key."
-        gateway = self.gateway("lic_live_but_rejected", {"result": {"isError": True, "content": [{"type": "text", "text": wording}], "structuredContent": {"licenceRefusal": True, "reason": "denied"}}})
-        self.assertEqual(self.turn(gateway)["text"], wording)
-        self.assertEqual(len(gateway.calls), 1)
-
-    def test_good_key_real_numbers(self):
-        gateway = self.gateway("lic_granted", {"result": {"content": [{"type": "text", "text": json.dumps(self.payload)}]}})
-        result = self.turn(gateway)
-        for text in ("1 storm-level days", "30 reported days", "29 complete days", "peak Kp 6.67", "mean Kp 5.16"):
-            self.assertIn(text, result["text"])
-        self.assertEqual(gateway.calls, [{"tool": "aurora_storm_digest", "arguments": {}, "authorized": True}])
-        _, artifact = AuroraAgent(gateway=gateway)._digest({})
-        self.assertTrue(artifact["premium"])
-
-    def test_free_question_never_calls_gateway(self):
-        gateway = self.gateway("lic_granted", {})
-        with patch.object(gateway, "call", side_effect=AssertionError("free question reached gateway")) as call:
-            self.assertIn("estimated Kp", self.turn(gateway, "how are the geomagnetic conditions?")["text"])
-            call.assert_not_called()
-
-    def test_empty_and_malformed_index(self):
-        for payload in ({}, {**self.payload, "forecastDays": [None]}, {**self.payload, "bestWindow": {}}):
-            gateway = self.gateway("lic_granted", {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}})
-            answer, artifact = AuroraAgent(gateway=gateway)._digest({})
-            self.assertIn("no readable NOAA storm digest", answer)
-            self.assertTrue(artifact["failed"])
-
-    def test_route_and_failed_upstream(self):
-        self.assertEqual(route("storm digest for the next 3 days"), ("aurora-digest", {}))
-        gateway = self.gateway("lic_granted", {"result": {"isError": True, "content": [{"type": "text", "text": "NOAA offline"}]}})
-        self.assertIn("could not read the NOAA product: NOAA offline", self.turn(gateway)["text"])
 
 
 if __name__ == "__main__":

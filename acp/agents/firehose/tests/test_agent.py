@@ -23,7 +23,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import render_event, route  # noqa: E402
 from data import (  # noqa: E402
@@ -363,63 +363,6 @@ class TurnTests(unittest.TestCase):
 
 
 
-class PremiumGateTests(unittest.TestCase):
-    def gateway(self, key, payload=None):
-        from acp_kit import GatewayClient
-        from unittest.mock import Mock
-        def fetch(url, request, headers):
-            if key == "lic_live_but_rejected":
-                return {"result": {"isError": True, "content": [{"type": "text", "text": "Gateway says revoked."}],
-                        "structuredContent": {"licenceRefusal": True, "reason": "revoked"}}}
-            return {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
-        gateway = GatewayClient(key=key, fetch=fetch)
-        gateway.call = Mock(wraps=gateway.call)
-        return gateway
-
-    def test_no_key_attempts_premium_call(self):
-        import os
-        from unittest.mock import patch
-        from agent import FirehoseAgent
-        with patch.dict(os.environ, {}, clear=False):
-            os.environ.pop("MCP_LICENSE_KEY", None)
-            gateway = self.gateway(None)
-            answer, artifact = FirehoseAgent(gateway=gateway)._digest({'wikis': ['en'], 'start': '2026-10-01T07:40:00Z', 'end': '2026-10-01T07:45:00Z'})
-        gateway.call.assert_called_once_with('wikimedia_recent_edit_digest', {'wikis': ['en'], 'start': '2026-10-01T07:40:00Z', 'end': '2026-10-01T07:45:00Z'})
-        self.assertIn("MCP_LICENSE_KEY", answer)
-        self.assertEqual(artifact["reason"], "missing_key")
-        self.assertEqual(answer, artifact["summary"])
-
-    def test_rejected_key_keeps_gateway_wording(self):
-        from agent import FirehoseAgent
-        gateway = self.gateway("lic_live_but_rejected")
-        answer, artifact = FirehoseAgent(gateway=gateway)._digest({'wikis': ['en'], 'start': '2026-10-01T07:40:00Z', 'end': '2026-10-01T07:45:00Z'})
-        self.assertEqual(answer, "Gateway says revoked.")
-        self.assertEqual(artifact["reason"], "denied")
-        gateway.call.assert_called_once()
-
-    def test_good_key_uses_real_gateway_numbers(self):
-        from agent import FirehoseAgent
-        gateway = self.gateway("lic_good", {'totalChanges': 37, 'complete': True, 'wikis': [{'wiki': 'en.wikipedia.org', 'changes': 37, 'byNamespace': {'0': 37}, 'byType': {'edit': 37}}]})
-        answer, artifact = FirehoseAgent(gateway=gateway)._digest({'wikis': ['en'], 'start': '2026-10-01T07:40:00Z', 'end': '2026-10-01T07:45:00Z'})
-        gateway.call.assert_called_once_with('wikimedia_recent_edit_digest', {'wikis': ['en'], 'start': '2026-10-01T07:40:00Z', 'end': '2026-10-01T07:45:00Z'})
-        self.assertIn('37', answer)
-        self.assertTrue(artifact["premium"])
-        self.assertEqual(route('wiki digest on en from 2026-10-01T07:40:00Z to 2026-10-01T07:45:00Z'), ('firehose-digest', {'wikis': ['en'], 'start': '2026-10-01T07:40:00Z', 'end': '2026-10-01T07:45:00Z'}))
-
-    def test_empty_payload_is_not_an_invented_reading(self):
-        from agent import FirehoseAgent
-        answer, artifact = FirehoseAgent(gateway=self.gateway("lic_good", {}))._digest({'wikis': ['en'], 'start': '2026-10-01T07:40:00Z', 'end': '2026-10-01T07:45:00Z'})
-        self.assertTrue(artifact["failed"])
-
-    def test_free_question_never_calls_gateway(self):
-        from agent import FirehoseAgent
-        from unittest.mock import Mock
-        gateway = self.gateway("lic_good")
-        ctx = Mock()
-        ctx.ask_permission.return_value = True
-        agent = FirehoseAgent(data=FakeStream(events=[recent_change()]), gateway=gateway)
-        agent.prompt(ctx, [{"type": "text", "text": 'watch the wiki firehose for 1 edit'}])
-        gateway.call.assert_not_called()
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

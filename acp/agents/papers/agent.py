@@ -20,8 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
-from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import DATASET, PapersData, PapersError, doi_from_text  # noqa: E402
 
@@ -31,7 +30,7 @@ HELP = (
     "  - recent papers about protein folding\n"
     "  - arxiv papers on transformer architectures\n"
     "  - what is DOI 10.1038/nature12373?\n"
-    "  - topic board for CRISPR from 2022 to 2024 (premium)\n"
+    "  - topic board for CRISPR from 2022 to 2024 (not implemented here)\n"
     "I say which service each result came from: a PubMed result is indexed literature with a "
     "PMID, an arXiv result is a preprint with a version history, and Crossref answers about a "
     "DOI. A preprint is not a peer-reviewed paper."
@@ -141,10 +140,10 @@ class PapersAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: PapersData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or PapersData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -179,7 +178,7 @@ class PapersAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (PapersError, GatewayError, ValueError) as exc:
+        except (PapersError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the literature service: {exc}")
             return STOP_END_TURN
@@ -203,56 +202,9 @@ class PapersAgent(AcpAgent):
         return HELP, {"summary": "help", "dataset": None}
 
     def _board(self, params: dict) -> tuple[str, dict]:
-        arguments = {"query": params["topic"], "start_year": int(params["start_year"]),
-                     "end_year": int(params["end_year"])}
-        data, refused = premium_call(self.gateway, "papers_topic_board", arguments,
-                                     {"agent": "papers", "skill": "papers-board"})
-        if refused:
-            return refused
-        cross = data.get("crossref") if isinstance(data, dict) else None
-        pmc = data.get("europe_pmc") if isinstance(data, dict) else None
-        def valid_count(value):
-            return type(value) is int and value >= 0
-
-        def valid_board(board, identifier):
-            if not isinstance(board, dict) or not valid_count(board.get("total")):
-                return False
-            annual, venues, top = (board.get(key) for key in ("annual", "venues", "top_cited"))
-            if (not isinstance(annual, list) or not 2 <= len(annual) <= 3
-                    or not isinstance(venues, list) or len(venues) > 10
-                    or not isinstance(top, list) or len(top) > 5):
-                return False
-            return (all(isinstance(row, dict) and type(row.get("year")) is int
-                        and valid_count(row.get("count")) for row in annual)
-                    and all(isinstance(row, dict) and isinstance(row.get("venue"), str)
-                            and valid_count(row.get("count")) for row in venues)
-                    and all(isinstance(row, dict) and isinstance(row.get("title"), str)
-                            and isinstance(row.get(identifier), str)
-                            and valid_count(row.get("citations")) for row in top))
-
-        if not valid_board(cross, "doi") or not valid_board(pmc, "id"):
-            return empty_premium_answer("The gateway returned no readable literature topic board.",
-                                        {"agent": "papers", "skill": "papers-board", "dataset": "Crossref and Europe PMC"})
-        lines = [f"Premium topic board for {data.get('query', arguments['query'])!r} "
-                 f"({arguments['start_year']}-{arguments['end_year']}):"]
-        for label, board in (("Crossref", cross), ("Europe PMC", pmc)):
-            lines.append(f"{label}: {board['total']:,} matching records.")
-            lines.append("  By year: " + ", ".join(f"{r['year']}: {r['count']:,}" for r in board["annual"]))
-            lines.append("  Venues" + (" in citation-ranked sample" if label == "Europe PMC" else " (full facets)")
-                         + ": " + (", ".join(f"{r['venue']}: {r['count']:,}" for r in board["venues"])
-                                   or "none reported"))
-            lines.append("  Most cited hits:")
-            for row in board["top_cited"]:
-                identifier = row["doi"] if label == "Crossref" else row["id"]
-                lines.append(f"    - {row['title']} ({row['citations']:,} citations; {identifier})")
-        lines.append("Source: Crossref and Europe PMC, compared on the licence gateway. "
-                     "Crossref searches titles and may match individual query words; Europe PMC "
-                     "searches the phrase in titles/abstracts. Coverage and citation counts differ; "
-                     "do not add provider totals. Europe PMC venue counts use up to 100 most-cited "
-                     "records per year, not full facets. Ties follow provider ordering.")
-        return "\n".join(lines), {**data, "premium": True, "dataset": "Crossref and Europe PMC",
-                                  "summary": f"premium topic board: {cross['total']:,} Crossref, "
-                                             f"{pmc['total']:,} Europe PMC"}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: board — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def _search(self, params: dict, recent: bool) -> tuple[str, dict]:
         topic = params["topic"]

@@ -17,7 +17,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import LaunchesAgent, days_from_text, route, search_from_text  # noqa: E402
 from data import LaunchesData, LaunchesError  # noqa: E402
@@ -311,59 +311,6 @@ class TurnTests(unittest.TestCase):
 
 
 
-class PremiumGateTests(unittest.TestCase):
-    def gateway(self, key, payload=None):
-        from acp_kit import GatewayClient
-        import json
-        self.calls = []
-        def fetch(url, body, headers):
-            self.calls.append((body, headers))
-            if key == "lic_live_but_rejected":
-                return {"result": {"isError": True, "content": [{"type": "text", "text": "Gateway says this licence is revoked."}],
-                                   "structuredContent": {"licenceRefusal": True, "reason": "revoked"}}}
-            return {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
-        return GatewayClient(key=key, fetch=fetch)
-
-    def test_premium_no_key_attempts_gate(self):
-        import os
-        from unittest.mock import patch
-        with patch.dict(os.environ, {}, clear=True):
-            gateway = self.gateway(None)
-            with patch.object(gateway, "call", wraps=gateway.call) as call:
-                answer, artifact = LaunchesAgent(data=FakeData(), gateway=gateway)._run_skill(*route('launch cadence board from 2026-10-01'))
-            call.assert_called_once_with('launch_cadence_board', {'start': '2026-10-01'})
-        self.assertIn("MCP_LICENSE_KEY", answer)
-        self.assertEqual(artifact["reason"], "missing_key")
-        self.assertEqual(self.calls, [])
-
-    def test_premium_rejected_preserves_gateway_wording(self):
-        gateway = self.gateway("lic_live_but_rejected")
-        answer, artifact = LaunchesAgent(data=FakeData(), gateway=gateway)._run_skill(*route('launch cadence board from 2026-10-01'))
-        self.assertEqual(answer, "Gateway says this licence is revoked.")
-        self.assertEqual(artifact["reason"], "denied")
-        self.assertEqual(len(self.calls), 1)
-
-    def test_premium_good_key_preserves_numbers_and_arguments(self):
-        gateway = self.gateway("lic_good", {'start': '2026-10-01', 'end_exclusive': '2026-12-30', 'upcoming': {'examined': 22, 'reported_total': 22, 'truncated': False}, 'recent': {'examined': 77, 'reported_total': 77, 'truncated': False}, 'by_provider': [{'name': 'SpaceX', 'count': 12}], 'by_country': [{'name': 'USA', 'count': 12}], 'by_vehicle': [{'name': 'Falcon 9', 'count': 12}], 'recent_outcomes': {'success': 74, 'failure': 1, 'partial': 1, 'unresolved': 1, 'success_percent': 97.37}})
-        answer, artifact = LaunchesAgent(data=FakeData(), gateway=gateway)._run_skill(*route('launch cadence board from 2026-10-01'))
-        self.assertEqual(len(self.calls), 1)
-        self.assertEqual(self.calls[0][0]["params"], {"name": 'launch_cadence_board', "arguments": {'start': '2026-10-01'}})
-        self.assertIn('74 successes', answer)
-        self.assertTrue(artifact["premium"])
-        self.assertEqual(route('launch cadence board from 2026-10-01')[0], 'launches-cadence')
-
-    def test_free_question_never_calls_gateway(self):
-        from unittest.mock import patch
-        gateway = self.gateway("lic_good")
-        with patch.object(gateway, "call", side_effect=AssertionError("free question reached gateway")) as call:
-            LaunchesAgent(data=FakeData(), gateway=gateway)._run_skill(*route('what is the next launch?'))
-        call.assert_not_called()
-
-    def test_premium_unreadable_payload(self):
-        for payload in (None, {}, {"unexpected": 42}):
-            gateway = self.gateway("lic_good", payload)
-            answer, artifact = LaunchesAgent(data=FakeData(), gateway=gateway)._run_skill(*route('launch cadence board from 2026-10-01'))
-            self.assertTrue(artifact["failed"])
 
 
 if __name__ == "__main__":

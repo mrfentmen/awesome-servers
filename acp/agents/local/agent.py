@@ -21,8 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (  # noqa: E402
     DATASET,
@@ -35,7 +34,7 @@ from data import (  # noqa: E402
 
 HELP = (
     "I read this machine, read-only. Ask me:\n"
-    "  • OSV advisories for requests 2.19.0 PyPI (premium)\n"
+    "  • OSV advisories for requests 2.19.0 PyPI (not implemented here)\n"
     "  • how much disk space is left?\n"
     "  • what is going on in this repo?\n"
     "  • what am I running on port 3000?\n"
@@ -103,10 +102,10 @@ class LocalAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: LocalData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or LocalData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -133,7 +132,7 @@ class LocalAgent(AcpAgent):
         ctx.tool_call(tool, "Look up explicit packages in OSV" if remote else f"Read the local {skill} state",
                       kind="fetch" if remote else "read", name=skill,
                       raw_input={"skill": skill, **params})
-        if not ctx.ask_permission(tool, "Allow Local to send these explicit package names, versions and ecosystems to OSV through the licence gateway?" if remote else
+        if not ctx.ask_permission(tool, "Allow Local to send these explicit package names, versions and ecosystems to OSV?" if remote else
                                   "Allow Local to read this machine (disk space, git status, listening ports)?",
                                   remember_key="local-osv-explicit-packages" if remote else PERMISSION_KEY):
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content("permission denied"))
@@ -143,7 +142,7 @@ class LocalAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params, ctx)
-        except (LocalError, ValueError, GatewayError) as exc:
+        except (LocalError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read that: {exc}")
             return STOP_END_TURN
@@ -170,35 +169,9 @@ class LocalAgent(AcpAgent):
         return HELP, {"summary": "help", "dataset": None}
 
     def _osv(self, params: dict) -> tuple[str, dict]:
-        packages = params.get("packages") or []
-        if (not isinstance(packages, list) or not 1 <= len(packages) <= 5 or
-                any(not isinstance(pkg, dict) or set(pkg) != {"name", "version", "ecosystem"} or
-                    any(not isinstance(pkg[key], str) for key in pkg) or
-                    not re.fullmatch(r"[A-Za-z0-9_.@+:/-]{1,100}", pkg["name"]) or
-                    pkg["name"].startswith("/") or ".." in pkg["name"] for pkg in packages)):
-            raise ValueError("Supply 1 to 5 explicit package triples: OSV advisories for requests 2.19.0 PyPI, lodash 4.17.21 npm")
-        arguments = {"packages": [{key: pkg[key] for key in ("name", "version", "ecosystem")} for pkg in packages]}
-        data, refused = premium_call(self.gateway, "osv_advisory_board", arguments,
-                                     {"agent": "local", "skill": "osv-advisories"})
-        if refused:
-            return refused
-        rows = data.get("packages") if isinstance(data, dict) else None
-        if (not isinstance(rows, list) or not rows or type(data.get("package_count")) is not int or
-                type(data.get("vulnerable_packages")) is not int or type(data.get("total_advisories")) is not int or any(not isinstance(row, dict) or
-                not isinstance(row.get("name"), str) or not isinstance(row.get("version"), str) or
-                not isinstance(row.get("ecosystem"), str) or type(row.get("advisory_count")) is not int or
-                not isinstance(row.get("advisories"), list) or any(not isinstance(item, dict) or
-                not isinstance(item.get("id"), str) for item in row["advisories"]) for row in rows)):
-            return empty_premium_answer("The gateway returned no readable OSV advisory board.",
-                                        {"agent": "local", "skill": "osv-advisories"})
-        lines = [f"Premium OSV advisory board: {data['vulnerable_packages']} of {data['package_count']} explicit packages have advisories ({data['total_advisories']} total)."]
-        for row in rows:
-            ids = ", ".join(str(item.get("id")) for item in row["advisories"][:5]) or "none"
-            lines.append(f"  {row['name']} {row['version']} ({row['ecosystem']}): {row['advisory_count']} advisories; IDs: {ids}.")
-        if data.get("truncated"):
-            lines.append("Results are truncated; counts are lower bounds.")
-        lines.append(str(data.get("note", "")))
-        return "\n".join(lines), {**data, "summary": lines[0], "premium": True}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: osv — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     @staticmethod
     def _where(params: dict, ctx: SessionContext) -> str:

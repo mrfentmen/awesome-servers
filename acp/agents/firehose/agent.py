@@ -8,7 +8,7 @@ renders them as they arrive rather than as one block at the end.
 It ends when the count is reached, when the deadline passes, or when the turn is cancelled -
 and it reports how many events it saw versus how many it showed, so "10 edits" is never
 mistaken for "the wiki is quiet". Nothing is left running when the turn ends. A premium recent-edit digest aggregates a bounded
-MediaWiki API history on the licence gateway.
+MediaWiki API history on a hosted service that was removed.
 """
 
 from __future__ import annotations
@@ -22,8 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text,
-                     GatewayClient, GatewayError, premium_call, empty_premium_answer)  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (  # noqa: E402
     DATASET,
@@ -38,7 +37,7 @@ HELP = (
     "as it arrives. Ask me:\n"
     "  - watch the wiki firehose for 10 edits\n"
     "  - live wikipedia edits\n"
-    "  - premium: wiki digest on en from 2026-10-01T07:40:00Z to 2026-10-01T07:45:00Z\n"
+    "  - wiki digest on en from 2026-10-01T07:40:00Z to 2026-10-01T07:45:00Z\n"
     "  - new wikipedia articles\n"
     "  - live edits on de.wikipedia\n"
     "  - big wikipedia edits over 5000 bytes\n"
@@ -140,10 +139,10 @@ class FirehoseAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: FirehoseData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or FirehoseData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -159,7 +158,7 @@ class FirehoseAgent(AcpAgent):
             ctx.tool_call(tool, "Aggregate recent Wikipedia changes", kind="fetch", name=skill, raw_input=params)
             try:
                 body, artifact = self._digest(params)
-            except (GatewayError, ValueError) as exc:
+            except (ValueError) as exc:
                 ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
                 ctx.message(str(exc))
                 return STOP_END_TURN
@@ -241,27 +240,9 @@ class FirehoseAgent(AcpAgent):
         return STOP_END_TURN
 
     def _digest(self, params: dict) -> tuple[str, dict]:
-        """Render the gateway's bounded recentchanges digest."""
-        if not params.get("start") or not params.get("end"):
-            raise ValueError("Give UTC start and end timestamps, for example wiki digest on en from 2026-10-01T07:40:00Z to 2026-10-01T07:45:00Z.")
-        arguments = {key: params[key] for key in ("wikis", "start", "end")}
-        context = {"agent": "firehose", "skill": "firehose-digest"}
-        data, refused = premium_call(self.gateway, "wikimedia_recent_edit_digest", arguments, context)
-        if refused:
-            return refused
-        if (not isinstance(data, dict) or type(data.get("totalChanges")) is not int
-                or not isinstance(data.get("wikis"), list) or not data["wikis"]
-                or type(data.get("complete")) is not bool
-                or any(not isinstance(row, dict) or not isinstance(row.get("byNamespace"), dict)
-                       or not isinstance(row.get("byType"), dict) or type(row.get("changes")) is not int
-                       for row in data["wikis"])):
-            return empty_premium_answer("The gateway returned no readable recent-edit digest.", context)
-        scope = "complete available window" if data["complete"] else "partial, newest capped records"
-        lines = [f"Recent-edit digest: {data['totalChanges']} changes ({scope})."]
-        for row in data["wikis"]:
-            lines.append(f"  {row.get('wiki')}: {row['changes']} changes; namespaces {row['byNamespace']}; types {row['byType']}.")
-        lines.append(str(data.get("note") or "Source: MediaWiki recentchanges API."))
-        return "\n".join(lines), {**data, **context, "premium": True}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: digest — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         """Nothing to clean up: the read loop checks the session's cancel flag per event."""

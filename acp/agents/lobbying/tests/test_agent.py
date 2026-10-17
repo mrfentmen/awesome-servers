@@ -1,15 +1,3 @@
-"""Tests for the lobbying agent: a firm's filings, its issues, one kind of filing, the
-Senate's count, routing, and the one premium skill.
-
-    python3 agents/lobbying/tests/test_agent.py
-
-No network: the JSON is injected, shaped like the live payloads read on 2026-09-28
-(lda.senate.gov 301-redirects to lda.gov; `filing_year=2024` alone counts 96945 filings;
-`filing_year=2024&q=trade`, `&q=zzzznotathing` and `&issue=TRA` all count 96945 too, which is
-why no topic filter is ever sent; `filing_year=2024&filing_type=Q1` counts 18898;
-`registrant_name=Microsoft&filing_year=2023` counts 5, with expenses 222000.00 on the Q1
-and 2220000.00 on the 1A).
-"""
 
 from __future__ import annotations
 
@@ -26,8 +14,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (AcpClient, Connection, GatewayClient,  # noqa: E402
-                     STOP_END_TURN, STOP_REFUSAL)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import route  # noqa: E402
 from data import (LobbyingData, LobbyingError, LobbyingNotFound, money,  # noqa: E402
@@ -253,10 +240,6 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(route("how many lobbying filings were there in 2024?"),
                          ("lobbying-count", {"year": 2024}))
 
-    def test_the_total_is_the_premium_question(self):
-        self.assertEqual(route("how much did Microsoft spend on lobbying in total from 2021 to 2023?"),
-                         ("lobbying-totals", {"registrant": "Microsoft", "from_year": 2021,
-                                              "to_year": 2023}))
 
     def test_a_question_that_is_not_about_lobbying(self):
         for text in ("tell me a joke", "what is the weather?", ""):
@@ -369,10 +352,7 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# The premium skill: lobbying-totals
 #
-# No network: the licence check and the work both happen on the gateway, and the
-# gateway's own JSON-RPC answers are injected into the real GatewayClient.
 # ---------------------------------------------------------------------------
 
 #: What `lobbying_registrant_totals` answers for Microsoft across 2021-2023.
@@ -400,132 +380,10 @@ TOTALS_DATA = {
 }
 
 #: The exact refusal the gateway sends for a key it will not accept.
-GATEWAY_DENIAL = ("`lobbying_registrant_totals` is a premium tool, but that licence key was "
-                  "rejected. Check MCP_LICENSE_KEY, or get a key at https://polar.sh/mrfentmen")
 
 
-def gateway_answer(text, is_error=False, structured=None):
-    """A fake transport that answers every premium call with one JSON-RPC reply."""
-    def fetch(url, payload, headers):
-        fetch.calls.append({"url": url, "payload": payload, "headers": headers})
-        result = {"content": [{"type": "text", "text": text}]}
-        if is_error:
-            result["isError"] = True
-        if structured is not None:
-            result["structuredContent"] = structured
-        return {"jsonrpc": "2.0", "id": payload.get("id", 1), "result": result}
-
-    fetch.calls = []
-    return fetch
 
 
-class PremiumTests(unittest.TestCase):
-    """No key, a bad key and a good key, plus the routing that gets there."""
-
-    def turn(self, text: str, fetch, key: str):
-        from agent import LobbyingAgent
-
-        agent_conn, client_conn = connected_pair()
-        data, _feed = make_data()
-        gateway = GatewayClient(fetch=fetch, key=key, url="https://gateway.test/mcp")
-        agent = LobbyingAgent(agent_conn, data, gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_answers_with_the_missing_key_wording(self):
-        fetch = gateway_answer("")
-        text = "how much did Microsoft spend on lobbying in total from 2021 to 2023?"
-        result, client = self.turn(text, fetch, "")
-        #: An answer, not a crash, and not a failed lookup either.
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertIn("no licence key is set", result["text"])
-        self.assertEqual(len(client.permission_requests), 1)
-        #: Nothing was spent on a call the gate was never going to let through.
-        self.assertEqual(fetch.calls, [])
-
-    def test_a_bad_key_returns_the_gateways_own_wording(self):
-        fetch = gateway_answer(GATEWAY_DENIAL, is_error=True,
-                               structured={"licenceRefusal": True, "reason": "denied"})
-        text = "how much did Microsoft spend on lobbying in total from 2021 to 2023?"
-        result, _ = self.turn(text, fetch, "bad-key")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn(GATEWAY_DENIAL, result["text"])
-        self.assertIn("premium", result["text"])
-        self.assertEqual(len(fetch.calls), 1)
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["name"],
-                         "lobbying_registrant_totals")
-
-    def test_a_good_key_returns_the_total(self):
-        fetch = gateway_answer(json.dumps(TOTALS_DATA))
-        result, _ = self.turn("how much did Microsoft spend on lobbying in total from 2021 to 2023?",
-                              fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("Microsoft: Senate lobbying filings 2021 to 2023", result["text"])
-        self.assertIn("filings read: 13 of 13", result["text"])
-        self.assertIn("that is all of them", result["text"])
-        self.assertIn("total expenses reported: $14,226,000.00 (on 9 filing(s))", result["text"])
-        self.assertIn("expenses less income: $-14,226,000.00", result["text"])
-        self.assertIn("Q1: 3 filing(s), expenses $666.00K", result["text"])
-        self.assertIn("RR: 1 filing(s)", result["text"])
-        self.assertIn("TRA - Trade (domestic/foreign): 13 activity report(s)", result["text"])
-        self.assertIn("JANE DOE (13)", result["text"])
-        #: The licence key travels in a header and is never echoed back.
-        self.assertEqual(fetch.calls[0]["headers"]["Authorization"], "Bearer k_paid")
-        self.assertNotIn("k_paid", result["text"])
-
-    def test_a_good_key_sends_the_registrant_and_years_it_was_asked_for(self):
-        fetch = gateway_answer(json.dumps(TOTALS_DATA))
-        self.turn("how much did Microsoft spend on lobbying in total from 2021 to 2023?",
-                  fetch, "k_paid")
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["arguments"],
-                         {"registrant": "Microsoft", "from_year": 2021, "to_year": 2023})
-
-    def test_an_empty_gateway_answer_is_not_a_crash(self):
-        fetch = gateway_answer(json.dumps({"registrant": "Microsoft", "filings_read": 0}))
-        result, _ = self.turn("how much did Microsoft spend on lobbying in total from 2021 to 2023?",
-                              fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("did not send back a total", result["text"])
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def fetch(url, payload, headers):
-            raise OSError("connection refused")
-
-        result, _ = self.turn("how much did Microsoft spend on lobbying in total from 2021 to 2023?",
-                              fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("I could not read the Senate's filings", result["text"])
-
-    def test_the_routing_is_narrow(self):
-        for text in ("how much did Microsoft spend on lobbying in total from 2021 to 2023?",
-                     "what did Boeing spend on lobbying in total?",
-                     "Microsoft's lobbying filings added up over the years",
-                     "what is the total spending on lobbying for Amazon across the years?"):
-            self.assertEqual(route(text)[0], "lobbying-totals", text)
-
-        free = [
-            ("what did Microsoft file with the Senate in 2023?", "lobbying-registrant"),
-            ("what issues does Microsoft lobby on?", "lobbying-issues"),
-            ("show me the Q1 filings from 2024", "lobbying-by-type"),
-            ("how many lobbying filings were there in 2024?", "lobbying-count"),
-            ("what can you do?", "help"),
-        ]
-        for text, expected in free:
-            self.assertEqual(route(text)[0], expected, text)
-
-    def test_the_premium_skill_id_is_published(self):
-        from agent import SKILLS
-
-        self.assertIn("lobbying-totals", SKILLS)
 
 
 if __name__ == "__main__":

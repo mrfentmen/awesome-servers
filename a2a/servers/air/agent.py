@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import DENIED, MISSING_KEY, GatewayClient, GatewayError, SkillAgent
+from a2a_kit import SkillAgent
 
 from data import (
     CITY_COORDS,
@@ -109,9 +109,9 @@ CARD_SKILLS = [
             "A per-day outlook for up to seven days at a point or known place: each day's "
             "maximum US AQI with its EPA band and the hour it lands, the day's mean, the peak "
             "PM2.5 and PM10, which day of the window is worst and which is cleanest, and how "
-            "many hours the model left unpublished. Premium: it runs behind a licence check."
+            "many hours the model left unpublished. Premium: it runs on a hosted service that was removed."
         ),
-        "tags": ["air", "air quality", "aqi", "week", "outlook", "premium"],
+        "tags": ["air", "air quality", "aqi", "week", "outlook",],
         "examples": [
             "What is the air going to be like in Denver this week?",
             '{"skill": "air-outlook", "place": "Phoenix", "days": 5}',
@@ -564,99 +564,14 @@ def run_air_watch(params: dict, client: AirQualityClient) -> dict:
     return {"final_state": "completed", "message": message, "artifact": artifact, "watch": watch}
 
 
-def run_air_outlook(params: dict, client: AirQualityClient, gateway: GatewayClient) -> dict:
-    """The premium week-ahead outlook. The figures are computed on the gateway.
-
-    Nothing here reads the model. The gateway does the work behind its licence
-    check and hands back the per-day figures, so a caller who has not paid gets
-    the gateway's own message and no data at all.
-    """
-    resolved = resolve_point(params, client)
-    if not resolved:
-        return {
-            "final_state": "completed",
-            "message": "I do not know that place, so I will not guess coordinates for it.",
-            "artifact": {"dataset": DATASET, "place": params.get("place"), "known": False},
-            "watch": None,
-        }
-    latitude, longitude, label = resolved
-    days = client.check_days(params.get("days") or DEFAULT_OUTLOOK_DAYS)
-
-    try:
-        read = gateway.call("air_outlook", {"latitude": latitude, "longitude": longitude, "days": days})
-    except GatewayError as exc:
-        # A licence problem is an answer, not a crash: repeat the gateway's own
-        # wording, which already says which key to set and where to buy one.
-        licensed = exc.reason in (MISSING_KEY, DENIED)
-        return {
-            "final_state": "completed" if licensed else "failed",
-            "message": str(exc),
-            "artifact": {
-                "dataset": DATASET,
-                "place": label,
-                "latitude": latitude,
-                "longitude": longitude,
-                "premium": True,
-                "reason": exc.reason,
-            },
-            "watch": None,
-        }
-
-    daily = read.get("daily") if isinstance(read, dict) else None
-    if not isinstance(daily, list) or not daily:
-        return {
-            "final_state": "failed",
-            "message": "The licence gateway answered without any daily figures, so there is nothing to report.",
-            "artifact": {"dataset": DATASET, "place": label, "premium": True},
-            "watch": None,
-        }
-
-    units = read.get("units") or {}
-    pm_unit = str(units.get("pm2_5") or "")
-    worst = read.get("worstDay") or {}
-    cleanest = read.get("cleanestDay") or {}
-    lines = [
-        f"{read.get('days', len(daily))}-day air outlook for {label} ({latitude},{longitude}), "
-        f"one row per day from Open-Meteo's air-quality model:"
-    ]
-    for row in daily[:MAX_LISTED_DAYS]:
-        lines.append(
-            f"  • {row.get('date')} — max US AQI {_value(row.get('maxAqi'))} ({row.get('maxAqiBand')}) "
-            f"at {row.get('maxAqiHour')}, mean {_value(row.get('meanAqi'))}, "
-            f"peak PM2.5 {_value(row.get('maxPm25'))} {pm_unit}".rstrip()
-        )
-    if len(daily) > MAX_LISTED_DAYS:
-        lines.append(f"  • ... {len(daily) - MAX_LISTED_DAYS} more day(s) are in the artifact.")
-    lines.append(
-        f"  • Worst day {worst.get('date')} ({worst.get('band')}), cleanest day "
-        f"{cleanest.get('date')} ({cleanest.get('band')}): {read.get('trend')}."
-    )
-    missing = read.get("missingHours")
-    if missing:
-        lines.append(
-            f"  • {missing} hour(s) in the window had no published value; they are left out "
-            f"rather than counted as clean air."
-        )
-    lines.append(
-        "\nComputed on the MCP gateway behind its licence check, from Open-Meteo's "
-        f"air-quality model ({DATASET}) — hourly model output on a grid cell, not a "
-        "measurement, and each day's peak is the worst hour the model published."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": "Open-Meteo air-quality API (CAMS global forecast model), computed on the licence gateway",
-        "premium": True,
-        "place": label,
-        "latitude": latitude,
-        "longitude": longitude,
-        "days": read.get("days"),
-        "worst_day": worst,
-        "cleanest_day": cleanest,
-        "missing_hours": missing,
-        "units": units,
-        "daily": daily,
+def run_air_outlook(params: dict, client: AirQualityClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: air-outlook — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class AirQualityAgent(SkillAgent):
@@ -675,9 +590,9 @@ class AirQualityAgent(SkillAgent):
     watch_kinds = (SKILL_AIR_WATCH,)
 
     def __init__(self, client: AirQualityClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or AirQualityClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

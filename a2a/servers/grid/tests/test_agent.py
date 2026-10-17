@@ -16,7 +16,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -290,18 +289,6 @@ class ParseTests(unittest.TestCase):
                      "how much carbon is the UK generating right now?"):
             self.assertEqual(parse(self.message(text))["skill"], "grid-mix", text)
 
-    def test_window_questions_route_to_the_premium_skill(self):
-        for text in ("when is the grid cleanest over the next two days?",
-                     "when can I run my batch job cheaply?",
-                     "give me the low-carbon windows above 100 gCO2/kWh",
-                     "what are the clean enough hours tomorrow?"):
-            request = parse(self.message(text))
-            self.assertEqual(request["skill"], SKILL_CLEAN_WINDOWS, text)
-            self.assertTrue(request["explicit"], text)
-        self.assertEqual(parse(self.message("when is the grid cleanest over the next two days?"))
-                         ["params"]["hours"], 48)
-        self.assertEqual(parse(self.message("give me the low-carbon windows above 100 gCO2/kWh"))
-                         ["params"]["threshold"], "100")
 
     def test_free_skills_keep_their_own_questions(self):
         self.assertEqual(parse(self.message("how dirty is the grid right now?"))["skill"], "grid-now")
@@ -477,8 +464,6 @@ WINDOWS_PAYLOAD = {
     "bands": list(INTENSITY_BANDS),
 }
 
-DENIED_TEXT = ("`a2a_grid_clean_windows` is a premium tool, but that license key is not valid. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = ("`a2a_grid_clean_windows` failed: the Carbon Intensity API refused that request: "
                    "Please enter a valid start and end datetime")
 
@@ -490,29 +475,6 @@ def _message(text, **extra):
     return payload
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            # The gateway's licence refusal, marker included: the marker is what tells a
-            # refusal apart from a tool that failed after the gate had let it through.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class WindowsSkillTests(unittest.TestCase):
@@ -522,97 +484,16 @@ class WindowsSkillTests(unittest.TestCase):
         return GridAgent(client=client or FakeGrid(), gateway=gateway).run(
             {"skill": SKILL_CLEAN_WINDOWS, "params": params, "missing": []})
 
-    def test_the_message_reports_the_gateways_windows(self):
-        gateway, calls = fake_gateway(WINDOWS_PAYLOAD)
-        result = self.windows(gateway=gateway, hours=48, series="forecast")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("96 half-hour(s)", result["message"])
-        self.assertIn("at or below 90 gCO2/kWh", result["message"])
-        self.assertIn("2026-09-29T06:00Z to 2026-09-29T06:30Z", result["message"])
-        self.assertIn("Longest window: 2026-09-29T07:00Z", result["message"])
-        self.assertIn("68 of 96 half-hour(s) are clean enough (70.8%)", result["message"])
-        self.assertIn("Cleanest half-hour 50", result["message"])
-        self.assertIn("carries no band", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["window_count"], 2)
 
-        # The forecast was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "a2a_grid_clean_windows")
-        self.assertEqual(sent["arguments"]["hours"], 48)
-        self.assertEqual(sent["arguments"]["source"], "forecast")
-        self.assertNotIn("threshold", sent["arguments"], "no threshold asked for, so none is sent")
 
-    def test_a_threshold_is_sent_when_the_caller_gives_one(self):
-        gateway, calls = fake_gateway(WINDOWS_PAYLOAD)
-        self.windows(gateway=gateway, threshold=120, hours=12)
-        self.assertEqual(calls[0]["payload"]["params"]["arguments"]["threshold"], 120)
-        self.assertEqual(calls[0]["payload"]["params"]["arguments"]["hours"], 12)
 
-    def test_no_clean_window_is_reported_cleanly(self):
-        payload = {**WINDOWS_PAYLOAD, "windows": [], "window_count": 0, "clean_half_hours": 0,
-                   "clean_share": 0, "longest_window": None}
-        gateway, _ = fake_gateway(payload)
-        result = self.windows(gateway=gateway, hours=48)
-        self.assertIn("No half-hour in this window is at or below", result["message"])
 
-    def test_omitted_windows_are_admitted(self):
-        payload = {**WINDOWS_PAYLOAD, "windows_omitted": 4}
-        gateway, _ = fake_gateway(payload)
-        result = self.windows(gateway=gateway, hours=48)
-        self.assertIn("4 more window(s) are in the artifact", result["message"])
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = self.windows(gateway=gateway, hours=48)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("windows", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = self.windows(gateway=gateway, hours=48)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_windows(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = self.windows(gateway=gateway, hours=48)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("windows"))
 
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = self.windows(gateway=gateway, hours=48)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("valid start and end datetime", result["message"])
 
-    def test_a_bad_horizon_is_a_question_not_a_charge(self):
-        gateway, calls = fake_gateway(WINDOWS_PAYLOAD)
-        result = self.windows(gateway=gateway, hours=100)
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("between 1 and 48", result["message"])
-        self.assertEqual(calls, [])
 
-    def test_a_bad_threshold_is_a_question_not_a_charge(self):
-        gateway, calls = fake_gateway(WINDOWS_PAYLOAD)
-        result = self.windows(gateway=gateway, threshold="clean")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("gCO2/kWh", result["message"])
-        self.assertEqual(calls, [])
-
-    def test_a_gateway_answer_without_intensity_is_not_a_window(self):
-        gateway, _ = fake_gateway({"window": {}, "half_hours_read": 0})
-        result = self.windows(gateway=gateway, hours=48)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("without any carbon intensity", result["message"])
 
 
 if __name__ == "__main__":

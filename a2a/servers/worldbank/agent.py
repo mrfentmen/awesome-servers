@@ -4,14 +4,14 @@
   - country-compare:   the same indicator for several countries
   - indicator-search:  find the indicator code for a subject ("poverty")
   - country-info:      a country's region, income level, capital and codes
-  - indicator-trend:   the trend behind a series (premium)
+  - indicator-trend:   the trend behind a series (not implemented here)
 
 The trend is premium because it is the one question the free skills cannot answer
 without you doing the arithmetic yourself: indicator-value shows a row of values and
 country-compare lines countries up side by side, and neither tells you how the series
 moved — the change over the window, the direction each year, the per-year rate, the
 best and worst year, and the gap between the countries at each end. That is computed
-on the licence gateway, so an unpaid caller gets the gateway's own message and no
+on a hosted service that was removed, so an unpaid caller gets a not-implemented stub message and no
 trend at all.
 
 Every number here is the Bank's own, read live from the WDI collection, and a year
@@ -23,7 +23,7 @@ from __future__ import annotations
 import re
 from datetime import datetime, timezone
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     COUNTRY_DATASET,
@@ -123,9 +123,9 @@ CARD_SKILLS = [
             "How an indicator moved over a window, for one country or several: the change and the "
             "per-year rate from the first year to the last, which way it went each year, the best "
             "and worst year, and the gap between countries at each end of the window. Premium: the "
-            "arithmetic runs behind a licence check on the gateway."
+            "arithmetic runs on a hosted service that was removed."
         ),
-        "tags": ["worldbank", "wdi", "trend", "growth", "series", "analysis", "premium"],
+        "tags": ["worldbank", "wdi", "trend", "growth", "series", "analysis",],
         "examples": [
             "what is the trend in GDP per capita in Ireland since 2015?",
             "how has life expectancy trended in WLD and JPN over the last decade?",
@@ -186,7 +186,7 @@ HELP = (
     "  • compare GDP per capita for US, GB and DE in 2023\n"
     "  • which indicator measures life expectancy?\n"
     "  • what region is Kenya in?\n"
-    "  • what is the trend in GDP per capita in Ireland since 2015?  (premium)\n"
+    "  • what is the trend in GDP per capita in Ireland since 2015?  (not implemented here)\n"
     "Indicators are identified by their World Bank code (NY.GDP.PCAP.CD, SP.DYN.LE00.IN). "
     "I quote the Bank's own numbers and its last-updated date, and I never fill a missing "
     "year with zero."
@@ -665,102 +665,14 @@ def run_country_info(params: dict, client: WorldBankClient) -> dict:
     }
 
 
-def run_indicator_trend(params: dict, client: WorldBankClient, gateway: GatewayClient) -> dict:
-    """The premium trend. Nothing here reads the World Bank.
-
-    The gateway reads the series and does the arithmetic behind its licence check, so
-    a caller who has not paid gets the gateway's own message and no trend at all.
-    """
-    raw = params.get("countries") or params.get("country")
-    countries = [raw] if isinstance(raw, str) else (raw or [])
-    if not countries and params.get("country_name"):
-        code, problem = resolve_country(params["country_name"], None, client)
-        if problem:
-            return problem
-        countries = [code]
-    resolved = []
-    for one in countries:
-        code, problem = resolve_country(None, one, client)
-        if problem:
-            return problem
-        resolved.append(code)
-    try:
-        codes = client.check_country(resolved) if resolved else None
-        if codes is None:
-            raise ValueError("which country? Give me an ISO code, for example IE, US or WLD")
-        indicator = client.check_indicator(params.get("indicator"))
-        years = _trend_window(params.get("years"), client)
-        limit = client.check_limit(params.get("limit", 20))
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-    read, refused = premium_call(
-        gateway, GATEWAY_TOOL,
-        {"countries": codes, "indicator": indicator, "years": years, "limit": limit},
-        {"dataset": DATASET, "indicator": indicator, "countries": codes},
-    )
-    if refused:
-        return refused
-    if not isinstance(read, dict) or not read.get("series"):
-        return empty_premium_answer(
-            "The licence gateway answered without a trend, so there is nothing to report.",
-            {"dataset": DATASET, "indicator": indicator, "countries": codes},
-        )
-
-    series = read.get("series") or []
-    lines = [
-        f"{read.get('indicatorName')} ({indicator}) over {read.get('years')}, from "
-        f"{SOURCE_NAME} (last updated {read.get('lastUpdated') or 'not reported'}):"
-    ]
-    for row in series[:MAX_COMPARE]:
-        lines.append(
-            f"  • {row.get('country') or 'country not reported'}: {row.get('firstYear')} "
-            f"{_value_label(row.get('firstValue'), indicator)} -> {row.get('lastYear')} "
-            f"{_value_label(row.get('lastValue'), indicator)}"
-            + (f", {row.get('changePercent'):+.2f}% over {row.get('yearsSpanned')} year(s)"
-               if isinstance(row.get("changePercent"), (int, float)) else "")
-            + (f", {row.get('perYearPercent'):+.2f}% a year"
-               if isinstance(row.get("perYearPercent"), (int, float)) else "")
-        )
-        if row.get("direction"):
-            lines.append(f"      direction {row['direction']}, {row.get('risingYears')} up and "
-                         f"{row.get('fallingYears')} down of {row.get('observedYears')} year-on-year steps")
-        if row.get("best") or row.get("worst"):
-            best, worst = row.get("best") or {}, row.get("worst") or {}
-            lines.append(
-                f"      best {best.get('year')} at {_value_label(best.get('value'), indicator)}"
-                + (f", worst {worst.get('year')} at {_value_label(worst.get('value'), indicator)}"
-                   if worst else "")
-            )
-    gap_first, gap_last = read.get("gapFirst") or {}, read.get("gapLast") or {}
-    if gap_first and gap_last:
-        lines.append(
-            f"  • Widest gap in {gap_first.get('year')}: {gap_first.get('high')} "
-            f"{_value_label(gap_first.get('value'), indicator)} vs {gap_first.get('low')} "
-            f"{_value_label(gap_first.get('lowValue'), indicator)}"
-        )
-        lines.append(
-            f"  • Widest gap in {gap_last.get('year')}: {gap_last.get('high')} "
-            f"{_value_label(gap_last.get('value'), indicator)} vs {gap_last.get('low')} "
-            f"{_value_label(gap_last.get('lowValue'), indicator)}"
-        )
-    lines.append(
-        "\nComputed on the MCP gateway behind its licence check, from the World Bank's own series "
-        f"({DATASET}). Years the Bank published no value for are skipped, so a change here is "
-        "between two published years, not necessarily two consecutive ones."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": SOURCE,
-        "premium": True,
-        "indicator": indicator,
-        "indicator_name": read.get("indicatorName"),
-        "years": read.get("years"),
-        "last_updated": read.get("lastUpdated"),
-        "series": series,
-        "gap_first": gap_first,
-        "gap_last": gap_last,
+def run_indicator_trend(params: dict, client: WorldBankClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: indicator-trend — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class WorldBankAgent(SkillAgent):
@@ -771,7 +683,7 @@ class WorldBankAgent(SkillAgent):
         "country, the same indicator side by side for up to eight countries, a search across the "
         "1,500-indicator catalogue to find the code for a subject, and a country reference — plus a "
         "trend skill that turns a series into a change, a per-year rate and a best and worst year "
-        "on a licence-gated gateway. Every number is the Bank's own and every year it has not "
+        "on a removed hosted service. Every number is the Bank's own and every year it has not "
         "published is left out rather than filled in."
     )
     env_prefix = "WORLDBANK"
@@ -779,9 +691,9 @@ class WorldBankAgent(SkillAgent):
     card_skills = CARD_SKILLS
 
     def __init__(self, client: WorldBankClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or WorldBankClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

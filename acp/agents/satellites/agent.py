@@ -17,9 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, SatelliteData, SatelliteError,  # noqa: E402
                   SatelliteNotFound, canonical_group, object_id_from_text)
@@ -260,9 +258,7 @@ class SatellitesAgent(AcpAgent):
                  gateway=None) -> None:
         super().__init__(connection)
         self.data = data or SatelliteData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -313,7 +309,7 @@ class SatellitesAgent(AcpAgent):
                 overview = self.data.stations(params.get("group") or "stations")
                 body = render_stations(overview)
                 summary = f"{overview['group']}: {overview['count']} tracked object(s)"
-        except (SatelliteError, GatewayError, ValueError) as exc:
+        except (SatelliteError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read Celestrak's elements: {exc}")
             return STOP_END_TURN
@@ -327,45 +323,9 @@ class SatellitesAgent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        arguments: dict = {"group": str(params.get("group") or "stations")}
-        if params.get("object_id"):
-            arguments["object_id"] = str(params["object_id"])
-
-        data, refused = premium_call(self.gateway, "satellites_orbit_shell_board", arguments,
-                                    {"agent": "satellites"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or "shells" not in data:
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back an orbit board for that group.",
-                {"agent": "satellites"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read an orbit board out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_shell(data)
-        shells = data.get("shells") or []
-        summary = (f"{arguments['group']}: {_num(data.get('objects_read'))} element set(s), "
-                   f"{len(shells)} shell(s)")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message(f"\nSource: {data.get('source', DATASET)}, computed on the licence gateway. "
-                    "Altitude comes from Kepler's third law on the mean motion, so it is a mean "
-                    "altitude, not the height at any one moment: an eccentric orbit swings by "
-                    "twice its eccentricity in altitude. A shell is a grouping, not a rule - two "
-                    "satellites can be metres apart and still land in different shells.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

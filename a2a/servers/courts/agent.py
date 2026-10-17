@@ -4,12 +4,12 @@
   - case-lookup:      a case or docket by name or docket number (RECAP)
   - court-info:       what a court is — code, name, jurisdiction, parent court
   - judge-lookup:     judges by name, with the courts they sat on
-  - citation-census:  which authorities a topic's case law leans on (premium)
+  - citation-census:  which authorities a topic's case law leans on (not implemented here)
 
 The census is premium because it is the one question the free skills cannot
 answer: opinion-search returns cases in relevance order, and ranking a result set
 by how often the case law has been cited is a different answer entirely. The
-tally is computed on the licence gateway, so a caller who has not paid gets the
+tally is computed on a hosted service that was removed, so a caller who has not paid gets the
 gateway's own message and no ranking at all.
 """
 
@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     COURTS_DATASET,
@@ -111,9 +111,9 @@ CARD_SKILLS = [
             "Read a page of case law on a topic and report what it leans on: the cases cited most "
             "often across that page, the most common reporter citations and reporters, the courts the "
             "opinions came from, the year spread, and the total inbound citations. Premium: the tally "
-            "runs behind a licence check on the gateway."
+            "runs on a hosted service that was removed."
         ),
-        "tags": ["courts", "case law", "citations", "census", "analysis", "premium"],
+        "tags": ["courts", "case law", "citations", "census", "analysis",],
         "examples": [
             "which authorities does the privacy case law lean on?",
             "run a citation census on fourth amendment search results",
@@ -209,7 +209,7 @@ HELP = (
     "  • look up docket 20-5364 in the D.C. Circuit\n"
     "  • what court is cadc?\n"
     "  • look up the judge Ruth Bader Ginsburg\n"
-    "  • which authorities does the privacy case law lean on?  (premium)\n"
+    "  • which authorities does the privacy case law lean on?  (not implemented here)\n"
     "Opinions come back in relevance order and quote the reporter citation and the\n"
     "number of times a case has been cited. CourtListener's index is not every case\n"
     "ever filed, and I read only the first page of 20 results at a time."
@@ -517,89 +517,14 @@ def run_judge_lookup(params: dict, client: CourtListenerClient) -> dict:
     }
 
 
-def run_citation_census(params: dict, client: CourtListenerClient, gateway: GatewayClient) -> dict:
-    """The premium citation census. Nothing here reads CourtListener.
-
-    The gateway does the tally behind its licence check and hands back the
-    census, so a caller who has not paid gets the gateway's wording and no
-    ranking at all.
-    """
-    try:
-        query = client.check_query(params.get("query"))
-        court = client.check_court(params.get("court"))
-        filed_after = client.check_date(params.get("filed_after"), "filed_after")
-        filed_before = client.check_date(params.get("filed_before"), "filed_before")
-        limit = client.check_limit(params.get("limit", 20))
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-    arguments = {"query": query, "limit": limit}
-    if court:
-        arguments["court"] = court
-    if filed_after:
-        arguments["filed_after"] = filed_after
-    if filed_before:
-        arguments["filed_before"] = filed_before
-    read, refused = premium_call(gateway, GATEWAY_TOOL, arguments, {
-        "dataset": DATASET, "query": query, "court": court,
-    })
-    if refused:
-        return refused
-    if not isinstance(read, dict) or read.get("opinionsRead") is None:
-        return empty_premium_answer(
-            "The licence gateway answered without any citation census, so there is nothing to report.",
-            {"dataset": DATASET, "query": query},
-        )
-
-    authorities = read.get("authorities") or []
-    reporters = read.get("reporters") or []
-    lines = [
-        f"Citation census over CourtListener’s {read.get('opinionsRead')} opinion(s) on "
-        f"“{read.get('query')}”{_census_scope(read)}, page of {read.get('pageSize')} from "
-        f"{read.get('totalHits'):,} hit(s)."
-        if isinstance(read.get("totalHits"), int)
-        else f"Citation census over CourtListener’s {read.get('opinionsRead')} opinion(s) on "
-             f"“{read.get('query')}”{_census_scope(read)}."
-    ]
-    if authorities:
-        lines.append("  • Most cited cases in this page:")
-        for row in authorities[:MAX_LISTED]:
-            lines.append(
-                f"      {row.get('caseName') or 'untitled case'} — {_citations(row)}, cited "
-                f"{row.get('citeCount', 0)} time(s), {row.get('court') or 'court not reported'}, "
-                f"filed {row.get('dateFiled') or 'not reported'}"
-            )
-        if len(authorities) > MAX_LISTED:
-            lines.append(f"      ... {len(authorities) - MAX_LISTED} more in the artifact.")
-    else:
-        lines.append("  • CourtListener reports no citations for these opinions.")
-    if reporters:
-        lines.append("  • Reporter citations seen: " + ", ".join(
-            f"{row.get('name') or 'not reported'} ({row.get('count', 0)})" for row in reporters[:MAX_LISTED]
-        ))
-    lines.append(f"  • Courts in this page: {_counts(read.get('courts'))}")
-    lines.append(f"  • Years in this page: {_counts(read.get('years'))}")
-    lines.append(f"  • Inbound citations across the page: {read.get('totalCiteCount', 0)}.")
-    lines.append(
-        "\nTallied on the MCP gateway behind its licence check, from CourtListener's search page "
-        f"({DATASET}). Citation counts are how often the whole database cites a case, not how often "
-        "these particular opinions cite each other, and CourtListener's index is not every case filed."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": SOURCE,
-        "premium": True,
-        "query": read.get("query"),
-        "court": read.get("court"),
-        "opinions_read": read.get("opinionsRead"),
-        "page_size": read.get("pageSize"),
-        "total_hits": read.get("totalHits"),
-        "authorities": authorities,
-        "reporters": reporters,
-        "courts": read.get("courts"),
-        "years": read.get("years"),
-        "total_cite_count": read.get("totalCiteCount"),
+def run_citation_census(params: dict, client: CourtListenerClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: citation-census — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class CourtListenerAgent(SkillAgent):
@@ -609,16 +534,16 @@ class CourtListenerAgent(SkillAgent):
         "Read-only agent over CourtListener's case law: published opinions on a topic with their "
         "reporter citations and inbound cite counts, RECAP docket lookups, the court list, and judge "
         "profiles — plus a citation census that tallies what a topic's case law leans on, computed on "
-        "a licence-gated gateway. Every answer is read live from CourtListener."
+        "a removed hosted service. Every answer is read live from CourtListener."
     )
     env_prefix = "COURTS"
     datasets = (DATASET, COURTS_DATASET)
     card_skills = CARD_SKILLS
 
     def __init__(self, client: CourtListenerClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or CourtListenerClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

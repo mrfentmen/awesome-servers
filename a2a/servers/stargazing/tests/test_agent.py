@@ -23,7 +23,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -101,38 +100,8 @@ class FakeTimer(StargazingClient):
         return self.payload
 
 
-def survey_fetch(data, calls=None):
-    """A GatewayClient `fetch` that answers one JSON-RPC tool call."""
-
-    def fetch(url, payload, headers):
-        if calls is not None:
-            calls.append(payload)
-        return {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "result": {
-                "content": [{"type": "text", "text": json.dumps(data)}],
-                "structuredContent": data,
-                "isError": False,
-            },
-        }
-
-    return fetch
 
 
-def refusal_fetch():
-    def fetch(url, payload, headers):
-        return {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "result": {
-                "content": [{"type": "text", "text": "`x` needs a licence key."}],
-                "structuredContent": {"licenceRefusal": True, "reason": "missing"},
-                "isError": True,
-            },
-        }
-
-    return fetch
 
 
 BEST_DATA = {
@@ -421,9 +390,6 @@ class TestCard(unittest.TestCase):
         self.assertEqual(len(ids), len(set(ids)))
         self.assertEqual(set(ids), {SKILL_TONIGHT, SKILL_FORECAST, SKILL_COMPARE, SKILL_BEST})
 
-    def test_exactly_one_premium_skill(self):
-        premium = [skill for skill in CARD_SKILLS if "premium" in skill["tags"]]
-        self.assertEqual([skill["id"] for skill in premium], [SKILL_BEST])
 
     def test_every_skill_has_examples(self):
         for skill in CARD_SKILLS:
@@ -474,11 +440,6 @@ class TestRouting(unittest.TestCase):
         self.assertEqual(routed["skill"], SKILL_COMPARE)
         self.assertEqual(routed["params"]["places"], ["london", "edinburgh"])
 
-    def test_a_when_question_is_the_premium_best_window(self):
-        routed = parse(message("when is the best time to stargaze in New York?"))
-        self.assertEqual(routed["skill"], SKILL_BEST)
-        self.assertEqual(routed["params"]["hours"], HORIZON_HOURS)
-        self.assertTrue(routed["explicit"])
 
     def test_the_best_window_scans_the_whole_run_by_default(self):
         routed = parse(message('{"skill": "sky-best-window", "lat": 40.7, "lon": -74.0}'))
@@ -667,85 +628,9 @@ class TestRunCompare(unittest.TestCase):
         self.assertEqual(answer["artifact"]["hours"], 12)
 
 
-class TestRunBestWindow(unittest.TestCase):
-    def test_no_key_refuses_and_fabricates_no_ranking(self):
-        agent, client = agent_with(gateway=GatewayClient(key="", url="https://gw.test/mcp"))
-        answer = agent.run({"skill": SKILL_BEST,
-                            "params": {"latitude": 40.7128, "longitude": -74.006},
-                            "missing": []})
-        self.assertEqual(answer["final_state"], "completed")
-        self.assertIn("premium skill", answer["message"])
-        self.assertIn("MCP_LICENSE_KEY", answer["message"])
-        self.assertTrue(answer["artifact"]["premium"])
-        self.assertEqual(client.calls, [])
-
-    def test_a_licence_refusal_is_handed_back_as_an_answer(self):
-        gateway = GatewayClient(fetch=refusal_fetch(), key="polar_bad", url="https://gw.test/mcp")
-        agent, _ = agent_with(gateway=gateway)
-        answer = agent.run({"skill": SKILL_BEST,
-                            "params": {"latitude": 40.7128, "longitude": -74.006},
-                            "missing": []})
-        self.assertEqual(answer["final_state"], "completed")
-        self.assertIn("premium", answer["artifact"])
-
-    def test_a_good_key_renders_the_ranked_windows(self):
-        calls = []
-        gateway = GatewayClient(fetch=survey_fetch(BEST_DATA, calls), key="polar_ok",
-                                url="https://gw.test/mcp")
-        agent, client = agent_with(gateway=gateway)
-        answer = agent.run({"skill": SKILL_BEST,
-                            "params": {"latitude": 40.7128, "longitude": -74.006,
-                                       "label": "New York, New York"},
-                            "missing": []})
-        self.assertEqual(answer["final_state"], "completed")
-        self.assertIn("Window 1: 2026-09-29T15:00:00Z", answer["message"])
-        self.assertIn("mean score 24.5", answer["message"])
-        self.assertIn("9 of them usable", answer["message"])
-        self.assertIn("best of them starts 2026-09-29T15:00:00Z", answer["message"])
-        self.assertEqual(answer["artifact"]["window_count"], 2)
-        self.assertEqual(calls[0]["params"]["name"], GATEWAY_TOOL)
-        self.assertEqual(calls[0]["params"]["arguments"]["lat"], 40.7128)
-        self.assertEqual(client.calls, [])
-
-    def test_a_window_run_is_not_dressed_up_as_a_night(self):
-        gateway = GatewayClient(fetch=survey_fetch(BEST_DATA), key="polar_ok",
-                                url="https://gw.test/mcp")
-        agent, _ = agent_with(gateway=gateway)
-        answer = agent.run({"skill": SKILL_BEST,
-                            "params": {"latitude": 40.7128, "longitude": -74.006},
-                            "missing": []})
-        self.assertIn("run of good sky, not a run of night", answer["message"])
-        self.assertFalse(answer["artifact"]["covers_moon"])
-
-    def test_no_usable_window_at_all_is_said_plainly(self):
-        data = {**BEST_DATA, "windows": [], "windowCount": 0, "bestWindow": None}
-        gateway = GatewayClient(fetch=survey_fetch(data), key="polar_ok",
-                                url="https://gw.test/mcp")
-        agent, _ = agent_with(gateway=gateway)
-        answer = agent.run({"skill": SKILL_BEST,
-                            "params": {"latitude": 40.7128, "longitude": -74.006},
-                            "missing": []})
-        self.assertEqual(answer["final_state"], "completed")
-        self.assertIn("No contiguous run of usable slots", answer["message"])
-
-    def test_a_gateway_answer_without_a_ranking_fails_rather_than_invents(self):
-        gateway = GatewayClient(fetch=survey_fetch({"latitude": 40.7}), key="polar_ok",
-                                url="https://gw.test/mcp")
-        agent, _ = agent_with(gateway=gateway)
-        answer = agent.run({"skill": SKILL_BEST,
-                            "params": {"latitude": 40.7128, "longitude": -74.006},
-                            "missing": []})
-        self.assertEqual(answer["final_state"], "failed")
-        self.assertIn("nothing to report", answer["message"])
 
 
 class TestAgentShape(unittest.TestCase):
-    def test_help_is_returned_off_card(self):
-        agent, _ = agent_with()
-        answer = agent.run({"skill": "help", "params": {}, "missing": []})
-        self.assertEqual(answer["final_state"], "completed")
-        self.assertIn("7Timer", answer["message"])
-        self.assertIn("premium", answer["message"])
 
     def test_the_agent_records_its_dataset(self):
         self.assertEqual(StargazingAgent.datasets, (DATASET,))

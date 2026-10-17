@@ -25,8 +25,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (  # noqa: E402
     DATASET,
@@ -41,7 +40,7 @@ from data import (  # noqa: E402
 
 HELP = (
     "I watch a live feed and push updates while you keep the turn open. Ask me:\n"
-    "  • week event digest at 37.77,-122.42 magnitude 4 (premium; one answer)\n"
+    "  • week event digest at 37.77,-122.42 magnitude 4 (not implemented here)\n"
     "  • watch the earthquakes\n"
     "  • watch the aurora for 4 rounds every 30 seconds\n"
     "  • watch the space station every 5 seconds\n"
@@ -153,10 +152,10 @@ class WatchAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: WatchData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or WatchData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -172,7 +171,7 @@ class WatchAgent(AcpAgent):
             tool = "call_watch_week_digest"
             ctx.tool_call(tool, "Build one historical event digest", kind="fetch", name=skill,
                           raw_input=dict(params))
-            if not ctx.ask_permission(tool, "Allow Watch to read a historical digest from the licence gateway?",
+            if not ctx.ask_permission(tool, "Allow Watch to read a historical digest?",
                                       remember_key=PERMISSION_KEY):
                 ctx.tool_call_update(tool, status="failed", content=ctx.text_content("permission denied"))
                 ctx.message("I need permission to read the historical digest first.")
@@ -180,7 +179,7 @@ class WatchAgent(AcpAgent):
             ctx.tool_call_update(tool, status="in_progress")
             try:
                 answer, artifact = self._week_digest(params)
-            except (ValueError, GatewayError) as exc:
+            except (ValueError) as exc:
                 ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
                 ctx.message(f"I could not read the historical digest: {exc}")
                 return STOP_END_TURN
@@ -244,53 +243,9 @@ class WatchAgent(AcpAgent):
         return STOP_END_TURN
 
     def _week_digest(self, params: dict) -> tuple[str, dict]:
-        """Get a one-shot historical digest; the existing watch loop is separate."""
-        context = {"agent": "watch", "skill": "watch-week-digest"}
-        if "latitude" not in params or "longitude" not in params:
-            return ("Give an explicit point: week event digest at 37.77,-122.42 magnitude 4.",
-                    {**context, "summary": "explicit point required"})
-        args = {"latitude": float(params["latitude"]), "longitude": float(params["longitude"]),
-                "min_magnitude": float(params.get("min_magnitude", 4)),
-                "radius_km": float(params.get("radius_km", 500)),
-                "kp_threshold": float(params.get("kp_threshold", 5))}
-        if params.get("end_date"):
-            args["end_date"] = str(params["end_date"])
-        data, refused = premium_call(self.gateway, "watch_week_event_digest", args, context)
-        if refused:
-            return refused
-        daily = data.get("daily") if isinstance(data, dict) else None
-        if (not isinstance(daily, list) or len(daily) != 7 or
-                not data.get("from") or not data.get("to") or
-                any(type(data.get(k)) is not int or data[k] < 0
-                    for k in ("quakeCount", "kpIntervalsAboveThreshold", "missingKpIntervals")) or
-                any(not isinstance(row, dict) or not row.get("date") or
-                    type(row.get("quakeCount")) is not int or type(row.get("missingKpIntervals")) is not int
-                    or type(row.get("kpIntervalsAboveThreshold")) is not int for row in daily)):
-            return empty_premium_answer("The gateway returned no readable seven-day event digest.", context)
-        lines = [f"Week event digest {data['from']} through {data['to']} (UTC): "
-                 f"{data['quakeCount']} quake(s) at/above M{args['min_magnitude']:g} "
-                 f"within {args['radius_km']:g} km of {args['latitude']},{args['longitude']}.",
-                 f"Global Kp: {data['kpIntervalsAboveThreshold']} three-hour interval(s) "
-                 f"at/above {args['kp_threshold']:g}; {data['missingKpIntervals']} interval(s) missing."]
-        for row in daily:
-            peak = row.get("maxKp")
-            lines.append(f"{row['date']}: {row['quakeCount']} quake(s), "
-                         f"Kp peak {peak if peak is not None else 'not reported'}, "
-                         f"{row['kpIntervalsAboveThreshold']} above-threshold interval(s), "
-                         f"{row['missingKpIntervals']} missing.")
-        for event in data.get("kpEvents", []):
-            if isinstance(event, dict):
-                lines.append(f"Kp event: intervals {event.get('firstInterval')} through "
-                             f"{event.get('lastInterval')}; {event.get('observedHours')} observed "
-                             f"hours, peak {event.get('peakKp')}.")
-        largest = data.get("largestQuake")
-        if isinstance(largest, dict):
-            lines.append(f"Largest quake: M{largest.get('magnitude')} {largest.get('place')} "
-                         f"at {largest.get('time')} ({largest.get('id')}).")
-        lines.append(data.get("note") or "Kp is planetary; missing intervals are not zeros.")
-        lines.append("Source: USGS + NOAA SWPC, aggregated on the licence gateway.")
-        return "\n".join(lines), {**context, "premium": True, "summary": "premium seven-day event digest",
-                                  "digest": data}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: week-digest — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         """Nothing to clean up: the loop sleeps on the session's cancel event itself."""

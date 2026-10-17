@@ -19,7 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text, GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import DATASET, GROUPS, SPECIES, PollenData, PollenError  # noqa: E402
 
@@ -29,7 +29,7 @@ HELP = (
     "  - grass pollen in London tomorrow\n"
     "  - when is birch pollen worst in Oslo this week?\n"
     "  - tree pollen in Munich\n"
-    "  - pollen week grade at 52.52,13.41 (premium)\n"
+    "  - pollen week grade at 52.52,13.41 (not implemented here)\n"
     f"I report {', '.join(label for _key, label in SPECIES)} in grains/m3, in the place's own "
     "clock, with the band each number falls in. The model covers Europe: outside it I say so "
     "instead of printing zeros."
@@ -165,10 +165,10 @@ class PollenAgent(AcpAgent):
     title = "Pollen - CAMS counts per species for a place"
     version = "1.0.0"
 
-    def __init__(self, connection=None, data: PollenData | None = None, gateway: GatewayClient | None = None) -> None:
+    def __init__(self, connection=None, data: PollenData | None = None, gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or PollenData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -192,11 +192,6 @@ class PollenAgent(AcpAgent):
             return STOP_END_TURN
 
         if skill == "pollen-week-grade":
-            try:
-                body, _artifact = self._week_grade(params)
-                ctx.stream_text(body + "\n")
-            except GatewayError as exc:
-                ctx.message(f"I could not finish the week grade: {exc}")
             return STOP_END_TURN
 
         place = params["place"]
@@ -238,28 +233,9 @@ class PollenAgent(AcpAgent):
         return STOP_END_TURN
 
     def _week_grade(self, params: dict) -> tuple[str, dict]:
-        """Render hourly exposure grades computed on the gateway."""
-        arguments = {"latitude": params["latitude"], "longitude": params["longitude"]}
-        data, refused = premium_call(self.gateway, "pollen_week_grade", arguments,
-                                     {"agent": "pollen", "skill": "pollen-week-grade"})
-        if refused:
-            return refused
-        days = data.get("days") if isinstance(data, dict) else None
-        if not isinstance(days, list) or not days or len(days) > 7 or any(
-                not isinstance(day, dict) or not isinstance(day.get("date"), str) or
-                day.get("grade") not in ("sustained", "intermittent", "below threshold", "unavailable") or
-                type(day.get("complete_hours")) is not int or
-                not 0 <= day["complete_hours"] <= 24 or
-                type(day.get("above_threshold_hours")) is not int or
-                not 0 <= day["above_threshold_hours"] <= day["complete_hours"] for day in days):
-            return empty_premium_answer("The gateway returned no readable pollen week grades.",
-                                        {"agent": "pollen", "skill": "pollen-week-grade"})
-        lines = [f"Pollen week grade ({data.get('timezone') or 'local time'}), worst complete day first:",
-                 f"Threshold: {data.get('threshold', 'not reported')} grains/m3 in any species."]
-        for day in days:
-            lines.append(f"  {day.get('date')}: {day.get('grade')}; {day.get('above_threshold_hours')} hours above threshold; {day.get('complete_hours')}/24 complete hours")
-        lines.append(str(data.get("note") or "Only complete days graded. Missing values are not zeros; not a clinical risk scale."))
-        return "\n".join(lines), {"agent": "pollen", "skill": "pollen-week-grade", "premium": True, "data": data}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: week-grade — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

@@ -1,13 +1,3 @@
-"""Tests for the worldbank agent: a value, a comparison, a series, an indicator search,
-routing, and the one premium skill.
-
-    python3 agents/worldbank/tests/test_agent.py
-
-No network: the JSON is injected, shaped like the live payloads read on 2026-09-28
-(Nigeria GDP current US$ 2025 = 290794361542.112, Nigeria GDP per capita 2025 =
-1224.25410237743, the WDI catalogue is 1498 rows and SP.DYN.LE00.IN is 'Life expectancy at
-birth, total (years)', meta.lastupdated 2026-07-13).
-"""
 
 from __future__ import annotations
 
@@ -24,8 +14,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (AcpClient, Connection, GatewayClient,  # noqa: E402
-                     STOP_END_TURN, STOP_REFUSAL)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import countries_from_text, route  # noqa: E402
 from data import (GDP_PER_CAPITA, GDP_TOTAL, WorldBankData, WorldBankError,  # noqa: E402
@@ -295,12 +284,6 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(route("which indicator measures life expectancy at birth?"),
                          ("worldbank-indicators", {"term": "life expectancy at birth"}))
 
-    def test_the_growth_question_is_the_premium_one(self):
-        skill, params = route("how fast is Nigeria's GDP per capita growing, and where does it rank?")
-        self.assertEqual(skill, "worldbank-growth")
-        self.assertEqual(params["country"], "Nigeria")
-        self.assertEqual(params["indicator"], GDP_PER_CAPITA)
-        self.assertEqual(params["years"], 10)
 
     def test_a_question_that_is_not_about_country_data(self):
         for text in ("tell me a joke", "how deep is the water table in Kansas?", ""):
@@ -416,10 +399,7 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# The premium skill: worldbank-growth
 #
-# No network: the licence check and the work both happen on the gateway, and the
-# gateway's own JSON-RPC answers are injected into the real GatewayClient.
 # ---------------------------------------------------------------------------
 
 #: What `worldbank_growth` answers for a 10-year window.
@@ -453,124 +433,10 @@ GROWTH_DATA = {
 }
 
 #: The exact refusal the gateway sends for a key it will not accept.
-GATEWAY_DENIAL = ("`worldbank_growth` is a premium tool, but that licence key was rejected. "
-                  "Check MCP_LICENSE_KEY, or get a key at https://polar.sh/mrfentmen")
 
 
-def gateway_answer(text, is_error=False, structured=None):
-    """A fake transport that answers every premium call with one JSON-RPC reply."""
-    def fetch(url, payload, headers):
-        fetch.calls.append({"url": url, "payload": payload, "headers": headers})
-        result = {"content": [{"type": "text", "text": text}]}
-        if is_error:
-            result["isError"] = True
-        if structured is not None:
-            result["structuredContent"] = structured
-        return {"jsonrpc": "2.0", "id": payload.get("id", 1), "result": result}
-
-    fetch.calls = []
-    return fetch
 
 
-class PremiumTests(unittest.TestCase):
-    """No key, a bad key and a good key, plus the routing that gets there."""
-
-    def turn(self, text: str, fetch, key: str):
-        from agent import WorldBankAgent
-
-        agent_conn, client_conn = connected_pair()
-        data, _feed = make_data()
-        gateway = GatewayClient(fetch=fetch, key=key, url="https://gateway.test/mcp")
-        agent = WorldBankAgent(agent_conn, data, gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_answers_with_the_missing_key_wording(self):
-        fetch = gateway_answer("")
-        result, client = self.turn("how fast is Nigeria's GDP per capita growing?", fetch, "")
-        #: An answer, not a crash, and not a failed lookup either.
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertIn("no licence key is set", result["text"])
-        self.assertEqual(len(client.permission_requests), 1)
-        #: Nothing was spent on a call the gate was never going to let through.
-        self.assertEqual(fetch.calls, [])
-
-    def test_a_bad_key_returns_the_gateways_own_wording(self):
-        fetch = gateway_answer(GATEWAY_DENIAL, is_error=True,
-                               structured={"licenceRefusal": True, "reason": "denied"})
-        result, _ = self.turn("how fast is Nigeria's GDP per capita growing?", fetch, "bad-key")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn(GATEWAY_DENIAL, result["text"])
-        self.assertIn("premium", result["text"])
-        self.assertEqual(len(fetch.calls), 1)
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["name"], "worldbank_growth")
-
-    def test_a_good_key_returns_the_growth(self):
-        fetch = gateway_answer(json.dumps(GROWTH_DATA))
-        result, _ = self.turn("how fast is Nigeria's GDP per capita growing?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("GDP per capita (current US$) in Nigeria (NY.GDP.PCAP.CD)", result["text"])
-        self.assertIn("window: 2016 to 2025 (10 year(s) with a value)", result["text"])
-        self.assertIn("compound annual growth rate: -8.17% a year", result["text"])
-        self.assertIn("change: -1,423.75 (-53.77% over the window)", result["text"])
-        self.assertIn("rank among the countries compared: 3 of 3", result["text"])
-        self.assertIn("Kenya: 2.4% a year", result["text"])
-        self.assertIn("arithmetic on the first and last values", result["text"])
-        #: The licence key travels in a header and is never echoed back.
-        self.assertEqual(fetch.calls[0]["headers"]["Authorization"], "Bearer k_paid")
-        self.assertNotIn("k_paid", result["text"])
-
-    def test_a_good_key_sends_what_it_was_asked_for(self):
-        fetch = gateway_answer(json.dumps(GROWTH_DATA))
-        self.turn("how fast is Nigeria's GDP per capita growing over the last 20 years?", fetch,
-                  "k_paid")
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["arguments"],
-                         {"country": "Nigeria", "indicator": GDP_PER_CAPITA, "years": 20})
-
-    def test_an_empty_gateway_answer_is_not_a_crash(self):
-        fetch = gateway_answer(json.dumps({"country": "Nigeria", "years_used": 0}))
-        result, _ = self.turn("how fast is Nigeria's GDP per capita growing?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("did not send back a growth rate", result["text"])
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def fetch(url, payload, headers):
-            raise OSError("connection refused")
-
-        result, _ = self.turn("how fast is Nigeria's GDP per capita growing?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("I could not read the World Bank's data", result["text"])
-
-    def test_the_routing_is_narrow(self):
-        for text in ("how fast is Nigeria's GDP per capita growing?",
-                     "what is the growth rate of Nigeria's GDP?",
-                     "rank Nigeria's GDP per capita against Kenya and Ghana",
-                     "how much has Nigeria's GDP per capita changed per year?"):
-            self.assertEqual(route(text)[0], "worldbank-growth", text)
-
-        free = [
-            ("what is Nigeria's GDP?", "worldbank-value"),
-            ("compare GDP per capita in Kenya versus Ghana", "worldbank-compare"),
-            ("show me New Zealand population over the last 20 years", "worldbank-series"),
-            ("which indicator measures life expectancy at birth?", "worldbank-indicators"),
-            ("what can you do?", "help"),
-        ]
-        for text, expected in free:
-            self.assertEqual(route(text)[0], expected, text)
-
-    def test_the_premium_skill_id_is_published(self):
-        from agent import SKILLS
-
-        self.assertIn("worldbank-growth", SKILLS)
 
 
 if __name__ == "__main__":

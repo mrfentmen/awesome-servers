@@ -21,17 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (  # noqa: E402
-    STOP_END_TURN,
-    STOP_REFUSAL,
-    AcpAgent,
-    GatewayClient,
-    GatewayError,
-    SessionContext,
-    empty_premium_answer,
-    premium_call,
-    prompt_text,
-)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (  # noqa: E402
     DATASET,
@@ -54,7 +44,7 @@ HELP = (
     "Each answer carries the day's title, its credit line and NASA's own explanation. Days NASA "
     "published as a video are sent as their thumbnail, and the answer says so. The archive starts "
     "on 1995-06-16, so a day before that has no picture to show.\n"
-    "Ask me for a span of days (premium, digested on the licence gateway) to browse a whole run of "
+    "Ask me for a span of days (premium, digested on a hosted service that was removed) to browse a whole run of "
     "them at once:\n"
     "  - what did APOD publish around the Webb launch?\n"
     "  - every APOD between 2022-07-12 and 2022-07-16\n"
@@ -240,10 +230,10 @@ class ApodAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: ApodData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or ApodData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -342,91 +332,34 @@ class ApodAgent(AcpAgent):
         ctx.message(note)
         return STOP_END_TURN
 
-    # -- premium: a span of days -------------------------------------------
+    # -- a span of days -------------------------------------------
 
     def _run_archive(self, ctx: SessionContext, params: dict) -> str:
         """Browse a run of days at once.
 
-        The digest is built on the licence gateway, so the list cannot be reproduced from
+        The digest is built on a hosted service that was removed, so the list cannot be reproduced from
         this repository. A missing or rejected key is a finished answer, not a failure.
         """
         start, end = params["start_date"], params["end_date"]
         tool = "apod_archive"
         ctx.tool_call(tool, f"Digest APOD from {start} to {end}", kind="fetch",
                       name="apod-archive", raw_input=dict(params))
-        if not ctx.ask_permission(tool, "Allow APOD to digest that range on the licence gateway?",
+        if not ctx.ask_permission(tool, "Allow APOD to digest that range on a hosted service that was removed?",
                                   remember_key=PERMISSION_KEY):
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content("permission denied"))
             ctx.message("I need permission to ask the licence gateway for that range first.")
             return STOP_REFUSAL
         ctx.tool_call_update(tool, status="in_progress")
 
-        try:
-            answer, artifact = self._archive(start, end)
-        except GatewayError as exc:
-            ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
-            ctx.message(f"I could not finish that on the licence gateway: {exc}")
-            return STOP_END_TURN
         ctx.check_cancelled()
         ctx.tool_call_update(tool, status="completed", content=ctx.text_content(artifact["summary"]))
         ctx.stream_text(answer)
         return STOP_END_TURN
 
     def _archive(self, start: str, end: str) -> tuple[str, dict]:
-        data, refused = premium_call(
-            self.gateway,
-            "apod_archive_digest",
-            {"start_date": start, "end_date": end},
-            {"agent": "apod", "skill": "apod-archive"},
-        )
-        if refused:
-            return refused
-        days = data.get("days") if isinstance(data, dict) else None
-        if not isinstance(days, list) or not days:
-            return empty_premium_answer(
-                f"The licence gateway sent back no days for {start} to {end}, so I have nothing "
-                "to list. The archive starts on 1995-06-16.",
-                {"agent": "apod", "skill": "apod-archive", "dataset": DATASET},
-            )
-
-        def shown(value, fallback: str = "not reported") -> str:
-            return fallback if value is None or value == "" else str(value)
-
-        kinds = ", ".join(f"{count} {kind}" for kind, count in sorted((data.get("byMediaType") or {}).items()))
-        artifact = {
-            "summary": (f"premium digest {start} to {end}: {data.get('daysPublished')} day(s) published, "
-                        f"{len(days)} listed, {kinds or 'no media types'}"),
-            "dataset": DATASET,
-            "premium": True,
-            "start_date": start,
-            "end_date": end,
-            "days_published": data.get("daysPublished"),
-            "days_returned": len(days),
-            "truncated": data.get("truncated"),
-            "by_media_type": data.get("byMediaType"),
-            "days": days,
-        }
-        lines = [f"Premium digest of APOD from {start} to {end}: "
-                 f"{shown(data.get('daysPublished'), '0')} day(s) published, "
-                 f"{len(days)} listed ({kinds or 'no media types'})."]
-        for day in days[:30]:
-            lines.append(f"  - {shown(day.get('date'))}: {shown(day.get('title'))} "
-                         f"[{shown(day.get('media_type'))}]")
-            credit = day.get("credit")
-            if credit:
-                lines.append(f"      {credit}")
-            if day.get("summary"):
-                lines.append(f"      {day['summary']}")
-        if len(days) > 30:
-            lines.append(f"  - ... {len(days) - 30} more day(s) in the artifact")
-        if data.get("truncated"):
-            lines.append("The range was longer than one digest, so this is a part of it - "
-                         "ask me for the rest.")
-        lines.append(
-            f"\nSource: {DATASET}, digested on the licence gateway. This is NASA's index of the "
-            "run, not the pictures: ask me for any one of these days and I will send that image."
-        )
-        return "\n".join(lines), artifact
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: archive — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

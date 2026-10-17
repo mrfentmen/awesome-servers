@@ -6,7 +6,7 @@
   - launch-details:    one launch in full - rocket, pad, agency, missions
   - launch-board:      a whole window as a picture: totals, busiest day, by agency
 
-Premium: `launch-board` runs on the licence gateway. A busy week is more than one
+Premium: `launch-board` runs on a hosted service that was removed. A busy week is more than one
 page of the API, so the sweep and the aggregation happen there, behind the
 licence check, and a caller who has not paid gets the gateway's message and no
 counts at all. Every other skill reads the Launch Library directly and stays free.
@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     CLOSED_STATUSES,
@@ -116,10 +116,10 @@ CARD_SKILLS = [
         "description": (
             "A whole date range read as a picture rather than a list: how many launches are in it, "
             "which day is busiest, which agency flies the most, how the missions divide, and how "
-            "tightly the launches are stacked together. Premium: it runs behind a licence check on "
+            "tightly the launches are stacked together. Premium: it runs on a hosted service that was removed on "
             "the gateway, which does the paginated sweep and the counting."
         ),
-        "tags": ["launches", "space", "board", "cadence", "summary", "premium"],
+        "tags": ["launches", "space", "board", "cadence", "summary",],
         "examples": [
             "how busy is the launch calendar this month?",
             "how many launches are there between 2026-10-01 and 2026-10-31?",
@@ -504,86 +504,14 @@ def run_details(params: dict, client: LaunchLibraryClient) -> dict:
     }
 
 
-def run_board(params: dict, client: LaunchLibraryClient, gateway: GatewayClient) -> dict:
-    """The premium launch board. Nothing here counts: the gateway does.
-
-    The free skills read one page and list it. This answers the question that
-    needs the whole window counted, and that sweep is many more requests than a
-    listing, so it happens on the gateway behind its licence check.
-    """
-    start, end, problem = _resolve_window(client, params)
-    if problem:
-        return problem
-    arguments = {"start": start, "end": end}
-    read, refused = premium_call(gateway, GATEWAY_TOOL, arguments, {
-        "dataset": DATASET, "start": start, "end": end,
-    })
-    if refused:
-        return refused
-    if not isinstance(read, dict) or not isinstance(read.get("byDay"), list):
-        return empty_premium_answer(
-            "The licence gateway answered without a launch board, so there is nothing to report.",
-            {"dataset": DATASET, "start": start, "end": end},
-        )
-
-    lines = [
-        f"Launch board for {start[:10]} to {end[:10]}: {read.get('totalLaunches')} launch(es) over "
-        f"{read.get('days')} day(s), read in {read.get('pages')} page(s)"
-        + (", count truncated" if read.get("truncated") else "") + ".",
-    ]
-    for day in read.get("byDay") or []:
-        names = ", ".join(str(row.get("name")) for row in (day.get("launches") or [])[:3])
-        # The gateway caps how many launches it names per day and reports what it
-        # left out, so the count is taken from there rather than guessed.
-        more = day.get("launchesTruncated") or max(0, len(day.get("launches") or []) - 3)
-        lines.append(f"  • {day.get('date')}: {day.get('count')} launch(es)"
-                     + (f" — {names}" if names else "")
-                     + (f" (+{more} more)" if more > 0 else ""))
-    agencies = read.get("byAgency") or []
-    if agencies:
-        lines.append("  • By agency: " + ", ".join(
-            f"{row.get('name')} {row.get('count')}" for row in agencies[:8]))
-    types = read.get("byMissionType") or []
-    if types:
-        lines.append("  • By mission type: " + ", ".join(
-            f"{row.get('name')} {row.get('count')}" for row in types[:8]))
-    busiest = read.get("busiestDay")
-    if busiest:
-        lines.append(f"  • Busiest day {busiest.get('date')} with {busiest.get('count')} launch(es).")
-    tightest = read.get("tightestTurnaround")
-    if tightest:
-        lines.append(
-            f"  • Tightest turnaround {tightest.get('hours')} h: {tightest.get('first')} then "
-            f"{tightest.get('second')}.")
-        lines.append(
-            f"  • {read.get('openCount')} still to fly, {read.get('heldCount')} in hold, "
-            f"{read.get('closedCount')} already flown or scrubbed.")
-    lines.append(
-        "\nCounted on the MCP gateway behind its licence check, from the SpaceDevs Launch Library "
-        f"({DATASET}). A NET is the library's own estimate and it publishes a precision for each "
-        "launch, so read the busiest day as a rough shape rather than a timetable."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": SOURCE,
-        "premium": True,
-        "start": start,
-        "end": end,
-        "days": read.get("days"),
-        "total_launches": read.get("totalLaunches"),
-        "pages": read.get("pages"),
-        "truncated": read.get("truncated"),
-        "by_day": read.get("byDay"),
-        "by_agency": agencies,
-        "by_mission_type": types,
-        "busiest_day": busiest,
-        "tightest_turnaround": tightest,
-        "open_count": read.get("openCount"),
-        "held_count": read.get("heldCount"),
-        "closed_count": read.get("closedCount"),
-        "mean_per_active_day": read.get("meanPerActiveDay"),
+def run_board(params: dict, client: LaunchLibraryClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: board — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class LaunchLibraryAgent(SkillAgent):
@@ -601,9 +529,9 @@ class LaunchLibraryAgent(SkillAgent):
     card_skills = CARD_SKILLS
 
     def __init__(self, client: LaunchLibraryClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or LaunchLibraryClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

@@ -25,7 +25,7 @@ for path in (str(REPO_ROOT), str(BRIDGE_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN
 
 from bridge import BridgeAgent, RemoteSkill, parse_endpoints  # noqa: E402
 

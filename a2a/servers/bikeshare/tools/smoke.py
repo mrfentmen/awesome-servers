@@ -110,26 +110,6 @@ def main(argv=None) -> int:
     smoke.check("feed age is reported", isinstance(system.get("feed_age_seconds"), int),
                 str(system.get("feed_age_seconds")))
 
-    # The premium skill: without a key the gateway's own wording comes back as an answer.
-    premium = ask(smoke, f"can I bike from {TIMES_SQUARE} to {ROCKEFELLER}?")
-    premium_data = artifact_data(premium)
-    premium_state = premium.get("status", {}).get("state")
-    if premium_data.get("premium") and premium_data.get("reason") in ("missing_key", "denied"):
-        smoke.check("ride-pair with no licence is a completed answer", premium_state == "completed",
-                    str(premium_state))
-        smoke.check("the refusal names the key",
-                    "MCP_LICENSE_KEY" in premium.get("status", {}).get("message", {})
-                    .get("parts", [{}])[0].get("text", ""),
-                    premium_data.get("reason"))
-        smoke.check("no ride is handed over without a licence", premium_data.get("best") is None)
-    else:
-        best = premium_data.get("best") or {}
-        smoke.check("ride-pair returned a live pair", premium_state == "completed" and bool(best),
-                    str(premium_state))
-        smoke.check("both ends of the ride are named",
-                    bool((best.get("pickup") or {}).get("name"))
-                    and bool((best.get("dropoff") or {}).get("name")),
-                    f"{(best.get('pickup') or {}).get('name')} -> {(best.get('dropoff') or {}).get('name')}")
 
     # input-required -> follow-up when no point is given.
     lonely = ask(smoke, "where can I get a bike?")

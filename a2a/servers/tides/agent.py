@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     DATASET,
@@ -127,10 +127,10 @@ CARD_SKILLS = [
         "description": (
             "The next days at a station read as windows when the water is at or below a height you "
             "can work with: when each window starts and ends, how many hours it lasts, the lowest "
-            "water in it and when that lands, and how many hours in total are low enough. Premium: "
-            "it runs behind a licence check."
+            "water in it and when that lands, and how many hours in total are low enough. "
+            "it runs on a hosted service that was removed."
         ),
-        "tags": ["tides", "noaa", "low water", "windows", "dock", "premium"],
+        "tags": ["tides", "noaa", "low water", "windows", "dock",],
         "examples": [
             "When is the water low enough to get the boat out at Boston this week?",
             '{"skill": "tide-windows", "station": "8443970", "days": 3, "below": 1.5}',
@@ -597,94 +597,14 @@ def run_tide_watch(params: dict, client: NoaaTidesClient) -> dict:
     }
 
 
-def run_tide_windows(params: dict, client: NoaaTidesClient, gateway: GatewayClient) -> dict:
-    """The premium low-water window list. The windows are worked out on the gateway.
-
-    Nothing here reads NOAA: the gateway does the work behind its licence check and
-    hands back the windows, so a caller who has not paid gets the gateway's own
-    message and no heights at all.
-    """
-    station, name, problem = _resolve_station(params, client)
-    if problem:
-        return problem
-    # A bad argument is the caller's to fix, so it comes back as a question rather than
-    # as an internal error.
-    try:
-        days = client.check_days(params.get("days") or DEFAULT_WINDOW_DAYS)
-        units = client.check_units(params.get("units") or client.units)
-        datum = client.check_datum(params.get("datum") or client.datum)
-        below = None if params.get("below") is None else client.check_threshold(params["below"])
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-    arguments = {"station": station, "days": days, "units": units, "datum": datum}
-    if below is not None:
-        arguments["below"] = below
-    place = name or station
-    read, refused = premium_call(gateway, "tide_windows", arguments, {
-        "dataset": DATASET, "station": station, "place": place, "days": days,
-    })
-    if refused:
-        return refused
-    if not isinstance(read, dict) or not read.get("hoursRead"):
-        return empty_premium_answer(
-            "The licence gateway answered without any tide predictions, so there is nothing to report.",
-            {"dataset": DATASET, "station": station, "place": place},
-        )
-
-    unit = read.get("unit") or UNIT_LABELS.get(units, units)
-    windows = read.get("windows") or []
-    best = read.get("bestWindow") or {}
-    lowest = read.get("lowestWater") or {}
-    highest = read.get("highestWater") or {}
-    threshold = read.get("threshold")
-    lines = [
-        f"Low-water windows at {place}, station {station}: {read.get('hoursRead')} hourly "
-        f"predictions from {read.get('firstHour')} to {read.get('lastHour')}, "
-        f"{read.get('datum')} datum, heights in {unit}."
-    ]
-    if windows:
-        for window in windows[:MAX_LISTED_WINDOWS]:
-            lines.append(
-                f"  • {window.get('start')} to {window.get('end')} — {window.get('hours')} h at or "
-                f"below {threshold} {unit}, lowest {window.get('lowest')} {unit} at "
-                f"{window.get('lowestAt')}"
-            )
-        if len(windows) > MAX_LISTED_WINDOWS:
-            lines.append(f"  • ... {len(windows) - MAX_LISTED_WINDOWS} more window(s) are in the artifact.")
-    else:
-        lines.append(f"  • No hour in this window is at or below {threshold} {unit}.")
-    lines.append(
-        f"  • {read.get('windowCount')} window(s) in all, {read.get('hoursAtOrBelow')} hours at or below "
-        f"{threshold} {unit} (threshold from {read.get('thresholdSource')}); longest window "
-        f"{best.get('hours')} h starting {best.get('start')}."
-    )
-    lines.append(
-        f"  • Lowest water {lowest.get('height')} {unit} at {lowest.get('at')}; highest "
-        f"{highest.get('height')} {unit} at {highest.get('at')}."
-    )
-    lines.append(
-        "\nComputed on the MCP gateway behind its licence check, from NOAA's published "
-        f"predictions ({DATASET}). These are astronomical predictions, not forecasts: wind and "
-        "pressure move the water well away from them, so read a window as a plan rather than a promise."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": SOURCE,
-        "premium": True,
-        "station": station,
-        "place": place,
-        "days": days,
-        "units": units,
-        "datum": read.get("datum"),
-        "threshold": threshold,
-        "window_count": read.get("windowCount"),
-        "hours_at_or_below": read.get("hoursAtOrBelow"),
-        "best_window": best,
-        "lowest_water": lowest,
-        "highest_water": highest,
-        "windows": windows,
+def run_tide_windows(params: dict, client: NoaaTidesClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: tide-windows — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class NoaaTidesAgent(SkillAgent):
@@ -702,9 +622,9 @@ class NoaaTidesAgent(SkillAgent):
     watch_kinds = (SKILL_TIDE_WATCH,)
 
     def __init__(self, client: NoaaTidesClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or NoaaTidesClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

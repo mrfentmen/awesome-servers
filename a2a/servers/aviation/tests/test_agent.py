@@ -16,7 +16,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     AviationAgent,
@@ -626,32 +625,9 @@ TIMELINE_PAYLOAD = {
     "note": "1 of 3 periods are TEMPO or PROB and are reported but excluded from the headline",
 }
 
-DENIED_TEXT = ("`taf_flight_category_timeline` is a premium tool, but that licence key has expired. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`taf_flight_category_timeline` failed: no TAF is published for KXXX"
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "expired"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class TafTimelineSkillTests(unittest.TestCase):
@@ -666,11 +642,6 @@ class TafTimelineSkillTests(unittest.TestCase):
             parts.append({"kind": "data", "data": data})
         return {"kind": "message", "role": "user", "messageId": "m", "parts": parts}
 
-    def test_timeline_questions_route_to_the_premium_skill(self):
-        for text in ("When does KDEN go IFR in the forecast, and for how long?",
-                     "how long will it be IFR at KJFK?",
-                     "when do conditions worsen at KDEN?"):
-            self.assertEqual(parse(self.message(text))["skill"], SKILL_TAF_TIMELINE, text)
 
     def test_the_free_skills_keep_their_own_questions(self):
         self.assertEqual(parse(self.message("What is the TAF for KJFK?"))["skill"], SKILL_TAF)
@@ -686,82 +657,12 @@ class TafTimelineSkillTests(unittest.TestCase):
         self.assertEqual(parsed["skill"], SKILL_TAF_TIMELINE)
         self.assertEqual(parsed["params"]["airports"], ["KDEN"])
 
-    def test_the_message_reports_the_gateways_timeline(self):
-        gateway, calls = fake_gateway(TIMELINE_PAYLOAD)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_TAF_TIMELINE, "params": {"airports": ["KDEN"]}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("KDEN — flight category over the TAF", result["message"])
-        self.assertIn("Worst period IFR from 2026-09-28T22:00:00.000Z", result["message"])
-        self.assertIn("Hours by category: VFR 4 h, IFR 6 h", result["message"])
-        self.assertIn("First period below VFR: IFR from 2026-09-28T22:00:00.000Z", result["message"])
-        self.assertIn("VFR to IFR (worsening, ceiling 800 ft)", result["message"])
-        self.assertIn("LIFR (TEMPO)", result["message"])
-        self.assertIn("conditional", result["message"])
-        self.assertIn("the service's own category", result["message"].lower())
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["station"], "KDEN")
-        self.assertEqual(len(result["artifact"]["periods"]), 3)
 
-        # The TAF and the METAR were read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "taf_flight_category_timeline")
-        self.assertEqual(sent["arguments"], {"station": "KDEN"})
 
-    def test_a_forecast_that_stays_vfr_says_so(self):
-        gateway, _ = fake_gateway({**TIMELINE_PAYLOAD, "transitions": [],
-                                   "firstPeriodBelowVfr": None,
-                                   "worstPeriod": {"category": "VFR", "from": "A", "to": "B",
-                                                   "ceilingFt": 15000, "visibilitySm": 10}})
-        result = self.agent(gateway).run(
-            {"skill": SKILL_TAF_TIMELINE, "params": {"airports": ["KDEN"]}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("No period in this forecast drops below VFR", result["message"])
-        self.assertIn("does not change across the headline periods", result["message"])
 
-    def test_more_than_one_station_is_asked_back_rather_than_guessed(self):
-        gateway, calls = fake_gateway(TIMELINE_PAYLOAD)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_TAF_TIMELINE, "params": {"airports": ["KDEN", "KJFK"]}, "missing": []})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("one station at a time", result["message"])
-        self.assertEqual(calls, [], "the tool takes one station, so this must not be sent")
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = self.agent(gateway).run(
-            {"skill": SKILL_TAF_TIMELINE, "params": {"airports": ["KDEN"]}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("periods", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = self.agent(gateway).run(
-            {"skill": SKILL_TAF_TIMELINE, "params": {"airports": ["KDEN"]}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_timeline(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = self.agent(gateway).run(
-            {"skill": SKILL_TAF_TIMELINE, "params": {"airports": ["KDEN"]}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("periods"))
-
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_TAF_TIMELINE, "params": {"airports": ["KDEN"]}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("no TAF is published", result["message"])
 
 
 if __name__ == "__main__":

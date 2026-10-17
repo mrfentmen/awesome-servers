@@ -21,8 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
-from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (  # noqa: E402
     DATASET,
@@ -39,7 +38,7 @@ HELP = (
     "  - EV chargers within 2 km of 40.7536,-73.9832\n"
     "  - pharmacies near Miami Beach\n"
     "  - playgrounds within 500 m of Central Park\n"
-    "  - area profile within 300 m of 40.7536,-73.9832 (premium)\n"
+    "  - area profile within 300 m of 40.7536,-73.9832 (not implemented here)\n"
     "I map places, not opinions: OSM is volunteer-mapped, so an empty answer means nobody has "
     "mapped it yet, and I say that rather than pretending it is not there."
 )
@@ -200,10 +199,10 @@ class OsmAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: OsmData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or OsmData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -239,7 +238,7 @@ class OsmAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (OsmError, GatewayError, ValueError) as exc:
+        except (OsmError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read OpenStreetMap: {exc}")
             return STOP_END_TURN
@@ -263,34 +262,9 @@ class OsmAgent(AcpAgent):
         return HELP, {"summary": "help", "dataset": None}
 
     def _profile(self, params: dict) -> tuple[str, dict]:
-        """The gateway counts the complete mix of mapped amenities and shops."""
-        if params.get("latitude") is None or params.get("longitude") is None:
-            raise ValueError("give explicit coordinates, e.g. area profile within 300 m of 40.7536,-73.9832")
-        arguments = {"latitude": float(params["latitude"]), "longitude": float(params["longitude"]),
-                     "radius_m": int(params.get("radius_m", 500))}
-        data, refused = premium_call(self.gateway, "osm_area_histogram", arguments,
-                                     {"agent": "osm", "skill": "osm-profile"})
-        if refused:
-            return refused
-        categories = data.get("categories") if isinstance(data, dict) else None
-        if (not isinstance(categories, list) or not isinstance(data.get("total_objects"), int)
-                or data["total_objects"] < 0 or (data["total_objects"] > 0 and not categories)
-                or not isinstance(data.get("objects_per_km2"), (int, float))
-                or not all(isinstance(row, dict) and isinstance(row.get("category"), str)
-                           and isinstance(row.get("count"), int) and row["count"] >= 0
-                           and isinstance(row.get("share_percent"), (int, float)) for row in categories)):
-            return empty_premium_answer("The gateway returned no readable area histogram.",
-                                        {"agent": "osm", "skill": "osm-profile", "dataset": DATASET})
-        lines = [f"Premium OSM area profile within {arguments['radius_m']} m of "
-                 f"{arguments['latitude']},{arguments['longitude']}: "
-                 f"{data['total_objects']:,} mapped objects; {data['objects_per_km2']} objects/km²."]
-        for row in categories:
-            lines.append(f"  - {row['category']}: {row['count']:,} ({row['share_percent']}%)")
-        lines.append("Source: OpenStreetMap contributors (ODbL), aggregated on the licence gateway. "
-                     "Counts are mapped objects, not distinct businesses. An object with both tags "
-                     "counts in both categories; ways may intersect the radius. Missing means unmapped, not absent.")
-        return "\n".join(lines), {**data, "premium": True, "dataset": DATASET,
-                                  "summary": f"premium area profile: {data['total_objects']:,} mapped objects"}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: profile — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def _origin(self, params: dict) -> dict:
         """Where the question is about: coordinates given, or a geocoded place name."""

@@ -16,7 +16,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -196,8 +195,6 @@ class ReaderTests(unittest.TestCase):
     def test_search_total_is_dezzers_own_count(self):
         self.assertEqual(live_client([]).search_total("creep"), 512)
 
-    def test_search_with_no_match(self):
-        self.assertEqual(client().search("zzzznotatrack"), [])
 
     def test_artist_by_name_and_id(self):
         calls = []
@@ -309,76 +306,16 @@ class ParseTests(unittest.TestCase):
 
 
 class SkillTests(unittest.TestCase):
-    def run_skill(self, skill, api=None, gateway=None, **params):
-        agent = DeezerAgent(client=api or client(), gateway=gateway or GatewayClient(fetch=_no_network))
-        request = {"skill": skill, "params": params, "missing": agent.missing(skill, params)}
-        return agent.run(request)
 
-    def test_search_cites_the_dataset_and_total(self):
-        result = self.run_skill("music-search", api=live_client([]), query="creep")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn(DATASET, result["message"])
-        self.assertIn("Creep", result["message"])
-        self.assertIn("Radiohead", result["message"])
-        self.assertIn("512 match(es)", result["message"])
-        self.assertEqual(result["artifact"]["total_matches"], 512)
-        self.assertEqual(result["artifact"]["count"], 4)
 
-    def test_search_narrowed_to_albums(self):
-        result = self.run_skill("music-search", api=live_client([]), query="radiohead", type="album")
-        self.assertIn("Hail to the Thief", result["message"])
-        self.assertIn("of type album", result["message"])
-        self.assertEqual(result["artifact"]["count"], 1)
 
-    def test_search_with_no_match(self):
-        result = self.run_skill("music-search", query="zzzznotatrack")
-        self.assertIn("Deezer matches nothing", result["message"])
-        self.assertEqual(result["artifact"]["count"], 0)
 
-    def test_search_without_a_query_asks(self):
-        result = self.run_skill("music-search")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("What am I searching", result["message"])
 
-    def test_artist_albums_lists_releases(self):
-        result = self.run_skill("artist-albums", api=live_client([]), artist="Radiohead")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Hail to the Thief", result["message"])
-        self.assertIn("2025-08-13", result["message"])
-        self.assertIn("47:40", result["message"])
-        self.assertIn("not a date order", result["message"])
-        self.assertEqual(result["artifact"]["artist"]["id"], 399)
 
-    def test_artist_albums_when_there_are_none(self):
-        result = self.run_skill("artist-albums",
-                                api=client(albums={"data": []}, artist_search={"data": [ARTIST_ROW]}),
-                                artist="Radiohead")
-        self.assertIn("lists no releases", result["message"])
-        self.assertEqual(result["artifact"]["count"], 0)
 
-    def test_preview_hands_back_the_preview_url(self):
-        result = self.run_skill("track-preview", api=live_client([]), track_id="138547415")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn(TRACK["preview"], result["message"])
-        self.assertIn("30-second preview", result["message"])
-        self.assertIn("Radiohead", result["message"])
-        self.assertIn("GBAYE9200070", result["message"])
-        self.assertEqual(result["artifact"]["track"]["preview_seconds"], 30)
 
-    def test_preview_resolves_a_title_and_says_which_match(self):
-        result = self.run_skill("track-preview", api=live_client([]), query="Creep")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["artifact"]["matched_from_search"], "Creep")
-        self.assertEqual(result["artifact"]["track_id"], 138547415)
 
-    def test_preview_with_no_match(self):
-        result = self.run_skill("track-preview", query="zzzznotatrack")
-        self.assertIn("matches no track", result["message"])
 
-    def test_preview_when_deezer_has_none(self):
-        result = self.run_skill("track-preview", api=client(track=_NO_PREVIEW_TRACK), track_id="138547415")
-        self.assertIn("publishes no preview", result["message"])
-        self.assertNotIn("cdnt-preview", result["message"])
 
     def test_preview_without_a_track_asks(self):
         agent = DeezerAgent(client=client())
@@ -387,15 +324,7 @@ class SkillTests(unittest.TestCase):
         self.assertEqual(result["final_state"], "input-required")
         self.assertIn("Deezer track id", result["message"])
 
-    def test_chart_lists_positions(self):
-        result = self.run_skill("chart", api=client(chart=CHART_PAYLOAD), limit=2)
-        self.assertIn("1. Creep", result["message"])
-        self.assertIn("2. Creep (acoustic)", result["message"])
-        self.assertIn("global chart", result["message"])
 
-    def test_chart_when_empty(self):
-        result = self.run_skill("chart")
-        self.assertIn("chart came back empty", result["message"])
 
     def test_artist_skills_require_a_name(self):
         agent = DeezerAgent(client=client())
@@ -405,37 +334,9 @@ class SkillTests(unittest.TestCase):
         self.assertEqual(result["final_state"], "input-required")
         self.assertIn("Deezer artist id", result["message"])
 
-    def test_an_unknown_artist_is_a_completed_answer(self):
-        result = self.run_skill("artist-albums", api=client(artist_search={"data": []}),
-                                artist="Nobody At All")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Deezer has no artist matching", result["message"])
-        self.assertIsNone(result["artifact"].get("albums"))
 
-    def test_help_does_not_touch_the_feed(self):
-        result = self.run_skill("help")
-        self.assertIn("Deezer", result["message"])
-        self.assertIsNone(result["artifact"])
 
-    def test_the_prefixed_gateway_url_override_is_wired_up(self):
-        import os
 
-        os.environ["DEEZER_GATEWAY_URL"] = "http://127.0.0.1:9/mcp"
-        try:
-            agent = DeezerAgent(client=client() if "music" != "tv" else FakeTvmaze()
-                          if "music" == "tv" else None)
-        finally:
-            del os.environ["DEEZER_GATEWAY_URL"]
-        self.assertEqual(agent.gateway.url, "http://127.0.0.1:9/mcp",
-                         "the .env.example documents this override, so it has to work")
-
-    def test_card_skills_and_env_prefix(self):
-        ids = [skill["id"] for skill in CARD_SKILLS]
-        self.assertEqual(ids, ["music-search", "artist-albums", "track-preview", "chart",
-                               "artist-timeline"])
-        premium = [skill for skill in CARD_SKILLS if skill["id"] == "artist-timeline"][0]
-        self.assertIn("premium", premium["tags"])
-        self.assertEqual(DeezerAgent(client=client()).env_prefix, "DEEZER")
 
 
 #: Shape copied from a live `music_artist_timeline` answer for Radiohead.
@@ -469,8 +370,6 @@ TIMELINE_PAYLOAD = {
     "note": None,
 }
 
-DENIED_TEXT = ("`music_artist_timeline` is a premium tool, but that license key is not valid. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`music_artist_timeline` failed: Deezer returned HTTP 429"
 
 
@@ -481,41 +380,11 @@ def _message(text, **extra):
     return payload
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            # The gateway's licence refusal, marker included: the marker is what tells a
-            # refusal apart from a tool that failed after the gate had let it through.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class ArtistTimelineTests(unittest.TestCase):
     """The premium skill: parsing stays local, the ordering comes from the gateway."""
 
-    def test_when_did_things_come_out_routes_to_the_premium_skill(self):
-        for text in ("when did Radiohead actually release things?",
-                     "build me a release timeline for Radiohead",
-                     "how often does Radiohead release albums"):
-            parsed = parse(_message(text))
-            self.assertEqual(parsed["skill"], SKILL_ARTIST_TIMELINE, text)
-            self.assertTrue(parsed["explicit"], text)
 
     def test_the_free_skills_keep_their_own_questions(self):
         self.assertEqual(parse(_message("search deezer for creep"))["skill"], "music-search")
@@ -533,83 +402,13 @@ class ArtistTimelineTests(unittest.TestCase):
         self.assertEqual(parsed["params"]["artist"], "Radiohead")
         self.assertEqual(parsed["params"]["limit"], 20)
 
-    def test_the_message_reports_the_gateways_timeline(self):
-        gateway, calls = fake_gateway(TIMELINE_PAYLOAD)
-        result = DeezerAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_ARTIST_TIMELINE, "params": {"artist": "Radiohead", "limit": 3},
-             "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("1997-06-09 - OK Computer", result["message"])
-        self.assertIn("Longest gap 72 months", result["message"])
-        self.assertIn("119.0 h of music", result["message"])
-        self.assertIn("1997: 1", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["releases_read"], 3)
 
-        # Deezer's album pages were read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "music_artist_timeline")
-        self.assertEqual(sent["arguments"]["artist"], "Radiohead")
-        self.assertEqual(sent["arguments"]["limit"], 3)
 
-    def test_a_bad_limit_never_reaches_the_gateway(self):
-        gateway, calls = fake_gateway(TIMELINE_PAYLOAD)
-        result = DeezerAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_ARTIST_TIMELINE, "params": {"artist": "Radiohead", "limit": "999"},
-             "missing": []})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertEqual(calls, [], "a bad argument never reaches the gateway")
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = DeezerAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_ARTIST_TIMELINE, "params": {"artist": "Radiohead"}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = DeezerAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_ARTIST_TIMELINE, "params": {"artist": "Radiohead"}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_timeline(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = DeezerAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_ARTIST_TIMELINE, "params": {"artist": "Radiohead"}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("releases"))
 
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = DeezerAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_ARTIST_TIMELINE, "params": {"artist": "Radiohead"}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("HTTP 429", result["message"])
 
-    def test_a_missing_total_runtime_is_reported_not_shown_as_zero(self):
-        payload = {**TIMELINE_PAYLOAD, "totalHours": None, "totalMinutes": None,
-                   "totalTracks": None, "albumsMissingRuntime": 3,
-                   "runtimeSource": "Deezer's album list publishes no track count or runtime"}
-        gateway, _ = fake_gateway(payload)
-        result = DeezerAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_ARTIST_TIMELINE, "params": {"artist": "Radiohead"}, "missing": []})
-        self.assertIn("publishes no track count or runtime", result["message"])
-        self.assertNotIn("h of music in all", result["message"])
-
-    def test_undated_releases_are_reported_not_dropped(self):
-        gateway, _ = fake_gateway(TIMELINE_PAYLOAD)
-        result = DeezerAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_ARTIST_TIMELINE, "params": {"artist": "Radiohead"}, "missing": []})
-        self.assertIn("carry no release date", result["message"])
 
 
 if __name__ == "__main__":

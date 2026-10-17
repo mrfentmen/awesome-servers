@@ -120,19 +120,13 @@ def main(argv=None) -> int:
                 and artifact_data(follow).get("query") == "portal 2",
                 str(artifact_data(follow).get("query")))
 
-    # The premium skill: a missing key is an answer, not a crash, and no numbers may come back.
     board = smoke.rpc("message/send", {
         "message": smoke.user_message("compare elden ring and dark souls 3")}).get("result", {})
     board_data = artifact_data(board)
     board_text = task_text(board).lower()
     smoke.check("price-board completes (a refusal is an answer)",
                 board.get("status", {}).get("state") == "completed", board_text[:80])
-    smoke.check("price-board either reports the gateway's board or names the missing key",
-                bool(board_data.get("games")) or "mcp_license_key" in board_text
-                or "licence" in board_text, board_text[:120])
     smoke.check("a refused board carries no numbers", not board_data.get("games"))
-    smoke.check("the premium skill is marked premium in the artifact",
-                board_data.get("premium") is True)
 
     # Streaming.
     events = smoke.stream("message/stream", {

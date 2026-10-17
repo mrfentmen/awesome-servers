@@ -1,11 +1,11 @@
-"""The MBTA agent: five free skills over the agency's v3 API, one behind the gate.
+"""The MBTA agent: five free skills over the agency's v3 API, one on a hosted service that was removed.
 
   - next-departures: the next trains and buses at a stop, with headsign and minutes away
   - stop-times:      today's timetable at a stop, the scheduled service rather than the live one
   - nearby-stops:    the stops closest to a point, optionally on one route
   - route-alerts:    service alerts affecting one line
   - service-alerts:  the alerts running across the whole network right now
-  - headway-check:   whether the arrivals at a stop run to a reliable headway (premium)
+  - headway-check:   whether the arrivals at a stop run to a reliable headway (not implemented here)
 
 Headway-capable: nothing here is watch-capable on its own. The premium skill sends the
 request to the licence gateway, which reads the MBTA's live prediction feed and works
@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     ALERT_SEVERITY,
@@ -135,9 +135,9 @@ CARD_SKILLS = [
         "description": (
             "The live arrivals at a stop read as a service-reliability answer rather than a list: the "
             "gap between each pair, the median headway, the longest single wait, and whether the "
-            "headway is holding. Premium: it runs behind a licence check."
+            "headway is holding. Premium: it runs on a hosted service that was removed."
         ),
-        "tags": ["mbta", "transit", "headway", "reliability", "waiting", "premium"],
+        "tags": ["mbta", "transit", "headway", "reliability", "waiting",],
         "examples": [
             "can I count on a train every 8 minutes from place-pktrm?",
             "is the headway holding on the Red Line at place-pktrm?",
@@ -201,7 +201,7 @@ HELP = (
     "  • which mbta stops are near 42.3519,-71.0601?\n"
     "  • any alerts on the Red Line?\n"
     "  • how is the T running across the network?\n"
-    "  • can I count on a train every 8 minutes from place-pktrm? (premium)\n"
+    "  • can I count on a train every 8 minutes from place-pktrm? (not implemented here)\n"
     "Times are the agency's own, with its UTC offset. Stop ids look like place-pktrm or 70068; "
     "I can take a line name such as “the Red Line” anywhere a route is asked for."
 )
@@ -607,95 +607,14 @@ def run_service_alerts(params: dict, client: MbtaClient) -> dict:
     }
 
 
-def run_headway_check(params: dict, client: MbtaClient, gateway: GatewayClient) -> dict:
-    """The premium headway judgement. The work happens on the gateway.
-
-    Nothing here reads the prediction feed: the gateway does the work behind its
-    licence check and hands back the gaps, so a caller who has not paid gets the
-    gateway's own message and no headway at all.
-    """
-    stop, problem = _resolve_stop(params, client)
-    if problem:
-        return problem
-    route = params.get("route")
-    resolved = client.find_route(route) if route else None
-    if route and resolved is None:
-        return {
-            "final_state": "completed",
-            "message": (
-                f"No MBTA line is called “{route}”. Route ids look like Red, 66 or 1, or give me a "
-                f"name such as “the Red Line”."
-            ),
-            "artifact": _artifact(params, client, stop=stop, route=route, resolved_route=None, watching=None),
-            "watch": None,
-        }
-    try:
-        limit = client.check_limit(params.get("limit") or MAX_ARRIVALS, MAX_ARRIVALS)
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-
-    info = client.stop_info(stop)
-    label = _stop_label(info, stop)
-    arguments: dict = {"stop": stop, "limit": limit}
-    if resolved:
-        arguments["route"] = resolved
-    direction_id = params.get("direction_id")
-    if direction_id not in (None, ""):
-        try:
-            arguments["direction_id"] = client.check_direction(direction_id)
-        except ValueError as exc:
-            return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-
-    read, refused = premium_call(gateway, "a2a_mbta_headway", arguments, {
-        "dataset": DATASET, "stop": stop, "place": label, "route": resolved,
-    })
-    if refused:
-        return refused
-    if not isinstance(read, dict) or not read.get("arrivals_read"):
-        return empty_premium_answer(
-            "The licence gateway answered without any MBTA arrivals, so there is nothing to measure.",
-            {"dataset": DATASET, "stop": stop, "place": label},
-        )
-
-    headway = read.get("headway_minutes") or {}
-    regularity = read.get("regularity") or {}
-    longest = read.get("longest_wait") or {}
-    lines = [
-        f"Headway at {label} ({stop})"
-        + (f", route {read.get('route') or resolved}" if (read.get("route") or resolved) else "")
-        + f": {read.get('arrivals_read')} live arrivals read.",
-        f"  • median gap {headway.get('median')} min, shortest {headway.get('shortest')} min, "
-        f"longest {headway.get('longest')} min, over {headway.get('gaps')} gap(s).",
-        f"  • longest single wait: {longest.get('minutes')} min from {longest.get('at')} "
-        f"(next arrival {longest.get('next_at')}).",
-        f"  • verdict: {regularity.get('verdict')} — {regularity.get('rule')}; the worst gap sits "
-        f"{regularity.get('max_deviation_minutes')} min off the median.",
-    ]
-    if read.get("arrivals_read", 0) < MIN_ARRIVALS_FOR_HEADWAY:
-        lines.append(
-            f"  • Only {read.get('arrivals_read')} arrival(s) are live, so this is a snapshot rather "
-            f"than a pattern. Ask again in a few minutes."
-        )
-    lines.append(
-        f"\nWorked out on the MCP gateway behind its licence check, from the MBTA's live prediction "
-        f"feed ({DATASET}). Headways move with congestion and incidents, so read this as the board "
-        f"right now, not a promise."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": SOURCE,
-        "premium": True,
-        "stop": stop,
-        "place": label,
-        "route": read.get("route") or resolved,
-        "arrivals_read": read.get("arrivals_read"),
-        "arrivals": read.get("arrivals"),
-        "headway_minutes": headway,
-        "longest_wait": longest,
-        "regularity": regularity,
-        "generated_at": read.get("generated_at"),
+def run_headway_check(params: dict, client: MbtaClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: headway-check — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class MbtaAgent(SkillAgent):
@@ -705,15 +624,15 @@ class MbtaAgent(SkillAgent):
         "Read-only agent over the MBTA's v3 API: real-time arrivals at any stop, today's timetable "
         "there, the stops nearest a point, and service alerts for one line or the whole network — "
         "with the agency's own alert wording. One premium skill turns the live arrival stream into a "
-        "headway-reliability answer, and it runs behind a licence check on the gateway."
+        "headway-reliability answer, and it runs on a hosted service that was removed."
     )
     env_prefix = "MBTA"
     datasets = (DATASET,)
     card_skills = CARD_SKILLS
 
-    def __init__(self, client: MbtaClient | None = None, gateway: GatewayClient | None = None) -> None:
+    def __init__(self, client: MbtaClient | None = None, gateway: object | None = None) -> None:
         self.client = client or MbtaClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

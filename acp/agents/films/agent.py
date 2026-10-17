@@ -20,17 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (  # noqa: E402
-    STOP_END_TURN,
-    STOP_REFUSAL,
-    AcpAgent,
-    GatewayClient,
-    GatewayError,
-    SessionContext,
-    empty_premium_answer,
-    premium_call,
-    prompt_text,
-)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (  # noqa: E402
     DATASET_ARCHIVE,
@@ -47,7 +37,7 @@ HELP = (
     "  • films by fritz lang\n"
     "  • 1940s noir I can watch for free\n"
     "  • what is in scarlet_street_1945\n"
-    "  • which decade has the most noir films (premium — needs a licence key)\n"
+    "  • which decade has the most noir films (not implemented here)\n"
     "Wikidata is a community wiki, so a fact it does not carry is reported as not reported. "
     "The Archive's shelf is mixed: many titles are public domain and the collection does not "
     "say which, so I never promise a print is free to reuse."
@@ -142,10 +132,10 @@ class FilmsAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: FilmsData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or FilmsData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -182,7 +172,7 @@ class FilmsAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (FilmsError, ValueError, GatewayError) as exc:
+        except (FilmsError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the film sources: {exc}")
             return STOP_END_TURN
@@ -344,55 +334,9 @@ class FilmsAgent(AcpAgent):
         return "\n".join(lines), artifact
 
     def _index(self, params: dict) -> tuple[str, dict]:
-        """Premium: the decade index is computed on the gateway, not here."""
-        keyword = params.get("keyword")
-        data, refused = premium_call(
-            self.gateway,
-            "film_decade_index",
-            {"keyword": keyword, "decades": 6},
-            {"agent": "films", "skill": "film-index", "keyword": keyword},
-        )
-        if refused:
-            return refused
-        decades = data.get("decades") if isinstance(data, dict) else None
-        if not isinstance(decades, list) or not decades:
-            return empty_premium_answer(
-                "The licence gateway returned no decades for that shelf, so I have nothing to "
-                "report. Try a subject word like 'noir' or 'western'.",
-                {"agent": "films", "skill": "film-index", "keyword": keyword},
-            )
-        artifact = {
-            "summary": f"premium decade index for {keyword or 'the collection'}: "
-                       f"{len(decades)} decades, best {data.get('bestDecade', {}).get('decade')}",
-            "premium": True,
-            "keyword": keyword,
-            "decades": decades,
-            "scanned": data.get("scanned"),
-            "best_decade": data.get("bestDecade"),
-            "most_downloaded": data.get("mostDownloaded"),
-        }
-        lines = [f"Premium decade index over the Archive's feature films"
-                 f"{' tagged ' + keyword if keyword else ''} "
-                 "(computed on the licence gateway):"]
-        for entry in decades:
-            top = entry.get("mostDownloaded") or {}
-            lines.append(
-                f"  • {entry.get('decade')}: {entry.get('count')} films, top-ten average "
-                f"{int(entry.get('averageDownloads') or 0):,} downloads"
-                + (f", most downloaded {top.get('title')}" if top.get("title") else "")
-            )
-        best, most = data.get("bestDecade") or {}, data.get("mostDownloaded") or {}
-        if best:
-            lines.append(f"\nMost films: {best.get('decade')} with {best.get('count')} titles.")
-        if most:
-            lines.append(f"Single most downloaded: {most.get('title')} "
-                         f"({int(most.get('downloads') or 0):,} downloads).")
-        lines.append(
-            f"\nSource: {DATASET_ARCHIVE}, read on the licence gateway ({data.get('scanned', 0):,} "
-            "titles counted). Same shelf as the free skills — the gateway adds the decade tally, "
-            "and a caller without a key never gets the numbers."
-        )
-        return "\n".join(lines), artifact
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: index — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
 
 def main(argv=None) -> int:

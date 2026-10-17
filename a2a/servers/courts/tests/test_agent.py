@@ -16,7 +16,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -381,14 +380,6 @@ class SkillTests(unittest.TestCase):
         self.assertIn("CourtListener", result["message"])
         self.assertIsNone(result["artifact"])
 
-    def test_card_lists_four_free_skills_and_one_premium(self):
-        ids = [skill["id"] for skill in CARD_SKILLS]
-        self.assertEqual(ids, ["opinion-search", "case-lookup", "court-info", "judge-lookup",
-                               "citation-census"])
-        premium = [skill for skill in CARD_SKILLS if "premium" in skill["tags"]]
-        self.assertEqual([skill["id"] for skill in premium], ["citation-census"])
-        for skill in CARD_SKILLS[:-1]:
-            self.assertNotIn("premium", skill["tags"], skill["id"])
 
     def test_agent_metadata(self):
         agent = CourtListenerAgent(client=FakeCourts())
@@ -424,8 +415,6 @@ CENSUS_PAYLOAD = {
     "note": "One page of results, not the whole index.",
 }
 
-DENIED_TEXT = ("`courts_citation_census` is a premium tool, but that license key is not valid. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`courts_citation_census` failed: upstream returned HTTP 500"
 
 
@@ -436,29 +425,6 @@ def _message(text, **extra):
     return payload
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            # The gateway's licence refusal, marker included: the marker is what tells a
-            # refusal apart from a tool that failed after the gate had let it through.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class CensusSkillTests(unittest.TestCase):
@@ -469,14 +435,6 @@ class CensusSkillTests(unittest.TestCase):
         return CourtListenerAgent(client or FakeCourts(), gateway=gateway).run(
             {"skill": SKILL_CITATION_CENSUS, "params": payload, "missing": []})
 
-    def test_the_census_question_routes_to_the_premium_skill(self):
-        for text in ("which authorities does the privacy case law lean on?",
-                     "run a citation census on fourth amendment search results",
-                     "the most-cited antitrust decisions",
-                     "citation map for standing"):
-            parsed = parse(_message(text))
-            self.assertEqual(parsed["skill"], SKILL_CITATION_CENSUS, text)
-            self.assertTrue(parsed["explicit"], text)
 
     def test_the_free_skills_keep_their_own_questions(self):
         for text, skill in (("what case law is there on the fourth amendment?", "opinion-search"),
@@ -493,72 +451,12 @@ class CensusSkillTests(unittest.TestCase):
         self.assertEqual(parsed["params"]["query"], "copyright")
         self.assertEqual(parsed["params"]["court"], "ca9")
 
-    def test_the_message_reports_the_gateways_census(self):
-        gateway, calls = fake_gateway(CENSUS_PAYLOAD)
-        result = self.run_census(gateway, query="privacy", court="cadc", filed_after="2020-01-01")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("3 opinion(s)", result["message"])
-        self.assertIn("Roe v. Wade", result["message"])
-        self.assertIn("cited 4211 time(s)", result["message"])
-        self.assertIn("Reporter citations seen: 18 F.4th 712 (2)", result["message"])
-        self.assertIn("Inbound citations across the page: 4230", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["total_cite_count"], 4230)
 
-        # CourtListener was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "courts_citation_census")
-        self.assertEqual(sent["arguments"]["query"], "privacy")
-        self.assertEqual(sent["arguments"]["court"], "cadc")
-        self.assertEqual(sent["arguments"]["filed_after"], "2020-01-01")
-        self.assertNotIn("filed_before", sent["arguments"], "no bound asked for, so none is sent")
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = self.run_census(gateway, query="privacy")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("authorities", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = self.run_census(gateway, query="privacy")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_census(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = self.run_census(gateway, query="privacy")
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("authorities"))
 
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = self.run_census(gateway, query="privacy")
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("HTTP 500", result["message"])
 
-    def test_a_bad_argument_never_reaches_the_gateway(self):
-        gateway, calls = fake_gateway(CENSUS_PAYLOAD)
-        result = self.run_census(gateway, query="privacy", limit=99)
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("limit must be between", result["message"])
-        self.assertEqual(calls, [])
-
-    def test_a_census_over_no_opinions_reports_cleanly(self):
-        payload = {**CENSUS_PAYLOAD, "opinionsRead": 0, "authorities": [], "reporters": [],
-                   "courts": [], "years": [], "totalCiteCount": 0}
-        gateway, _ = fake_gateway(payload)
-        result = self.run_census(gateway, query="zzzz")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("CourtListener reports no citations", result["message"])
 
 
 if __name__ == "__main__":

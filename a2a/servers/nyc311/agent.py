@@ -2,7 +2,7 @@
 
   - complaint-status:  look up one complaint by its unique key (watch-capable)
   - complaints-near:   recent complaints around a ZIP / street / borough
-  - complaints-board:  how the city's complaints were filed and handled (premium)
+  - complaints-board:  how the city's complaints were filed and handled (not implemented here)
 
 Parsing accepts plain text ("did complaint 12345678 get fixed?") or a DataPart:
 {"skill": "complaint-status", "unique_key": "12345678"}.
@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import DATASET_311, DATASET_311_TITLE, UpstreamError, NYC311Client
 
@@ -58,14 +58,14 @@ CARD_SKILLS = [
     },
     {
         "id": SKILL_COMPLAINTS_BOARD,
-        "name": "How the city's complaints were handled (premium)",
+        "name": "How the city's complaints were handled (not implemented here)",
         "description": (
             "A window of New York City 311 complaints read as a board: the exact number filed, "
             "the busiest complaint types with their share, the busiest hour of day, and per "
             "agency how many are still open, the share closed, and the median and mean hours to "
-            "close, slowest first. Premium: it runs behind a licence check."
+            "close, slowest first. Premium: it runs on a hosted service that was removed."
         ),
-        "tags": ["nyc", "311", "civic", "board", "response-time", "premium"],
+        "tags": ["nyc", "311", "civic", "board", "response-time",],
         "examples": [
             "How many 311 complaints were filed in the last week, and how long do they take to close?",
             '{"skill": "complaints-board", "days": 7}',
@@ -293,107 +293,14 @@ def run_complaints_near(params: dict, client: NYC311Client) -> dict:
     }
 
 
-def run_complaints_board(params: dict, client: NYC311Client, gateway: GatewayClient) -> dict:
-    """The premium handling board. The figures are worked out on the gateway.
-
-    The gateway reads the 311 dataset behind its licence check and hands back the board,
-    so a caller who has not paid gets the gateway's own message and no figures at all.
-    """
-    # A bad argument is the caller's to fix, so it comes back as a question rather than
-    # as an internal error.
-    try:
-        days = client.check_board_days(params.get("days") or DEFAULT_BOARD_DAYS)
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-    read, refused = premium_call(
-        gateway, "complaint_response_board", {"days": days},
-        {"dataset": DATASET_311, "dataset_title": DATASET_311_TITLE, "days": days},
-    )
-    if refused:
-        return refused
-    if not isinstance(read, dict) or read.get("totalComplaints") is None:
-        return empty_premium_answer(
-            "The licence gateway answered without a complaint count, so there is nothing to report.",
-            {"dataset": DATASET_311, "days": days},
-        )
-
-    total = int(read.get("totalComplaints") or 0)
-    artifact = {
-        "dataset": DATASET_311,
-        "dataset_title": DATASET_311_TITLE,
-        "premium": True,
-        "window_days": read.get("windowDays"),
-        "window_start": read.get("windowStart"),
-        "total_complaints": total,
-        "top_types": read.get("topTypes"),
-        "sample_size": read.get("sampleSize"),
-        "sample_covers_window": read.get("sampleCoversWindow"),
-        "sample_hours_used": read.get("sampleHoursUsed"),
-        "by_agency": read.get("byAgency"),
-        "slowest_to_close": read.get("slowestToClose"),
-        "busiest_hour_of_day": read.get("busiestHourOfDay"),
-        "note": read.get("note"),
+def run_complaints_board(params: dict, client: NYC311Client, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: complaints-board — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    if not total:
-        return {
-            "final_state": "completed",
-            "message": (
-                f"Nothing to report: {read.get('note') or 'no complaints were created in that window'} "
-                f"(the {read.get('windowDays')} days from {read.get('windowStart')})."
-            ),
-            "artifact": artifact,
-            "watch": None,
-        }
-
-    lines = [
-        f"NYC 311 complaints filed in the {read.get('windowDays')} days from "
-        f"{read.get('windowStart')}: {total:,}.",
-    ]
-    types = read.get("topTypes") or []
-    if types:
-        lines.append("  • Busiest complaint types:")
-        for row in types[:MAX_LISTED_TYPES]:
-            lines.append(
-                f"      {row.get('type')} — {row.get('complaints')} ({row.get('share')}%)"
-            )
-    hour = read.get("busiestHourOfDay") or {}
-    if hour:
-        lines.append(
-            f"  • Busiest hour: {hour.get('hourOfDay')}:00 with {hour.get('complaints')} closed "
-            f"complaints, {hour.get('asRecordedBy')}."
-        )
-    agencies = read.get("byAgency") or []
-    if agencies:
-        lines.append("  • By agency (from the records in the sample):")
-        for row in agencies[:MAX_LISTED_AGENCIES]:
-            median = row.get("medianHoursToClose")
-            lines.append(
-                f"      {row.get('agency')} — {row.get('complaints')} complaints, "
-                f"{row.get('stillOpen')} still open ({row.get('closedShare')}% closed), "
-                f"median {median} h to close"
-                if median is not None else
-                f"      {row.get('agency')} — {row.get('complaints')} complaints, "
-                f"{row.get('stillOpen')} still open ({row.get('closedShare')}% closed), "
-                "no closing time yet"
-            )
-        if len(agencies) > MAX_LISTED_AGENCIES:
-            lines.append(f"      ... {len(agencies) - MAX_LISTED_AGENCIES} more are in the artifact.")
-    slowest = read.get("slowestToClose") or None
-    if slowest:
-        lines.append(
-            f"  • Slowest to close: {slowest.get('agency')} at a median of "
-            f"{slowest.get('medianHoursToClose')} h over {slowest.get('closed')} closed complaints."
-        )
-    if read.get("note"):
-        lines.append(f"  • {read.get('note')}.")
-    lines.append(
-        "\nCounted on the MCP gateway behind its licence check, from the live NYC 311 dataset "
-        f"({DATASET_311}, \"{DATASET_311_TITLE}\"). The counts are exact; the closing times come "
-        "from the records the dataset returned in one page, so they describe the agencies in that "
-        "sample rather than the city's whole history. An agency with no time here is simply one "
-        "whose records in the sample have not closed yet."
-    )
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class NYC311Agent(SkillAgent):
@@ -401,7 +308,7 @@ class NYC311Agent(SkillAgent):
     card_name = "NYC Open Data Agent"
     card_description = (
         "Read-only agent for NYC Open Data. Looks up a 311 complaint by its unique key, lists "
-        "recent 311 complaints near a ZIP, street, or borough, and (premium) reads a window of the "
+        "recent 311 complaints near a ZIP, street, or borough, and (not implemented here) reads a window of the "
         "city's complaints as a board of volumes, busiest types and per-agency closing times. "
         "Every answer cites the dataset (erm2-nwe9) and its freshness. Supports streaming and "
         "webhook push notifications when a watched complaint's status changes."
@@ -412,9 +319,9 @@ class NYC311Agent(SkillAgent):
     watch_kinds = (SKILL_COMPLAINT_STATUS,)
 
     def __init__(self, client: NYC311Client | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or NYC311Client()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

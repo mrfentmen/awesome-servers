@@ -5,7 +5,7 @@ station's live ground position (open-notify), the local sunset (sunrise-sunset.o
 cloud cover (Open-Meteo), all keyless, and answers two questions: where is it, and could I
 see it from here right now.
 
-Free checks describe the current sky. Premium pass estimates run on the licence gateway.
+Free checks describe the current sky. Premium pass estimates run on a hosted service that was removed.
 """
 
 from __future__ import annotations
@@ -18,8 +18,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (  # noqa: E402
     DATASET_CLOUD,
@@ -35,7 +34,7 @@ HELP = (
     "  • where is the ISS right now?\n"
     "  • is the ISS near 40.71,-74.01?\n"
     "  • could I see the ISS from Denver tonight?\n"
-    "  • estimate the ISS pass over Denver in the next 90 minutes (premium)\n"
+    "  • estimate the ISS pass over Denver in the next 90 minutes (not implemented here)\n"
     "Free checks do not predict passes; premium estimates use an approximate orbit model."
 )
 
@@ -117,10 +116,10 @@ class IssAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: IssData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or IssData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -140,7 +139,7 @@ class IssAgent(AcpAgent):
         if skill == "help":
             ctx.stream_text(HELP)
             ctx.message("I read three public feeds: the station's position, sunrise/sunset "
-                        "times, and cloud cover. Premium approximate pass estimates run on the licence gateway.")
+                        "times, and cloud cover. Premium approximate pass estimates run on a hosted service that was removed.")
             return STOP_END_TURN
 
         tool = f"call_{skill}"
@@ -155,7 +154,7 @@ class IssAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (IssError, GatewayError, ValueError) as exc:
+        except (IssError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the space-station feeds: {exc}")
             return STOP_END_TURN
@@ -180,38 +179,9 @@ class IssAgent(AcpAgent):
         return HELP, {"summary": "help", "dataset": None}
 
     def _pass(self, params: dict) -> tuple[str, dict]:
-        """Render the gateway's approximate orbit walk."""
-        context = {"agent": "iss", "skill": "iss-pass"}
-        if not params.get("point"):
-            return "Give me a city or latitude,longitude for the pass estimate.", {"summary": "no point"}
-        point = IssData.check_point(params["point"])
-        minutes = int(params.get("minutes", 90))
-        if not 10 <= minutes <= 240:
-            raise ValueError("minutes must be between 10 and 240")
-        data, refused = premium_call(self.gateway, "iss_pass_estimate",
-                                     {"point": point, "minutes": minutes}, context)
-        if refused:
-            return refused
-        closest = data.get("closest_approach") if isinstance(data, dict) else None
-        if (not isinstance(closest, dict) or
-                any(not isinstance(closest.get(k), (int, float)) for k in
-                    ("minutes_from_now", "ground_km", "elevation_deg"))):
-            return empty_premium_answer("The gateway returned no readable closest approach.", context)
-        def shown(value):
-            return "not reported" if value is None else str(value)
-        lines = [f"Premium ISS pass estimate for {point}, next {shown(data.get('searched_minutes'))} minutes:",
-                 f"Closest approach: {closest['minutes_from_now']} minutes from now "
-                 f"({shown(closest.get('time'))}), {closest['ground_km']} km on the ground.",
-                 f"Look {shown(closest.get('look_direction'))}; elevation {closest['elevation_deg']} degrees."]
-        visible = data.get("next_visible")
-        if data.get("visible_in_window") is True and isinstance(visible, dict):
-            lines.append(f"Estimated visible opportunity: {shown(visible.get('time'))}, "
-                         f"elevation {shown(visible.get('elevation_deg'))} degrees.")
-        elif data.get("visible_in_window") is False:
-            lines.append("No visible opportunity estimated in this window.")
-        lines.append("Approximate orbit model; not a published pass table or a guaranteed sighting.")
-        lines.append(f"Source: {shown(data.get('source'))}.")
-        return "\n".join(lines), {**data, **context, "premium": True, "summary": lines[1]}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: pass — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def _position_lines(self, position: dict) -> list[str]:
         return [

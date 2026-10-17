@@ -21,9 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (COUNTRIES, DATASET, NO_COVERAGE, ZipData, ZipError,  # noqa: E402
                   ZipNotFound, country_code_from_text, normalise, postal_code_from_text)
@@ -33,8 +31,7 @@ HELP = (
     "  - what places are in ZIP 11235?\n"
     "  - where is 100-0001 in Japan?\n"
     "  - which countries does this directory cover?\n"
-    "How far is ZIP 11235 from ZIP 10001, which way, and how long is that? (premium - one code's "
-    "record cannot answer it)\n"
+    "How far is ZIP 11235 from ZIP 10001, which way, and how long is that? (not implemented here)\n"
     "Tell me the country as well as the code whenever you can: 1012 is an Amsterdam postcode and "
     "101 is an Icelandic one, and a postal code on its own is not a lookup key here.\n"
     "What I will NOT do is the reverse: this directory is keyed by postal code and has no search, "
@@ -237,9 +234,7 @@ class ZipAgent(AcpAgent):
                  gateway=None) -> None:
         super().__init__(connection)
         self.data = data or ZipData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -263,7 +258,7 @@ class ZipAgent(AcpAgent):
             return STOP_END_TURN
 
         tool = f"call_{skill.replace('-', '_')}"
-        label = ("Ask the licence gateway for the distance" if skill == "zip-reach"
+        label = ("Ask about the distance" if skill == "zip-reach"
                  else "Read the postal code directory")
         ctx.tool_call(tool, label, kind="fetch", name=skill, raw_input=dict(params))
         if not ctx.ask_permission(tool, "Allow ZIP to read the postal code directory?",
@@ -300,7 +295,7 @@ class ZipAgent(AcpAgent):
                 body = render_where(record)
                 summary = (f"{record['postal_code']} in {record['country']}: "
                            f"{record['places'][0]['name']}")
-        except (ZipError, GatewayError, ValueError) as exc:
+        except (ZipError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the postal code directory: {exc}")
             return STOP_END_TURN
@@ -313,43 +308,9 @@ class ZipAgent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str, want_miles: bool) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        data, refused = premium_call(self.gateway, "zip_reach", {
-            "from": normalise(params["from"]),
-            "to": normalise(params["to"]),
-            "country": params.get("country") or "us",
-        }, {"agent": "zip"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not data.get("from"):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back a distance for those two codes.",
-                {"agent": "zip"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a distance out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_reach(data, want_miles)
-        summary = (f"{data['from']} to {data['to']}: {_num(data.get('distance_km'))} km, "
-                   f"{data.get('compass', 'not reported')}")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message("\nSource: the postal code directory, measured on the licence gateway. Every "
-                    "figure is a straight line between the two codes' published points, and the "
-                    "walk and drive times assume the distance is a road: neither is a route, and a "
-                    "real journey across water or a mountain range is longer than the number "
-                    "above.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

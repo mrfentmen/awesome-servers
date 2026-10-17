@@ -4,7 +4,7 @@ Safecast runs a network of cheap Geiger counters that anyone can put on a window
 and it publishes every reading keyless. "what is the radiation level near Fukushima?"
 answers from the sensors actually within the radius, with the distance worked out from
 the coordinates and the age of each reading, because a 2013 count rate is not a
-reading of today. The rate of change over a window is the premium skill.
+reading of today. The rate of change over a window is a separate skill.
 """
 
 from __future__ import annotations
@@ -17,9 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, PAGE_SIZE, RADIATION_UNITS, RadiationData,  # noqa: E402
                   RadiationError, RadiationNotFound, coordinates_from_text,
@@ -283,7 +281,7 @@ def render_window(summary: dict) -> str:
                  + (", and the page cap was reached, so older readings may be missing"
                     if summary.get("truncated") else ""))
     lines.append("  this is what the sensors recorded, not a fitted rate - a slope over the "
-                 "same window is the premium skill")
+                 "same window is a separate skill")
     return "\n".join(lines)
 
 
@@ -320,9 +318,7 @@ class RadiationAgent(AcpAgent):
                  gateway=None) -> None:
         super().__init__(connection)
         self.data = data or RadiationData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -376,7 +372,7 @@ class RadiationAgent(AcpAgent):
                 inside = found["inside"]
                 summary = (f"{params['label']}: {len(inside)} reading(s) within "
                            f"{_num(found['radius_km'], 0)} km")
-        except (RadiationError, GatewayError, ValueError) as exc:
+        except (RadiationError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read Safecast's measurements: {exc}")
             return STOP_END_TURN
@@ -407,44 +403,9 @@ class RadiationAgent(AcpAgent):
             return found, asked
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        arguments: dict = {"latitude": float(params["latitude"]),
-                           "longitude": float(params["longitude"]),
-                           "radius_km": float(params.get("radius_km") or 100.0)}
-
-        data, refused = premium_call(self.gateway, "radiation_trend_board", arguments,
-                                    {"agent": "radiation"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or "rate_per_day" not in data:
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back a trend for that point.",
-                {"agent": "radiation"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a trend out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_trend(data)
-        summary = (f"{data.get('label', 'not reported')}: {data.get('trend', 'not reported')} "
-                   f"at {_num(data.get('rate_per_day'), 4)} {data.get('unit', '')} a day")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message(f"\nSource: {data.get('source', DATASET)}, fitted on the licence gateway. "
-                    "The fit is a line through readings from whatever sensors happened to be "
-                    "inside the radius, and volunteers move their detectors, so a slope here is "
-                    "not a measurement of the place. Rows on other units are dropped before the "
-                    "fit, never averaged in.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

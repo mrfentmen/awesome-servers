@@ -21,7 +21,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL, GatewayClient  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import (  # noqa: E402
     WildfireAgent,
@@ -377,75 +377,8 @@ BOARD_PAYLOAD = {
 BOARD_QUESTION = "season board in CA from 2026-09-01 to 2026-09-03"
 
 
-class RecordingGateway(GatewayClient):
-    def __init__(self, key=None, payload=BOARD_PAYLOAD, refused=False):
-        self.attempts = []
-        self.transports = []
-        self.refusal = "Gateway says: this key was revoked. Set MCP_LICENSE_KEY."
-
-        def fetch(url, body, headers):
-            self.transports.append(body["params"])
-            result = {"content": [{"type": "text", "text":
-                       self.refusal if refused else json.dumps(payload)}]}
-            if refused:
-                result.update(isError=True, structuredContent={"licenceRefusal": True, "reason": "denied"})
-            return {"jsonrpc": "2.0", "id": 1, "result": result}
-        super().__init__(fetch=fetch, key=key, url="http://gateway.test/mcp")
-
-    def call(self, tool, arguments=None):
-        self.attempts.append((tool, arguments, bool(self.key)))
-        return super().call(tool, arguments)
 
 
-class PremiumTests(unittest.TestCase):
-    turn = TurnTests.turn
-
-    def test_no_key_attempts_premium_but_is_not_authorized(self):
-        with patch.dict(os.environ, {}, clear=True):
-            gateway = RecordingGateway()
-            result, _ = self.turn(BOARD_QUESTION, gateway=gateway)
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertIn("`wildfire_season_board` is a premium skill", result["text"])
-        self.assertEqual(len(gateway.attempts), 1)
-        self.assertFalse(gateway.attempts[0][2])
-        self.assertEqual(gateway.transports, [])
-
-    def test_rejected_key_preserves_gateway_answer(self):
-        gateway = RecordingGateway("lic_live_but_rejected", refused=True)
-        result, _ = self.turn(BOARD_QUESTION, gateway=gateway)
-        self.assertEqual(result["text"], gateway.refusal)
-        self.assertEqual(len(gateway.attempts), 1)
-
-    def test_good_key_returns_numbers_and_exact_arguments(self):
-        gateway = RecordingGateway("lic_good")
-        result, _ = self.turn(BOARD_QUESTION, gateway=gateway)
-        self.assertIn("3 incidents; 5005 reported acres", result["text"])
-        self.assertIn("Size class G: 1 incidents, 5000", result["text"])
-        self.assertIn("Containment unknown: 1 incidents, not reported", result["text"])
-        self.assertEqual(gateway.attempts, [("wildfire_season_board", {
-            "start_date": "2026-09-01", "end_date": "2026-09-03", "state": "CA"}, True)])
-        _, artifact = WildfireAgent(data=FakeData(), gateway=gateway)._season_board(route(BOARD_QUESTION)[1])
-        self.assertTrue(artifact["premium"])
-
-    def test_free_questions_never_reach_gateway(self):
-        gateway = RecordingGateway("lic_good")
-        for text in ("what is burning in California?", "how many wildfires are burning nationwide?",
-                     "any fires within 150 miles of Denver?", "tell me about the Timber fire"):
-            self.turn(text, gateway=gateway)
-        self.assertEqual(gateway.attempts, [])
-
-    def test_empty_payload_and_gateway_failure_are_answers(self):
-        result, _ = self.turn(BOARD_QUESTION, gateway=RecordingGateway("lic_good", payload={}))
-        self.assertIn("no readable wildfire season board", result["text"])
-        def broken(*args):
-            raise OSError("offline")
-        result, _ = self.turn(BOARD_QUESTION, gateway=GatewayClient(key="lic_good", fetch=broken))
-        self.assertIn("could not build the season board", result["text"])
-
-    def test_route_preserves_explicit_dates_and_state(self):
-        self.assertEqual(route("season board in California from 2026-09-01 to 2026-09-03"),
-                         ("wildfire-season-board", {"start_date": "2026-09-01", "end_date": "2026-09-03", "state": "CA"}))
-        self.assertNotIn("state", route("season board from 2026-09-01 to 2026-09-03")[1])
 
 
 if __name__ == "__main__":

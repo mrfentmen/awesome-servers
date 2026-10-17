@@ -21,15 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (  # noqa: E402
-    GatewayClient, GatewayError, premium_call, empty_premium_answer,
-    STOP_END_TURN,
-    STOP_REFUSAL,
-    AcpAgent,
-    JsonRpcError,
-    SessionContext,
-    prompt_text,
-)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, JsonRpcError, SessionContext, prompt_text
 
 from data import SECTIONS, BriefData, BriefError  # noqa: E402
 
@@ -41,7 +33,7 @@ HELP = (
     "  - brief me on Denver\n"
     "  - write a briefing for Tokyo\n"
     "  - give me a morning briefing for Miami\n"
-    "  - outlook for Denver next 3 days (premium; US places)\n"
+    "  - outlook for Denver next 3 days (not implemented here)\n"
     "Sections: weather, air quality, official weather alerts, earthquakes in the past day, and "
     "where the space station is. A dead source is reported as unavailable rather than dropped - "
     "and nothing is written until you approve the write."
@@ -107,10 +99,10 @@ class BriefAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: BriefData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or BriefData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -141,7 +133,7 @@ class BriefAgent(AcpAgent):
                           name=skill, raw_input=params)
             try:
                 answer, artifact = self._outlook(params)
-            except (GatewayError, ValueError) as exc:
+            except (ValueError) as exc:
                 ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
                 ctx.message(f"I could not read the outlook: {exc}")
                 return STOP_END_TURN
@@ -209,42 +201,9 @@ class BriefAgent(AcpAgent):
         return STOP_END_TURN
 
     def _outlook(self, params: dict) -> tuple[str, dict]:
-        """Render a multi-source outlook computed entirely on the gateway."""
-        place = str(params.get("place") or "").strip()
-        days = int(params.get("days", 3))
-        if not 2 <= days <= 5:
-            raise ValueError("the outlook covers 2 to 5 days")
-        data, refused = premium_call(self.gateway, "brief_place_outlook",
-                                     {"place": place, "days": days},
-                                     {"agent": "brief", "skill": "brief-outlook"})
-        if refused:
-            return refused
-        daily = data.get("daily") if isinstance(data, dict) else None
-        if (not isinstance(daily, list) or not daily
-                or any(not isinstance(row, dict) or not row.get("date") or not row.get("grade")
-                       or not isinstance(row.get("alerts"), list) for row in daily)
-                or any(data.get(k) is not None and not isinstance(data[k], dict)
-                       for k in ("worstDay", "cleanestWindow"))):
-            return empty_premium_answer("The gateway returned no readable outlook days.",
-                                        {"agent": "brief", "skill": "brief-outlook"})
-        def shown(value):
-            return "not reported" if value is None else str(value)
-        lines = [f"Premium {len(daily)}-day outlook for {data.get('place') or place} (UTC):"]
-        for row in daily:
-            lines.append(f"  • {row['date']}: {row['grade']}; peak AQI {shown(row.get('maxAqi'))}, "
-                         f"rain {shown(row.get('rainChancePct'))}%, wind {shown(row.get('windKmh'))} km/h; "
-                         f"{shown(row.get('lowC'))} to {shown(row.get('highC'))} C; "
-                         f"{len(row['alerts'])} overlapping active alerts")
-        worst, clean = data.get("worstDay"), data.get("cleanestWindow")
-        lines.append(f"Worst complete day: {worst.get('date')} ({worst.get('grade')}), "
-                     f"peak AQI {shown(worst.get('maxAqi'))}." if worst else "Worst complete day: not reported.")
-        lines.append(f"Cleanest three-hour air window: {clean.get('start')} to {clean.get('end')} UTC, "
-                     f"mean AQI {shown(clean.get('meanAqi'))}." if clean else
-                     "Cleanest three-hour air window: not reported.")
-        if data.get("missingDays"):
-            lines.append(f"Missing forecast days: {data['missingDays']}.")
-        lines.extend([str(data.get("grading") or ""), str(data.get("note") or "Source: Open-Meteo + NWS.")])
-        return "\n".join(lines), {**data, "summary": lines[0], "premium": True}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: outlook — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one gather, one write

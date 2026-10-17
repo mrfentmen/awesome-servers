@@ -7,7 +7,7 @@ belong together, because two charities side by side are rarely reporting for the
 
 The question the free skills do not answer is how big a charity is *next to the others*: the
 search only returns names, so a real comparison means reading one record per organisation,
-and that is the premium skill, licensed on the gateway.
+and that is a separate skill, licensed on the gateway.
 """
 
 from __future__ import annotations
@@ -20,9 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, PAGE_SIZE, NonprofitData, NonprofitError,  # noqa: E402
                   NonprofitNotFound, ein_from_text, name_from_text)
@@ -33,7 +31,7 @@ HELP = (
     "  - what is charity EIN 53-0196605's income?\n"
     "  - which charities are named Habitat for Humanity?\n"
     "  - compare the Red Cross and Habitat for Humanity\n"
-    "  - how does the Red Cross compare with other charities like it? (premium)\n"
+    "  - how does the Red Cross compare with other charities like it? (not implemented here)\n"
     "Every amount comes with the tax period it belongs to, because two charities side by\n"
     "side are rarely reporting for the same year. These are the IRS's own figures for each\n"
     "charity, not a parsed Form 990 - ProPublica's filing endpoint returns nothing for the\n"
@@ -292,9 +290,7 @@ class NonprofitAgent(AcpAgent):
                  gateway=None) -> None:
         super().__init__(connection)
         self.data = data or NonprofitData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -355,7 +351,7 @@ class NonprofitAgent(AcpAgent):
                            f"(tax period {row.get('tax_period') or 'not reported'}"
                            + (f", first of {found['total']} matching the name"
                               if found["total"] else "") + ")")
-        except (NonprofitError, GatewayError, ValueError) as exc:
+        except (NonprofitError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read ProPublica's charity data: {exc}")
             return STOP_END_TURN
@@ -369,44 +365,9 @@ class NonprofitAgent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        arguments: dict = {"name": params["name"], "max_organizations": int(params["limit"] or 10)}
-        if params.get("ein"):
-            arguments["focus_ein"] = params["ein"]
-
-        data, refused = premium_call(self.gateway, "nonprofit_peer_standing", arguments,
-                                    {"agent": "nonprofit"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not data.get("read"):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back a peer comparison for that name.",
-                {"agent": "nonprofit"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read a comparison out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_standing(data)
-        summary = (f"{data.get('focus_name', '?')}: rank {data.get('rank')} of "
-                   f"{data.get('ranked_count', '?')} on revenue among "
-                   f"{data.get('read', 0)} read")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message("\nSource: ProPublica, read one record per organisation on the licence "
-                    "gateway. The peers are the organisations ProPublica's own search ranks "
-                    "highest for that name, which is a text match rather than a peer group, "
-                    "and each charity reports for its own tax period.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

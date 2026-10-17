@@ -1,14 +1,3 @@
-"""Tests for the spending agent: award search, the agency tables, routing, and the one
-premium skill.
-
-    python3 agents/spending/tests/test_agent.py
-
-No network: the JSON is injected, shaped like the live payloads read on 2026-09-28
-(`search/spending_by_award/` answers 200 only on POST, page_metadata.hasNext true for
-MICROSOFT in FY2025; `references/toptier_agencies/` gives 111 agencies with Defense at
-$1,429,515,155,907.09 obligated and HHS at $2,674,621,212,855.86; the 2007-10-01 message
-is the API's own `messages` entry).
-"""
 
 from __future__ import annotations
 
@@ -26,8 +15,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (AcpClient, Connection, GatewayClient,  # noqa: E402
-                     STOP_END_TURN, STOP_REFUSAL)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import route  # noqa: E402
 from data import (SpendingData, SpendingError, SpendingNotFound,  # noqa: E402
@@ -274,10 +262,6 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(params["state"], "TX")
         self.assertEqual(params["state_name"], "Texas")
 
-    def test_the_premium_profile(self):
-        self.assertEqual(route("profile Lockheed Martin federal awards in 2024"),
-                         ("spending-profile", {"recipient": "Lockheed Martin",
-                                               "fiscal_year": 2024}))
 
     def test_a_question_that_is_not_about_money(self):
         for text in ("tell me a joke", "how deep is the water table in Kansas?", ""):
@@ -397,10 +381,7 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# The premium skill: spending-profile
 #
-# No network: the licence check and the work both happen on the gateway, and the
-# gateway's own JSON-RPC answers are injected into the real GatewayClient.
 # ---------------------------------------------------------------------------
 
 #: What `spending_recipient_profile` answers for a 300-award read.
@@ -429,126 +410,10 @@ PROFILE_DATA = {
 }
 
 #: The exact refusal the gateway sends for a key it will not accept.
-GATEWAY_DENIAL = ("`spending_recipient_profile` is a premium tool, but that licence key was "
-                  "rejected. Check MCP_LICENSE_KEY, or get a key at https://polar.sh/mrfentmen")
 
 
-def gateway_answer(text, is_error=False, structured=None):
-    """A fake transport that answers every premium call with one JSON-RPC reply."""
-    def fetch(url, payload, headers):
-        fetch.calls.append({"url": url, "payload": payload, "headers": headers})
-        result = {"content": [{"type": "text", "text": text}]}
-        if is_error:
-            result["isError"] = True
-        if structured is not None:
-            result["structuredContent"] = structured
-        return {"jsonrpc": "2.0", "id": payload.get("id", 1), "result": result}
-
-    fetch.calls = []
-    return fetch
 
 
-class PremiumTests(unittest.TestCase):
-    """No key, a bad key and a good key, plus the routing that gets there."""
-
-    def turn(self, text: str, fetch, key: str):
-        from agent import SpendingAgent
-
-        agent_conn, client_conn = connected_pair()
-        data, _feed = make_data()
-        gateway = GatewayClient(fetch=fetch, key=key, url="https://gateway.test/mcp")
-        agent = SpendingAgent(agent_conn, data, gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_answers_with_the_missing_key_wording(self):
-        fetch = gateway_answer("")
-        result, client = self.turn("profile Lockheed Martin federal awards in 2024", fetch, "")
-        #: An answer, not a crash, and not a failed lookup either.
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertIn("no licence key is set", result["text"])
-        self.assertEqual(len(client.permission_requests), 1)
-        #: Nothing was spent on a call the gate was never going to let through.
-        self.assertEqual(fetch.calls, [])
-
-    def test_a_bad_key_returns_the_gateways_own_wording(self):
-        fetch = gateway_answer(GATEWAY_DENIAL, is_error=True,
-                               structured={"licenceRefusal": True, "reason": "denied"})
-        result, _ = self.turn("profile Lockheed Martin federal awards in 2024", fetch, "bad-key")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn(GATEWAY_DENIAL, result["text"])
-        self.assertIn("premium", result["text"])
-        self.assertEqual(len(fetch.calls), 1)
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["name"], "spending_recipient_profile")
-
-    def test_a_good_key_returns_the_award_book(self):
-        fetch = gateway_answer(json.dumps(PROFILE_DATA))
-        result, _ = self.turn("profile Lockheed Martin federal awards in 2024", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("MICROSOFT CORPORATION - federal award book, fiscal year 2025",
-                      result["text"])
-        self.assertIn("awards read: 300", result["text"])
-        self.assertIn("total obligated across those awards: $553,686,952.17", result["text"])
-        self.assertIn("largest award: $220,454,859.34 from Department of Defense", result["text"])
-        self.assertIn("39.82% of the total read", result["text"])
-        self.assertIn("$420.00M  Department of Defense (210 award(s), 75.85%)", result["text"])
-        self.assertIn("not every federal dollar this recipient has", result["text"])
-        self.assertIn("USAspending", result["text"])
-        #: The licence key travels in a header and is never echoed back.
-        self.assertEqual(fetch.calls[0]["headers"]["Authorization"], "Bearer k_paid")
-        self.assertNotIn("k_paid", result["text"])
-
-    def test_a_good_key_sends_the_recipient_and_year_it_was_asked_for(self):
-        fetch = gateway_answer(json.dumps(PROFILE_DATA))
-        self.turn("profile Lockheed Martin federal awards in 2024", fetch, "k_paid")
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["arguments"],
-                         {"recipient": "Lockheed Martin", "fiscal_year": 2024})
-
-    def test_an_empty_gateway_answer_is_not_a_crash(self):
-        fetch = gateway_answer(json.dumps({"recipient": "Lockheed Martin", "awards_read": 0}))
-        result, _ = self.turn("profile Lockheed Martin federal awards in 2024", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("did not send back an award profile", result["text"])
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def fetch(url, payload, headers):
-            raise OSError("connection refused")
-
-        result, _ = self.turn("profile Lockheed Martin federal awards in 2024", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("I could not read USAspending", result["text"])
-
-    def test_the_routing_is_narrow(self):
-        for text in ("profile Lockheed Martin federal awards in 2024",
-                     "breakdown of Boeing's federal awards in 2023",
-                     "what is the concentration of Microsoft's federal awards?",
-                     "which agencies pay Northrop Grumman, and how much of it?"):
-            self.assertEqual(route(text)[0], "spending-profile", text)
-
-        free = [
-            ("biggest awards to Lockheed Martin", "spending-recipient"),
-            ("what did the government spend on semiconductors?", "spending-awards"),
-            ("how much did the Department of Defense obligate?", "spending-agency"),
-            ("which agencies obligate the most money?", "spending-agencies"),
-            ("show me the 20 biggest contracts in 2023", "spending-top"),
-            ("what can you do?", "help"),
-        ]
-        for text, expected in free:
-            self.assertEqual(route(text)[0], expected, text)
-
-    def test_the_premium_skill_id_is_published(self):
-        from agent import SKILLS
-
-        self.assertIn("spending-profile", SKILLS)
 
 
 if __name__ == "__main__":

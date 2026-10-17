@@ -23,8 +23,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (AcpClient, Connection, GatewayClient,  # noqa: E402
-                     STOP_END_TURN, STOP_REFUSAL)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import route  # noqa: E402
 from data import (ComicsData, ComicsError, ComicsNotFound,  # noqa: E402
@@ -166,11 +165,6 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(route("what is comic 2998-3002 about?"),
                          ("comics-run", {"from": 2998, "to": 3002}))
 
-    def test_a_recurring_words_question_goes_to_the_premium_skill(self):
-        self.assertEqual(route("what does xkcd keep coming back to around 2900-2910?"),
-                         ("comics-recurring", {"from": 2900, "to": 2910}))
-        self.assertEqual(route("what words recur in xkcd 100-110?"),
-                         ("comics-recurring", {"from": 100, "to": 110}))
 
     def test_a_single_number_is_not_a_run_of_comics(self):
         #: One comic cannot have a recurring word, so a window would have to be invented.
@@ -275,10 +269,7 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# The premium skill: comics-recurring
 #
-# No network: the licence check and the work both happen on the gateway, and the
-# gateway's own JSON-RPC answers are injected into the real GatewayClient.
 # ---------------------------------------------------------------------------
 
 #: What `comics_recurring_terms` answers over comics 100-111, all with transcripts.
@@ -309,129 +300,10 @@ TRUNCATED_DATA = dict(RECURRING_DATA, **{
 })
 
 #: The exact refusal the gateway sends for a key it will not accept.
-GATEWAY_DENIAL = ("`comics_recurring_terms` is a premium tool, but that licence key was rejected. "
-                  "Check MCP_LICENSE_KEY, or get a key at https://polar.sh/mrfentmen")
 
 
-def gateway_answer(text, is_error=False, structured=None):
-    """A fake transport that answers every premium call with one JSON-RPC reply."""
-    def fetch(url, payload, headers):
-        fetch.calls.append({"url": url, "payload": payload, "headers": headers})
-        result = {"content": [{"type": "text", "text": text}]}
-        if is_error:
-            result["isError"] = True
-        if structured is not None:
-            result["structuredContent"] = structured
-        return {"jsonrpc": "2.0", "id": payload.get("id", 1), "result": result}
-
-    fetch.calls = []
-    return fetch
 
 
-class PremiumTests(unittest.TestCase):
-    """No key, a bad key and a good key, plus the routing that gets there."""
-
-    def turn(self, text: str, fetch, key: str, **kw):
-        from agent import ComicsAgent
-
-        agent_conn, client_conn = connected_pair()
-        data, _feed = make_data(**kw)
-        gateway = GatewayClient(fetch=fetch, key=key, url="https://gateway.test/mcp")
-        agent = ComicsAgent(agent_conn, data, gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_answers_with_the_missing_key_wording(self):
-        fetch = gateway_answer("")
-        result, client = self.turn("what words recur in xkcd 100-110?", fetch, "")
-        #: An answer, not a crash, and not a failed lookup either.
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertIn("no licence key is set", result["text"])
-        self.assertEqual(len(client.permission_requests), 1)
-        #: Nothing was spent on a call the gate was never going to let through.
-        self.assertEqual(fetch.calls, [])
-
-    def test_a_bad_key_returns_the_gateways_own_wording(self):
-        fetch = gateway_answer(GATEWAY_DENIAL, is_error=True,
-                               structured={"licenceRefusal": True, "reason": "denied"})
-        result, _ = self.turn("what words recur in xkcd 100-110?", fetch, "not-a-real-key")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn(GATEWAY_DENIAL, result["text"])
-        self.assertIn("premium", result["text"])
-        self.assertEqual(len(fetch.calls), 1)
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["name"], "comics_recurring_terms")
-
-    def test_a_good_key_returns_the_recurring_words(self):
-        fetch = gateway_answer(json.dumps(RECURRING_DATA))
-        result, _ = self.turn("what words recur in xkcd 100-110?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("xkcd 100-111 - words that come back", result["text"])
-        self.assertIn("read 12 comic(s)", result["text"])
-        self.assertIn("counted from the transcript: 12 transcript(s), 0 alt text only",
-                      result["text"])
-        self.assertIn("duck - 4 comic(s): 101, 104, 107, 110", result["text"])
-        self.assertIn("xkcd (xkcd.com/info.0.json)", result["text"])
-        #: The licence key travels in a header and is never echoed back.
-        self.assertEqual(fetch.calls[0]["headers"]["Authorization"], "Bearer k_paid")
-        self.assertNotIn("k_paid", result["text"])
-
-    def test_a_range_with_no_transcripts_says_it_counted_the_alt_text(self):
-        fetch = gateway_answer(json.dumps(TRUNCATED_DATA))
-        result, _ = self.turn("what does xkcd keep coming back to around 2900-2910?", fetch,
-                              "k_paid")
-        self.assertIn("counted from the alt text: 0 transcript(s), 12 alt text only",
-                      result["text"])
-        self.assertIn("brain - 3 comic(s): 2900, 2905, 2911", result["text"])
-
-    def test_a_good_key_sends_the_range_it_was_asked_for(self):
-        fetch = gateway_answer(json.dumps(RECURRING_DATA))
-        self.turn("what does xkcd keep coming back to around 2900-2910?", fetch, "k_paid")
-        arguments = fetch.calls[0]["payload"]["params"]["arguments"]
-        self.assertEqual(arguments, {"from": 2900, "to": 2910})
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def fetch(url, payload, headers):
-            raise OSError("connection refused")
-
-        result, _ = self.turn("what words recur in xkcd 100-110?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("I could not read xkcd's API", result["text"])
-
-    def test_the_routing_is_narrow(self):
-        free = [
-            ("show me the latest xkcd", "comics-latest"),
-            ("tell me about xkcd 3000", "comics-by-number"),
-            ("comic #1500", "comics-by-number"),
-            ("show me the last 5 comics", "comics-run"),
-            ("what is comic 2998-3002 about?", "comics-run"),
-            ("what can you do?", "help"),
-            ("", "help"),
-        ]
-        for text, expected in free:
-            self.assertEqual(route(text)[0], expected, text)
-
-        premium = [
-            "what does xkcd keep coming back to around 2900-2910?",
-            "what words recur in xkcd 100-110?",
-            "running gags in xkcd 500-520",
-            "what themes show up in comics 300-312",
-        ]
-        for text in premium:
-            self.assertEqual(route(text)[0], "comics-recurring", text)
-
-    def test_the_premium_skill_id_is_published(self):
-        from agent import SKILLS
-
-        self.assertIn("comics-recurring", SKILLS)
 
 
 if __name__ == "__main__":

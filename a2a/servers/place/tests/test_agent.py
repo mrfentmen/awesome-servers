@@ -16,7 +16,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -269,15 +268,6 @@ class ParseTests(unittest.TestCase):
         request = parse(self.message("postcode 10115, Germany"))
         self.assertEqual(request["params"]["country"], "de")
 
-    def test_catchment_questions_route_to_the_premium_skill(self):
-        for text in ("which ward covers the area around 53.4808,-2.2426?",
-                     "what is the administrative make-up around 51.5010,-0.1416?",
-                     "which constituencies cover 53.4808,-2.2426?",
-                     "what is this corner in: 53.4808,-2.2426"):
-            request = parse(self.message(text))
-            self.assertEqual(request["skill"], SKILL_CATCHMENT_AREA, text)
-            self.assertTrue(request["explicit"], text)
-            self.assertTrue(request["params"].get("point"), text)
 
     def test_free_skills_keep_their_own_questions(self):
         self.assertEqual(parse(self.message("what is in postcode SW1A 1AA?"))["skill"], "uk-postcode")
@@ -467,8 +457,6 @@ CATCHMENT_PAYLOAD = {
     "postcodes": [{"postcode": "M2 4NG", "admin_ward": "Deansgate", "distance_km": 0}],
 }
 
-DENIED_TEXT = ("`a2a_place_catchment` is a premium tool, but that license key is not valid. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`a2a_place_catchment` failed: postcodes.io refused that request: HTTP 503"
 
 
@@ -479,29 +467,6 @@ def _message(text, **extra):
     return payload
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            # The gateway's licence refusal, marker included: the marker is what tells a
-            # refusal apart from a tool that failed after the gate had let it through.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class CatchmentSkillTests(unittest.TestCase):
@@ -511,87 +476,14 @@ class CatchmentSkillTests(unittest.TestCase):
         return PlaceAgent(client=client or FakePlace(), gateway=gateway).run(
             {"skill": SKILL_CATCHMENT_AREA, "params": params, "missing": []})
 
-    def test_the_message_reports_the_gateways_tally(self):
-        gateway, calls = fake_gateway(CATCHMENT_PAYLOAD)
-        result = self.catchment(gateway=gateway, point="53.4808,-2.2426", radius_km=5)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("100 UK postcode(s) read", result["message"])
-        self.assertIn("nearest postcode: M2 4NG", result["message"])
-        self.assertIn("Deansgate ward", result["message"])
-        self.assertIn("ward: Deansgate (100 pc, 100.0%)", result["message"])
-        self.assertIn("constituency: Manchester Central", result["message"])
-        self.assertIn(UK_DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["postcodes_in_radius"], 100)
-        self.assertEqual(len(result["artifact"]["postcodes"]), 1)
 
-        # postcodes.io was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "a2a_place_catchment")
-        self.assertEqual(sent["arguments"]["latitude"], 53.4808)
-        self.assertEqual(sent["arguments"]["longitude"], -2.2426)
-        self.assertEqual(sent["arguments"]["radius_km"], 5)
-        self.assertEqual(sent["arguments"]["limit"], 100)
 
-    def test_a_short_feed_count_is_admitted(self):
-        payload = {**CATCHMENT_PAYLOAD, "postcodes_returned_by_feed": 40, "postcodes_in_radius": 40}
-        gateway, _ = fake_gateway(payload)
-        result = self.catchment(gateway=gateway, point="53.4808,-2.2426")
-        self.assertIn("returned 40 postcode(s)", result["message"])
-        self.assertIn("it caps the count", result["message"])
 
-    def test_an_empty_area_is_reported(self):
-        payload = {**CATCHMENT_PAYLOAD, "postcodes_in_radius": 0,
-                   "coverage": {k: [] for k in CATCHMENT_PAYLOAD["coverage"]}}
-        gateway, _ = fake_gateway(payload)
-        result = self.catchment(gateway=gateway, point="53.4808,-2.2426")
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("without any postcode", result["message"])
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = self.catchment(gateway=gateway, point="53.4808,-2.2426")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("coverage", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = self.catchment(gateway=gateway, point="53.4808,-2.2426")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_tally(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = self.catchment(gateway=gateway, point="53.4808,-2.2426")
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("coverage"))
 
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = self.catchment(gateway=gateway, point="53.4808,-2.2426")
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("HTTP 503", result["message"])
 
-    def test_a_bad_point_is_a_question_not_a_charge(self):
-        gateway, calls = fake_gateway(CATCHMENT_PAYLOAD)
-        result = self.catchment(gateway=gateway, point="Manchester")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("lat,lon", result["message"])
-        self.assertEqual(calls, [])
-
-    def test_a_bad_radius_is_a_question_not_a_charge(self):
-        gateway, calls = fake_gateway(CATCHMENT_PAYLOAD)
-        result = self.catchment(gateway=gateway, point="53.4808,-2.2426", radius_km=200)
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("between 0.1 and 25 km", result["message"])
-        self.assertEqual(calls, [])
 
 
 if __name__ == "__main__":

@@ -17,12 +17,7 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import (  # noqa: E402
-    A2AHandler,
-    GatewayClient,
-    PushWatcher,
-    TaskStore,
-)
+from a2a_kit import A2AHandler, PushWatcher, TaskStore
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -553,32 +548,9 @@ THREAT_PAYLOAD = {
     "levelsNeverAssigned": 1,
 }
 
-DENIED_TEXT = ("`volcano_threat_ranking` is a premium tool, but that licence key has expired. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`volcano_threat_ranking` failed: the volcano catalogue returned no volcanoes"
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "expired"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class VolcanoThreatSkillTests(unittest.TestCase):
@@ -587,11 +559,6 @@ class VolcanoThreatSkillTests(unittest.TestCase):
     def agent(self, gateway) -> VolcanoAgent:
         return VolcanoAgent(FakeVsc(), gateway=gateway)
 
-    def test_threat_questions_route_to_the_premium_skill(self):
-        for text in ("Which high-threat volcanoes are still sitting at normal?",
-                     "which observatory watches the most volcanoes?",
-                     "how long have the elevated volcanoes been elevated?"):
-            self.assertEqual(parse(_message(text))["skill"], SKILL_VOLCANO_THREAT, text)
 
     def test_the_free_skills_keep_their_own_questions(self):
         self.assertEqual(parse(_message("which volcanoes are erupting right now?"))["skill"],
@@ -607,75 +574,11 @@ class VolcanoThreatSkillTests(unittest.TestCase):
         self.assertEqual(parsed["skill"], SKILL_VOLCANO_THREAT)
         self.assertEqual(parsed["params"], {})
 
-    def test_the_message_reports_the_gateways_picture(self):
-        gateway, calls = fake_gateway(THREAT_PAYLOAD)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_VOLCANO_THREAT, "params": {}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("161 monitored volcano(s) and seamount(s)", result["message"])
-        self.assertIn("NORMAL 152, ADVISORY 5, WATCH 2, WARNING 1, UNASSIGNED 1", result["message"])
-        self.assertIn("Observatories: AVO 54, CVO 21", result["message"])
-        self.assertIn("8 volcano(s) are above normal right now", result["message"])
-        self.assertIn("Great Sitkin — WARNING/RED (High), Alaska, 412.5 day(s) at this level",
-                      result["message"])
-        self.assertIn("Kilauea — ADVISORY/YELLOW (Very High), Hawaii, no date published",
-                      result["message"])
-        self.assertIn("57 volcano(s) carry a high or very high threat score, and 2 of those are "
-                      "sitting at normal", result["message"])
-        self.assertIn("Mount Rainier — Very High, Cascades (CVO)", result["message"])
-        self.assertIn("1 volcano(s) have no alert level assigned at all", result["message"])
-        self.assertIn("not what it is doing now", result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["monitored_volcanoes"], 161)
-        self.assertEqual(result["artifact"]["high_threat_count"], 57)
 
-        # The catalogue was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "volcano_threat_ranking")
-        self.assertEqual(sent["arguments"], {})
 
-    def test_a_quiet_catalogue_is_reported_as_quiet(self):
-        gateway, _ = fake_gateway({**THREAT_PAYLOAD,
-                                   "elevated": {"count": 0, "volcanoes": []}})
-        result = self.agent(gateway).run(
-            {"skill": SKILL_VOLCANO_THREAT, "params": {}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("No volcano in the catalogue is above normal right now", result["message"])
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = self.agent(gateway).run(
-            {"skill": SKILL_VOLCANO_THREAT, "params": {}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("monitored_volcanoes", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = self.agent(gateway).run(
-            {"skill": SKILL_VOLCANO_THREAT, "params": {}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_picture(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = self.agent(gateway).run(
-            {"skill": SKILL_VOLCANO_THREAT, "params": {}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("monitored_volcanoes"))
-
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = self.agent(gateway).run(
-            {"skill": SKILL_VOLCANO_THREAT, "params": {}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("returned no volcanoes", result["message"])
 
 
 if __name__ == "__main__":

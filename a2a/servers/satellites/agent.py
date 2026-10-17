@@ -6,9 +6,9 @@
   - catalog-lookup:  the SATCAT record: owner, launch date, orbit regime, decay date
   - pass-windows:    the next days at a place read as usable observation windows
 
-Premium: `pass-windows` runs on the licence gateway. That work is not in this
+Premium: `pass-windows` runs on a hosted service that was removed. That work is not in this
 repository at all - the gateway propagates the element sets and merges the
-overlapping passes, so a caller who has not paid gets the gateway's own message
+overlapping passes, so a caller who has not paid gets a not-implemented stub message
 and no times at all. Every other skill reads CelesTrak directly and stays free.
 
 The times are modelled, not SGP4: two-body Kepler with secular J2 drift, no
@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     DATASET,
@@ -123,10 +123,10 @@ CARD_SKILLS = [
             "The next few days at a place read as windows you could actually use: each stretch of "
             "time something is above an elevation worth getting out for, when it starts and ends, "
             "how long it lasts, which satellite gives the best pass inside it, the total hours on "
-            "offer and the dead gaps between them. Premium: it runs behind a licence check on the "
+            "offer and the dead gaps between them. Premium: it runs on a hosted service that was removed on the "
             "gateway, which does the propagation and the merging."
         ),
-        "tags": ["satellites", "celestrak", "passes", "windows", "planning", "premium"],
+        "tags": ["satellites", "celestrak", "passes", "windows", "planning",],
         "examples": [
             "when are the good satellite windows from London over the next 3 days?",
             "how many hours of usable passes do I have from 51.5074,-0.1278 this week?",
@@ -641,106 +641,14 @@ def run_catalog(params: dict, client: CelesTrakClient) -> dict:
     }
 
 
-def run_pass_windows(params: dict, client: CelesTrakClient, gateway: GatewayClient) -> dict:
-    """The premium observation windows. Nothing here propagates: the gateway does.
-
-    The free `passes` skill answers "when does this one satellite pass". This
-    answers the different question - across a whole group and a multi-day range,
-    when is there a stretch worth going outside for - and that work, the
-    propagation and the merging, happens on the gateway behind its licence check.
-    """
-    point = params.get("point")
-    if not point:
-        return _missing_point()
-    try:
-        lat, lon = client.check_point(point)
-        days = client.check_days(params.get("days") or DEFAULT_PASS_DAYS)
-        min_elevation = client.check_elevation(params.get("min_elevation", DEFAULT_MIN_ELEVATION))
-        group = client.check_group(params.get("group", "stations"))
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-
-    arguments = {
-        "latitude": lat,
-        "longitude": lon,
-        "days": days,
-        "min_elevation": min_elevation,
-        "group": group,
+def run_pass_windows(params: dict, client: CelesTrakClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: pass-windows — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    read, refused = premium_call(gateway, GATEWAY_TOOL, arguments, {
-        "dataset": DATASET, "point": point, "days": days, "min_elevation_deg": min_elevation,
-        "group": group,
-    })
-    if refused:
-        return refused
-    if not isinstance(read, dict) or not isinstance(read.get("windows"), list):
-        return empty_premium_answer(
-            "The licence gateway answered without any satellite windows, so there is nothing to report.",
-            {"dataset": DATASET, "point": point, "group": group},
-        )
-
-    windows = read["windows"]
-    total_hours = read.get("totalHours")
-    lines = [
-        f"{read.get('windowCount', len(windows))} window(s) over the CelesTrak "
-        f"“{read.get('group', group)}” group above {read.get('minElevationDeg', min_elevation)}° "
-        f"from {point}, {read.get('from')} to {read.get('to')}:",
-    ]
-    for window in windows[:MAX_LISTED]:
-        lines.append(
-            f"  • {window.get('start')} to {window.get('end')} ({window.get('minutes')} min) — "
-            f"best is {window.get('bestSatellite')} at {window.get('maxElevationDeg')}° "
-            f"({window.get('bestAt')}), range {window.get('rangeKm')} km, "
-            f"{window.get('satelliteCount')} object(s) up"
-        )
-    if read.get("windowsTruncated"):
-        lines.append(f"  • ... {read['windowsTruncated']} more window(s) are in the artifact.")
-    if not windows:
-        lines.append("  • Nothing rises that high in this window. Try a lower elevation.")
-    lines.append(
-        f"  • {total_hours} h total above the threshold, {read.get('coveragePct')}% of the "
-        f"{read.get('days', days)} day(s), out of {read.get('satellitesConsidered')} object(s) swept."
-    )
-    longest = read.get("longestWindow")
-    if longest:
-        lines.append(
-            f"  • Longest window {longest.get('minutes')} min from {longest.get('start')}, peaking "
-            f"at {longest.get('maxElevationDeg')}° on {longest.get('bestSatellite')}."
-        )
-    for gap in read.get("gaps") or []:
-        lines.append(f"  • Dead air: {gap.get('minutes')} min, {gap.get('from')} to {gap.get('to')}")
-    lines.append(
-        "\nComputed on the MCP gateway behind its licence check, from CelesTrak's published element "
-        f"sets ({DATASET}). The gateway reports the oldest element set it used as "
-        f"{read.get('oldestElementSet') or 'not reported'}; the model is two-body Kepler plus "
-        "secular J2 drift, not SGP4, so treat these as modelled passes rather than a schedule. "
-        "They are also not visibility: check the sun angle yourself before planning a night out."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": SOURCE,
-        "premium": True,
-        "point": point,
-        "group": read.get("group", group),
-        "days": read.get("days", days),
-        "min_elevation_deg": read.get("minElevationDeg", min_elevation),
-        "from": read.get("from"),
-        "to": read.get("to"),
-        "window_count": read.get("windowCount"),
-        "pass_count": read.get("passCount"),
-        "total_minutes": read.get("totalMinutes"),
-        "total_hours": total_hours,
-        "coverage_pct": read.get("coveragePct"),
-        "satellites_considered": read.get("satellitesConsidered"),
-        "satellite_names": read.get("satelliteNames"),
-        "longest_window": longest,
-        "windows": windows,
-        "windows_truncated": read.get("windowsTruncated"),
-        "gaps": read.get("gaps"),
-        "oldest_element_set": read.get("oldestElementSet"),
-        "method": read.get("method"),
-    }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class CelesTrakAgent(SkillAgent):
@@ -759,9 +667,9 @@ class CelesTrakAgent(SkillAgent):
     card_skills = CARD_SKILLS
 
     def __init__(self, client: CelesTrakClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or CelesTrakClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

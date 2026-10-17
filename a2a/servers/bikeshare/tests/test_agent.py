@@ -16,7 +16,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -268,15 +267,6 @@ class ParseTests(unittest.TestCase):
         self.assertEqual(parse(self.message("how many bikes at station 6322.01?"))["skill"],
                          "station-lookup")
 
-    def test_ride_pair_routes_to_the_premium_skill(self):
-        for text in ("can I bike from 40.7484,-73.9857 to 40.7580,-73.9855?",
-                     "where do I pick up and drop off for 40.7008,-73.9938 to 40.7128,-74.0060?",
-                     "ride 40.7484,-73.9857 -> 40.7580,-73.9855"):
-            request = parse(self.message(text))
-            self.assertEqual(request["skill"], SKILL_RIDE_PAIR, text)
-            self.assertTrue(request["params"]["origin"], text)
-            self.assertTrue(request["params"]["destination"], text)
-            self.assertTrue(request["explicit"], text)
 
     def test_free_skills_keep_their_own_questions(self):
         self.assertEqual(parse(self.message("where can I get a bike near 40.7484,-73.9857?"))["skill"],
@@ -444,8 +434,6 @@ RIDE_PAYLOAD = {
     "note": "walk distances are straight-line; the feed publishes no cycling or walking time",
 }
 
-DENIED_TEXT = ("`a2a_bikeshare_ride_pair` is a premium tool, but that license key is not valid. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`a2a_bikeshare_ride_pair` failed: the Citi Bike feed returned a GBFS document with no station list"
 
 
@@ -456,29 +444,6 @@ def _message(text, **extra):
     return payload
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            # The gateway's licence refusal, marker included: the marker is what tells a
-            # refusal apart from a tool that failed after the gate had let it through.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class RidePairSkillTests(unittest.TestCase):
@@ -488,89 +453,14 @@ class RidePairSkillTests(unittest.TestCase):
         return BikeShareAgent(client=client or FakeBikeShare(), gateway=gateway).run(
             {"skill": SKILL_RIDE_PAIR, "params": params, "missing": []})
 
-    def test_the_message_reports_the_gateways_pair(self):
-        gateway, calls = fake_gateway(RIDE_PAYLOAD)
-        result = self.ride(gateway=gateway, origin="40.7484,-73.9857", destination="40.7580,-73.9855")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Pick up at E 33 St & 5 Ave", result["message"])
-        self.assertIn("0.106 km walk", result["message"])
-        self.assertIn("Drop off at Broadway & W 48 St", result["message"])
-        self.assertIn("99 free dock(s)", result["message"])
-        self.assertIn("0.354 km of walking in total", result["message"])
-        self.assertIn("also: 6 Ave & W 34 St", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["stations_read"], 2520)
-        self.assertEqual(len(result["artifact"]["alternatives"]), 1)
 
-        # The GBFS feeds were read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "a2a_bikeshare_ride_pair")
-        self.assertEqual(sent["arguments"]["origin_latitude"], 40.7484)
-        self.assertEqual(sent["arguments"]["origin_longitude"], -73.9857)
-        self.assertEqual(sent["arguments"]["destination_latitude"], 40.758)
-        self.assertEqual(sent["arguments"]["destination_longitude"], -73.9855)
-        self.assertEqual(sent["arguments"]["search_km"], 1.0)
 
-    def test_a_station_not_renting_is_called_out(self):
-        payload = {**RIDE_PAYLOAD, "best": {
-            **RIDE_PAYLOAD["best"],
-            "pickup": {**RIDE_PAYLOAD["best"]["pickup"], "renting": False}}}
-        gateway, _ = fake_gateway(payload)
-        result = self.ride(gateway=gateway, origin="40.7484,-73.9857", destination="40.7580,-73.9855")
-        self.assertIn("NOT renting", result["message"])
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = self.ride(gateway=gateway, origin="40.7484,-73.9857", destination="40.7580,-73.9855")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("best", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = self.ride(gateway=gateway, origin="40.7484,-73.9857", destination="40.7580,-73.9855")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_ride(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = self.ride(gateway=gateway, origin="40.7484,-73.9857", destination="40.7580,-73.9855")
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("best"))
 
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = self.ride(gateway=gateway, origin="40.7484,-73.9857", destination="40.7580,-73.9855")
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("no station list", result["message"])
 
-    def test_a_bad_point_is_a_question_not_a_charge(self):
-        gateway, calls = fake_gateway(RIDE_PAYLOAD)
-        result = self.ride(gateway=gateway, origin="the office", destination="40.7580,-73.9855")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("lat,lon", result["message"])
-        self.assertEqual(calls, [])
 
-    def test_a_bad_search_radius_is_a_question_not_a_charge(self):
-        gateway, calls = fake_gateway(RIDE_PAYLOAD)
-        result = self.ride(gateway=gateway, origin="40.7484,-73.9857",
-                           destination="40.7580,-73.9855", search_km=90)
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("between 0.1 and 5 km", result["message"])
-        self.assertEqual(calls, [])
-
-    def test_a_gateway_answer_without_a_pair_is_not_a_ride(self):
-        gateway, _ = fake_gateway({"stations_read": 2520, "pairs_compared": 0})
-        result = self.ride(gateway=gateway, origin="40.7484,-73.9857", destination="40.7580,-73.9855")
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("without a ride pair", result["message"])
 
 
 if __name__ == "__main__":

@@ -23,7 +23,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import BriefAgent, FILENAME, place_from_text, route  # noqa: E402
 from data import SECTIONS, BriefData, BriefError  # noqa: E402
@@ -274,12 +274,10 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# Premium: multi-day place outlook runs on the licence gateway.
 
 import json
 import os
 from unittest.mock import patch
-from acp_kit import GatewayClient
 
 OUTLOOK_PAYLOAD = {
     "place": "Denver, Colorado, United States", "days": 2, "missingDays": 0,
@@ -295,82 +293,6 @@ OUTLOOK_PAYLOAD = {
     "grading": "grade rules", "note": "sources",
 }
 
-class PremiumOutlookTests(unittest.TestCase):
-    def gateway(self, key, payload=OUTLOOK_PAYLOAD, refused=False):
-        calls = []
-        def fetch(url, body, headers):
-            calls.append((body["params"], headers))
-            result = {"content": [{"type": "text", "text": json.dumps(payload)}]}
-            if refused:
-                result.update(isError=True, structuredContent={"licenceRefusal": True})
-            return {"result": result}
-        gateway = GatewayClient(key=key, fetch=fetch)
-        gateway.calls = calls
-        return gateway
-
-    def premium_turn(self, text, gateway):
-        agent_conn, client_conn = connected_pair()
-        agent = BriefAgent(agent_conn, make_data(), gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_preserves_gate_wording(self):
-        with patch.dict(os.environ, {}, clear=True):
-            gateway = self.gateway("")
-            with patch.object(gateway, "call", wraps=gateway.call) as call:
-                result, _ = self.premium_turn("outlook for Denver next 2 days", gateway)
-            call.assert_called_once_with("brief_place_outlook", {"place": "Denver", "days": 2})
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertEqual(gateway.calls, [])
-
-    def test_rejected_key_preserves_gateway_wording(self):
-        gateway = self.gateway("lic_live_but_rejected", "revoked premium wording", True)
-        answer, artifact = BriefAgent(data=make_data(), gateway=gateway)._outlook({"place": "Denver", "days": 2})
-        self.assertEqual(answer, json.dumps("revoked premium wording"))
-        self.assertEqual(artifact["reason"], "denied")
-
-    def test_good_key_renders_gateway_grade_and_window(self):
-        gateway = self.gateway("lic_granted")
-        answer, artifact = BriefAgent(data=make_data(), gateway=gateway)._outlook({"place": "Denver", "days": 2})
-        self.assertIn("Premium 2-day outlook for Denver", answer)
-        self.assertIn("2026-10-02: high; peak AQI 120", answer)
-        self.assertIn("Worst complete day: 2026-10-02 (high), peak AQI 120", answer)
-        self.assertIn("Cleanest three-hour air window: 2026-10-01T00:00 to 2026-10-01T03:00 UTC", answer)
-        self.assertTrue(artifact["premium"])
-        self.assertEqual(len(gateway.calls), 1)
-        self.assertEqual(gateway.calls[0][0], {"name": "brief_place_outlook", "arguments": {"place": "Denver", "days": 2}})
-        self.assertEqual(gateway.calls[0][1]["Authorization"], "Bearer lic_granted")
-
-    def test_free_briefing_never_calls_gateway(self):
-        gateway = self.gateway("lic_granted")
-        with patch.object(gateway, "call", wraps=gateway.call) as call:
-            result, _ = self.premium_turn("brief me on Denver, just tell me in the chat", gateway)
-        self.assertIn("# Briefing - Denver", result["text"])
-        call.assert_not_called()
-        self.assertEqual(gateway.calls, [])
-
-    def test_outlook_prompt_routes_to_gateway_without_file_write(self):
-        gateway = self.gateway("lic_granted")
-        result, client = self.premium_turn("outlook for Denver next 2 days", gateway)
-        self.assertIn("peak AQI 120", result["text"])
-        self.assertEqual(client.written_files, [])
-        self.assertEqual(len(gateway.calls), 1)
-        self.assertEqual(route("outlook for Denver next 5 days"),
-                         ("brief-outlook", {"place": "Denver", "days": 5}))
-        self.assertEqual(route("outlook for Denver"),
-                         ("brief-outlook", {"place": "Denver", "days": 3}))
-
-    def test_empty_payload_is_not_invented(self):
-        answer, artifact = BriefAgent(data=make_data(), gateway=self.gateway("lic_granted", {}))._outlook({"place": "Denver", "days": 2})
-        self.assertIn("no readable outlook days", answer)
-        self.assertTrue(artifact["failed"])
 
 
 if __name__ == "__main__":

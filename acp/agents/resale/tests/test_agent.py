@@ -1,7 +1,3 @@
-"""Tests for the resale agent: catalogue reader, routing, skills, permissions, the premium index.
-
-    python3 agents/resale/tests/test_agent.py
-"""
 
 from __future__ import annotations
 
@@ -19,7 +15,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, GatewayClient, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import ResaleAgent, keyword_from_text, route, singular, usd  # noqa: E402
 from data import (  # noqa: E402
@@ -280,13 +276,7 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(skill, "piece-lookup")
         self.assertEqual(params["source"], DATASET_REBAG)
 
-    def test_two_brands_asked_to_compare_is_the_premium_skill(self):
-        skill, params = route("compare chanel and gucci")
-        self.assertEqual(skill, "price-index")
-        self.assertEqual(params["brands"], ["chanel", "gucci"])
 
-    def test_one_brand_never_routes_to_the_premium_skill(self):
-        self.assertEqual(route("compare the chanel market")[0], "brand-market")
 
     def test_singular_helper(self):
         self.assertEqual(singular("watches"), "watch")
@@ -364,7 +354,6 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# Premium: the cross-brand index is computed on the licence gateway
 # ---------------------------------------------------------------------------
 
 INDEX_PAYLOAD = {
@@ -381,10 +370,6 @@ INDEX_PAYLOAD = {
 }
 
 #: The gateway words its own refusals, buy link included, and the agent must not rewrite them.
-REFUSAL_TEXT = (
-    "This is a premium skill and needs a valid license key. "
-    "Get one at https://polar.sh/mrfentmen and set MCP_LICENSE_KEY."
-)
 
 
 def mcp_result(payload, is_error=False, structured=None):
@@ -396,76 +381,8 @@ def mcp_result(payload, is_error=False, structured=None):
     return {"jsonrpc": "2.0", "id": 1, "result": result}
 
 
-def make_gateway(key, result):
-    """A real GatewayClient with the transport injected - no network, ever."""
-    calls = []
-
-    def fetch(url, payload, headers):
-        calls.append({"tool": payload["params"]["name"],
-                      "arguments": payload["params"]["arguments"],
-                      "authorized": "Authorization" in headers})
-        return result
-
-    client = GatewayClient(fetch=fetch, url="http://127.0.0.1:8787/mcp", key=key)
-    client.calls = calls
-    return client
 
 
-class PremiumIndexTests(unittest.TestCase):
-    def premium_turn(self, text, gateway, permission="allow-once"):
-        agent_conn, client_conn = connected_pair()
-        agent = ResaleAgent(agent_conn, FakeData(), gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission=permission)
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_returns_the_gateways_own_wording(self):
-        saved = os.environ.pop("MCP_LICENSE_KEY", None)
-        try:
-            result, _ = self.premium_turn("compare chanel and gucci",
-                                          make_gateway("", mcp_result(INDEX_PAYLOAD)))
-        finally:
-            if saved is not None:
-                os.environ["MCP_LICENSE_KEY"] = saved
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-
-    def test_a_bad_key_is_answered_not_crashed(self):
-        gateway = make_gateway("lic_live_but_rejected", mcp_result(
-            REFUSAL_TEXT, is_error=True,
-            structured={"licenceRefusal": True, "reason": "denied"}))
-        result, _ = self.premium_turn("compare chanel and gucci", gateway)
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("polar.sh", result["text"])
-
-    def test_a_good_key_gets_the_board_and_the_gateway_did_the_work(self):
-        gateway = make_gateway("lic_granted", mcp_result(INDEX_PAYLOAD))
-        result, client = self.premium_turn("compare chanel, gucci and prada", gateway)
-        self.assertIn("computed on the licence gateway", result["text"])
-        self.assertIn("chanel: 83 listings (70 available), median $1,975", result["text"])
-        self.assertIn("Highest median asking price: chanel", result["text"])
-        self.assertEqual(gateway.calls[0]["tool"], "resale_price_index")
-        self.assertTrue(gateway.calls[0]["authorized"])
-        self.assertEqual(gateway.calls[0]["arguments"]["brands"], ["chanel", "gucci", "prada"])
-        self.assertEqual(len(client.permission_requests), 1)
-
-    def test_free_skills_never_reach_the_gateway(self):
-        gateway = make_gateway("lic_granted", mcp_result(INDEX_PAYLOAD))
-        for text in ("show me chanel jewelry", "what does the gucci market look like",
-                     "pull the listing handbags-hermes-maxibox-bag-evercolor-294167871"):
-            self.premium_turn(text, gateway)
-        self.assertEqual(gateway.calls, [])
-
-    def test_usd_formatting(self):
-        self.assertEqual(usd(1975.0), "$1,975")
-        self.assertEqual(usd(None), "price not reported")
 
 
 if __name__ == "__main__":

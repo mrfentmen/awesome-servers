@@ -21,8 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer  # noqa: E402
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (  # noqa: E402
     DATASET,
@@ -46,7 +45,7 @@ HELP = (
     "  - recruiting trials for ALS in California\n"
     "  - completed studies for long COVID in the UK\n"
     "  - what is trial NCT01065467?\n"
-    "  - trial landscape for melanoma in Boston from 2025-01-01 to 2025-12-31 (premium)\n"
+    "  - trial landscape for melanoma in Boston from 2025-01-01 to 2025-12-31 (not implemented here)\n"
     "I answer with the study's number, status, phase, sponsor, how many people it plans to enrol, "
     "the sites that match the place you named, when the record was last updated and a link to it. "
     "This is the registry's record, not medical advice, and a status is the sponsor's own word."
@@ -212,10 +211,10 @@ class TrialsAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: TrialsData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or TrialsData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -265,7 +264,7 @@ class TrialsAgent(AcpAgent):
                 summary = f"one study: {study['nct']}"
             else:
                 body, summary = self._search(params)
-        except (TrialsError, GatewayError) as exc:
+        except (TrialsError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read that: {exc}")
             return STOP_END_TURN
@@ -281,33 +280,9 @@ class TrialsAgent(AcpAgent):
     # -- the search answer -------------------------------------------------
 
     def _landscape(self, params: dict) -> tuple[str, dict]:
-        """The gateway counts trial phases, statuses and sponsor classes."""
-        context = {"agent": "clinicaltrials", "skill": "trials-landscape"}
-        if not all(params.get(key) for key in ("condition", "start", "end")):
-            return empty_premium_answer(
-                "Use: trial landscape for melanoma in Boston from 2025-01-01 to 2025-12-31.", context)
-        arguments = {key: params[key] for key in ("condition", "start", "end", "location") if key in params}
-        data, refused = premium_call(self.gateway, "clinical_trial_landscape", arguments, context)
-        if refused:
-            return refused
-        valid = isinstance(data, dict) and all(type(data.get(k)) is int and data[k] >= 0
-                                               for k in ("scanned", "totalMatching"))
-        valid = valid and type(data.get("complete")) is bool
-        valid = valid and all(isinstance(data.get(k), dict) and all(
-            isinstance(label, str) and type(n) is int and n >= 0 for label, n in data[k].items())
-            for k in ("byPhase", "byStatus", "bySponsorClass"))
-        if not valid:
-            return empty_premium_answer("The licence gateway returned no readable trial landscape.", context)
-        summary = f"{data['scanned']} studies counted of {data['totalMatching']} matching"
-        lines = [f"Premium trial landscape for {params['condition']}: {summary}.",
-                 f"First posted {params['start']} to {params['end']}; "
-                 + ("complete coverage." if data["complete"] else "partial coverage (800-study cap).")]
-        if params.get("location"):
-            lines.append(f"Location filter: {params['location']}")
-        for key, title in (("byPhase", "Phase"), ("byStatus", "Status"), ("bySponsorClass", "Sponsor class")):
-            lines.append(title + ": " + (", ".join(f"{k} {v}" for k, v in sorted(data[key].items())) or "none"))
-        lines.append(str(data.get("note") or "Registry records are not medical advice."))
-        return "\n".join(lines), {**context, "summary": summary, "premium": True, "data": data}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: landscape — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def _search(self, params: dict) -> tuple[str, str]:
         reading = self.data.search(condition=params.get("condition"), place=params.get("place"),

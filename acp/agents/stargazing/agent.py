@@ -17,9 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, SLOT_HOURS, StargazingData, StargazingError,  # noqa: E402
                   StargazingNotFound, coordinates_from_text, describe_cloud,
@@ -293,9 +291,7 @@ class StargazingAgent(AcpAgent):
                  gateway=None) -> None:
         super().__init__(connection)
         self.data = data or StargazingData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -348,7 +344,7 @@ class StargazingAgent(AcpAgent):
                 body = render_tonight(run, params["label"], params["hours"])
                 summary = (f"{params['label']}: {max(1, params['hours'] // SLOT_HOURS)} "
                            f"slot(s) over {params['hours']} h")
-        except (StargazingError, GatewayError, ValueError) as exc:
+        except (StargazingError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read 7Timer's forecast: {exc}")
             return STOP_END_TURN
@@ -362,47 +358,9 @@ class StargazingAgent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        arguments: dict = {"hours": int(params.get("hours") or 12)}
-        if params.get("latitude") is not None:
-            arguments["latitude"] = float(params["latitude"])
-            arguments["longitude"] = float(params["longitude"])
-            arguments["label"] = str(params.get("label") or "not reported")
-
-        data, refused = premium_call(self.gateway, "stargazing_best_window_board", arguments,
-                                    {"agent": "stargazing"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or "windows" not in data:
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back any observing windows.",
-                {"agent": "stargazing"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read any windows out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_best(data)
-        windows = data.get("windows") or []
-        summary = (f"{data.get('label', 'not reported')}: {data.get('slots_scored', 0)} slot(s) "
-                   f"scored, {len(windows)} window(s)")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message(f"\nSource: {data.get('source', DATASET)}, ranked on the licence gateway. "
-                    "The score is a weighted sum of the three published indices, and the "
-                    "weights are a choice this answer makes and shows - 7Timer does not rank "
-                    "anything. Two windows hours apart are not independent, and a bright Moon "
-                    "is not in the product at all.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

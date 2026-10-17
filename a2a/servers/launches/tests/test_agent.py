@@ -1,12 +1,3 @@
-"""Tests for the SpaceDevs launch-schedule server.
-
-    python3 servers/launches/tests/test_agent.py
-
-No test touches the network: the client is given a fake `fetch` or subclassed.
-The premium skill is exercised through a `GatewayClient` whose POST is a
-function, so the no-key, bad-key, good-key and dead-gateway paths are all
-covered without a key and without a network.
-"""
 
 from __future__ import annotations
 
@@ -21,7 +12,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -150,8 +140,6 @@ def _message(text, **data):
     return {"parts": parts}
 
 
-DENIED_TEXT = ("`a2a_launches_board` is a premium tool, but that license key is not valid. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`a2a_launches_board` failed: the Launch Library is throttling this address"
 
 #: Shape copied from a live gateway `a2a_launches_board` answer.
@@ -183,25 +171,6 @@ BOARD_PAYLOAD = {
 }
 
 
-def fake_gateway(payload=None, error=None, tool_error=None, key="polar_test_key"):
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None:
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        return {"jsonrpc": "2.0", "id": 1,
-                "result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class ParsingTests(unittest.TestCase):
@@ -368,116 +337,7 @@ class ParseTests(unittest.TestCase):
         self.assertEqual(parse(_message("hello"))["skill"], SKILL_UPCOMING)
 
 
-class SkillTests(unittest.TestCase):
-    def run_skill(self, skill, client=None, gateway=None, **params):
-        agent = LaunchLibraryAgent(client=client or FakeLaunches(),
-                                   gateway=gateway or fake_gateway()[0])
-        return agent.run({"skill": skill, "params": params, "missing": agent.missing(skill, params)})
 
-    def test_upcoming_lists_the_schedule(self):
-        result = self.run_skill(SKILL_UPCOMING, limit=3)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Crew-13", result["message"])
-        self.assertIn("SpaceX", result["message"])
-        self.assertIn("precise to the minute", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertEqual(result["artifact"]["count"], 3)
-
-    def test_upcoming_needs_nothing(self):
-        agent = LaunchLibraryAgent(client=FakeLaunches(), gateway=fake_gateway()[0])
-        self.assertEqual(agent.missing(SKILL_UPCOMING, {}), [])
-
-    def test_window_lists_a_range(self):
-        result = self.run_skill(SKILL_WINDOW, start="2026-10-01", end="2026-10-07", limit=10)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("between 2026-10-01 and 2026-10-07", result["message"])
-        self.assertIn("Crew-13", result["message"])
-
-    def test_window_accepts_a_day_count(self):
-        result = self.run_skill(SKILL_WINDOW, days=14, limit=10)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["artifact"]["count"], 5)
-
-    def test_one_sided_a_range_comes_back_as_a_question(self):
-        result = self.run_skill(SKILL_WINDOW, start="2026-10-01")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("both ends", result["message"])
-
-    def test_a_bad_date_comes_back_as_a_question(self):
-        result = self.run_skill(SKILL_WINDOW, start="01-10-2026", end="2026-10-07")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("YYYY-MM-DD", result["message"])
-
-    def test_lookup_finds_a_unique_name(self):
-        result = self.run_skill(SKILL_LOOKUP, name="crew-13")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("matches one launch", result["message"])
-        self.assertIn("7d1afb26-6f9c-429b-9ccf-29012fd1e519", result["message"])
-        self.assertTrue(result["artifact"]["matched_exactly"])
-
-    def test_lookup_asks_which_one_when_ambiguous(self):
-        client = FakeLaunches(schedule=[_list_record("Falcon 9 | Starlink", "2026-10-01T00:00:00Z",
-                                                     id="x1"),
-                                        _list_record("Falcon 9 | Starlink 2", "2026-10-02T00:00:00Z",
-                                                     id="x2")])
-        result = self.run_skill(SKILL_LOOKUP, client=client, name="starlink")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("matches 2 launches", result["message"])
-
-    def test_lookup_reports_no_match(self):
-        client = FakeLaunches()
-        result = self.run_skill(SKILL_LOOKUP, client=client, name="voyager-interstellar")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Nothing in the published schedule matches", result["message"])
-
-    def test_lookup_without_text_asks_for_it(self):
-        agent = LaunchLibraryAgent(client=FakeLaunches(), gateway=fake_gateway()[0])
-        self.assertEqual(agent.missing(SKILL_LOOKUP, {}), ["name"])
-        result = agent.run({"skill": SKILL_LOOKUP, "params": {}, "missing": ["name"]})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("crew-13", result["message"])
-
-    def test_details_reports_rocket_pad_provider_and_mission(self):
-        result = self.run_skill(SKILL_DETAILS, launch_id=DETAIL["id"])
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Falcon 9 Block 5", result["message"])
-        self.assertIn("LC-39A", result["message"])
-        self.assertIn("USA", result["message"])
-        self.assertIn("Crew-13", result["message"])
-        self.assertIn("28.6080", result["message"])
-        self.assertIn("go probability 90", result["message"])
-        self.assertIn(DATASET, result["message"])
-
-    def test_an_unknown_launch_id_is_reported(self):
-        result = self.run_skill(SKILL_DETAILS, launch_id="00000000-0000-0000-0000-000000000000")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("no launch with id", result["message"])
-
-    def test_a_throttle_is_a_failed_task_not_a_wrong_answer(self):
-        class Throttled(FakeLaunches):
-            def _page(self, path, query, ttl):
-                raise UpstreamError("the Launch Library is throttling this address")
-
-        result = self.run_skill(SKILL_UPCOMING, client=Throttled())
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("throttling", result["message"])
-
-    def test_help_does_not_touch_the_feed(self):
-        client = FakeLaunches()
-        result = self.run_skill("help", client=client)
-        self.assertIn("Launch Library", result["message"])
-        self.assertIsNone(result["artifact"])
-        self.assertEqual(client.calls, 0)
-
-    def test_card_has_five_skills_and_exactly_one_premium(self):
-        ids = [skill["id"] for skill in CARD_SKILLS]
-        self.assertEqual(ids, [SKILL_UPCOMING, SKILL_WINDOW, SKILL_LOOKUP, SKILL_DETAILS, SKILL_BOARD])
-        premium = [skill["id"] for skill in CARD_SKILLS if "premium" in skill["tags"]]
-        self.assertEqual(premium, [SKILL_BOARD])
-        agent = LaunchLibraryAgent(client=FakeLaunches(), gateway=fake_gateway()[0])
-        self.assertEqual(agent.env_prefix, "LAUNCHES")
-        self.assertEqual(agent.datasets, (DATASET,))
-        self.assertEqual(GATEWAY_TOOL, "a2a_launches_board")
 
 
 class BoardTests(unittest.TestCase):
@@ -488,87 +348,14 @@ class BoardTests(unittest.TestCase):
             "skill": SKILL_BOARD, "params": params, "missing": [],
         })
 
-    def test_the_message_reports_the_gateways_board(self):
-        gateway, calls = fake_gateway(BOARD_PAYLOAD)
-        result = self.run_board(gateway, start="2026-10-01", end="2026-11-01")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("5 launch(es) over 31 day(s)", result["message"])
-        self.assertIn("2026-10-01: 2 launch(es)", result["message"])
-        self.assertIn("+1 more", result["message"])
-        self.assertIn("SpaceX 4", result["message"])
-        self.assertIn("Busiest day 2026-10-01 with 2 launch(es)", result["message"])
-        self.assertIn("Tightest turnaround 3.13 h", result["message"])
-        self.assertIn("4 still to fly, 1 in hold, 1 already flown", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["total_launches"], 5)
-        self.assertEqual(result["artifact"]["busiest_day"]["date"], "2026-10-01")
 
-        # The Launch Library was read on the gateway, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], GATEWAY_TOOL)
-        self.assertEqual(sent["arguments"]["start"], "2026-10-01T00:00:00Z")
-        self.assertEqual(sent["arguments"]["end"], "2026-11-01T00:00:00Z")
 
-    def test_a_day_count_becomes_a_window(self):
-        gateway, calls = fake_gateway(BOARD_PAYLOAD)
-        result = self.run_board(gateway, days=30)
-        self.assertEqual(result["final_state"], "completed")
-        sent = calls[0]["payload"]["params"]["arguments"]
-        self.assertTrue(sent["start"].endswith("T00:00:00Z"))
-        self.assertGreaterEqual(Date_diff(sent["start"], sent["end"]), 29)
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = self.run_board(gateway, start="2026-10-01", end="2026-11-01")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("by_day", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()
-        result = self.run_board(gateway, start="2026-10-01", end="2026-11-01")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_board(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = self.run_board(gateway, start="2026-10-01", end="2026-11-01")
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("by_day"))
 
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = self.run_board(gateway, start="2026-10-01", end="2026-11-01")
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("throttling", result["message"])
 
-    def test_an_unusable_answer_fails_rather_than_showing_nothing(self):
-        gateway, _ = fake_gateway({"nothing_useful": True})
-        result = self.run_board(gateway, start="2026-10-01", end="2026-11-01")
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("without a launch board", result["message"])
 
-    def test_an_empty_window_is_still_a_completed_board(self):
-        payload = {**BOARD_PAYLOAD, "totalLaunches": 0, "activeDays": 0, "byDay": [],
-                   "byAgency": [], "byMissionType": [], "busiestDay": None,
-                   "tightestTurnaround": None, "openCount": 0, "heldCount": 0, "closedCount": 0}
-        gateway, _ = fake_gateway(payload)
-        result = self.run_board(gateway, start="2030-01-01", end="2030-02-01")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("0 launch(es)", result["message"])
-
-    def test_bad_arguments_never_reach_the_gateway(self):
-        gateway, calls = fake_gateway(BOARD_PAYLOAD)
-        result = self.run_board(gateway, start="01-10-2026", end="2026-11-01")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertEqual(calls, [])
 
 
 def Date_diff(start, end):

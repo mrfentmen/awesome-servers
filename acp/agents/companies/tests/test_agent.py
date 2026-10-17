@@ -1,15 +1,3 @@
-"""Tests for the companies agent: name search, one record, owners, subsidiaries, routing,
-and the one premium skill.
-
-    python3 agents/companies/tests/test_agent.py
-
-No network: the JSON is injected, shaped like the live payloads read on 2026-09-28
-(`filter[entity.legalName]=Apple` matches 370 records and `Apple Inc` matches 24 with
-'Apple Inc.' first; LEI HWUPKR0MPOU8FGXBT394 is Apple Inc., ACTIVE, US-CA, registered as
-806592, incorporated 1977-01-03, LEI first issued 2012-06-06, one previous legal name
-'Apple Computer, Inc.'). The parent fixtures are the shape GLEIF returns when a record
-does carry a corporate relationship.
-"""
 
 from __future__ import annotations
 
@@ -26,8 +14,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (AcpClient, Connection, GatewayClient,  # noqa: E402
-                     STOP_END_TURN, STOP_REFUSAL)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import route  # noqa: E402
 from data import (CompaniesData, CompaniesError, CompaniesNotFound,  # noqa: E402
@@ -385,10 +372,7 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# The premium skill: companies-resolve
 #
-# No network: the licence check and the work both happen on the gateway, and the
-# gateway's own JSON-RPC answers are injected into the real GatewayClient.
 # ---------------------------------------------------------------------------
 
 #: What `companies_resolve` answers for a 200-record read of "Apple".
@@ -415,124 +399,10 @@ RESOLVE_DATA = {
 }
 
 #: The exact refusal the gateway sends for a key it will not accept.
-GATEWAY_DENIAL = ("`companies_resolve` is a premium tool, but that licence key was rejected. "
-                  "Check MCP_LICENSE_KEY, or get a key at https://polar.sh/mrfentmen")
 
 
-def gateway_answer(text, is_error=False, structured=None):
-    """A fake transport that answers every premium call with one JSON-RPC reply."""
-    def fetch(url, payload, headers):
-        fetch.calls.append({"url": url, "payload": payload, "headers": headers})
-        result = {"content": [{"type": "text", "text": text}]}
-        if is_error:
-            result["isError"] = True
-        if structured is not None:
-            result["structuredContent"] = structured
-        return {"jsonrpc": "2.0", "id": payload.get("id", 1), "result": result}
-
-    fetch.calls = []
-    return fetch
 
 
-class PremiumTests(unittest.TestCase):
-    """No key, a bad key and a good key, plus the routing that gets there."""
-
-    def turn(self, text: str, fetch, key: str):
-        from agent import CompaniesAgent
-
-        agent_conn, client_conn = connected_pair()
-        data, _feed = make_data()
-        gateway = GatewayClient(fetch=fetch, key=key, url="https://gateway.test/mcp")
-        agent = CompaniesAgent(agent_conn, data, gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_answers_with_the_missing_key_wording(self):
-        fetch = gateway_answer("")
-        result, client = self.turn("which Apple is it, and how many are there?", fetch, "")
-        #: An answer, not a crash, and not a failed lookup either.
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertIn("no licence key is set", result["text"])
-        self.assertEqual(len(client.permission_requests), 1)
-        #: Nothing was spent on a call the gate was never going to let through.
-        self.assertEqual(fetch.calls, [])
-
-    def test_a_bad_key_returns_the_gateways_own_wording(self):
-        fetch = gateway_answer(GATEWAY_DENIAL, is_error=True,
-                               structured={"licenceRefusal": True, "reason": "denied"})
-        result, _ = self.turn("which Apple is it, and how many are there?", fetch, "bad-key")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn(GATEWAY_DENIAL, result["text"])
-        self.assertIn("premium", result["text"])
-        self.assertEqual(len(fetch.calls), 1)
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["name"], "companies_resolve")
-
-    def test_a_good_key_returns_the_resolution(self):
-        fetch = gateway_answer(json.dumps(RESOLVE_DATA))
-        result, _ = self.turn("which Apple is it, and how many are there?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("resolving 'Apple' across the GLEIF registry", result["text"])
-        self.assertIn("records read: 200 of 370", result["text"])
-        self.assertIn("most likely: Apple Inc.", result["text"])
-        self.assertIn("LEI HWUPKR0MPOU8FGXBT394, ACTIVE, US-CA", result["text"])
-        self.assertIn("0.27% of the records read carry exactly this legal name", result["text"])
-        self.assertIn("US                         41 record(s)", result["text"])
-        self.assertIn("APPLE FABRICS", result["text"])
-        self.assertIn("not proof", result["text"])
-        #: The licence key travels in a header and is never echoed back.
-        self.assertEqual(fetch.calls[0]["headers"]["Authorization"], "Bearer k_paid")
-        self.assertNotIn("k_paid", result["text"])
-
-    def test_a_good_key_sends_the_name_it_was_asked_for(self):
-        fetch = gateway_answer(json.dumps(RESOLVE_DATA))
-        self.turn("resolve Deutsche Bank across countries", fetch, "k_paid")
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["arguments"],
-                         {"name": "Deutsche Bank"})
-
-    def test_an_empty_gateway_answer_is_not_a_crash(self):
-        fetch = gateway_answer(json.dumps({"name": "Apple", "records_read": 0}))
-        result, _ = self.turn("which Apple is it, and how many are there?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("did not send back a resolution", result["text"])
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def fetch(url, payload, headers):
-            raise OSError("connection refused")
-
-        result, _ = self.turn("which Apple is it, and how many are there?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("I could not read the GLEIF registry", result["text"])
-
-    def test_the_routing_is_narrow(self):
-        for text in ("which Apple is it, and how many are there?",
-                     "how many entities are named Apple?",
-                     "resolve Apple across countries",
-                     "how many companies are called Boeing?"):
-            self.assertEqual(route(text)[0], "companies-resolve", text)
-
-        free = [
-            ("what is Apple's LEI?", "companies-lookup"),
-            ("look up LEI 549300APXY32KXB1KC12", "companies-record"),
-            ("who owns Bank of America National Association?", "companies-owners"),
-            ("what subsidiaries does Apple Inc. own?", "companies-group"),
-            ("what can you do?", "help"),
-        ]
-        for text, expected in free:
-            self.assertEqual(route(text)[0], expected, text)
-
-    def test_the_premium_skill_id_is_published(self):
-        from agent import SKILLS
-
-        self.assertIn("companies-resolve", SKILLS)
 
 
 if __name__ == "__main__":

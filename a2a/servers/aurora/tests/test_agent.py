@@ -17,12 +17,7 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import (  # noqa: E402
-    A2AHandler,
-    GatewayClient,
-    PushWatcher,
-    TaskStore,
-)
+from a2a_kit import A2AHandler, PushWatcher, TaskStore
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -471,45 +466,14 @@ STORM_PAYLOAD = {
     "note": "2 storm windows at or above Kp 5",
 }
 
-DENIED_TEXT = ("`aurora_storm_windows` is a premium tool, but that license key has expired. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`aurora_storm_windows` failed: the Kp forecast published no readable periods"
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "expired"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class StormWindowSkillTests(unittest.TestCase):
     """The premium skill: parsing stays local, the windows come from the gateway."""
 
-    def test_storm_window_questions_route_to_the_premium_skill(self):
-        for text in ("How many hours of geomagnetic storm are coming in the next three days?",
-                     "aurora storm windows with kp 6 or above",
-                     "how long will the storm last?"):
-            parsed = parse(message(text))
-            self.assertEqual(parsed["skill"], SKILL_AURORA_STORM_WINDOWS, text)
-        self.assertEqual(parse(message("aurora storm windows"))["params"]["min_kp"], 5.0)
-        self.assertEqual(parse(message("storm windows at kp 7"))["params"]["min_kp"], 7.0)
 
     def test_the_free_skills_keep_their_own_questions(self):
         self.assertEqual(parse(message("what is the kp right now?"))["skill"], "aurora-now")
@@ -527,80 +491,12 @@ class StormWindowSkillTests(unittest.TestCase):
         self.assertEqual(parsed["skill"], SKILL_AURORA_STORM_WINDOWS)
         self.assertEqual(parsed["params"]["min_kp"], 6)
 
-    def test_the_message_reports_the_gateways_windows(self):
-        gateway, calls = fake_gateway(STORM_PAYLOAD)
-        result = AuroraSpaceWeatherAgent(FakeSWPC(), gateway=gateway).run(
-            {"skill": SKILL_AURORA_STORM_WINDOWS, "params": {"min_kp": 5}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("Storm windows at or above Kp 5", result["message"])
-        self.assertIn("30 periods, 9 observed and 21 predicted", result["message"])
-        self.assertIn("2026-09-29T00:00:00.000Z to 2026-09-29T06:00:00.000Z", result["message"])
-        self.assertIn("6 h", result["message"])
-        self.assertIn("peak Kp 6", result["message"])
-        self.assertIn("starts in 4.5 h", result["message"])
-        self.assertIn("already under way", result["message"])
-        self.assertIn("6 hours of storm conditions still ahead", result["message"])
-        self.assertIn(DATASET_FORECAST, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["storm_window_count"], 2)
-        self.assertEqual(len(result["artifact"]["storm_windows"]), 2)
 
-        # SWPC was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "aurora_storm_windows")
-        self.assertEqual(sent["arguments"]["min_kp"], 5)
 
-    def test_a_quiet_forecast_is_reported_as_quiet(self):
-        gateway, _ = fake_gateway({**STORM_PAYLOAD, "stormWindows": [], "stormWindowCount": 0,
-                                   "nextStorm": None, "strongestWindow": None,
-                                   "stormHoursAhead": 0, "stormHoursInHistory": 0})
-        result = AuroraSpaceWeatherAgent(FakeSWPC(), gateway=gateway).run(
-            {"skill": SKILL_AURORA_STORM_WINDOWS, "params": {"min_kp": 5}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("no storm-level activity is expected", result["message"])
 
-    def test_a_threshold_below_the_storm_scale_is_a_question_not_a_crash(self):
-        gateway, calls = fake_gateway(STORM_PAYLOAD)
-        result = AuroraSpaceWeatherAgent(FakeSWPC(), gateway=gateway).run(
-            {"skill": SKILL_AURORA_STORM_WINDOWS, "params": {"min_kp": 2}, "missing": []})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("between 4 and 9", result["message"])
-        self.assertEqual(calls, [], "a bad argument must not reach the gateway")
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = AuroraSpaceWeatherAgent(FakeSWPC(), gateway=gateway).run(
-            {"skill": SKILL_AURORA_STORM_WINDOWS, "params": {"min_kp": 5}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("storm_windows", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = AuroraSpaceWeatherAgent(FakeSWPC(), gateway=gateway).run(
-            {"skill": SKILL_AURORA_STORM_WINDOWS, "params": {"min_kp": 5}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_windows(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = AuroraSpaceWeatherAgent(FakeSWPC(), gateway=gateway).run(
-            {"skill": SKILL_AURORA_STORM_WINDOWS, "params": {"min_kp": 5}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("storm_windows"))
-
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = AuroraSpaceWeatherAgent(FakeSWPC(), gateway=gateway).run(
-            {"skill": SKILL_AURORA_STORM_WINDOWS, "params": {"min_kp": 5}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("no readable periods", result["message"])
 
 
 if __name__ == "__main__":

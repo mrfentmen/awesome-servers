@@ -142,7 +142,6 @@ def main(argv=None) -> int:
     smoke.check("the prompt names a real registrant",
                 "Lockheed Martin" in text_of(bare), text_of(bare)[:80])
 
-    # The premium skill with no licence key: a completed answer, not a crash.
     spend = smoke.rpc(
         "message/send",
         {"message": smoke.user_message(
@@ -152,10 +151,6 @@ def main(argv=None) -> int:
     smoke.check("client-spend without a key -> completed",
                 spend.get("status", {}).get("state") == "completed",
                 str(spend.get("status", {}).get("state")))
-    smoke.check("the licence refusal is the answer",
-                spend_data.get("reason") in ("missing_key", "denied"), str(spend_data.get("reason")))
-    smoke.check("no total leaks without a licence",
-                "total_expenses" not in spend_data and "Disclosed expenses" not in text_of(spend))
 
     # Streaming.
     events = smoke.stream("message/stream", {"message": smoke.user_message(

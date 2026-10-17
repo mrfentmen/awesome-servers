@@ -19,9 +19,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
-from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer
 
 from data import DATASET, BikesData, BikesError  # noqa: E402
 
@@ -30,7 +29,7 @@ HELP = (
     "  • how many citibikes are available right now?\n"
     "  • what is at the Grand Central station?\n"
     "  • nearest citibike stations to 40.71,-74.01?\n"
-    "  • Citi Bike capacity board (premium)\n"
+    "  • Citi Bike capacity board (not implemented here)\n"
     "Citi Bike covers New York City, Jersey City and Hoboken; I do not speak for other systems."
 )
 
@@ -116,10 +115,10 @@ class BikesAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: BikesData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or BikesData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -155,7 +154,7 @@ class BikesAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params)
-        except (BikesError, GatewayError, ValueError) as exc:
+        except (BikesError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the GBFS feed: {exc}")
             return STOP_END_TURN
@@ -182,32 +181,9 @@ class BikesAgent(AcpAgent):
         return HELP, {"summary": "help", "dataset": None}
 
     def _capacity(self, params: dict) -> tuple[str, dict]:
-        """Render the station rankings computed on the licence gateway."""
-        data, refused = premium_call(self.gateway, "bikes_capacity_board",
-                                     {"limit": int(params.get("limit", 5))},
-                                     {"agent": "bikes", "skill": "bikes-capacity"})
-        if refused:
-            return refused
-        groups = ("ranked", "emptiest", "fullest")
-        if (not isinstance(data, dict) or not isinstance(data.get("eligibleStations"), int)
-                or any(not isinstance(data.get(k), list) or not data[k]
-                       or any(not isinstance(row, dict) or not row.get("name")
-                              or any(not isinstance(row.get(n), (int, float))
-                                     for n in ("bikes", "ebikes", "docks", "occupancyPct"))
-                              for row in data[k]) for k in groups)):
-            return empty_premium_answer("The gateway returned no readable capacity board.",
-                                        {"agent": "bikes", "skill": "bikes-capacity"})
-        lines = [f"Premium Citi Bike capacity board: {data['eligibleStations']} operational stations."]
-        for key, label in (("ranked", "Highest e-bike share"), ("emptiest", "Emptiest"),
-                           ("fullest", "Fullest")):
-            lines.append(label + ":")
-            for row in data[key]:
-                share = row.get("ebikeSharePct")
-                lines.append(f"  • {row['name']}: {row['bikes']} bikes, {row['ebikes']} e-bikes "
-                             f"(share {share if share is not None else 'not reported'}%), "
-                             f"{row['docks']} docks; occupancy {row['occupancyPct']}%")
-        lines.append(str(data.get("note") or "Source: Citi Bike GBFS."))
-        return "\n".join(lines), {**data, "summary": lines[0], "premium": True}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: capacity — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def _status(self) -> tuple[str, dict]:
         system = self.data.system()

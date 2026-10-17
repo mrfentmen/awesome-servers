@@ -4,7 +4,7 @@
   - recent-sightings:     the newest observations recorded under a name
   - nearby-observations:  what has been recorded within a radius of a point
   - species-info:         one taxon's own record - rank, common name, count
-  - range-survey:         a name's records read as a picture (premium)
+  - range-survey:         a name's records read as a picture (not implemented here)
 
 Premium: `range-survey` pages through a name's observations and reports the
 shape of them - by year, by month, by grade, by country, and how many carried a
@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     DATASET,
@@ -377,10 +377,10 @@ CARD_SKILLS = [
             "One name's records read as a picture rather than a list: how many observations, "
             "how they divide by year and by calendar month, how many carry each grade, the "
             "places and countries they name, and how many rows carried a usable position. "
-            "Premium: it pages through the observations behind a licence check on the gateway, "
+            "Premium: it pages through the observations on a hosted service that was removed, "
             "which is where the reading and counting happen."
         ),
-        "tags": ["inaturalist", "biodiversity", "survey", "seasonality", "premium"],
+        "tags": ["inaturalist", "biodiversity", "survey", "seasonality",],
         "examples": [
             "give me an overview of the monarch butterfly records",
             "how do the red fox observations break down by month?",
@@ -625,83 +625,14 @@ def run_info(params: dict, client: SpeciesClient) -> dict:
     }
 
 
-def run_survey(params: dict, client: SpeciesClient, gateway: GatewayClient) -> dict:
-    """The premium range survey. Nothing here pages: the gateway does.
-
-    A free count asks one bounded question and reads one page. This walks the
-    name's records and counts their shape, which is a lot of pages, and it
-    happens on the gateway behind its licence check.
-    """
-    missing = _needs_taxon(params)
-    if missing:
-        return missing
-    taxon = params["taxon"]
-    read, refused = premium_call(gateway, GATEWAY_TOOL, {
-        "taxon": taxon,
-        "grade": params.get("grade") or "any",
-    }, {"dataset": DATASET, "taxon": taxon})
-    if refused:
-        return refused
-    if not isinstance(read, dict) or not isinstance(read.get("byMonth"), list):
-        return empty_premium_answer(
-            "The licence gateway answered without a range survey, so there is nothing to report.",
-            {"dataset": DATASET, "taxon": taxon},
-        )
-
-    lines = [
-        f"{read.get('taxon')} on iNaturalist: {read.get('observedCount'):,} observation(s) "
-        f"read across {read.get('pages')} page(s), {read.get('totalMatches'):,} on file."
-        if isinstance(read.get("observedCount"), int) and isinstance(read.get("totalMatches"), int)
-        else f"{read.get('taxon')} on iNaturalist.",
-    ]
-    months = read.get("byMonth") or []
-    if months:
-        lines.append("  • By month: " + ", ".join(
-            f"{row.get('name')} {row.get('count')}" for row in months))
-    years = read.get("byYear") or []
-    if years:
-        lines.append("  • By year: " + ", ".join(
-            f"{row.get('name')} {row.get('count')}" for row in years))
-    grades = read.get("byGrade") or []
-    if grades:
-        lines.append("  • By grade: " + ", ".join(
-            f"{row.get('name')} {row.get('count')}" for row in grades))
-    countries = read.get("byCountry") or []
-    if countries:
-        lines.append("  • Places named most often: " + ", ".join(
-            f"{row.get('name')} {row.get('count')}" for row in countries[:8]))
-    lines.append(
-        f"  • {read.get('withPosition')} of {read.get('observedCount')} rows carried a position "
-        "iNaturalist was willing to publish."
-    )
-    span = read.get("observedSpan") or {}
-    if span.get("first"):
-        lines.append(f"  • Oldest and newest read: {span.get('first')} to {span.get('last')}")
-    lines.append(
-        f"\nCounted on the MCP gateway behind its licence check, from {DATASET}. These are "
-        f"uploaded observations rather than sightings that happened: {_GRADE_NOTE} And a row's "
-        "position can be deliberately wrong, because iNaturalist obscures protected taxa - which "
-        "is why the obscured rows are counted separately here instead of being mapped."
-    )
-    artifact = _artifact(client, **{
-        "taxon": read.get("taxon"),
-        "premium": True,
-        "total_matches": read.get("totalMatches"),
-        "observed_count": read.get("observedCount"),
-        "pages": read.get("pages"),
-        "truncated": read.get("truncated"),
-        "by_month": months,
-        "by_year": years,
-        "by_grade": grades,
-        "by_country": countries,
-        "with_position": read.get("withPosition"),
-        "obscured_count": read.get("obscuredCount"),
-        "observed_span": span,
-        "years_covered": read.get("yearsCovered"),
-        "method": read.get("method"),
-    })
-    return {"final_state": "completed", "message": "\n".join(lines),
-            "artifact": artifact, "watch": None}
+def run_survey(params: dict, client: SpeciesClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: survey — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
+    }
 
 
 class SpeciesAgent(SkillAgent):
@@ -720,9 +651,9 @@ class SpeciesAgent(SkillAgent):
     card_skills = CARD_SKILLS
 
     def __init__(self, client: SpeciesClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or SpeciesClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

@@ -1,7 +1,3 @@
-"""Tests for the games agent: Steam/SteamSpy/Epic readers, routing, skills, premium board.
-
-    python3 agents/games/tests/test_agent.py
-"""
 
 from __future__ import annotations
 
@@ -19,7 +15,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, GatewayClient, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import GamesAgent, day, name_from_text, names_from_compare, route, usd  # noqa: E402
 from data import (  # noqa: E402
@@ -299,10 +295,6 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(skill, "game-search")
         self.assertEqual(params["term"], "hades")
 
-    def test_compare_is_the_premium_board(self):
-        skill, params = route("compare elden ring and dark souls 3")
-        self.assertEqual(skill, "price-board")
-        self.assertEqual(params["games"], ["elden ring", "dark souls 3"])
 
     def test_one_title_never_routes_to_the_board(self):
         self.assertEqual(route("compare portal 2 prices")[0], "game-search")
@@ -396,7 +388,6 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# Premium: the cross-title board is computed on the licence gateway
 # ---------------------------------------------------------------------------
 
 BOARD_PAYLOAD = {
@@ -415,10 +406,6 @@ BOARD_PAYLOAD = {
 }
 
 #: The gateway words its own refusals, buy link included, and the agent must not rewrite them.
-REFUSAL_TEXT = (
-    "This is a premium skill and needs a valid license key. "
-    "Get one at https://polar.sh/mrfentmen and set MCP_LICENSE_KEY."
-)
 
 
 def mcp_result(payload, is_error=False, structured=None):
@@ -430,77 +417,8 @@ def mcp_result(payload, is_error=False, structured=None):
     return {"jsonrpc": "2.0", "id": 1, "result": result}
 
 
-def make_gateway(key, result):
-    """A real GatewayClient with the transport injected - no network, ever."""
-    calls = []
-
-    def fetch(url, payload, headers):
-        calls.append({"tool": payload["params"]["name"],
-                      "arguments": payload["params"]["arguments"],
-                      "authorized": "Authorization" in headers})
-        return result
-
-    client = GatewayClient(fetch=fetch, url="http://127.0.0.1:8787/mcp", key=key)
-    client.calls = calls
-    return client
 
 
-class PremiumBoardTests(unittest.TestCase):
-    def premium_turn(self, text, gateway, permission="allow-once"):
-        agent_conn, client_conn = connected_pair()
-        agent = GamesAgent(agent_conn, FakeData(), gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission=permission)
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_returns_the_gateways_own_wording(self):
-        saved = os.environ.pop("MCP_LICENSE_KEY", None)
-        try:
-            result, _ = self.premium_turn("compare elden ring and dark souls 3",
-                                          make_gateway("", mcp_result(BOARD_PAYLOAD)))
-        finally:
-            if saved is not None:
-                os.environ["MCP_LICENSE_KEY"] = saved
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-
-    def test_a_bad_key_is_answered_not_crashed(self):
-        gateway = make_gateway("lic_live_but_rejected", mcp_result(
-            REFUSAL_TEXT, is_error=True,
-            structured={"licenceRefusal": True, "reason": "denied"}))
-        result, _ = self.premium_turn("compare elden ring and dark souls 3", gateway)
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("polar.sh", result["text"])
-
-    def test_a_good_key_gets_the_board_and_the_gateway_did_the_work(self):
-        gateway = make_gateway("lic_granted", mcp_result(BOARD_PAYLOAD))
-        result, client = self.premium_turn("compare elden ring and dark souls 3", gateway)
-        self.assertIn("computed on the licence gateway", result["text"])
-        self.assertIn("ELDEN RING (asked: elden ring): $59.99 — 92% of reviews positive", result["text"])
-        self.assertIn("Most played right now: ELDEN RING with 45,000 players.", result["text"])
-        self.assertEqual(gateway.calls[0]["tool"], "games_price_board")
-        self.assertTrue(gateway.calls[0]["authorized"])
-        self.assertEqual(gateway.calls[0]["arguments"]["games"], ["elden ring", "dark souls 3"])
-        self.assertEqual(len(client.permission_requests), 1)
-
-    def test_free_skills_never_reach_the_gateway(self):
-        gateway = make_gateway("lic_granted", mcp_result(BOARD_PAYLOAD))
-        for text in ("how much is portal 2", "how many people play portal 2",
-                     "what is free on epic this week"):
-            self.premium_turn(text, gateway)
-        self.assertEqual(gateway.calls, [])
-
-    def test_dataset_constants_are_the_endpoints_the_reader_calls(self):
-        self.assertIn("store.steampowered.com", DATASET_STEAM)
-        self.assertIn("steamspy", DATASET_STEAMSPY)
-        self.assertIn("epicgames", DATASET_EPIC)
 
 
 if __name__ == "__main__":

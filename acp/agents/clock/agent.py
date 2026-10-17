@@ -18,9 +18,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (STOP_END_TURN, STOP_REFUSAL, AcpAgent, GatewayClient,  # noqa: E402
-                     GatewayError, SessionContext, empty_premium_answer, premium_call,
-                     prompt_text)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, NAMELESS_ZONE_SAMPLES, ClockData, ClockError,  # noqa: E402
                   ClockNotFound, available_zones, zone_from_text, zones_in_order)
@@ -32,8 +30,7 @@ HELP = (
     "  - what time is it in London and Santiago?\n"
     "  - what is the timezone for Santiago?\n"
     "  - how many timezones are there?\n"
-    "Find a 45 minute slot this week that works for London, Tokyo and New York. (premium - a "
-    "clock read cannot answer it)\n"
+    "Find a 45 minute slot this week that works for London, Tokyo and New York. (not implemented here)\n"
     "I can resolve a place only when the IANA zone is named after a city, which is most of them: "
     "`Asia/Tokyo`, `America/Santiago`, `Europe/London`. Zones like `Asia/Qatar` have no city in "
     "the name, so name the zone itself for those.\n"
@@ -245,9 +242,7 @@ class ClockAgent(AcpAgent):
                  gateway=None) -> None:
         super().__init__(connection)
         self.data = data or ClockData()
-        # The licence check lives on the gateway, not here, so deleting a line
-        # from this repository buys nobody the answer.
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -270,7 +265,7 @@ class ClockAgent(AcpAgent):
             return STOP_END_TURN
 
         tool = f"call_{skill.replace('-', '_')}"
-        label = ("Ask the licence gateway for the meeting slots" if skill == "clock-meet"
+        label = ("Ask about the meeting slots" if skill == "clock-meet"
                  else "Read the time feed and the IANA database")
 
         # Answered before the permission gate because it reads nothing off the
@@ -322,7 +317,7 @@ class ClockAgent(AcpAgent):
                     body = render_now(readings[0])
                     summary = (f"{readings[0]['city']} {readings[0]['feed_time']} "
                                f"({readings[0]['offset']})")
-        except (ClockError, GatewayError, ValueError) as exc:
+        except (ClockError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the time: {exc}")
             return STOP_END_TURN
@@ -336,42 +331,9 @@ class ClockAgent(AcpAgent):
         return STOP_END_TURN
 
     def _run_skill(self, ctx: SessionContext, params: dict, tool: str) -> str:
-        """The premium skill. The licence is checked on the gateway, not here."""
-        data, refused = premium_call(self.gateway, "clock_meeting_slots", {
-            "zones": list(params["zones"]),
-            "minutes": int(params["minutes"]),
-        }, {"agent": "clock"})
-        if refused:
-            # Already an (answer, artifact) pair, worded by the gateway.
-            answer, artifact = refused
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("That is a premium skill, so the answer comes from the licence gateway. "
-                        "The wording above is the gateway's own.")
-            return STOP_END_TURN
-
-        if not isinstance(data, dict) or not data.get("zones"):
-            answer, artifact = empty_premium_answer(
-                "The licence gateway did not send back any meeting slots for those zones.",
-                {"agent": "clock"})
-            ctx.tool_call_update(tool, status="completed",
-                                 content=ctx.text_content(artifact["summary"]))
-            ctx.stream_text(answer + "\n")
-            ctx.message("I could not read any slots out of what the gateway sent.")
-            return STOP_END_TURN
-
-        body = render_meet(data)
-        slots = data.get("slots") or []
-        summary = (f"{len(slots)} {_show(data.get('minutes'))} minute slot(s) for "
-                   f"{len(data.get('zones') or [])} zones")
-        ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
-        ctx.stream_text(body + "\n")
-        ctx.message("\nSource: the time feed's wall clocks, worked out on the licence gateway. The "
-                    "offsets are the ones in force at the moment of the answer, and a zone that "
-                    "changes its clocks inside the window is not modelled, so check any date more "
-                    "than a week out against the rules for the countries involved.")
-        return STOP_END_TURN
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: run-skill — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

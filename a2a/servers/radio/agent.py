@@ -10,8 +10,8 @@ Station-roster is the one question the free skills cannot answer. `stations-find
 reads one query and hands back what the mirror matched, duplicates and dead streams
 included. A roster has to read several genres at once, drop what failed its last
 check, remove the stations that turn up under more than one tag, and rank what is
-left, so that work runs behind the licence gateway and a caller who has not paid
-gets the gateway's own message and no stations at all.
+left, so that work runs on a hosted service that was removed and a caller who has not paid
+gets a not-implemented stub message and no stations at all.
 
 There is no now-playing skill here, and there cannot be: radio-browser is a
 directory of stream URLs, and it publishes no ICY track metadata. Nothing in this
@@ -23,7 +23,7 @@ from __future__ import annotations
 import os
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, UpstreamError, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent, UpstreamError
 
 from data import (
     DATASET,
@@ -116,9 +116,9 @@ CARD_SKILLS = [
             "A shortlist drawn from up to four genres at once: reads each genre, drops the streams that "
             "failed the directory's last check, removes the stations that appear under more than one "
             "tag, ranks what is left by listener votes and bitrate, and reports how many candidates each "
-            "genre contributed and what was removed. Premium: it runs behind a licence check."
+            "genre contributed and what was removed. Premium: it runs on a hosted service that was removed."
         ),
-        "tags": ["radio", "roster", "shortlist", "genres", "premium"],
+        "tags": ["radio", "roster", "shortlist", "genres",],
         "examples": [
             "give me a roster of jazz, blues and soul stations for tonight",
             '{"skill": "station-roster", "tags": "jazz,blues,soul", "country": "US", "limit": 20}',
@@ -596,97 +596,14 @@ def run_genre_list(params: dict, client: RadioBrowserClient) -> dict:
     }
 
 
-def run_station_roster(params: dict, client: RadioBrowserClient, gateway: GatewayClient) -> dict:
-    """The premium multi-genre roster. The reading and the filtering run on the gateway.
-
-    Nothing here queries the directory: the gateway reads each genre, drops the streams
-    that failed their last check, removes duplicates and ranks what is left behind its
-    licence check, so a caller who has not paid gets the gateway's own message and no
-    stations at all.
-    """
-    raw_tags = params.get("tags") or params.get("tag")
-    if not raw_tags:
-        return _needs_genres()
-    try:
-        tags = [client.check_tag(part) for part in str(raw_tags).split(",") if part.strip()]
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-    if not tags:
-        return _needs_genres()
-    if len(tags) > 4:
-        return {
-            "final_state": "input-required",
-            "message": "Name up to four genres at a time; the directory throttles bursts.",
-            "artifact": None,
-            "watch": None,
-        }
-    arguments = {"tags": ",".join(tags)}
-    try:
-        if params.get("country"):
-            arguments["country"] = client.check_country(params["country"])
-        if params.get("limit") is not None:
-            arguments["limit"] = client.check_limit(params["limit"], default=20)
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-
-    read, refused = premium_call(gateway, "radio_station_roster", arguments, {
-        "dataset": DATASET, "tags": ",".join(tags),
-    })
-    if refused:
-        return refused
-    if not isinstance(read, dict) or not read.get("stations"):
-        return empty_premium_answer(
-            "The licence gateway answered without any stations, so there is nothing to report.",
-            {"dataset": DATASET, "tags": ",".join(tags)},
-        )
-
-    stations = read.get("stations") or []
-    scope = read.get("country") or "every country"
-    lines = [
-        f"Roster from {len(read.get('perTag') or [])} genre(s) for {scope}: "
-        f"{read.get('returned')} station(s) out of {read.get('candidatesFound')} candidates, "
-        f"{read.get('duplicatesRemoved')} duplicate(s) removed.",
-    ]
-    for station in stations[:MAX_LISTED]:
-        bits = [f"  • {station.get('name') or 'name not reported'}"]
-        if station.get("countryName") or station.get("country"):
-            bits.append(str(station.get("countryName") or station.get("country")))
-        bits.append(f"{station.get('codec') or 'codec not reported'}"
-                    + (f" {station['bitrate']} kbps" if station.get("bitrate") else ""))
-        if station.get("votes") is not None:
-            bits.append(f"{station['votes']} votes")
-        if station.get("matchedTags"):
-            bits.append(f"matched {', '.join(station['matchedTags'])}")
-        lines.append(" - ".join(str(bit) for bit in bits))
-    if len(stations) > MAX_LISTED:
-        lines.append(f"  • ... {len(stations) - MAX_LISTED} more station(s) are in the artifact.")
-    for row in (read.get("perTag") or [])[:MAX_LISTED]:
-        lines.append(
-            f"  • {row.get('tag')}: {row.get('candidates')} candidate(s), {row.get('added')} added."
-        )
-    if read.get("medianBitrate") is not None:
-        lines.append(f"  • Median bitrate {read['medianBitrate']} kbps across "
-                     f"{read.get('distinctCountries')} country code(s) in the shortlist.")
-    lines.append(
-        "\nComputed on the MCP gateway behind its licence check, from the radio-browser directory "
-        f"({DATASET}). Every station was working on the directory's last check at the moment it was "
-        "read; streams go down without notice, so try the first few first."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": SOURCE,
-        "premium": True,
-        "tags": read.get("tags") or tags,
-        "country": read.get("country"),
-        "candidates_found": read.get("candidatesFound"),
-        "duplicates_removed": read.get("duplicatesRemoved"),
-        "returned": read.get("returned"),
-        "distinct_countries": read.get("distinctCountries"),
-        "median_bitrate": read.get("medianBitrate"),
-        "per_tag": read.get("perTag"),
-        "stations": stations,
+def run_station_roster(params: dict, client: RadioBrowserClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: station-roster — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class RadioBrowserAgent(SkillAgent):
@@ -703,11 +620,9 @@ class RadioBrowserAgent(SkillAgent):
     card_skills = CARD_SKILLS
 
     def __init__(self, client: RadioBrowserClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or RadioBrowserClient()
-        # The documented <PREFIX>_GATEWAY_URL override is passed in explicitly:
-        # the shared client otherwise only looks at A2A_GATEWAY_URL.
-        self.gateway = gateway or GatewayClient(url=os.environ.get(f"{self.env_prefix}_GATEWAY_URL"))
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

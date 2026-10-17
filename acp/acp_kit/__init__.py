@@ -20,18 +20,6 @@ from .agent import (
     text_of,
 )
 from .client import AcpClient
-from .gateway import (
-    DENIED,
-    DEFAULT_GATEWAY_URL,
-    MISSING_KEY,
-    PROTOCOL_ERROR,
-    TOOL_ERROR,
-    UNREACHABLE,
-    GatewayClient,
-    GatewayError,
-    empty_premium_answer,
-    premium_call,
-)
 from .rpc import DEFERRED, Connection, JsonRpcError
 
 __all__ = [
@@ -40,17 +28,7 @@ __all__ = [
     "Cancelled",
     "Connection",
     "DEFERRED",
-    "DENIED",
-    "DEFAULT_GATEWAY_URL",
-    "GatewayClient",
-    "GatewayError",
     "JsonRpcError",
-    "MISSING_KEY",
-    "PROTOCOL_ERROR",
-    "TOOL_ERROR",
-    "UNREACHABLE",
-    "empty_premium_answer",
-    "premium_call",
     "PROTOCOL_VERSION",
     "STOP_CANCELLED",
     "STOP_END_TURN",

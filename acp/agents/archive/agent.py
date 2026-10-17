@@ -17,17 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import (  # noqa: E402
-    STOP_END_TURN,
-    STOP_REFUSAL,
-    AcpAgent,
-    GatewayClient,
-    GatewayError,
-    SessionContext,
-    empty_premium_answer,
-    premium_call,
-    prompt_text,
-)
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
 from data import (DATASET, MEDIATYPES, ArchiveData, ArchiveError,  # noqa: E402
                   mediatype_from_text)
@@ -39,7 +29,7 @@ HELP = (
     "  - search the archive for old radio dramas\n"
     "  - is there anything about the 1918 flu in the archive?\n"
     "  - how many films about the moon landing exist?\n"
-    "  - premium: profile: find Apollo 11 recordings\n"
+    "  - profile: find Apollo 11 recordings\n"
     "  - what is in the item Apollo11Audio?\n"
     "  - list the files in the item MisharyRasyidPerJuz\n"
     "Searches come back most-downloaded first and tell you the archive-wide total, not just the\n"
@@ -226,10 +216,10 @@ class ArchiveAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: ArchiveData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or ArchiveData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -262,15 +252,9 @@ class ArchiveAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
 
         if skill == "archive-profile":
-            try:
-                body, summary = self._profile(params)
-            except GatewayError as exc:
-                ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
-                ctx.message(f"I could not finish that on the licence gateway: {exc}")
-                return STOP_END_TURN
             ctx.tool_call_update(tool, status="completed", content=ctx.text_content(summary))
             ctx.stream_text(body + "\n")
-            ctx.message("\nSource: the archive's own catalogue, profiled on the licence gateway. "
+            ctx.message("\nSource: the archive's own catalogue, profiled on a hosted service that was removed. "
                         "The totals are the archive's, not a sample of them.")
             return STOP_END_TURN
 
@@ -297,66 +281,12 @@ class ArchiveAgent(AcpAgent):
                     "this hour.")
         return STOP_END_TURN
 
-    # -- premium: the shape of a shelf, not a list of it -------------------
+    # -- the shape of a shelf, not a list of it -------------------
 
     def _profile(self, params: dict) -> tuple[str, dict]:
-        """How much of a topic the archive holds, and in what shape.
-
-        The aggregation happens on the licence gateway. A missing or rejected key is a
-        finished answer, not a failure; a dead gateway is a failed lookup.
-        """
-        arguments = {"query": params["query"]}
-        if params.get("mediatype"):
-            arguments["mediatype"] = params["mediatype"]
-        data, refused = premium_call(
-            self.gateway, "archive_topic_profile", arguments,
-            {"agent": "archive", "skill": "archive-profile"})
-        if refused:
-            return refused
-        if not isinstance(data, dict) or data.get("totalMatching") is None:
-            return empty_premium_answer(
-                "The licence gateway sent back something I could not read, so I have no "
-                "profile to show.",
-                {"agent": "archive", "skill": "archive-profile", "dataset": DATASET},
-            )
-
-        def shown(value, fallback: str = "not reported") -> str:
-            return fallback if value is None or value == "" else str(value)
-
-        def tally(counts, limit=None):
-            if not counts:
-                return "not reported"
-            pairs = sorted(counts.items(), key=lambda pair: (-pair[1], str(pair[0])))
-            if limit:
-                pairs = pairs[:limit]
-            return ", ".join(f"{count} {name}" for name, count in pairs)
-
-        kinds = tally(data.get("byMediatype") or {})
-        decades = tally(data.get("byDecade") or {})
-        creators = tally(data.get("topCreators") or {}, 5)
-        span = data.get("yearSpan") or {}
-        sampled = data.get("sampled")
-        total = data.get("totalMatching")
-        scope = (f"every one of the {total} matching item(s) was read"
-                 if data.get("sampledIsWholeShelf")
-                 else f"the {sampled} most-downloaded of {total} matching item(s) were read")
-        lines = [f"Premium profile of the Internet Archive for {data.get('query')!r}: "
-                 f"{shown(total, '0')} item(s) match, and {scope}."]
-        lines.append(f"  - Media types: {kinds}")
-        lines.append(f"  - Years: {shown(span.get('first'))} to {shown(span.get('last'))} "
-                     f"({shown(span.get('datedItems'), '0')} dated, "
-                     f"{shown(span.get('undatedItems'), '0')} without a year).")
-        lines.append(f"  - By decade: {decades}")
-        lines.append(f"  - Most common creators: {creators}")
-        lines.append(f"  - Downloads across the sample: "
-                     f"{shown(data.get('downloadsAcrossSample'), '0')}.")
-        for row in (data.get("topItems") or [])[:10]:
-            lines.append(f"  - {shown(row.get('title'))} - {shown(row.get('mediatype'))}, "
-                         f"{shown(row.get('year'))}, {shown(row.get('downloads'), '0')} downloads"
-                         + (f"\n      {row['url']}" if row.get("url") else ""))
-        summary = (f"premium profile {data.get('query')!r}: {total} match(es), {kinds}")
-        return "\n".join(lines), {"summary": summary, "premium": True,
-                                  "agent": "archive", "skill": "archive-profile", "data": data}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: profile — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def on_cancel(self, session) -> None:
         return None  # one read, one answer

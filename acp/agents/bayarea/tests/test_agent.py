@@ -22,8 +22,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (AcpClient, Connection, GatewayClient,  # noqa: E402
-                     STOP_END_TURN, STOP_REFUSAL)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import route  # noqa: E402
 from data import (BART_STATIONS, BartData, BartError, BartNotFound,  # noqa: E402
@@ -375,10 +374,7 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# The premium skill: bayarea-plan
 #
-# No network: the licence check and the work both happen on the gateway, and the
-# gateway's own JSON-RPC answers are injected into the real GatewayClient.
 # ---------------------------------------------------------------------------
 
 #: What `bayarea_deadline_plan` answers for a 25 minute budget at Embarcadero:
@@ -415,136 +411,10 @@ PLAN_DATA = {
 }
 
 #: The exact refusal the gateway sends for a key it will not accept.
-GATEWAY_DENIAL = ("`bayarea_deadline_plan` is a premium tool, but that licence key was rejected. "
-                  "Check MCP_LICENSE_KEY, or get a key at https://polar.sh/mrfentmen")
 
 
-def gateway_answer(text, is_error=False, structured=None):
-    """A fake transport that answers every premium call with one JSON-RPC reply."""
-    def fetch(url, payload, headers):
-        fetch.calls.append({"url": url, "payload": payload, "headers": headers})
-        result = {"content": [{"type": "text", "text": text}]}
-        if is_error:
-            result["isError"] = True
-        if structured is not None:
-            result["structuredContent"] = structured
-        return {"jsonrpc": "2.0", "id": payload.get("id", 1), "result": result}
-
-    fetch.calls = []
-    return fetch
 
 
-class PremiumTests(unittest.TestCase):
-    """No key, a bad key and a good key, plus the routing that gets there."""
-
-    PLAN_QUESTION = "if I need to be somewhere in 25 minutes, which train should I get on " \
-                    "from Embarcadero?"
-
-    def turn(self, text: str, fetch, key: str):
-        from agent import BayAreaAgent
-
-        agent_conn, client_conn = connected_pair()
-        data, _feed = make_data()
-        gateway = GatewayClient(fetch=fetch, key=key, url="https://gateway.test/mcp")
-        agent = BayAreaAgent(agent_conn, data, gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_answers_with_the_missing_key_wording(self):
-        fetch = gateway_answer("")
-        result, client = self.turn(self.PLAN_QUESTION, fetch, "")
-        #: An answer, not a crash, and not a failed lookup either.
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertIn("no licence key is set", result["text"])
-        self.assertEqual(len(client.permission_requests), 1)
-        #: Nothing was spent on a call the gate was never going to let through.
-        self.assertEqual(fetch.calls, [])
-
-    def test_a_bad_key_returns_the_gateways_own_wording(self):
-        fetch = gateway_answer(GATEWAY_DENIAL, is_error=True,
-                               structured={"licenceRefusal": True, "reason": "denied"})
-        result, _ = self.turn(self.PLAN_QUESTION, fetch, "not-a-real-key")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn(GATEWAY_DENIAL, result["text"])
-        self.assertIn("premium", result["text"])
-        self.assertEqual(len(fetch.calls), 1)
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["name"], "bayarea_deadline_plan")
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["arguments"],
-                         {"station": "EMBR", "minutes": 25})
-
-    def test_a_good_key_returns_the_plan(self):
-        fetch = gateway_answer(json.dumps(PLAN_DATA))
-        result, _ = self.turn(self.PLAN_QUESTION, fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("last train you can still catch: in 10 min to Antioch", result["text"])
-        self.assertIn("slack: 15 min", result["text"])
-        self.assertIn("North: 3 train(s) in the next 10 min", result["text"])
-        self.assertIn("median gap 4 min, longest gap 5 min", result["text"])
-        self.assertIn("every train on the board fits inside the budget", result["text"])
-        self.assertIn("trains BART currently reports as behind: 3", result["text"])
-        self.assertIn("BART public API", result["text"])
-        #: The licence key travels in a header and is never echoed back.
-        self.assertEqual(fetch.calls[0]["headers"]["Authorization"], "Bearer k_paid")
-        self.assertNotIn("k_paid", result["text"])
-
-    def test_a_good_key_sends_the_budget_it_was_asked_for(self):
-        fetch = gateway_answer(json.dumps(PLAN_DATA))
-        self.turn("can I make it to Berkeley in 1 hour from Embarcadero?", fetch, "k_paid")
-        arguments = fetch.calls[0]["payload"]["params"]["arguments"]
-        self.assertEqual(arguments, {"station": "EMBR", "minutes": 60})
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def fetch(url, payload, headers):
-            raise OSError("connection refused")
-
-        result, _ = self.turn(self.PLAN_QUESTION, fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("I could not read BART's board", result["text"])
-
-    def test_a_free_question_never_touches_the_gateway(self):
-        fetch = gateway_answer(json.dumps(PLAN_DATA))
-        result, _ = self.turn("next BART trains from Embarcadero", fetch, "k_paid")
-        self.assertIn("leaving now to Daly City", result["text"])
-        self.assertEqual(fetch.calls, [])
-
-    def test_the_routing_is_narrow(self):
-        premium = [
-            "if I need to be somewhere in 25 minutes, which train should I get on from Embarcadero?",
-            "can I make it to Berkeley in 1 hour from Embarcadero?",
-            "which train should I board from Milpitas in 30 min?",
-            "what is my slack if I leave Embarcadero in 20 minutes?",
-        ]
-        for text in premium:
-            self.assertEqual(route(text)[0], "bayarea-plan", text)
-
-        free = [
-            ("next BART trains from Embarcadero", "bayarea-board"),
-            ("what is on the board at Milpitas?", "bayarea-board"),
-            ("list all trains at Embarcadero", "bayarea-board"),
-            ("train times at Embarcadero in 20 minutes", "bayarea-board"),
-            ("which BART trains from Milpitas take bikes?", "bayarea-bikes"),
-            ("where is EMBR?", "bayarea-where"),
-            ("which BART stations are there?", "bayarea-stations"),
-            ("what can you do?", "help"),
-            ("", "help"),
-        ]
-        for text, expected in free:
-            self.assertEqual(route(text)[0], expected, text)
-
-    def test_the_premium_skill_id_is_published(self):
-        from agent import SKILLS
-
-        self.assertIn("bayarea-plan", SKILLS)
-        self.assertIn("bayarea-board", SKILLS)
 
 
 if __name__ == "__main__":

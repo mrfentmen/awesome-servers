@@ -2,7 +2,7 @@
 
 The A2A twin of the Games ACP agent. It reads Steam's keyless store API, SteamSpy's owner and
 concurrent-player estimates, Steam's per-app news feed and Epic's public free-promotions feed.
-The fifth skill, a cross-title price and popularity board, runs on the licence gateway.
+The fifth skill, a cross-title price and popularity board, runs on a hosted service that was removed.
 
 Deterministic on purpose: routing is rules, the prices are Steam's own cents, and nothing is
 invented. SteamSpy publishes ownership as a range, so the answers quote the range; a playtime
@@ -22,12 +22,7 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import (  # noqa: E402  (path setup must come first)
-    GatewayClient,
-    SkillAgent,
-    empty_premium_answer,
-    premium_call,
-)
+from a2a_kit import SkillAgent
 from a2a_kit.errors import UpstreamError  # noqa: E402
 
 from data import (  # noqa: E402
@@ -58,7 +53,7 @@ HELP = (
     "  • is hades well reviewed\n"
     "  • what is free on epic this week\n"
     "  • any news for stardew valley\n"
-    "  • compare elden ring and dark souls 3 (premium — needs a licence key)\n"
+    "  • compare elden ring and dark souls 3 (not implemented here)\n"
     "Prices are Steam's own US store prices in dollars; ownership is SteamSpy's published "
     "range, not a count."
 )
@@ -424,65 +419,14 @@ def run_free(client: GamesClient) -> dict:
             "watch": None}
 
 
-def run_board(params: dict, gateway: GatewayClient) -> dict:
-    """Premium: the cross-title board is computed on the gateway, not here."""
-    games = (params.get("games") or [])[:MAX_BOARD_GAMES]
-    data, refused = premium_call(
-        gateway,
-        PREMIUM_TOOL,
-        {"games": games},
-        {"dataset": [DATASET_STEAM, DATASET_STEAMSPY], "skill": SKILL_BOARD, "asked": games},
-    )
-    if refused:
-        return refused
-    board = data.get("games") if isinstance(data, dict) else None
-    if not isinstance(board, list) or not board:
-        return empty_premium_answer(
-            "The licence gateway returned no titles for that comparison, so I have nothing to "
-            "report. Try two to four game names.",
-            {"dataset": [DATASET_STEAM, DATASET_STEAMSPY], "skill": SKILL_BOARD},
-        )
-    artifact = {
-        "dataset": [DATASET_STEAM, DATASET_STEAMSPY],
-        "skill": SKILL_BOARD,
-        "premium": True,
-        "summary": f"premium board over {len(board)} titles: cheapest "
-                   f"{(data.get('cheapest') or {}).get('name')}, most played "
-                   f"{(data.get('mostPlayed') or {}).get('name')}",
-        "games": board,
-        "cheapest": data.get("cheapest"),
-        "dearest": data.get("dearest"),
-        "most_played": data.get("mostPlayed"),
-        "best_reviewed": data.get("bestReviewed"),
+def run_board(params: dict, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: board — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    lines = ["Premium cross-title board (computed on the licence gateway):"]
-    for entry in board:
-        ratio = entry.get("reviewRatio")
-        lines.append(
-            f"  • {entry.get('name')} (asked: {entry.get('query')}): "
-            f"{usd(entry.get('price'))}"
-            + (f" — {ratio * 100:.0f}% of reviews positive" if ratio is not None else "")
-            + f"; owners {entry.get('owners') or 'not reported'}, "
-              f"{int(entry.get('ccu') or 0):,} playing now"
-        )
-    cheapest, dearest = data.get("cheapest") or {}, data.get("dearest") or {}
-    most, best = data.get("mostPlayed") or {}, data.get("bestReviewed") or {}
-    lines.append(f"\nCheapest: {cheapest.get('name')} at {usd(cheapest.get('price'))}. "
-                 f"Dearest: {dearest.get('name')} at {usd(dearest.get('price'))}.")
-    if most:
-        lines.append(f"Most played right now: {most.get('name')} with "
-                     f"{int(most.get('ccu') or 0):,} players.")
-    if best:
-        ratio = best.get("reviewRatio")
-        if ratio is not None:
-            lines.append(f"Best reviewed: {best.get('name')} at {ratio * 100:.1f}% positive.")
-    lines.append(
-        f"\nSource: {DATASET_STEAM} and {DATASET_STEAMSPY}, read on the licence gateway. Same "
-        "feeds as the free skills — the gateway adds the cross-title comparison, and a caller "
-        "without a key never gets the numbers."
-    )
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact,
-            "watch": None}
 
 
 def run_help() -> dict:
@@ -504,7 +448,7 @@ class GamesAgent(SkillAgent):
         "price in US dollars, what SteamSpy estimates about its players and reviews, its recent "
         "news, and what is free on Epic this week. Nothing is estimated here — prices are "
         "Steam's own cents and ownership is SteamSpy's published range. A cross-title price "
-        "board runs behind a licence check on the gateway."
+        "board runs on a hosted service that was removed."
     )
     env_prefix = "GAMES"
     datasets = (DATASET_STEAM, DATASET_STEAMSPY, DATASET_EPIC)
@@ -574,15 +518,15 @@ class GamesAgent(SkillAgent):
         },
         {
             "id": SKILL_BOARD,
-            "name": "Cross-title price board (premium)",
+            "name": "Cross-title price board (not implemented here)",
             "description": (
                 "Two to four titles compared at once: each one's Steam price and discount, "
                 "SteamSpy's owner range, concurrent players and review ratio, and then which "
                 "title is cheapest, dearest, most played and best reviewed. Premium: it runs "
-                "behind a licence check on the gateway, so the numbers only exist for a caller "
+                "on a hosted service that was removed, so the numbers only exist for a caller "
                 "with a key."
             ),
-            "tags": ["games", "compare", "premium", "price-board"],
+            "tags": ["games", "compare", "price-board"],
             "examples": [
                 "Compare elden ring and dark souls 3",
                 '{"skill": "price-board", "games": ["elden ring", "dark souls 3"]}',
@@ -606,9 +550,9 @@ class GamesAgent(SkillAgent):
     ]
 
     def __init__(self, client: GamesClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or GamesClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)
@@ -629,7 +573,7 @@ class GamesAgent(SkillAgent):
             return "Which game's news should I read? 'stardew valley', or a Steam app id."
         if skill == SKILL_BOARD:
             return ("The premium board compares two to four titles at once — name them, like "
-                    "'compare elden ring and dark souls 3'. It needs a licence key.")
+                    "'compare elden ring and dark souls 3'. It is not implemented here.")
         return ("Which game should I look up? A name works — 'portal 2', 'stardew valley' — or a "
                 "Steam app id.")
 

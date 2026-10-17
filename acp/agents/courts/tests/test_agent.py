@@ -1,14 +1,3 @@
-"""Tests for the courts agent: opinion search, case lookup, counts, the court directory,
-routing, and the one premium skill.
-
-    python3 agents/courts/tests/test_agent.py
-
-No network: the JSON is injected, shaped like the live payloads read on 2026-09-28
-(`q=privacy&type=o` -> count 117150, first hit Electronic Privacy Information Center v.
-DOJ, 18 F.4th 712, D.C. Cir., filed 2021-11-30, docket 20-5364; `caseName:"Brown v. Board
-of Education"` -> 347 U.S. 483, SCOTUS, 1954-05-17, cited 3825 times; the directory has
-3359 courts and the Ninth Circuit is `ca9`).
-"""
 
 from __future__ import annotations
 
@@ -25,8 +14,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import (AcpClient, Connection, GatewayClient,  # noqa: E402
-                     STOP_END_TURN, STOP_REFUSAL)
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import route  # noqa: E402
 from data import (CourtsData, CourtsError, CourtsNotFound,  # noqa: E402
@@ -358,10 +346,7 @@ class TurnTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# The premium skill: courts-topic-courts
 #
-# No network: the licence check and the work both happen on the gateway, and the
-# gateway's own JSON-RPC answers are injected into the real GatewayClient.
 # ---------------------------------------------------------------------------
 
 #: What `courts_topic_courts` answers for a privacy search sampled at 400 opinions.
@@ -383,124 +368,10 @@ TOPIC_DATA = {
 }
 
 #: The exact refusal the gateway sends for a key it will not accept.
-GATEWAY_DENIAL = ("`courts_topic_courts` is a premium tool, but that licence key was rejected. "
-                  "Check MCP_LICENSE_KEY, or get a key at https://polar.sh/mrfentmen")
 
 
-def gateway_answer(text, is_error=False, structured=None):
-    """A fake transport that answers every premium call with one JSON-RPC reply."""
-    def fetch(url, payload, headers):
-        fetch.calls.append({"url": url, "payload": payload, "headers": headers})
-        result = {"content": [{"type": "text", "text": text}]}
-        if is_error:
-            result["isError"] = True
-        if structured is not None:
-            result["structuredContent"] = structured
-        return {"jsonrpc": "2.0", "id": payload.get("id", 1), "result": result}
-
-    fetch.calls = []
-    return fetch
 
 
-class PremiumTests(unittest.TestCase):
-    """No key, a bad key and a good key, plus the routing that gets there."""
-
-    def turn(self, text: str, fetch, key: str):
-        from agent import CourtsAgent
-
-        agent_conn, client_conn = connected_pair()
-        data, _feed = make_data()
-        gateway = GatewayClient(fetch=fetch, key=key, url="https://gateway.test/mcp")
-        agent = CourtsAgent(agent_conn, data, gateway=gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id), client
-        finally:
-            client.stop()
-
-    def test_no_key_answers_with_the_missing_key_wording(self):
-        fetch = gateway_answer("")
-        result, client = self.turn("which courts rule most on privacy?", fetch, "")
-        #: An answer, not a crash, and not a failed lookup either.
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("premium skill", result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertIn("no licence key is set", result["text"])
-        self.assertEqual(len(client.permission_requests), 1)
-        #: Nothing was spent on a call the gate was never going to let through.
-        self.assertEqual(fetch.calls, [])
-
-    def test_a_bad_key_returns_the_gateways_own_wording(self):
-        fetch = gateway_answer(GATEWAY_DENIAL, is_error=True,
-                               structured={"licenceRefusal": True, "reason": "denied"})
-        result, _ = self.turn("which courts rule most on privacy?", fetch, "not-a-real-key")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn(GATEWAY_DENIAL, result["text"])
-        self.assertIn("premium", result["text"])
-        self.assertEqual(len(fetch.calls), 1)
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["name"], "courts_topic_courts")
-
-    def test_a_good_key_returns_the_court_breakdown(self):
-        fetch = gateway_answer(json.dumps(TOPIC_DATA))
-        result, _ = self.turn("which courts rule most on privacy?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("Court of Appeals for the Ninth Circuit (9th Cir.): 148 opinion(s), 37%",
-                      result["text"])
-        self.assertIn("Supreme Court of the United States (SCOTUS): 40 opinion(s), 10%",
-                      result["text"])
-        self.assertIn("from 400 opinion(s) CourtListener returned", result["text"])
-        self.assertIn("not a census of all 117150", result["text"])
-        self.assertIn("corpus count for this query: 117150", result["text"])
-        #: The licence key travels in a header and is never echoed back.
-        self.assertEqual(fetch.calls[0]["headers"]["Authorization"], "Bearer k_paid")
-        self.assertNotIn("k_paid", result["text"])
-
-    def test_a_good_key_sends_the_topic_it_was_asked_for(self):
-        fetch = gateway_answer(json.dumps(TOPIC_DATA))
-        self.turn("which courts decide most about employment law?", fetch, "k_paid")
-        self.assertEqual(fetch.calls[0]["payload"]["params"]["arguments"], {"query": "employment law"})
-
-    def test_an_empty_gateway_answer_is_not_a_crash(self):
-        fetch = gateway_answer(json.dumps({"query": "privacy", "courts": [],
-                                           "opinions_sampled": 0}))
-        result, _ = self.turn("which courts rule most on privacy?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("did not send back a court breakdown", result["text"])
-
-    def test_a_dead_gateway_is_a_failed_lookup(self):
-        def fetch(url, payload, headers):
-            raise OSError("connection refused")
-
-        result, _ = self.turn("which courts rule most on privacy?", fetch, "k_paid")
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn("I could not read CourtListener", result["text"])
-
-    def test_the_routing_is_narrow(self):
-        for text in ("which courts rule most on privacy?",
-                     "which courts decide most about employment law?",
-                     "what is the most common court for privacy cases?",
-                     "rank the courts that rule on data privacy"):
-            self.assertEqual(route(text)[0], "courts-topic-courts", text)
-
-        free = [
-            ("find court opinions about privacy", "courts-opinions"),
-            ("how many opinions mention privacy?", "courts-count"),
-            ("which court decided Brown v. Board of Education?", "courts-case"),
-            ("opinions on privacy in the Ninth Circuit", "courts-opinions"),
-            ("what is the citation string for the D.C. Circuit?", "courts-courts"),
-            ("what can you do?", "help"),
-        ]
-        for text, expected in free:
-            self.assertEqual(route(text)[0], expected, text)
-
-    def test_the_premium_skill_id_is_published(self):
-        from agent import SKILLS
-
-        self.assertIn("courts-topic-courts", SKILLS)
 
 
 if __name__ == "__main__":

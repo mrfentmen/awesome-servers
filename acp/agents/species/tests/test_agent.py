@@ -20,8 +20,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import GatewayClient, GatewayError
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 from agent import SpeciesAgent, route, taxon_from_text  # noqa: E402
 from data import DATASET, SpeciesData, SpeciesError  # noqa: E402
@@ -294,93 +293,10 @@ class TurnTests(unittest.TestCase):
         self.assertIn("failed", statuses)
 
 
-    def test_premium_turn_renders_board(self):
-        gateway = Mock()
-        gateway.call.return_value = PremiumTests.payload
-        result, _ = self.turn(PremiumTests.question, gateway=gateway)
-        self.assertIn("300 region observations", result["text"])
-        gateway.call.assert_called_once_with("species_region_board", PremiumTests.arguments)
-
-    def test_premium_turn_reports_gateway_failure(self):
-        gateway = Mock()
-        gateway.call.side_effect = GatewayError("unreachable", "gateway offline")
-        result, _ = self.turn(PremiumTests.question, gateway=gateway)
-        self.assertIn("gateway offline", result["text"])
 
 
 
-class PremiumTests(unittest.TestCase):
-    question = "region board place 1 taxon 47158 observer 1 from 2024-01 to 2024-03"
-    arguments = {"place_id": 1, "taxon_id": 47158, "user_id": 1,
-                 "start_month": "2024-01", "end_month": "2024-03"}
-    payload = {"monthly": [
-        {"month": "2024-01", "region_count": 100, "taxon_count": 10, "observer_count": 4,
-         "taxon_share_percent": 10, "observer_share_percent": 40},
-        {"month": "2024-02", "region_count": 0, "taxon_count": 0, "observer_count": 0,
-         "taxon_share_percent": None, "observer_share_percent": None},
-        {"month": "2024-03", "region_count": 200, "taxon_count": 40, "observer_count": 20,
-         "taxon_share_percent": 20, "observer_share_percent": 50}],
-        "totals": {"region": 300, "taxon": 50, "observer": 24},
-        "taxon_net_change": 30, "observer_net_change": 16}
 
-    def run_premium(self, gateway):
-        return SpeciesAgent(data=FakeData(), gateway=gateway)._run_skill(*route(self.question))
-
-    def test_no_key_attempts_premium_and_preserves_wording(self):
-        with patch.dict(os.environ, {}, clear=True):
-            fetch = Mock(side_effect=AssertionError("must not authorize"))
-            gateway = GatewayClient(fetch=fetch)
-            with self.assertRaises(GatewayError) as expected:
-                gateway.call("species_region_board", self.arguments)
-            with patch.object(gateway, "call", wraps=gateway.call) as call:
-                answer, artifact = self.run_premium(gateway)
-                call.assert_called_once_with("species_region_board", self.arguments)
-            self.assertEqual(answer, str(expected.exception))
-            self.assertIn("MCP_LICENSE_KEY", answer)
-            self.assertEqual(artifact["reason"], "missing_key")
-            fetch.assert_not_called()
-
-    def test_rejected_key_preserves_gateway_wording(self):
-        message = "Gateway key revoked. Buy at https://example.test/buy"
-        fetch = Mock(return_value={"result": {"isError": True,
-                     "structuredContent": {"licenceRefusal": True, "reason": "revoked"},
-                     "content": [{"type": "text", "text": message}]}})
-        answer, artifact = self.run_premium(GatewayClient(key="lic_live_but_rejected", fetch=fetch))
-        self.assertEqual(answer, message)
-        self.assertEqual(artifact["reason"], "denied")
-        self.assertEqual(fetch.call_args.args[2]["Authorization"], "Bearer lic_live_but_rejected")
-
-    def test_good_key_reports_gateway_numbers(self):
-        fetch = Mock(return_value={"result": {"content": [{"type": "text", "text": json.dumps(self.payload)}]}})
-        answer, artifact = self.run_premium(GatewayClient(key="test-good", fetch=fetch))
-        self.assertEqual(fetch.call_count, 1)
-        self.assertEqual(fetch.call_args.args[1]["params"],
-                         {"name": "species_region_board", "arguments": self.arguments})
-        for text in ("300 region observations", "50 taxon", "24 by this observer", "50% of taxon", "+30", "+16"):
-            self.assertIn(text, answer)
-        self.assertTrue(artifact["premium"])
-
-    def test_free_question_never_calls_gateway(self):
-        gateway = Mock()
-        agent = SpeciesAgent(data=FakeData(), gateway=gateway)
-        answer, _ = agent._run_skill(*route("how many monarch butterflies are there?"))
-        self.assertIn("548,321", answer)
-        gateway.call.assert_not_called()
-
-    def test_unreadable_payload_has_no_invented_numbers(self):
-        for payload in ({}, {"monthly": [None]}, "bad", {**self.payload, "totals": {}}):
-            gateway = Mock()
-            gateway.call.return_value = payload
-            answer, artifact = self.run_premium(gateway)
-            self.assertIn("no readable", answer)
-            self.assertTrue(artifact["failed"])
-
-    def test_route_and_missing_parameters(self):
-        self.assertEqual(route(self.question), ("species-board", self.arguments))
-        gateway = Mock()
-        answer, _ = SpeciesAgent(gateway=gateway)._run_skill(*route("region board"))
-        self.assertIn("supply iNaturalist IDs", answer)
-        gateway.call.assert_not_called()
 
 
 if __name__ == "__main__":

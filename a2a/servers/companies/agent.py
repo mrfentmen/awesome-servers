@@ -4,13 +4,13 @@
   - lei-lookup:          one entity from its 20-character LEI
   - ownership:           who a parent owns — every entity whose ultimate parent it is
   - entities-in-country: the legal entities registered in one country
-  - group-rollup:        a parent rolled up across its whole group (premium)
+  - group-rollup:        a parent rolled up across its whole group (not implemented here)
 
 The roll-up is premium because it is the one question the free skills cannot answer
 without you doing the work: `ownership` lists the children in one page, and turning
 that into a status and country breakdown, with each child's own registration record
 read to say how fresh it is, means re-reading every subsidiary. That is done on the
-licence gateway, so an unpaid caller gets the gateway's own message and no roll-up.
+licence gateway, so an unpaid caller gets a not-implemented stub message and no roll-up.
 
 An LEI says an entity has filed identifying data with a Local Operating Unit. It is
 not a company register: GLEIF holds entities of every kind, and a lapsed LEI means
@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     DATASET,
@@ -119,9 +119,9 @@ CARD_SKILLS = [
             "A parent rolled up across its whole group: how many entities sit under it, how many are "
             "ACTIVE and how many INACTIVE, which countries they are registered in, the subsidiary "
             "whose LEI renews soonest, and each subsidiary's own registration date and corroboration "
-            "level read individually. Premium: the roll-up runs behind a licence check on the gateway."
+            "level read individually. Premium: the roll-up runs on a hosted service that was removed."
         ),
-        "tags": ["companies", "gleif", "group", "rollup", "analysis", "premium"],
+        "tags": ["companies", "gleif", "group", "rollup", "analysis",],
         "examples": [
             "roll up the group under ultimate parent 5493000IBP32UQZ0KL24",
             "how is the BBC Worldwide group split by country and status?",
@@ -198,7 +198,7 @@ HELP = (
     "  • what is LEI 8I5DZWZKVSZI1NUHU748?\n"
     "  • who owns the entities under ultimate parent 5493000IBP32UQZ0KL24?\n"
     "  • which legal entities are registered in DE?\n"
-    "  • roll up the group under 5493000IBP32UQZ0KL24  (premium)\n"
+    "  • roll up the group under 5493000IBP32UQZ0KL24  (not implemented here)\n"
     "A name has to be the one the entity files — GLEIF matches legal names exactly, so a\n"
     "trading name finds nothing. An LEI is not proof a company is trading: it means the\n"
     "entity filed identifying data with a Local Operating Unit."
@@ -492,88 +492,14 @@ def run_entities_in_country(params: dict, client: GleifClient) -> dict:
     }
 
 
-def run_group_rollup(params: dict, client: GleifClient, gateway: GatewayClient) -> dict:
-    """The premium group roll-up. Nothing here reads GLEIF.
-
-    The gateway reads every subsidiary's own record and does the tally behind its
-    licence check, so a caller who has not paid gets the gateway's own message and
-    no roll-up at all.
-    """
-    try:
-        lei = client.check_lei(params.get("lei"))
-        limit = client.check_limit(params.get("limit") or 100)
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-    read, refused = premium_call(gateway, GATEWAY_TOOL, {"lei": lei, "limit": limit},
-                                 {"dataset": DATASET, "ultimate_parent": lei})
-    if refused:
-        return refused
-    if not isinstance(read, dict) or read.get("read") is None:
-        return empty_premium_answer(
-            "The licence gateway answered without a group roll-up, so there is nothing to report.",
-            {"dataset": DATASET, "ultimate_parent": lei},
-        )
-
-    subsidiaries = read.get("subsidiaries") or []
-    lines = [
-        f"Group roll-up for ultimate parent {read.get('ultimateParent')}"
-        + (f" — {read['ultimateParentName']}" if read.get("ultimateParentName") else "")
-        + f": GLEIF lists {read.get('total')} entit{'y' if read.get('total') == 1 else 'ies'}, "
-          f"and this run read {read.get('read')} of them individually."
-    ]
-    if not subsidiaries:
-        lines.append("  • No entity in GLEIF files this LEI as its ultimate parent.")
-    else:
-        lines.append(
-            f"  • {read.get('active', 0)} ACTIVE, {read.get('inactive', 0)} INACTIVE"
-            f", {read.get('unknownStatus', 0)} status not reported."
-        )
-        lines.append("  • Countries: " + _counts(read.get("countries")))
-        lines.append("  • Jurisdictions: " + _counts(read.get("jurisdictions")))
-        renewal = read.get("soonestRenewal") or {}
-        if renewal:
-            lines.append(
-                f"  • Renews soonest: {renewal.get('name') or 'unnamed entity'} "
-                f"({renewal.get('lei') or 'LEI not reported'}) on {renewal.get('nextRenewalDate') or 'not reported'}."
-            )
-        else:
-            lines.append("  • Renews soonest: not reported.")
-        lines.append("  • Subsidiaries:")
-        for row in subsidiaries[:MAX_LISTED]:
-            lines.append(
-                f"      {row.get('name') or 'unnamed entity'} — LEI {row.get('lei') or 'not reported'}, "
-                f"{row.get('status') or 'status not reported'}, {row.get('country') or 'country not reported'}"
-                + (f", registered as {row['registeredAs']}" if row.get("registeredAs") else "")
-                + (f", LEI {row['registrationStatus']}" if row.get("registrationStatus") else "")
-                + (f", renews {row['nextRenewalDate'][:10]}" if row.get("nextRenewalDate") else "")
-            )
-        if len(subsidiaries) > MAX_LISTED:
-            lines.append(f"      ... {len(subsidiaries) - MAX_LISTED} more in the artifact.")
-    lines.append(
-        "\nRolled up on the MCP gateway behind its licence check, from GLEIF's LEI records "
-        f"({DATASET}). Status and country come from the subsidiary list GLEIF returned; the "
-        f"registration status and renewal date were read from {read.get('detailRead')} of the "
-        "subsidiaries' own records, so an empty renewal date means not read, not absent. The "
-        "parent name is the registered name of the parent LEI, not a brand."
-    )
-    artifact = {
-        "dataset": DATASET,
-        "source": SOURCE,
-        "premium": True,
-        "ultimate_parent": read.get("ultimateParent"),
-        "ultimate_parent_name": read.get("ultimateParentName"),
-        "total": read.get("total"),
-        "read": read.get("read"),
-        "detail_read": read.get("detailRead"),
-        "active": read.get("active"),
-        "inactive": read.get("inactive"),
-        "unknown_status": read.get("unknownStatus"),
-        "countries": read.get("countries"),
-        "jurisdictions": read.get("jurisdictions"),
-        "soonest_renewal": read.get("soonestRenewal"),
-        "subsidiaries": subsidiaries,
+def run_group_rollup(params: dict, client: GleifClient, gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: group-rollup — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class GleifAgent(SkillAgent):
@@ -583,7 +509,7 @@ class GleifAgent(SkillAgent):
         "Read-only agent over GLEIF, the global index of legal entities that hold an LEI: entity "
         "lookup by registered name, one entity from its 20-character LEI with its registration dates "
         "and corroboration level, the entities a parent owns, and the legal entities registered in a "
-        "country — plus a group roll-up that reads every subsidiary individually on a licence-gated "
+        "country — plus a group roll-up that reads every subsidiary individually on a removed-hosted "
         "gateway. Every answer is read live from GLEIF."
     )
     env_prefix = "COMPANIES"
@@ -591,9 +517,9 @@ class GleifAgent(SkillAgent):
     card_skills = CARD_SKILLS
 
     def __init__(self, client: GleifClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or GleifClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

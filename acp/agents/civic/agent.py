@@ -22,9 +22,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text  # noqa: E402
+from acp_kit import STOP_END_TURN, STOP_REFUSAL, AcpAgent, SessionContext, prompt_text
 
-from acp_kit import GatewayClient, GatewayError, premium_call, empty_premium_answer
 
 from datasets import CivicData, CivicDataError  # noqa: E402
 
@@ -34,7 +33,7 @@ HELP = (
     "  • what 311 complaints came in around 11235 this month?\n"
     "  • which streets flooded in the last 30 days?\n"
     "  • how is the drinking water testing at site 55450?\n"
-    "  • agency resolution profile for DOT last 3 months (premium)\n"
+    "  • agency resolution profile for DOT last 3 months (not implemented here)\n"
     "I only read public datasets; I never file a complaint or pay a ticket."
 )
 
@@ -103,10 +102,10 @@ class CivicAgent(AcpAgent):
     version = "1.0.0"
 
     def __init__(self, connection=None, data: CivicData | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         super().__init__(connection)
         self.data = data or CivicData()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     # -- ACP ---------------------------------------------------------------
 
@@ -136,7 +135,7 @@ class CivicAgent(AcpAgent):
         ctx.tool_call_update(tool, status="in_progress")
         try:
             answer, artifact = self._run_skill(skill, params, ctx)
-        except (CivicDataError, GatewayError, ValueError) as exc:
+        except (CivicDataError, ValueError) as exc:
             ctx.tool_call_update(tool, status="failed", content=ctx.text_content(str(exc)))
             ctx.message(f"I could not read the dataset: {exc}")
             return STOP_END_TURN
@@ -274,32 +273,9 @@ class CivicAgent(AcpAgent):
         return HELP, {"summary": "help", "dataset": None}
 
     def _resolution(self, params: dict) -> tuple[str, dict]:
-        """The gateway aggregates counts and closure medians; no local premium work."""
-        context = {"agent": "civic", "skill": "agency-resolution"}
-        if not params.get("agency"):
-            return empty_premium_answer("Name an agency, for example agency resolution profile for DOT last 3 months.", context)
-        arguments = {"agency": str(params["agency"]).upper(), "months": int(params.get("months", 3)),
-                     "end_month": params.get("end_month") or datetime.now(timezone.utc).strftime("%Y-%m")}
-        data, refused = premium_call(self.gateway, "civic_agency_resolution_profile", arguments, context)
-        if refused:
-            return refused
-        rows = data.get("byType") if isinstance(data, dict) else None
-        if (not isinstance(rows, list) or not isinstance(data.get("totalComplaints"), int)
-                or not isinstance(data.get("window"), dict)
-                or any(not isinstance(r, dict) or not isinstance(r.get("count"), int) for r in rows)):
-            return empty_premium_answer("The licence gateway returned no readable agency resolution profile.", context)
-        median = data.get("medianDaysToClose")
-        lines = [f"Premium agency resolution profile for {data.get('agency')}: {data['totalComplaints']} complaints.",
-                 f"Created {data['window'].get('start')} to {data['window'].get('end')} (exclusive).",
-                 f"Closed with valid durations: {data.get('closedWithDuration')}; median whole days to close: "
-                 f"{median if median is not None else 'not reported'}."]
-        for row in rows:
-            value = row.get("medianDaysToClose")
-            lines.append(f"  • {row.get('type')}: {row['count']} complaints; {row.get('closedWithDuration')} closed; "
-                         f"median {value if value is not None else 'not reported'} whole days.")
-        lines.append(str(data.get("note") or ""))
-        lines.append("Source: NYC Open Data erm2-nwe9.")
-        return "\n".join(lines), {**context, "premium": True, "summary": lines[0], "profile": data}
+        """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+        message = 'Not yet implemented: resolution — its hosted implementation was removed.'
+        return message, {"summary": "not implemented", "removed": True}
 
     def _active_context(self, text: str) -> str:
         """A one-line note about what the datasets can and cannot answer."""

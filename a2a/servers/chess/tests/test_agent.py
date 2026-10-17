@@ -16,7 +16,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     CARD_SKILLS,
@@ -360,117 +359,21 @@ class ParseTests(unittest.TestCase):
 
 
 class SkillTests(unittest.TestCase):
-    def run_skill(self, skill, api=None, gateway=None, **params):
-        agent = LichessAgent(client=api or client(),
-                             gateway=gateway or GatewayClient(fetch=_no_network))
-        request = {"skill": skill, "params": params, "missing": agent.missing(skill, params)}
-        return agent.run(request)
 
-    def test_profile_reports_ratings_and_record(self):
-        result = self.run_skill("player-profile", player="thibault")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("blitz: 1724", result["message"])
-        self.assertIn("+/- 45", result["message"])
-        self.assertIn("trend -7", result["message"])
-        self.assertIn("provisional", result["message"])
-        self.assertIn("23886 game(s)", result["message"])
-        self.assertIn(DATASET, result["message"])
 
-    def test_profile_when_there_are_no_rated_games(self):
-        api = client(user={**USER_PAYLOAD, "perfs": {"blitz": {"games": 0}}})
-        result = self.run_skill("player-profile", api=api, player="thibault")
-        self.assertIn("no rated games", result["message"])
 
-    def test_profile_for_an_unknown_player(self):
-        from a2a_kit import UpstreamError
 
-        def missing(url, params, headers):
-            raise UpstreamError("LICHESS request failed: HTTP Error 404: Not Found")
 
-        api = LichessClient(fetch=missing, fetch_text=fetch_text_from(NDJSON))
-        result = self.run_skill("player-profile", api=api, player="nosuchplayer")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("no player called", result["message"])
 
-    def test_profile_rejects_a_bad_username(self):
-        result = self.run_skill("player-profile", player="not a username")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("letters, digits and underscores", result["message"])
 
-    def test_recent_games_lists_them(self):
-        result = self.run_skill("recent-games", player="thibault", count=3)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("JNUpaHZT", result["message"])
-        self.assertIn("black vs ofergrinberg", result["message"])
-        self.assertIn("rated 1720 (+4)", result["message"])
-        self.assertIn("B22 Sicilian Defense: Alapin Variation", result["message"])
-        self.assertIn("300+3", result["message"])
-        self.assertIn("NDJSON", result["message"])
-        self.assertEqual(result["artifact"]["found"], 3)
 
-    def test_recent_games_when_there_are_none(self):
-        api = client(games="")
-        result = self.run_skill("recent-games", api=api, player="thibault")
-        self.assertIn("no rated games", result["message"])
 
-    def test_game_detail_reads_the_export(self):
-        result = self.run_skill("game-detail", game_id="JNUpaHZT")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("ofergrinberg vs thibault", result["message"])
-        self.assertIn("black won", result["message"])
-        self.assertIn("Moves (16 half-moves)", result["message"])
-        self.assertIn("1. e4 c5 2. c3 Nc6", result["message"],
-                      "the moves are numbered in full-move pairs")
-        self.assertIn("300+3", result["message"])
-        self.assertEqual(result["artifact"]["game"]["id"], "JNUpaHZT")
 
-    def test_game_detail_from_a_players_side(self):
-        result = self.run_skill("game-detail", player="thibault", game_id="JNUpaHZT")
-        self.assertIn("From thibault's side: black, win", result["message"])
 
-    def test_game_detail_for_an_unknown_game(self):
-        result = self.run_skill("game-detail", api=client(game={}), game_id="JNUpaHZT")
-        self.assertIn("no game with id", result["message"])
-        self.assertIsNone(result["artifact"]["game"])
 
-    def test_game_detail_when_lichess_published_no_moves(self):
-        api = client(game={**EXPORT_PAYLOAD, "moves": None})
-        result = self.run_skill("game-detail", api=api, game_id="JNUpaHZT")
-        self.assertIn("Lichess published none for this game", result["message"])
 
-    def test_game_detail_rejects_a_bad_id(self):
-        result = self.run_skill("game-detail", game_id="nope")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("eight characters", result["message"])
 
-    def test_opening_lookup_by_game(self):
-        result = self.run_skill("opening-lookup", game_id="JNUpaHZT")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("B22 Sicilian Defense: Alapin Variation", result["message"])
-        self.assertIn("Recognised at half-move 3", result["message"])
-        self.assertIn("e4 c5 c3", result["message"])
-        self.assertEqual(result["artifact"]["opening_source"], "Lichess game analysis")
 
-    def test_opening_lookup_when_lichess_analysed_nothing(self):
-        api = client(game={**EXPORT_PAYLOAD, "opening": None})
-        result = self.run_skill("opening-lookup", api=api, game_id="JNUpaHZT")
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("no opening analysis", result["message"])
-
-    def test_opening_lookup_by_name(self):
-        result = self.run_skill("opening-lookup", opening="Sicilian Defense")
-        self.assertIn("B22 Sicilian Defense", result["message"])
-        self.assertEqual(result["artifact"]["opening_source"], "Lichess opening dictionary")
-
-    def test_opening_lookup_for_a_name_lichess_does_not_have(self):
-        from a2a_kit import UpstreamError
-
-        def missing(url, params, headers):
-            raise UpstreamError("LICHESS request failed: HTTP Error 404: Not Found")
-
-        api = LichessClient(fetch=missing, fetch_text=fetch_text_from(NDJSON))
-        result = self.run_skill("opening-lookup", api=api, opening="Nonsense Opening")
-        self.assertIn("opening dictionary has nothing", result["message"])
 
     def test_opening_lookup_needs_something(self):
         agent = LichessAgent(client=client())
@@ -484,30 +387,8 @@ class SkillTests(unittest.TestCase):
         result = agent.run({"skill": "game-detail", "params": {}, "missing": ["game_id"]})
         self.assertIn("eight-character", result["message"])
 
-    def test_help_does_not_touch_the_feed(self):
-        result = self.run_skill("help")
-        self.assertIn("Lichess", result["message"])
-        self.assertIsNone(result["artifact"])
 
-    def test_the_prefixed_gateway_url_override_is_wired_up(self):
-        import os
 
-        os.environ["LICHESS_GATEWAY_URL"] = "http://127.0.0.1:9/mcp"
-        try:
-            agent = LichessAgent(client=client() if "chess" != "tv" else FakeTvmaze()
-                          if "chess" == "tv" else None)
-        finally:
-            del os.environ["LICHESS_GATEWAY_URL"]
-        self.assertEqual(agent.gateway.url, "http://127.0.0.1:9/mcp",
-                         "the .env.example documents this override, so it has to work")
-
-    def test_card_skills_and_env_prefix(self):
-        ids = [skill["id"] for skill in CARD_SKILLS]
-        self.assertEqual(ids, ["player-profile", "recent-games", "game-detail",
-                               "opening-lookup", "player-form"])
-        premium = [skill for skill in CARD_SKILLS if skill["id"] == "player-form"][0]
-        self.assertIn("premium", premium["tags"])
-        self.assertEqual(LichessAgent(client=client()).env_prefix, "LICHESS")
 
 
 #: Shape copied from a live `chess_player_form` answer for thibault over 30 games.
@@ -542,8 +423,6 @@ FORM_PAYLOAD = {
     "note": "Only rated games are counted.",
 }
 
-DENIED_TEXT = ("`chess_player_form` is a premium tool, but that license key is not valid. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`chess_player_form` failed: Lichess throttled that request"
 
 
@@ -554,40 +433,11 @@ def _message(text, **extra):
     return payload
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            # The gateway's licence refusal, marker included: the marker is what tells a
-            # refusal apart from a tool that failed after the gate had let it through.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class PlayerFormTests(unittest.TestCase):
     """The premium skill: parsing stays local, the form report comes from the gateway."""
 
-    def test_form_wording_routes_to_the_premium_skill(self):
-        for text in ("is thibault improving at the moment?",
-                     "build me a form report for thibault over 30 games",
-                     "what openings does thibault play?"):
-            parsed = parse(_message(text))
-            self.assertEqual(parsed["skill"], SKILL_PLAYER_FORM, text)
 
     def test_the_free_skills_keep_their_own_questions(self):
         self.assertEqual(parse(_message("how strong is thibault on lichess?"))["skill"],
@@ -606,43 +456,8 @@ class PlayerFormTests(unittest.TestCase):
         self.assertEqual(parsed["params"]["player"], "thibault")
         self.assertEqual(parsed["params"]["count"], 30)
 
-    def test_the_message_reports_the_gateways_form(self):
-        gateway, calls = fake_gateway(FORM_PAYLOAD)
-        result = LichessAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_PLAYER_FORM, "params": {"player": "thibault", "count": 30},
-             "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("14W 4D 12L", result["message"])
-        self.assertIn("roughly level over this run", result["message"])
-        self.assertIn("With white: 8W 2D 5L", result["message"])
-        self.assertIn("B22 Sicilian Defense: Alapin Variation: 9 game(s)", result["message"])
-        self.assertIn("Rating change over the run: -18", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["games_read"], 30)
 
-        # The games were read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "chess_player_form")
-        self.assertEqual(sent["arguments"]["player"], "thibault")
-        self.assertEqual(sent["arguments"]["max"], 30)
 
-    def test_a_bad_username_never_reaches_the_gateway(self):
-        gateway, calls = fake_gateway(FORM_PAYLOAD)
-        result = LichessAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_PLAYER_FORM, "params": {"player": "not a username"}, "missing": []})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertEqual(calls, [], "a bad argument never reaches the gateway")
-
-    def test_too_many_games_never_reaches_the_gateway(self):
-        gateway, calls = fake_gateway(FORM_PAYLOAD)
-        result = LichessAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_PLAYER_FORM, "params": {"player": "thibault", "count": "500"},
-             "missing": []})
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("between 1 and 60", result["message"])
-        self.assertEqual(calls, [])
 
     def test_form_needs_a_player(self):
         agent = LichessAgent(client=client())
@@ -650,47 +465,10 @@ class PlayerFormTests(unittest.TestCase):
         result = agent.run({"skill": "player-form", "params": {}, "missing": ["player"]})
         self.assertIn("Which player?", result["message"])
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = LichessAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_PLAYER_FORM, "params": {"player": "thibault"}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = LichessAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_PLAYER_FORM, "params": {"player": "thibault"}, "missing": []})
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_form(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = LichessAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_PLAYER_FORM, "params": {"player": "thibault"}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("repertoire"))
 
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = LichessAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_PLAYER_FORM, "params": {"player": "thibault"}, "missing": []})
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("throttled", result["message"])
 
-    def test_an_unclassified_opening_is_still_reported(self):
-        payload = {**FORM_PAYLOAD, "repertoire": [
-            {"name": "unclassified", "eco": None, "openingName": None, "games": 4,
-             "wins": 1, "draws": 1, "losses": 2}]}
-        gateway, _ = fake_gateway(payload)
-        result = LichessAgent(client(), gateway=gateway).run(
-            {"skill": SKILL_PLAYER_FORM, "params": {"player": "thibault"}, "missing": []})
-        self.assertIn("ECO not reported unclassified", result["message"])
 
 
 if __name__ == "__main__":

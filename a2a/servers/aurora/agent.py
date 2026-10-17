@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import re
 
-from a2a_kit import GatewayClient, SkillAgent, empty_premium_answer, premium_call
+from a2a_kit import SkillAgent
 
 from data import (
     CITY_COORDS,
@@ -127,9 +127,9 @@ CARD_SKILLS = [
             "The next three days read as storm windows: each unbroken run of storm-level Kp in "
             "NOAA's planetary K index forecast with its start, end, duration, peak Kp and G scale, "
             "the strongest window, the next one due and the hours until it starts, and the total "
-            "hours of storm conditions still ahead. Premium: it runs behind a licence check."
+            "hours of storm conditions still ahead. Premium: it runs on a hosted service that was removed."
         ),
-        "tags": ["aurora", "space-weather", "storm", "kp", "windows", "premium"],
+        "tags": ["aurora", "space-weather", "storm", "kp", "windows",],
         "examples": [
             "How many hours of geomagnetic storm are coming in the next three days?",
             '{"skill": "aurora-storm-windows", "min_kp": 6}',
@@ -541,90 +541,14 @@ def run_aurora_watch(params: dict, client: SpaceWeatherClient) -> dict:
 
 
 def run_aurora_storm_windows(params: dict, client: SpaceWeatherClient,
-                             gateway: GatewayClient) -> dict:
-    """The premium storm-window list. The windows are worked out on the gateway.
-
-    The gateway reads SWPC behind its licence check and hands back the windows, so a
-    caller who has not paid gets the gateway's own message and no figures at all.
-    """
-    # A bad argument is the caller's to fix, so it comes back as a question rather than
-    # as an internal error.
-    try:
-        min_kp = client.check_storm_kp(params.get("min_kp") or DEFAULT_THRESHOLD_KP)
-    except ValueError as exc:
-        return {"final_state": "input-required", "message": str(exc), "artifact": None, "watch": None}
-    read, refused = premium_call(gateway, "aurora_storm_windows", {"min_kp": min_kp}, {
-        "dataset": DATASET_FORECAST, "min_kp": min_kp,
-    })
-    if refused:
-        return refused
-    if not isinstance(read, dict) or read.get("periodsRead") is None:
-        return empty_premium_answer(
-            "The licence gateway answered without any Kp forecast, so there is nothing to report.",
-            {"dataset": DATASET_FORECAST, "min_kp": min_kp},
-        )
-
-    windows = read.get("stormWindows") or []
-    next_storm = read.get("nextStorm") or None
-    strongest = read.get("strongestWindow") or None
-    now_kp = read.get("nowKp") or {}
-    lines = [
-        f"Storm windows at or above Kp {read.get('thresholdKp')} over NOAA's planetary K index "
-        f"forecast ({read.get('periodsRead')} periods, {read.get('observedPeriods')} observed and "
-        f"{read.get('predictedPeriods')} predicted, covering {read.get('forecastFrom')} to "
-        f"{read.get('forecastTo')}):",
-        f"  • Right now: Kp {now_kp.get('kp')} ({now_kp.get('scale')}) at {now_kp.get('at')}.",
-    ]
-    if windows:
-        for window in windows[:MAX_LISTED_STORM_WINDOWS]:
-            when = (f"starts in {window.get('startsInHours')} h" if window.get("inFuture")
-                    else "already under way")
-            lines.append(
-                f"  • {window.get('start')} to {window.get('end')} — {window.get('hours')} h, peak "
-                f"Kp {window.get('peakKp')} ({window.get('peakScale')}) at {window.get('peakAt')}, "
-                f"{window.get('source')}, {when}"
-            )
-        if len(windows) > MAX_LISTED_STORM_WINDOWS:
-            lines.append(f"  • ... {len(windows) - MAX_LISTED_STORM_WINDOWS} more window(s) are in the artifact.")
-    else:
-        lines.append(
-            f"  • No period at or above Kp {read.get('thresholdKp')} is in the forecast, so no "
-            "storm-level activity is expected in the next three days."
-        )
-    if strongest:
-        lines.append(
-            f"  • Strongest window: {strongest.get('start')} to {strongest.get('end')}, peak Kp "
-            f"{strongest.get('peakKp')} ({strongest.get('peakScale')})."
-        )
-    if next_storm:
-        lines.append(
-            f"  • Next to arrive: {next_storm.get('start')} ({next_storm.get('hours')} h, peak Kp "
-            f"{next_storm.get('peakKp')}), {next_storm.get('startsInHours')} h from now."
-        )
-    lines.append(
-        f"  • {read.get('stormHoursAhead')} hours of storm conditions still ahead, "
-        f"{read.get('stormHoursInHistory')} already past."
-    )
-    lines.append(
-        "\nComputed on the MCP gateway behind its licence check, from NOAA's "
-        f"planetary K index forecast ({DATASET_FORECAST}). The file mixes observed periods with the "
-        "prediction, so each window says which it came from; a Kp forecast is an estimate and can be "
-        "revised either way."
-    )
-    artifact = {
-        "dataset": DATASET_FORECAST,
-        "source": "NOAA Space Weather Prediction Center planetary K index forecast, computed on the licence gateway",
-        "premium": True,
-        "min_kp": min_kp,
-        "now_kp": now_kp,
-        "storm_window_count": read.get("stormWindowCount"),
-        "storm_hours_ahead": read.get("stormHoursAhead"),
-        "storm_hours_in_history": read.get("stormHoursInHistory"),
-        "next_storm": next_storm,
-        "strongest_window": strongest,
-        "storm_windows": windows,
+                             gateway: object) -> dict:
+    """Stub: the hosted implementation of this skill was removed in the paywall cleanup."""
+    return {
+        "final_state": "completed",
+        "message": 'Not yet implemented: aurora-storm-windows — its hosted implementation was removed.',
+        "artifact": {"removed": True},
+        "watch": None,
     }
-    return {"final_state": "completed", "message": "\n".join(lines), "artifact": artifact, "watch": None}
 
 
 class AuroraSpaceWeatherAgent(SkillAgent):
@@ -644,9 +568,9 @@ class AuroraSpaceWeatherAgent(SkillAgent):
     watch_kinds = (SKILL_AURORA_WATCH,)
 
     def __init__(self, client: SpaceWeatherClient | None = None,
-                 gateway: GatewayClient | None = None) -> None:
+                 gateway: object | None = None) -> None:
         self.client = client or SpaceWeatherClient()
-        self.gateway = gateway or GatewayClient()
+        self.gateway = gateway
 
     def parse(self, message: dict) -> dict:
         return parse(message)

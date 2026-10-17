@@ -28,7 +28,7 @@ for path in (str(REPO_ROOT), str(AGENT_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL  # noqa: E402
+from acp_kit import AcpClient, Connection, STOP_END_TURN, STOP_REFUSAL
 
 import render  # noqa: E402
 from agent import place_from_text, route  # noqa: E402
@@ -504,81 +504,6 @@ class TurnTests(unittest.TestCase):
 
 
 
-class PremiumGatewayTests(unittest.TestCase):
-    def gateway(self, key, payload=None, refused=False):
-        import json
-        from acp_kit import GatewayClient
-        class RecordingGateway(GatewayClient):
-            def call(self, tool, arguments=None):
-                self.attempts.append((tool, arguments, bool(self.key)))
-                return super().call(tool, arguments)
-        def fetch(url, request, headers):
-            self.requests.append((request, headers))
-            if refused:
-                return {"result": {"isError": True, "content": [{"type": "text", "text": "Gateway says this premium tool needs a valid license key."}],
-                                  "structuredContent": {"licenceRefusal": True, "reason": "denied"}}}
-            return {"result": {"content": [{"type": "text", "text": json.dumps(payload)}]}}
-        self.requests = []
-        gateway = RecordingGateway(key=key, fetch=fetch)
-        gateway.attempts = []
-        return gateway
-
-    def turn(self, text, gateway):
-        from agent import ChartAgent
-        agent_conn, client_conn = connected_pair()
-        agent = ChartAgent(agent_conn, make_data()[0], gateway)
-        threading.Thread(target=agent_conn.serve, daemon=True).start()
-        client = AcpClient(connection=client_conn, permission="allow-once")
-        client.start()
-        client.initialize()
-        session_id = client.new_session(cwd="/tmp")
-        try:
-            return client.prompt(text, session_id)
-        finally:
-            client.stop()
-
-    def test_premium_no_key(self):
-        import os
-        from unittest.mock import patch
-        from acp_kit import GatewayError
-        with patch.dict(os.environ, {}, clear=True):
-            gateway = self.gateway("")
-            with self.assertRaises(GatewayError) as caught:
-                gateway.call('chart_series_digest', {'places': ['Seattle', 'Tokyo'], 'startDate': '2026-10-01', 'endDate': '2026-10-02'})
-            wording = str(caught.exception)
-            gateway.attempts.clear()
-            result = self.turn('compare temperature in Seattle and Tokyo from 2026-10-01 to 2026-10-02', gateway)
-        self.assertIn(wording, result["text"])
-        self.assertIn("MCP_LICENSE_KEY", result["text"])
-        self.assertEqual(gateway.attempts, [('chart_series_digest', {'places': ['Seattle', 'Tokyo'], 'startDate': '2026-10-01', 'endDate': '2026-10-02'}, False)])
-        self.assertEqual(self.requests, [])
-
-    def test_premium_rejected_key(self):
-        gateway = self.gateway("lic_live_but_rejected", refused=True)
-        result = self.turn('compare temperature in Seattle and Tokyo from 2026-10-01 to 2026-10-02', gateway)
-        self.assertIn("Gateway says this premium tool needs a valid license key.", result["text"])
-        self.assertEqual(len(gateway.attempts), 1)
-
-    def test_premium_granted_key(self):
-        gateway = self.gateway("lic_granted", {'startDate': '2026-10-01', 'endDate': '2026-10-02', 'series': [{'name': 'Seattle', 'min': 8.2, 'max': 18.7, 'mean': 14.1, 'change': 2.4, 'trend': 'rising', 'reportedHours': 48, 'missingHours': 0}]})
-        result = self.turn('compare temperature in Seattle and Tokyo from 2026-10-01 to 2026-10-02', gateway)
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertIn('min 8.2; max 18.7; mean 14.1', result["text"])
-        self.assertEqual(gateway.attempts, [('chart_series_digest', {'places': ['Seattle', 'Tokyo'], 'startDate': '2026-10-01', 'endDate': '2026-10-02'}, True)])
-        self.assertEqual(len(self.requests), 1)
-        self.assertEqual(self.requests[0][1]["Authorization"], "Bearer lic_granted")
-        self.assertEqual(route('compare temperature in Seattle and Tokyo from 2026-10-01 to 2026-10-02')[0], 'chart-digest')
-
-    def test_premium_empty_payload(self):
-        gateway = self.gateway("lic_granted", {})
-        result = self.turn('compare temperature in Seattle and Tokyo from 2026-10-01 to 2026-10-02', gateway)
-        self.assertIn("no readable", result["text"])
-
-    def test_free_never_calls_gateway(self):
-        gateway = self.gateway("lic_granted", {'startDate': '2026-10-01', 'endDate': '2026-10-02', 'series': [{'name': 'Seattle', 'min': 8.2, 'max': 18.7, 'mean': 14.1, 'change': 2.4, 'trend': 'rising', 'reportedHours': 48, 'missingHours': 0}]})
-        result = self.turn('chart the temperature in Seattle for the next 24 hours', gateway)
-        self.assertEqual(result["stopReason"], STOP_END_TURN)
-        self.assertEqual(gateway.attempts, [])
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

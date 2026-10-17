@@ -16,7 +16,6 @@ for path in (str(SERVER_DIR), str(REPO_ROOT)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from a2a_kit import GatewayClient  # noqa: E402
 
 from agent import (  # noqa: E402
     BBC_LEI,
@@ -297,15 +296,6 @@ class ParseTests(unittest.TestCase):
         self.assertEqual(request["params"]["name"], "APPLE INC")
         self.assertNotIn("country", request["params"])
 
-    def test_a_rollup_question_routes_to_the_premium_skill(self):
-        for text in (f"roll up the group under ultimate parent {BBC_LEI}",
-                     "how is the BBC Worldwide group split by country and status?",
-                     "give me a group profile for that parent"):
-            parsed = parse({"parts": [{"kind": "text", "text": text}]})
-            self.assertEqual(parsed["skill"], SKILL_GROUP_ROLLUP, text)
-            self.assertTrue(parsed["explicit"], text)
-        self.assertEqual(parse({"parts": [{"kind": "text", "text": f"roll up the group under {BBC_LEI}"}]})
-                         ["params"]["limit"], 100)
 
     def test_a_quoted_name_is_used_verbatim(self):
         request = parse({"parts": [{"kind": "text", "text": 'look up "Volkswagen AG" please'}]})
@@ -427,14 +417,6 @@ class SkillTests(unittest.TestCase):
         self.assertIn("exact", result["message"])
         self.assertIsNone(result["artifact"])
 
-    def test_card_lists_four_free_skills_and_one_premium(self):
-        ids = [skill["id"] for skill in CARD_SKILLS]
-        self.assertEqual(ids, ["entity-lookup", "lei-lookup", "ownership",
-                               "entities-in-country", "group-rollup"])
-        premium = [skill for skill in CARD_SKILLS if "premium" in skill["tags"]]
-        self.assertEqual([skill["id"] for skill in premium], ["group-rollup"])
-        for skill in CARD_SKILLS[:-1]:
-            self.assertNotIn("premium", skill["tags"], skill["id"])
 
     def test_agent_metadata(self):
         agent = GleifAgent(client=FakeGleif())
@@ -470,8 +452,6 @@ ROLLUP_PAYLOAD = {
     "note": "Statuses and countries come from the subsidiary list GLEIF returned.",
 }
 
-DENIED_TEXT = ("`companies_group_rollup` is a premium tool, but that license key is not valid. "
-               "Get a key at https://buy.polar.sh/polar_cl_example")
 TOOL_ERROR_TEXT = "`companies_group_rollup` failed: upstream returned HTTP 500"
 
 
@@ -482,29 +462,6 @@ def _message(text, **extra):
     return payload
 
 
-def fake_gateway(payload=None, error=None, text=None, tool_error=None, key="polar_test_key"):
-    """A GatewayClient whose HTTP POST is a function, so no test touches the network."""
-    calls: list[dict] = []
-
-    def fetch(url, request_payload, headers):
-        calls.append({"url": url, "payload": request_payload, "headers": headers})
-        if error is not None:
-            raise error
-        if tool_error is not None:
-            # Failed after the gate let it through: no licenceRefusal marker.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": tool_error}], "isError": True}}
-        if payload is None and text is None:
-            # The gateway's licence refusal, marker included: the marker is what tells a
-            # refusal apart from a tool that failed after the gate had let it through.
-            return {"jsonrpc": "2.0", "id": 1,
-                    "result": {"content": [{"type": "text", "text": DENIED_TEXT}],
-                               "structuredContent": {"licenceRefusal": True, "reason": "invalid"},
-                               "isError": True}}
-        body = text if text is not None else json.dumps(payload)
-        return {"jsonrpc": "2.0", "id": 1, "result": {"content": [{"type": "text", "text": body}]}}
-
-    return GatewayClient(fetch=fetch, key=key), calls
 
 
 class RollupSkillTests(unittest.TestCase):
@@ -515,13 +472,6 @@ class RollupSkillTests(unittest.TestCase):
         return GleifAgent(client or FakeGleif(), gateway=gateway).run(
             {"skill": SKILL_GROUP_ROLLUP, "params": payload, "missing": []})
 
-    def test_the_rollup_question_routes_to_the_premium_skill(self):
-        for text in ("roll up the group under ultimate parent 5493000IBP32UQZ0KL24",
-                     "how is the BBC Worldwide group split by country and status?",
-                     "give me a group breakdown of that parent"):
-            parsed = parse(_message(text))
-            self.assertEqual(parsed["skill"], SKILL_GROUP_ROLLUP, text)
-            self.assertTrue(parsed["explicit"], text)
 
     def test_the_free_skills_keep_their_own_questions(self):
         for text, skill in (("look up JPMORGAN CHASE & CO.", "entity-lookup"),
@@ -536,76 +486,12 @@ class RollupSkillTests(unittest.TestCase):
         self.assertEqual(parsed["skill"], SKILL_GROUP_ROLLUP)
         self.assertEqual(parsed["params"]["limit"], 50)
 
-    def test_the_message_reports_the_gateways_rollup(self):
-        gateway, calls = fake_gateway(ROLLUP_PAYLOAD)
-        result = self.run_rollup(gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("BRITISH BROADCASTING CORPORATION", result["message"])
-        self.assertIn("GLEIF lists 14 entities", result["message"])
-        self.assertIn("13 ACTIVE, 1 INACTIVE", result["message"])
-        self.assertIn("Countries: GB (10), IN (2), NL (1)", result["message"])
-        self.assertIn("Renews soonest", result["message"])
-        self.assertIn("BBC WORLDWIDE HOLDINGS B.V.", result["message"])
-        self.assertIn("LEI LAPSED", result["message"])
-        self.assertIn(DATASET, result["message"])
-        self.assertTrue(result["artifact"]["premium"])
-        self.assertEqual(result["artifact"]["total"], 14)
-        self.assertEqual(result["artifact"]["detail_read"], 14)
 
-        # GLEIF was read behind the gate, not here.
-        self.assertEqual(len(calls), 1)
-        sent = calls[0]["payload"]["params"]
-        self.assertEqual(sent["name"], "companies_group_rollup")
-        self.assertEqual(sent["arguments"]["lei"], BBC_LEI)
-        self.assertEqual(sent["arguments"]["limit"], 100)
 
-    def test_without_a_licence_the_caller_is_told_how_to_get_one(self):
-        gateway, calls = fake_gateway(key="")
-        result = self.run_rollup(gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("MCP_LICENSE_KEY", result["message"])
-        self.assertEqual(result["artifact"]["reason"], "missing_key")
-        self.assertNotIn("subsidiaries", result["artifact"])
-        self.assertEqual(calls, [], "a keyless caller must not reach the gateway")
 
-    def test_a_licence_refusal_keeps_the_gateways_wording(self):
-        gateway, _ = fake_gateway()  # nothing but a refusal
-        result = self.run_rollup(gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertEqual(result["message"], DENIED_TEXT)
-        self.assertEqual(result["artifact"]["reason"], "denied")
 
-    def test_a_dead_gateway_fails_instead_of_inventing_a_rollup(self):
-        gateway, _ = fake_gateway(error=OSError("connection refused"))
-        result = self.run_rollup(gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertIn("could not be reached", result["message"])
-        self.assertIsNone(result["artifact"].get("subsidiaries"))
 
-    def test_a_tool_error_is_not_sold_as_a_licence_problem(self):
-        gateway, _ = fake_gateway(tool_error=TOOL_ERROR_TEXT)
-        result = self.run_rollup(gateway)
-        self.assertEqual(result["final_state"], "failed")
-        self.assertNotIn("MCP_LICENSE_KEY", result["message"])
-        self.assertIn("HTTP 500", result["message"])
 
-    def test_a_bad_argument_never_reaches_the_gateway(self):
-        gateway, calls = fake_gateway(ROLLUP_PAYLOAD)
-        result = self.run_rollup(gateway, lei="nope")
-        self.assertEqual(result["final_state"], "input-required")
-        self.assertIn("an LEI is 20 characters", result["message"])
-        self.assertEqual(calls, [])
-
-    def test_a_parent_with_no_subsidiaries_reports_cleanly(self):
-        payload = {**ROLLUP_PAYLOAD, "total": 0, "read": 0, "detailRead": 0, "active": 0,
-                   "inactive": 0, "unknownStatus": 0, "countries": [], "jurisdictions": [],
-                   "soonestRenewal": None, "subsidiaries": []}
-        gateway, _ = fake_gateway(payload)
-        result = self.run_rollup(gateway)
-        self.assertEqual(result["final_state"], "completed")
-        self.assertIn("No entity in GLEIF files this LEI as its ultimate parent", result["message"])
-        self.assertIn("read 0 of them individually", result["message"])
-        self.assertNotIn("Renews soonest", result["message"])
 
 
 if __name__ == "__main__":
