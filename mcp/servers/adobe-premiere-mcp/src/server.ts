@@ -1,5 +1,5 @@
-import { mediaProbe, timecodeConvert } from "./api.js"
-import { premiumTool } from "./gateway.js"
+successfully downloaded text file (SHA: 561dfd2010c86e9e1ac6a7e12ae5dc63cc46fc53)
+import { mediaProbe, timecodeConvert, searchArchiveFootage } from "./api.js"
 // @ts-nocheck
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
@@ -270,10 +270,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: search_archive_footage ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_adobe_premiere_search_archive_footage", args)) } catch (e) { return textError(error(e)) }
+    try { return text(await searchArchiveFootage(args)) } catch (e) { return textError(error(e)) }
   }
   )
 
