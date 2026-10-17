@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: d6fc2cab475ab5d6947c8044eedbe66cec65aaf5)
 # ackee-mcp
 
 Self-hosted Ackee analytics via GraphQL: domains, facts, top browsers.
@@ -18,21 +19,10 @@ Needs ACKEE_BASE_URL (your instance, e.g. https://stats.example.com) plus ACKEE_
 
 Part of [awesome-mcps](https://github.com/mrfentmen/awesome-mcps).
 
-<!-- paywall -->
-## Premium tools
+## Tools
 
-These tools need a license key:
-
-* `app_store_search`
-* `app_store_reviews`
-
-Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-ackee-mcp and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
-```
-
-The key is checked against MCP Marketplace, cached for 24 hours, and keeps
-working offline once one check has succeeded. Every other tool on this server
-stays free.
-<!-- /paywall -->
+* `list_domains`  All Ackee domains.
+* `get_domain`  Domain facts.
+* `get_top_browsers`  Top browsers.
+* `app_store_search`  Search iOS apps.
+* `app_store_reviews`  Read App Store reviews.
