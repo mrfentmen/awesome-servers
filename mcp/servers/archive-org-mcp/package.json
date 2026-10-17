@@ -1,6 +1,6 @@
 {
   "name": "archive-org-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Internet Archive search, item metadata, and Wayback snapshots.",
   "type": "module",
   "main": "dist/index.js",

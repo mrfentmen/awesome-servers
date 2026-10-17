@@ -1,6 +1,6 @@
 {
   "name": "appveyor-mcp",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "CI pipeline monitoring for GitLab and GitHub - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/appveyor-mcp",

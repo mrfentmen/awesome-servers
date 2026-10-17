@@ -1,6 +1,6 @@
 {
   "name": "apexlegends-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Apex Legends status API: player stats, map rotation, crafting rotation, predator counts, servers.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/apexlegends-mcp",

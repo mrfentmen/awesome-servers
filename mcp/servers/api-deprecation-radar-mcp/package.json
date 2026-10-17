@@ -1,6 +1,6 @@
 {
   "name": "api-deprecation-radar-mcp",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Count local API deprecation markers by broad severity without returning endpoint names, paths, values, or source.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/api-deprecation-radar-mcp",
