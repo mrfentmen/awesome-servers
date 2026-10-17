@@ -1,0 +1,11 @@
+# check batch 8 — 2026-10-17T07:04:43Z
+govinfo-mcp PASS {"ok":true,"tools":10,"names":["list_collections","search_published","federal_register_search","federal_register_document","collection_statistics","health_check","version_info","list_tools","echo","timestamp"]}
+govtrack-mcp PASS {"ok":true,"tools":10,"names":["bills","search","members","votes","committees","health_check","version_info","list_tools","echo","timestamp"]}
+gpodder-mcp PASS {"ok":true,"tools":10,"names":["search_podcasts","top_podcasts","podcasts_by_tag","list_tags","search_hosts","search_overlap","health_check","version_info","list_tools","echo"]}
+greenhouse-mcp PASS {"ok":true,"tools":11,"names":["jobs","job","search_jobs","departments","offices","board","jobs_by_office","newest_jobs","job_questions","hiring_velocity","ashby_posting"]}
+groq-mcp PASS {"ok":true,"tools":10,"names":["chat","list_models","hub_model_search","hub_dataset_search","health_check","version_info","list_tools","echo","timestamp","ping"]}
+guardian-mcp PASS {"ok":true,"tools":10,"names":["search","latest","section_feed","front_page_feed","health_check","version_info","list_tools","echo","timestamp","ping"]}
+gucci-mcp PASS {"ok":true,"tools":12,"names":["search_listings","list_newest","get_listing","price_overview","compare_prices","find_deals","brand_overview","list_collections","browse_collection","find_by_attribute","tag_facets","listing_velocity"]}
+guru-mcp PASS {"ok":true,"tools":10,"names":["list_teams","search_cards","get_collection","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+gutendex-mcp PASS {"ok":true,"tools":10,"names":["search","book","search_books","book_info","browse_by_filter","health_check","version_info","list_tools","echo","timestamp"]}
+gw2-mcp PASS {"ok":true,"tools":10,"names":["search_items","get_item","get_item_price","get_achievement","get_daily_achievements","world_events","item_stat_bonuses","health_check","version_info","list_tools"]}
