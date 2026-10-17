@@ -10,11 +10,11 @@ can still be built, run and published on its own.
 | [`a2a/`](a2a) | 37 Python A2A servers plus the shared `a2a_kit` | `python3 a2a/servers/<name>/server.py` |
 
 Most servers read public data with no key of their own; the ones wrapping a vendor API take
-that vendor's key. The few tools that are paid run **on the licence gateway**, not in these
-packages: the package carries a thin client and the tool body lives on the Worker, so a caller
-without a key gets a refusal with a buy link and never the numbers. Older MCP servers still
-carry the first-generation `src/license.ts` gate; those are being moved to the gateway a batch
-at a time.
+that vendor's key. **There is no paywall anywhere in this repo any more.** On 2026-10-17 the
+licence machinery was removed for good: the per-tool `src/license.ts` gates are gone from the
+MCP servers, and the A2A and ACP trees no longer carry the hosted licence-gateway half — the
+skills that used it now answer with an explicit not-implemented stub. Nothing here asks a
+caller to pay, and nothing they run is refused with a buy link.
 
 Nothing here is generated: each subtree's README says what its servers read, and every server
 has its own unit tests (`mcp/servers/<slug>/tests`, `acp/agents/<name>/tests`,
