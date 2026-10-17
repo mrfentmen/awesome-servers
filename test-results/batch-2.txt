@@ -1,0 +1,11 @@
+# check batch 2 — 2026-10-17T07:02:15Z
+financial-data-mcp PASS {"ok":true,"tools":10,"names":["get_fred_series","get_treasury_rates","series_trend","series_compare","treasury_curve_history","series_window","health_check","version_info","list_tools","echo"]}
+fingrid-mcp PASS {"ok":true,"tools":10,"names":["list_datasets","get_records","day_ahead_prices","best_cheap_window","health_check","version_info","list_tools","echo","timestamp","ping"]}
+finnhub-mcp PASS {"ok":true,"tools":10,"names":["stock_quote","company_news","earnings_calendar","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+firefox-addons-mcp PASS {"ok":true,"tools":10,"names":["search","addon","version_history","category_catalog","addon_manifest","health_check","version_info","list_tools","echo","timestamp"]}
+flaky-history-mcp PASS {"ok":true,"tools":10,"names":["analyze_test_history","history_cohort_spread","history_flap_patterns","public_workflow_history","public_run_bottlenecks","health_check","version_info","list_tools","echo","timestamp"]}
+flathub-mcp PASS {"ok":true,"tools":10,"names":["search","app","catalogue_stats","app_trust","app_timeline","health_check","version_info","list_tools","echo","timestamp"]}
+flickr-mcp PASS {"ok":true,"tools":10,"names":["recent","photos_by_tag","health_check","version_info","list_tools","echo","timestamp","ping","help","status"]}
+flipside-mcp PASS {"ok":true,"tools":10,"names":["create_query","get_query_status","get_query_results","cancel_query","saved_queries","run_saved_query","table_schema","health_check","version_info","list_tools"]}
+flood-mcp PASS {"ok":true,"tools":10,"names":["forecast","flood_peaks","flood_thresholds","flood_grid","health_check","version_info","list_tools","echo","timestamp","ping"]}
+fmp-mcp PASS {"ok":true,"tools":10,"names":["stock_quote","company_profile","income_statement","currency_rates","fx_history","price_history","health_check","version_info","list_tools","echo"]}
