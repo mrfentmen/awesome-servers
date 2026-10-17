@@ -1,6 +1,6 @@
 {
   "name": "esplora-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Keyless MCP server for Esplora Bitcoin data: blocks, fees, transactions, addresses.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/esplora-mcp",
