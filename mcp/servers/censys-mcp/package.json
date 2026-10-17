@@ -1,6 +1,6 @@
 {
   "name": "censys-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Censys internet scan: host lookup and search. Needs free key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/censys-mcp",
