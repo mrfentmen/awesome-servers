@@ -1,0 +1,11 @@
+# check batch 22 — 2026-10-17T07:12:43Z
+medrxiv-mcp PASS {"ok":true,"tools":10,"names":["details","recent","preprints_by_date","category_breakdown","revised_preprints","health_check","version_info","list_tools","echo","timestamp"]}
+meilisearch-mcp PASS {"ok":true,"tools":15,"names":["check_health","list_indexes","get_index","create_index","delete_index","search_index","get_documents","get_document","add_documents","delete_document","get_stats","get_index_stats","get_task","list_keys","update_settings"]}
+meme-generator-mcp PASS {"ok":true,"tools":10,"names":["templates","caption","template_search","meme_url","health_check","version_info","list_tools","echo","timestamp","ping"]}
+memegen-mcp PASS {"ok":true,"tools":10,"names":["list_templates","make_meme","get_template","list_caption_fonts","random_quote","template_styles","health_check","version_info","list_tools","echo"]}
+meowfacts-mcp PASS {"ok":true,"tools":10,"names":["fact","many","fact_by_number","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+mercury-mcp PASS {"ok":true,"tools":10,"names":["list_accounts","get_account","list_transactions","fdic_institution_search","fdic_call_report_compare","health_check","version_info","list_tools","echo","timestamp"]}
+merge-conflict-forecaster-mcp PASS {"ok":true,"tools":10,"names":["forecast_merge_conflicts","commit_cadence","repository_health","object_store","health_check","version_info","list_tools","echo","timestamp","ping"]}
+metmuseum-mcp PASS {"ok":true,"tools":10,"names":["search_objects","get_object","get_departments","search","object","objects_in_department","objects_with_images","health_check","version_info","list_tools"]}
+metoffice-mcp PASS {"ok":true,"tools":10,"names":["get_hourly_forecast","get_three_hourly_forecast","get_daily_forecast","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+metronome-mcp PASS {"ok":true,"tools":10,"names":["bpm_to_ms","note_duration","reference_recordings","piece_reference","health_check","version_info","list_tools","echo","timestamp","ping"]}
