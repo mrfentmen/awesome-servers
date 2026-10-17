@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: b9e96c7c6b70dbff7b05c7e859bb98f045195792)
 const BASE = 'https://www.7timer.info/bin/api.pl';
 
 export interface ForecastArgs {
@@ -146,5 +147,82 @@ export async function forecastByPlace(args: { place?: string; limit?: number }):
     );
   }
   if (rows.length > 8) lines.push(`... and ${rows.length - 8} more period(s) in the series.`);
+  return lines.join('\n');
+}
+
+
+/** Summarise the whole 7Timer civil series: coldest/warmest periods, precipitation, wind, cloud, lifted index. */
+export async function forecastSummary(args: { lat: number; lon: number }): Promise<string> {
+  const lat = Number(args.lat);
+  const lon = Number(args.lon);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return 'Provide valid latitude and longitude.';
+  const data = (await product('civil', lat, lon)) as CivilPayload;
+  const rows = data.dataseries ?? [];
+  if (!rows.length) return 'No forecast data returned.';
+
+  let coldest = rows[0], warmest = rows[0];
+  let totalPrecip = 0;
+  let windSum = 0, windPeak = 0;
+  let cloudSum = 0, cloudMax = 0;
+  let liftedMin = Infinity, liftedMax = -Infinity;
+
+  for (const r of rows) {
+    const temp = Number(r.temp2m);
+    if (Number.isFinite(temp)) {
+      if (temp < Number(coldest.temp2m)) coldest = r;
+      if (temp > Number(warmest.temp2m)) warmest = r;
+    }
+    const precip = Number(r.prec_amount);
+    if (Number.isFinite(precip)) totalPrecip += precip;
+    const wind = Number(r.wind10m?.speed);
+    if (Number.isFinite(wind)) { windSum += wind; if (wind > windPeak) windPeak = wind; }
+    const cloud = Number(r.cloudcover);
+    if (Number.isFinite(cloud)) { cloudSum += cloud; if (cloud > cloudMax) cloudMax = cloud; }
+    const li = Number(r.lifted_index);
+    if (Number.isFinite(li)) { if (li < liftedMin) liftedMin = li; if (li > liftedMax) liftedMax = li; }
+  }
+
+  const n = rows.length;
+  const lines = [
+    `7Timer civil-series summary for ${lat}, ${lon} (init ${String(data.init ?? 'not reported')}), ${n} period(s):`,
+    `Coldest: +${String(coldest.timepoint ?? '?')}h at ${String(coldest.temp2m ?? 'n/a')}C (${condition(coldest.weather)})`,
+    `Warmest: +${String(warmest.timepoint ?? '?')}h at ${String(warmest.temp2m ?? 'n/a')}C (${condition(warmest.weather)})`,
+    `Temperature range: ${Number(warmest.temp2m) - Number(coldest.temp2m)}C`,
+    `Total precipitation: ${totalPrecip.toFixed(1)} mm`,
+    `Mean wind: ${(windSum / n).toFixed(1)} m/s | Peak wind: ${windPeak} m/s`,
+    `Mean cloud: ${(cloudSum / n).toFixed(1)}/9 | Thickest cloud: ${cloudMax}/9`,
+    `Lifted index: min ${liftedMin === Infinity ? 'n/a' : liftedMin}, max ${liftedMax === -Infinity ? 'n/a' : liftedMax}`,
+  ];
+  return lines.join('\n');
+}
+
+/** Daily outlook from the 7Timer civillight product: one row per day. */
+export async function dailyOutlook(args: { lat: number; lon: number; limit?: number }): Promise<string> {
+  const lat = Number(args.lat);
+  const lon = Number(args.lon);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return 'Provide valid latitude and longitude.';
+  const limit = num(args.limit ?? 7, 1, 7, 7);
+  const data = (await product('civillight', lat, lon)) as LightRow[];
+  if (!Array.isArray(data) || !data.length) return 'No daily data returned.';
+
+  const lines = [`7Timer daily outlook for ${lat}, ${lon}, ${Math.min(limit, data.length)} day(s):`];
+  let overallMin = Infinity, overallMax = -Infinity, overallPeakWind = 0;
+
+  for (const r of data.slice(0, limit)) {
+    const date = r.date != null ? String(r.date) : 'unknown date';
+    const cond = condition(r.weather);
+    const lo = r.temp2m?.min;
+    const hi = r.temp2m?.max;
+    const wind = r.wind10m_max;
+    const range = (lo != null && hi != null) ? Number(hi) - Number(lo) : null;
+    if (lo != null && Number(lo) < overallMin) overallMin = Number(lo);
+    if (hi != null && Number(hi) > overallMax) overallMax = Number(hi);
+    if (wind != null && Number(wind) > overallPeakWind) overallPeakWind = Number(wind);
+    lines.push(
+      `${date} | ${cond} | low ${lo ?? 'n/a'}C high ${hi ?? 'n/a'}C${range != null ? ' (range ' + range + 'C)' : ''} | peak wind ${wind ?? 'n/a'} m/s`,
+    );
+  }
+
+  lines.push(`Period extremes: low ${overallMin === Infinity ? 'n/a' : overallMin}C, high ${overallMax === -Infinity ? 'n/a' : overallMax}C, peak wind ${overallPeakWind} m/s`);
   return lines.join('\n');
 }
