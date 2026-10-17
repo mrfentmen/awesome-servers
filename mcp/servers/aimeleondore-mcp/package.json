@@ -1,6 +1,6 @@
 {
   "name": "aimeleondore-mcp",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Query the Aim\u00e9 Leon Dore catalog (aimeleondore.com, NYC): search menswear, newest arrivals, enriched product details (sizes/colors), price stats, below-median deals, and category counts.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/aimeleondore-mcp",

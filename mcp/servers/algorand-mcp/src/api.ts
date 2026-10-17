@@ -85,7 +85,7 @@ export async function blockDetail(args: { round: number }): Promise<string> {
   const block = (data.block ?? data) as Record<string, unknown>;
   const lines = ['Algorand block #' + round + ':'];
   lines.push('  Timestamp: ' + (block.timestamp ? new Date(Number(block.timestamp) * 1000).toISOString() : 'n/a'));
-  lines.push('  Transactions: ' + (block.txns?.length ?? block.num_txns ?? 'n/a'));
+  lines.push('  Transactions: ' + (((block.txns as any[])?.length ?? block.num_txns ?? 'n/a')));
   lines.push('  Previous block: ' + (block.previousBlockHash ?? block.prev ?? 'n/a'));
   lines.push('  Seed: ' + (block.seed ?? 'n/a'));
   lines.push('  Reward: ' + (block.reward ?? 'n/a'));

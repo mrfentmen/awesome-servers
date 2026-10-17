@@ -1,6 +1,6 @@
 {
   "name": "8bitpeoples-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Use this MCP server to 8bitpeoples, the free chiptune record label, browse the full release catalog. Tools include list releases, get release",
   "type": "module",
   "mcpName": "io.github.mrfentmen/8bitpeoples-mcp",

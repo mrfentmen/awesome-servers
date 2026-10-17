@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
-import { AlphaVantageError, cryptoPrice, fxRate, stockQuote, symbolSearch, priceHistory } from "./api.js"
+import { AlphaVantageError, cryptoPrice, fxRate, stockQuote, symbolSearch, priceHistory, companyProfile } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 

@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
-import { AlphaFoldError, formatPrediction, getPrediction, modelFiles, proteinIdentity } from "./api.js"
+import { AlphaFoldError, formatPrediction, getPrediction, modelFiles, proteinIdentity, confidenceProfile, modelVersions, paeSummary } from "./api.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
