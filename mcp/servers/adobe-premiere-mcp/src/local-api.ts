@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: 3fdc99bf80d29770184400f7c6b2e48e4a606a19)
 // ---- muxE tools:
 // Every existing tool here drives Adobe Premiere Pro through ExtendScript, so
 // all eleven of them need the application installed and running. The two new
@@ -203,4 +204,30 @@ export async function timecodeConvert(args: TimecodeConvertArgs): Promise<string
     lines.push("  drop frame is only implemented for 29.97 here, where frame numbers 00 and 01 are skipped at every minute except every tenth; 59.94 is reported as non drop.");
   }
   return lines.join("\n");
+}
+
+
+export async function searchArchiveFootage(args: { query?: string; limit?: number }): Promise<string> {
+  const query = (args.query ?? 'nasa').trim();
+  const limit = Math.max(1, Math.min(20, args.limit ?? 5));
+  const searchUrl = 'https://archive.org/advancedsearch.php?q=mediatype:movies+AND+(' + encodeURIComponent(query) + ')&fl[]=identifier,title,creator,date,licenseurl,mediatype&rows=' + limit + '&output=json';
+  const res = await fetch(searchUrl, { headers: { 'User-Agent': 'awesome-mcps/1.0', Accept: 'application/json' }, signal: AbortSignal.timeout(30000) });
+  if (!res.ok) throw new Error('Internet Archive returned ' + res.status);
+  const data = (await res.json()) as { response?: { docs?: Array<Record<string, unknown>>; numFound?: number } };
+  const docs = data.response?.docs ?? [];
+  if (!docs.length) return 'No archive footage found for "' + query + '".';
+  const lines = ['Internet Archive footage search for "' + query + '", ' + docs.length + ' result(s) of ' + (data.response?.numFound ?? '?') + ' total:', ''];
+  for (const d of docs) {
+    const id = String(d.identifier ?? 'unknown');
+    const title = String(d.title ?? 'untitled').slice(0, 120);
+    const creator = d.creator ? String(d.creator).slice(0, 80) : 'not reported';
+    const date = d.date ? String(d.date).slice(0, 10) : 'not reported';
+    const license = d.licenseurl ? String(d.licenseurl) : 'not reported';
+    lines.push('• ' + title);
+    lines.push('  Creator: ' + creator + ' | Date: ' + date);
+    lines.push('  License: ' + license);
+    lines.push('  Link: https://archive.org/details/' + id);
+    lines.push('');
+  }
+  return lines.join('\n');
 }
