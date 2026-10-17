@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { SteamError, fmtPrice, formatAppDetail, formatStoreItem, getAppDetail, getNews, getPlayerCount, getReviewSummary, getTopSellers, searchStore, storeHighlights, salesCheck, playerCountRank, game_achievements } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
             items.map((i, n) => `${n + 1}. ${formatStoreItem(i)}`).join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -52,7 +51,7 @@ export function createServer(): McpServer {
         if (!detail) return text(`No Steam app with id ${appid}.`)
         return text(formatAppDetail(detail))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -86,7 +85,7 @@ export function createServer(): McpServer {
               .join("\n\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -107,7 +106,7 @@ export function createServer(): McpServer {
           `Reviews: ${s.total.toLocaleString()} total, ${s.positive.toLocaleString()} positive, ${s.negative.toLocaleString()} negative — ${s.score_desc}.`
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -125,7 +124,7 @@ export function createServer(): McpServer {
         const n = await getPlayerCount(appid)
         return text(`Current players: ${n.toLocaleString()}.`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -148,7 +147,7 @@ export function createServer(): McpServer {
           ).join('\n')
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -167,7 +166,7 @@ export function createServer(): McpServer {
       try {
         return text(await storeHighlights({ limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -187,7 +186,7 @@ export function createServer(): McpServer {
       try {
         return text(await salesCheck({ appids }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -207,7 +206,7 @@ export function createServer(): McpServer {
       try {
         return text(await playerCountRank({ appids }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -223,10 +222,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: game_requirements ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_steam_game_requirements", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement requirements locally (paywall removed)
+      try { return textError("Not yet implemented: requirements") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -241,10 +238,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: game_dlc_cost ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_steam_game_dlc_cost", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement cost locally (paywall removed)
+      try { return textError("Not yet implemented: cost") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -262,7 +257,7 @@ export function createServer(): McpServer {
       try {
         return text(await game_achievements({ appid }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

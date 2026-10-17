@@ -29,7 +29,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No candidates match "${query}".`)
         return text(rows.map((c, i) => formatCandidate(c, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -49,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(await candidateSummary(cid, cycle))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -72,7 +72,7 @@ export function createServer(): McpServer {
       try {
         return text(await fecCandidateSearch({ query, office, state, party, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -92,7 +92,7 @@ export function createServer(): McpServer {
       try {
         return text(await fecCommitteeSearch({ query, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

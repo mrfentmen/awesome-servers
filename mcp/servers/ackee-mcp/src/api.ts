@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: d30ca1c630d5c3e3e7eede44967d88e5ddcafa29)
 export class AckeeError extends Error {
   constructor(message: string) {
     super(message)

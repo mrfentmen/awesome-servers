@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { format, inspectLicenseBoundary } from "./core.js"
 import { errorMessage, searchSpdx, spdxLicense, spdxException } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -28,7 +27,7 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await searchSpdx(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await searchSpdx(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -41,7 +40,7 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await spdxLicense(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await spdxLicense(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -54,7 +53,7 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await spdxException(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await spdxException(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -67,10 +66,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: npm_license_evidence ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_license_boundary_npm_license_evidence", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement evidence locally (paywall removed)
+    try { return textError("Not yet implemented: evidence") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -83,10 +80,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: repo_license_evidence ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_license_boundary_repo_license_evidence", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement evidence locally (paywall removed)
+    try { return textError("Not yet implemented: evidence") } catch (e) { return textError(String(e)) }
   }
   )
 

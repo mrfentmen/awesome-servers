@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { checkServices, dnsPropagation, errorMessage, portCheck, serviceStatus, sslChain, statusSummary, dns_records, cert_forecast } from "./api.js"
-import { premiumTool } from "./gateway.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -21,7 +20,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await statusSummary(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await statusSummary(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -36,7 +35,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await checkServices(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await checkServices(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -51,7 +50,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await serviceStatus(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await serviceStatus(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -67,7 +66,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await portCheck(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await portCheck(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -83,7 +82,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await dnsPropagation(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await dnsPropagation(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -98,7 +97,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await sslChain(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await sslChain(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -114,10 +113,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: header_audit ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_statping_header_audit", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement audit locally (paywall removed)
+      try { return textError("Not yet implemented: audit") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -133,7 +130,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ domain, types }) => {
-      try { return text(await dns_records({ domain, types })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await dns_records({ domain, types })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -152,7 +149,7 @@ export function createServer(): McpServer {
     async ({ host, port, warnDays }) => {
       // cert_forecast stays free: it reads the live TLS handshake, which the
       // gateway cannot see, so it was ungated rather than moved behind the gate.
-      try { return text(await cert_forecast({ host, port, warnDays })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await cert_forecast({ host, port, warnDays })) } catch (e) { return textError(String(e)) }
     }
   )
 

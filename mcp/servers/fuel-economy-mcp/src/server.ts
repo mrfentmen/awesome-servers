@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { vehicleMpg, modelsForMake } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await vehicleMpg(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await vehicleMpg(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,10 +30,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: makes_for_year ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_fuel_economy_makes_for_year", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement year locally (paywall removed)
+    try { return textError("Not yet implemented: year") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -47,7 +44,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await modelsForMake(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await modelsForMake(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -60,10 +57,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: vehicle_data ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_fuel_economy_vehicle_data", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement data locally (paywall removed)
+    try { return textError("Not yet implemented: data") } catch (e) { return textError(String(e)) }
   }
   )
 

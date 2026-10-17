@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { featured, mostread, projectPageviews } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await featured(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await featured(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await mostread(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await mostread(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,10 +42,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: on_this_day ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wikitrending_on_this_day", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement day locally (paywall removed)
+    try { return textError("Not yet implemented: day") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -59,10 +56,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: picture_of_the_day ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wikitrending_picture_of_the_day", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement day locally (paywall removed)
+    try { return textError("Not yet implemented: day") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -75,10 +70,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: article_pageviews ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wikitrending_article_pageviews", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement pageviews locally (paywall removed)
+    try { return textError("Not yet implemented: pageviews") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -91,7 +84,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await projectPageviews(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await projectPageviews(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

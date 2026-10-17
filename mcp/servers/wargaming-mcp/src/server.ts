@@ -37,7 +37,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchWotAccounts(search, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -56,7 +56,7 @@ export function createServer(): McpServer {
       try {
         return text(await getWotAccount(accountId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -75,7 +75,7 @@ export function createServer(): McpServer {
       try {
         return text(await getWotTanks(accountId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -95,7 +95,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchWotClans(search, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -115,7 +115,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchWowsAccounts(search, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -134,7 +134,7 @@ export function createServer(): McpServer {
       try {
         return text(await getWowsAccount(accountId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

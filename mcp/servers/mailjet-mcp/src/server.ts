@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { formatContact, formatMessage, listContacts, MailjetError, recentMessages, messageHeaderLint, sendTimePlanner } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No contacts.")
         return text(rows.map((c, i) => formatContact(c, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -51,7 +50,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No messages.")
         return text(rows.map((m, i) => formatMessage(m, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -65,11 +64,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: message_header_lint ----
-      const paywallMessage = await premiumRequired("message_header_lint")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await messageHeaderLint(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await messageHeaderLint(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -82,11 +77,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: send_time_planner ----
-      const paywallMessage = await premiumRequired("send_time_planner")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await sendTimePlanner(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await sendTimePlanner(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

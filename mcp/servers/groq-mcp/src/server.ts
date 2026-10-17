@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { chat, GroqError, listModels, hubModelSearch, hubDatasetSearch } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
       try {
         return text(await chat(model, message, system))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -49,7 +48,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No models.")
         return text(rows.map((m, i) => `${i + 1}. ${m}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -63,11 +62,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: hub_model_search ----
-      const paywallMessage = await premiumRequired("hub_model_search")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await hubModelSearch(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await hubModelSearch(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -80,11 +75,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: hub_dataset_search ----
-      const paywallMessage = await premiumRequired("hub_dataset_search")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await hubDatasetSearch(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await hubDatasetSearch(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

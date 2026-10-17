@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { format, recoverySignals, reflogSignals, stashSignals } from "./archaeology.js"
 import { recoverableObjectWindow, reflogActivityProfile } from "./local-api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -71,10 +70,8 @@ export function createServer() { const server = new McpServer({ name: "git-reflo
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: public_commit_provenance ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_git_reflog_archaeologist_public_commit_provenance", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement provenance locally (paywall removed)
+    try { return textError("Not yet implemented: provenance") } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_issNow, m0_issPasses, m1_position } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +19,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_issNow(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_issNow(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -32,7 +31,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_issPasses(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_issPasses(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -44,7 +43,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_position(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_position(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -56,10 +55,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: iss_ground_track ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_iss_iss_ground_track", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement track locally (paywall removed)
+      try { return textError("Not yet implemented: track") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -72,10 +69,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: resolve_place ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_iss_resolve_place", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement place locally (paywall removed)
+      try { return textError("Not yet implemented: place") } catch (e) { return textError(String(e)) }
     }
   )
 

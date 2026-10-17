@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listCustomers, getCustomer, listSegments, segmentDetails, campaigns, campaignDetails, newsletters, activities, customerActivities, customerMessages, broadcastMetrics, campaignMetrics, segmentMembers } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await listCustomers(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await getCustomer(identifier));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -64,7 +63,7 @@ export function createServer(): McpServer {
       try {
         return text(await listSegments());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -83,7 +82,7 @@ export function createServer(): McpServer {
       try {
         return text(await segmentDetails(segment_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -100,7 +99,7 @@ export function createServer(): McpServer {
       try {
         return text(await campaigns());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -119,7 +118,7 @@ export function createServer(): McpServer {
       try {
         return text(await campaignDetails(campaign_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -136,7 +135,7 @@ export function createServer(): McpServer {
       try {
         return text(await newsletters());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -153,7 +152,7 @@ export function createServer(): McpServer {
       try {
         return text(await activities());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -172,7 +171,7 @@ export function createServer(): McpServer {
       try {
         return text(await customerActivities(identifier));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -191,7 +190,7 @@ export function createServer(): McpServer {
       try {
         return text(await customerMessages(identifier));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -210,11 +209,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: broadcast_metrics ----
-    const paywallMessage = await premiumRequired("broadcast_metrics")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await broadcastMetrics(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await broadcastMetrics(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -231,11 +226,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: campaign_metrics ----
-    const paywallMessage = await premiumRequired("campaign_metrics")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await campaignMetrics(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await campaignMetrics(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -252,7 +243,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await segmentMembers(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await segmentMembers(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

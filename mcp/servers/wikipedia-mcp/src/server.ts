@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { random, search, summary } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await search(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await summary(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await summary(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await random(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await random(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -55,10 +54,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: article_outline ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wikipedia_article_outline", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement outline locally (paywall removed)
+    try { return textError("Not yet implemented: outline") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -71,10 +68,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: translations ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wikipedia_translations", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement translations locally (paywall removed)
+    try { return textError("Not yet implemented: translations") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -87,10 +82,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: page_history ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wikipedia_page_history", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement history locally (paywall removed)
+    try { return textError("Not yet implemented: history") } catch (e) { return textError(String(e)) }
   }
   )
 

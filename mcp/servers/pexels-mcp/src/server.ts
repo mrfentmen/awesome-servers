@@ -18,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await search(args)) } catch (e) { return textError(String(e)) }
   }
   )
   return server

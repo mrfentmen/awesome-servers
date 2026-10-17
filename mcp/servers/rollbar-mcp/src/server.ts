@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, listProjects, listItems, getItem } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await listProjects());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -45,7 +44,7 @@ export function createServer(): McpServer {
       try {
         return text(await listItems(project_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       try {
         return text(await getItem(project_id, item_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -85,10 +84,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: dependency_audit ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_rollbar_dependency_audit", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement audit locally (paywall removed)
+    try { return textError("Not yet implemented: audit") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -104,10 +101,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: advisory_detail ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_rollbar_advisory_detail", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement detail locally (paywall removed)
+    try { return textError("Not yet implemented: detail") } catch (e) { return textError(String(e)) }
   }
   )
 

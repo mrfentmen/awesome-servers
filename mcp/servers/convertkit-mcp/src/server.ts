@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { findSubscriber, formatNamed, KitError, listBroadcasts, listForms, listTags, listSequences, broadcastPerformance } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
         if (!s) return text(`No Kit subscriber ${email}.`)
         return text(`${s.email ?? email}${s.firstName ? ` (${s.firstName})` : ""}${s.state ? ` [${s.state}]` : ""}${s.created ? ` — since ${s.created}` : ""}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -49,7 +48,7 @@ export function createServer(): McpServer {
       try {
         return text(formatNamed(await listForms(limit), "forms"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -68,7 +67,7 @@ export function createServer(): McpServer {
       try {
         return text(formatNamed(await listBroadcasts(limit), "broadcasts"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -84,11 +83,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: list_tags ----
-    const paywallMessage = await premiumRequired("list_tags")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await listTags(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await listTags(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -103,11 +98,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: list_sequences ----
-    const paywallMessage = await premiumRequired("list_sequences")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await listSequences(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await listSequences(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -125,7 +116,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await broadcastPerformance(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await broadcastPerformance(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

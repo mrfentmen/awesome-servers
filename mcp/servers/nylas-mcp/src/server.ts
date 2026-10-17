@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, getGrant, listCalendars, listMessages, grantFlowAudit, messageObjectAudit } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -25,7 +24,7 @@ export function createServer(): McpServer {
       try {
         return text(await getGrant());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -44,7 +43,7 @@ export function createServer(): McpServer {
       try {
         return text(await listCalendars(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -63,7 +62,7 @@ export function createServer(): McpServer {
       try {
         return text(await listMessages(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -77,11 +76,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: grant_flow_audit ----
-      const paywallMessage = await premiumRequired("grant_flow_audit")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await grantFlowAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await grantFlowAudit(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -94,11 +89,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: message_object_audit ----
-      const paywallMessage = await premiumRequired("message_object_audit")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await messageObjectAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await messageObjectAudit(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

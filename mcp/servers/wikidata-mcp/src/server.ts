@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_entity, m0_format, m0_search, m0_sparql, m0_WikidataError, m1_search } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -50,7 +49,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_search(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -62,10 +61,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: entity_sitelinks ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wikidata_entity_sitelinks", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement sitelinks locally (paywall removed)
+    try { return textError("Not yet implemented: sitelinks") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -78,10 +75,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: entity_history ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wikidata_entity_history", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement history locally (paywall removed)
+    try { return textError("Not yet implemented: history") } catch (e) { return textError(String(e)) }
   }
   )
 

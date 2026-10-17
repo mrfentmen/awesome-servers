@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listZones, listAccounts, listDns, zoneDetails, dnsRecord, firewallRules, pageRules, workers, analytics, tunnels, zoneSettings, zoneRulesets, originPullCertificates } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await listZones());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       try {
         return text(await listAccounts());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -62,7 +61,7 @@ export function createServer(): McpServer {
       try {
         return text(await listDns(zone_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -81,7 +80,7 @@ export function createServer(): McpServer {
       try {
         return text(await zoneDetails(zone_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -101,7 +100,7 @@ export function createServer(): McpServer {
       try {
         return text(await dnsRecord(zone_id, record_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -120,7 +119,7 @@ export function createServer(): McpServer {
       try {
         return text(await firewallRules(zone_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -139,7 +138,7 @@ export function createServer(): McpServer {
       try {
         return text(await pageRules(zone_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -158,7 +157,7 @@ export function createServer(): McpServer {
       try {
         return text(await workers(account_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -177,7 +176,7 @@ export function createServer(): McpServer {
       try {
         return text(await analytics(zone_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -196,7 +195,7 @@ export function createServer(): McpServer {
       try {
         return text(await tunnels(account_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -213,11 +212,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: zone_settings ----
-    const paywallMessage = await premiumRequired("zone_settings")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await zoneSettings(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await zoneSettings(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -233,11 +228,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: zone_rulesets ----
-    const paywallMessage = await premiumRequired("zone_rulesets")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await zoneRulesets(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await zoneRulesets(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -252,7 +243,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await originPullCertificates(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await originPullCertificates(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

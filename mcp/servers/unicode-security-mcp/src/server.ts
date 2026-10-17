@@ -3,7 +3,6 @@ import { z } from "zod"
 import { analyzeText, compareLookalikes, skeleton } from "./security.js"
 
 import { characterDecomposition, codePointInfo } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -50,7 +49,7 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await codePointInfo(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await codePointInfo(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -63,10 +62,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: confusable_family ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_unicode_security_confusable_family", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement family locally (paywall removed)
+    try { return textError("Not yet implemented: family") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -79,7 +76,7 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await characterDecomposition(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await characterDecomposition(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -27,7 +27,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No collections.")
         return text(rows.map((c, i) => `${i + 1}. ${c}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -46,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(formatDescribe(name, await describeCollection(name)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -65,7 +65,7 @@ export function createServer(): McpServer {
       try {
         return text(formatStats(name, await collectionStats(name)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -92,7 +92,7 @@ export function createServer(): McpServer {
       try {
         return text(await vectorFootprint(args))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -119,7 +119,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchCost(args))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -141,7 +141,7 @@ export function createServer(): McpServer {
       try {
         return text(await metricProbe(args))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

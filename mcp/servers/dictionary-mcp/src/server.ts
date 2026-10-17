@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_define, m0_wordOfDay, m1_randomWord, m1_wordOfTheDay, wordPhonetics } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +19,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_define(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_define(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -32,7 +31,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_wordOfDay(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_wordOfDay(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -44,7 +43,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_wordOfTheDay(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_wordOfTheDay(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -56,7 +55,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_randomWord(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_randomWord(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -68,10 +67,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: word_relations ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_dictionary_word_relations", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement relations locally (paywall removed)
+    try { return textError("Not yet implemented: relations") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -84,7 +81,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await wordPhonetics(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await wordPhonetics(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { OsrsError, formatStats, getFlips, getHotItems, getItemPrice, getPlayerStats, getPriceHistory, searchItems, itemVolume, priceWindows, alchProfit, playerCompare, wikiSearch } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -32,7 +31,7 @@ export function createServer(): McpServer {
       try {
         return text(formatStats(await getPlayerStats(username, mode)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -60,7 +59,7 @@ export function createServer(): McpServer {
           ].join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -92,7 +91,7 @@ export function createServer(): McpServer {
               .join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -122,7 +121,7 @@ export function createServer(): McpServer {
               .join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -160,7 +159,7 @@ export function createServer(): McpServer {
               .join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -192,7 +191,7 @@ export function createServer(): McpServer {
               .join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -213,7 +212,7 @@ export function createServer(): McpServer {
       try {
         return text(await itemVolume({ name, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -233,7 +232,7 @@ export function createServer(): McpServer {
       try {
         return text(await priceWindows({ name }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -254,7 +253,7 @@ export function createServer(): McpServer {
       try {
         return text(await alchProfit({ limit, membersOnly }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -276,7 +275,7 @@ export function createServer(): McpServer {
       try {
         return text(await playerCompare({ playerA, playerB, mode }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -294,7 +293,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await wikiSearch(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await wikiSearch(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -310,10 +309,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: item_lore ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_osrs_item_lore", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement lore locally (paywall removed)
+    try { return textError("Not yet implemented: lore") } catch (e) { return textError(String(e)) }
   }
   )
 

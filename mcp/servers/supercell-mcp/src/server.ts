@@ -36,7 +36,7 @@ export function createServer(): McpServer {
       try {
         return text(await getCocPlayer(tag));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -55,7 +55,7 @@ export function createServer(): McpServer {
       try {
         return text(await getCocClan(tag));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -75,7 +75,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchCocClans(name, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -94,7 +94,7 @@ export function createServer(): McpServer {
       try {
         return text(await getRoyalePlayer(tag));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -113,7 +113,7 @@ export function createServer(): McpServer {
       try {
         return text(await getRoyaleClan(tag));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -133,7 +133,7 @@ export function createServer(): McpServer {
       try {
         return text(await getRoyaleTopClans(locationId, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

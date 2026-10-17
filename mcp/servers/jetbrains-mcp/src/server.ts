@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { formatHit, formatPlugin, formatRating, formatReview, getPlugin, JetBrainsError, pluginRatings, pluginReviews, pluginVersions, searchPlugins, topPlugins, searchByBuild, listTags, errorMessage } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -38,7 +37,7 @@ export function createServer(): McpServer {
         if (results.length === 0) return text(`No plugins match "${query}".`)
         return text(`JetBrains plugins for "${query}":\n\n${results.map((p, i) => formatHit(p, i)).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -57,7 +56,7 @@ export function createServer(): McpServer {
       try {
         return text(formatPlugin(await getPlugin(id)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -83,7 +82,7 @@ export function createServer(): McpServer {
             results.map((p, i) => formatHit(p, i)).join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -110,7 +109,7 @@ export function createServer(): McpServer {
               .join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -136,7 +135,7 @@ export function createServer(): McpServer {
             reviews.map((review, i) => formatReview(review, i)).join("\n\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -158,7 +157,7 @@ export function createServer(): McpServer {
         if (!rating.total) return text(`Plugin ${id} has no ratings yet.`)
         return text(`Rating breakdown for plugin ${id}:\n${formatRating(rating)}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -177,7 +176,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ query, build, limit, order_by: orderBy }) => {
-      try { return text(await searchByBuild(query, build, limit, orderBy)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await searchByBuild(query, build, limit, orderBy)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -193,7 +192,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ limit, family }) => {
-      try { return text(await listTags(limit, family)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await listTags(limit, family)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -206,10 +205,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: product_release ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_jetbrains_product_release", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement release locally (paywall removed)
+      try { return textError("Not yet implemented: release") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -222,10 +219,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: plugin_compatibility ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_jetbrains_plugin_compatibility", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement compatibility locally (paywall removed)
+      try { return textError("Not yet implemented: compatibility") } catch (e) { return textError(String(e)) }
     }
   )
 

@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { get, ip } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await get(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await get(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await ip(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await ip(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,10 +42,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: status_probe ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_postman_echo_status_probe", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement probe locally (paywall removed)
+    try { return textError("Not yet implemented: probe") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -59,10 +56,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: header_echo ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_postman_echo_header_echo", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement echo locally (paywall removed)
+    try { return textError("Not yet implemented: echo") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -75,10 +70,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: redirect_probe ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_postman_echo_redirect_probe", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement probe locally (paywall removed)
+    try { return textError("Not yet implemented: probe") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -91,10 +84,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: json_body_echo ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_postman_echo_json_body_echo", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement echo locally (paywall removed)
+    try { return textError("Not yet implemented: echo") } catch (e) { return textError(String(e)) }
   }
   )
 

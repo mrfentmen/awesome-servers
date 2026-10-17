@@ -37,7 +37,7 @@ export function createServer(): McpServer {
       try {
         return text(await getPlayer(player, platform));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -57,7 +57,7 @@ export function createServer(): McpServer {
       try {
         return text(await getPlayerByUid(uid, platform));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -75,7 +75,7 @@ export function createServer(): McpServer {
       try {
         return text(await getMapRotation());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -93,7 +93,7 @@ export function createServer(): McpServer {
       try {
         return text(await getCraftingRotation());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -111,7 +111,7 @@ export function createServer(): McpServer {
       try {
         return text(await getPredatorCounts());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -129,7 +129,7 @@ export function createServer(): McpServer {
       try {
         return text(await getServerStatus());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

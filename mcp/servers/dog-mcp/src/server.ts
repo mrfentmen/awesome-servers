@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { listBreeds, randomImage, breedImages, facts, randomMedia, breedGroups } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async () => {
-    try { return text(await listBreeds()) } catch (e) { return textError(error(e)) }
+    try { return text(await listBreeds()) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await randomImage(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await randomImage(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await breedImages(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await breedImages(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -55,7 +54,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await facts(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await facts(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -67,7 +66,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async () => {
-    try { return text(await randomMedia()) } catch (e) { return textError(error(e)) }
+    try { return text(await randomMedia()) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -79,10 +78,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: breed_profile ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_dog_breed_profile", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement profile locally (paywall removed)
+    try { return textError("Not yet implemented: profile") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -95,10 +92,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: breed_matcher ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_dog_breed_matcher", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement matcher locally (paywall removed)
+    try { return textError("Not yet implemented: matcher") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -111,7 +106,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await breedGroups(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await breedGroups(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { compareLocations, errorMessage, formatPvYield, hourlyOutput, parseLocation, pvYield, radiation, sizeSystem, systemSummary, typicalWeather, horizonProfile, offgridSizing, optimalTilt } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -41,7 +40,7 @@ export function createServer(): McpServer {
         const data = await pvYield(latitude, longitude, peakpower, loss, angle, aspect)
         return text(formatPvYield(data, parseLocation(latitude, longitude)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -59,7 +58,7 @@ export function createServer(): McpServer {
       try {
         return text(await radiation(latitude, longitude, angle, aspect))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -84,7 +83,7 @@ export function createServer(): McpServer {
       try {
         return text(await hourlyOutput(latitude, longitude, year, peakpower, loss, angle))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -102,7 +101,7 @@ export function createServer(): McpServer {
       try {
         return text(await typicalWeather(latitude, longitude))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -126,7 +125,7 @@ export function createServer(): McpServer {
       try {
         return text(await systemSummary(latitude, longitude, peakpower, loss, angle))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -148,7 +147,7 @@ export function createServer(): McpServer {
       try {
         return text(await compareLocations(sites, peakpower, loss))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -172,7 +171,7 @@ export function createServer(): McpServer {
       try {
         return text(await sizeSystem(latitude, longitude, annual_kwh, loss, angle))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -193,7 +192,7 @@ export function createServer(): McpServer {
       try {
         return text(await horizonProfile(lat, lon))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -218,7 +217,7 @@ export function createServer(): McpServer {
       try {
         return text(await offgridSizing({ lat, lon, peakPower, batteryWh, dailyWh, cutoff }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -240,7 +239,7 @@ export function createServer(): McpServer {
       try {
         return text(await optimalTilt({ lat, lon, loss }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -258,10 +257,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: solar_variability ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_pvgis_solar_variability", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement variability locally (paywall removed)
+    try { return textError("Not yet implemented: variability") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -278,10 +275,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: diurnal_profile ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_pvgis_diurnal_profile", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement profile locally (paywall removed)
+    try { return textError("Not yet implemented: profile") } catch (e) { return textError(String(e)) }
   }
   )
 

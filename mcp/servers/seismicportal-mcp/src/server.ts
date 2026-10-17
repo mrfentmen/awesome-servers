@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { recent, significant } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await recent(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await recent(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await significant(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await significant(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,10 +42,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: largest ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_seismicportal_largest", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement largest locally (paywall removed)
+    try { return textError("Not yet implemented: largest") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -59,10 +56,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: in_box ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_seismicportal_in_box", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement box locally (paywall removed)
+    try { return textError("Not yet implemented: box") } catch (e) { return textError(String(e)) }
   }
   )
 

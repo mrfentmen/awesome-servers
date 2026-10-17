@@ -38,7 +38,7 @@ export function createServer(): McpServer {
       try {
         return text(await getAccountByRiotId(gameName, tagLine, cluster));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -58,7 +58,7 @@ export function createServer(): McpServer {
       try {
         return text(await getLolSummoner(puuid, platform));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -79,7 +79,7 @@ export function createServer(): McpServer {
       try {
         return text(await getLolMatchIds(puuid, cluster, count));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -99,7 +99,7 @@ export function createServer(): McpServer {
       try {
         return text(await getLolMatch(matchId, cluster));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -120,7 +120,7 @@ export function createServer(): McpServer {
       try {
         return text(await getLolChampionMastery(puuid, platform, count));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -138,7 +138,7 @@ export function createServer(): McpServer {
       try {
         return text(await getDdragonVersions());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

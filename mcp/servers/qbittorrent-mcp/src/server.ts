@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listTorrents, getTransferInfo, getAppVersion, parseMagnet, torrentGeometry } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await listTorrents());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       try {
         return text(await getTransferInfo());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -60,7 +59,7 @@ export function createServer(): McpServer {
       try {
         return text(await getAppVersion());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -77,11 +76,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: parse_magnet ----
-    const paywallMessage = await premiumRequired("parse_magnet")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await parseMagnet(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await parseMagnet(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -99,11 +94,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: torrent_geometry ----
-    const paywallMessage = await premiumRequired("torrent_geometry")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await torrentGeometry(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await torrentGeometry(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

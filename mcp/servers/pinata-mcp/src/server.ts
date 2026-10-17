@@ -3,7 +3,6 @@ import { z } from "zod"
 import { formatPin, listPins, pinJson, unpin } from "./vendor-api.js"
 
 import { PinataError, convertCid } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -33,7 +32,7 @@ export function createServer(): McpServer {
         if (pins.length === 0) return text("No pins.")
         return text(`${count} pins total:\n\n${pins.map((p, i) => formatPin(p, i)).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -53,7 +52,7 @@ export function createServer(): McpServer {
       try {
         return text(await pinJson(name, content))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -72,7 +71,7 @@ export function createServer(): McpServer {
       try {
         return text(await unpin(cid))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -89,10 +88,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: decode_cid ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_pinata_decode_cid", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement cid locally (paywall removed)
+    try { return textError("Not yet implemented: cid") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -108,10 +105,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: compare_cids ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_pinata_compare_cids", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement cids locally (paywall removed)
+    try { return textError("Not yet implemented: cids") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -128,7 +123,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await convertCid(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await convertCid(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

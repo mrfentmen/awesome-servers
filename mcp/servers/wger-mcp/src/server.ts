@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { exercise, exercises, muscles } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await exercises(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await exercises(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await exercise(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await exercise(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await muscles(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await muscles(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -55,10 +54,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: equipment_list ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wger_equipment_list", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement list locally (paywall removed)
+    try { return textError("Not yet implemented: list") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -71,10 +68,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: exercise_detail ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wger_exercise_detail", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement detail locally (paywall removed)
+    try { return textError("Not yet implemented: detail") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -87,10 +82,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: exercise_categories ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wger_exercise_categories", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement categories locally (paywall removed)
+    try { return textError("Not yet implemented: categories") } catch (e) { return textError(String(e)) }
   }
   )
 

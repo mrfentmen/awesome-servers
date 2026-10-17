@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { cityLookup, zipLookup, nearbyPostcodes, postcodeAutocomplete } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await zipLookup(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await zipLookup(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await cityLookup(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await cityLookup(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,10 +42,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: reverse_geocode ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_zip_codes_reverse_geocode", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement geocode locally (paywall removed)
+    try { return textError("Not yet implemented: geocode") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -59,10 +56,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: address_search ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_zip_codes_address_search", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement search locally (paywall removed)
+    try { return textError("Not yet implemented: search") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -75,7 +70,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await nearbyPostcodes(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await nearbyPostcodes(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -88,7 +83,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await postcodeAutocomplete(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await postcodeAutocomplete(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

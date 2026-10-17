@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listEventTypes, listBookings, listSchedules, eventType, booking, schedule, teams, teamDetails, webhooks, me, openSlots, slotDensity, publicEventTypes } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await listEventTypes());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       try {
         return text(await listBookings());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -60,7 +59,7 @@ export function createServer(): McpServer {
       try {
         return text(await listSchedules());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -79,7 +78,7 @@ export function createServer(): McpServer {
       try {
         return text(await eventType(type_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -98,7 +97,7 @@ export function createServer(): McpServer {
       try {
         return text(await booking(uid));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -117,7 +116,7 @@ export function createServer(): McpServer {
       try {
         return text(await schedule(schedule_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -134,7 +133,7 @@ export function createServer(): McpServer {
       try {
         return text(await teams());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -153,7 +152,7 @@ export function createServer(): McpServer {
       try {
         return text(await teamDetails(team_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -170,7 +169,7 @@ export function createServer(): McpServer {
       try {
         return text(await webhooks());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -187,7 +186,7 @@ export function createServer(): McpServer {
       try {
         return text(await me());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -206,7 +205,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await openSlots(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await openSlots(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -224,11 +223,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: slot_density ----
-    const paywallMessage = await premiumRequired("slot_density")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await slotDensity(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await slotDensity(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -243,11 +238,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: public_event_types ----
-    const paywallMessage = await premiumRequired("public_event_types")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await publicEventTypes(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await publicEventTypes(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

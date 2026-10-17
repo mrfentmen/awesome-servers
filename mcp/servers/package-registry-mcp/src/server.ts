@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { npmPackage, npmSearch, pypiPackage } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await npmPackage(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await npmPackage(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await pypiPackage(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await pypiPackage(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await npmSearch(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await npmSearch(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -55,10 +54,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: npm_dist_tags ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_package_registry_npm_dist_tags", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement tags locally (paywall removed)
+    try { return textError("Not yet implemented: tags") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -71,10 +68,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: npm_publish_timeline ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_package_registry_npm_publish_timeline", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement timeline locally (paywall removed)
+    try { return textError("Not yet implemented: timeline") } catch (e) { return textError(String(e)) }
   }
   )
 

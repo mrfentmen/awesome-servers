@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_search, m1_appLookup, m1_topFree, m1_topPaid, m2_searchPodcasts, m2_topPodcasts } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +19,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_search(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -32,7 +31,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_topFree(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_topFree(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -44,7 +43,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_topPaid(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_topPaid(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -56,7 +55,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_appLookup(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_appLookup(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -68,7 +67,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m2_searchPodcasts(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m2_searchPodcasts(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -80,7 +79,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m2_topPodcasts(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m2_topPodcasts(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -92,10 +91,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: podcast_episodes ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_itunes_podcast_episodes", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement episodes locally (paywall removed)
+    try { return textError("Not yet implemented: episodes") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -108,10 +105,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: audiobooks ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_itunes_audiobooks", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement audiobooks locally (paywall removed)
+    try { return textError("Not yet implemented: audiobooks") } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_formatAlerts, m0_formatScales, m0_formatSpeed, m0_SpaceWeatherError, m0_alerts, m0_scales, m0_solarWindSpeed, m1_latest, m1_map, m2_xrays } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ server.registerTool(
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
-    async () => { try { return text(m0_formatSpeed(await m0_solarWindSpeed())) } catch (e) { return textError(error(e)) } }
+    async () => { try { return text(m0_formatSpeed(await m0_solarWindSpeed())) } catch (e) { return textError(String(e)) } }
   )
 server.registerTool(
     "get_noaa_scales",
@@ -29,7 +28,7 @@ server.registerTool(
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
-    async () => { try { return text(m0_formatScales(await m0_scales())) } catch (e) { return textError(error(e)) } }
+    async () => { try { return text(m0_formatScales(await m0_scales())) } catch (e) { return textError(String(e)) } }
   )
 server.registerTool(
     "get_alerts",
@@ -39,7 +38,7 @@ server.registerTool(
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
-    async () => { try { return text(m0_formatAlerts(await m0_alerts())) } catch (e) { return textError(error(e)) } }
+    async () => { try { return text(m0_formatAlerts(await m0_alerts())) } catch (e) { return textError(String(e)) } }
   )
 server.registerTool(
     "latest",
@@ -50,7 +49,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_latest(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_latest(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -62,7 +61,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_map(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_map(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -74,7 +73,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m2_xrays(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m2_xrays(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -86,10 +85,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: planetary_k_index ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_space_weather_planetary_k_index", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement index locally (paywall removed)
+    try { return textError("Not yet implemented: index") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -102,10 +99,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: solar_wind_mag_field ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_space_weather_solar_wind_mag_field", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement field locally (paywall removed)
+    try { return textError("Not yet implemented: field") } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -27,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await stockQuote(symbol))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -49,7 +49,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No news for ${symbol}.`)
         return text(rows.join("\n\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -70,7 +70,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No upcoming earnings.")
         return text(rows.join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

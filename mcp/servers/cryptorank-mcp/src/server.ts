@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { coin } from "./api.js"
 import { coins, marketSentiment, gainersLosers, globalMarket } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -20,7 +19,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await coins(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await coins(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -32,7 +31,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await coin(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await coin(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -46,11 +45,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: market_sentiment ----
-    const paywallMessage = await premiumRequired("market_sentiment")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await marketSentiment(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await marketSentiment(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -68,11 +63,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: gainers_losers ----
-    const paywallMessage = await premiumRequired("gainers_losers")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await gainersLosers(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await gainersLosers(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -87,7 +78,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await globalMarket(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await globalMarket(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

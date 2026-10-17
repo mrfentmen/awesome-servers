@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { filter, suggest } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await suggest(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await suggest(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await filter(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await filter(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,10 +42,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: pattern_words ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wordle_helper_pattern_words", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement words locally (paywall removed)
+    try { return textError("Not yet implemented: words") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -59,10 +56,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: rhyming_words ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wordle_helper_rhyming_words", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement words locally (paywall removed)
+    try { return textError("Not yet implemented: words") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -75,10 +70,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: word_facts ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wordle_helper_word_facts", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement facts locally (paywall removed)
+    try { return textError("Not yet implemented: facts") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -91,10 +84,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: related_words ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wordle_helper_related_words", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement words locally (paywall removed)
+    try { return textError("Not yet implemented: words") } catch (e) { return textError(String(e)) }
   }
   )
 

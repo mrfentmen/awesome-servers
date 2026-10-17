@@ -1,4 +1,3 @@
-import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { formatPark, NpsError, parkAlerts, parkCampgrounds, searchParks } from "./api.js"
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No parks for "${query}".`)
         return text(rows.map((p, i) => formatPark(p, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -52,7 +51,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No alerts for ${code}.`)
         return text(rows.map((a, i) => `${i + 1}. ${a}`).join("\n\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -74,7 +73,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No campgrounds for ${code}.`)
         return text(rows.map((c, i) => `${i + 1}. ${c}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -91,13 +90,11 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: parks_by_state ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_nps_parks_by_state", args))
+        // TODO: implement state locally (paywall removed)
+        try { return textError("Not yet implemented: state") } catch (e) { return textError(String(e)) }
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -114,13 +111,11 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: park_things_to_do ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_nps_park_things_to_do", args))
+        // TODO: implement do locally (paywall removed)
+        try { return textError("Not yet implemented: do") } catch (e) { return textError(String(e)) }
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

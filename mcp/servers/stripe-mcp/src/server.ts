@@ -39,7 +39,7 @@ export function createServer(): McpServer {
       try {
         return text(await listCharges(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -58,7 +58,7 @@ export function createServer(): McpServer {
       try {
         return text(await listCustomers(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -75,7 +75,7 @@ export function createServer(): McpServer {
       try {
         return text(await getBalance());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -94,7 +94,7 @@ export function createServer(): McpServer {
       try {
         return text(await listInvoices(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -113,7 +113,7 @@ export function createServer(): McpServer {
       try {
         return text(await listSubscriptions(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -132,7 +132,7 @@ export function createServer(): McpServer {
       try {
         return text(await listProducts(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -151,7 +151,7 @@ export function createServer(): McpServer {
       try {
         return text(await listPrices(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -170,7 +170,7 @@ export function createServer(): McpServer {
       try {
         return text(await listRefunds(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -189,7 +189,7 @@ export function createServer(): McpServer {
       try {
         return text(await listDisputes(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -208,7 +208,7 @@ export function createServer(): McpServer {
       try {
         return text(await listCoupons(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

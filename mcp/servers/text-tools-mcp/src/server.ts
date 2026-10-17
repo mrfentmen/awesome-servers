@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { base64, slugify, toCase, diffText } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await slugify(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await slugify(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await toCase(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await toCase(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await base64(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await base64(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -55,10 +54,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: text_metrics ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_text_tools_text_metrics", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement metrics locally (paywall removed)
+    try { return textError("Not yet implemented: metrics") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -75,7 +72,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await diffText(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await diffText(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -88,10 +85,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: dictionary_lookup ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_text_tools_dictionary_lookup", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement lookup locally (paywall removed)
+    try { return textError("Not yet implemented: lookup") } catch (e) { return textError(String(e)) }
   }
   )
 

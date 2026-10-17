@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listPeople, getPerson, listGroups, emailDomainDns, domainRegistration } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await listPeople(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await getPerson(person_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -64,7 +63,7 @@ export function createServer(): McpServer {
       try {
         return text(await listGroups());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -80,11 +79,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: email_domain_dns ----
-      const paywallMessage = await premiumRequired("email_domain_dns")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await emailDomainDns(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await emailDomainDns(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -99,11 +94,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: domain_registration ----
-      const paywallMessage = await premiumRequired("domain_registration")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await domainRegistration(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await domainRegistration(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

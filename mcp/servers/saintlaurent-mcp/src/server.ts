@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, searchListings, listNewest, getListing, priceOverview, comparePrices, findDeals, brandOverview, listCollections, browseCollection, find_by_attribute } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchListings(query, limit, maxPrice, condition));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -54,7 +53,7 @@ export function createServer(): McpServer {
       try {
         return text(await listNewest(limit, page, productType, maxPrice, condition));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -74,7 +73,7 @@ export function createServer(): McpServer {
       try {
         return text(await getListing(handle, source));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -93,7 +92,7 @@ export function createServer(): McpServer {
       try {
         return text(await priceOverview(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -113,7 +112,7 @@ export function createServer(): McpServer {
       try {
         return text(await comparePrices(query, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -133,7 +132,7 @@ export function createServer(): McpServer {
       try {
         return text(await findDeals(limit, sample));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -150,7 +149,7 @@ export function createServer(): McpServer {
       try {
         return text(await brandOverview());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -169,7 +168,7 @@ export function createServer(): McpServer {
       try {
         return text(await listCollections(query));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -192,7 +191,7 @@ export function createServer(): McpServer {
       try {
         return text(await browseCollection(handle, source, limit, maxPrice, condition));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -216,7 +215,7 @@ export function createServer(): McpServer {
       try {
         return text(await find_by_attribute(color, material, condition, maxPrice, limit, sample));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -234,10 +233,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: line_matrix ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_saintlaurent_line_matrix", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement matrix locally (paywall removed)
+    try { return textError("Not yet implemented: matrix") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -254,10 +251,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: material_census ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_saintlaurent_material_census", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement census locally (paywall removed)
+    try { return textError("Not yet implemented: census") } catch (e) { return textError(String(e)) }
   }
   )
 

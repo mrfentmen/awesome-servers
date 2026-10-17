@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { mlbScores, nbaScores, nflScores } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await nbaScores(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await nbaScores(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await nflScores(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await nflScores(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await mlbScores(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await mlbScores(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -55,10 +54,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: nhl_scores ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_sports_scores_nhl_scores", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement scores locally (paywall removed)
+    try { return textError("Not yet implemented: scores") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -71,10 +68,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: soccer_scores ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_sports_scores_soccer_scores", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement scores locally (paywall removed)
+    try { return textError("Not yet implemented: scores") } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { formatPulse, ipReputation, OtxError, pulseIndicators, searchPulses, indicatorReport, indicatorPulses, indicatorUrls } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No pulses for "${query}".`)
         return text(rows.map((p, i) => formatPulse(p, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -53,7 +52,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No indicators for pulse ${id}.`)
         return text(rows.map((r, i) => `${i + 1}. ${r}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -72,7 +71,7 @@ export function createServer(): McpServer {
       try {
         return text(await ipReputation(ip))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -89,11 +88,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: indicator_report ----
-    const paywallMessage = await premiumRequired("indicator_report")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await indicatorReport(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await indicatorReport(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -110,11 +105,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: indicator_pulses ----
-    const paywallMessage = await premiumRequired("indicator_pulses")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await indicatorPulses(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await indicatorPulses(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -131,7 +122,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await indicatorUrls(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await indicatorUrls(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

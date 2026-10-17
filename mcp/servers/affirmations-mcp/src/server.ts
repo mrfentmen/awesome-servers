@@ -1,9 +1,7 @@
-successfully downloaded text file (SHA: 3d8dfb27219db5f6a7f48c1e4aaeab66b9d4020e)
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { many, random, randomAdvice, adviceById } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await random(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await random(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -32,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await many(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await many(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -44,10 +42,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: quote_of_the_day ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_affirmations_quote_of_the_day", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement day locally (paywall removed)
+    try { return textError("Not yet implemented: day") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -60,7 +56,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await randomAdvice(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await randomAdvice(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -73,7 +69,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await adviceById(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await adviceById(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -86,10 +82,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: advice_search ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_affirmations_advice_search", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement search locally (paywall removed)
+    try { return textError("Not yet implemented: search") } catch (e) { return textError(String(e)) }
   }
   )
 

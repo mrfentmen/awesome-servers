@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, me, listRepos, getRepo, searchRepos, userIssues, repoIssues, repoPulls, repoCommits, getUser, searchCode, listWorkflows, repoReleases, repoContributors } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await me());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -45,7 +44,7 @@ export function createServer(): McpServer {
       try {
         return text(await listRepos(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       try {
         return text(await getRepo(owner, repo));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -85,7 +84,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchRepos(query, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -102,7 +101,7 @@ export function createServer(): McpServer {
       try {
         return text(await userIssues());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -122,7 +121,7 @@ export function createServer(): McpServer {
       try {
         return text(await repoIssues(owner, repo));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -142,7 +141,7 @@ export function createServer(): McpServer {
       try {
         return text(await repoPulls(owner, repo));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -162,7 +161,7 @@ export function createServer(): McpServer {
       try {
         return text(await repoCommits(owner, repo));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -181,7 +180,7 @@ export function createServer(): McpServer {
       try {
         return text(await getUser(username));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -200,7 +199,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchCode(query));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -220,7 +219,7 @@ export function createServer(): McpServer {
       try {
         return text(await listWorkflows(owner, repo));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -238,11 +237,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: repo_releases ----
-      const paywallMessage = await premiumRequired("repo_releases")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await repoReleases(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await repoReleases(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -259,11 +254,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: repo_contributors ----
-      const paywallMessage = await premiumRequired("repo_contributors")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await repoContributors(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await repoContributors(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

@@ -3,7 +3,6 @@ import { z } from "zod"
 import { createWorkbook } from "./local-api.js"
 import { readWorkbook, workbookProfile, formulaReport } from "./local-api.js"
 
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -21,7 +20,7 @@ export function createServer(): McpServer {
       annotations: WRITE,
     },
     async (args) => {
-    try { return text(await createWorkbook(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await createWorkbook(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -33,7 +32,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await readWorkbook(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await readWorkbook(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -45,7 +44,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await workbookProfile(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await workbookProfile(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -58,7 +57,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await formulaReport(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await formulaReport(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -71,10 +70,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: exchange_rates ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_excel_exchange_rates", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement rates locally (paywall removed)
+    try { return textError("Not yet implemented: rates") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -87,10 +84,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: economic_indicator ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_excel_economic_indicator", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement indicator locally (paywall removed)
+    try { return textError("Not yet implemented: indicator") } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: 26eecbbef842f891917f19d9e6ab832d9a6665cd)
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listDomains, getDomain, getTopBrowsers, appStoreSearch, appStoreReviews } from "./api.js"
@@ -27,7 +26,7 @@ export function createServer(): McpServer {
       try {
         return text(await listDomains());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -46,7 +45,7 @@ export function createServer(): McpServer {
       try {
         return text(await getDomain(domainId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       try {
         return text(await getTopBrowsers(domainId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -86,7 +85,7 @@ export function createServer(): McpServer {
       try {
         return text(await appStoreSearch(args));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -107,7 +106,7 @@ export function createServer(): McpServer {
       try {
         return text(await appStoreReviews(args));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

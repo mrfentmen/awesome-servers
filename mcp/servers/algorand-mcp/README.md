@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: e556e6b70529df8b87e80cc09abd3b14b445eb81)
 # Algorand MCP
 
 Algorand chain status from the public Algorand indexer. No key required.

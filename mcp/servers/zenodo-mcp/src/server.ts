@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { record, search, record_versions } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await search(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await record(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await record(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -46,10 +45,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: record_files ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_zenodo_record_files", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement files locally (paywall removed)
+      try { return textError("Not yet implemented: files") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -64,10 +61,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: record_impact ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_zenodo_record_impact", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement impact locally (paywall removed)
+      try { return textError("Not yet implemented: impact") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -82,7 +77,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ id }) => {
-      try { return text(await record_versions({ id })) } catch (e) { return textError(error(e)) }
+      try { return text(await record_versions({ id })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -95,10 +90,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: search_facets ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_zenodo_search_facets", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement facets locally (paywall removed)
+    try { return textError("Not yet implemented: facets") } catch (e) { return textError(String(e)) }
   }
   )
 

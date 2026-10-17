@@ -32,7 +32,7 @@ export function createServer(): McpServer {
       try {
         return text(await listSources());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -49,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(await listSnapshots());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -66,7 +66,7 @@ export function createServer(): McpServer {
       try {
         return text(await getRepoStatus());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -83,7 +83,7 @@ export function createServer(): McpServer {
       try {
         return text(await getCurrentUser());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -100,7 +100,7 @@ export function createServer(): McpServer {
       try {
         return text(await getTasksSummary());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

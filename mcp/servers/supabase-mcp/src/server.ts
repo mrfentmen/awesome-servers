@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, queryTable, listUsers, callRpc, storageBuckets, storageObjects, authUser, createUser, deleteUser, insertRow, updateRows, deleteRows, schemaReview, platformStatus, postgresVersionWatch } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       try {
         return text(await queryTable(table, select, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -50,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(await listUsers(page));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -70,7 +69,7 @@ export function createServer(): McpServer {
       try {
         return text(await callRpc(function_name, params));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -87,7 +86,7 @@ export function createServer(): McpServer {
       try {
         return text(await storageBuckets());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -107,7 +106,7 @@ export function createServer(): McpServer {
       try {
         return text(await storageObjects(bucket, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -126,7 +125,7 @@ export function createServer(): McpServer {
       try {
         return text(await authUser(user_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -146,7 +145,7 @@ export function createServer(): McpServer {
       try {
         return text(await createUser(email, password));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -165,7 +164,7 @@ export function createServer(): McpServer {
       try {
         return text(await deleteUser(user_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -185,7 +184,7 @@ export function createServer(): McpServer {
       try {
         return text(await insertRow(table, row_json));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -206,7 +205,7 @@ export function createServer(): McpServer {
       try {
         return text(await updateRows(table, row_id, patch_json));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -226,7 +225,7 @@ export function createServer(): McpServer {
       try {
         return text(await deleteRows(table, row_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -240,7 +239,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await schemaReview(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await schemaReview(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -253,11 +252,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (_args) => {
-    // ---- paywall: platform_status ----
-    const paywallMessage = await premiumRequired("platform_status")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await platformStatus(_args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await platformStatus(_args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -270,11 +265,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (_args) => {
-    // ---- paywall: postgres_version_watch ----
-    const paywallMessage = await premiumRequired("postgres_version_watch")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await postgresVersionWatch(_args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await postgresVersionWatch(_args)) } catch (e) { return textError(String(e)) }
   }
   )
 

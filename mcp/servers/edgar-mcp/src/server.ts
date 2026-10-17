@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { companyFacts, companyFilings, searchFilings, filingCensus, formCadence } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await companyFilings(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await companyFilings(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await companyFacts(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await companyFacts(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await searchFilings(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await searchFilings(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -55,10 +54,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: company_profile ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_edgar_company_profile", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement profile locally (paywall removed)
+    try { return textError("Not yet implemented: profile") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -71,7 +68,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await filingCensus(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await filingCensus(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -84,10 +81,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: frame_peers ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_edgar_frame_peers", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement peers locally (paywall removed)
+    try { return textError("Not yet implemented: peers") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -100,7 +95,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await formCadence(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await formCadence(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

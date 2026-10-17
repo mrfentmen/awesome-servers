@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, getServer, listTemplates, listOutbound, blacklistCheck, mailPolicyReport } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -25,7 +24,7 @@ export function createServer(): McpServer {
       try {
         return text(await getServer());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -44,7 +43,7 @@ export function createServer(): McpServer {
       try {
         return text(await listTemplates(count));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -63,7 +62,7 @@ export function createServer(): McpServer {
       try {
         return text(await listOutbound(count));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -81,11 +80,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: blacklist_check ----
-    const paywallMessage = await premiumRequired("blacklist_check")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await blacklistCheck(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await blacklistCheck(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -101,11 +96,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: mail_policy_report ----
-    const paywallMessage = await premiumRequired("mail_policy_report")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await mailPolicyReport(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await mailPolicyReport(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

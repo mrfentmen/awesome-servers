@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { format, compareSchemaShapes } from "./core.js"
 import { keyVocabulary, nestingProfile, schemaProfile } from "./api.js"
-import { premiumRequired } from "./license.js"
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
 const text=(value:string)=>({content:[{type:"text" as const,text:value}]})
@@ -26,10 +25,6 @@ export function createServer(){const server=new McpServer({name:"schema-compatib
       annotations: READ_ONLY,
     },
     async (input) => {
-    // ---- paywall: schema_profile ----
-    const paywallMessage = await premiumRequired("schema_profile")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await schemaProfile(input)) } catch (error) { return errorText(error) }
   }
   )
@@ -56,10 +51,6 @@ export function createServer(){const server=new McpServer({name:"schema-compatib
       annotations: READ_ONLY,
     },
     async (input) => {
-    // ---- paywall: key_vocabulary ----
-    const paywallMessage = await premiumRequired("key_vocabulary")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await keyVocabulary(input)) } catch (error) { return errorText(error) }
   }
   )

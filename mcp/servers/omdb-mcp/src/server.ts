@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, searchMovies, getMovie, findFilmIds } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchMovies(query, page));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -48,7 +47,7 @@ export function createServer(): McpServer {
       try {
         return text(await getMovie(id_or_title));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await findFilmIds(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await findFilmIds(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -81,10 +80,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: wikidata_facts ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_omdb_wikidata_facts", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement facts locally (paywall removed)
+    try { return textError("Not yet implemented: facts") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -97,10 +94,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: cinemeta_details ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_omdb_cinemeta_details", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement details locally (paywall removed)
+    try { return textError("Not yet implemented: details") } catch (e) { return textError(String(e)) }
   }
   )
 

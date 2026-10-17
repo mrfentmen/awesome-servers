@@ -34,7 +34,7 @@ export function createServer(): McpServer {
       try {
         return text(await getTotals(start, end));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -53,7 +53,7 @@ export function createServer(): McpServer {
       try {
         return text(await getHits(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -72,7 +72,7 @@ export function createServer(): McpServer {
       try {
         return text(await getBreakdown(page));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

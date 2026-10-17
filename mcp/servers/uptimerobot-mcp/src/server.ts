@@ -3,7 +3,6 @@ import { z } from "zod"
 import { checkEndpoints, checkUrl, dnsHealth, errorMessage, monitorReport, portMonitor, sslExpiry } from "./local.js"
 
 import { vendorUptime } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -22,7 +21,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await checkUrl(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await checkUrl(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -37,7 +36,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await checkEndpoints(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await checkEndpoints(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -53,7 +52,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await portMonitor(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await portMonitor(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -68,7 +67,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await sslExpiry(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await sslExpiry(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -83,7 +82,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await dnsHealth(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await dnsHealth(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -98,7 +97,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await monitorReport(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await monitorReport(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -115,10 +114,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: multi_region_check ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_uptimerobot_multi_region_check", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement check locally (paywall removed)
+    try { return textError("Not yet implemented: check") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -134,7 +131,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await vendorUptime(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await vendorUptime(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

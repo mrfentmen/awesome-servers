@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_recent, m1_byPlace, m1_recent, m2_formatQuake, m2_latestQuakes, m2_queryQuakes, m2_UsgsError } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +19,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_recent(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_recent(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -32,7 +31,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_byPlace(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_byPlace(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -54,7 +53,7 @@ server.registerTool(
         if (quakes.length === 0) return text(`No M${magnitude}+ quakes in the last ${timeframe}.`)
         return text(`Latest M${magnitude}+ earthquakes (${timeframe}):\n\n${quakes.map((q, i) => `${i + 1}. ${m2_formatQuake(q)}`).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -77,7 +76,7 @@ server.registerTool(
         if (quakes.length === 0) return text(`No quakes M${minMagnitude}+${starttime ? ` since ${starttime}` : ""}.`)
         return text(`Quakes M${minMagnitude}+${starttime ? ` since ${starttime}` : ""}:\n\n${quakes.map((q, i) => `${i + 1}. ${m2_formatQuake(q)}`).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -90,10 +89,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: nearby_quakes ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_usgs_earthquakes_nearby_quakes", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement quakes locally (paywall removed)
+    try { return textError("Not yet implemented: quakes") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -106,10 +103,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: event_detail ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_usgs_earthquakes_event_detail", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement detail locally (paywall removed)
+    try { return textError("Not yet implemented: detail") } catch (e) { return textError(String(e)) }
   }
   )
 

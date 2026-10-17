@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, getBalance, getTransactions, getTokenTransfers, txStatus, contractAbi, contractSource, tokenBalance, gasOracle, ethPrice, blockNumber, internalTransactions, eventLogs, contractStateRead } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(await getBalance(address, chain_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -49,7 +48,7 @@ export function createServer(): McpServer {
       try {
         return text(await getTransactions(address, chain_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -69,7 +68,7 @@ export function createServer(): McpServer {
       try {
         return text(await getTokenTransfers(address, chain_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -89,7 +88,7 @@ export function createServer(): McpServer {
       try {
         return text(await txStatus(txhash, chain_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -109,7 +108,7 @@ export function createServer(): McpServer {
       try {
         return text(await contractAbi(address, chain_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -129,7 +128,7 @@ export function createServer(): McpServer {
       try {
         return text(await contractSource(address, chain_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -150,7 +149,7 @@ export function createServer(): McpServer {
       try {
         return text(await tokenBalance(contract, address, chain_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -169,7 +168,7 @@ export function createServer(): McpServer {
       try {
         return text(await gasOracle(chain_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -188,7 +187,7 @@ export function createServer(): McpServer {
       try {
         return text(await ethPrice(chain_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -207,7 +206,7 @@ export function createServer(): McpServer {
       try {
         return text(await blockNumber(chain_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -229,11 +228,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: internal_transactions ----
-    const paywallMessage = await premiumRequired("internal_transactions")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await internalTransactions(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await internalTransactions(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -256,11 +251,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: event_logs ----
-    const paywallMessage = await premiumRequired("event_logs")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await eventLogs(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await eventLogs(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -278,7 +269,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await contractStateRead(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await contractStateRead(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

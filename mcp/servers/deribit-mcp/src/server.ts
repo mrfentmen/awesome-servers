@@ -1,7 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { indexPrice, ticker, supported, book, instruments, trades, summary, fundingRateHistory, historicalVolatility, optionsSummary, currencies, optionsPositioning } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -18,7 +17,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await indexPrice(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await indexPrice(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await ticker(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await ticker(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -42,7 +41,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await supported(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await supported(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -54,7 +53,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await book(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await book(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -66,7 +65,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await instruments(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await instruments(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -78,7 +77,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await trades(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await trades(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -90,7 +89,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await summary(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await summary(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -102,7 +101,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await fundingRateHistory(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await fundingRateHistory(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -115,7 +114,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await historicalVolatility(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await historicalVolatility(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -128,7 +127,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await optionsSummary(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await optionsSummary(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -141,7 +140,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await currencies(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await currencies(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -158,10 +157,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: futures_open_interest ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_deribit_futures_open_interest", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement interest locally (paywall removed)
+    try { return textError("Not yet implemented: interest") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -177,10 +174,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: implied_vol_history ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_deribit_implied_vol_history", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement history locally (paywall removed)
+    try { return textError("Not yet implemented: history") } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -31,7 +31,7 @@ export function createServer(): McpServer {
       try {
         return text(await listLibraries());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -50,7 +50,7 @@ export function createServer(): McpServer {
       try {
         return text(await getLibraryInfo(repo_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -67,7 +67,7 @@ export function createServer(): McpServer {
       try {
         return text(await getDefaultLibrary());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -87,7 +87,7 @@ export function createServer(): McpServer {
       try {
         return text(await getFileDetail(repo_id, path));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { VgmdbError, formatAlbumDetail, formatAlbumSearch, formatArtistDetail, formatArtistSearch, getAlbum, getArtist, searchAlbums, searchArtists, trackSearch } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -32,7 +31,7 @@ export function createServer(): McpServer {
             albums.map((a, i) => `${i + 1}. ${formatAlbumSearch(a)}`).join("\n\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -52,7 +51,7 @@ export function createServer(): McpServer {
         if (!album) return text(`No album with id "${id}".`)
         return text(formatAlbumDetail(album))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -75,7 +74,7 @@ export function createServer(): McpServer {
             artists.map((a, i) => `${i + 1}. ${formatArtistSearch(a)}`).join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -95,7 +94,7 @@ export function createServer(): McpServer {
         if (!artist) return text(`No artist with id "${id}".`)
         return text(formatArtistDetail(artist))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -109,10 +108,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: album_census ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_vgmdb_album_census", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement census locally (paywall removed)
+      try { return textError("Not yet implemented: census") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -125,10 +122,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: composer_survey ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_vgmdb_composer_survey", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement survey locally (paywall removed)
+      try { return textError("Not yet implemented: survey") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -144,7 +139,7 @@ export function createServer(): McpServer {
       try {
         return text(await trackSearch(args))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -158,10 +153,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: storefront_availability ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_vgmdb_storefront_availability", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement availability locally (paywall removed)
+    try { return textError("Not yet implemented: availability") } catch (e) { return textError(String(e)) }
   }
   )
 

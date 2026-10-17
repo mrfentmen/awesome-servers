@@ -25,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(formatMetadata(await exportMetadata()))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -49,7 +49,7 @@ export function createServer(): McpServer {
         }
         return text(formatSqlResult(await runSql(sql, source)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -66,7 +66,7 @@ export function createServer(): McpServer {
       try {
         return text(await metadataCensus(args))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -83,7 +83,7 @@ export function createServer(): McpServer {
       try {
         return text(await sqlAudit(args))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -106,7 +106,7 @@ export function createServer(): McpServer {
       try {
         return text(await graphqlBuilder(args))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

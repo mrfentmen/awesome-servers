@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { format, inspectTestShape } from "./core.js"
 import { checkTestConventions, ciWorkflows } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -28,10 +27,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: analyze_test_source ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_test_shape_analyze_test_source", args)) } catch (e) { return textError(String(e)) }
+    // TODO: implement source locally (paywall removed)
+    try { return textError("Not yet implemented: source") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -70,10 +67,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: ci_run_history ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_test_shape_ci_run_history", args)) } catch (e) { return textError(String(e)) }
+    // TODO: implement history locally (paywall removed)
+    try { return textError("Not yet implemented: history") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -86,10 +81,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: commit_checks ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_test_shape_commit_checks", args)) } catch (e) { return textError(String(e)) }
+    // TODO: implement checks locally (paywall removed)
+    try { return textError("Not yet implemented: checks") } catch (e) { return textError(String(e)) }
   }
   )
 

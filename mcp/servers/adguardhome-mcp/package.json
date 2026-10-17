@@ -1,6 +1,6 @@
 {
   "name": "adguardhome-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Query your AdGuard Home (self-hosted; set ADGUARD_URL; optional ADGUARD_USER + ADGUARD_PASS basic auth): status, stats, query log. Endpoints per official docs.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/adguardhome-mcp",

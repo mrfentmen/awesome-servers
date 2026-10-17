@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { companies, companyJobs, jobDetail, marketSummary, recentJobs, remoteJobs, searchJobs, compareQueries, companyOpenings, workplaceSplit, remoteSalary } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -24,7 +23,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await searchJobs(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await searchJobs(args)) } catch (e) { return textError(String(e)) }
     }
   )
   server.registerTool(
@@ -38,7 +37,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await jobDetail(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await jobDetail(args)) } catch (e) { return textError(String(e)) }
     }
   )
   server.registerTool(
@@ -53,7 +52,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await companyJobs(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await companyJobs(args)) } catch (e) { return textError(String(e)) }
     }
   )
   server.registerTool(
@@ -69,7 +68,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await companies(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await companies(args)) } catch (e) { return textError(String(e)) }
     }
   )
   server.registerTool(
@@ -85,7 +84,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await marketSummary(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await marketSummary(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -103,7 +102,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await remoteJobs(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await remoteJobs(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -120,7 +119,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await recentJobs(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await recentJobs(args)) } catch (e) { return textError(String(e)) }
     }
   )
   server.registerTool(
@@ -139,7 +138,7 @@ export function createServer(): McpServer {
       try {
         return text(await compareQueries({ queries, location }))
       } catch (e) {
-        return textError(error(e))
+        return textError(String(e))
       }
     }
   )
@@ -161,7 +160,7 @@ export function createServer(): McpServer {
       try {
         return text(await companyOpenings({ company, query, limit }))
       } catch (e) {
-        return textError(error(e))
+        return textError(String(e))
       }
     }
   )
@@ -182,7 +181,7 @@ export function createServer(): McpServer {
       try {
         return text(await workplaceSplit({ query, location }))
       } catch (e) {
-        return textError(error(e))
+        return textError(String(e))
       }
     }
   )
@@ -200,10 +199,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: remote_market ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_workable_remote_market", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement market locally (paywall removed)
+    try { return textError("Not yet implemented: market") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -220,7 +217,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await remoteSalary(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await remoteSalary(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

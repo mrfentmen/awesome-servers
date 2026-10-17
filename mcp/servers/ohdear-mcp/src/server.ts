@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { checkMany, checkUrl, dnsHealth, errorMessage, securityHeaders, siteReport, sslCertificate, archivedSnapshot } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await checkUrl({ url }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await checkMany({ urls }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -66,7 +65,7 @@ export function createServer(): McpServer {
       try {
         return text(await sslCertificate({ host }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -85,7 +84,7 @@ export function createServer(): McpServer {
       try {
         return text(await dnsHealth({ domain }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -104,7 +103,7 @@ export function createServer(): McpServer {
       try {
         return text(await securityHeaders({ url }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -123,7 +122,7 @@ export function createServer(): McpServer {
       try {
         return text(await siteReport({ url }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -140,10 +139,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: certificate_transparency ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_ohdear_certificate_transparency", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement transparency locally (paywall removed)
+    try { return textError("Not yet implemented: transparency") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -156,10 +153,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: domain_registration ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_ohdear_domain_registration", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement registration locally (paywall removed)
+    try { return textError("Not yet implemented: registration") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -175,7 +170,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await archivedSnapshot(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await archivedSnapshot(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

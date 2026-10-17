@@ -3,7 +3,6 @@ import { z } from "zod"
 import { cert } from "./local.js"
 
 import { check, maintenanceWindows } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +19,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await check(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await check(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -32,7 +31,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await cert(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await cert(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -44,10 +43,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: dns_records ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_uptime_dns_records", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement records locally (paywall removed)
+    try { return textError("Not yet implemented: records") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -60,10 +57,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: service_status ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_uptime_service_status", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement status locally (paywall removed)
+    try { return textError("Not yet implemented: status") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -76,10 +71,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: incident_history ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_uptime_incident_history", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement history locally (paywall removed)
+    try { return textError("Not yet implemented: history") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -92,7 +85,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await maintenanceWindows(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await maintenanceWindows(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

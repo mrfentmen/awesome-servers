@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listForms, getForm, listResponses, findResponse, accountImages, accountImage, createForm, themes, themeDetails, workspaces, serviceStatus, schemaLint } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -27,7 +26,7 @@ export function createServer(): McpServer {
       try {
         return text(await listForms());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -46,7 +45,7 @@ export function createServer(): McpServer {
       try {
         return text(await getForm(form_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       try {
         return text(await listResponses(form_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -85,7 +84,7 @@ export function createServer(): McpServer {
       try {
         return text(await findResponse(form_id, response_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -102,7 +101,7 @@ export function createServer(): McpServer {
       try {
         return text(await accountImages());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -121,7 +120,7 @@ export function createServer(): McpServer {
       try {
         return text(await accountImage(image_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -138,7 +137,7 @@ export function createServer(): McpServer {
       try {
         return text(await themes());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -157,7 +156,7 @@ export function createServer(): McpServer {
       try {
         return text(await themeDetails(theme_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -174,7 +173,7 @@ export function createServer(): McpServer {
       try {
         return text(await workspaces());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -193,7 +192,7 @@ export function createServer(): McpServer {
       try {
         return text(await createForm(title));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -210,7 +209,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await serviceStatus(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await serviceStatus(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -227,11 +226,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: schema_lint ----
-    const paywallMessage = await premiumRequired("schema_lint")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await schemaLint(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await schemaLint(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

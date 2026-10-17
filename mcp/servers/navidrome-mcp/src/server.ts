@@ -25,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await ping())
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -44,7 +44,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No artists.")
         return text(rows.map((a, i) => `${i + 1}. [${a.id}] ${a.name}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -69,7 +69,7 @@ export function createServer(): McpServer {
         if (!parts.length) return text(`Nothing found for "${query}".`)
         return text(parts.join("\n\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -89,7 +89,7 @@ export function createServer(): McpServer {
         if (!song_id.trim()) return textError("Error: song id is empty.")
         return text(streamUrl(song_id))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

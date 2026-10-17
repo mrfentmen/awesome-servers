@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_quoteOfTheDay, m0_randomQuote, m1_qotd, m1_search, m2_random, m3_many, m3_random, m4_random, m4_today, m4_quotes } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +19,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_quoteOfTheDay(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_quoteOfTheDay(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -32,7 +31,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_randomQuote(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_randomQuote(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -44,7 +43,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_qotd(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_qotd(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -56,7 +55,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_search(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -68,7 +67,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m2_random(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m2_random(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -80,7 +79,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m3_many(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m3_many(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -92,7 +91,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m4_today(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m4_today(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -104,7 +103,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m4_quotes(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m4_quotes(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -116,10 +115,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: quote_by_id ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_quotes_quote_by_id", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement id locally (paywall removed)
+    try { return textError("Not yet implemented: id") } catch (e) { return textError(String(e)) }
   }
   )
 

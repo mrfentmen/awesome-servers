@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { diffText } from "./api.js"
 import { unifiedDiff, diffStats, structuredDiff, inlineDiff, applyPatchText } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -20,7 +19,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await diffText(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await diffText(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -32,7 +31,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await unifiedDiff(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await unifiedDiff(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -44,11 +43,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: diff_stats ----
-    const paywallMessage = await premiumRequired("diff_stats")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await diffStats(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await diffStats(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -61,7 +56,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await structuredDiff(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await structuredDiff(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -74,11 +69,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: inline_diff ----
-    const paywallMessage = await premiumRequired("inline_diff")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await inlineDiff(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await inlineDiff(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -91,7 +82,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await applyPatchText(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await applyPatchText(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

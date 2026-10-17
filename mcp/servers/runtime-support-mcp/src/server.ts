@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { format, inspectRuntimeSupport } from "./core.js"
 import { runtimeConstraintSpread, runtimeSupportMatrix } from "./api.js"
-import { premiumRequired } from "./license.js"
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
 const text=(value:string)=>({content:[{type:"text" as const,text:value}]})
@@ -26,10 +25,6 @@ export function createServer(){const server=new McpServer({name:"runtime-support
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: runtime_support_matrix ----
-    const paywallMessage = await premiumRequired("runtime_support_matrix")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await runtimeSupportMatrix(args)) } catch (error) { return errorText(error) }
   }
   )

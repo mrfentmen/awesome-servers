@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { byAuthor, randomPoem, searchTitles } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await searchTitles(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await searchTitles(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await byAuthor(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await byAuthor(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await randomPoem(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await randomPoem(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -55,10 +54,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: author_poems ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_poetry_author_poems", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement poems locally (paywall removed)
+    try { return textError("Not yet implemented: poems") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -71,10 +68,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: title_index ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_poetry_title_index", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement index locally (paywall removed)
+    try { return textError("Not yet implemented: index") } catch (e) { return textError(String(e)) }
   }
   )
 

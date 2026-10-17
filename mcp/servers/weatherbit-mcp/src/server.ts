@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, getCurrent, getDailyForecast, getHourlyForecast, getAlerts, getAirQuality } from "./api.js"
-import { premiumTool } from "./gateway.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
       try {
         return text(await getCurrent(lat, lon));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -51,7 +50,7 @@ export function createServer(): McpServer {
       try {
         return text(await getDailyForecast(lat, lon, days));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -72,7 +71,7 @@ export function createServer(): McpServer {
       try {
         return text(await getHourlyForecast(lat, lon, hours));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -92,7 +91,7 @@ export function createServer(): McpServer {
       try {
         return text(await getAlerts(lat, lon));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -112,7 +111,7 @@ export function createServer(): McpServer {
       try {
         return text(await getAirQuality(lat, lon));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -130,13 +129,11 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: nws_point_forecast ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_weatherbit_nws_point_forecast", args));
+        // TODO: implement forecast locally (paywall removed)
+        try { return textError("Not yet implemented: forecast") } catch (e) { return textError(String(e)) }
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -154,13 +151,11 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: open_meteo_air_quality ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_weatherbit_open_meteo_air_quality", args));
+        // TODO: implement quality locally (paywall removed)
+        try { return textError("Not yet implemented: quality") } catch (e) { return textError(String(e)) }
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

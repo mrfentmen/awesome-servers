@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: d6fc2cab475ab5d6947c8044eedbe66cec65aaf5)
 # ackee-mcp
 
 Self-hosted Ackee analytics via GraphQL: domains, facts, top browsers.

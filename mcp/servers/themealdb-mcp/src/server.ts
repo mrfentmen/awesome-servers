@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_categories, m0_filterByIngredient, m0_random, m0_search, m1_byIngredient, m1_recipeDetails, m1_searchRecipes, listIngredients } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +19,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_search(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -32,7 +31,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_random(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_random(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -44,7 +43,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_categories(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_categories(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -56,7 +55,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_filterByIngredient(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_filterByIngredient(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -68,7 +67,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_searchRecipes(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_searchRecipes(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -80,7 +79,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_byIngredient(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_byIngredient(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -92,7 +91,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_recipeDetails(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_recipeDetails(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -104,10 +103,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: filter_by_category ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_themealdb_filter_by_category", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement category locally (paywall removed)
+    try { return textError("Not yet implemented: category") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -120,10 +117,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: filter_by_area ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_themealdb_filter_by_area", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement area locally (paywall removed)
+    try { return textError("Not yet implemented: area") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -136,7 +131,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await listIngredients(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await listIngredients(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { BbsError, formatBbs, listAll } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -44,7 +43,7 @@ export function createServer(): McpServer {
             shown.map((b, i) => formatBbs(b, i)).join("\n\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -67,7 +66,7 @@ export function createServer(): McpServer {
         if (!found) return text(`No BBS named "${name}". Try list_bbses first.`)
         return text(formatBbs(found))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -87,7 +86,7 @@ export function createServer(): McpServer {
         const pick = all[Math.floor(Math.random() * all.length)]
         return text(`Dialing ${pick.name}...\n\n${formatBbs(pick)}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -103,10 +102,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: software_census ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_telnetbbs_software_census", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement census locally (paywall removed)
+    try { return textError("Not yet implemented: census") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -120,10 +117,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: bbs_stats ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_telnetbbs_bbs_stats", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement stats locally (paywall removed)
+    try { return textError("Not yet implemented: stats") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -136,10 +131,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: ssh_bbses ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_telnetbbs_ssh_bbses", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement bbses locally (paywall removed)
+    try { return textError("Not yet implemented: bbses") } catch (e) { return textError(String(e)) }
   }
   )
 

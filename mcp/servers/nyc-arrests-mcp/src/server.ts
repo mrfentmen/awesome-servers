@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, searchArrests, arrestDetails, historicSearch, topOffenses, precinctActivity, boroughStats, recentFelonies, recentMisdemeanors, offenseLookup, arrestMapData, datasetCoverage } from "./api.js"
-import { premiumTool } from "./gateway.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -34,7 +33,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchArrests({ borough, offense, from, to, age, sex, limit }));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -53,7 +52,7 @@ export function createServer(): McpServer {
       try {
         return text(await arrestDetails(arrest_key));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -78,7 +77,7 @@ export function createServer(): McpServer {
       try {
         return text(await historicSearch({ borough, offense, from, to, age, sex, limit }));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -98,7 +97,7 @@ export function createServer(): McpServer {
       try {
         return text(await topOffenses(borough, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -118,7 +117,7 @@ export function createServer(): McpServer {
       try {
         return text(await precinctActivity(precinct, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -137,7 +136,7 @@ export function createServer(): McpServer {
       try {
         return text(await boroughStats(borough));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -156,7 +155,7 @@ export function createServer(): McpServer {
       try {
         return text(await recentFelonies(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -175,7 +174,7 @@ export function createServer(): McpServer {
       try {
         return text(await recentMisdemeanors(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -195,7 +194,7 @@ export function createServer(): McpServer {
       try {
         return text(await offenseLookup(pd_code, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -218,7 +217,7 @@ export function createServer(): McpServer {
       try {
         return text(await arrestMapData(lat_min, lat_max, lon_min, lon_max, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -235,7 +234,7 @@ export function createServer(): McpServer {
       try {
         return text(await datasetCoverage());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -256,13 +255,11 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: arrest_trend ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_nyc_arrests_arrest_trend", args));
+        // TODO: implement trend locally (paywall removed)
+        try { return textError("Not yet implemented: trend") } catch (e) { return textError(String(e)) }
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -280,13 +277,11 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: borough_category_matrix ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_nyc_arrests_borough_category_matrix", args));
+        // TODO: implement matrix locally (paywall removed)
+        try { return textError("Not yet implemented: matrix") } catch (e) { return textError(String(e)) }
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

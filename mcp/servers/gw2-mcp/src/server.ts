@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { Gw2Error, formatAchievement, formatItem, formatPrice, getAchievement, getDailyAchievements, getItem, getItemPrice, searchItems } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
         if (items.length === 0) return text(`No GW2 items match "${name}".`)
         return text(`Items matching "${name}":\n\n${items.map((i) => formatItem(i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -48,7 +47,7 @@ export function createServer(): McpServer {
         if (!item) return text(`No item ${id}.`)
         return text(formatItem(item))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -68,7 +67,7 @@ export function createServer(): McpServer {
         if (!price) return text(`No trading data for item ${id}.`)
         return text(`Trading Post for ${id}:\n${formatPrice(price)}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -88,7 +87,7 @@ export function createServer(): McpServer {
         if (!a) return text(`No achievement ${id}.`)
         return text(formatAchievement(a))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -112,7 +111,7 @@ export function createServer(): McpServer {
         }
         return text(`Today's GW2 dailies:\n${out.join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -126,10 +125,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: world_events ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_gw2_world_events", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement events locally (paywall removed)
+    try { return textError("Not yet implemented: events") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -142,10 +139,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: item_stat_bonuses ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_gw2_item_stat_bonuses", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement bonuses locally (paywall removed)
+    try { return textError("Not yet implemented: bonuses") } catch (e) { return textError(String(e)) }
   }
   )
 

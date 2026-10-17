@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { AshbyError, compensation, departments, formatJob, getJob, listJobs, listLocations, listTeams, newestJobs, remoteJobs, searchJobs } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -37,7 +36,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No open roles at ${org}.`)
         return text(rows.map((j, i) => formatJob(j, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -64,7 +63,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchJobs(org, query, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -84,7 +83,7 @@ export function createServer(): McpServer {
       try {
         return text(await getJob(org, job_id))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -103,7 +102,7 @@ export function createServer(): McpServer {
       try {
         return text(await departments(org))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -129,7 +128,7 @@ export function createServer(): McpServer {
       try {
         return text(await remoteJobs(org, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -155,7 +154,7 @@ export function createServer(): McpServer {
       try {
         return text(await compensation(org, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -174,7 +173,7 @@ export function createServer(): McpServer {
       try {
         return text(await listTeams(org))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -193,7 +192,7 @@ export function createServer(): McpServer {
       try {
         return text(await listLocations(org))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -219,7 +218,7 @@ export function createServer(): McpServer {
       try {
         return text(await newestJobs(org, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -236,10 +235,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: posting_age ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_ashby_posting_age", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement age locally (paywall removed)
+      try { return textError("Not yet implemented: age") } catch (e) { return textError(String(e)) }
     }
   )
 

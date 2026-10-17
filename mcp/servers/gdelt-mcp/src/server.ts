@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { newsByCountry, searchNews, source_country_breakdown } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await searchNews(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await searchNews(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await newsByCountry(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await newsByCountry(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -46,7 +45,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ articles, label }) => {
-      try { return text(await source_country_breakdown({ articles, label })) } catch (e) { return textError(error(e)) }
+      try { return text(await source_country_breakdown({ articles, label })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -62,10 +61,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: domain_ranking ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_gdelt_domain_ranking", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement ranking locally (paywall removed)
+    try { return textError("Not yet implemented: ranking") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -81,10 +78,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: coverage_stats ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_gdelt_coverage_stats", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement stats locally (paywall removed)
+    try { return textError("Not yet implemented: stats") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -101,10 +96,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: syndication_clusters ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_gdelt_syndication_clusters", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement clusters locally (paywall removed)
+    try { return textError("Not yet implemented: clusters") } catch (e) { return textError(String(e)) }
   }
   )
 

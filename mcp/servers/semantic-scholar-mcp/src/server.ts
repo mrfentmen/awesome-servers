@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { paperInfo, searchPapers, paper_references } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await searchPapers(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await searchPapers(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await paperInfo(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await paperInfo(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -46,10 +45,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: paper_citations ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_semantic_scholar_paper_citations", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement citations locally (paywall removed)
+      try { return textError("Not yet implemented: citations") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -65,7 +62,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ paperId, limit }) => {
-      try { return text(await paper_references({ paperId, limit })) } catch (e) { return textError(error(e)) }
+      try { return text(await paper_references({ paperId, limit })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -80,10 +77,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: paper_field ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_semantic_scholar_paper_field", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement field locally (paywall removed)
+      try { return textError("Not yet implemented: field") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -96,10 +91,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: paper_authors ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_semantic_scholar_paper_authors", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement authors locally (paywall removed)
+    try { return textError("Not yet implemented: authors") } catch (e) { return textError(String(e)) }
   }
   )
 

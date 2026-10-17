@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, getCommentaries, getConnections, getTanakhText, getWeeklyPortion, searchTexts } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
       try {
         return text(await getWeeklyPortion(latitude, longitude, timezone))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -50,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(await getTanakhText(ref, language))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -71,7 +70,7 @@ export function createServer(): McpServer {
       try {
         return text(await getCommentaries(ref, commentator, maxResults))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -91,7 +90,7 @@ export function createServer(): McpServer {
       try {
         return text(await getConnections(ref, category))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -111,7 +110,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchTexts(query, size))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -125,10 +124,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: book_index ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_torah_book_index", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement index locally (paywall removed)
+    try { return textError("Not yet implemented: index") } catch (e) { return textError(String(e)) }
     }
   );
 
@@ -141,10 +138,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: word_lookup ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_torah_word_lookup", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement lookup locally (paywall removed)
+    try { return textError("Not yet implemented: lookup") } catch (e) { return textError(String(e)) }
     }
   );
 

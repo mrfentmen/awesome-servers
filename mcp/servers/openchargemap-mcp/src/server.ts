@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, nearby, getPoi, osmChargersNearby, chargerCoverageGap, chargeTimeEstimate } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       try {
         return text(await nearby(latitude, longitude, distance, max_results));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -50,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(await getPoi(poi_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -69,11 +68,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: osm_chargers_nearby ----
-    const paywallMessage = await premiumRequired("osm_chargers_nearby")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await osmChargersNearby(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await osmChargersNearby(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -90,11 +85,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: charger_coverage_gap ----
-    const paywallMessage = await premiumRequired("charger_coverage_gap")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await chargerCoverageGap(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await chargerCoverageGap(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -114,7 +105,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await chargeTimeEstimate(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await chargeTimeEstimate(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

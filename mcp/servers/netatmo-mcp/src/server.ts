@@ -33,7 +33,7 @@ export function createServer(): McpServer {
       try {
         return text(await getWeatherStations());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -51,7 +51,7 @@ export function createServer(): McpServer {
       try {
         return text(await getHomeData());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -70,7 +70,7 @@ export function createServer(): McpServer {
       try {
         return text(await getHomeStatus(homeId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -89,7 +89,7 @@ export function createServer(): McpServer {
       try {
         return text(await getEvents(homeId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

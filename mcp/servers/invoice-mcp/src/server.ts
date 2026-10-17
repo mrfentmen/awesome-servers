@@ -1,4 +1,3 @@
-import { premiumTool } from "./gateway.js"
 // @ts-nocheck
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
@@ -138,10 +137,8 @@ export function createServer(): McpServer {
       inputSchema: z.object({ vat_number: z.string().describe("VAT number with or without its country prefix, e.g. DE123456789") }),
     },
     async (args: any) => {
-      // ---- paywall: vat_number_check ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_invoice_vat_number_check", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement check locally (paywall removed)
+      try { return textError("Not yet implemented: check") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -153,10 +150,8 @@ export function createServer(): McpServer {
       inputSchema: z.object({ iban: z.string().describe("IBAN, spaces allowed, e.g. DE89 3704 0044 0532 0130 00") }),
     },
     async (args: any) => {
-      // ---- paywall: iban_check ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_invoice_iban_check", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement check locally (paywall removed)
+      try { return textError("Not yet implemented: check") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -168,10 +163,8 @@ export function createServer(): McpServer {
       inputSchema: z.object({ amount: z.number().describe("Invoice total to convert"), from: z.string().describe("Three-letter source currency, e.g. USD"), to: z.string().describe("Three-letter target currency, e.g. EUR") }),
     },
     async (args: any) => {
-      // ---- paywall: currency_reference ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_invoice_currency_reference", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement reference locally (paywall removed)
+      try { return textError("Not yet implemented: reference") } catch (e) { return textError(String(e)) }
     }
   )
 

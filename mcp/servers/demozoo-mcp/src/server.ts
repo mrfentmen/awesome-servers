@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { DemozooError, formatProduction, formatReleaser, formatSummary, getProduction, getReleaser, searchProductions, referenceCatalogue, partiesAndScenes } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
         if (results.length === 0) return text(`No Demozoo productions match "${query}".`)
         return text(`Demozoo results for "${query}":\n\n${results.map((p, i) => formatSummary(p, i)).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -52,7 +51,7 @@ export function createServer(): McpServer {
         if (!p) return text(`No Demozoo production with id ${id}.`)
         return text(formatProduction(p))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -73,7 +72,7 @@ export function createServer(): McpServer {
         if (!r) return text(`No Demozoo group/scener with id ${id}.`)
         return text(formatReleaser(r))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -113,10 +112,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: releaser_productions ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_demozoo_releaser_productions", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement productions locally (paywall removed)
+    try { return textError("Not yet implemented: productions") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -129,10 +126,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: platform_productions ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_demozoo_platform_productions", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement productions locally (paywall removed)
+    try { return textError("Not yet implemented: productions") } catch (e) { return textError(String(e)) }
   }
   )
 

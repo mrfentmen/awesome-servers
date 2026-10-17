@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, searchBooks, getItem, collectionItems } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchBooks(query));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -48,7 +47,7 @@ export function createServer(): McpServer {
       try {
         return text(await getItem(prefix, suffix));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -62,10 +61,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: browse_directory ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_doab_browse_directory", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement directory locally (paywall removed)
+    try { return textError("Not yet implemented: directory") } catch (e) { return textError(String(e)) }
     }
   );
 
@@ -78,10 +75,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: item_metadata ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_doab_item_metadata", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement metadata locally (paywall removed)
+    try { return textError("Not yet implemented: metadata") } catch (e) { return textError(String(e)) }
     }
   );
 
@@ -94,7 +89,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await collectionItems(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await collectionItems(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -107,10 +102,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: item_files ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_doab_item_files", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement files locally (paywall removed)
+    try { return textError("Not yet implemented: files") } catch (e) { return textError(String(e)) }
   }
   )
 

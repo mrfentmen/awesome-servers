@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listOrgs, orgProjects, orgIssues, issueDetails, issueEvents, projectDetails, teams, members, releases, eventDetails, releaseFeed, dependencyDrift } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await listOrgs());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -45,7 +44,7 @@ export function createServer(): McpServer {
       try {
         return text(await orgProjects(org));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -64,7 +63,7 @@ export function createServer(): McpServer {
       try {
         return text(await orgIssues(org));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -84,7 +83,7 @@ export function createServer(): McpServer {
       try {
         return text(await issueDetails(org, issue_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -104,7 +103,7 @@ export function createServer(): McpServer {
       try {
         return text(await issueEvents(org, issue_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -124,7 +123,7 @@ export function createServer(): McpServer {
       try {
         return text(await projectDetails(org, project));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -143,7 +142,7 @@ export function createServer(): McpServer {
       try {
         return text(await teams(org));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -162,7 +161,7 @@ export function createServer(): McpServer {
       try {
         return text(await members(org));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -181,7 +180,7 @@ export function createServer(): McpServer {
       try {
         return text(await releases(org));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -202,7 +201,7 @@ export function createServer(): McpServer {
       try {
         return text(await eventDetails(org, issue_id, event_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -220,11 +219,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: release_feed ----
-    const paywallMessage = await premiumRequired("release_feed")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await releaseFeed(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await releaseFeed(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -241,11 +236,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: dependency_drift ----
-    const paywallMessage = await premiumRequired("dependency_drift")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await dependencyDrift(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await dependencyDrift(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

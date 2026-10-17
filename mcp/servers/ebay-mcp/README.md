@@ -20,21 +20,4 @@ Query the eBay Browse API (OAuth user token; set EBAY_OAUTH_TOKEN, Bearer): item
 
 [ebay-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/ebay-mcp)
 
-<!-- paywall -->
-## Premium tools
 
-These tools need a license key:
-
-* `shipping_options`
-* `find_item_group`
-
-Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-ebay-mcp and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
-```
-
-The key is checked against MCP Marketplace, cached for 24 hours, and keeps
-working offline once one check has succeeded. Every other tool on this server
-stays free.
-<!-- /paywall -->

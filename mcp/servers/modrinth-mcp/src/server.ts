@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { ModrinthError, formatHit, formatProject, formatVersion, getProject, getProjectVersions, searchProjects, filterIndex } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -39,7 +38,7 @@ export function createServer(): McpServer {
           (gameVersion ? ` (MC ${gameVersion})` : "") + ":\n"
         return text(head + hits.map((h, i) => formatHit(h, i + 1)).join("\n\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -60,7 +59,7 @@ export function createServer(): McpServer {
         if (!project) return text(`No Modrinth project "${slug}".`)
         return text(formatProject(project))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -93,7 +92,7 @@ export function createServer(): McpServer {
             versions.map((v, i) => formatVersion(v, i + 1)).join("\n\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -107,7 +106,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await filterIndex(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await filterIndex(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -120,10 +119,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: search_sorted ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_modrinth_search_sorted", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement sorted locally (paywall removed)
+    try { return textError("Not yet implemented: sorted") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -136,10 +133,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: version_files ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_modrinth_version_files", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement files locally (paywall removed)
+    try { return textError("Not yet implemented: files") } catch (e) { return textError(String(e)) }
   }
   )
 

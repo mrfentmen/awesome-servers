@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { compareVehicles, errorMessage, formatVehicle, fuelPrices, listMakes, listModels, listOptions, listYears, vehicleDetails, runningCost, compareCosts } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -38,7 +37,7 @@ export function createServer(): McpServer {
         const years = await listYears()
         return text(`Model years available:\n\n${years.map((y) => `  ${y}`).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -55,7 +54,7 @@ export function createServer(): McpServer {
       try {
         return text(menu(await listMakes(year), `makes for ${year}`))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -72,7 +71,7 @@ export function createServer(): McpServer {
       try {
         return text(menu(await listModels(year, make), `${make} models for ${year}`))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -90,7 +89,7 @@ export function createServer(): McpServer {
       try {
         return text(menu(await listOptions(year, make, model), `${year} ${make} ${model} options`))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -110,7 +109,7 @@ export function createServer(): McpServer {
       try {
         return text(formatVehicle(await vehicleDetails(vehicle_id)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -130,7 +129,7 @@ export function createServer(): McpServer {
       try {
         return text(await compareVehicles(vehicle_ids.split(",")))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -148,7 +147,7 @@ export function createServer(): McpServer {
       try {
         return text(await fuelPrices())
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -170,7 +169,7 @@ export function createServer(): McpServer {
       try {
         return text(await runningCost({ vehicle_id, miles_per_year, fuel_price }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -192,7 +191,7 @@ export function createServer(): McpServer {
       try {
         return text(await compareCosts({ vehicle_ids, miles_per_year, fuel_price }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -211,10 +210,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: model_recalls ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_fueleconomy_model_recalls", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement recalls locally (paywall removed)
+      try { return textError("Not yet implemented: recalls") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -232,10 +229,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: model_complaints ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_fueleconomy_model_complaints", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement complaints locally (paywall removed)
+      try { return textError("Not yet implemented: complaints") } catch (e) { return textError(String(e)) }
     }
   )
 

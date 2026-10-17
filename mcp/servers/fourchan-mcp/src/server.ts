@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { ChanError, formatPost, formatThreadSummary, getCatalog, getThread, listBoards, boardConfig } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
             `NSFW boards:\n${nsfw.map((b) => `  /${b.board}/ — ${b.title}`).join("\n")}`
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -55,7 +54,7 @@ export function createServer(): McpServer {
             sorted.map((t, i) => formatThreadSummary(t, i)).join("\n\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -79,7 +78,7 @@ export function createServer(): McpServer {
             posts.slice(0, max).map(formatPost).join("\n\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -96,10 +95,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: board_thread_index ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_fourchan_board_thread_index", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement index locally (paywall removed)
+    try { return textError("Not yet implemented: index") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -114,7 +111,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await boardConfig(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await boardConfig(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -131,10 +128,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: thread_media_gallery ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_fourchan_thread_media_gallery", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement gallery locally (paywall removed)
+    try { return textError("Not yet implemented: gallery") } catch (e) { return textError(String(e)) }
   }
   )
 

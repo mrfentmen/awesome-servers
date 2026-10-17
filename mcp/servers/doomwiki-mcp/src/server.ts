@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { categoryMembers, cleanWikiText, DoomWikiError, getPage, searchPages, siteStats } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
         if (hits.length === 0) return text(`No Doom Wiki pages match "${query}".`)
         return text(`Doom Wiki pages matching "${query}":\n${hits.map((h, i) => `${i + 1}. ${h.title}${h.pageid ? ` (id ${h.pageid})` : ""}`).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
         const wt = await getPage(title)
         return text(`# ${title}\n\n${cleanWikiText(wt, maxChars)}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -67,7 +66,7 @@ export function createServer(): McpServer {
         if (hits.length === 0) return text(`No pages in category "${category}".`)
         return text(`Doom Wiki category ${category}:\n${hits.map((h, i) => `${i + 1}. ${h.title}`).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -81,7 +80,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await siteStats(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await siteStats(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -94,10 +93,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: page_info ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_doomwiki_page_info", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement info locally (paywall removed)
+    try { return textError("Not yet implemented: info") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -110,10 +107,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: recent_changes ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_doomwiki_recent_changes", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement changes locally (paywall removed)
+    try { return textError("Not yet implemented: changes") } catch (e) { return textError(String(e)) }
   }
   )
 

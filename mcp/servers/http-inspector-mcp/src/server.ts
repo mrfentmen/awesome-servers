@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { inspectUrl } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await inspectUrl(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await inspectUrl(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,10 +30,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: dns_records ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_http_inspector_dns_records", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement records locally (paywall removed)
+    try { return textError("Not yet implemented: records") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -47,10 +44,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: redirect_chain ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_http_inspector_redirect_chain", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement chain locally (paywall removed)
+    try { return textError("Not yet implemented: chain") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -63,10 +58,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: security_txt ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_http_inspector_security_txt", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement txt locally (paywall removed)
+    try { return textError("Not yet implemented: txt") } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { categories, product, products, catalogSummary } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await products(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await products(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await product(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await product(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await categories(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await categories(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -55,10 +54,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: products_by_category ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_fakestoreapi_products_by_category", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement category locally (paywall removed)
+    try { return textError("Not yet implemented: category") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -71,7 +68,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await catalogSummary(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await catalogSummary(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -84,10 +81,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: cart_detail ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_fakestoreapi_cart_detail", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement detail locally (paywall removed)
+    try { return textError("Not yet implemented: detail") } catch (e) { return textError(String(e)) }
   }
   )
 

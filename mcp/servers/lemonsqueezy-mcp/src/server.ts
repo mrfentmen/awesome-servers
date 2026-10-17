@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, listStores, listProducts, getProduct } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await listStores());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -45,7 +44,7 @@ export function createServer(): McpServer {
       try {
         return text(await listProducts(store_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -64,7 +63,7 @@ export function createServer(): McpServer {
       try {
         return text(await getProduct(product_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -78,10 +77,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: fee_breakdown ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_lemonsqueezy_fee_breakdown", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement breakdown locally (paywall removed)
+      try { return textError("Not yet implemented: breakdown") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -94,10 +91,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: payout_schedule ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_lemonsqueezy_payout_schedule", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement schedule locally (paywall removed)
+      try { return textError("Not yet implemented: schedule") } catch (e) { return textError(String(e)) }
     }
   )
 

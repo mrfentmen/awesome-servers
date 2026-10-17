@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: fac7db320d063fab8f8cbdf2c6885597b35fb304)
 # Advice MCP
 
 Random pieces of advice from the public Advice Slip API. No key required.

@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { DatamuseError, formatHits, formatWithDefs, meansLike, relatedTo, rhymesWith, spellCheck, suggest, confusablesWith } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -27,7 +26,7 @@ export function createServer(): McpServer {
         const hits = await rhymesWith(word, limit)
         return text(hits.length ? `Words that rhyme with "${word}":\n${formatHits(hits)}` : `No rhymes for "${word}".`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -46,7 +45,7 @@ export function createServer(): McpServer {
         const hits = await meansLike(word, limit)
         return text(hits.length ? `Words meaning like "${word}":\n${formatWithDefs(hits)}` : `Nothing meaning like "${word}".`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
         const hits = await relatedTo(word, limit)
         return text(hits.length ? `Words related to "${word}":\n${formatHits(hits)}` : `Nothing related to "${word}".`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -86,7 +85,7 @@ export function createServer(): McpServer {
         const body = hits.length ? `Closest matches:\n${formatHits(hits)}` : "No close matches."
         return text(correct ? `"${word}" looks correctly spelled. ${body}` : `"${word}" may be misspelled. ${body}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -105,7 +104,7 @@ export function createServer(): McpServer {
         const hits = await suggest(prefix, limit)
         return text(hits.length ? `Words starting with "${prefix}":\n${formatHits(hits)}` : `Nothing starts with "${prefix}".`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -119,7 +118,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await confusablesWith(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await confusablesWith(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -132,10 +131,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: synonyms_of ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_datamuse_synonyms_of", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement of locally (paywall removed)
+    try { return textError("Not yet implemented: of") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -148,10 +145,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: antonyms_of ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_datamuse_antonyms_of", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement of locally (paywall removed)
+    try { return textError("Not yet implemented: of") } catch (e) { return textError(String(e)) }
   }
   )
 

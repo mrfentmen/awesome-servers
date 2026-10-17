@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, geocode, reverse, directions, nominatimLookup } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(await geocode(query, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -49,7 +48,7 @@ export function createServer(): McpServer {
       try {
         return text(await reverse(lat, lon));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -71,7 +70,7 @@ export function createServer(): McpServer {
       try {
         return text(await directions(from_lon, from_lat, to_lon, to_lat));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -90,7 +89,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await nominatimLookup(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await nominatimLookup(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -109,10 +108,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: osrm_route_steps ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_openrouteservice_osrm_route_steps", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement steps locally (paywall removed)
+    try { return textError("Not yet implemented: steps") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -131,10 +128,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: valhalla_mode_compare ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_openrouteservice_valhalla_mode_compare", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement compare locally (paywall removed)
+    try { return textError("Not yet implemented: compare") } catch (e) { return textError(String(e)) }
   }
   )
 

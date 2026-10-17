@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_formatObject, m0_getDepartments, m0_getObject, m0_MetError, m0_searchObjects, m1_object, m1_search } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -26,7 +25,7 @@ server.registerTool(
         if (objects.length === 0) return text(`No Met artworks match "${query}".`)
         return text(`Met Museum results for "${query}":\n\n${objects.map((o, i) => m0_formatObject(o)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -45,7 +44,7 @@ server.registerTool(
         if (!o) return text(`No Met object ${id}.`)
         return text(m0_formatObject(o))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -62,7 +61,7 @@ server.registerTool(
         const deps = await m0_getDepartments()
         return text(`Met Museum departments:\n${deps.map((d) => `- ${d.departmentId}: ${d.displayName}`).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -75,7 +74,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_search(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -87,7 +86,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_object(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_object(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -99,10 +98,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: objects_in_department ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_metmuseum_objects_in_department", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement department locally (paywall removed)
+    try { return textError("Not yet implemented: department") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -115,10 +112,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: objects_with_images ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_metmuseum_objects_with_images", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement images locally (paywall removed)
+    try { return textError("Not yet implemented: images") } catch (e) { return textError(String(e)) }
   }
   )
 

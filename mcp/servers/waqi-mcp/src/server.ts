@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { city } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await city(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await city(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,10 +30,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: station_search ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_waqi_station_search", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement search locally (paywall removed)
+    try { return textError("Not yet implemented: search") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -47,10 +44,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: nearest_station ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_waqi_nearest_station", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement station locally (paywall removed)
+    try { return textError("Not yet implemented: station") } catch (e) { return textError(String(e)) }
   }
   )
 

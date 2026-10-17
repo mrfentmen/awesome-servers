@@ -34,7 +34,7 @@ export function createServer(): McpServer {
       try {
         return text(await getTrails(lat, lon, maxDistance, maxResults));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -53,7 +53,7 @@ export function createServer(): McpServer {
       try {
         return text(await getTrailById(ids));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

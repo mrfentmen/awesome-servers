@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatCharacter, getCharacter, searchCharacters, StapiError } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
         if (results.length === 0) return text(`No Star Trek characters match "${args.name}".`)
         return text(`Star Trek characters for "${args.name}":\n\n${results.map((c, i) => formatCharacter(c, i)).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -52,7 +51,7 @@ export function createServer(): McpServer {
         if (!c) return text(`No Star Trek character ${uid}.`)
         return text(formatCharacter(c))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -69,10 +68,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: search_species ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_stapi_search_species", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement species locally (paywall removed)
+      try { return textError("Not yet implemented: species") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -88,10 +85,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: search_locations ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_stapi_search_locations", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement locations locally (paywall removed)
+      try { return textError("Not yet implemented: locations") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -107,10 +102,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: search_organizations ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_stapi_search_organizations", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement organizations locally (paywall removed)
+      try { return textError("Not yet implemented: organizations") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -123,10 +116,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: list_series ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_stapi_list_series", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement series locally (paywall removed)
+      try { return textError("Not yet implemented: series") } catch (e) { return textError(String(e)) }
     }
   )
 

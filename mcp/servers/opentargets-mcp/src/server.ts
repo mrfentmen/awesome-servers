@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatHit, formatTarget, getTarget, OpenTargetsError, searchEntities, target_evidence } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -32,7 +31,7 @@ export function createServer(): McpServer {
         if (results.length === 0) return text(`No Open Targets ${entity}s match "${query}".`)
         return text(`Open Targets ${entity}s for "${query}":\n\n${results.map((h, i) => formatHit(h, i)).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -53,7 +52,7 @@ export function createServer(): McpServer {
         if (!t) return text(`No Open Targets gene ${ensemblId}.`)
         return text(formatTarget(t))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -69,10 +68,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: target_druggability ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_opentargets_target_druggability", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement druggability locally (paywall removed)
+      try { return textError("Not yet implemented: druggability") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -88,10 +85,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: target_pathways ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_opentargets_target_pathways", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement pathways locally (paywall removed)
+      try { return textError("Not yet implemented: pathways") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -107,7 +102,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ ensemblId, limit }) => {
-      try { return text(await target_evidence({ ensemblId, limit })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await target_evidence({ ensemblId, limit })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -120,10 +115,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: drug_profile ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_opentargets_drug_profile", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement profile locally (paywall removed)
+    try { return textError("Not yet implemented: profile") } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { departments, hiringCompanies, jobs, posting, searchAllJobs, searchPostings, postingsPage, postingsByCountry, boardOverview, locationSpread } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -22,7 +21,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await jobs(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await jobs(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -37,7 +36,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await posting(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await posting(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -53,7 +52,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await searchPostings(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await searchPostings(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -67,7 +66,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await departments(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await departments(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -84,7 +83,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await searchAllJobs(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await searchAllJobs(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -100,7 +99,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await hiringCompanies(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await hiringCompanies(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -120,7 +119,7 @@ export function createServer(): McpServer {
       try {
         return text(await postingsPage({ company, offset, limit }))
       } catch (e) {
-        return textError(error(e))
+        return textError(String(e))
       }
     }
   )
@@ -142,7 +141,7 @@ export function createServer(): McpServer {
       try {
         return text(await postingsByCountry({ company, country, limit }))
       } catch (e) {
-        return textError(error(e))
+        return textError(String(e))
       }
     }
   )
@@ -162,7 +161,7 @@ export function createServer(): McpServer {
       try {
         return text(await boardOverview({ company }))
       } catch (e) {
-        return textError(error(e))
+        return textError(String(e))
       }
     }
   )
@@ -180,10 +179,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: posting_age ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_smartrecruiters_posting_age", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement age locally (paywall removed)
+    try { return textError("Not yet implemented: age") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -201,7 +198,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await locationSpread(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await locationSpread(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

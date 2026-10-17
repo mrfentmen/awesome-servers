@@ -26,7 +26,7 @@ export function createServer(): McpServer {
       try {
         return text(await getCapabilities());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -43,7 +43,7 @@ export function createServer(): McpServer {
       try {
         return text(await listShares());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -62,7 +62,7 @@ export function createServer(): McpServer {
       try {
         return text(await getShare(share_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -83,7 +83,7 @@ export function createServer(): McpServer {
       try {
         return text(await createShare(path, share_type, share_with));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -100,7 +100,7 @@ export function createServer(): McpServer {
       try {
         return text(await serverStatus());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   );

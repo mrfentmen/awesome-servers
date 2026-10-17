@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { formatLibrary, formatUser, JellyfinError, listLibraries, listUsers, serverInfo, audit_users, access_audit, library_summary } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -27,7 +26,7 @@ export function createServer(): McpServer {
         const info = await serverInfo()
         return text(`${info.name ?? "Jellyfin"}${info.version ? ` ${info.version}` : ""}${info.id ? `\nId: ${info.id}` : ""}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -46,7 +45,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No users.")
         return text(rows.map((u, i) => formatUser(u, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No libraries.")
         return text(rows.map((l, i) => formatLibrary(l, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -82,11 +81,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ users, now }) => {
-      // ---- paywall: audit_users ----
-      const paywallMessage = await premiumRequired("audit_users")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(audit_users({ users, now })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(audit_users({ users, now })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -102,11 +97,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ users, libraries }) => {
-      // ---- paywall: access_audit ----
-      const paywallMessage = await premiumRequired("access_audit")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(access_audit({ users, libraries })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(access_audit({ users, libraries })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -122,7 +113,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ libraries, itemCounts }) => {
-      try { return text(library_summary({ libraries, itemCounts })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(library_summary({ libraries, itemCounts })) } catch (e) { return textError(String(e)) }
     }
   )
 

@@ -33,7 +33,7 @@ export function createServer(): McpServer {
       try {
         return text(await browseHot());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -51,7 +51,7 @@ export function createServer(): McpServer {
       try {
         return text(await browseNewest());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -70,7 +70,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchTags(tag));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -89,7 +89,7 @@ export function createServer(): McpServer {
       try {
         return text(await getDeviation(deviationIds));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, getJoke, jokeById, jokeInfo, listCategories, listLanguages, searchJokes, jokesByType, jokeRange } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -34,7 +33,7 @@ export function createServer(): McpServer {
       try {
         return text(await getJoke(category, amount))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -55,7 +54,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchJokes(contains, category, amount))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -75,7 +74,7 @@ export function createServer(): McpServer {
       try {
         return text(await jokeById(id, category))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -92,7 +91,7 @@ export function createServer(): McpServer {
       try {
         return text(await listCategories())
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -109,7 +108,7 @@ export function createServer(): McpServer {
       try {
         return text(await jokeInfo())
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -126,7 +125,7 @@ export function createServer(): McpServer {
       try {
         return text(await listLanguages())
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -143,7 +142,7 @@ export function createServer(): McpServer {
       try {
         return text(await getJoke("Programming", 1))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -161,7 +160,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await jokesByType(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await jokesByType(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -179,7 +178,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await jokeRange(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await jokeRange(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -192,10 +191,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: joke_length_profile ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_jokeapi_joke_length_profile", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement profile locally (paywall removed)
+      try { return textError("Not yet implemented: profile") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -208,10 +205,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: joke_type_coverage ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_jokeapi_joke_type_coverage", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement coverage locally (paywall removed)
+      try { return textError("Not yet implemented: coverage") } catch (e) { return textError(String(e)) }
     }
   )
 

@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { decode, verify } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await decode(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await decode(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await verify(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await verify(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -46,10 +45,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: list_signing_keys ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_jwt_tools_list_signing_keys", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement keys locally (paywall removed)
+    try { return textError("Not yet implemented: keys") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -64,10 +61,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: describe_issuer ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_jwt_tools_describe_issuer", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement issuer locally (paywall removed)
+    try { return textError("Not yet implemented: issuer") } catch (e) { return textError(String(e)) }
   }
   )
 

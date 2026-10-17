@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatPhoto, getPhoto, listPhotos, photoUrl, PicsumError } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
         if (results.length === 0) return text("No photos on this page.")
         return text(results.map((p, i) => formatPhoto(p, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -50,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(formatPhoto(await getPhoto(id)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -73,7 +72,7 @@ export function createServer(): McpServer {
       try {
         return text(photoUrl(id, width, height, grayscale, blur))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -87,10 +86,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: author_photos ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_picsum_author_photos", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement photos locally (paywall removed)
+    try { return textError("Not yet implemented: photos") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -103,10 +100,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: photo_batch ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_picsum_photo_batch", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement batch locally (paywall removed)
+    try { return textError("Not yet implemented: batch") } catch (e) { return textError(String(e)) }
   }
   )
 

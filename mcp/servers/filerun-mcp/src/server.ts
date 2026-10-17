@@ -33,7 +33,7 @@ export function createServer(): McpServer {
       try {
         return text(await browseFolder(path));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -54,7 +54,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchFiles(path, filename, contents));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -74,7 +74,7 @@ export function createServer(): McpServer {
       try {
         return text(await createFolder(path, name));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

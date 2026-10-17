@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatArticle, getArticle, LostMediaError, randomArticle, searchArticles } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -33,7 +32,7 @@ export function createServer(): McpServer {
           `Lost Media Wiki results for "${query}":\n\n${results.map((h, i) => `${i + 1}. ${h.title}${h.snippet ? ` — ${h.snippet.slice(0, 140)}` : ""}`).join("\n")}`
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -54,7 +53,7 @@ export function createServer(): McpServer {
         if (!a) return text(`No Lost Media Wiki article titled "${title}".`)
         return text(formatArticle(a))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -74,7 +73,7 @@ export function createServer(): McpServer {
         if (!a) return text(`Random pick: ${title}`)
         return text(formatArticle(a))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -88,10 +87,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: recent_changes ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_lostmedia_recent_changes", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement changes locally (paywall removed)
+      try { return textError("Not yet implemented: changes") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -107,10 +104,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: browse_categories ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_lostmedia_browse_categories", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement categories locally (paywall removed)
+      try { return textError("Not yet implemented: categories") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -123,10 +118,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: category_articles ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_lostmedia_category_articles", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement articles locally (paywall removed)
+    try { return textError("Not yet implemented: articles") } catch (e) { return textError(String(e)) }
   }
   )
 

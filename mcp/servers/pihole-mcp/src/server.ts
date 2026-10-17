@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { blockingStatus, PiholeError, setBlocking, summaryStats, communitySearch } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -27,7 +26,7 @@ export function createServer(): McpServer {
       try {
         return text(`${await blockingStatus()}\n\n${await summaryStats()}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await setBlocking(enabled, seconds))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -64,7 +63,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await communitySearch(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await communitySearch(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -80,10 +79,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: blocklist_audit ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_pihole_blocklist_audit", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement audit locally (paywall removed)
+    try { return textError("Not yet implemented: audit") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -99,10 +96,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: rule_match_test ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_pihole_rule_match_test", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement test locally (paywall removed)
+    try { return textError("Not yet implemented: test") } catch (e) { return textError(String(e)) }
   }
   )
 

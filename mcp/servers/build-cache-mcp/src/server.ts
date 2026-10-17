@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { format, inspectBuildCache, artifactBreakdown, reclaimableCache } from "./core.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -52,10 +51,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: npm_package_metadata ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_build_cache_npm_package_metadata", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement metadata locally (paywall removed)
+    try { return textError("Not yet implemented: metadata") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -68,10 +65,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: github_latest_release ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_build_cache_github_latest_release", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement release locally (paywall removed)
+    try { return textError("Not yet implemented: release") } catch (e) { return textError(String(e)) }
   }
   )
 

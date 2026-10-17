@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { TextfilesError, formatEntry, listDirectory, listTopics, readTextFile, findFiles } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
           `textfiles.com topics:\n` + topics.map((t, i) => formatEntry(t, i)).join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -50,7 +49,7 @@ export function createServer(): McpServer {
         if (files.length === 0) return text(`Nothing in textfiles.com/${dir}.`)
         return text(`textfiles.com/${dir}:\n\n${files.map((f, i) => formatEntry(f, i)).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -73,7 +72,7 @@ export function createServer(): McpServer {
         if (!content.trim()) return text(`Empty file at textfiles.com/${path}.`)
         return text(content)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -90,10 +89,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: archive_stats ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_textfiles_archive_stats", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement stats locally (paywall removed)
+    try { return textError("Not yet implemented: stats") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -110,10 +107,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: topic_profile ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_textfiles_topic_profile", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement profile locally (paywall removed)
+    try { return textError("Not yet implemented: profile") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -131,7 +126,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await findFiles(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await findFiles(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -149,10 +144,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: grep_files ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_textfiles_grep_files", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement files locally (paywall removed)
+    try { return textError("Not yet implemented: files") } catch (e) { return textError(String(e)) }
   }
   )
 

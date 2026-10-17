@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { format, inspectDeprecationRadar, inspectVersionPins, inspectEndpointInventory } from "./core.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -52,10 +51,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: runtime_lifecycle ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_api_deprecation_radar_runtime_lifecycle", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement lifecycle locally (paywall removed)
+    try { return textError("Not yet implemented: lifecycle") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -68,10 +65,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: npm_latest ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_api_deprecation_radar_npm_latest", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement latest locally (paywall removed)
+    try { return textError("Not yet implemented: latest") } catch (e) { return textError(String(e)) }
   }
   )
 

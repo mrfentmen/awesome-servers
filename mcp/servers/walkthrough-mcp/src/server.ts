@@ -36,7 +36,7 @@ export function createServer(): McpServer {
               .join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -70,7 +70,7 @@ export function createServer(): McpServer {
               .join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -105,7 +105,7 @@ export function createServer(): McpServer {
             : content
         return text(truncated)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

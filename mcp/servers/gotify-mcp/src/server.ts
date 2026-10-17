@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, sendMessage, listMessages, listApps, alertPayload, retrySchedule } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       try {
         return text(await sendMessage(title, message, priority));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -50,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(await listMessages(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -67,7 +66,7 @@ export function createServer(): McpServer {
       try {
         return text(await listApps());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -88,11 +87,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: alert_payload ----
-      const paywallMessage = await premiumRequired("alert_payload")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await alertPayload(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await alertPayload(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -111,11 +106,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: retry_schedule ----
-      const paywallMessage = await premiumRequired("retry_schedule")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await retrySchedule(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await retrySchedule(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

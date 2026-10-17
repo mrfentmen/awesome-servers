@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { DEFAULT_GHOST, DEFAULT_PORT, GopherError, cleanText, formatItem, gopherFetch, parseMenu } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -39,7 +38,7 @@ export function createServer(): McpServer {
             items.map((it, i) => formatItem(it, i)).join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
         if (!cleaned.trim()) return text(`Empty file at gopher://${host}/${selector}`)
         return text(cleaned.slice(0, maxChars))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -96,7 +95,7 @@ export function createServer(): McpServer {
             items.slice(0, 40).map((it, i) => formatItem(it, i)).join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -110,10 +109,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: menu_inventory ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_gopher_menu_inventory", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement inventory locally (paywall removed)
+    try { return textError("Not yet implemented: inventory") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -126,10 +123,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: menu_search ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_gopher_menu_search", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement search locally (paywall removed)
+    try { return textError("Not yet implemented: search") } catch (e) { return textError(String(e)) }
   }
   )
 

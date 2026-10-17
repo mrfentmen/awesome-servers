@@ -27,7 +27,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No flows.")
         return text(rows.map((f, i) => `${i + 1}. [${f.id}] ${f.label ?? "(unnamed)"}${f.disabled ? " (disabled)" : ""}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -46,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(formatFlow(id, await getFlow(id)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -63,7 +63,7 @@ export function createServer(): McpServer {
       try {
         return text(await flowGraphAudit(args))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -80,7 +80,7 @@ export function createServer(): McpServer {
       try {
         return text(await wiringReport(args))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -97,7 +97,7 @@ export function createServer(): McpServer {
       try {
         return text(await flowLint(args))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

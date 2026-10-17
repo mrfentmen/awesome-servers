@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { format, getDocument, listAgencies, searchDocuments, documentCounts } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -64,10 +63,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: comment_periods ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_federal_register_comment_periods", args)) } catch (e) { return textError(String(e)) }
+    // TODO: implement periods locally (paywall removed)
+    try { return textError("Not yet implemented: periods") } catch (e) { return textError(String(e)) }
   }
   )
 

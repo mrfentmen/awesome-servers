@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { checkPassword, commonListRank, keyboardWalk, variantAudit } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await checkPassword(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await checkPassword(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,11 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: common_list_rank ----
-    const paywallMessage = await premiumRequired("common_list_rank")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await commonListRank(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await commonListRank(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -48,7 +43,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await keyboardWalk(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await keyboardWalk(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -61,11 +56,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: variant_audit ----
-    const paywallMessage = await premiumRequired("variant_audit")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await variantAudit(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await variantAudit(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

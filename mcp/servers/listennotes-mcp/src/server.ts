@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, search, bestPodcasts, getEpisode, justListen, getPodcast, podcastRecommendations, listGenres, trendingSearches, applePodcastSearch, podcastFeedCadence } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await search(query));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await bestPodcasts(page));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -66,7 +65,7 @@ export function createServer(): McpServer {
       try {
         return text(await getEpisode(episode_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -83,7 +82,7 @@ export function createServer(): McpServer {
       try {
         return text(await justListen());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -102,7 +101,7 @@ export function createServer(): McpServer {
       try {
         return text(await getPodcast(podcast_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -121,7 +120,7 @@ export function createServer(): McpServer {
       try {
         return text(await podcastRecommendations(podcast_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -138,7 +137,7 @@ export function createServer(): McpServer {
       try {
         return text(await listGenres());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -155,7 +154,7 @@ export function createServer(): McpServer {
       try {
         return text(await trendingSearches());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -172,11 +171,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: apple_podcast_search ----
-      const paywallMessage = await premiumRequired("apple_podcast_search")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await applePodcastSearch(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await applePodcastSearch(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -192,11 +187,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: podcast_feed_cadence ----
-      const paywallMessage = await premiumRequired("podcast_feed_cadence")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await podcastFeedCadence(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await podcastFeedCadence(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { listApplications, listUsers, LogtoError, tenantDiscovery, signingKeys, tokenInspect } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No users.")
         return text(rows.map((u, i) => `${i + 1}. [${u.id}] ${u.username ?? u.email ?? "(unnamed)"}${u.created ? ` (since ${u.created})` : ""}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -51,7 +50,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No applications.")
         return text(rows.map((a, i) => `${i + 1}. [${a.id}] ${a.name ?? "(unnamed)"}${a.type ? ` (${a.type})` : ""}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -67,7 +66,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await tenantDiscovery(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await tenantDiscovery(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -82,11 +81,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: signing_keys ----
-    const paywallMessage = await premiumRequired("signing_keys")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await signingKeys(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await signingKeys(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -102,11 +97,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: token_inspect ----
-    const paywallMessage = await premiumRequired("token_inspect")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await tokenInspect(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await tokenInspect(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

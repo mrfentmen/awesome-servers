@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_schedule, m0_search, m1_searchShows, m1_showEpisodes, m1_todaySchedule } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +19,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_search(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -32,7 +31,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_schedule(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_schedule(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -44,7 +43,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_searchShows(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_searchShows(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -56,7 +55,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_showEpisodes(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_showEpisodes(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -68,7 +67,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_todaySchedule(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_todaySchedule(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -80,10 +79,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: show_lookup ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_tvmaze_show_lookup", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement lookup locally (paywall removed)
+    try { return textError("Not yet implemented: lookup") } catch (e) { return textError(String(e)) }
   }
   )
 

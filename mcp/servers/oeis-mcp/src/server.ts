@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatSequence, getSequence, OeisError, searchSequences } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
         if (results.length === 0) return text(`No OEIS sequences match "${query}".`)
         return text(`OEIS results for "${query}":\n\n${results.map((s, i) => formatSequence(s, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -48,7 +47,7 @@ export function createServer(): McpServer {
         if (!s) return text(`No OEIS sequence ${id}.`)
         return text(formatSequence(s))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -62,10 +61,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: sequence_terms ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_oeis_sequence_terms", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement terms locally (paywall removed)
+    try { return textError("Not yet implemented: terms") } catch (e) { return textError(String(e)) }
   }
   )
 

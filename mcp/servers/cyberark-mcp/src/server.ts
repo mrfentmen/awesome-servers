@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { breachCatalog, breachDetail, checkPassword, checkPasswords, domainEmailSecurity, errorMessage, generatePassword, passwordStrength, identifyHash, hashText, breachTimeline, subdomainInventory, dnssecStatus } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -27,7 +26,7 @@ export function createServer(): McpServer {
       try {
         return text(await checkPassword({ password }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -46,7 +45,7 @@ export function createServer(): McpServer {
       try {
         return text(await checkPasswords({ passwords }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       try {
         return text(await passwordStrength({ password }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -87,7 +86,7 @@ export function createServer(): McpServer {
       try {
         return text(await generatePassword({ length, symbols, digits, upperCase }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -108,7 +107,7 @@ export function createServer(): McpServer {
       try {
         return text(await breachCatalog({ domain, year, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -127,7 +126,7 @@ export function createServer(): McpServer {
       try {
         return text(await breachDetail({ name }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -146,7 +145,7 @@ export function createServer(): McpServer {
       try {
         return text(await domainEmailSecurity({ domain }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -165,7 +164,7 @@ export function createServer(): McpServer {
       try {
         return text(await identifyHash({ hash }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -185,7 +184,7 @@ export function createServer(): McpServer {
       try {
         return text(await hashText({ text: value, algorithm }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -205,7 +204,7 @@ export function createServer(): McpServer {
       try {
         return text(await breachTimeline({ from, to }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -226,7 +225,7 @@ export function createServer(): McpServer {
       try {
         return text(await subdomainInventory({ domain, names, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -242,10 +241,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: dns_record_inventory ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_cyberark_dns_record_inventory", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement inventory locally (paywall removed)
+    try { return textError("Not yet implemented: inventory") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -260,7 +257,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await dnssecStatus(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await dnssecStatus(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -277,10 +274,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: password_variation_audit ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_cyberark_password_variation_audit", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement audit locally (paywall removed)
+    try { return textError("Not yet implemented: audit") } catch (e) { return textError(String(e)) }
   }
   )
 

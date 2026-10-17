@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { avg, book, depth, klines, markets, price, ticker, recentTrades, symbolInfo, volumeLeaders, compareTickers } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await ticker(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await ticker(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await klines(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await klines(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await price(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await price(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -55,7 +54,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await book(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await book(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -67,7 +66,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await avg(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await avg(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -79,7 +78,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await depth(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await depth(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -91,7 +90,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await markets()) } catch (e) { return textError(error(e)) }
+    try { return text(await markets()) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -103,7 +102,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await recentTrades(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await recentTrades(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -116,7 +115,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await symbolInfo(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await symbolInfo(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -129,7 +128,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await volumeLeaders(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await volumeLeaders(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -145,10 +144,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: market_movers ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_binance_market_market_movers", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement movers locally (paywall removed)
+    try { return textError("Not yet implemented: movers") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -165,10 +162,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: kline_indicators ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_binance_market_kline_indicators", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement indicators locally (paywall removed)
+    try { return textError("Not yet implemented: indicators") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -183,7 +178,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await compareTickers(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await compareTickers(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

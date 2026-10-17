@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listTickers, getTicker, prevClose, aggregates, groupedDaily, openClose, rsi, macd, dividends, splits, news, gainers, secFilings, secRevenue } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await listTickers(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await getTicker(ticker));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -66,7 +65,7 @@ export function createServer(): McpServer {
       try {
         return text(await prevClose(ticker));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -87,7 +86,7 @@ export function createServer(): McpServer {
       try {
         return text(await aggregates(ticker, from, to));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -106,7 +105,7 @@ export function createServer(): McpServer {
       try {
         return text(await groupedDaily(date));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -126,7 +125,7 @@ export function createServer(): McpServer {
       try {
         return text(await openClose(ticker, date));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -145,7 +144,7 @@ export function createServer(): McpServer {
       try {
         return text(await rsi(ticker));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -164,7 +163,7 @@ export function createServer(): McpServer {
       try {
         return text(await macd(ticker));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -183,7 +182,7 @@ export function createServer(): McpServer {
       try {
         return text(await dividends(ticker));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -202,7 +201,7 @@ export function createServer(): McpServer {
       try {
         return text(await splits(ticker));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -222,7 +221,7 @@ export function createServer(): McpServer {
       try {
         return text(await news(ticker, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -239,7 +238,7 @@ export function createServer(): McpServer {
       try {
         return text(await gainers());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -258,11 +257,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: sec_filings ----
-    const paywallMessage = await premiumRequired("sec_filings")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await secFilings(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await secFilings(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -279,11 +274,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: sec_revenue ----
-    const paywallMessage = await premiumRequired("sec_revenue")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await secRevenue(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await secRevenue(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

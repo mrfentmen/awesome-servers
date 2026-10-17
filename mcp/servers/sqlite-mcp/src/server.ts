@@ -35,7 +35,7 @@ export function createServer(dbPath: string): McpServer {
       try {
         return text(await query(dbPath, sql, params))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -55,7 +55,7 @@ export function createServer(dbPath: string): McpServer {
       try {
         return text(await execute(dbPath, sql, params))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -72,7 +72,7 @@ export function createServer(dbPath: string): McpServer {
       try {
         return text(await listTables(dbPath))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -91,7 +91,7 @@ export function createServer(dbPath: string): McpServer {
       try {
         return text(await describeTable(dbPath, table))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

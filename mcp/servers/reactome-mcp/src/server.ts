@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatHit, formatPathway, getPathway, ReactomeError, searchPathways, pathway_structure } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
         if (results.length === 0) return text(`No Reactome pathways match "${query}".`)
         return text(`Reactome results for "${query}":\n\n${results.map((h, i) => formatHit(h, i)).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -52,7 +51,7 @@ export function createServer(): McpServer {
         if (!p) return text(`No Reactome pathway ${stId}.`)
         return text(formatPathway(p))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -68,7 +67,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ stId }) => {
-      try { return text(await pathway_structure({ stId })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await pathway_structure({ stId })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -84,10 +83,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: pathway_participants ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_reactome_pathway_participants", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement participants locally (paywall removed)
+    try { return textError("Not yet implemented: participants") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -103,10 +100,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: pathway_tree ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_reactome_pathway_tree", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement tree locally (paywall removed)
+    try { return textError("Not yet implemented: tree") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -123,10 +118,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: identifier_pathways ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_reactome_identifier_pathways", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement pathways locally (paywall removed)
+    try { return textError("Not yet implemented: pathways") } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -20,21 +20,4 @@ Query Cal.com API v2 (key; set CAL_API_KEY, Bearer + version header): event type
 
 [calcom-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/calcom-mcp)
 
-<!-- paywall -->
-## Premium tools
 
-These tools need a license key:
-
-* `slot_density`
-* `public_event_types`
-
-Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-calcom-mcp and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
-```
-
-The key is checked against MCP Marketplace, cached for 24 hours, and keeps
-working offline once one check has succeeded. Every other tool on this server
-stays free.
-<!-- /paywall -->

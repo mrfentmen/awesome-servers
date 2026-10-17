@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatScored, getPackage, NpmsError, searchPackages } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
         if (results.length === 0) return text(`No packages match "${query}".`)
         return text(`Scored packages for "${query}":\n\n${results.map((p, i) => formatScored(p, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -50,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(formatScored(await getPackage(name)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -64,10 +63,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: package_downloads ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_npms_package_downloads", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement downloads locally (paywall removed)
+    try { return textError("Not yet implemented: downloads") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -80,10 +77,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: package_health ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_npms_package_health", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement health locally (paywall removed)
+    try { return textError("Not yet implemented: health") } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -3,7 +3,6 @@ import { z } from "zod"
 import { format, inspect, plan } from "./sieve.js"
 
 import { compareSchemas } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -41,10 +40,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: validate_instance ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_schema_sieve_validate_instance", args)) } catch (e) { return textError(String(e)) }
+    // TODO: implement instance locally (paywall removed)
+    try { return textError("Not yet implemented: instance") } catch (e) { return textError(String(e)) }
   }
   )
 

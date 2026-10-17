@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, listApps, getApp, listNotifications, pushSdkPopularity } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -25,7 +24,7 @@ export function createServer(): McpServer {
       try {
         return text(await listApps());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -44,7 +43,7 @@ export function createServer(): McpServer {
       try {
         return text(await getApp(app_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -64,7 +63,7 @@ export function createServer(): McpServer {
       try {
         return text(await listNotifications(app_id, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -78,7 +77,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (_args) => {
-    try { return text(await pushSdkPopularity(_args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await pushSdkPopularity(_args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -94,10 +93,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: sdk_release_timeline ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_onesignal_sdk_release_timeline", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement timeline locally (paywall removed)
+    try { return textError("Not yet implemented: timeline") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -110,10 +107,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: platform_status ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_onesignal_platform_status", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement status locally (paywall removed)
+    try { return textError("Not yet implemented: status") } catch (e) { return textError(String(e)) }
   }
   )
 

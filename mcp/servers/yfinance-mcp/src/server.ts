@@ -1,7 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { m0_quote, m0_search, m1_quote, m1_searchSymbol, gainers, losers, actives, trending, dividendHistory, volumeSpike, benchmarkCompare, registrantProfile } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -17,7 +16,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_quote(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_quote(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -29,7 +28,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_search(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -41,7 +40,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_searchSymbol(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_searchSymbol(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -53,7 +52,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await gainers(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await gainers(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -65,7 +64,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await losers(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await losers(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -77,7 +76,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await actives(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await actives(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -89,7 +88,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await trending(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await trending(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -108,7 +107,7 @@ server.registerTool(
       try {
         return text(await dividendHistory({ symbol, range }))
       } catch (e) {
-        return textError(error(e))
+        return textError(String(e))
       }
     }
   )
@@ -129,7 +128,7 @@ server.registerTool(
       try {
         return text(await volumeSpike({ symbol, lookback }))
       } catch (e) {
-        return textError(error(e))
+        return textError(String(e))
       }
     }
   )
@@ -150,7 +149,7 @@ server.registerTool(
       try {
         return text(await benchmarkCompare({ symbols, range }))
       } catch (e) {
-        return textError(error(e))
+        return textError(String(e))
       }
     }
   )
@@ -169,10 +168,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: filing_fundamentals ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_yfinance_filing_fundamentals", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement fundamentals locally (paywall removed)
+    try { return textError("Not yet implemented: fundamentals") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -189,7 +186,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await registrantProfile(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await registrantProfile(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

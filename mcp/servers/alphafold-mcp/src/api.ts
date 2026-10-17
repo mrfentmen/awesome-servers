@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: 1ac69f8a7e607749ab0406d0ff681d696ae24bb3)
 /**
  * AlphaFold Protein Structure Database API client, keyless.
  * Docs: https://alphafold.ebi.ac.uk/api-docs

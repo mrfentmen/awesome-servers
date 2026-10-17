@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { EtsyError, findShop, formatListing, formatShop, getListing, shopListings, shopCatalogue, listingVariations, featuredListings } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No Etsy shops match "${name}".`)
         return text(rows.map((s, i) => formatShop(s, i)).join("\n\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -52,7 +51,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No active listings for shop ${shop_id}.`)
         return text(rows.map((l, i) => formatListing(l, i)).join("\n\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -71,7 +70,7 @@ export function createServer(): McpServer {
       try {
         return text(formatListing(await getListing(id)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -96,11 +95,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: shop_catalogue ----
-    const paywallMessage = await premiumRequired("shop_catalogue")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await shopCatalogue(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await shopCatalogue(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -116,11 +111,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: listing_variations ----
-    const paywallMessage = await premiumRequired("listing_variations")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await listingVariations(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await listingVariations(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -136,7 +127,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await featuredListings(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await featuredListings(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

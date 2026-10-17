@@ -3,7 +3,6 @@ import { z } from "zod"
 import { repo } from "./api.js"
 import { searchRepos } from "./api.js"
 import { userRepos, repoLanguages, repoReleases, repoContributors, userProfile } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -21,7 +20,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await searchRepos(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await searchRepos(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -33,7 +32,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await repo(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await repo(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -45,7 +44,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await userRepos(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await userRepos(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -57,11 +56,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: repo_languages ----
-    const paywallMessage = await premiumRequired("repo_languages")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await repoLanguages(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await repoLanguages(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -74,7 +69,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await repoReleases(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await repoReleases(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -87,11 +82,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: repo_contributors ----
-    const paywallMessage = await premiumRequired("repo_contributors")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await repoContributors(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await repoContributors(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -104,7 +95,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await userProfile(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await userProfile(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

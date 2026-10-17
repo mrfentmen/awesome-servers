@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { state, nightwave, dailyDeals } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await state(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await state(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,10 +30,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: invasions ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_warframe_invasions", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement invasions locally (paywall removed)
+    try { return textError("Not yet implemented: invasions") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -47,7 +44,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await nightwave(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await nightwave(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -60,10 +57,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: sortie ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_warframe_sortie", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement sortie locally (paywall removed)
+    try { return textError("Not yet implemented: sortie") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -76,10 +71,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: archon_hunt ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_warframe_archon_hunt", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement hunt locally (paywall removed)
+    try { return textError("Not yet implemented: hunt") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -92,7 +85,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await dailyDeals(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await dailyDeals(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

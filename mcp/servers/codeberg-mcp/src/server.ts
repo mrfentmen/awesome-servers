@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { search, version, repoDetail, repoBranches, repoReleases, userOverview } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await search(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await version(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await version(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await repoDetail(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await repoDetail(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -56,7 +55,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await repoBranches(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await repoBranches(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -69,10 +68,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: repo_commits ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_codeberg_repo_commits", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement commits locally (paywall removed)
+    try { return textError("Not yet implemented: commits") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -85,10 +82,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: repo_issues ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_codeberg_repo_issues", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement issues locally (paywall removed)
+    try { return textError("Not yet implemented: issues") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -101,7 +96,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await repoReleases(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await repoReleases(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -114,7 +109,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await userOverview(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await userOverview(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -127,10 +122,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: file_contents ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_codeberg_file_contents", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement contents locally (paywall removed)
+    try { return textError("Not yet implemented: contents") } catch (e) { return textError(String(e)) }
   }
   )
 

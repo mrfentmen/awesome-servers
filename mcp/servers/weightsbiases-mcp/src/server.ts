@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { listProjects, listRuns, myProfile, WandbError, datasetCatalogue } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -27,7 +26,7 @@ export function createServer(): McpServer {
         const p = await myProfile()
         return text(`${p.username ?? "?"}${p.email ? ` <${p.email}>` : ""}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -49,7 +48,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No projects for ${entity}.`)
         return text(rows.map((p, i) => `${i + 1}. ${p.entity ?? entity}/${p.name}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -72,7 +71,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No runs in ${entity}/${project}.`)
         return text(rows.map((r, i) => `${i + 1}. ${r.name ?? "?"} [${r.state ?? "?"}]${r.created ? ` (${r.created})` : ""}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -90,10 +89,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: model_card_audit ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_weightsbiases_model_card_audit", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement audit locally (paywall removed)
+    try { return textError("Not yet implemented: audit") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -110,7 +107,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await datasetCatalogue(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await datasetCatalogue(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

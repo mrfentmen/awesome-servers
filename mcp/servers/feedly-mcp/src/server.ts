@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, profile, subscriptions, streamContents, discoverFeeds, unreadCounts, boardCatalogue } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await profile());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       try {
         return text(await subscriptions());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -63,7 +62,7 @@ export function createServer(): McpServer {
       try {
         return text(await streamContents(stream_id, count));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -81,7 +80,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await discoverFeeds(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await discoverFeeds(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -97,11 +96,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: unread_counts ----
-    const paywallMessage = await premiumRequired("unread_counts")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await unreadCounts(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await unreadCounts(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -116,11 +111,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: board_catalogue ----
-    const paywallMessage = await premiumRequired("board_catalogue")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await boardCatalogue(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await boardCatalogue(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

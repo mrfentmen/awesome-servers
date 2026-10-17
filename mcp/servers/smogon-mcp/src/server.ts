@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { SmogonError, formatPoke, getPokemon, getUsageStats, listAvailableMonths, searchDex } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
           `Pokemon matching "${query}":\n\n` + found.map((p) => formatPoke(p)).join("\n\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -51,7 +50,7 @@ export function createServer(): McpServer {
         if (!p) return text(`No Pokemon named "${name}".`)
         return text(formatPoke(p))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -85,7 +84,7 @@ export function createServer(): McpServer {
               .join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -104,7 +103,7 @@ export function createServer(): McpServer {
         if (months.length === 0) return text("No months found.")
         return text("Available usage months:\n" + months.join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -118,10 +117,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: pokemon_by_type ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_smogon_pokemon_by_type", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement type locally (paywall removed)
+    try { return textError("Not yet implemented: type") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -134,10 +131,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: pokemon_by_ability ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_smogon_pokemon_by_ability", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement ability locally (paywall removed)
+    try { return textError("Not yet implemented: ability") } catch (e) { return textError(String(e)) }
   }
   )
 

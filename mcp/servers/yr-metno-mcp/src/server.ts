@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_forecast, m0_nowcast, moonEvents } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +19,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_forecast(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_forecast(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -32,7 +31,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_nowcast(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_nowcast(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -44,10 +43,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: sun_times ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_yr_metno_sun_times", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement times locally (paywall removed)
+    try { return textError("Not yet implemented: times") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -60,7 +57,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await moonEvents(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await moonEvents(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -73,10 +70,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: ocean_conditions ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_yr_metno_ocean_conditions", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement conditions locally (paywall removed)
+    try { return textError("Not yet implemented: conditions") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -89,10 +84,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: weather_alerts ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_yr_metno_weather_alerts", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement alerts locally (paywall removed)
+    try { return textError("Not yet implemented: alerts") } catch (e) { return textError(String(e)) }
   }
   )
 

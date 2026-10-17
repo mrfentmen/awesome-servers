@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, searchListings, listNewest, getListing, priceOverview, comparePrices, findDeals, brandOverview, variantDepth } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchListings(query, limit, maxPrice, condition));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -54,7 +53,7 @@ export function createServer(): McpServer {
       try {
         return text(await listNewest(limit, page, productType, maxPrice, condition));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -74,7 +73,7 @@ export function createServer(): McpServer {
       try {
         return text(await getListing(handle, source));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -93,7 +92,7 @@ export function createServer(): McpServer {
       try {
         return text(await priceOverview(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -113,7 +112,7 @@ export function createServer(): McpServer {
       try {
         return text(await comparePrices(query, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -133,7 +132,7 @@ export function createServer(): McpServer {
       try {
         return text(await findDeals(limit, sample));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -150,7 +149,7 @@ export function createServer(): McpServer {
       try {
         return text(await brandOverview());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -166,10 +165,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: listing_freshness ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_bottegaveneta_listing_freshness", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement freshness locally (paywall removed)
+    try { return textError("Not yet implemented: freshness") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -184,7 +181,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await variantDepth(args.sample)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await variantDepth(args.sample)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -200,10 +197,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: product_type_ladder ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_bottegaveneta_product_type_ladder", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement ladder locally (paywall removed)
+    try { return textError("Not yet implemented: ladder") } catch (e) { return textError(String(e)) }
   }
   )
 

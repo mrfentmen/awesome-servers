@@ -27,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(formatVerdict(await fileReport(hash)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -46,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(formatVerdict(await urlReport(url)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -65,7 +65,7 @@ export function createServer(): McpServer {
       try {
         return text(formatVerdict(await domainReport(domain)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -84,7 +84,7 @@ export function createServer(): McpServer {
       try {
         return text(formatVerdict(await ipReport(ip)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

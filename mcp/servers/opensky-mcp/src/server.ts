@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_area, m1_flightsInBox, m1_flightsNear, airspaceSummary } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +19,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_area(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_area(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -32,7 +31,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_flightsNear(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_flightsNear(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -44,7 +43,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_flightsInBox(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_flightsInBox(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -59,10 +58,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: callsign_lookup ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_opensky_callsign_lookup", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement lookup locally (paywall removed)
+    try { return textError("Not yet implemented: lookup") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -78,10 +75,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: country_flights ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_opensky_country_flights", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement flights locally (paywall removed)
+    try { return textError("Not yet implemented: flights") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -94,7 +89,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await airspaceSummary(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await airspaceSummary(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

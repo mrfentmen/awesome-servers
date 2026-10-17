@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { createContact, findContact, formatContact, LoopsError, sendEvent, sendingDomainDns, campaignLinkAudit } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
         if (!c) return text(`No Loops contact ${email}.`)
         return text(formatContact(c))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -52,7 +51,7 @@ export function createServer(): McpServer {
       try {
         return text(await createContact(email, first_name, last_name))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -73,7 +72,7 @@ export function createServer(): McpServer {
       try {
         return text(await sendEvent(email, event_name, properties as Record<string, unknown>))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -87,11 +86,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: sending_domain_dns ----
-      const paywallMessage = await premiumRequired("sending_domain_dns")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await sendingDomainDns(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await sendingDomainDns(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -104,11 +99,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: campaign_link_audit ----
-      const paywallMessage = await premiumRequired("campaign_link_audit")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await campaignLinkAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await campaignLinkAudit(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

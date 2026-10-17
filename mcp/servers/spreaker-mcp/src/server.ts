@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, getShow, listShowEpisodes, getEpisode, searchShows, createShow, episodeSearch } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(await getShow(show_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -49,7 +48,7 @@ export function createServer(): McpServer {
       try {
         return text(await listShowEpisodes(show_id, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -68,7 +67,7 @@ export function createServer(): McpServer {
       try {
         return text(await getEpisode(episode_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -88,7 +87,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchShows(query, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -108,7 +107,7 @@ export function createServer(): McpServer {
       try {
         return text(await createShow(title, language));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -126,10 +125,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: publisher_profile ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_spreaker_publisher_profile", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement profile locally (paywall removed)
+    try { return textError("Not yet implemented: profile") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -146,7 +143,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await episodeSearch(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await episodeSearch(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { createPdf } from "./api.js"
 import { createReport, urlToPdf } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -21,7 +20,7 @@ export function createServer(): McpServer {
       annotations: WRITE,
     },
     async (args) => {
-    try { return text(await createPdf(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await createPdf(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -33,7 +32,7 @@ export function createServer(): McpServer {
       annotations: WRITE,
     },
     async (args) => {
-    try { return text(await createReport(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await createReport(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -45,11 +44,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: url_to_pdf ----
-    const paywallMessage = await premiumRequired("url_to_pdf")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await urlToPdf(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await urlToPdf(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

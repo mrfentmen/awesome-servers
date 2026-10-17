@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { breachCatalog, breachDetail, breachStats, dataClasses, errorMessage, passwordAudit, passwordExposure, recentBreaches, latestBreach, passwordStrength } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -22,7 +21,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await breachCatalog(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await breachCatalog(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -37,7 +36,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await breachDetail(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await breachDetail(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -53,7 +52,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await recentBreaches(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await recentBreaches(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -68,7 +67,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await breachStats(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await breachStats(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -83,7 +82,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await dataClasses(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await dataClasses(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -98,7 +97,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await passwordExposure(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await passwordExposure(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -113,7 +112,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await passwordAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await passwordAudit(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -126,7 +125,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async () => {
-      try { return text(await latestBreach()) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await latestBreach()) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -142,7 +141,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await passwordStrength(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await passwordStrength(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -155,10 +154,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: package_vulnerabilities ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_hibp_package_vulnerabilities", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement vulnerabilities locally (paywall removed)
+      try { return textError("Not yet implemented: vulnerabilities") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -171,10 +168,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: cve_search ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_hibp_cve_search", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement search locally (paywall removed)
+      try { return textError("Not yet implemented: search") } catch (e) { return textError(String(e)) }
     }
   )
 

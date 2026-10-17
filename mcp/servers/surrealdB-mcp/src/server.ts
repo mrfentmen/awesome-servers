@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { formatResult, runQuery, serverVersion, SurrealDbError, surrealqlReview, crateVersionMatrix, releaseFeed } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(`SurrealDB ${await serverVersion()}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -45,7 +44,7 @@ export function createServer(): McpServer {
       try {
         return text(formatResult(await runQuery(sql)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -59,7 +58,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await surrealqlReview(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await surrealqlReview(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -75,11 +74,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: crate_version_matrix ----
-    const paywallMessage = await premiumRequired("crate_version_matrix")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await crateVersionMatrix(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await crateVersionMatrix(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -92,11 +87,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: release_feed ----
-    const paywallMessage = await premiumRequired("release_feed")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await releaseFeed(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await releaseFeed(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

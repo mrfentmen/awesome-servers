@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, search, getArtist, getAlbum, getTrack, artistTop, artistAlbums, newReleases, getEpisode, getShow, browseCategories, artistIdentity, musicCharts } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
       try {
         return text(await search(query, type, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -49,7 +48,7 @@ export function createServer(): McpServer {
       try {
         return text(await getArtist(artist_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -68,7 +67,7 @@ export function createServer(): McpServer {
       try {
         return text(await getAlbum(album_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -87,7 +86,7 @@ export function createServer(): McpServer {
       try {
         return text(await getTrack(track_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -106,7 +105,7 @@ export function createServer(): McpServer {
       try {
         return text(await artistTop(artist_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -125,7 +124,7 @@ export function createServer(): McpServer {
       try {
         return text(await artistAlbums(artist_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -144,7 +143,7 @@ export function createServer(): McpServer {
       try {
         return text(await newReleases(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -163,7 +162,7 @@ export function createServer(): McpServer {
       try {
         return text(await getEpisode(episode_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -182,7 +181,7 @@ export function createServer(): McpServer {
       try {
         return text(await getShow(show_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -201,7 +200,7 @@ export function createServer(): McpServer {
       try {
         return text(await browseCategories(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -219,11 +218,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: artist_identity ----
-    const paywallMessage = await premiumRequired("artist_identity")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await artistIdentity(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await artistIdentity(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -241,7 +236,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await musicCharts(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await musicCharts(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

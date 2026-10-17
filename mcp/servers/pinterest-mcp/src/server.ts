@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { boardPins, formatBoard, formatPin, getBoard, getPin, listBoards, myAccount, PinterestError, imageSources } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -27,7 +26,7 @@ export function createServer(): McpServer {
         const a = await myAccount()
         return text(`@${a.username ?? "?"}${a.websiteUrl ? `\n${a.websiteUrl}` : ""}${a.profileImage ? `\n${a.profileImage}` : ""}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -48,7 +47,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No boards.")
         return text(rows.map((b, i) => formatBoard(b, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -70,7 +69,7 @@ export function createServer(): McpServer {
         const pins = await boardPins(id, limit)
         return text(`${formatBoard(b)}\n\nPins:\n\n${pins.map((p, i) => formatPin(p, i)).join("\n\n") || "(none)"}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -89,7 +88,7 @@ export function createServer(): McpServer {
       try {
         return text(formatPin(await getPin(id)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -109,10 +108,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: find_licensed_images ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_pinterest_find_licensed_images", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement images locally (paywall removed)
+    try { return textError("Not yet implemented: images") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -128,10 +125,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: image_licence ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_pinterest_image_licence", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement licence locally (paywall removed)
+    try { return textError("Not yet implemented: licence") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -148,7 +143,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await imageSources(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await imageSources(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

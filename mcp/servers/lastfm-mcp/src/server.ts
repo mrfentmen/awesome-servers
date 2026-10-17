@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, topArtists, topTracks, artistInfo, musicbrainzArtist, artistDiscography, coverArt } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await topArtists(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await topTracks(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -66,7 +65,7 @@ export function createServer(): McpServer {
       try {
         return text(await artistInfo(artist));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -80,11 +79,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: musicbrainz_artist ----
-      const paywallMessage = await premiumRequired("musicbrainz_artist")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await musicbrainzArtist(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await musicbrainzArtist(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -97,11 +92,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: artist_discography ----
-      const paywallMessage = await premiumRequired("artist_discography")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await artistDiscography(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await artistDiscography(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -114,11 +105,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: cover_art ----
-      const paywallMessage = await premiumRequired("cover_art")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await coverArt(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await coverArt(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { errorMessage, searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections, browseCollection, find_by_size } from "./api.js";
-import { premiumTool } from "./gateway.js";
+import { searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections, browseCollection, find_by_size } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -25,7 +24,7 @@ export function createServer() {
             return text(await searchProducts(query, limit, maxPrice, productType));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("list_newest", {
@@ -42,7 +41,7 @@ export function createServer() {
             return text(await listNewest(limit, page, productType));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("get_product", {
@@ -57,7 +56,7 @@ export function createServer() {
             return text(await getProduct(handle));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("price_overview", {
@@ -72,7 +71,7 @@ export function createServer() {
             return text(await priceOverview(limit));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("find_deals", {
@@ -88,7 +87,7 @@ export function createServer() {
             return text(await findDeals(limit, sample));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("list_categories", {
@@ -101,7 +100,7 @@ export function createServer() {
             return text(await listCategories());
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("list_collections", {
@@ -116,7 +115,7 @@ export function createServer() {
             return text(await listCollections(query));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("browse_collection", {
@@ -134,7 +133,7 @@ export function createServer() {
             return text(await browseCollection(handle, limit, maxPrice, size));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("find_by_size", {
@@ -151,7 +150,7 @@ export function createServer() {
             return text(await find_by_size(size, limit, maxPrice));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("shop_info", {
@@ -160,14 +159,12 @@ export function createServer() {
         inputSchema: z.object({}),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: shop_info ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
+        // TODO: implement info locally (paywall removed)
         try {
-            return text(await premiumTool("mcp_aimeleondore_shop_info", args));
+            return textError("Not yet implemented: info");
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("list_pages", {
@@ -176,14 +173,12 @@ export function createServer() {
         inputSchema: z.object({ limit: z.number().describe("Max pages.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: list_pages ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
+        // TODO: implement pages locally (paywall removed)
         try {
-            return text(await premiumTool("mcp_aimeleondore_list_pages", args));
+            return textError("Not yet implemented: pages");
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     return server;

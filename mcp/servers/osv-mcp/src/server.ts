@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatVulnerability, getVulnerability, OsvError, queryBatch, queryPackage } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -27,7 +26,7 @@ export function createServer(): McpServer {
       const result = await queryPackage({ ecosystem, name, version })
       if (!result.vulns.length) return text(`No known OSV vulnerabilities found for ${ecosystem}/${name}${version ? `@${version}` : ""}.`)
       return text(`${ecosystem}/${name}${version ? `@${version}` : ""} has ${result.vulns.length} known vulnerability record(s):\n\n${result.vulns.map(formatVulnerability).join("\n\n")}`)
-    } catch (e) { return textError(error(e)) }
+    } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -46,7 +45,7 @@ export function createServer(): McpServer {
       const vulnerable = results.filter((r) => r.vulns.length)
       if (!vulnerable.length) return text(`No known vulnerabilities found across ${packages.length} package(s).`)
       return text(vulnerable.map((r) => `${r.ref.ecosystem}/${r.ref.name}${r.ref.version ? `@${r.ref.version}` : ""}: ${r.vulns.length} record(s)\n${r.vulns.map(formatVulnerability).join("\n\n")}`).join("\n\n"))
-    } catch (e) { return textError(error(e)) }
+    } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -60,7 +59,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ id }) => {
-    try { return text(formatVulnerability(await getVulnerability(id))) } catch (e) { return textError(error(e)) }
+    try { return text(formatVulnerability(await getVulnerability(id))) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -78,10 +77,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: advisory_database ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_osv_advisory_database", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement database locally (paywall removed)
+    try { return textError("Not yet implemented: database") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -98,10 +95,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: package_releases ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_osv_package_releases", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement releases locally (paywall removed)
+    try { return textError("Not yet implemented: releases") } catch (e) { return textError(String(e)) }
   }
   )
 

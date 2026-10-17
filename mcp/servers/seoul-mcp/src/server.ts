@@ -30,7 +30,7 @@ export function createServer(): McpServer {
       try {
         return text(await getAirQuality());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -49,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(await getStationAir(gu));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

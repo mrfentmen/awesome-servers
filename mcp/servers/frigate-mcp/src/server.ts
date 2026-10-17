@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { formatEvent, FrigateError, recentEvents, serverVersion, stats, analyze_events, event_timeline, threshold_advice } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(`${await serverVersion()}\n\n${await stats()}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -48,7 +47,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No recent events.")
         return text(rows.map((e, i) => formatEvent(e, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -64,11 +63,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ events }) => {
-      // ---- paywall: analyze_events ----
-      const paywallMessage = await premiumRequired("analyze_events")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(analyze_events({ events })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(analyze_events({ events })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -84,7 +79,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ events, gapMinutes }) => {
-      try { return text(event_timeline({ events, gapMinutes })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(event_timeline({ events, gapMinutes })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -101,11 +96,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ events, threshold, label }) => {
-      // ---- paywall: threshold_advice ----
-      const paywallMessage = await premiumRequired("threshold_advice")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(threshold_advice({ events, threshold, label })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(threshold_advice({ events, threshold, label })) } catch (e) { return textError(String(e)) }
     }
   )
 

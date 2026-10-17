@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { repo, repos } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await repos(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await repos(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await repo(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await repo(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,10 +42,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: workspace ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_bitbucket_workspace", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement workspace locally (paywall removed)
+    try { return textError("Not yet implemented: workspace") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -59,10 +56,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: repo_commits ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_bitbucket_repo_commits", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement commits locally (paywall removed)
+    try { return textError("Not yet implemented: commits") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -75,10 +70,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: repo_pull_requests ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_bitbucket_repo_pull_requests", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement requests locally (paywall removed)
+    try { return textError("Not yet implemented: requests") } catch (e) { return textError(String(e)) }
   }
   )
 

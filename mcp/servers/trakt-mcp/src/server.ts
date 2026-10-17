@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { formatShow, imdbOf, searchShows, TraktError, trendingMovies, trendingShows, match_title, dedupe_entries, show_identifiers } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No shows for "${query}".`)
         return text(rows.map((s, i) => formatShow(s, imdbOf(s.ids), i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -52,7 +51,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("Nothing trending.")
         return text(rows.map((s, i) => formatShow(s, imdbOf(s.ids), i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -73,7 +72,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("Nothing trending.")
         return text(rows.map((s, i) => formatShow(s, imdbOf(s.ids), i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -91,11 +90,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ query, candidates, limit }) => {
-      // ---- paywall: match_title ----
-      const paywallMessage = await premiumRequired("match_title")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(match_title({ query, candidates, limit })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(match_title({ query, candidates, limit })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -110,11 +105,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ entries }) => {
-      // ---- paywall: dedupe_entries ----
-      const paywallMessage = await premiumRequired("dedupe_entries")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(dedupe_entries({ entries })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(dedupe_entries({ entries })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -129,7 +120,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ entry }) => {
-      try { return text(show_identifiers({ entry })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(show_identifiers({ entry })) } catch (e) { return textError(String(e)) }
     }
   )
 

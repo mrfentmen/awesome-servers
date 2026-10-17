@@ -85,20 +85,4 @@ To make calls, you need a TwiML URL that controls the call flow. You can use Twi
 
 MIT
 
-<!-- paywall -->
-## Premium tools
 
-These tools need a license key:
-
-* `incident_history`
-
-Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-twilio-mcp and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
-```
-
-The key is checked against MCP Marketplace, cached for 24 hours, and keeps
-working offline once one check has succeeded. Every other tool on this server
-stays free.
-<!-- /paywall -->

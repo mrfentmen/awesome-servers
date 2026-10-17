@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { generateQr, qr_analyse } from "./api.js"
-import { premiumTool } from "./gateway.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -20,7 +19,7 @@ export function createServer(): McpServer {
       annotations: WRITE,
     },
     async (args) => {
-    try { return text(await generateQr(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await generateQr(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -35,12 +34,10 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: qr_capacity ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       // args.text is read rather than destructured: a parameter named text
       // shadows the module-level text helper used on the line below.
-      try { return text(await premiumTool("mcp_qr_code_qr_capacity", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement capacity locally (paywall removed)
+      try { return textError("Not yet implemented: capacity") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -55,7 +52,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await qr_analyse({ text: args.text })) } catch (e) { return textError(error(e)) }
+      try { return text(await qr_analyse({ text: args.text })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -71,10 +68,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: qr_size_report ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_qr_code_qr_size_report", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement report locally (paywall removed)
+      try { return textError("Not yet implemented: report") } catch (e) { return textError(String(e)) }
     }
   )
 

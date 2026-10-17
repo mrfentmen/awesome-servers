@@ -1,5 +1,4 @@
 import { contractSummary, contractDiff } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const error = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
@@ -58,10 +57,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: node_runtime_lifecycle ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_env_contract_node_runtime_lifecycle", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement lifecycle locally (paywall removed)
+    try { return textError("Not yet implemented: lifecycle") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -74,10 +71,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: environment_dns_records ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_env_contract_environment_dns_records", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement records locally (paywall removed)
+    try { return textError("Not yet implemented: records") } catch (e) { return textError(String(e)) }
   }
   )
 

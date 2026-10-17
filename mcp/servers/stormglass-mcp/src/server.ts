@@ -36,7 +36,7 @@ export function createServer(): McpServer {
       try {
         return text(await getWeather(lat, lng, params, start, end));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -56,7 +56,7 @@ export function createServer(): McpServer {
       try {
         return text(await getElevation(lat, lng));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -76,7 +76,7 @@ export function createServer(): McpServer {
       try {
         return text(await getTides(lat, lng));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, groupIssues, issueDetail, issueStats, mergeRequests, projectIssues, recentIssues, searchProjects, publicRegistry, platformFeed } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchProjects({ query, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -52,7 +51,7 @@ export function createServer(): McpServer {
       try {
         return text(await projectIssues({ project, state, labels, search, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -72,7 +71,7 @@ export function createServer(): McpServer {
       try {
         return text(await issueDetail({ project, iid }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -93,7 +92,7 @@ export function createServer(): McpServer {
       try {
         return text(await mergeRequests({ project, state, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -115,7 +114,7 @@ export function createServer(): McpServer {
       try {
         return text(await groupIssues({ group, state, labels, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -135,7 +134,7 @@ export function createServer(): McpServer {
       try {
         return text(await issueStats({ project, days }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -155,7 +154,7 @@ export function createServer(): McpServer {
       try {
         return text(await recentIssues({ project, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -174,11 +173,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: public_registry ----
-    const paywallMessage = await premiumRequired("public_registry")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await publicRegistry(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await publicRegistry(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -194,7 +189,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await platformFeed(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await platformFeed(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

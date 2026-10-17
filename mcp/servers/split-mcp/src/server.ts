@@ -32,7 +32,7 @@ export function createServer(): McpServer {
       try {
         return text(await listWorkspaces());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -51,7 +51,7 @@ export function createServer(): McpServer {
       try {
         return text(await listSplits(workspaceId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -70,7 +70,7 @@ export function createServer(): McpServer {
       try {
         return text(await listSegments(workspaceId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

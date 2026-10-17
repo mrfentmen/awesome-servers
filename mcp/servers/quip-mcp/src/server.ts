@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, searchThreads, getThread, listFolders, getUser, documentProfile } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchThreads(query));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await getThread(threadId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       try {
         return text(await listFolders());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -83,7 +82,7 @@ export function createServer(): McpServer {
       try {
         return text(await getUser());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -100,10 +99,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: wiki_article ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_quip_wiki_article", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement article locally (paywall removed)
+    try { return textError("Not yet implemented: article") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -120,10 +117,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: wiki_outline ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_quip_wiki_outline", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement outline locally (paywall removed)
+    try { return textError("Not yet implemented: outline") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -139,7 +134,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await documentProfile(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await documentProfile(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

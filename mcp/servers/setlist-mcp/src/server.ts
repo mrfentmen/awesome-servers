@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { SetlistApiError, formatSetlist, getArtistByMbid, getSetlist, getSetlists, searchArtists, searchSetlistsBySong, analyze_setlist, compare_setlists, tour_summary } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -37,7 +36,7 @@ export function createServer(): McpServer {
         )
         return text(`Artists matching "${name}":\n${lines.join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -71,7 +70,7 @@ export function createServer(): McpServer {
           .join("\n")
         return text(head + body)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -90,7 +89,7 @@ export function createServer(): McpServer {
         const s = await getSetlist(setlistId)
         return text(formatSetlist(s))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -132,7 +131,7 @@ export function createServer(): McpServer {
           : "No live plays found in the scanned pages."
         return text(head + tail)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -148,7 +147,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ setlist }) => {
-      try { return text(analyze_setlist({ setlist })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(analyze_setlist({ setlist })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -164,11 +163,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ before, after }) => {
-      // ---- paywall: compare_setlists ----
-      const paywallMessage = await premiumRequired("compare_setlists")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(compare_setlists({ before, after })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(compare_setlists({ before, after })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -183,11 +178,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ setlists }) => {
-      // ---- paywall: tour_summary ----
-      const paywallMessage = await premiumRequired("tour_summary")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(tour_summary({ setlists })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(tour_summary({ setlists })) } catch (e) { return textError(String(e)) }
     }
   )
 

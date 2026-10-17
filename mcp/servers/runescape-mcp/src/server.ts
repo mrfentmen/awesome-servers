@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_hiscore, m1_OsrsError, m1_formatStats, m1_getHotItems, m1_getItemPrice, m1_getPlayerStats, wikiOutline } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -22,7 +21,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_hiscore(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_hiscore(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -43,7 +42,7 @@ server.registerTool(
         const stats = await m1_getPlayerStats(username, mode)
         return text(m1_formatStats(stats))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -68,7 +67,7 @@ server.registerTool(
         ]
         return text(lines.join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -96,7 +95,7 @@ server.registerTool(
               .join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -109,10 +108,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: wiki_article ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_runescape_wiki_article", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement article locally (paywall removed)
+    try { return textError("Not yet implemented: article") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -125,7 +122,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await wikiOutline(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await wikiOutline(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

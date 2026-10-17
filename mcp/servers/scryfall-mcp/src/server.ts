@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { ScryfallError, formatCard, formatPrices, formatRuling, getCardByFuzzyName, getCardRulings, getRandomCard, getSets, searchCards, searchSet, cardsByCollection, cardBySetNumber, manaSymbols, cardAutocomplete } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
         if (cards.length === 0) return text(`No cards match "${query}".`)
         return text(`Cards matching "${query}":\n\n${cards.map((c, i) => formatCard(c, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -49,7 +48,7 @@ export function createServer(): McpServer {
         if (!card) return text(`No card named "${name}".`)
         return text(formatCard(card))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -71,7 +70,7 @@ export function createServer(): McpServer {
         if (rulings.length === 0) return text(`${card.name} has no rulings on file.`)
         return text(`Rulings for ${card.name}:\n${rulings.map(formatRuling).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -99,7 +98,7 @@ export function createServer(): McpServer {
               .join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -116,7 +115,7 @@ export function createServer(): McpServer {
       try {
         return text(await formatCard(await getRandomCard()))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -141,7 +140,7 @@ export function createServer(): McpServer {
             cards.map((c, i) => formatCard(c, i)).join("\n\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -161,7 +160,7 @@ export function createServer(): McpServer {
         if (!card) return text(`No card named "${name}".`)
         return text(formatPrices(card))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -181,7 +180,7 @@ export function createServer(): McpServer {
       try {
         return text(await cardsByCollection({ names }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -202,7 +201,7 @@ export function createServer(): McpServer {
       try {
         return text(await cardBySetNumber({ set, number }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -223,7 +222,7 @@ export function createServer(): McpServer {
       try {
         return text(await manaSymbols({ query, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -243,7 +242,7 @@ export function createServer(): McpServer {
       try {
         return text(await cardAutocomplete({ query }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -261,10 +260,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: set_profile ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_scryfall_set_profile", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement profile locally (paywall removed)
+    try { return textError("Not yet implemented: profile") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -281,10 +278,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: keyword_index ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_scryfall_keyword_index", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement index locally (paywall removed)
+    try { return textError("Not yet implemented: index") } catch (e) { return textError(String(e)) }
   }
   )
 

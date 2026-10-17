@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { generateCode128, generateEan, generateQrCode, generateTwoDimensional, validateBarcode } from "./api.js"
-import { premiumRequired } from "./license.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await generateEan(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await generateEan(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await generateCode128(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await generateCode128(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,11 +42,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: generate_qr_code ----
-    const paywallMessage = await premiumRequired("generate_qr_code")
-    if (paywallMessage) return textError(paywallMessage)
-    // ---- paywall: end ----
-    try { return text(await generateQrCode(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await generateQrCode(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -73,11 +68,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: validate_barcode ----
-    const paywallMessage = await premiumRequired("validate_barcode")
-    if (paywallMessage) return textError(paywallMessage)
-    // ---- paywall: end ----
-    try { return text(await validateBarcode(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await validateBarcode(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

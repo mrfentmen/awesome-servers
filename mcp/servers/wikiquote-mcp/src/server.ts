@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { pageQuotes, searchQuotes, pageBacklinks } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await searchQuotes(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await searchQuotes(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await pageQuotes(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await pageQuotes(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,10 +42,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: random_quote_page ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wikiquote_random_quote_page", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement page locally (paywall removed)
+    try { return textError("Not yet implemented: page") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -59,10 +56,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: page_languages ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wikiquote_page_languages", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement languages locally (paywall removed)
+    try { return textError("Not yet implemented: languages") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -75,10 +70,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: page_history ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wikiquote_page_history", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement history locally (paywall removed)
+    try { return textError("Not yet implemented: history") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -91,7 +84,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await pageBacklinks(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await pageBacklinks(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

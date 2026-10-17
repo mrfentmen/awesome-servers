@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, getDailyForecast, getHourlyForecast, getObservations, forecast_window } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(await getDailyForecast(lat, lon));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -49,7 +48,7 @@ export function createServer(): McpServer {
       try {
         return text(await getHourlyForecast(lat, lon));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -69,7 +68,7 @@ export function createServer(): McpServer {
       try {
         return text(await getObservations(product, stationId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -87,10 +86,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: forecast_table ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_bom_forecast_table", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement table locally (paywall removed)
+      try { return textError("Not yet implemented: table") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -106,10 +103,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: forecast_hazards ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_bom_forecast_hazards", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement hazards locally (paywall removed)
+      try { return textError("Not yet implemented: hazards") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -130,7 +125,7 @@ export function createServer(): McpServer {
       try {
         return text(await forecast_window(args));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -144,10 +139,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: resolve_location ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_bom_resolve_location", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement location locally (paywall removed)
+    try { return textError("Not yet implemented: location") } catch (e) { return textError(String(e)) }
   }
   )
 

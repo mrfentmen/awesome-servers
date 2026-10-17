@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { describe, next, previousRuns, validate } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await describe(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await describe(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await next(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await next(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await previousRuns(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await previousRuns(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -56,7 +55,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await validate(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await validate(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -69,10 +68,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: schedule_holidays ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_cron_schedule_holidays", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement holidays locally (paywall removed)
+    try { return textError("Not yet implemented: holidays") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -85,10 +82,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: solar_schedule ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_cron_solar_schedule", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement schedule locally (paywall removed)
+    try { return textError("Not yet implemented: schedule") } catch (e) { return textError(String(e)) }
   }
   )
 

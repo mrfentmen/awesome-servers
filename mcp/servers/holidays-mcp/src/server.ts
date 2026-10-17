@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_publicHolidays, m0_nextHolidays, m0_countries, m0_openHolidays, m1_holidays } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +19,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_publicHolidays(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_publicHolidays(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -32,7 +31,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_nextHolidays(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_nextHolidays(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -44,7 +43,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async () => {
-    try { return text(await m0_countries()) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_countries()) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -56,7 +55,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_openHolidays(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_openHolidays(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -68,7 +67,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_holidays(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_holidays(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -80,10 +79,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: available_countries ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_holidays_available_countries", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement countries locally (paywall removed)
+    try { return textError("Not yet implemented: countries") } catch (e) { return textError(String(e)) }
     }
   );
 

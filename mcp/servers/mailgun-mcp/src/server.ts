@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { domainStats, formatStats, listBounces, listDomains, MailgunError } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No domains.")
         return text(rows.map((d, i) => `${i + 1}. ${d.name}${d.state ? ` (${d.state})` : ""}${d.created ? ` — since ${d.created}` : ""}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -49,7 +48,7 @@ export function createServer(): McpServer {
       try {
         return text(formatStats(domain, await domainStats(domain)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -71,7 +70,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No bounces for ${domain}.`)
         return text(rows.map((b, i) => `${i + 1}. ${b}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -85,10 +84,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: dkim_selector_scan ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_mailgun_dkim_selector_scan", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement scan locally (paywall removed)
+      try { return textError("Not yet implemented: scan") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -101,10 +98,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: mailgun_status_audit ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_mailgun_mailgun_status_audit", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement audit locally (paywall removed)
+      try { return textError("Not yet implemented: audit") } catch (e) { return textError(String(e)) }
     }
   )
 

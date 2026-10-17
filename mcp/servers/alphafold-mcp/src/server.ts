@@ -1,9 +1,7 @@
-successfully downloaded text file (SHA: 722fee3e425c81b1724c61fdf476306c0d41fc3f)
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { AlphaFoldError, formatPrediction, getPrediction, modelFiles, proteinIdentity } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -31,7 +29,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No AlphaFold prediction for ${accession}.`)
         return text(rows.map(formatPrediction).join("\n\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -52,7 +50,7 @@ export function createServer(): McpServer {
         const f = modelFiles(accession, version)
         return text(`AlphaFold files for ${accession.trim().toUpperCase()}:\nmmCIF: ${f.cif}\nPDB: ${f.pdb}\nPAE: ${f.pae}\nPage: ${f.page}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -68,7 +66,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ accession }) => {
-      try { return text(await proteinIdentity({ accession })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await proteinIdentity({ accession })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -83,7 +81,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await confidenceProfile(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await confidenceProfile(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -98,7 +96,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await modelVersions(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await modelVersions(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -111,7 +109,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await paeSummary(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await paeSummary(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

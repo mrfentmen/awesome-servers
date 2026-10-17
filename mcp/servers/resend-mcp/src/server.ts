@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listDomains, getDomain, getEmail, listApiKeys, listAudiences, getAudience, listContacts, listBroadcasts, getBroadcast, createContact, addDomain, buildMimeMessage, dkimCanonicalization } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -27,7 +26,7 @@ export function createServer(): McpServer {
       try {
         return text(await listDomains());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -46,7 +45,7 @@ export function createServer(): McpServer {
       try {
         return text(await getDomain(domain_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       try {
         return text(await getEmail(email_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -82,7 +81,7 @@ export function createServer(): McpServer {
       try {
         return text(await listApiKeys());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -99,7 +98,7 @@ export function createServer(): McpServer {
       try {
         return text(await listAudiences());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -118,7 +117,7 @@ export function createServer(): McpServer {
       try {
         return text(await getAudience(audience_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -137,7 +136,7 @@ export function createServer(): McpServer {
       try {
         return text(await listContacts(audience_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -154,7 +153,7 @@ export function createServer(): McpServer {
       try {
         return text(await listBroadcasts());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -173,7 +172,7 @@ export function createServer(): McpServer {
       try {
         return text(await getBroadcast(broadcast_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -193,7 +192,7 @@ export function createServer(): McpServer {
       try {
         return text(await createContact(audience_id, email));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -212,7 +211,7 @@ export function createServer(): McpServer {
       try {
         return text(await addDomain(name));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -236,11 +235,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: build_mime_message ----
-    const paywallMessage = await premiumRequired("build_mime_message")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await buildMimeMessage(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await buildMimeMessage(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -258,11 +253,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: dkim_canonicalisation ----
-    const paywallMessage = await premiumRequired("dkim_canonicalisation")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await dkimCanonicalization(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await dkimCanonicalization(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

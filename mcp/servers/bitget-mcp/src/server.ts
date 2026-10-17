@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { ticker, candles } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await ticker(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await ticker(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -34,10 +33,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: orderbook ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_bitget_orderbook", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement orderbook locally (paywall removed)
+      try { return textError("Not yet implemented: orderbook") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -54,7 +51,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await candles(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await candles(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -70,10 +67,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: contract_ticker ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_bitget_contract_ticker", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement ticker locally (paywall removed)
+      try { return textError("Not yet implemented: ticker") } catch (e) { return textError(String(e)) }
     }
   )
 

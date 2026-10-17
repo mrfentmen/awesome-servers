@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: b9e96c7c6b70dbff7b05c7e859bb98f045195792)
 const BASE = 'https://www.7timer.info/bin/api.pl';
 
 export interface ForecastArgs {

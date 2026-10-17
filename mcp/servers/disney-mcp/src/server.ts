@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { character, characters, charactersByMedium } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await character(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await character(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await characters(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await characters(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,10 +42,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: character_appearances ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_disney_character_appearances", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement appearances locally (paywall removed)
+    try { return textError("Not yet implemented: appearances") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -59,10 +56,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: character_directory ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_disney_character_directory", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement directory locally (paywall removed)
+    try { return textError("Not yet implemented: directory") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -75,7 +70,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await charactersByMedium(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await charactersByMedium(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

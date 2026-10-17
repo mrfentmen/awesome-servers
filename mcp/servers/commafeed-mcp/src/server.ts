@@ -36,7 +36,7 @@ export function createServer(): McpServer {
       try {
         return text(await getFeedEntries(feed_id, read_type, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -56,7 +56,7 @@ export function createServer(): McpServer {
       try {
         return text(await markEntry(entry_id, read));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -73,7 +73,7 @@ export function createServer(): McpServer {
       try {
         return text(await listEntryTags());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -92,7 +92,7 @@ export function createServer(): McpServer {
       try {
         return text(await subscribeFeed(url));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

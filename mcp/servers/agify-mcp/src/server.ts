@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { age, ageVersusCommonality } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await age(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await age(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,10 +30,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: age_ranking ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_agify_age_ranking", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement ranking locally (paywall removed)
+    try { return textError("Not yet implemented: ranking") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -47,10 +44,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: name_frequency ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_agify_name_frequency", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement frequency locally (paywall removed)
+    try { return textError("Not yet implemented: frequency") } catch (e) { return textError(String(e)) }
   }
   )
 

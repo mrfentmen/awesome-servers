@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { node, nodes, preprint_landscape } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await nodes(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await nodes(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await node(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await node(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -47,10 +46,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: preprint_search ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_osf_preprint_search", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement search locally (paywall removed)
+      try { return textError("Not yet implemented: search") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -65,10 +62,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: preprint_record ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_osf_preprint_record", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement record locally (paywall removed)
+      try { return textError("Not yet implemented: record") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -84,7 +79,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ provider, limit }) => {
-      try { return text(await preprint_landscape({ provider, limit })) } catch (e) { return textError(error(e)) }
+      try { return text(await preprint_landscape({ provider, limit })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -97,10 +92,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: preprint_contributors ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_osf_preprint_contributors", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement contributors locally (paywall removed)
+    try { return textError("Not yet implemented: contributors") } catch (e) { return textError(String(e)) }
   }
   )
 

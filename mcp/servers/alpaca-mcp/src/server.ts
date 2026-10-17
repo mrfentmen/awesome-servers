@@ -37,7 +37,7 @@ export function createServer(): McpServer {
       try {
         return text(await account());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -54,7 +54,7 @@ export function createServer(): McpServer {
       try {
         return text(await positions());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -73,7 +73,7 @@ export function createServer(): McpServer {
       try {
         return text(await orders(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -92,7 +92,7 @@ export function createServer(): McpServer {
       try {
         return text(await orderDetails(order_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -111,7 +111,7 @@ export function createServer(): McpServer {
       try {
         return text(await positionDetails(symbol));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -128,7 +128,7 @@ export function createServer(): McpServer {
       try {
         return text(await marketClock());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -148,7 +148,7 @@ export function createServer(): McpServer {
       try {
         return text(await calendar(start, end));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -167,7 +167,7 @@ export function createServer(): McpServer {
       try {
         return text(await listAssets(status));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -184,7 +184,7 @@ export function createServer(): McpServer {
       try {
         return text(await watchlists());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -203,7 +203,7 @@ export function createServer(): McpServer {
       try {
         return text(await portfolioHistory(period));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

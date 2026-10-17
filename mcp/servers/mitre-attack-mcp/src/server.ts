@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { search, technique } from "./free-api.js"
 
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await search(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await technique(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await technique(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,10 +42,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: group_list ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_mitre_attack_group_list", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement list locally (paywall removed)
+    try { return textError("Not yet implemented: list") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -59,10 +56,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: software_list ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_mitre_attack_software_list", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement list locally (paywall removed)
+    try { return textError("Not yet implemented: list") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -75,10 +70,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: tactic_list ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_mitre_attack_tactic_list", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement list locally (paywall removed)
+    try { return textError("Not yet implemented: list") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -91,10 +84,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: technique_mitigations ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_mitre_attack_technique_mitigations", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement mitigations locally (paywall removed)
+    try { return textError("Not yet implemented: mitigations") } catch (e) { return textError(String(e)) }
   }
   )
 

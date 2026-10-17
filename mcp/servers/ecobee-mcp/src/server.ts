@@ -1,4 +1,3 @@
-import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { EcobeeError, formatThermostat, listThermostats, setpointAudit } from "./api.js"
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No thermostats.")
         return text(rows.map((t, i) => formatThermostat(t, i)).join("\n\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -42,13 +41,11 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: outdoor_air ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_ecobee_outdoor_air", args))
+        // TODO: implement air locally (paywall removed)
+        try { return textError("Not yet implemented: air") } catch (e) { return textError(String(e)) }
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -62,13 +59,11 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: air_quality_trend ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_ecobee_air_quality_trend", args))
+        // TODO: implement trend locally (paywall removed)
+        try { return textError("Not yet implemented: trend") } catch (e) { return textError(String(e)) }
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -92,7 +87,7 @@ export function createServer(): McpServer {
       try {
         return text(await setpointAudit(args))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

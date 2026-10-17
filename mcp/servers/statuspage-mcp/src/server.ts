@@ -37,7 +37,7 @@ export function createServer(): McpServer {
       try {
         return text(await listPages());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -56,7 +56,7 @@ export function createServer(): McpServer {
       try {
         return text(await getPage(page_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -75,7 +75,7 @@ export function createServer(): McpServer {
       try {
         return text(await listIncidents(page_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -95,7 +95,7 @@ export function createServer(): McpServer {
       try {
         return text(await incidentDetails(page_id, incident_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -115,7 +115,7 @@ export function createServer(): McpServer {
       try {
         return text(await incidentUpdates(page_id, incident_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -134,7 +134,7 @@ export function createServer(): McpServer {
       try {
         return text(await components(page_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -154,7 +154,7 @@ export function createServer(): McpServer {
       try {
         return text(await componentDetails(page_id, component_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -173,7 +173,7 @@ export function createServer(): McpServer {
       try {
         return text(await subscribers(page_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -192,7 +192,7 @@ export function createServer(): McpServer {
       try {
         return text(await upcomingMaintenance(page_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -212,7 +212,7 @@ export function createServer(): McpServer {
       try {
         return text(await maintenanceDetails(page_id, maintenance_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

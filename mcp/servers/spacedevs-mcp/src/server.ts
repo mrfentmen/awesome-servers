@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { astronauts, errorMessage, launchCountdown, launchVehicles, nextLaunches, satelliteFrequencies, satelliteOrbit, satelliteSearch, spaceAgencies, spaceBlogs, spaceNews, spaceWeather, upcomingEvents, auroraReach } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
       try {
         return text(await nextLaunches(limit, provider))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -48,7 +47,7 @@ export function createServer(): McpServer {
       try {
         return text(await launchCountdown())
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -69,7 +68,7 @@ export function createServer(): McpServer {
       try {
         return text(await satelliteSearch(query, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -89,7 +88,7 @@ export function createServer(): McpServer {
       try {
         return text(await satelliteOrbit(norad_id))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -110,7 +109,7 @@ export function createServer(): McpServer {
       try {
         return text(await satelliteFrequencies(norad_id, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -130,7 +129,7 @@ export function createServer(): McpServer {
       try {
         return text(await spaceNews(query, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -150,7 +149,7 @@ export function createServer(): McpServer {
       try {
         return text(await spaceBlogs(query, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -168,7 +167,7 @@ export function createServer(): McpServer {
       try {
         return text(await spaceWeather())
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -190,7 +189,7 @@ export function createServer(): McpServer {
       try {
         return text(await spaceAgencies(query, type, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -212,7 +211,7 @@ export function createServer(): McpServer {
       try {
         return text(await astronauts(query, in_space, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -233,7 +232,7 @@ export function createServer(): McpServer {
       try {
         return text(await launchVehicles(query, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -254,7 +253,7 @@ export function createServer(): McpServer {
       try {
         return text(await upcomingEvents(type, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -271,10 +270,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: solar_flux_profile ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_spacedevs_solar_flux_profile", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement profile locally (paywall removed)
+    try { return textError("Not yet implemented: profile") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -290,7 +287,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await auroraReach(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await auroraReach(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

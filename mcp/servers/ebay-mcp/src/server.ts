@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, searchItems, getItem, getItemGroup, getLegacyItem, dealItems, searchExtended, searchEndingSoon, searchLowestPrice, searchNewlyListed, searchByCategory, shippingOptions, findItemGroup, marketPriceContext } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchItems(query, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -48,7 +47,7 @@ export function createServer(): McpServer {
       try {
         return text(await getItem(item_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -67,7 +66,7 @@ export function createServer(): McpServer {
       try {
         return text(await getItemGroup(item_group_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -86,7 +85,7 @@ export function createServer(): McpServer {
       try {
         return text(await getLegacyItem(legacy_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -105,7 +104,7 @@ export function createServer(): McpServer {
       try {
         return text(await dealItems(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -125,7 +124,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchExtended(query, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -145,7 +144,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchEndingSoon(query, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -165,7 +164,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchLowestPrice(query, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -185,7 +184,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchNewlyListed(query, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -206,7 +205,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchByCategory(query, category_id, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -223,11 +222,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: shipping_options ----
-    const paywallMessage = await premiumRequired("shipping_options")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await shippingOptions(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await shippingOptions(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -244,11 +239,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: find_item_group ----
-    const paywallMessage = await premiumRequired("find_item_group")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await findItemGroup(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await findItemGroup(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -264,7 +255,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await marketPriceContext(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await marketPriceContext(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

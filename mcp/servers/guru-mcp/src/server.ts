@@ -31,7 +31,7 @@ export function createServer(): McpServer {
       try {
         return text(await listTeams());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -51,7 +51,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchCards(query, max_results));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -70,7 +70,7 @@ export function createServer(): McpServer {
       try {
         return text(await getCollection(collection_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

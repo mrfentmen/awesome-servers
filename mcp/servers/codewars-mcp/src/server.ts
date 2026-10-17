@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { CodewarsError, formatKata, formatUser, getKata, getUser, completedKata, supportedLanguages } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(formatUser(await getUser(username)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(formatKata(await getKata(id_or_slug)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await completedKata(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await completedKata(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -81,10 +80,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: language_progress ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_codewars_language_progress", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement progress locally (paywall removed)
+    try { return textError("Not yet implemented: progress") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -99,10 +96,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: completion_timeline ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_codewars_completion_timeline", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement timeline locally (paywall removed)
+    try { return textError("Not yet implemented: timeline") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -118,7 +113,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await supportedLanguages(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await supportedLanguages(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

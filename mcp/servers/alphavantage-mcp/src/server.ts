@@ -1,9 +1,7 @@
-successfully downloaded text file (SHA: 0635c169b619baad4baf717705471c8a5aac8584)
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { AlphaVantageError, cryptoPrice, fxRate, stockQuote, symbolSearch, priceHistory } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -29,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await stockQuote(symbol))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -49,7 +47,7 @@ export function createServer(): McpServer {
       try {
         return text(await fxRate(from, to))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -69,7 +67,7 @@ export function createServer(): McpServer {
       try {
         return text(await cryptoPrice(symbol, market))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -90,7 +88,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No symbols for "${keywords}".`)
         return text(rows.map((r, i) => `${i + 1}. ${r}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -107,7 +105,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-        try { return text(await companyProfile(args.symbol)) } catch (e) { return textError(errorMessage(e)) }
+        try { return text(await companyProfile(args.symbol)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -125,7 +123,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await priceHistory(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await priceHistory(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

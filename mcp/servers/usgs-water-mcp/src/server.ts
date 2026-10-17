@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { format, gauges, latestValue, streamflow, WaterError } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -33,10 +32,8 @@ export function createServer() { const server = new McpServer({ name: "usgs-wate
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: daily_values ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_usgs_water_daily_values", args)) } catch (e) { return textError(String(e)) }
+    // TODO: implement values locally (paywall removed)
+    try { return textError("Not yet implemented: values") } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(

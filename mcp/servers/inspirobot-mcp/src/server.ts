@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { generate, inscriptionMetrics } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await generate(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await generate(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,10 +30,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: generate_styled ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_inspirobot_generate_styled", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement styled locally (paywall removed)
+    try { return textError("Not yet implemented: styled") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -47,10 +44,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: font_matrix ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_inspirobot_font_matrix", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement matrix locally (paywall removed)
+    try { return textError("Not yet implemented: matrix") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -63,7 +58,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await inscriptionMetrics(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await inscriptionMetrics(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

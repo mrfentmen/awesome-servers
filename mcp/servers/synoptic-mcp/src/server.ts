@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, findStations, getTimeseries } from "./api.js"
-import { premiumTool } from "./gateway.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(await findStations(state, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -50,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(await getTimeseries(stid, vars, recent));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -68,13 +67,11 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: nws_station_timeseries ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_synoptic_nws_station_timeseries", args));
+        // TODO: implement timeseries locally (paywall removed)
+        try { return textError("Not yet implemented: timeseries") } catch (e) { return textError(String(e)) }
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -93,13 +90,11 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: nws_gridpoint_hourly ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_synoptic_nws_gridpoint_hourly", args));
+        // TODO: implement hourly locally (paywall removed)
+        try { return textError("Not yet implemented: hourly") } catch (e) { return textError(String(e)) }
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, auth, listBooks, listHighlights, paperSearch, paperReferences } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await auth());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       try {
         return text(await listBooks());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -60,7 +59,7 @@ export function createServer(): McpServer {
       try {
         return text(await listHighlights());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -79,11 +78,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: paper_search ----
-    const paywallMessage = await premiumRequired("paper_search")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await paperSearch({ query: args.query, limit: args.limit, fromYear: args.from_year })) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await paperSearch({ query: args.query, limit: args.limit, fromYear: args.from_year })) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -100,11 +95,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: paper_references ----
-    const paywallMessage = await premiumRequired("paper_references")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await paperReferences(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await paperReferences(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

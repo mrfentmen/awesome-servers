@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { noteFrequency, noteFromName, noteName, buildScale, interval } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await noteName(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await noteName(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await noteFrequency(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await noteFrequency(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await noteFromName(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await noteFromName(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -60,10 +59,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: build_chord ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_midi_tools_build_chord", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement chord locally (paywall removed)
+    try { return textError("Not yet implemented: chord") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -81,7 +78,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await buildScale(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await buildScale(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -98,7 +95,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await interval(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await interval(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

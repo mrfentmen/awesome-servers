@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { EsploraError, feeEstimates, getAddress, getBlock, getTx, mempoolFees, tipHeight, recentBlocks, recentMempool } from "./local-api.js"
 
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(`Bitcoin tip height: ${await tipHeight()}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       try {
         return text(`${await feeEstimates()}\n\n${await mempoolFees()}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -62,7 +61,7 @@ export function createServer(): McpServer {
       try {
         return text(await getBlock(height_or_hash))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -81,7 +80,7 @@ export function createServer(): McpServer {
       try {
         return text(await getTx(txid))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -100,7 +99,7 @@ export function createServer(): McpServer {
       try {
         return text(await getAddress(address))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -120,7 +119,7 @@ export function createServer(): McpServer {
       try {
         return text(await recentBlocks(height, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -139,7 +138,7 @@ export function createServer(): McpServer {
       try {
         return text(await recentMempool(limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -153,10 +152,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: difficulty_adjustment ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_esplora_difficulty_adjustment", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement adjustment locally (paywall removed)
+      try { return textError("Not yet implemented: adjustment") } catch (e) { return textError(String(e)) }
     }
   )
 

@@ -20,21 +20,4 @@ node dist/index.js
 
 The directory bundles common bank BICs for validation and search. Coverage is best effort and not exhaustive.
 
-<!-- paywall -->
-## Premium tools
 
-These tools need a license key:
-
-* `analyse_bic`
-* `country_directory`
-
-Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-swift-bic-mcp and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
-```
-
-The key is checked against MCP Marketplace, cached for 24 hours, and keeps
-working offline once one check has succeeded. Every other tool on this server
-stays free.
-<!-- /paywall -->

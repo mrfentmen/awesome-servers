@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, listCustomers, listThreads, getThread } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await listCustomers(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await listThreads(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -66,7 +65,7 @@ export function createServer(): McpServer {
       try {
         return text(await getThread(thread_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -83,10 +82,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: email_deliverability ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_plain_email_deliverability", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement deliverability locally (paywall removed)
+    try { return textError("Not yet implemented: deliverability") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -107,10 +104,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: response_time_report ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_plain_response_time_report", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement report locally (paywall removed)
+    try { return textError("Not yet implemented: report") } catch (e) { return textError(String(e)) }
   }
   )
 

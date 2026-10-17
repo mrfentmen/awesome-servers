@@ -3,7 +3,6 @@ import { z } from "zod"
 import { coinFlip, randomNumber, rollDice } from "./local-rng.js"
 
 import { randomWords } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +19,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await rollDice(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await rollDice(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -32,7 +31,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await coinFlip(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await coinFlip(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -44,7 +43,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await randomNumber(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await randomNumber(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -56,10 +55,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: random_fact ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_rng_random_fact", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement fact locally (paywall removed)
+    try { return textError("Not yet implemented: fact") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -72,10 +69,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: random_advice ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_rng_random_advice", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement advice locally (paywall removed)
+    try { return textError("Not yet implemented: advice") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -88,7 +83,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await randomWords(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await randomWords(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

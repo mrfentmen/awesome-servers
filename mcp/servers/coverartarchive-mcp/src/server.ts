@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { CoverArtError, formatCover, frontUrl, getCover, coverImageBytes } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(formatCover(await getCover(mbid, kind)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -50,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(frontUrl(mbid, kind, Number(size) as 250 | 500 | 1200))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -64,10 +63,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: cover_gallery ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_coverartarchive_cover_gallery", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement gallery locally (paywall removed)
+    try { return textError("Not yet implemented: gallery") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -80,10 +77,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: find_cover_releases ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_coverartarchive_find_cover_releases", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement releases locally (paywall removed)
+    try { return textError("Not yet implemented: releases") } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -17,20 +17,4 @@ No setup. Every check runs live from the server itself, so there is no key or ac
 
 Part of [awesome-mcps](https://github.com/mrfentmen/awesome-mcps).
 
-<!-- paywall -->
-## Premium tools
 
-These tools need a license key:
-
-* `header_audit`
-
-Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-statping-mcp and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
-```
-
-The key is checked against MCP Marketplace, cached for 24 hours, and keeps
-working offline once one check has succeeded. Every other tool on this server
-stays free.
-<!-- /paywall -->

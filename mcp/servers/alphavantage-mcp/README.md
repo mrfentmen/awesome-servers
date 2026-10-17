@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: cb8999a8bd62106a95d135b311c377eaec1c2785)
 # Alpha Vantage MCP
 
 MCP server for Alpha Vantage: stock quotes, forex, crypto. Needs a free API key.

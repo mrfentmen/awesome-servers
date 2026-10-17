@@ -27,7 +27,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No pages.")
         return text(rows.map((p, i) => `${i + 1}. ${p.name}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -49,7 +49,7 @@ export function createServer(): McpServer {
         if (!page && blocks.length === 0) return text(`No Logseq page "${name}".`)
         return text(formatPage(name, page, blocks))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

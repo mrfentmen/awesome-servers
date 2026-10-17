@@ -1,8 +1,7 @@
 import { getStatus, getStats, getQueryLog } from "./instance.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { errorMessage, filterRuleAudit } from "./api.js";
-import { premiumTool } from "./gateway.js";
+import { filterRuleAudit, domainCoverage, filterCatalog } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -21,7 +20,7 @@ export function createServer() {
             return text(await getStatus());
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("get_stats", {
@@ -34,7 +33,7 @@ export function createServer() {
             return text(await getStats());
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("get_query_log", {
@@ -49,7 +48,7 @@ export function createServer() {
             return text(await getQueryLog(limit));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("filter_rule_audit", {
@@ -62,7 +61,7 @@ export function createServer() {
             return text(await filterRuleAudit(args));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("domain_coverage", {
@@ -74,14 +73,11 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: domain_coverage ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
         try {
-            return text(await premiumTool("mcp_adguardhome_domain_coverage", args));
+            return text(await domainCoverage(args));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("filter_catalog", {
@@ -90,14 +86,11 @@ export function createServer() {
         inputSchema: z.object({ query: z.string().max(200).optional(), limit: z.number().describe("Maximum lists, 1-30; default 10.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: filter_catalog ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
         try {
-            return text(await premiumTool("mcp_adguardhome_filter_catalog", args));
+            return text(await filterCatalog(args));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     return server;

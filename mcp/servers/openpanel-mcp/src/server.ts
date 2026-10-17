@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, getMetrics, getLive, getPages, getReferrer, referrerTaxonomy } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(await getMetrics(projectId, startDate, endDate));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -48,7 +47,7 @@ export function createServer(): McpServer {
       try {
         return text(await getLive(projectId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -67,7 +66,7 @@ export function createServer(): McpServer {
       try {
         return text(await getPages(projectId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -86,7 +85,7 @@ export function createServer(): McpServer {
       try {
         return text(await getReferrer(projectId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -100,10 +99,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (_args) => {
-    // ---- paywall: tracker_sdk_matrix ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_openpanel_tracker_sdk_matrix", _args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement matrix locally (paywall removed)
+    try { return textError("Not yet implemented: matrix") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -116,10 +113,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: project_health ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_openpanel_project_health", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement health locally (paywall removed)
+    try { return textError("Not yet implemented: health") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -135,7 +130,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await referrerTaxonomy(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await referrerTaxonomy(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: 5400c68db27d0eb6d563ed6bd9091e0b607f56d3)
 import { getStatus, getStats, getQueryLog } from "./instance.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
@@ -27,7 +26,7 @@ export function createServer(): McpServer {
       try {
         return text(await getStatus());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -44,7 +43,7 @@ export function createServer(): McpServer {
       try {
         return text(await getStats());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -63,7 +62,7 @@ export function createServer(): McpServer {
       try {
         return text(await getQueryLog(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -77,7 +76,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await filterRuleAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await filterRuleAudit(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -93,7 +92,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await domainCoverage(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await domainCoverage(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -106,7 +105,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await filterCatalog(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await filterCatalog(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

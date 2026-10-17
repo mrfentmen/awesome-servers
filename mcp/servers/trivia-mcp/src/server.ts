@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_categories, m0_getQuestion, m1_formatQuestion, m1_getCategories, m1_getQuestions, m1_TriviaError } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +19,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_getQuestion(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_getQuestion(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -32,7 +31,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_categories(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_categories(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -48,7 +47,7 @@ server.registerTool(
         const cats = await m1_getCategories()
         return text(`Trivia categories:\n${cats.map((c) => `- ${c.id}: ${c.name}`).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -72,7 +71,7 @@ server.registerTool(
         const filters = [category != null ? `category ${category}` : "", difficulty ?? "", type ?? ""].filter(Boolean).join(", ")
         return text(`Trivia questions${filters ? ` (${filters})` : ""}:\n\n${qs.map((q, i) => m1_formatQuestion(q, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -85,10 +84,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: boolean_question ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_trivia_boolean_question", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement question locally (paywall removed)
+    try { return textError("Not yet implemented: question") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -101,10 +98,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: category_list ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_trivia_category_list", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement list locally (paywall removed)
+    try { return textError("Not yet implemented: list") } catch (e) { return textError(String(e)) }
     }
   );
 

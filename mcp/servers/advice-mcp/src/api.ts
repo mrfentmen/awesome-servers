@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: 4bf5036e94d0e0db74398584c0617d0c08dfb6f0)
 const BASE = 'https://api.adviceslip.com/advice';
 
 export async function random(_args: Record<string, never> = {}): Promise<string> {

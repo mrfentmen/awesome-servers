@@ -30,7 +30,7 @@ export function createServer(): McpServer {
       try {
         return text(await getVersion());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -49,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchItems(query));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -68,7 +68,7 @@ export function createServer(): McpServer {
       try {
         return text(await getItem(item_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

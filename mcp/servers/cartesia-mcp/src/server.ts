@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listVoices, getVoice, synthesizeSpeech, searchVoices, languageRollCall, pickVoice } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(await listVoices(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -48,7 +47,7 @@ export function createServer(): McpServer {
       try {
         return text(await getVoice(voice_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -69,7 +68,7 @@ export function createServer(): McpServer {
       try {
         return text(await synthesizeSpeech(transcript, voice_id, model_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -88,11 +87,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: search_voices ----
-    const paywallMessage = await premiumRequired("search_voices")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await searchVoices(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await searchVoices(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -107,11 +102,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: language_roll_call ----
-    const paywallMessage = await premiumRequired("language_roll_call")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await languageRollCall(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await languageRollCall(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -128,7 +119,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await pickVoice(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await pickVoice(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -1,7 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { m0_price, m0_trending, markets, coin, chart, global, categories, exchanges, search, history, exchangeTickers } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -17,7 +16,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_price(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_price(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -29,7 +28,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_trending(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_trending(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -41,7 +40,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await markets(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await markets(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -53,7 +52,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await coin(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await coin(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -65,7 +64,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await chart(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await chart(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -77,7 +76,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await global(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await global(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -89,7 +88,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await categories(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await categories(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -102,7 +101,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await exchanges(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await exchanges(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -115,7 +114,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await search(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -128,7 +127,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await history(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await history(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -146,10 +145,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: coin_tickers ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_coingecko_coin_tickers", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement tickers locally (paywall removed)
+    try { return textError("Not yet implemented: tickers") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -167,7 +164,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await exchangeTickers(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await exchangeTickers(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -184,10 +181,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: coin_ohlc ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_coingecko_coin_ohlc", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement ohlc locally (paywall removed)
+    try { return textError("Not yet implemented: ohlc") } catch (e) { return textError(String(e)) }
   }
   )
 

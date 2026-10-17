@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { ticker, orderBook, instruments } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await ticker(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await ticker(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await orderBook(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await orderBook(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -44,10 +43,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: candles ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_crypto_com_candles", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement candles locally (paywall removed)
+    try { return textError("Not yet implemented: candles") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -60,10 +57,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: trades ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_crypto_com_trades", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement trades locally (paywall removed)
+    try { return textError("Not yet implemented: trades") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -76,7 +71,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await instruments(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await instruments(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

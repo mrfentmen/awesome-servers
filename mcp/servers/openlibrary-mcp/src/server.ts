@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { authorWorks, errorMessage, getAuthor, getEdition, getWork, searchBooks, searchByAuthor, searchBySubject, editionByIsbn, workEditions, subjectOverview, searchFacets } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchBooks(query, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -48,7 +47,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchByAuthor(author, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -68,7 +67,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchBySubject(subject, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -87,7 +86,7 @@ export function createServer(): McpServer {
       try {
         return text(await getWork(work_id))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -106,7 +105,7 @@ export function createServer(): McpServer {
       try {
         return text(await getEdition(edition_id))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -125,7 +124,7 @@ export function createServer(): McpServer {
       try {
         return text(await getAuthor(author_id))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -145,7 +144,7 @@ export function createServer(): McpServer {
       try {
         return text(await authorWorks(author_id, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -165,7 +164,7 @@ export function createServer(): McpServer {
       try {
         return text(await editionByIsbn({ isbn }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -186,7 +185,7 @@ export function createServer(): McpServer {
       try {
         return text(await workEditions({ workId, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -207,7 +206,7 @@ export function createServer(): McpServer {
       try {
         return text(await subjectOverview({ subject, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -221,10 +220,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: read_availability ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_openlibrary_read_availability", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement availability locally (paywall removed)
+    try { return textError("Not yet implemented: availability") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -237,10 +234,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: scanned_copy_report ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_openlibrary_scanned_copy_report", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement report locally (paywall removed)
+    try { return textError("Not yet implemented: report") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -256,7 +251,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await searchFacets(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await searchFacets(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

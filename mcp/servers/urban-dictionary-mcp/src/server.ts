@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_define, m0_random } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +19,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_define(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_define(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -32,7 +31,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_random(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_random(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -44,10 +43,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: autocomplete ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_urban_dictionary_autocomplete", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement autocomplete locally (paywall removed)
+    try { return textError("Not yet implemented: autocomplete") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -60,10 +57,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: word_completions ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_urban_dictionary_word_completions", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement completions locally (paywall removed)
+    try { return textError("Not yet implemented: completions") } catch (e) { return textError(String(e)) }
   }
   )
 

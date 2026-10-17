@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { lookup, ipNetwork, reverseGeocode, timezoneAt } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await lookup(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await lookup(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await ipNetwork(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await ipNetwork(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -44,10 +43,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: ip_registration ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_freegeoip_ip_registration", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement registration locally (paywall removed)
+    try { return textError("Not yet implemented: registration") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -60,10 +57,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: geocode_place ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_freegeoip_geocode_place", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement place locally (paywall removed)
+    try { return textError("Not yet implemented: place") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -76,7 +71,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await reverseGeocode(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await reverseGeocode(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -89,7 +84,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await timezoneAt(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await timezoneAt(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

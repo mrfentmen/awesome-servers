@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { ChessError, formatBoardRow, formatGame, formatPlayer, formatStats, getLeaderboards, getPlayer, getPlayerGames, getPlayerStats, getTitledPlayers, titledPlayerLookup } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
         if (!p) return text(`No chess.com player "${username}".`)
         return text(formatPlayer(p))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -48,7 +47,7 @@ export function createServer(): McpServer {
         const out = formatStats(stats)
         return text(out || `No rated stats for "${username}".`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -73,7 +72,7 @@ export function createServer(): McpServer {
         if (games.length === 0) return text(`No games for ${username} in ${year}-${String(month).padStart(2, "0")}.`)
         return text(`Games for ${username} in ${year}-${String(month).padStart(2, "0")}:\n${games.slice(0, limit).map((g, i) => formatGame(g, i)).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -96,7 +95,7 @@ export function createServer(): McpServer {
         }
         return text(parts.join("\n\n") || "No leaderboard data.")
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -115,7 +114,7 @@ export function createServer(): McpServer {
         const users = await getTitledPlayers(title)
         return text(`${title} players on chess.com (${users.length} total):\n${users.slice(0, 40).join(", ")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -129,10 +128,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: live_leaderboards ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_chess_live_leaderboards", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement leaderboards locally (paywall removed)
+    try { return textError("Not yet implemented: leaderboards") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -145,10 +142,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: board_records ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_chess_board_records", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement records locally (paywall removed)
+    try { return textError("Not yet implemented: records") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -161,7 +156,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await titledPlayerLookup(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await titledPlayerLookup(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

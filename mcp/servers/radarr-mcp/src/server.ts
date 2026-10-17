@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listMovies, getQueue, getHealth, filmFacts, filmography } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await listMovies());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       try {
         return text(await getQueue());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -60,7 +59,7 @@ export function createServer(): McpServer {
       try {
         return text(await getHealth());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -78,11 +77,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: film_facts ----
-    const paywallMessage = await premiumRequired("film_facts")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await filmFacts(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await filmFacts(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -99,11 +94,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: filmography ----
-    const paywallMessage = await premiumRequired("filmography")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await filmography(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await filmography(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

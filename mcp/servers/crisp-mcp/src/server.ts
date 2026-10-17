@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listVisitors, getProfile, getConversation, conversations, conversationMessages, conversationMeta, listOperators, listInboxes, audiencePulse } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await listVisitors(website_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -48,7 +47,7 @@ export function createServer(): McpServer {
       try {
         return text(await getProfile(website_id, email));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -68,7 +67,7 @@ export function createServer(): McpServer {
       try {
         return text(await getConversation(website_id, session_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -88,7 +87,7 @@ export function createServer(): McpServer {
       try {
         return text(await conversations(website_id, page));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -108,7 +107,7 @@ export function createServer(): McpServer {
       try {
         return text(await conversationMessages(website_id, session_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -128,7 +127,7 @@ export function createServer(): McpServer {
       try {
         return text(await conversationMeta(website_id, session_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -144,11 +143,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: list_operators ----
-    const paywallMessage = await premiumRequired("list_operators")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await listOperators(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await listOperators(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -164,11 +159,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: list_inboxes ----
-    const paywallMessage = await premiumRequired("list_inboxes")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await listInboxes(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await listInboxes(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -183,7 +174,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await audiencePulse(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await audiencePulse(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

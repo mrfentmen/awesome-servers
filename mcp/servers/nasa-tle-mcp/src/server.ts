@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { satellite, search, browseCatalog } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await satellite(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await satellite(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await search(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -48,7 +47,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await browseCatalog(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await browseCatalog(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -61,10 +60,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: orbital_elements ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_nasa_tle_orbital_elements", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement elements locally (paywall removed)
+    try { return textError("Not yet implemented: elements") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -80,10 +77,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: fleet_tles ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_nasa_tle_fleet_tles", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement tles locally (paywall removed)
+    try { return textError("Not yet implemented: tles") } catch (e) { return textError(String(e)) }
   }
   )
 

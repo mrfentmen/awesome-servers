@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { define, wordRevisions, searchEntries } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await define(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await define(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,10 +30,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: word_languages ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wiktionary_word_languages", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement languages locally (paywall removed)
+    try { return textError("Not yet implemented: languages") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -47,10 +44,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: entry_sections ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wiktionary_entry_sections", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement sections locally (paywall removed)
+    try { return textError("Not yet implemented: sections") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -63,7 +58,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await wordRevisions(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await wordRevisions(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -76,7 +71,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await searchEntries(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await searchEntries(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -89,10 +84,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: entry_categories ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wiktionary_entry_categories", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement categories locally (paywall removed)
+    try { return textError("Not yet implemented: categories") } catch (e) { return textError(String(e)) }
   }
   )
 

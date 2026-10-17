@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, searchJobs, latestJobs, jobsByBoard, companyJobs, salaryInsights, boardCoverage, jobCategories, jobsLastHours, skillDemand } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -35,7 +34,7 @@ export function createServer(): McpServer {
         const combined = [query, category].filter((part) => part && part.trim()).join(" ")
         return text(await searchJobs({ query: combined, location, boards, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -57,7 +56,7 @@ export function createServer(): McpServer {
       try {
         return text(await latestJobs({ location, boards, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -80,7 +79,7 @@ export function createServer(): McpServer {
       try {
         return text(await jobsByBoard({ board, query, location, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -102,7 +101,7 @@ export function createServer(): McpServer {
       try {
         return text(await companyJobs({ company, boards, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -120,7 +119,7 @@ export function createServer(): McpServer {
       try {
         return text(await jobCategories())
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -142,7 +141,7 @@ export function createServer(): McpServer {
       try {
         return text(await salaryInsights(args))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -163,7 +162,7 @@ export function createServer(): McpServer {
       try {
         return text(await boardCoverage(args))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -183,7 +182,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await jobsLastHours(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await jobsLastHours(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -200,7 +199,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await skillDemand(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await skillDemand(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -213,10 +212,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: hiring_thread ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_job_search_hiring_thread", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement thread locally (paywall removed)
+      try { return textError("Not yet implemented: thread") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -229,10 +226,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: role_taxonomy ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_job_search_role_taxonomy", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement taxonomy locally (paywall removed)
+      try { return textError("Not yet implemented: taxonomy") } catch (e) { return textError(String(e)) }
     }
   )
 

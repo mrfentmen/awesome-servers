@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { CernError, formatRecord, getRecord, searchRecords } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -33,7 +32,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No CERN records for "${query}".`)
         return text(rows.map((r, i) => formatRecord(r, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -52,7 +51,7 @@ export function createServer(): McpServer {
       try {
         return text(await getRecord(id))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -66,10 +65,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: record_files ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_cern_record_files", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement files locally (paywall removed)
+    try { return textError("Not yet implemented: files") } catch (e) { return textError(String(e)) }
   }
   )
 

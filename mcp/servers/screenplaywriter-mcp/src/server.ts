@@ -4,7 +4,6 @@ import { writeFile, mkdir, readFile } from "node:fs/promises"
 import { dirname } from "node:path"
 import { astToFountain, estimateRuntime, getSceneBreakdown, parseFountain, sceneToFountain } from "./parser.js"
 import type { SceneNode, ScreenplayAST } from "./types.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const errorMessage = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
@@ -438,10 +437,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: source_material_reference ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_screenplaywriter_source_material_reference", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement reference locally (paywall removed)
+    try { return textError("Not yet implemented: reference") } catch (e) { return textError(String(e)) }
   }
   )
 

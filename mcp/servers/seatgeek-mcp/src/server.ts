@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatEvent, recommendEvents, searchEvents, SeatGeekError } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No events for "${query}".`)
         return text(rows.map((e, i) => formatEvent(e, i)).join("\n\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -54,7 +53,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No events nearby.")
         return text(rows.map((e, i) => formatEvent(e, i)).join("\n\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -72,10 +71,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: artist_briefing ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_seatgeek_artist_briefing", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement briefing locally (paywall removed)
+    try { return textError("Not yet implemented: briefing") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -91,10 +88,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: artist_catalogue ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_seatgeek_artist_catalogue", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement catalogue locally (paywall removed)
+    try { return textError("Not yet implemented: catalogue") } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { countRequests, format, searchRequests, boroughBreakdown } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -57,10 +56,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: agency_breakdown ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_nyc311_agency_breakdown", args)) } catch (e) { return textError(String(e)) }
+    // TODO: implement breakdown locally (paywall removed)
+    try { return textError("Not yet implemented: breakdown") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -86,10 +83,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: open_by_type ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_nyc311_open_by_type", args)) } catch (e) { return textError(String(e)) }
+    // TODO: implement type locally (paywall removed)
+    try { return textError("Not yet implemented: type") } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { headings, toHtml, emojiShortcodes } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await toHtml(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await toHtml(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await headings(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await headings(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,10 +42,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: table_to_markdown ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_markdown_table_to_markdown", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement markdown locally (paywall removed)
+    try { return textError("Not yet implemented: markdown") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -59,10 +56,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: check_document ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_markdown_check_document", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement document locally (paywall removed)
+    try { return textError("Not yet implemented: document") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -75,7 +70,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await premiumTool("mcp_markdown_repository_readme", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement readme locally (paywall removed)
+    try { return textError("Not yet implemented: readme") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -88,7 +84,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await emojiShortcodes(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await emojiShortcodes(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

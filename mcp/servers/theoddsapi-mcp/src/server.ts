@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatGame, gameOdds, listSports, OddsError, fixtureForm } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No sports.")
         return text(rows.map((s, i) => `${i + 1}. [${s.key}] ${s.title ?? ""}${s.group ? ` (${s.group})` : ""}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -50,7 +49,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No upcoming games for ${sport}.`)
         return text(rows.map((g, i) => formatGame(g, i)).join("\n\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -67,10 +66,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: implied_probability ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_theoddsapi_implied_probability", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement probability locally (paywall removed)
+    try { return textError("Not yet implemented: probability") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -87,10 +84,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: expected_value ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_theoddsapi_expected_value", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement value locally (paywall removed)
+    try { return textError("Not yet implemented: value") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -107,7 +102,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await fixtureForm(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await fixtureForm(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

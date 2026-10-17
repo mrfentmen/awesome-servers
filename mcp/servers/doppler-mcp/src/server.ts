@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listProjects, listConfigs, listSecrets, downloadSecrets, configLockStatus, inheritableSecrets, secretDiff } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await listProjects());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -45,7 +44,7 @@ export function createServer(): McpServer {
       try {
         return text(await listConfigs(project));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -66,7 +65,7 @@ export function createServer(): McpServer {
       try {
         return text(await listSecrets(project, config, secrets));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -87,7 +86,7 @@ export function createServer(): McpServer {
       try {
         return text(await downloadSecrets(project, config, format));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -103,7 +102,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await configLockStatus(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await configLockStatus(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -120,11 +119,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: inheritable_secrets ----
-    const paywallMessage = await premiumRequired("inheritable_secrets")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await inheritableSecrets(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await inheritableSecrets(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -142,11 +137,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: secret_diff ----
-    const paywallMessage = await premiumRequired("secret_diff")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await secretDiff(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await secretDiff(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

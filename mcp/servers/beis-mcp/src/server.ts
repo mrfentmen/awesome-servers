@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchProducts(query, limit, maxPrice, productType));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -52,7 +51,7 @@ export function createServer(): McpServer {
       try {
         return text(await listNewest(limit, page, productType));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -71,7 +70,7 @@ export function createServer(): McpServer {
       try {
         return text(await getProduct(handle));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -90,7 +89,7 @@ export function createServer(): McpServer {
       try {
         return text(await priceOverview(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -110,7 +109,7 @@ export function createServer(): McpServer {
       try {
         return text(await findDeals(limit, sample));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -127,7 +126,7 @@ export function createServer(): McpServer {
       try {
         return text(await listCategories());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -143,7 +142,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await listCollections(args.limit)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await listCollections(args.limit)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -160,10 +159,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: collection_products ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_beis_collection_products", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement products locally (paywall removed)
+    try { return textError("Not yet implemented: products") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -178,10 +175,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: type_price_bands ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_beis_type_price_bands", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement bands locally (paywall removed)
+    try { return textError("Not yet implemented: bands") } catch (e) { return textError(String(e)) }
   }
   )
 

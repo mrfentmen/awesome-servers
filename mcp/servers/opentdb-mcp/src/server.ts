@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { categoryCounts, errorMessage, formatQuiz, globalCounts, listCategories, questions, sessionToken, compareCategories, quizReadiness, categoryQuality, questionFairnessAudit } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
         const lines = trivia_categories.map((c) => `  ${String(c.id).padStart(3)}  ${c.name}`)
         return text(`${trivia_categories.length} categories:\n\n${lines.join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -57,7 +56,7 @@ export function createServer(): McpServer {
           ].join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -93,7 +92,7 @@ export function createServer(): McpServer {
           ].join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -117,7 +116,7 @@ export function createServer(): McpServer {
         const list = await questions(amount, category, difficulty, token)
         return text(JSON.stringify(list, null, 2))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -142,7 +141,7 @@ export function createServer(): McpServer {
         const label = [category ? `category ${category}` : "any category", difficulty ?? "any difficulty"].join(", ")
         return text(formatQuiz(list, `Quiz (${label})`))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -165,7 +164,7 @@ export function createServer(): McpServer {
           `${action === "request" ? "New" : "Reset"} session token:\n\n  ${token}\n\nPass it as the token argument to quiz or get_questions.`
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -186,7 +185,7 @@ export function createServer(): McpServer {
       try {
         return text(await compareCategories({ a, b }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -208,7 +207,7 @@ export function createServer(): McpServer {
       try {
         return text(await quizReadiness({ category, difficulty, amount }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -229,7 +228,7 @@ export function createServer(): McpServer {
       try {
         return text(await categoryQuality({ limit, minTotal }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -246,7 +245,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await questionFairnessAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await questionFairnessAudit(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -264,10 +263,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: distractor_quality ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_opentdb_distractor_quality", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement quality locally (paywall removed)
+    try { return textError("Not yet implemented: quality") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -284,10 +281,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: quiz_exploitability ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_opentdb_quiz_exploitability", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement exploitability locally (paywall removed)
+    try { return textError("Not yet implemented: exploitability") } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -33,7 +33,7 @@ export function createServer(): McpServer {
       try {
         return text(await listWorkouts(limit, offset));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -52,7 +52,7 @@ export function createServer(): McpServer {
       try {
         return text(await getWorkout(workoutId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

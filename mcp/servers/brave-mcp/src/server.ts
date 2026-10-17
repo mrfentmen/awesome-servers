@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, webSearch, newsSearch, imageSearch, videoSearch, suggestQueries, spellcheck, listGoggles, faqSearch, discussionSearch, localizedSearch, freshnessSweep, goggleSearch, pagedDive } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(await webSearch(query, count));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -49,7 +48,7 @@ export function createServer(): McpServer {
       try {
         return text(await newsSearch(query, count));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -69,7 +68,7 @@ export function createServer(): McpServer {
       try {
         return text(await imageSearch(query, count));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -89,7 +88,7 @@ export function createServer(): McpServer {
       try {
         return text(await videoSearch(query, count));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -108,7 +107,7 @@ export function createServer(): McpServer {
       try {
         return text(await suggestQueries(query));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -127,7 +126,7 @@ export function createServer(): McpServer {
       try {
         return text(await spellcheck(query));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -144,7 +143,7 @@ export function createServer(): McpServer {
       try {
         return text(await listGoggles());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -164,7 +163,7 @@ export function createServer(): McpServer {
       try {
         return text(await faqSearch(query, count));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -184,7 +183,7 @@ export function createServer(): McpServer {
       try {
         return text(await discussionSearch(query, count));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -205,7 +204,7 @@ export function createServer(): McpServer {
       try {
         return text(await localizedSearch(query, country, count));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -223,11 +222,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: freshness_sweep ----
-    const paywallMessage = await premiumRequired("freshness_sweep")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await freshnessSweep(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await freshnessSweep(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -244,11 +239,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: goggle_search ----
-    const paywallMessage = await premiumRequired("goggle_search")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await goggleSearch(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await goggleSearch(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -265,7 +256,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await pagedDive(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await pagedDive(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

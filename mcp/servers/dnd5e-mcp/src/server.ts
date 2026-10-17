@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { DndError, formatMonster, formatSpell, getClassInfo, getMonster, getSpell, listMonsters, listRaces } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
         if (!m) return text(`No monster "${index}". Try list_monsters for valid slugs.`)
         return text(formatMonster(m))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -48,7 +47,7 @@ export function createServer(): McpServer {
         if (!s) return text(`No spell "${index}".`)
         return text(formatSpell(s))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -70,7 +69,7 @@ export function createServer(): McpServer {
             monsters.map((m, i) => `${i + 1}. ${m.name} [${m.index}]`).join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -113,7 +112,7 @@ export function createServer(): McpServer {
         ].filter(Boolean)
         return text(lines.join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -127,10 +126,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: list_spells ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_dnd5e_list_spells", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement spells locally (paywall removed)
+    try { return textError("Not yet implemented: spells") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -143,10 +140,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: list_magic_items ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_dnd5e_list_magic_items", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement items locally (paywall removed)
+    try { return textError("Not yet implemented: items") } catch (e) { return textError(String(e)) }
   }
   )
 

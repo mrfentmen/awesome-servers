@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_convert, m0_current, m1_listZones, m1_timeInZone } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +19,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_current(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_current(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -32,7 +31,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_convert(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_convert(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -44,7 +43,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_timeInZone(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_timeInZone(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -56,7 +55,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_listZones(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_listZones(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -68,10 +67,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: available_zones ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_timeapi_available_zones", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement zones locally (paywall removed)
+    try { return textError("Not yet implemented: zones") } catch (e) { return textError(String(e)) }
   }
   )
 

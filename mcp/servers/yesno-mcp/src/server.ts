@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { answer, wikipediaPageExists } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await answer(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await answer(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,10 +30,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: is_site_up ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_yesno_is_site_up", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement up locally (paywall removed)
+    try { return textError("Not yet implemented: up") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -47,10 +44,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: is_domain_taken ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_yesno_is_domain_taken", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement taken locally (paywall removed)
+    try { return textError("Not yet implemented: taken") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -63,10 +58,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: is_person_alive ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_yesno_is_person_alive", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement alive locally (paywall removed)
+    try { return textError("Not yet implemented: alive") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -79,10 +72,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: domain_accepts_mail ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_yesno_domain_accepts_mail", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement mail locally (paywall removed)
+    try { return textError("Not yet implemented: mail") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -95,7 +86,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await wikipediaPageExists(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await wikipediaPageExists(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

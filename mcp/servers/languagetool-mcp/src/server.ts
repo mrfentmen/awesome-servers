@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { checkText, formatResult, LanguageToolError, listLanguages, usageExamples } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(formatResult(await checkText(input, language)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
         const langs = await listLanguages()
         return text(langs.map((l) => `${l.code} — ${l.name}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -65,10 +64,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: translate_text ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_languagetool_translate_text", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement text locally (paywall removed)
+      try { return textError("Not yet implemented: text") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -85,10 +82,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: word_lookup ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_languagetool_word_lookup", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement lookup locally (paywall removed)
+      try { return textError("Not yet implemented: lookup") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -101,10 +96,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: word_pronunciation ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_languagetool_word_pronunciation", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement pronunciation locally (paywall removed)
+    try { return textError("Not yet implemented: pronunciation") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -117,7 +110,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await usageExamples(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await usageExamples(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

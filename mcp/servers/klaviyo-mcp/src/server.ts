@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listProfiles, listLists, listCampaigns, profileDetails, listDetails, campaignDetails, metrics, events, flows, segments, disposableCheck, sendingReadiness } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await listProfiles());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       try {
         return text(await listLists());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -60,7 +59,7 @@ export function createServer(): McpServer {
       try {
         return text(await listCampaigns());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -79,7 +78,7 @@ export function createServer(): McpServer {
       try {
         return text(await profileDetails(profile_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -98,7 +97,7 @@ export function createServer(): McpServer {
       try {
         return text(await listDetails(list_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -117,7 +116,7 @@ export function createServer(): McpServer {
       try {
         return text(await campaignDetails(campaign_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -134,7 +133,7 @@ export function createServer(): McpServer {
       try {
         return text(await metrics());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -151,7 +150,7 @@ export function createServer(): McpServer {
       try {
         return text(await events());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -168,7 +167,7 @@ export function createServer(): McpServer {
       try {
         return text(await flows());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -185,7 +184,7 @@ export function createServer(): McpServer {
       try {
         return text(await segments());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -199,11 +198,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: disposable_check ----
-      const paywallMessage = await premiumRequired("disposable_check")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await disposableCheck(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await disposableCheck(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -216,11 +211,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: sending_readiness ----
-      const paywallMessage = await premiumRequired("sending_readiness")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await sendingReadiness(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await sendingReadiness(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

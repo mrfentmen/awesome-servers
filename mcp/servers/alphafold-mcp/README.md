@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: 2cc0a452f6a0aa84999b8922e6fe84ce11fe1167)
 # AlphaFold MCP
 
 Keyless MCP server for AlphaFold: protein structure predictions by UniProt accession, confidence scores, model file links.

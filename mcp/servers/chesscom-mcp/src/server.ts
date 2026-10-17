@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { ChessComError, dailyPuzzle, formatLeaders, formatProfile, formatPuzzle, formatStats, getPlayer, getStats, leaderboards, LEADERBOARD_CATEGORIES, clubProfile } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(formatProfile(await getPlayer(username)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(formatStats(username, await getStats(username)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -64,7 +63,7 @@ export function createServer(): McpServer {
       try {
         return text(formatPuzzle(await dailyPuzzle()))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -84,7 +83,7 @@ export function createServer(): McpServer {
       try {
         return text(formatLeaders(category, await leaderboards(category, limit)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -98,10 +97,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: recent_games ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_chesscom_recent_games", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement games locally (paywall removed)
+    try { return textError("Not yet implemented: games") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -114,7 +111,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await clubProfile(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await clubProfile(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -127,10 +124,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: club_members ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_chesscom_club_members", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement members locally (paywall removed)
+    try { return textError("Not yet implemented: members") } catch (e) { return textError(String(e)) }
   }
   )
 

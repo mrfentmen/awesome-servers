@@ -30,7 +30,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`Nothing found for "${query}".`)
         return text(rows.map((o, i) => formatObject(o, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -47,7 +47,7 @@ export function createServer(): McpServer {
       try {
         return text(await openAccessCorpus(args))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -68,7 +68,7 @@ export function createServer(): McpServer {
       try {
         return text(await openAccessDigest(args))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

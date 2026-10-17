@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatStream, formatUser, getUser, topGames, topStreams, TwitchError, serviceStatus } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No games right now.")
         return text(rows.map((g, i) => `${i + 1}. [${g.id}] ${g.name}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -52,7 +51,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No live streams right now.")
         return text(rows.map((s, i) => formatStream(s, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -73,7 +72,7 @@ export function createServer(): McpServer {
         if (!u) return text(`No Twitch user "${login}".`)
         return text(formatUser(u))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -88,7 +87,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (_args) => {
-    try { return text(await serviceStatus()) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await serviceStatus()) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -104,10 +103,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: game_demand ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_twitch_game_demand", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement demand locally (paywall removed)
+    try { return textError("Not yet implemented: demand") } catch (e) { return textError(String(e)) }
   }
   )
 

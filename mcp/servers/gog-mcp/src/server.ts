@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { browseGames, deals, gameDetails, gamesByIds, searchGames, topRated, priceCheck, browseByType, errorMessage } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -22,7 +21,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await browseGames(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await browseGames(args)) } catch (e) { return textError(String(e)) }
     }
   )
   server.registerTool(
@@ -37,7 +36,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await searchGames(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await searchGames(args)) } catch (e) { return textError(String(e)) }
     }
   )
   server.registerTool(
@@ -52,7 +51,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await deals(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await deals(args)) } catch (e) { return textError(String(e)) }
     }
   )
   server.registerTool(
@@ -66,7 +65,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await topRated(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await topRated(args)) } catch (e) { return textError(String(e)) }
     }
   )
   server.registerTool(
@@ -80,7 +79,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await gameDetails(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await gameDetails(args)) } catch (e) { return textError(String(e)) }
     }
   )
   server.registerTool(
@@ -94,7 +93,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await gamesByIds(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await gamesByIds(args)) } catch (e) { return textError(String(e)) }
     }
   )
   server.registerTool(
@@ -108,7 +107,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await priceCheck(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await priceCheck(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -125,7 +124,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await browseByType(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await browseByType(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -140,10 +139,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: gog_news ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_gog_gog_news", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement news locally (paywall removed)
+      try { return textError("Not yet implemented: news") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -159,10 +156,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: steam_reception ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_gog_steam_reception", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement reception locally (paywall removed)
+      try { return textError("Not yet implemented: reception") } catch (e) { return textError(String(e)) }
     }
   )
 

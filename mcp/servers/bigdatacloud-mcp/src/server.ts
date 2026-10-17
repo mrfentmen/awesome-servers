@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { clientIp, reverseGeocode, distanceBetween } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await clientIp(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await clientIp(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await reverseGeocode(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await reverseGeocode(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,10 +42,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: location_hierarchy ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_bigdatacloud_location_hierarchy", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement hierarchy locally (paywall removed)
+    try { return textError("Not yet implemented: hierarchy") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -59,10 +56,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: location_codes ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_bigdatacloud_location_codes", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement codes locally (paywall removed)
+    try { return textError("Not yet implemented: codes") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -75,7 +70,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await distanceBetween(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await distanceBetween(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

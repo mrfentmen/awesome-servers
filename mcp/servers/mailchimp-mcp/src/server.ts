@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, ping, listLists, listMembers, listCampaigns, listDetails, memberDetails, campaignDetails, automations, segments, campaignReport, audienceHygieneAudit, emailComplianceScan } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await ping());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -45,7 +44,7 @@ export function createServer(): McpServer {
       try {
         return text(await listLists(count));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       try {
         return text(await listMembers(list_id, count));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -84,7 +83,7 @@ export function createServer(): McpServer {
       try {
         return text(await listCampaigns(count));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -103,7 +102,7 @@ export function createServer(): McpServer {
       try {
         return text(await listDetails(list_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -123,7 +122,7 @@ export function createServer(): McpServer {
       try {
         return text(await memberDetails(list_id, email));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -142,7 +141,7 @@ export function createServer(): McpServer {
       try {
         return text(await campaignDetails(campaign_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -159,7 +158,7 @@ export function createServer(): McpServer {
       try {
         return text(await automations());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -178,7 +177,7 @@ export function createServer(): McpServer {
       try {
         return text(await segments(list_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -197,7 +196,7 @@ export function createServer(): McpServer {
       try {
         return text(await campaignReport(campaign_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -211,11 +210,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: audience_hygiene_audit ----
-      const paywallMessage = await premiumRequired("audience_hygiene_audit")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await audienceHygieneAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await audienceHygieneAudit(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -228,11 +223,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: email_compliance_scan ----
-      const paywallMessage = await premiumRequired("email_compliance_scan")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await emailComplianceScan(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await emailComplianceScan(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

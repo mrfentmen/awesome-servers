@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, getStatus, search, getCharacter, getCorporation, getAlliance, getMarketPrices, incursionWatch } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(await getStatus(datasource));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -51,7 +50,7 @@ export function createServer(): McpServer {
       try {
         return text(await search(query, categories, strict, datasource));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -71,7 +70,7 @@ export function createServer(): McpServer {
       try {
         return text(await getCharacter(characterId, datasource));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -91,7 +90,7 @@ export function createServer(): McpServer {
       try {
         return text(await getCorporation(corporationId, datasource));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -111,7 +110,7 @@ export function createServer(): McpServer {
       try {
         return text(await getAlliance(allianceId, datasource));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -130,7 +129,7 @@ export function createServer(): McpServer {
       try {
         return text(await getMarketPrices(datasource));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -148,10 +147,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: faction_directory ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_eveonline_faction_directory", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement directory locally (paywall removed)
+    try { return textError("Not yet implemented: directory") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -168,10 +165,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: region_profile ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_eveonline_region_profile", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement profile locally (paywall removed)
+    try { return textError("Not yet implemented: profile") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -187,7 +182,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await incursionWatch(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await incursionWatch(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

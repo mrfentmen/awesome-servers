@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { coneSearch, lookupObject, SimbadError, objectIdentifiers } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await lookupObject(ident))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -50,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(await coneSearch(ra, dec, radius, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -66,10 +65,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: object_photometry ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_simbad_object_photometry", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement photometry locally (paywall removed)
+      try { return textError("Not yet implemented: photometry") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -84,10 +81,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: object_references ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_simbad_object_references", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement references locally (paywall removed)
+      try { return textError("Not yet implemented: references") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -105,7 +100,7 @@ export function createServer(): McpServer {
       try {
         return text(await objectIdentifiers(args))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -119,10 +114,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: object_kinematics ----
-    // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_simbad_object_kinematics", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement kinematics locally (paywall removed)
+    try { return textError("Not yet implemented: kinematics") } catch (e) { return textError(String(e)) }
   }
   )
 

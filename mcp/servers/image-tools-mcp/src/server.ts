@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { inspectImage } from "./api.js"
 import { resizeImage, probeUrl, convertUrlImage } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -21,7 +20,7 @@ export function createServer(): McpServer {
       annotations: WRITE,
     },
     async (args) => {
-    try { return text(await resizeImage(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await resizeImage(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -33,7 +32,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await inspectImage(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await inspectImage(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -45,11 +44,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: probe_url ----
-    const paywallMessage = await premiumRequired("probe_url")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await probeUrl(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await probeUrl(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -62,11 +57,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: convert_url_image ----
-    const paywallMessage = await premiumRequired("convert_url_image")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await convertUrlImage(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await convertUrlImage(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

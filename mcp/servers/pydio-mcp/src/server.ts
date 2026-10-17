@@ -30,7 +30,7 @@ export function createServer(): McpServer {
       try {
         return text(await listWorkspaces());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -49,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(await getTreeStats(node_paths));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

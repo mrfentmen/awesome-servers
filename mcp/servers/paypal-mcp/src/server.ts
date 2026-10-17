@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, getOrder, getCapture, listPlans, planDetails, listProducts, productDetails, subscriptionDetails, payoutDetails, listWebhooks, disputeDetails, payoutMarketProfile, payoutFxTrend, payoutMarketScan } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await getOrder(order_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await getCapture(capture_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -64,7 +63,7 @@ export function createServer(): McpServer {
       try {
         return text(await listPlans());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -83,7 +82,7 @@ export function createServer(): McpServer {
       try {
         return text(await planDetails(plan_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -100,7 +99,7 @@ export function createServer(): McpServer {
       try {
         return text(await listProducts());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -119,7 +118,7 @@ export function createServer(): McpServer {
       try {
         return text(await productDetails(product_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -138,7 +137,7 @@ export function createServer(): McpServer {
       try {
         return text(await subscriptionDetails(subscription_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -157,7 +156,7 @@ export function createServer(): McpServer {
       try {
         return text(await payoutDetails(payout_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -174,7 +173,7 @@ export function createServer(): McpServer {
       try {
         return text(await listWebhooks());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -193,7 +192,7 @@ export function createServer(): McpServer {
       try {
         return text(await disputeDetails(dispute_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -210,11 +209,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: payout_market_profile ----
-    const paywallMessage = await premiumRequired("payout_market_profile")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await payoutMarketProfile(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await payoutMarketProfile(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -231,7 +226,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await payoutFxTrend(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await payoutFxTrend(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -249,11 +244,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: payout_market_scan ----
-    const paywallMessage = await premiumRequired("payout_market_scan")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await payoutMarketScan(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await payoutMarketScan(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { format, forecast } from "./forecaster.js"
 import { commitCadence, objectStore, repositoryHealth } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -41,10 +40,6 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (input) => {
-    // ---- paywall: commit_cadence ----
-    const paywallMessage = await premiumRequired("commit_cadence")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await commitCadence(input)) } catch (e) { return errorText(e) }
   }
   )
@@ -77,10 +72,6 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (input) => {
-    // ---- paywall: object_store ----
-    const paywallMessage = await premiumRequired("object_store")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await objectStore(input)) } catch (e) { return errorText(e) }
   }
   )

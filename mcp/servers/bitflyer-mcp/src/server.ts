@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { ticker, board, markets, marketSummary } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await ticker(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await ticker(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await board(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await board(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await markets(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await markets(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -55,10 +54,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: recent_trades ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_bitflyer_recent_trades", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement trades locally (paywall removed)
+    try { return textError("Not yet implemented: trades") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -71,7 +68,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await marketSummary(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await marketSummary(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -84,10 +81,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: cross_market_check ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_bitflyer_cross_market_check", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement check locally (paywall removed)
+    try { return textError("Not yet implemented: check") } catch (e) { return textError(String(e)) }
   }
   )
 

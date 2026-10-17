@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, recentUrls, lookupUrl, lookupPayload, searchTag, feedDigest, domainReputation } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await recentUrls(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await lookupUrl(url));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -66,7 +65,7 @@ export function createServer(): McpServer {
       try {
         return text(await lookupPayload(sha256));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -86,7 +85,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchTag(tag, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -104,11 +103,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: feed_digest ----
-    const paywallMessage = await premiumRequired("feed_digest")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await feedDigest(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await feedDigest(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -125,7 +120,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await domainReputation(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await domainReputation(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

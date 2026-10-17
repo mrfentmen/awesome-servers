@@ -38,7 +38,7 @@ export function createServer(): McpServer {
       try {
         return text(await listBases());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -57,7 +57,7 @@ export function createServer(): McpServer {
       try {
         return text(await listTables(base_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -78,7 +78,7 @@ export function createServer(): McpServer {
       try {
         return text(await listRecords(base_id, table, max_records));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -99,7 +99,7 @@ export function createServer(): McpServer {
       try {
         return text(await getRecord(base_id, table, record_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -121,7 +121,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchRecords(base_id, table, formula, max_records));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -142,7 +142,7 @@ export function createServer(): McpServer {
       try {
         return text(await createRecord(base_id, table, fields_json));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -164,7 +164,7 @@ export function createServer(): McpServer {
       try {
         return text(await updateRecord(base_id, table, record_id, fields_json));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -185,7 +185,7 @@ export function createServer(): McpServer {
       try {
         return text(await deleteRecord(base_id, table, record_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -204,7 +204,7 @@ export function createServer(): McpServer {
       try {
         return text(await listWebhooks(base_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -225,7 +225,7 @@ export function createServer(): McpServer {
       try {
         return text(await recordComments(base_id, table, record_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

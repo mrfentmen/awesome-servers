@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, browse, getFile, getLatestAlert } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await browse(path));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await getFile(path));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       try {
         return text(await getLatestAlert());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -82,10 +81,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: directory_stats ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_chmi_directory_stats", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement stats locally (paywall removed)
+      try { return textError("Not yet implemented: stats") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -102,10 +99,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: directory_tree ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_chmi_directory_tree", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement tree locally (paywall removed)
+      try { return textError("Not yet implemented: tree") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -118,10 +113,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: find_documents ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_chmi_find_documents", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement documents locally (paywall removed)
+    try { return textError("Not yet implemented: documents") } catch (e) { return textError(String(e)) }
   }
   )
 

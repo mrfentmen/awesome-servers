@@ -32,7 +32,7 @@ export function createServer(): McpServer {
       try {
         return text(await listDatasets());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -51,7 +51,7 @@ export function createServer(): McpServer {
       try {
         return text(await listVersions(dataset));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -72,7 +72,7 @@ export function createServer(): McpServer {
       try {
         return text(await listFiles(dataset, version, maxKeys));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -93,7 +93,7 @@ export function createServer(): McpServer {
       try {
         return text(await getFile(dataset, version, filename));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

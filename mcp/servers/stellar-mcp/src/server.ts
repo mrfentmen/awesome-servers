@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { ledgers } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await ledgers(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await ledgers(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,10 +30,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: stellar_assets ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_stellar_stellar_assets", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement assets locally (paywall removed)
+    try { return textError("Not yet implemented: assets") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -47,10 +44,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: stellar_payments ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_stellar_stellar_payments", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement payments locally (paywall removed)
+    try { return textError("Not yet implemented: payments") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -63,10 +58,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: horizon_root ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_stellar_horizon_root", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement root locally (paywall removed)
+    try { return textError("Not yet implemented: root") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -79,10 +72,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: transaction_detail ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_stellar_transaction_detail", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement detail locally (paywall removed)
+    try { return textError("Not yet implemented: detail") } catch (e) { return textError(String(e)) }
   }
   )
 

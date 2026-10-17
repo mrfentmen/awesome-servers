@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listChannels, getHistory, postMessage, listUsers, userInfo, channelInfo, threadReplies, emojiList, pinMessage, setTopic, serviceIncidentHistory, incidentServiceRanking } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(await listChannels(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -49,7 +48,7 @@ export function createServer(): McpServer {
       try {
         return text(await getHistory(channel, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -69,7 +68,7 @@ export function createServer(): McpServer {
       try {
         return text(await postMessage(channel, message));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -88,7 +87,7 @@ export function createServer(): McpServer {
       try {
         return text(await listUsers(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -107,7 +106,7 @@ export function createServer(): McpServer {
       try {
         return text(await userInfo(user));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -126,7 +125,7 @@ export function createServer(): McpServer {
       try {
         return text(await channelInfo(channel));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -146,7 +145,7 @@ export function createServer(): McpServer {
       try {
         return text(await threadReplies(channel, ts));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -163,7 +162,7 @@ export function createServer(): McpServer {
       try {
         return text(await emojiList());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -183,7 +182,7 @@ export function createServer(): McpServer {
       try {
         return text(await pinMessage(channel, timestamp));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -203,7 +202,7 @@ export function createServer(): McpServer {
       try {
         return text(await setTopic(channel, topic));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -221,11 +220,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: service_incident_history ----
-    const paywallMessage = await premiumRequired("service_incident_history")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await serviceIncidentHistory(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await serviceIncidentHistory(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -241,7 +236,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await incidentServiceRanking(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await incidentServiceRanking(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

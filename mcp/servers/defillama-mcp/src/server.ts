@@ -1,7 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { m0_chains, m0_protocol, m1_chainTvl, m1_protocolInfo, m1_topProtocols, topYields, hacks, stablecoins, dexVolume, feesOverview, stablecoinChains } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -17,7 +16,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_chains(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_chains(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -29,7 +28,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_protocol(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_protocol(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -41,7 +40,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_topProtocols(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_topProtocols(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -53,7 +52,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_chainTvl(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_chainTvl(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -65,7 +64,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_protocolInfo(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_protocolInfo(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -77,7 +76,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await topYields(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await topYields(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -89,7 +88,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await hacks(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await hacks(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -101,7 +100,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await stablecoins(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await stablecoins(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -114,7 +113,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await dexVolume(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await dexVolume(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -127,7 +126,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await feesOverview(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await feesOverview(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -143,7 +142,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await stablecoinChains(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await stablecoinChains(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -159,10 +158,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: stablecoin_history ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_defillama_stablecoin_history", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement history locally (paywall removed)
+    try { return textError("Not yet implemented: history") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -178,10 +175,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: aggregator_volume ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_defillama_aggregator_volume", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement volume locally (paywall removed)
+    try { return textError("Not yet implemented: volume") } catch (e) { return textError(String(e)) }
   }
   )
 

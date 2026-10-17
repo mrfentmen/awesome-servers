@@ -26,7 +26,7 @@ export function createServer(): McpServer {
         const info = await serverInfo()
         return text(`${info.name ?? "Emby"}${info.version ? ` ${info.version}` : ""}${info.id ? `\nId: ${info.id}` : ""}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -45,7 +45,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No users.")
         return text(rows.map((u, i) => formatUser(u, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -64,7 +64,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No libraries.")
         return text(rows.map((l, i) => formatLibrary(l, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

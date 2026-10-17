@@ -33,7 +33,7 @@ export function createServer(): McpServer {
       try {
         return text(await getInfo());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -51,7 +51,7 @@ export function createServer(): McpServer {
       try {
         return text(await getState());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -70,7 +70,7 @@ export function createServer(): McpServer {
       try {
         return text(await setPower(on));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -88,7 +88,7 @@ export function createServer(): McpServer {
       try {
         return text(await getEffects());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

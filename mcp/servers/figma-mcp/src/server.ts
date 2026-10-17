@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, me, getFile, projectFiles, teamProjects, fileComments, fileVersions, fileComponents, fileStyles, fileNodes, fileImages, fileVariables, componentSets, fileStructure } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await me());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -45,7 +44,7 @@ export function createServer(): McpServer {
       try {
         return text(await getFile(file_key));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -64,7 +63,7 @@ export function createServer(): McpServer {
       try {
         return text(await projectFiles(project_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -83,7 +82,7 @@ export function createServer(): McpServer {
       try {
         return text(await teamProjects(team_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -102,7 +101,7 @@ export function createServer(): McpServer {
       try {
         return text(await fileComments(file_key));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -121,7 +120,7 @@ export function createServer(): McpServer {
       try {
         return text(await fileVersions(file_key));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -140,7 +139,7 @@ export function createServer(): McpServer {
       try {
         return text(await fileComponents(file_key));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -159,7 +158,7 @@ export function createServer(): McpServer {
       try {
         return text(await fileStyles(file_key));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -179,7 +178,7 @@ export function createServer(): McpServer {
       try {
         return text(await fileNodes(file_key, node_ids));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -199,7 +198,7 @@ export function createServer(): McpServer {
       try {
         return text(await fileImages(file_key, node_ids));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -216,11 +215,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: file_variables ----
-    const paywallMessage = await premiumRequired("file_variables")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await fileVariables(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await fileVariables(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -237,11 +232,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: component_sets ----
-    const paywallMessage = await premiumRequired("component_sets")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await componentSets(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await componentSets(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -258,7 +249,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await fileStructure(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await fileStructure(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

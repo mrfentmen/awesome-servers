@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listTickets, getTicket, listContacts, contactDetails, agents, companies, groups, conversations, satisfaction, canned, serviceStatus, domainCertificates } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await listTickets());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -45,7 +44,7 @@ export function createServer(): McpServer {
       try {
         return text(await getTicket(ticket_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -62,7 +61,7 @@ export function createServer(): McpServer {
       try {
         return text(await listContacts());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -81,7 +80,7 @@ export function createServer(): McpServer {
       try {
         return text(await contactDetails(contact_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -98,7 +97,7 @@ export function createServer(): McpServer {
       try {
         return text(await agents());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -115,7 +114,7 @@ export function createServer(): McpServer {
       try {
         return text(await companies());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -132,7 +131,7 @@ export function createServer(): McpServer {
       try {
         return text(await groups());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -151,7 +150,7 @@ export function createServer(): McpServer {
       try {
         return text(await conversations(ticket_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -168,7 +167,7 @@ export function createServer(): McpServer {
       try {
         return text(await satisfaction());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -185,7 +184,7 @@ export function createServer(): McpServer {
       try {
         return text(await canned());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -202,11 +201,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: service_status ----
-      const paywallMessage = await premiumRequired("service_status")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await serviceStatus(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await serviceStatus(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -223,11 +218,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: domain_certificates ----
-      const paywallMessage = await premiumRequired("domain_certificates")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await domainCertificates(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await domainCertificates(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

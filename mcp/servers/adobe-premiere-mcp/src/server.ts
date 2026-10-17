@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: 561dfd2010c86e9e1ac6a7e12ae5dc63cc46fc53)
 import { mediaProbe, timecodeConvert, searchArchiveFootage } from "./api.js"
 // @ts-nocheck
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
@@ -270,7 +269,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await searchArchiveFootage(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await searchArchiveFootage(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

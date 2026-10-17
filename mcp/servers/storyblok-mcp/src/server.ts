@@ -25,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await getSpace())
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -47,7 +47,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No stories.")
         return text(rows.map((s, i) => formatStory(s, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -66,7 +66,7 @@ export function createServer(): McpServer {
       try {
         return text(formatStoryDetail(await getStory(slug)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

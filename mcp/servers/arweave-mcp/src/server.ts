@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { ArweaveError, networkInfo, storagePrice, txStatus, walletBalance, searchByTag, addressTransactions, blockDetail } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -25,7 +24,7 @@ export function createServer(): McpServer {
       try {
         return text(await networkInfo())
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -44,7 +43,7 @@ export function createServer(): McpServer {
       try {
         return text(await txStatus(id))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -63,7 +62,7 @@ export function createServer(): McpServer {
       try {
         return text(await walletBalance(address))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -82,7 +81,7 @@ export function createServer(): McpServer {
       try {
         return text(await storagePrice(bytes))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -104,7 +103,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchByTag({ tag, value, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -125,7 +124,7 @@ export function createServer(): McpServer {
       try {
         return text(await addressTransactions({ address, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -145,7 +144,7 @@ export function createServer(): McpServer {
       try {
         return text(await blockDetail({ height }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -159,8 +158,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: price_table ----
-    try { return text(await premiumTool("mcp_arweave_price_table", { ...args, gatewayUrl: process.env.ARWEAVE_URL })) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement table locally (paywall removed)
+    try { return textError("Not yet implemented: table") } catch (e) { return textError(String(e)) }
   }
   )
 

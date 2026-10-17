@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, listProvinces, listDistricts, getDaily, getHourly } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -27,7 +26,7 @@ export function createServer(): McpServer {
       try {
         return text(await listProvinces());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -46,7 +45,7 @@ export function createServer(): McpServer {
       try {
         return text(await listDistricts(il));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       try {
         return text(await getDaily(istno));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -84,7 +83,7 @@ export function createServer(): McpServer {
       try {
         return text(await getHourly(istno));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -101,10 +100,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: current_conditions ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_mgm_current_conditions", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement conditions locally (paywall removed)
+      try { return textError("Not yet implemented: conditions") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -121,10 +118,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: province_board ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_mgm_province_board", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement board locally (paywall removed)
+      try { return textError("Not yet implemented: board") } catch (e) { return textError(String(e)) }
     }
   )
 

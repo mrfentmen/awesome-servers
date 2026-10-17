@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, search, listUsers, getPage, queryDatabase, blockChildren, searchDatabases, getUser, appendBlock, updatePageTitle, createPage, notionPageMetadata, notionIdAudit } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(await search(query));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -46,7 +45,7 @@ export function createServer(): McpServer {
       try {
         return text(await listUsers());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       try {
         return text(await getPage(page_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -84,7 +83,7 @@ export function createServer(): McpServer {
       try {
         return text(await queryDatabase(database_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -103,7 +102,7 @@ export function createServer(): McpServer {
       try {
         return text(await blockChildren(block_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -122,7 +121,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchDatabases(query));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -141,7 +140,7 @@ export function createServer(): McpServer {
       try {
         return text(await getUser(user_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -161,7 +160,7 @@ export function createServer(): McpServer {
       try {
         return text(await appendBlock(block_id, paragraph));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -181,7 +180,7 @@ export function createServer(): McpServer {
       try {
         return text(await updatePageTitle(page_id, title));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -201,7 +200,7 @@ export function createServer(): McpServer {
       try {
         return text(await createPage(parent_page_id, title));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -215,11 +214,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: notion_page_metadata ----
-      const paywallMessage = await premiumRequired("notion_page_metadata")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await notionPageMetadata(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await notionPageMetadata(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -232,11 +227,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: notion_id_audit ----
-      const paywallMessage = await premiumRequired("notion_id_audit")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await notionIdAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await notionIdAudit(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { lookup, barcodeCheck } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await lookup(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await lookup(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await barcodeCheck(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await barcodeCheck(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -44,10 +43,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: product_evidence ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_upcitemdb_product_evidence", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement evidence locally (paywall removed)
+    try { return textError("Not yet implemented: evidence") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -60,10 +57,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: compare_barcodes ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_upcitemdb_compare_barcodes", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement barcodes locally (paywall removed)
+    try { return textError("Not yet implemented: barcodes") } catch (e) { return textError(String(e)) }
   }
   )
 

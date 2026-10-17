@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { parseYaml } from "./api.js"
 import { toJson, listOperations, listRepoContents } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -20,7 +19,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await parseYaml(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await parseYaml(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -32,7 +31,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await toJson(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await toJson(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -44,11 +43,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: openapi_operations ----
-    const paywallMessage = await premiumRequired("openapi_operations")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await listOperations(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await listOperations(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -61,11 +56,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: repo_file_listing ----
-    const paywallMessage = await premiumRequired("repo_file_listing")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await listRepoContents(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await listRepoContents(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

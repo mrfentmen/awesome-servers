@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: 1dfe6aaaedb8a6ca25fa4545a06ef8b9df1a24eb)
 const BASE = 'https://mainnet-api.algonode.cloud/v2/status';
 
 export interface StatusArgs {

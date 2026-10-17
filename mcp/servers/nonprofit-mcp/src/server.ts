@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { compare, details, errorMessage, financialSummary, formatDetails, formatSearch, search, searchByCategory, searchByState, searchBySubsection, filings } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       try {
         return text(formatSearch(await search(query, page), `Nonprofits matching "${query}"`))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -51,7 +50,7 @@ export function createServer(): McpServer {
       try {
         return text(formatSearch(await searchByState(state, page), `Nonprofits in ${state.toUpperCase()}`))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -75,7 +74,7 @@ export function createServer(): McpServer {
         const label = `Nonprofits with NTEE ${ntee_code.toUpperCase()}${state ? ` in ${state.toUpperCase()}` : ""}`
         return text(formatSearch(await searchByCategory(ntee_code, state, page), label))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -95,7 +94,7 @@ export function createServer(): McpServer {
       try {
         return text(formatDetails(await details(ein)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -115,7 +114,7 @@ export function createServer(): McpServer {
       try {
         return text(financialSummary(await details(ein)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -134,7 +133,7 @@ export function createServer(): McpServer {
       try {
         return text(await compare(eins.split(",")))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -152,7 +151,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await searchBySubsection(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await searchBySubsection(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -168,7 +167,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await filings(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await filings(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -181,10 +180,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: state_sector_census ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_nonprofit_state_sector_census", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement census locally (paywall removed)
+      try { return textError("Not yet implemented: census") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -197,10 +194,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: filing_recency_audit ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_nonprofit_filing_recency_audit", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement audit locally (paywall removed)
+      try { return textError("Not yet implemented: audit") } catch (e) { return textError(String(e)) }
     }
   )
 

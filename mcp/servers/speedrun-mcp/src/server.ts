@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { SpeedrunError, formatGame, formatRecordCategory, getCategories, getLeaderboard, getRunner, getWorldRecords, searchGames } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
         if (games.length === 0) return text(`No speedrun.com games match "${query}".`)
         return text(`Games matching "${query}":\n${games.map((g, i) => formatGame(g, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -49,7 +48,7 @@ export function createServer(): McpServer {
         if (records.length === 0) return text(`No records found for game ${gameId}.`)
         return text(`World records for ${gameId}:\n\n${records.map(formatRecordCategory).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -84,7 +83,7 @@ export function createServer(): McpServer {
               .join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -109,7 +108,7 @@ export function createServer(): McpServer {
               .join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -135,7 +134,7 @@ export function createServer(): McpServer {
             `${u.runCount !== undefined ? `Runs on profile: ${u.runCount}` : ""}`
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -149,10 +148,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: latest_runs ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_speedrun_latest_runs", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement runs locally (paywall removed)
+    try { return textError("Not yet implemented: runs") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -165,10 +162,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: player_pbs ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_speedrun_player_pbs", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement pbs locally (paywall removed)
+    try { return textError("Not yet implemented: pbs") } catch (e) { return textError(String(e)) }
   }
   )
 

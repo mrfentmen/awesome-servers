@@ -34,7 +34,7 @@ export function createServer(): McpServer {
       try {
         return text(await getHourlyForecast(latitude, longitude));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -54,7 +54,7 @@ export function createServer(): McpServer {
       try {
         return text(await getThreeHourlyForecast(latitude, longitude));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -74,7 +74,7 @@ export function createServer(): McpServer {
       try {
         return text(await getDailyForecast(latitude, longitude));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

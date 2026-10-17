@@ -1,4 +1,3 @@
-import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { FaunaError, listCollections, runQuery, fqlCompare } from "./api.js"
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No collections.")
         return text(rows.map((c, i) => `${i + 1}. ${c}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -48,7 +47,7 @@ export function createServer(): McpServer {
       try {
         return text(await runQuery(fql))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -62,13 +61,11 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: fql_lint ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_fauna_fql_lint", args))
+        // TODO: implement lint locally (paywall removed)
+        try { return textError("Not yet implemented: lint") } catch (e) { return textError(String(e)) }
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -88,7 +85,7 @@ export function createServer(): McpServer {
       try {
         return text(await fqlCompare({ before, after }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listAccounts, getAccount, listTransactions, fdicInstitutionSearch, fdicCallReportCompare } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await listAccounts());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -45,7 +44,7 @@ export function createServer(): McpServer {
       try {
         return text(await getAccount(account_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       try {
         return text(await listTransactions(account_id, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -79,11 +78,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: fdic_institution_search ----
-      const paywallMessage = await premiumRequired("fdic_institution_search")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await fdicInstitutionSearch(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await fdicInstitutionSearch(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -96,11 +91,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: fdic_call_report_compare ----
-      const paywallMessage = await premiumRequired("fdic_call_report_compare")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await fdicCallReportCompare(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await fdicCallReportCompare(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

@@ -1,5 +1,4 @@
 // @ts-nocheck
-import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { componentReliability } from "./api.js"
@@ -369,11 +368,9 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args: any) => {
-      // ---- paywall: incident_history ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        const value = await premiumTool("mcp_twilio_incident_history", args)
+        // TODO: implement history locally (paywall removed)
+        try { return textError("Not yet implemented: history") } catch (e) { return textError(String(e)) }
         return { content: [{ type: "text", text: value }] }
       } catch (err) {
         return { content: [{ type: "text", text: `Error: ${(err as Error).message}` }] , isError: true }

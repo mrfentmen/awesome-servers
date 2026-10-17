@@ -36,7 +36,7 @@ export function createServer(): McpServer {
       try {
         return text(await getPlayer(playerName, shard));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -56,7 +56,7 @@ export function createServer(): McpServer {
       try {
         return text(await getMatch(matchId, shard));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -75,7 +75,7 @@ export function createServer(): McpServer {
       try {
         return text(await getSeasons(shard));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -95,7 +95,7 @@ export function createServer(): McpServer {
       try {
         return text(await getLifetimeStats(accountId, shard));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -116,7 +116,7 @@ export function createServer(): McpServer {
       try {
         return text(await getSeasonStats(accountId, seasonId, shard));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

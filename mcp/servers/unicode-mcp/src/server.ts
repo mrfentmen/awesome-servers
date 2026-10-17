@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { character, emojiSearch, format, searchBlocks } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -56,10 +55,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: get_character_age ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_unicode_get_character_age", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement age locally (paywall removed)
+    try { return textError("Not yet implemented: age") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -72,10 +69,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: check_normalization ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_unicode_check_normalization", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement normalization locally (paywall removed)
+    try { return textError("Not yet implemented: normalization") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -88,10 +83,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: search_named_sequences ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_unicode_search_named_sequences", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement sequences locally (paywall removed)
+    try { return textError("Not yet implemented: sequences") } catch (e) { return textError(String(e)) }
   }
   )
 

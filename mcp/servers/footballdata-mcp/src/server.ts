@@ -27,7 +27,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No competitions.")
         return text(rows.map((c, i) => formatCompetition(c, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -49,7 +49,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No matches for team ${team_id}.`)
         return text(rows.map((m, i) => `${i + 1}. ${m}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

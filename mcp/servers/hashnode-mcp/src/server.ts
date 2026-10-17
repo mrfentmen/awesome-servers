@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, me, publicationPosts, getUser, publicationInfo, postDetails, seriesList, tagInfo, userStats, userPublications, publicationMembers, userProfile, authorEngagement } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await me());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -46,7 +45,7 @@ export function createServer(): McpServer {
       try {
         return text(await publicationPosts(host, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       try {
         return text(await getUser(username));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -84,7 +83,7 @@ export function createServer(): McpServer {
       try {
         return text(await publicationInfo(host));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -104,7 +103,7 @@ export function createServer(): McpServer {
       try {
         return text(await postDetails(host, slug));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -124,7 +123,7 @@ export function createServer(): McpServer {
       try {
         return text(await seriesList(host, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -143,7 +142,7 @@ export function createServer(): McpServer {
       try {
         return text(await tagInfo(slug));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -162,7 +161,7 @@ export function createServer(): McpServer {
       try {
         return text(await userStats(username));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -181,7 +180,7 @@ export function createServer(): McpServer {
       try {
         return text(await userPublications(username));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -200,7 +199,7 @@ export function createServer(): McpServer {
       try {
         return text(await publicationMembers(host));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -215,11 +214,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: user_profile ----
-      const paywallMessage = await premiumRequired("user_profile")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await userProfile(args.username)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await userProfile(args.username)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -232,11 +227,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: author_engagement ----
-      const paywallMessage = await premiumRequired("author_engagement")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await authorEngagement(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await authorEngagement(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

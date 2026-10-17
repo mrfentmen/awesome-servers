@@ -21,21 +21,4 @@ NYPD arrest records (NYC Open Data, keyless; optional NYC_APP_TOKEN): search by 
 
 [nyc-arrests-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/nyc-arrests-mcp)
 
-<!-- paywall -->
-## Premium tools
 
-These tools need a license key:
-
-* `arrest_trend`
-* `borough_category_matrix`
-
-Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-nyc-arrests-mcp and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
-```
-
-The key is checked against MCP Marketplace, cached for 24 hours, and keeps
-working offline once one check has succeeded. Every other tool on this server
-stays free.
-<!-- /paywall -->

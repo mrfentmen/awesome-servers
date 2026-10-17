@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { nodesInBox, tag_census } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await nodesInBox(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await nodesInBox(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -40,10 +39,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: map_features ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_overpass_map_features", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement features locally (paywall removed)
+      try { return textError("Not yet implemented: features") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -62,10 +59,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: named_places ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_overpass_named_places", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement places locally (paywall removed)
+      try { return textError("Not yet implemented: places") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -84,7 +79,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ min_lat, min_lon, max_lat, max_lon, limit }) => {
-      try { return text(await tag_census({ min_lat, min_lon, max_lat, max_lon, limit })) } catch (e) { return textError(error(e)) }
+      try { return text(await tag_census({ min_lat, min_lon, max_lat, max_lon, limit })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -97,10 +92,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: element_lookup ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_overpass_element_lookup", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement lookup locally (paywall removed)
+    try { return textError("Not yet implemented: lookup") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -113,10 +106,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: nearby_features ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_overpass_nearby_features", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement features locally (paywall removed)
+    try { return textError("Not yet implemented: features") } catch (e) { return textError(String(e)) }
   }
   )
 

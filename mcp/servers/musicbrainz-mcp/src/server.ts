@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { formatArtist, formatRecording, formatRelease, getArtist, MusicBrainzError, searchArtists, searchRecordings, searchReleases } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -16,7 +15,7 @@ export function createServer(): McpServer {
       inputSchema: z.object( { query: z.string().min(1), limit: z.number().int().min(1).max(25).default(10) }),
       annotations: READ_ONLY,
     },
-    async ({ query, limit }) => { try { const r = await searchArtists(query, limit); return text(`Artists for "${query}" (${r.count ?? 0} total):\n\n${(r.artists ?? []).map((a, i) => formatArtist(a, i)).join("\n\n")}`) } catch (e) { return textError(error(e)) } }
+    async ({ query, limit }) => { try { const r = await searchArtists(query, limit); return text(`Artists for "${query}" (${r.count ?? 0} total):\n\n${(r.artists ?? []).map((a, i) => formatArtist(a, i)).join("\n\n")}`) } catch (e) { return textError(String(e)) } }
   )
   server.registerTool(
     "search_releases",
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       inputSchema: z.object( { query: z.string().min(1), limit: z.number().int().min(1).max(25).default(10) }),
       annotations: READ_ONLY,
     },
-    async ({ query, limit }) => { try { const r = await searchReleases(query, limit); return text(`Releases for "${query}" (${r.count ?? 0} total):\n\n${(r.releases ?? []).map((x, i) => formatRelease(x, i)).join("\n\n")}`) } catch (e) { return textError(error(e)) } }
+    async ({ query, limit }) => { try { const r = await searchReleases(query, limit); return text(`Releases for "${query}" (${r.count ?? 0} total):\n\n${(r.releases ?? []).map((x, i) => formatRelease(x, i)).join("\n\n")}`) } catch (e) { return textError(String(e)) } }
   )
   server.registerTool(
     "search_recordings",
@@ -36,7 +35,7 @@ export function createServer(): McpServer {
       inputSchema: z.object( { query: z.string().min(1), limit: z.number().int().min(1).max(25).default(10) }),
       annotations: READ_ONLY,
     },
-    async ({ query, limit }) => { try { const r = await searchRecordings(query, limit); return text(`Recordings for "${query}" (${r.count ?? 0} total):\n\n${(r.recordings ?? []).map((x, i) => formatRecording(x, i)).join("\n\n")}`) } catch (e) { return textError(error(e)) } }
+    async ({ query, limit }) => { try { const r = await searchRecordings(query, limit); return text(`Recordings for "${query}" (${r.count ?? 0} total):\n\n${(r.recordings ?? []).map((x, i) => formatRecording(x, i)).join("\n\n")}`) } catch (e) { return textError(String(e)) } }
   )
   server.registerTool(
     "get_artist",
@@ -46,7 +45,7 @@ export function createServer(): McpServer {
       inputSchema: z.object( { id: z.string().min(1) }),
       annotations: READ_ONLY,
     },
-    async ({ id }) => { try { return text(formatArtist(await getArtist(id))) } catch (e) { return textError(error(e)) } }
+    async ({ id }) => { try { return text(formatArtist(await getArtist(id))) } catch (e) { return textError(String(e)) } }
   )
   server.registerTool(
     "search_release_groups",
@@ -57,10 +56,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: search_release_groups ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_musicbrainz_search_release_groups", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement groups locally (paywall removed)
+    try { return textError("Not yet implemented: groups") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -73,10 +70,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: search_labels ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_musicbrainz_search_labels", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement labels locally (paywall removed)
+    try { return textError("Not yet implemented: labels") } catch (e) { return textError(String(e)) }
   }
   )
 

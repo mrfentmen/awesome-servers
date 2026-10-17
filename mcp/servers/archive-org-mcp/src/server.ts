@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_ArchiveError, m0_fmtSize, m0_formatItem, m0_getItemDetails, m0_searchItems, m1_WaybackError, m1_formatSnapshot, m1_getAvailability, m1_getSnapshots, m1_getSnapshotText, searchProfile } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -37,7 +36,7 @@ server.registerTool(
             items.map((it, i) => m0_formatItem(it, i)).join("\n\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -67,7 +66,7 @@ server.registerTool(
         ].filter(Boolean)
         return text(lines.join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -86,7 +85,7 @@ server.registerTool(
         if (snaps.length === 0) return text(`No archived snapshots of ${url}.`)
         return text(`Snapshots of ${url}:\n\n${snaps.map((s, i) => m1_formatSnapshot(s, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -105,7 +104,7 @@ server.registerTool(
         if (!snap) return text(`No archived snapshot of ${url}.`)
         return text(`Closest snapshot of ${url}:\n\n${m1_formatSnapshot(snap)}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -128,7 +127,7 @@ server.registerTool(
         if (!content.trim()) return text(`Snapshot ${timestamp} of ${url} has no readable text.`)
         return text(content)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -147,10 +146,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: snapshot_timeline ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_archive_org_snapshot_timeline", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement timeline locally (paywall removed)
+      try { return textError("Not yet implemented: timeline") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -168,7 +165,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await searchProfile(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await searchProfile(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

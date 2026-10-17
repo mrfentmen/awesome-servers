@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { companies, job, jobs, search, tags, topSalaries, newestJobs, tagCombinations, companyJobs } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -18,7 +17,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await jobs(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await jobs(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await search(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -42,7 +41,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await job(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await job(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -54,7 +53,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await topSalaries(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await topSalaries(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -66,7 +65,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await companies(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await companies(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -78,7 +77,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await tags(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await tags(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -97,7 +96,7 @@ export function createServer(): McpServer {
       try {
         return text(await newestJobs({ hours, limit }))
       } catch (e) {
-        return textError(error(e))
+        return textError(String(e))
       }
     }
   )
@@ -118,7 +117,7 @@ export function createServer(): McpServer {
       try {
         return text(await tagCombinations({ tags, limit }))
       } catch (e) {
-        return textError(error(e))
+        return textError(String(e))
       }
     }
   )
@@ -139,7 +138,7 @@ export function createServer(): McpServer {
       try {
         return text(await companyJobs({ company, limit }))
       } catch (e) {
-        return textError(error(e))
+        return textError(String(e))
       }
     }
   )
@@ -156,10 +155,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: market_census ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_remoteok_market_census", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement census locally (paywall removed)
+    try { return textError("Not yet implemented: census") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -176,10 +173,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: salary_by_tag ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_remoteok_salary_by_tag", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement tag locally (paywall removed)
+    try { return textError("Not yet implemented: tag") } catch (e) { return textError(String(e)) }
   }
   )
 

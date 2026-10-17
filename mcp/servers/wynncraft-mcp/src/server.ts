@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatGuild, formatItem, formatPlayer, getGuild, getPlayer, searchItems, WynncraftError, mapLocations } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(formatPlayer(await getPlayer(name)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(formatGuild(await getGuild(name)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -69,7 +68,7 @@ export function createServer(): McpServer {
         if (results.length === 0) return text(`No Wynncraft items match "${query}".`)
         return text(`Wynncraft items for "${query}":\n\n${results.map((it, i) => formatItem(it, i)).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -86,10 +85,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: item_build ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_wynncraft_item_build", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement build locally (paywall removed)
+      try { return textError("Not yet implemented: build") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -102,7 +99,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await mapLocations(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await mapLocations(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -115,10 +112,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: territory_owners ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wynncraft_territory_owners", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement owners locally (paywall removed)
+    try { return textError("Not yet implemented: owners") } catch (e) { return textError(String(e)) }
   }
   )
 

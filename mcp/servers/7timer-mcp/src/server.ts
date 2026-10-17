@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: 864ce492d6c6b414eb5616e68cf024f448b3679f)
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { forecast, forecastByPlace, forecastSummary, dailyOutlook } from "./api.js"
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await forecast(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await forecast(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await forecastSummary(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await forecastSummary(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -44,7 +43,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await dailyOutlook(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await dailyOutlook(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -57,7 +56,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await forecastByPlace(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await forecastByPlace(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

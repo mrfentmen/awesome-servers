@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { byIngredient, cocktailDetails, searchCocktails, randomCocktail } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await searchCocktails(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await searchCocktails(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await byIngredient(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await byIngredient(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await cocktailDetails(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await cocktailDetails(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -55,10 +54,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: filter_cocktails ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_cocktails_filter_cocktails", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement cocktails locally (paywall removed)
+    try { return textError("Not yet implemented: cocktails") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -71,10 +68,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: shopping_list ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_cocktails_shopping_list", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement list locally (paywall removed)
+    try { return textError("Not yet implemented: list") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -87,7 +82,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await randomCocktail(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await randomCocktail(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

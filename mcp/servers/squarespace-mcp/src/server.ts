@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { formatOrder, formatProduct, listOrders, listProducts, SquarespaceError, domainRegistration, pageValidation } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No products.")
         return text(rows.map((p, i) => formatProduct(p, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -51,7 +50,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No orders.")
         return text(rows.map((o, i) => formatOrder(o, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -68,11 +67,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: domain_registration ----
-    const paywallMessage = await premiumRequired("domain_registration")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await domainRegistration(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await domainRegistration(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -89,7 +84,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await pageValidation(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await pageValidation(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

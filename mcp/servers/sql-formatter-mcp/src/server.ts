@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { format, minify, analyse } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await format(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await format(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,11 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: minify ----
-    const paywallMessage = await premiumRequired("minify")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await minify(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await minify(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -48,11 +43,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: analyse ----
-    const paywallMessage = await premiumRequired("analyse")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await analyse(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await analyse(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

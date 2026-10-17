@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { departments, locations, posting, postings, recentPostings, searchPostings, teams, groupedPostings, newestSince } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -18,7 +17,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await postings(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await postings(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -33,7 +32,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await posting(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await posting(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -49,7 +48,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await searchPostings(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await searchPostings(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -64,7 +63,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await recentPostings(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await recentPostings(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -78,7 +77,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await departments(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await departments(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -90,7 +89,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await teams(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await teams(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -102,7 +101,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await locations(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await locations(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -118,7 +117,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await groupedPostings(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await groupedPostings(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -135,7 +134,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await newestSince(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await newestSince(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -148,10 +147,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: hiring_velocity ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_lever_hiring_velocity", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement velocity locally (paywall removed)
+      try { return textError("Not yet implemented: velocity") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -164,10 +161,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: company_comparison ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_lever_company_comparison", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement comparison locally (paywall removed)
+      try { return textError("Not yet implemented: comparison") } catch (e) { return textError(String(e)) }
     }
   )
 

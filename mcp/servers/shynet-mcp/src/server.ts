@@ -32,7 +32,7 @@ export function createServer(): McpServer {
       try {
         return text(await getDashboard(startDate, endDate));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -53,7 +53,7 @@ export function createServer(): McpServer {
       try {
         return text(await getServiceStats(uuid, startDate, endDate));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

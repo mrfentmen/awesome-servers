@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { hash, hmac, secureRandom } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await hash(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await hash(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await hmac(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await hmac(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,10 +42,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: base64_codec ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_crypto_tools_base64_codec", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement codec locally (paywall removed)
+    try { return textError("Not yet implemented: codec") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -59,7 +56,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await secureRandom(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await secureRandom(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -72,10 +69,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: password_hash ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_crypto_tools_password_hash", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement hash locally (paywall removed)
+    try { return textError("Not yet implemented: hash") } catch (e) { return textError(String(e)) }
   }
   )
 

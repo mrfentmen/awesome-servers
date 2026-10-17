@@ -36,7 +36,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchPlayers(nickname));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -55,7 +55,7 @@ export function createServer(): McpServer {
       try {
         return text(await getPlayer(playerId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -75,7 +75,7 @@ export function createServer(): McpServer {
       try {
         return text(await getPlayerStats(playerId, game));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -97,7 +97,7 @@ export function createServer(): McpServer {
       try {
         return text(await getPlayerHistory(playerId, game, offset, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -116,7 +116,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchTeams(name));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -136,7 +136,7 @@ export function createServer(): McpServer {
       try {
         return text(await getChampionships(game, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

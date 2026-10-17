@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { format, summarize } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -41,10 +40,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: use_of_force_summary ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_police_transparency_use_of_force_summary", args)) } catch (e) { return textError(String(e)) }
+    // TODO: implement summary locally (paywall removed)
+    try { return textError("Not yet implemented: summary") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -61,10 +58,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: arrests_by_charge ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_police_transparency_arrests_by_charge", args)) } catch (e) { return textError(String(e)) }
+    // TODO: implement charge locally (paywall removed)
+    try { return textError("Not yet implemented: charge") } catch (e) { return textError(String(e)) }
   }
   )
 

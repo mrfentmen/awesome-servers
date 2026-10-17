@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { WaybackError, domainSnapshots, formatSnapshot, getAvailability, getSnapshots, getSnapshotText, siteHistory, statusHistory, captureGaps, snapshotDiff, brokenPages, prefixInventory } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
         if (snaps.length === 0) return text(`No archived snapshots of ${url}.`)
         return text(`Snapshots of ${url}:\n\n${snaps.map((s, i) => formatSnapshot(s, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -53,7 +52,7 @@ export function createServer(): McpServer {
         if (snaps.length === 0) return text(`Nothing archived for domain ${domain}.`)
         return text(`Archived pages on ${domain}:\n\n${snaps.map((s, i) => formatSnapshot(s, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -84,7 +83,7 @@ export function createServer(): McpServer {
           ].join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -103,7 +102,7 @@ export function createServer(): McpServer {
         if (!snap) return text(`No archived snapshot of ${url}.`)
         return text(`Closest snapshot of ${url}:\n\n${formatSnapshot(snap)}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -126,7 +125,7 @@ export function createServer(): McpServer {
         if (!content.trim()) return text(`Snapshot ${timestamp} of ${url} has no readable text.`)
         return text(content)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -163,7 +162,7 @@ export function createServer(): McpServer {
         }
         return text(`How ${url} changed:\n\n${blocks.join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -184,7 +183,7 @@ export function createServer(): McpServer {
       try {
         return text(await statusHistory(url, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -205,7 +204,7 @@ export function createServer(): McpServer {
       try {
         return text(await captureGaps(url, since))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -228,7 +227,7 @@ export function createServer(): McpServer {
       try {
         return text(await snapshotDiff({ url, yearA, yearB, maxChars }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -249,7 +248,7 @@ export function createServer(): McpServer {
       try {
         return text(await brokenPages(url, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -267,10 +266,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: content_profile ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wayback_content_profile", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement profile locally (paywall removed)
+    try { return textError("Not yet implemented: profile") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -288,7 +285,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await prefixInventory(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await prefixInventory(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

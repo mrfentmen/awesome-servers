@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { ConfluentError, formatCluster, listClusters, listEnvironments, listTopics, listConnectors, listSchemas } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No environments.")
         return text(rows.map((e, i) => `${i + 1}. [${e.id}] ${e.name ?? "(unnamed)"}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -49,7 +48,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No clusters in ${environment}.`)
         return text(rows.map((c, i) => formatCluster(c, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -66,10 +65,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: list_topics ----
-    const paywallMessage = await premiumRequired("list_topics")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await listTopics(args)) } catch (e) { return textError(`Error: ${e instanceof Error ? e.message : String(e)}`) }
   }
   )
@@ -87,10 +82,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: list_connectors ----
-    const paywallMessage = await premiumRequired("list_connectors")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await listConnectors(args)) } catch (e) { return textError(`Error: ${e instanceof Error ? e.message : String(e)}`) }
   }
   )

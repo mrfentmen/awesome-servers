@@ -35,7 +35,7 @@ export function createServer(): McpServer {
       try {
         return text(await getForecast(nx, ny, baseDate, baseTime));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -55,7 +55,7 @@ export function createServer(): McpServer {
       try {
         return text(await getUltrashort(nx, ny));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -75,7 +75,7 @@ export function createServer(): McpServer {
       try {
         return text(await getObservations(nx, ny));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

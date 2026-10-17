@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, arrests, offenses, victims, stateComparison, crimeTrend, crimeSnapshot } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await arrests(state));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await offenses(state));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -66,7 +65,7 @@ export function createServer(): McpServer {
       try {
         return text(await victims(state));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -85,11 +84,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: state_comparison ----
-    const paywallMessage = await premiumRequired("state_comparison")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await stateComparison(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await stateComparison(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -108,11 +103,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: crime_trend ----
-    const paywallMessage = await premiumRequired("crime_trend")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await crimeTrend(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await crimeTrend(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -128,7 +119,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await crimeSnapshot(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await crimeSnapshot(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { random, triviaCategories } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await random(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await random(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,10 +30,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: trivia_questions ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_riddles_trivia_questions", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement questions locally (paywall removed)
+    try { return textError("Not yet implemented: questions") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -47,10 +44,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: word_entry ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_riddles_word_entry", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement entry locally (paywall removed)
+    try { return textError("Not yet implemented: entry") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -63,10 +58,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: rhyme_candidates ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_riddles_rhyme_candidates", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement candidates locally (paywall removed)
+    try { return textError("Not yet implemented: candidates") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -79,10 +72,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: crossword_matches ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_riddles_crossword_matches", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement matches locally (paywall removed)
+    try { return textError("Not yet implemented: matches") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -95,7 +86,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await triviaCategories(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await triviaCategories(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

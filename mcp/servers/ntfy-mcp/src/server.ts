@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, publish, poll, health, account, pollSince, sendUrgent, sendScheduled, sendEmail, sendCall, publishTags, ntfyServerCapabilities, topicMessageHistory } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
       try {
         return text(await publish(topic, message));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -49,7 +48,7 @@ export function createServer(): McpServer {
       try {
         return text(await poll(topic));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -66,7 +65,7 @@ export function createServer(): McpServer {
       try {
         return text(await health());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -83,7 +82,7 @@ export function createServer(): McpServer {
       try {
         return text(await account());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -103,7 +102,7 @@ export function createServer(): McpServer {
       try {
         return text(await pollSince(topic, since_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -123,7 +122,7 @@ export function createServer(): McpServer {
       try {
         return text(await sendUrgent(topic, message));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -144,7 +143,7 @@ export function createServer(): McpServer {
       try {
         return text(await sendScheduled(topic, message, delay));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -165,7 +164,7 @@ export function createServer(): McpServer {
       try {
         return text(await sendEmail(topic, message, email));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -186,7 +185,7 @@ export function createServer(): McpServer {
       try {
         return text(await sendCall(topic, message, phone));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -207,7 +206,7 @@ export function createServer(): McpServer {
       try {
         return text(await publishTags(topic, message, tags));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -221,11 +220,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: ntfy_server_capabilities ----
-      const paywallMessage = await premiumRequired("ntfy_server_capabilities")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await ntfyServerCapabilities(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await ntfyServerCapabilities(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -238,11 +233,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: topic_message_history ----
-      const paywallMessage = await premiumRequired("topic_message_history")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await topicMessageHistory(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await topicMessageHistory(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

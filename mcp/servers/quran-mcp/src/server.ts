@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { verse, surahInfo, chapters, chapter, page_verses } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await verse(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await verse(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await surahInfo(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await surahInfo(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async () => {
-    try { return text(await chapters()) } catch (e) { return textError(error(e)) }
+    try { return text(await chapters()) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -55,7 +54,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await chapter(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await chapter(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -70,10 +69,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: verse_position ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_quran_verse_position", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement position locally (paywall removed)
+      try { return textError("Not yet implemented: position") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -88,10 +85,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: surah_order ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_quran_surah_order", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement order locally (paywall removed)
+      try { return textError("Not yet implemented: order") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -107,7 +102,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ page, limit }) => {
-      try { return text(await page_verses({ page, limit })) } catch (e) { return textError(error(e)) }
+      try { return text(await page_verses({ page, limit })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -120,10 +115,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: recitation_audio ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_quran_recitation_audio", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement audio locally (paywall removed)
+    try { return textError("Not yet implemented: audio") } catch (e) { return textError(String(e)) }
   }
   )
 

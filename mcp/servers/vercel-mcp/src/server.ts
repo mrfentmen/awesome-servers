@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listProjects, getProject, listDeployments, deploymentDetails, listAliases, listDomains, domainInfo, listTeams, projectEnv, getAlias, edgeFootprint, incidentTimeline } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await listProjects(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await getProject(project_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -67,7 +66,7 @@ export function createServer(): McpServer {
       try {
         return text(await listDeployments(project_id, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -86,7 +85,7 @@ export function createServer(): McpServer {
       try {
         return text(await deploymentDetails(deploy_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -105,7 +104,7 @@ export function createServer(): McpServer {
       try {
         return text(await listAliases(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -122,7 +121,7 @@ export function createServer(): McpServer {
       try {
         return text(await listDomains());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -141,7 +140,7 @@ export function createServer(): McpServer {
       try {
         return text(await domainInfo(domain));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -158,7 +157,7 @@ export function createServer(): McpServer {
       try {
         return text(await listTeams());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -177,7 +176,7 @@ export function createServer(): McpServer {
       try {
         return text(await projectEnv(project_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -196,7 +195,7 @@ export function createServer(): McpServer {
       try {
         return text(await getAlias(alias));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -213,7 +212,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await edgeFootprint(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await edgeFootprint(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -230,11 +229,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: incident_timeline ----
-    const paywallMessage = await premiumRequired("incident_timeline")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await incidentTimeline(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await incidentTimeline(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

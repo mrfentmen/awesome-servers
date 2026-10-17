@@ -1,5 +1,4 @@
 import { contractShape, contractRisk } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const error = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
@@ -54,10 +53,8 @@ export function createServer() { const server = new McpServer({ name: "contract-
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: public_api_versions ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_contract_diff_public_api_versions", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement versions locally (paywall removed)
+    try { return textError("Not yet implemented: versions") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -70,10 +67,8 @@ export function createServer() { const server = new McpServer({ name: "contract-
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: public_api_operations ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_contract_diff_public_api_operations", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement operations locally (paywall removed)
+    try { return textError("Not yet implemented: operations") } catch (e) { return textError(String(e)) }
   }
   )
 

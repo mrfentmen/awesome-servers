@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatPodcast, GpodderError, listTags, podcastsByTag, searchPodcasts, topPodcasts, searchOverlap } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
         if (results.length === 0) return text(`No podcasts match "${query}".`)
         return text(`Podcasts for "${query}":\n\n${results.map((p, i) => formatPodcast(p, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -52,7 +51,7 @@ export function createServer(): McpServer {
         if (results.length === 0) return text("No top podcasts right now.")
         return text(`Top podcasts:\n\n${results.map((p, i) => formatPodcast(p, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -74,7 +73,7 @@ export function createServer(): McpServer {
         if (results.length === 0) return text(`No podcasts tagged "${tag}".`)
         return text(`Podcasts tagged "${tag}":\n\n${results.map((p, i) => formatPodcast(p, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -95,7 +94,7 @@ export function createServer(): McpServer {
         if (tags.length === 0) return text("No tags right now.")
         return text(`Top podcast tags:\n\n${tags.map((t, i) => `${i + 1}. ${t.tag}${t.usage !== undefined ? ` (${t.usage})` : ""}`).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -109,10 +108,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: search_hosts ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_gpodder_search_hosts", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement hosts locally (paywall removed)
+    try { return textError("Not yet implemented: hosts") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -125,7 +122,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await searchOverlap(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await searchOverlap(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

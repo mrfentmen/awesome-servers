@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: 3fdc99bf80d29770184400f7c6b2e48e4a606a19)
 // ---- muxE tools:
 // Every existing tool here drives Adobe Premiere Pro through ExtendScript, so
 // all eleven of them need the application installed and running. The two new

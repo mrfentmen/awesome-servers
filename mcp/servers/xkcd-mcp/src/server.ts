@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatComic, getComic, latestComic, XkcdError, comic_range } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -25,7 +24,7 @@ export function createServer(): McpServer {
       try {
         return text(formatComic(await latestComic()))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       try {
         return text(formatComic(await getComic(num)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -61,7 +60,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ from, to, limit }) => {
-      try { return text(await comic_range({ from, to, limit })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await comic_range({ from, to, limit })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -79,10 +78,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: comic_find ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_xkcd_comic_find", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement find locally (paywall removed)
+    try { return textError("Not yet implemented: find") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -98,10 +95,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: comic_census ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_xkcd_comic_census", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement census locally (paywall removed)
+    try { return textError("Not yet implemented: census") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -114,10 +109,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: comic_transcript ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_xkcd_comic_transcript", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement transcript locally (paywall removed)
+    try { return textError("Not yet implemented: transcript") } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -3,7 +3,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import * as USPS from "./usps.js"
 import { postalLookup, addressGeocode } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 // The tools below are registered with registerTool, which the paywall script reads,
 // and that form takes annotations; the older server.tool() blocks above do not.
@@ -176,10 +175,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: postal_lookup ----
-    const paywallMessage = await premiumRequired("postal_lookup")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await postalLookup(args)) } catch (e) { return textError(`Error: ${(e as Error).message}`) }
   }
   )

@@ -1,4 +1,3 @@
-import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { search } from "./api.js"
@@ -20,7 +19,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await search(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -32,7 +31,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await validate(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await validate(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -44,10 +43,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: analyse_bic ----
-    // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_swift_bic_analyse_bic", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement bic locally (paywall removed)
+    try { return textError("Not yet implemented: bic") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -60,13 +57,11 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: country_directory ----
-    // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
     try {
-      return text(await premiumTool("mcp_swift_bic_country_directory", args));
+      // TODO: implement directory locally (paywall removed)
+      try { return textError("Not yet implemented: directory") } catch (e) { return textError(String(e)) }
     } catch (e) {
-      return textError(error(e));
+      return textError(String(e));
     }
     }
   );

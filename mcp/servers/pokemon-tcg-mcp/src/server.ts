@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { TcgError, formatCardDetail, formatCardSummary, formatSet, getCard, getSet, listSets, searchCards, cardRarities } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -37,7 +36,7 @@ export function createServer(): McpServer {
             cards.map((c, i) => `${i + 1}. ${formatCardSummary(c)}`).join("\n\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -58,7 +57,7 @@ export function createServer(): McpServer {
         if (!card) return text(`No card with id "${id}".`)
         return text(formatCardDetail(card))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -80,7 +79,7 @@ export function createServer(): McpServer {
             sets.slice(0, 20).map((s, i) => `${i + 1}. ${formatSet(s)}`).join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -106,7 +105,7 @@ export function createServer(): McpServer {
         const tail = set.cards.length > 25 ? `\n…and ${set.cards.length - 25} more` : ""
         return text(head + body + tail)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -123,10 +122,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: cards_by_rarity ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_pokemon_tcg_cards_by_rarity", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement rarity locally (paywall removed)
+      try { return textError("Not yet implemented: rarity") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -142,7 +139,7 @@ export function createServer(): McpServer {
       try {
         return text(await cardRarities(args))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

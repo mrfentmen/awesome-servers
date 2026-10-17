@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { companyProfile, FmpError, incomeStatement, stockQuote } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await stockQuote(symbol))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await companyProfile(symbol))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -67,7 +66,7 @@ export function createServer(): McpServer {
       try {
         return text(await incomeStatement(symbol, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -84,10 +83,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: currency_rates ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_fmp_currency_rates", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement rates locally (paywall removed)
+      try { return textError("Not yet implemented: rates") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -105,10 +102,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: fx_history ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_fmp_fx_history", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement history locally (paywall removed)
+      try { return textError("Not yet implemented: history") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -126,10 +121,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: price_history ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_fmp_price_history", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement history locally (paywall removed)
+      try { return textError("Not yet implemented: history") } catch (e) { return textError(String(e)) }
     }
   )
 

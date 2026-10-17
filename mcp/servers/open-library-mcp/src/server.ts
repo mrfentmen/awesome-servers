@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_formatAuthor, m0_formatBook, m0_formatWork, m0_getAuthor, m0_getEditions, m0_getWork, m0_OpenLibraryError, m0_searchBooks, m1_lookup, m1_validate } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -22,7 +21,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async ({ query, limit }) => {
-    try { const result = await m0_searchBooks(query, limit); return text(`Open Library found ${result.numFound ?? 0} result(s) for "${query}":\n\n${(result.docs ?? []).map((d, i) => m0_formatBook(d, i)).join("\n\n")}`) } catch (e) { return textError(error(e)) }
+    try { const result = await m0_searchBooks(query, limit); return text(`Open Library found ${result.numFound ?? 0} result(s) for "${query}":\n\n${(result.docs ?? []).map((d, i) => m0_formatBook(d, i)).join("\n\n")}`) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -33,7 +32,7 @@ server.registerTool(
       inputSchema: z.object( { m0_key }),
       annotations: READ_ONLY,
     },
-    async ({ m0_key: workKey }) => { try { return text(m0_formatWork(await m0_getWork(workKey))) } catch (e) { return textError(error(e)) } }
+    async ({ m0_key: workKey }) => { try { return text(m0_formatWork(await m0_getWork(workKey))) } catch (e) { return textError(String(e)) } }
   )
 server.registerTool(
     "get_author",
@@ -43,7 +42,7 @@ server.registerTool(
       inputSchema: z.object( { m0_key }),
       annotations: READ_ONLY,
     },
-    async ({ m0_key: authorKey }) => { try { return text(m0_formatAuthor(await m0_getAuthor(authorKey))) } catch (e) { return textError(error(e)) } }
+    async ({ m0_key: authorKey }) => { try { return text(m0_formatAuthor(await m0_getAuthor(authorKey))) } catch (e) { return textError(String(e)) } }
   )
 server.registerTool(
     "list_editions",
@@ -53,7 +52,7 @@ server.registerTool(
       inputSchema: z.object( { m0_key, limit: z.number().int().min(1).max(50).default(20) }),
       annotations: READ_ONLY,
     },
-    async ({ m0_key: workKey, limit }) => { try { const result = await m0_getEditions(workKey, limit); return text(`Editions for ${workKey}:\n\n${(result.docs ?? []).map((d, i) => m0_formatBook(d, i)).join("\n\n")}`) } catch (e) { return textError(error(e)) } }
+    async ({ m0_key: workKey, limit }) => { try { const result = await m0_getEditions(workKey, limit); return text(`Editions for ${workKey}:\n\n${(result.docs ?? []).map((d, i) => m0_formatBook(d, i)).join("\n\n")}`) } catch (e) { return textError(String(e)) } }
   )
 server.registerTool(
     "validate",
@@ -64,7 +63,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_validate(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_validate(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -76,7 +75,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_lookup(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_lookup(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -88,10 +87,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: author_works ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_open_library_author_works", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement works locally (paywall removed)
+    try { return textError("Not yet implemented: works") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -104,10 +101,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: subject_works ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_open_library_subject_works", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement works locally (paywall removed)
+    try { return textError("Not yet implemented: works") } catch (e) { return textError(String(e)) }
   }
   )
 

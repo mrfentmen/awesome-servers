@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { emojiStats, emojisInGroup, errorMessage, getEmoji, listGroups, listSubgroups, randomEmoji, searchEmoji, svgLinks, skinToneVariants, compareEmoji, emojiLint } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -32,7 +31,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchEmoji(query, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -51,7 +50,7 @@ export function createServer(): McpServer {
       try {
         return text(await getEmoji(hexcode))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -68,7 +67,7 @@ export function createServer(): McpServer {
       try {
         return text(await listGroups())
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -87,7 +86,7 @@ export function createServer(): McpServer {
       try {
         return text(await listSubgroups(group))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -108,7 +107,7 @@ export function createServer(): McpServer {
       try {
         return text(await emojisInGroup(group, subgroup, limit))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -127,7 +126,7 @@ export function createServer(): McpServer {
       try {
         return text(await randomEmoji(group))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -144,7 +143,7 @@ export function createServer(): McpServer {
       try {
         return text(await emojiStats())
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -164,7 +163,7 @@ export function createServer(): McpServer {
       try {
         return text(await svgLinks({ hexcode }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -184,7 +183,7 @@ export function createServer(): McpServer {
       try {
         return text(await skinToneVariants({ emoji }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -205,7 +204,7 @@ export function createServer(): McpServer {
       try {
         return text(await compareEmoji({ a, b }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -219,10 +218,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: unicode_reference ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_openmoji_unicode_reference", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement reference locally (paywall removed)
+    try { return textError("Not yet implemented: reference") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -235,10 +232,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: unicode_version_census ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_openmoji_unicode_version_census", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement census locally (paywall removed)
+    try { return textError("Not yet implemented: census") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -251,7 +246,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await emojiLint(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await emojiLint(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { CtanError, formatPackage, getPackage, licenseCatalog } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(formatPackage(await getPackage(key)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -45,10 +44,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: search_packages ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_ctan_search_packages", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement packages locally (paywall removed)
+    try { return textError("Not yet implemented: packages") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -63,10 +60,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: package_provenance ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_ctan_package_provenance", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement provenance locally (paywall removed)
+    try { return textError("Not yet implemented: provenance") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -79,7 +74,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (_args) => {
-    try { return text(await licenseCatalog(_args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await licenseCatalog(_args)) } catch (e) { return textError(String(e)) }
   }
   )
 

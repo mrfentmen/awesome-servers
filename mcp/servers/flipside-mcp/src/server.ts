@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, createQuery, getQueryStatus, getQueryResults, cancelQuery, savedQueries, runSavedQuery, tableSchema } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       try {
         return text(await createQuery(sql, dataSource, dataProvider));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -50,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(await getQueryStatus(token));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -71,7 +70,7 @@ export function createServer(): McpServer {
       try {
         return text(await getQueryResults(token, pageNumber, pageSize));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -90,7 +89,7 @@ export function createServer(): McpServer {
       try {
         return text(await cancelQuery(token));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -108,11 +107,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: saved_queries ----
-    const paywallMessage = await premiumRequired("saved_queries")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await savedQueries(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await savedQueries(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -129,11 +124,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: run_saved_query ----
-    const paywallMessage = await premiumRequired("run_saved_query")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await runSavedQuery(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await runSavedQuery(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -150,7 +141,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await tableSchema(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await tableSchema(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

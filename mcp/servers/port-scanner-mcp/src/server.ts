@@ -3,7 +3,6 @@ import { z } from "zod"
 import { scanCommon, scanHost } from "./scan.js"
 
 import { parsePortSpec, dnsRecords } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +19,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await scanHost(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await scanHost(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -32,7 +31,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await scanCommon(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await scanCommon(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -44,10 +43,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: summarize_scan_results ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_port_scanner_summarize_scan_results", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement results locally (paywall removed)
+    try { return textError("Not yet implemented: results") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -60,7 +57,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await parsePortSpec(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await parsePortSpec(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -73,7 +70,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await dnsRecords(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await dnsRecords(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -86,10 +83,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: network_origin ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_port_scanner_network_origin", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement origin locally (paywall removed)
+    try { return textError("Not yet implemented: origin") } catch (e) { return textError(String(e)) }
   }
   )
 

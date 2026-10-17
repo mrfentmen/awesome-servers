@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { auditEndpoint, auditTools, checkListing, compareServers, diffToolSchema, errorMessage, generateToolRegistration, lintSource, probeKeyless, registryLookup, npmPackageCheck, callTool, serverJsonCheck } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -21,7 +20,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await probeKeyless(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await probeKeyless(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -36,7 +35,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await auditEndpoint(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await auditEndpoint(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -52,7 +51,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await auditTools(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await auditTools(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -68,7 +67,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await compareServers(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await compareServers(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -87,7 +86,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await checkListing(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await checkListing(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -103,7 +102,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await lintSource(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await lintSource(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -129,7 +128,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await generateToolRegistration(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await generateToolRegistration(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -145,7 +144,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await diffToolSchema(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await diffToolSchema(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -165,7 +164,7 @@ export function createServer(): McpServer {
       try {
         return text(await registryLookup({ query, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -185,7 +184,7 @@ export function createServer(): McpServer {
       try {
         return text(await npmPackageCheck({ name }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -207,7 +206,7 @@ export function createServer(): McpServer {
       try {
         return text(await callTool({ url, tool, args }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -227,7 +226,7 @@ export function createServer(): McpServer {
       try {
         return text(await serverJsonCheck({ serverJson }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -241,10 +240,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: openapi_spec_audit ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_mcp_auditor_openapi_spec_audit", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement audit locally (paywall removed)
+      try { return textError("Not yet implemented: audit") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -257,10 +254,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: endpoint_latency_matrix ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_mcp_auditor_endpoint_latency_matrix", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement matrix locally (paywall removed)
+      try { return textError("Not yet implemented: matrix") } catch (e) { return textError(String(e)) }
     }
   )
 

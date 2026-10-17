@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, getAssetMetrics, listMetrics, metricDefinitions, candlePairs } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -32,7 +31,7 @@ export function createServer(): McpServer {
       try {
         return text(await getAssetMetrics(assets, metrics, startTime, endTime, frequency));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -51,7 +50,7 @@ export function createServer(): McpServer {
       try {
         return text(await listMetrics(assets));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -65,10 +64,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: asset_catalog ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_coinmetrics_asset_catalog", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement catalog locally (paywall removed)
+    try { return textError("Not yet implemented: catalog") } catch (e) { return textError(String(e)) }
     }
   );
 
@@ -81,7 +78,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await metricDefinitions(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await metricDefinitions(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -94,7 +91,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await candlePairs(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await candlePairs(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -107,10 +104,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: pair_candles ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_coinmetrics_pair_candles", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement candles locally (paywall removed)
+    try { return textError("Not yet implemented: candles") } catch (e) { return textError(String(e)) }
   }
   )
 

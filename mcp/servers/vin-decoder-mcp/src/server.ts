@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { decodeVin, makeModelCatalog } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await decodeVin(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await decodeVin(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,10 +30,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: decode_vin_full ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_vin_decoder_decode_vin_full", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement full locally (paywall removed)
+    try { return textError("Not yet implemented: full") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -47,10 +44,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: vehicle_recalls ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_vin_decoder_vehicle_recalls", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement recalls locally (paywall removed)
+    try { return textError("Not yet implemented: recalls") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -63,7 +58,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await makeModelCatalog(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await makeModelCatalog(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -76,10 +71,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: recall_campaign ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_vin_decoder_recall_campaign", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement campaign locally (paywall removed)
+    try { return textError("Not yet implemented: campaign") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -92,10 +85,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: models_in_year ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_vin_decoder_models_in_year", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement year locally (paywall removed)
+    try { return textError("Not yet implemented: year") } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { deals, freeGames, gameDetails, searchGames, storeList, topDeals, steamLookup, filterDeals, valuePicks } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -23,7 +22,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await deals(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await deals(args)) } catch (e) { return textError(String(e)) }
     }
   )
   server.registerTool(
@@ -35,7 +34,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async () => {
-      try { return text(await storeList({})) } catch (e) { return textError(error(e)) }
+      try { return text(await storeList({})) } catch (e) { return textError(String(e)) }
     }
   )
   server.registerTool(
@@ -50,7 +49,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await searchGames(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await searchGames(args)) } catch (e) { return textError(String(e)) }
     }
   )
   server.registerTool(
@@ -64,7 +63,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await gameDetails(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await gameDetails(args)) } catch (e) { return textError(String(e)) }
     }
   )
   server.registerTool(
@@ -79,7 +78,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await topDeals(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await topDeals(args)) } catch (e) { return textError(String(e)) }
     }
   )
   server.registerTool(
@@ -93,7 +92,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await freeGames(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await freeGames(args)) } catch (e) { return textError(String(e)) }
     }
   )
   server.registerTool(
@@ -108,7 +107,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await steamLookup(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await steamLookup(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -130,7 +129,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await filterDeals(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await filterDeals(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -145,10 +144,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: deal_market_scan ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_cheapshark_deal_market_scan", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement scan locally (paywall removed)
+    try { return textError("Not yet implemented: scan") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -164,10 +161,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: store_leaderboard ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_cheapshark_store_leaderboard", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement leaderboard locally (paywall removed)
+    try { return textError("Not yet implemented: leaderboard") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -182,7 +177,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await valuePicks(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await valuePicks(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

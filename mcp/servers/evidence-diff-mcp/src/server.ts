@@ -3,7 +3,6 @@ import { z } from "zod"
 import { explainEvidence, format } from "./evidence.js"
 import { testEvidence, commitEvidence } from "./local-api.js"
 
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -57,10 +56,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: public_revision_evidence ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_evidence_diff_public_revision_evidence", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement evidence locally (paywall removed)
+    try { return textError("Not yet implemented: evidence") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -73,10 +70,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: public_check_evidence ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_evidence_diff_public_check_evidence", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement evidence locally (paywall removed)
+    try { return textError("Not yet implemented: evidence") } catch (e) { return textError(String(e)) }
   }
   )
 

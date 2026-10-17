@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: 726d49028ecb309609dfd0ad33d3c8d1093ae92d)
 const UA = "mrfentmen-affirmations-mcp/1.0 (https://github.com/mrfentmen)"
 
 export class AffirmationError extends Error {}

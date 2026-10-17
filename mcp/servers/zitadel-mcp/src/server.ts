@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { formatOrg, formatUser, listOrganizations, listUsers, ZitadelError, audit_users, credential_report, org_coverage } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No users.")
         return text(rows.map((u, i) => formatUser(u, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -51,7 +50,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No organizations.")
         return text(rows.map((o, i) => formatOrg(o, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -68,11 +67,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ users, now }) => {
-      // ---- paywall: audit_users ----
-      const paywallMessage = await premiumRequired("audit_users")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(audit_users({ users, now })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(audit_users({ users, now })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -87,11 +82,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ users }) => {
-      // ---- paywall: credential_report ----
-      const paywallMessage = await premiumRequired("credential_report")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(credential_report({ users })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(credential_report({ users })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -107,7 +98,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ users, organizations }) => {
-      try { return text(org_coverage({ users, organizations })) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(org_coverage({ users, organizations })) } catch (e) { return textError(String(e)) }
     }
   )
 

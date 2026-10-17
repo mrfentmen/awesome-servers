@@ -1,4 +1,3 @@
-import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listTraStations, getTraLiveboard, listThsrStations, getTraTimetable, odsStationSearch } from "./api.js"
@@ -27,7 +26,7 @@ export function createServer(): McpServer {
       try {
         return text(await listTraStations());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -46,7 +45,7 @@ export function createServer(): McpServer {
       try {
         return text(await getTraLiveboard(stationId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -64,7 +63,7 @@ export function createServer(): McpServer {
       try {
         return text(await listThsrStations());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -84,7 +83,7 @@ export function createServer(): McpServer {
       try {
         return text(await getTraTimetable(stationId, date));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -104,7 +103,7 @@ export function createServer(): McpServer {
       try {
         return text(await odsStationSearch({ query, limit }));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -122,13 +121,11 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: ods_train_departures ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_tdx_ods_train_departures", args));
+        // TODO: implement departures locally (paywall removed)
+        try { return textError("Not yet implemented: departures") } catch (e) { return textError(String(e)) }
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -145,13 +142,11 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: ods_train_route ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_tdx_ods_train_route", args));
+        // TODO: implement route locally (paywall removed)
+        try { return textError("Not yet implemented: route") } catch (e) { return textError(String(e)) }
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

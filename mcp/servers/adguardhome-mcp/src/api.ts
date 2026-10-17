@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: ee4def7b2deaa2da409ef97491df1d5f72a49363)
 export class AdGuardError extends Error {
   constructor(message: string) {
     super(message)

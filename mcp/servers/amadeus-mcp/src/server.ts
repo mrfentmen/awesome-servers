@@ -30,7 +30,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No airports for "${keyword}".`)
         return text(rows.map((a, i) => `${i + 1}. ${a}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -55,7 +55,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No flight offers.")
         return text(rows.map((o, i) => formatOffer(o, i)).join("\n\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { search, pageCategories, pageHistory, pageBacklinks } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await search(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,10 +30,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: species_page ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wikispecies_species_page", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement page locally (paywall removed)
+    try { return textError("Not yet implemented: page") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -47,7 +44,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await pageCategories(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await pageCategories(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -60,7 +57,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await pageHistory(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await pageHistory(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -73,7 +70,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await pageBacklinks(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await pageBacklinks(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -86,10 +83,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: category_members ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_wikispecies_category_members", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement members locally (paywall removed)
+    try { return textError("Not yet implemented: members") } catch (e) { return textError(String(e)) }
   }
   )
 

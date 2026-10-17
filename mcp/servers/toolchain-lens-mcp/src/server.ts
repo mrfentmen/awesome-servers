@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { explain, format } from "./lens.js"
 import { checkToolchainDeclarations, reproducibilityGapMatrix } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -34,10 +33,6 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: reproducibility_gap_matrix ----
-    const paywallMessage = await premiumRequired("reproducibility_gap_matrix")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await reproducibilityGapMatrix(args)) } catch (error) { return errorText(error) }
   }
   )

@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { departures, stops, stopBoardByMode, journeyPlan } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await stops(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await stops(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await departures(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await departures(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -46,10 +45,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: stop_punctuality ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_berlin_bvg_stop_punctuality", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement punctuality locally (paywall removed)
+      try { return textError("Not yet implemented: punctuality") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -66,10 +63,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: line_departures ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_berlin_bvg_line_departures", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement departures locally (paywall removed)
+      try { return textError("Not yet implemented: departures") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -84,7 +79,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await stopBoardByMode(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await stopBoardByMode(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -103,7 +98,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await journeyPlan(args)) } catch (e) { return textError(error(e)) }
+      try { return text(await journeyPlan(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

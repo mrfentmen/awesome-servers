@@ -30,7 +30,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No series for "${query}".`)
         return text(rows.map((s, i) => formatSeries(s, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -49,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(await getSeries(id))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

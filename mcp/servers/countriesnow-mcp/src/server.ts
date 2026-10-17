@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_cities, m0_countries, m0_flag, m1_byCode, m1_byName, m1_search, currencyTally } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +19,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_countries(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_countries(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -32,7 +31,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_cities(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_cities(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -44,7 +43,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_flag(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_flag(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -56,7 +55,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_byName(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_byName(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -68,7 +67,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_byCode(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_byCode(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -80,7 +79,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_search(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -92,10 +91,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: country_profile ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_countriesnow_country_profile", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement profile locally (paywall removed)
+    try { return textError("Not yet implemented: profile") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -108,7 +105,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await currencyTally()) } catch (e) { return textError(error(e)) }
+    try { return text(await currencyTally()) } catch (e) { return textError(String(e)) }
   }
   )
 

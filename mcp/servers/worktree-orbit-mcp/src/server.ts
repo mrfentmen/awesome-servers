@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { format, inspectTopology } from "./orbit.js"
 import { worktreeAgeProfile, worktreeDivergenceProfile } from "./api.js"
-import { premiumRequired } from "./license.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -26,10 +25,6 @@ export function createServer() { const server = new McpServer({ name: "worktree-
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: worktree_divergence_profile ----
-    const paywallMessage = await premiumRequired("worktree_divergence_profile")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await worktreeDivergenceProfile(args)) } catch (error) { return errorText(error) }
   }
   ); server.registerTool(

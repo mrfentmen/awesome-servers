@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { avatarUrl, initialsAvatar, avatarStyleCatalog } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await initialsAvatar(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await initialsAvatar(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await avatarUrl(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await avatarUrl(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,10 +42,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: avatar_gallery ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_avatar_avatar_gallery", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement gallery locally (paywall removed)
+    try { return textError("Not yet implemented: gallery") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -59,10 +56,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: avatar_batch ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_avatar_avatar_batch", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement batch locally (paywall removed)
+    try { return textError("Not yet implemented: batch") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -75,7 +70,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await avatarStyleCatalog(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await avatarStyleCatalog(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

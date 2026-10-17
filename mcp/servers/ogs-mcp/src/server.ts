@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatDetails, formatGame, formatPlayer, getPlayer, OgsError, recentGames, searchPlayers, groupList } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
         if (results.length === 0) return text(`No OGS players match "${username}".`)
         return text(`OGS players for "${username}":\n\n${results.map((p, i) => formatPlayer(p, i)).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -52,7 +51,7 @@ export function createServer(): McpServer {
         if (!p) return text(`No OGS player with id ${id}.`)
         return text(formatDetails(p))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -74,7 +73,7 @@ export function createServer(): McpServer {
         if (games.length === 0) return text(`No recent games for player ${id}.`)
         return text(`Recent games:\n\n${games.map((g, i) => formatGame(g, i)).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -88,10 +87,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: game_record ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_ogs_game_record", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement record locally (paywall removed)
+    try { return textError("Not yet implemented: record") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -104,10 +101,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: tournament_list ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_ogs_tournament_list", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement list locally (paywall removed)
+    try { return textError("Not yet implemented: list") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -120,7 +115,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await groupList(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await groupList(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

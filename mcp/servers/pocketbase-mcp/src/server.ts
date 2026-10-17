@@ -26,7 +26,7 @@ export function createServer(): McpServer {
       try {
         return text(await health())
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -45,7 +45,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No collections.")
         return text(rows.map((c, i) => `${i + 1}. [${c.id}] ${c.name}${c.type ? ` (${c.type})` : ""}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -68,7 +68,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No records in ${collection}.`)
         return text(rows.map((r, i) => formatRecord(r, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -89,7 +89,7 @@ export function createServer(): McpServer {
         const r = await createRecord(collection, data as Record<string, unknown>)
         return text(`Created record ${(r as { id?: string }).id ?? ""} in ${collection}.`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

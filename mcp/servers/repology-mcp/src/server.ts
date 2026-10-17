@@ -19,7 +19,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await project(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await project(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +31,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await projects(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await projects(args)) } catch (e) { return textError(String(e)) }
   }
   )
   return server

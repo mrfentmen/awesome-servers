@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, getFirmwareStatus, getInterfaces, ipOwnership, knownExploitedCheck, packageAvailability } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await getFirmwareStatus());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       try {
         return text(await getInterfaces());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -57,7 +56,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await ipOwnership(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await ipOwnership(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -73,11 +72,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: known_exploited_check ----
-    const paywallMessage = await premiumRequired("known_exploited_check")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await knownExploitedCheck(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await knownExploitedCheck(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -94,11 +89,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: package_availability ----
-    const paywallMessage = await premiumRequired("package_availability")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await packageAvailability(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await packageAvailability(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { caaRecords, emailRecords, errorMessage, normaliseProvider, resolve, resolveMany, reverseLookup, formatAnswer, providersHelp, recordSummary, dnssecCheck, propagationCheck, txtContains, wildcardCheck } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -36,7 +35,7 @@ export function createServer(): McpServer {
         const res = await resolve(name, type ?? "A", p)
         return text(formatAnswer(name.replace(/\.$/, ""), (type ?? "A").toUpperCase(), p, res))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -59,7 +58,7 @@ export function createServer(): McpServer {
       try {
         return text(await resolveMany(names.split(","), type ?? "A", normaliseProvider(provider)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -78,7 +77,7 @@ export function createServer(): McpServer {
       try {
         return text(await recordSummary(domain.trim(), normaliseProvider(provider)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -96,7 +95,7 @@ export function createServer(): McpServer {
       try {
         return text(await emailRecords(domain.trim(), normaliseProvider(provider)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -115,7 +114,7 @@ export function createServer(): McpServer {
       try {
         return text(await caaRecords(domain.trim(), normaliseProvider(provider)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -136,7 +135,7 @@ export function createServer(): McpServer {
       try {
         return text(await reverseLookup(ip, normaliseProvider(provider)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -165,7 +164,7 @@ export function createServer(): McpServer {
       try {
         return text(await dnssecCheck({ domain, provider }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -187,7 +186,7 @@ export function createServer(): McpServer {
       try {
         return text(await propagationCheck({ name, type, provider }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -209,7 +208,7 @@ export function createServer(): McpServer {
       try {
         return text(await txtContains({ domain, value, provider }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -227,10 +226,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: diagnose_lookup ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_doh_diagnose_lookup", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement lookup locally (paywall removed)
+    try { return textError("Not yet implemented: lookup") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -247,10 +244,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: delegation_chain ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_doh_delegation_chain", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement chain locally (paywall removed)
+    try { return textError("Not yet implemented: chain") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -266,7 +261,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await wildcardCheck(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await wildcardCheck(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

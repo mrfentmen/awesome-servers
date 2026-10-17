@@ -36,7 +36,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchPlayer(displayName, membershipType));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -57,7 +57,7 @@ export function createServer(): McpServer {
       try {
         return text(await getProfile(membershipType, membershipId, components));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -79,7 +79,7 @@ export function createServer(): McpServer {
       try {
         return text(await getCharacter(membershipType, membershipId, characterId, components));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -97,7 +97,7 @@ export function createServer(): McpServer {
       try {
         return text(await getMilestones());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -115,7 +115,7 @@ export function createServer(): McpServer {
       try {
         return text(await getManifest());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

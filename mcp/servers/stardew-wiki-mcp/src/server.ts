@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatArticle, getPage, randomPage, searchWiki, StardewError } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -33,7 +32,7 @@ export function createServer(): McpServer {
           `Stardew Wiki results for "${query}":\n\n${results.map((h, i) => `${i + 1}. ${h.title}${h.snippet ? ` — ${h.snippet.slice(0, 140)}` : ""}`).join("\n")}`
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -54,7 +53,7 @@ export function createServer(): McpServer {
         if (!a) return text(`No Stardew Wiki page titled "${title}".`)
         return text(formatArticle(a))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -74,7 +73,7 @@ export function createServer(): McpServer {
         if (!a) return text(`Random pick: ${title}`)
         return text(formatArticle(a))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -91,10 +90,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: category_members ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_stardew_wiki_category_members", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement members locally (paywall removed)
+      try { return textError("Not yet implemented: members") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -110,10 +107,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: page_links ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_stardew_wiki_page_links", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement links locally (paywall removed)
+      try { return textError("Not yet implemented: links") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -128,10 +123,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: page_sections ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_stardew_wiki_page_sections", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement sections locally (paywall removed)
+      try { return textError("Not yet implemented: sections") } catch (e) { return textError(String(e)) }
     }
   )
 

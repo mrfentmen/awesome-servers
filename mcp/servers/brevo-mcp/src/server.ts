@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { accountInfo, BrevoError, emailReports, formatContact, listContacts, campaignPerformance, senderInventory, listInventory } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await accountInfo())
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No contacts.")
         return text(rows.map((c, i) => formatContact(c, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -66,7 +65,7 @@ export function createServer(): McpServer {
       try {
         return text(await emailReports(days))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -84,11 +83,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: campaign_performance ----
-    const paywallMessage = await premiumRequired("campaign_performance")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await campaignPerformance(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await campaignPerformance(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -103,11 +98,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: sender_inventory ----
-    const paywallMessage = await premiumRequired("sender_inventory")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await senderInventory(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await senderInventory(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -122,7 +113,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await listInventory(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await listInventory(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_domain, m0_ip, m1_domainInfo } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +19,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_domain(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_domain(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -32,7 +31,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_ip(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_ip(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -44,7 +43,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_domainInfo(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_domainInfo(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -56,10 +55,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: asn_info ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_whois_asn_info", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement info locally (paywall removed)
+    try { return textError("Not yet implemented: info") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -72,10 +69,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: asn_networks ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_whois_asn_networks", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement networks locally (paywall removed)
+    try { return textError("Not yet implemented: networks") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -88,10 +83,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: domain_contacts ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_whois_domain_contacts", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement contacts locally (paywall removed)
+    try { return textError("Not yet implemented: contacts") } catch (e) { return textError(String(e)) }
   }
   )
 

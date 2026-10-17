@@ -31,7 +31,7 @@ export function createServer(): McpServer {
       try {
         return text(await listUsers(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -48,7 +48,7 @@ export function createServer(): McpServer {
       try {
         return text(await listDatabases());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

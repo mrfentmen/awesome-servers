@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listMembers, listCollections, listGroups, getEvents, listPolicies, collectionAccess, twoFactorCoverage } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await listMembers());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -44,7 +43,7 @@ export function createServer(): McpServer {
       try {
         return text(await listCollections());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -62,7 +61,7 @@ export function createServer(): McpServer {
       try {
         return text(await listGroups());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -82,7 +81,7 @@ export function createServer(): McpServer {
       try {
         return text(await getEvents(start, end));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -98,7 +97,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await listPolicies(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await listPolicies(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -113,11 +112,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: collection_access ----
-    const paywallMessage = await premiumRequired("collection_access")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await collectionAccess(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await collectionAccess(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -132,11 +127,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: two_factor_coverage ----
-    const paywallMessage = await premiumRequired("two_factor_coverage")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await twoFactorCoverage(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await twoFactorCoverage(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

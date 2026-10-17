@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { LichessError, formatPlayer, formatPuzzle, getDailyPuzzle, getPlayer, getPuzzleById, getTopPlayers } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -27,7 +26,7 @@ export function createServer(): McpServer {
         if (!p) return text("No daily puzzle available right now.")
         return text(formatPuzzle(p))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
         if (!p) return text(`No puzzle "${id}".`)
         return text(formatPuzzle(p))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -67,7 +66,7 @@ export function createServer(): McpServer {
         if (!u) return text(`No Lichess user "${username}".`)
         return text(formatPlayer(u))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -98,7 +97,7 @@ export function createServer(): McpServer {
               .join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -112,10 +111,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: live_tournaments ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_lichess_live_tournaments", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement tournaments locally (paywall removed)
+    try { return textError("Not yet implemented: tournaments") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -128,10 +125,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: team_info ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_lichess_team_info", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement info locally (paywall removed)
+    try { return textError("Not yet implemented: info") } catch (e) { return textError(String(e)) }
   }
   )
 

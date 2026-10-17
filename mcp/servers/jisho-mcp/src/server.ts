@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { JishoError, formatWord, searchByTag, searchWords } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -35,7 +34,7 @@ export function createServer(): McpServer {
             words.map((w, i) => formatWord(w, i + 1)).join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -63,7 +62,7 @@ export function createServer(): McpServer {
             words.map((w, i) => formatWord(w, i + 1)).join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -77,10 +76,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: all_senses ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_jisho_all_senses", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement senses locally (paywall removed)
+    try { return textError("Not yet implemented: senses") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -93,10 +90,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: words_by_reading ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_jisho_words_by_reading", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement reading locally (paywall removed)
+    try { return textError("Not yet implemented: reading") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -109,10 +104,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: word_network ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_jisho_word_network", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement network locally (paywall removed)
+    try { return textError("Not yet implemented: network") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -125,10 +118,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: kanji_profile ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_jisho_kanji_profile", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement profile locally (paywall removed)
+    try { return textError("Not yet implemented: profile") } catch (e) { return textError(String(e)) }
   }
   )
 

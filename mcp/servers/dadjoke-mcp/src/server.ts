@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { DadJokeError, getJoke, randomJoke, searchJokes } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text((await randomJoke()).joke)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -48,7 +47,7 @@ export function createServer(): McpServer {
         if (results.length === 0) return text(`No dad jokes about "${term}".`)
         return text(results.map((j, i) => `${i + 1}. ${j.joke}`).join("\n\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -67,7 +66,7 @@ export function createServer(): McpServer {
       try {
         return text((await getJoke(id)).joke)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -83,10 +82,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: typed_joke ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_dadjoke_typed_joke", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement joke locally (paywall removed)
+      try { return textError("Not yet implemented: joke") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -101,10 +98,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: chuck_fact ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_dadjoke_chuck_fact", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement fact locally (paywall removed)
+      try { return textError("Not yet implemented: fact") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -119,10 +114,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: comic_strip ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_dadjoke_comic_strip", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement strip locally (paywall removed)
+      try { return textError("Not yet implemented: strip") } catch (e) { return textError(String(e)) }
     }
   )
 

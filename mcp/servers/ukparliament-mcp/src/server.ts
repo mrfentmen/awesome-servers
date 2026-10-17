@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatHit, formatMember, getMember, ParliamentError, searchMembers } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
         if (results.length === 0) return text(`No UK Parliament members match "${name}".`)
         return text(`UK Parliament members for "${name}":\n\n${results.map((h, i) => formatHit(h, i)).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -52,7 +51,7 @@ export function createServer(): McpServer {
         if (!m) return text(`No UK Parliament member with id ${id}.`)
         return text(formatMember(m))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -66,10 +65,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: member_career ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_ukparliament_member_career", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement career locally (paywall removed)
+    try { return textError("Not yet implemented: career") } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatCase, formatHit, getCase, OyezError, searchCases, citation_lookup } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
         if (results.length === 0) return text(`No Oyez cases match "${query}".`)
         return text(`Oyez cases for "${query}":\n\n${results.map((h, i) => formatHit(h, i)).join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -51,7 +50,7 @@ export function createServer(): McpServer {
       try {
         return text(formatCase(await getCase(term, docket)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -68,10 +67,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: case_citations ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_oyez_case_citations", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement citations locally (paywall removed)
+    try { return textError("Not yet implemented: citations") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -87,10 +84,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: case_questions ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_oyez_case_questions", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement questions locally (paywall removed)
+    try { return textError("Not yet implemented: questions") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -110,7 +105,7 @@ export function createServer(): McpServer {
       try {
         return text(await citation_lookup(args))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -124,10 +119,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: case_timeline ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_oyez_case_timeline", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement timeline locally (paywall removed)
+    try { return textError("Not yet implemented: timeline") } catch (e) { return textError(String(e)) }
   }
   )
 

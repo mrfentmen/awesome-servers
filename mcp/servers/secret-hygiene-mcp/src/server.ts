@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { format, scanSecretHygiene } from "./core.js"
 import { secretExposureLedger } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
 const text=(value:string)=>({content:[{type:"text" as const,text:value}]})
@@ -26,10 +25,8 @@ export function createServer(){const server=new McpServer({name:"secret-hygiene-
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: entropy_profile ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_secret_hygiene_entropy_profile", args)) } catch (e) { return textError(String(e)) }
+    // TODO: implement profile locally (paywall removed)
+    try { return textError("Not yet implemented: profile") } catch (e) { return textError(String(e)) }
   }
   ); server.registerTool(
     "secret_exposure_ledger",

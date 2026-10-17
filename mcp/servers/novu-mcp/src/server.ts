@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listSubscribers, getSubscriber, listTopics, topicDetails, notifications, environments, integrations, layouts, feeds, blueprintGroups, notificationApiAudit, novuSdkReleaseCheck } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await listSubscribers(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await getSubscriber(subscriber_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -64,7 +63,7 @@ export function createServer(): McpServer {
       try {
         return text(await listTopics());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -83,7 +82,7 @@ export function createServer(): McpServer {
       try {
         return text(await topicDetails(topic_key));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -102,7 +101,7 @@ export function createServer(): McpServer {
       try {
         return text(await notifications(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -119,7 +118,7 @@ export function createServer(): McpServer {
       try {
         return text(await environments());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -136,7 +135,7 @@ export function createServer(): McpServer {
       try {
         return text(await integrations());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -153,7 +152,7 @@ export function createServer(): McpServer {
       try {
         return text(await layouts());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -170,7 +169,7 @@ export function createServer(): McpServer {
       try {
         return text(await feeds());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -187,7 +186,7 @@ export function createServer(): McpServer {
       try {
         return text(await blueprintGroups());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -201,11 +200,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: notification_api_audit ----
-      const paywallMessage = await premiumRequired("notification_api_audit")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await notificationApiAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await notificationApiAudit(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -218,11 +213,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: novu_sdk_release_check ----
-      const paywallMessage = await premiumRequired("novu_sdk_release_check")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await novuSdkReleaseCheck(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await novuSdkReleaseCheck(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

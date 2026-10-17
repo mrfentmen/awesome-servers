@@ -1,4 +1,3 @@
-import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { gameMap } from "./api.js"
@@ -158,11 +157,9 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: game_routes ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_zork_game_routes", args))
+        // TODO: implement routes locally (paywall removed)
+        try { return textError("Not yet implemented: routes") } catch (e) { return textError(String(e)) }
       } catch (e) {
         return textError(`Error: ${(e as Error).message}`)
       }

@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { format, compareLicenseEvidence } from "./core.js"
 import { snapshotProfile } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
 const text=(value:string)=>({content:[{type:"text" as const,text:value}]})
@@ -37,10 +36,8 @@ export function createServer(){const server=new McpServer({name:"dependency-lice
       annotations: READ_ONLY,
     },
     async (input) => {
-      // ---- paywall: category_matrix ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_dependency_license_change_category_matrix", input)) } catch (e) { return textError(String(e)) }
+      // TODO: implement matrix locally (paywall removed)
+      try { return textError("Not yet implemented: matrix") } catch (e) { return textError(String(e)) }
     }
   )
 

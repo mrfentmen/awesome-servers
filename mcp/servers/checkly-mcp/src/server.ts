@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { assertContent, assertHeaders, assertStatus, brokenLinks, checkRedirects, checkUrl, errorMessage, assertResponseTime, assertJson, assertRedirect, a11yBasics } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -22,7 +21,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await assertStatus(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await assertStatus(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -41,7 +40,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await assertHeaders(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await assertHeaders(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -58,7 +57,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await assertContent(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await assertContent(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -73,7 +72,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await checkUrl(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await checkUrl(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -88,7 +87,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await checkRedirects(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await checkRedirects(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -104,7 +103,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await brokenLinks(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await brokenLinks(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -121,7 +120,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await assertResponseTime(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await assertResponseTime(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -139,7 +138,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await assertJson(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await assertJson(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -156,7 +155,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      try { return text(await assertRedirect(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await assertRedirect(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -172,10 +171,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: http_security_report ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_checkly_http_security_report", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement report locally (paywall removed)
+    try { return textError("Not yet implemented: report") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -191,7 +188,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await a11yBasics(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await a11yBasics(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -208,10 +205,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: seo_meta ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_checkly_seo_meta", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement meta locally (paywall removed)
+    try { return textError("Not yet implemented: meta") } catch (e) { return textError(String(e)) }
   }
   )
 

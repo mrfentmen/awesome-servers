@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listAssistants, getAssistant, listCalls, getCall, voiceStackStatus, stackMaintenance } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -27,7 +26,7 @@ export function createServer(): McpServer {
       try {
         return text(await listAssistants(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -46,7 +45,7 @@ export function createServer(): McpServer {
       try {
         return text(await getAssistant(assistant_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       try {
         return text(await listCalls(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -84,7 +83,7 @@ export function createServer(): McpServer {
       try {
         return text(await getCall(call_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -101,11 +100,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: voice_stack_status ----
-    const paywallMessage = await premiumRequired("voice_stack_status")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await voiceStackStatus(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await voiceStackStatus(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -121,7 +116,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await stackMaintenance(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await stackMaintenance(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

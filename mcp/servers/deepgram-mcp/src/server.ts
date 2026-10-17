@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listProjects, getBalance, listKeys, requestLog, usageBreakdown, projectMembers } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -25,7 +24,7 @@ export function createServer(): McpServer {
       try {
         return text(await listProjects());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -44,7 +43,7 @@ export function createServer(): McpServer {
       try {
         return text(await getBalance(project_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -63,7 +62,7 @@ export function createServer(): McpServer {
       try {
         return text(await listKeys(project_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -87,11 +86,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: request_log ----
-    const paywallMessage = await premiumRequired("request_log")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await requestLog(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await requestLog(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -109,11 +104,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: usage_breakdown ----
-    const paywallMessage = await premiumRequired("usage_breakdown")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await usageBreakdown(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await usageBreakdown(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -128,7 +119,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await projectMembers(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await projectMembers(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

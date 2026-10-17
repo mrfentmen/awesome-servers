@@ -37,7 +37,7 @@ export function createServer(): McpServer {
       try {
         return text(await health());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -59,7 +59,7 @@ export function createServer(): McpServer {
       try {
         return text(await matchPerson(email, first_name, last_name, organization));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -79,7 +79,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchPeople(query, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -99,7 +99,7 @@ export function createServer(): McpServer {
       try {
         return text(await peopleSearch(query, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -119,7 +119,7 @@ export function createServer(): McpServer {
       try {
         return text(await companySearch(query, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -138,7 +138,7 @@ export function createServer(): McpServer {
       try {
         return text(await orgEnrich(domain));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -157,7 +157,7 @@ export function createServer(): McpServer {
       try {
         return text(await bulkMatch(emails));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -176,7 +176,7 @@ export function createServer(): McpServer {
       try {
         return text(await getContact(contact_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -196,7 +196,7 @@ export function createServer(): McpServer {
       try {
         return text(await accountSearch(query, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -216,7 +216,7 @@ export function createServer(): McpServer {
       try {
         return text(await peopleSearchV1(titles, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

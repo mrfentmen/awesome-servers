@@ -6,3 +6,11 @@ export declare function errorMessage(e: unknown): string;
 export declare function filterRuleAudit(args: {
     url?: string;
 }): Promise<string>;
+export declare function domainCoverage(args: {
+    domain: string;
+    url?: string;
+}): Promise<string>;
+export declare function filterCatalog(args: {
+    query?: string;
+    limit?: number;
+}): Promise<string>;

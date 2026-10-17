@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { slot } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await slot(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await slot(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,10 +30,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: solana_supply ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_solana_solana_supply", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement supply locally (paywall removed)
+    try { return textError("Not yet implemented: supply") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -47,10 +44,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: solana_epoch ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_solana_solana_epoch", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement epoch locally (paywall removed)
+    try { return textError("Not yet implemented: epoch") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -63,10 +58,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: solana_versions ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_solana_solana_versions", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement versions locally (paywall removed)
+    try { return textError("Not yet implemented: versions") } catch (e) { return textError(String(e)) }
   }
   )
 

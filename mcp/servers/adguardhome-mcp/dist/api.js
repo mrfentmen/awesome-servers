@@ -175,3 +175,69 @@ export async function filterRuleAudit(args) {
         .join("\n");
 }
 // ---- gap4a1 tools:
+// ---- domain_coverage: check if a domain is covered by an AdGuard filter list ----
+export async function domainCoverage(args) {
+    const domain = (args.domain ?? '').trim().toLowerCase();
+    if (!domain)
+        return 'Provide a domain to check.';
+    const l = await agFetchList(String(args?.url ?? AG_REGISTRY));
+    const parts = domain.split('.');
+    let covered = false;
+    let coveringRule = null;
+    for (let i = 0; i < parts.length - 1; i++) {
+        const candidate = parts.slice(i).join('.');
+        if (l.listDomains.has(candidate)) {
+            covered = true;
+            coveringRule = candidate;
+            break;
+        }
+    }
+    const lines = [
+        'Domain coverage check for "' + domain + '" against ' + l.url,
+        '',
+        covered
+            ? 'COVERED: "' + domain + '" is covered by a rule for "' + coveringRule + '" (parent domains are also covered).'
+            : 'NOT COVERED: "' + domain + '" does not match any rule in this list.',
+        '',
+        'The check tests the domain exactly, then every parent up to the registrable domain,',
+        'because a rule for a parent also covers all subdomains.',
+    ];
+    if (l.exceptions > 0) {
+        lines.push('');
+        lines.push('Note: this list contains ' + l.exceptions + ' exception rule(s) (@@) that may re-admit blocked domains.');
+    }
+    return lines.join('\n');
+}
+// ---- filter_catalog: discover published AdGuard DNS filter lists ----
+export async function filterCatalog(args) {
+    const query = (args.query ?? '').trim().toLowerCase();
+    const limit = agBound(args.limit, 1, 30, 10);
+    const registryUrl = 'https://adguardteam.github.io/HostlistsRegistry/assets/filters.json';
+    const res = await fetch(registryUrl, { headers: { 'User-Agent': 'awesome-mcps/1.0', Accept: 'application/json' }, signal: AbortSignal.timeout(30000) });
+    if (!res.ok)
+        throw new AdGuardError('Registry returned HTTP ' + res.status);
+    const data = (await res.json());
+    if (!Array.isArray(data))
+        throw new AdGuardError('Unexpected registry format.');
+    let filtered = data;
+    if (query) {
+        filtered = data.filter((f) => {
+            const name = String(f.name ?? '').toLowerCase();
+            const desc = String(f.description ?? '').toLowerCase();
+            return name.includes(query) || desc.includes(query);
+        });
+    }
+    filtered = filtered.slice(0, limit);
+    if (!filtered.length)
+        return 'No filter lists found' + (query ? ' matching "' + query + '"' : '') + '.';
+    const lines = ['AdGuard DNS filter catalog' + (query ? ' (query: "' + query + '")' : '') + ', ' + filtered.length + ' list(s):', ''];
+    for (const f of filtered) {
+        lines.push('• ' + String(f.name ?? 'unnamed'));
+        lines.push('  ' + String(f.description ?? 'no description').slice(0, 120));
+        lines.push('  URL: ' + String(f.downloadUrl ?? f.homepage ?? 'n/a'));
+        if (f.version)
+            lines.push('  Version: ' + f.version + ' | Updated: ' + (f.timeAdded ? new Date(Number(f.timeAdded)).toISOString().slice(0, 10) : 'n/a'));
+        lines.push('');
+    }
+    return lines.join('\n');
+}

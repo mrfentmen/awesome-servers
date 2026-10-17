@@ -3,7 +3,6 @@ import { z } from "zod"
 import { findInText, LEXICON, lookupExact, searchLexicon } from "./lexicon.js"
 
 import { originTimeline } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -154,10 +153,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: related_terms ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_brainrot_related_terms", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement terms locally (paywall removed)
+      try { return textError("Not yet implemented: terms") } catch (e) { return textError(String(e)) }
     }
   )
   server.registerTool(
@@ -169,10 +166,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: similar_terms ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_brainrot_similar_terms", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement terms locally (paywall removed)
+    try { return textError("Not yet implemented: terms") } catch (e) { return textError(String(e)) }
   }
   )
 

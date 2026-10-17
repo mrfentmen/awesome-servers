@@ -29,7 +29,7 @@ export function createServer(): McpServer {
       try {
         return text(await projectPipelines({ project, ref, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -49,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(await pipelineDetail({ project, pipelineId }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -70,7 +70,7 @@ export function createServer(): McpServer {
       try {
         return text(await pipelineJobs({ project, pipelineId, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -90,7 +90,7 @@ export function createServer(): McpServer {
       try {
         return text(await ciStats({ project, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -109,7 +109,7 @@ export function createServer(): McpServer {
       try {
         return text(await latestCiStatus({ projects }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -130,7 +130,7 @@ export function createServer(): McpServer {
       try {
         return text(await githubWorkflowRuns({ repo, branch, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -150,7 +150,7 @@ export function createServer(): McpServer {
       try {
         return text(await githubJobs({ repo, runId }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -170,7 +170,7 @@ export function createServer(): McpServer {
       try {
         return text(await projectReleases({ project, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -189,7 +189,7 @@ export function createServer(): McpServer {
       try {
         return text(await repoLanguages({ repo }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

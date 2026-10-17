@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listModels, keyInfo, credits, getModel, searchModels, freeModels, longestContext, modelEndpoints, generationStats, promptCostEstimate, modelEconomicsMatrix, deprecationWatch } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await listModels());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       try {
         return text(await keyInfo());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -60,7 +59,7 @@ export function createServer(): McpServer {
       try {
         return text(await credits());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -79,7 +78,7 @@ export function createServer(): McpServer {
       try {
         return text(await getModel(model_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -99,7 +98,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchModels(query, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -118,7 +117,7 @@ export function createServer(): McpServer {
       try {
         return text(await freeModels(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -137,7 +136,7 @@ export function createServer(): McpServer {
       try {
         return text(await longestContext(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -157,7 +156,7 @@ export function createServer(): McpServer {
       try {
         return text(await modelEndpoints(author, slug));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -176,7 +175,7 @@ export function createServer(): McpServer {
       try {
         return text(await generationStats(generation_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -195,7 +194,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await promptCostEstimate(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await promptCostEstimate(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -208,11 +207,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (_args) => {
-    // ---- paywall: model_economics_matrix ----
-    const paywallMessage = await premiumRequired("model_economics_matrix")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await modelEconomicsMatrix(_args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await modelEconomicsMatrix(_args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -225,11 +220,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: deprecation_watch ----
-    const paywallMessage = await premiumRequired("deprecation_watch")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await deprecationWatch(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await deprecationWatch(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

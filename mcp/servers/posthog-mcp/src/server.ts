@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, me, listProjects, listInsights, insightDetails, dashboards, actions, events, persons, flags, cohorts, certificateTransparency, markupAudit } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await me());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       try {
         return text(await listProjects());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -62,7 +61,7 @@ export function createServer(): McpServer {
       try {
         return text(await listInsights(project_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -82,7 +81,7 @@ export function createServer(): McpServer {
       try {
         return text(await insightDetails(project_id, insight_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -101,7 +100,7 @@ export function createServer(): McpServer {
       try {
         return text(await dashboards(project_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -120,7 +119,7 @@ export function createServer(): McpServer {
       try {
         return text(await actions(project_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -140,7 +139,7 @@ export function createServer(): McpServer {
       try {
         return text(await events(project_id, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -159,7 +158,7 @@ export function createServer(): McpServer {
       try {
         return text(await persons(project_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -178,7 +177,7 @@ export function createServer(): McpServer {
       try {
         return text(await flags(project_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -197,7 +196,7 @@ export function createServer(): McpServer {
       try {
         return text(await cohorts(project_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -215,11 +214,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: certificate_transparency ----
-    const paywallMessage = await premiumRequired("certificate_transparency")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await certificateTransparency(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await certificateTransparency(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -236,11 +231,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: markup_audit ----
-    const paywallMessage = await premiumRequired("markup_audit")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await markupAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await markupAudit(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

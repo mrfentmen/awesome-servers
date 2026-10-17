@@ -32,7 +32,7 @@ export function createServer(): McpServer {
       try {
         return text(await listDevices());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -51,7 +51,7 @@ export function createServer(): McpServer {
       try {
         return text(await getDeviceStatus(deviceId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -73,7 +73,7 @@ export function createServer(): McpServer {
       try {
         return text(await sendCommand(deviceId, command, parameter, commandType));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

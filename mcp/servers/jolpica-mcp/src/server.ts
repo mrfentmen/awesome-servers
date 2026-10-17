@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_current, m0_drivers, m0_races, m1_driverStandings, m1_lastRace, m1_seasonSchedule } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -20,7 +19,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_current(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_current(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -32,7 +31,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_races(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_races(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -44,7 +43,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_drivers(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_drivers(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -56,7 +55,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_lastRace(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_lastRace(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -68,7 +67,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_driverStandings(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_driverStandings(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -80,7 +79,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_seasonSchedule(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_seasonSchedule(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -92,10 +91,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: constructor_standings ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_jolpica_constructor_standings", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement standings locally (paywall removed)
+      try { return textError("Not yet implemented: standings") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -108,10 +105,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: qualifying_report ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_jolpica_qualifying_report", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement report locally (paywall removed)
+      try { return textError("Not yet implemented: report") } catch (e) { return textError(String(e)) }
     }
   )
 

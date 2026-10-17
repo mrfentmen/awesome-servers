@@ -34,7 +34,7 @@ export function createServer(): McpServer {
       try {
         return text(await getCard(card_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -54,7 +54,7 @@ export function createServer(): McpServer {
       try {
         return text(await selectCards(search, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -74,7 +74,7 @@ export function createServer(): McpServer {
       try {
         return text(await simpleCreateCard(name, markup));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -91,7 +91,7 @@ export function createServer(): McpServer {
       try {
         return text(await checkAuth());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

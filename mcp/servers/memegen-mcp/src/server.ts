@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { getTemplate, listTemplates, makeMeme, MemeError } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
           top.map((t) => `${t.id} — ${t.name} (${t.lines} lines)`).join("\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -51,7 +50,7 @@ export function createServer(): McpServer {
       try {
         return text(makeMeme(template, lines))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -71,7 +70,7 @@ export function createServer(): McpServer {
         const t = await getTemplate(id)
         return text(`${t.id} — ${t.name} (${t.lines} lines)${t.blank ? `\nBlank: ${t.blank}` : ""}${t.example ? `\nExample: ${t.example}` : ""}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -85,10 +84,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: list_caption_fonts ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_memegen_list_caption_fonts", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement fonts locally (paywall removed)
+      try { return textError("Not yet implemented: fonts") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -101,10 +98,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: random_quote ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_memegen_random_quote", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement quote locally (paywall removed)
+      try { return textError("Not yet implemented: quote") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -117,10 +112,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: template_styles ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_memegen_template_styles", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement styles locally (paywall removed)
+    try { return textError("Not yet implemented: styles") } catch (e) { return textError(String(e)) }
   }
   )
 

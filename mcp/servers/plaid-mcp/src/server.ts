@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, listInstitutions, listCategories, sandboxToken, getInstitution, sandboxBalance, sandboxTransactions, sandboxHoldings, sandboxLiabilities, sandboxAuth, sandboxIdentity, findBank } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(await listInstitutions(count));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -46,7 +45,7 @@ export function createServer(): McpServer {
       try {
         return text(await listCategories());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       try {
         return text(await sandboxToken(institution_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -84,7 +83,7 @@ export function createServer(): McpServer {
       try {
         return text(await getInstitution(institution_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -103,7 +102,7 @@ export function createServer(): McpServer {
       try {
         return text(await sandboxBalance(access_token));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -123,7 +122,7 @@ export function createServer(): McpServer {
       try {
         return text(await sandboxTransactions(access_token, days));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -142,7 +141,7 @@ export function createServer(): McpServer {
       try {
         return text(await sandboxHoldings(access_token));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -161,7 +160,7 @@ export function createServer(): McpServer {
       try {
         return text(await sandboxLiabilities(access_token));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -180,7 +179,7 @@ export function createServer(): McpServer {
       try {
         return text(await sandboxAuth(access_token));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -199,7 +198,7 @@ export function createServer(): McpServer {
       try {
         return text(await sandboxIdentity(access_token));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -217,7 +216,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await findBank(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await findBank(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -234,10 +233,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: bank_health ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_plaid_bank_health", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement health locally (paywall removed)
+    try { return textError("Not yet implemented: health") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -254,10 +251,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: banks_by_state ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_plaid_banks_by_state", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement state locally (paywall removed)
+    try { return textError("Not yet implemented: state") } catch (e) { return textError(String(e)) }
   }
   )
 

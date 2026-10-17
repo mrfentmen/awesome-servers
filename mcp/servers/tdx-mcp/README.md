@@ -19,21 +19,4 @@ Needs free TDX client id + secret (TDX_CLIENT_SECRET) from tdx.transportdata.tw.
 
 Part of [awesome-mcps](https://github.com/mrfentmen/awesome-mcps).
 
-<!-- paywall -->
-## Premium tools
 
-These tools need a license key:
-
-* `ods_train_departures`
-* `ods_train_route`
-
-Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-tdx-mcp and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
-```
-
-The key is checked against MCP Marketplace, cached for 24 hours, and keeps
-working offline once one check has succeeded. Every other tool on this server
-stays free.
-<!-- /paywall -->

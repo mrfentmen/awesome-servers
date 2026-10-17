@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { fredSeries, treasuryRates, series_compare } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await fredSeries(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await fredSeries(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await treasuryRates(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await treasuryRates(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -46,10 +45,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: series_trend ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_financial_data_series_trend", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement trend locally (paywall removed)
+      try { return textError("Not yet implemented: trend") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -68,7 +65,7 @@ export function createServer(): McpServer {
       try {
         return text(await series_compare(args))
       } catch (e) {
-        return textError(error(e))
+        return textError(String(e))
       }
     }
   )
@@ -85,10 +82,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: treasury_curve_history ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_financial_data_treasury_curve_history", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement history locally (paywall removed)
+      try { return textError("Not yet implemented: history") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -107,10 +102,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: series_window ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_financial_data_series_window", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement window locally (paywall removed)
+    try { return textError("Not yet implemented: window") } catch (e) { return textError(String(e)) }
   }
   )
 

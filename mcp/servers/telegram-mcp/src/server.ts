@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, getMe, sendMessage, getUpdates, chatInfo, memberCount, fileInfo, sendPhoto, myCommands, deleteMessage, editMessage, messageLimitAudit, inlineKeyboardAudit, deepLinkBuilder } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -27,7 +26,7 @@ export function createServer(): McpServer {
       try {
         return text(await getMe());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await sendMessage(chat_id, message));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -66,7 +65,7 @@ export function createServer(): McpServer {
       try {
         return text(await getUpdates(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -85,7 +84,7 @@ export function createServer(): McpServer {
       try {
         return text(await chatInfo(chat_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -104,7 +103,7 @@ export function createServer(): McpServer {
       try {
         return text(await memberCount(chat_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -123,7 +122,7 @@ export function createServer(): McpServer {
       try {
         return text(await fileInfo(file_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -144,7 +143,7 @@ export function createServer(): McpServer {
       try {
         return text(await sendPhoto(chat_id, photo_url, caption));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -161,7 +160,7 @@ export function createServer(): McpServer {
       try {
         return text(await myCommands());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -181,7 +180,7 @@ export function createServer(): McpServer {
       try {
         return text(await deleteMessage(chat_id, message_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -202,7 +201,7 @@ export function createServer(): McpServer {
       try {
         return text(await editMessage(chat_id, message_id, message));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -220,11 +219,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: message_limit_audit ----
-    const paywallMessage = await premiumRequired("message_limit_audit")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await messageLimitAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await messageLimitAudit(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -237,11 +232,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: inline_keyboard_audit ----
-    const paywallMessage = await premiumRequired("inline_keyboard_audit")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await inlineKeyboardAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await inlineKeyboardAudit(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -260,7 +251,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await deepLinkBuilder(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await deepLinkBuilder(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

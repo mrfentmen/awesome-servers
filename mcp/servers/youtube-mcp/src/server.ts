@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, search, videoDetails, channelDetails, playlistItems, channelPlaylists, mostPopular, videoComments, channelVideos, searchChannels, liveStreams, channelFeed, embedCard } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(await search(query, max_results));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -48,7 +47,7 @@ export function createServer(): McpServer {
       try {
         return text(await videoDetails(video_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -67,7 +66,7 @@ export function createServer(): McpServer {
       try {
         return text(await channelDetails(channel_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -87,7 +86,7 @@ export function createServer(): McpServer {
       try {
         return text(await playlistItems(playlist_id, max_results));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -107,7 +106,7 @@ export function createServer(): McpServer {
       try {
         return text(await channelPlaylists(channel_id, max_results));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -127,7 +126,7 @@ export function createServer(): McpServer {
       try {
         return text(await mostPopular(region, max_results));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -147,7 +146,7 @@ export function createServer(): McpServer {
       try {
         return text(await videoComments(video_id, max_results));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -167,7 +166,7 @@ export function createServer(): McpServer {
       try {
         return text(await channelVideos(channel_id, max_results));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -187,7 +186,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchChannels(query, max_results));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -207,7 +206,7 @@ export function createServer(): McpServer {
       try {
         return text(await liveStreams(query, max_results));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -225,11 +224,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: channel_feed ----
-    const paywallMessage = await premiumRequired("channel_feed")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await channelFeed(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await channelFeed(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -245,7 +240,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await embedCard(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await embedCard(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

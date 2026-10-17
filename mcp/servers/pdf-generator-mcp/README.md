@@ -20,20 +20,4 @@ node dist/index.js
 
 Output files are written to the system temp directory and the path is returned. Files are created for real and can be opened with any PDF reader.
 
-<!-- paywall -->
-## Premium tools
 
-These tools need a license key:
-
-* `url_to_pdf`
-
-Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-pdf-generator-mcp and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
-```
-
-The key is checked against MCP Marketplace, cached for 24 hours, and keeps
-working offline once one check has succeeded. Every other tool on this server
-stays free.
-<!-- /paywall -->

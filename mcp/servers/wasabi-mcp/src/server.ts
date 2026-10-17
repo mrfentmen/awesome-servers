@@ -27,7 +27,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No buckets.")
         return text(rows.map((b, i) => `${i + 1}. ${b}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -50,7 +50,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No objects in ${bucket}.`)
         return text(rows.map((o, i) => formatObject(o, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

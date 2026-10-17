@@ -32,7 +32,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchSecrets(query));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -51,7 +51,7 @@ export function createServer(): McpServer {
       try {
         return text(await getSecret(secretId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -69,7 +69,7 @@ export function createServer(): McpServer {
       try {
         return text(await listFolders());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

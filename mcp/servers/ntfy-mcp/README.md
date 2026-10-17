@@ -20,21 +20,4 @@ Use ntfy.sh (keyless; optional NTFY_BASE_URL + NTFY_TOKEN): publish notification
 
 [ntfy-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/ntfy-mcp)
 
-<!-- paywall -->
-## Premium tools
 
-These tools need a license key:
-
-* `ntfy_server_capabilities`
-* `topic_message_history`
-
-Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-ntfy-mcp and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
-```
-
-The key is checked against MCP Marketplace, cached for 24 hours, and keeps
-working offline once one check has succeeded. Every other tool on this server
-stays free.
-<!-- /paywall -->

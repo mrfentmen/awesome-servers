@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listUsers, getUser, listSessions, listInvitations, listMemberships } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await listUsers(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await getUser(user_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -66,11 +65,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: list_sessions ----
-    const paywallMessage = await premiumRequired("list_sessions")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await listSessions(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await listSessions(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -88,7 +83,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await listInvitations(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await listInvitations(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -108,11 +103,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: list_memberships ----
-    const paywallMessage = await premiumRequired("list_memberships")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await listMemberships(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await listMemberships(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

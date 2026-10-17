@@ -20,21 +20,4 @@ Search with Brave Search API (free key; set BRAVE_API_KEY, X-Subscription-Token)
 
 [brave-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/brave-mcp)
 
-<!-- paywall -->
-## Premium tools
 
-These tools need a license key:
-
-* `freshness_sweep`
-* `goggle_search`
-
-Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-brave-mcp and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
-```
-
-The key is checked against MCP Marketplace, cached for 24 hours, and keeps
-working offline once one check has succeeded. Every other tool on this server
-stays free.
-<!-- /paywall -->

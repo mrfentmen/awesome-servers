@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, getLatestEod, getEodOnDate, searchTickers, listExchanges, getDividends } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -27,7 +26,7 @@ export function createServer(): McpServer {
       try {
         return text(await getLatestEod(symbols));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await getEodOnDate(symbols, date));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -67,7 +66,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchTickers(query, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -85,7 +84,7 @@ export function createServer(): McpServer {
       try {
         return text(await listExchanges());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -104,7 +103,7 @@ export function createServer(): McpServer {
       try {
         return text(await getDividends(symbols));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -118,10 +117,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: symbol_dividend_ledger ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_marketstack_symbol_dividend_ledger", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement ledger locally (paywall removed)
+      try { return textError("Not yet implemented: ledger") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -134,10 +131,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: price_window_review ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_marketstack_price_window_review", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement review locally (paywall removed)
+      try { return textError("Not yet implemented: review") } catch (e) { return textError(String(e)) }
     }
   )
 

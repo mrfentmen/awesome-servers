@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { formatJob, searchJobs, UsajobsError, hiringRules, hiringSignal } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -33,7 +32,7 @@ export function createServer(): McpServer {
         if (jobs.length === 0) return text("No federal jobs found.")
         return text(`${total.toLocaleString()} federal jobs (showing ${jobs.length}):\n\n${jobs.map((j, i) => formatJob(j, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -51,10 +50,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: hiring_rules ----
-    const paywallMessage = await premiumRequired("hiring_rules")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
     try { return text(await hiringRules(args)) } catch (e) { return textError(`Error: ${(e as Error).message}`) }
   }
   )

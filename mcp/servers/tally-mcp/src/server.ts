@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listForms, getForm, listSubmissions, listWebhooks, getWebhook, questionQualityAudit, formLogicAudit, completionEstimate } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -26,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await listForms());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -45,7 +44,7 @@ export function createServer(): McpServer {
       try {
         return text(await getForm(form_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       try {
         return text(await listSubmissions(form_id, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -84,7 +83,7 @@ export function createServer(): McpServer {
       try {
         return text(await listWebhooks(form_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -104,7 +103,7 @@ export function createServer(): McpServer {
       try {
         return text(await getWebhook(form_id, webhook_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -118,7 +117,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await questionQualityAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await questionQualityAudit(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -131,11 +130,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: form_logic_audit ----
-    const paywallMessage = await premiumRequired("form_logic_audit")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await formLogicAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await formLogicAudit(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -152,11 +147,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: completion_estimate ----
-    const paywallMessage = await premiumRequired("completion_estimate")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await completionEstimate(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await completionEstimate(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

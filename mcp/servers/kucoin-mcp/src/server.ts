@@ -35,7 +35,7 @@ export function createServer(): McpServer {
       try {
         return text(await getServerTime());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -54,7 +54,7 @@ export function createServer(): McpServer {
       try {
         return text(await listSymbols(market));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -73,7 +73,7 @@ export function createServer(): McpServer {
       try {
         return text(await get24hStats(symbol));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -92,7 +92,7 @@ export function createServer(): McpServer {
       try {
         return text(await getOrderbook(symbol));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -114,7 +114,7 @@ export function createServer(): McpServer {
       try {
         return text(await getKlines(symbol, type, startAt, endAt));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -134,7 +134,7 @@ export function createServer(): McpServer {
       try {
         return text(await getFiatPrices(currencies, base));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

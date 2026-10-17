@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { RadioError, formatStation, searchStations, stationsByCountry, stationsByTag, topVoted } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
         if (stations.length === 0) return text(`No stations match "${name}".`)
         return text(`Stations matching "${name}":\n\n${stations.map((s, i) => formatStation(s, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -48,7 +47,7 @@ export function createServer(): McpServer {
         if (stations.length === 0) return text(`No stations tagged "${tag}".`)
         return text(`Top "${tag}" stations:\n\n${stations.map((s, i) => formatStation(s, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -68,7 +67,7 @@ export function createServer(): McpServer {
         if (stations.length === 0) return text(`No stations in "${country}".`)
         return text(`Top stations in ${country}:\n\n${stations.map((s, i) => formatStation(s, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -87,7 +86,7 @@ export function createServer(): McpServer {
         const stations = await topVoted(limit)
         return text(`Most-voted stations:\n\n${stations.map((s, i) => formatStation(s, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -104,10 +103,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: list_tags ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_radio_browser_list_tags", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement tags locally (paywall removed)
+    try { return textError("Not yet implemented: tags") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -123,10 +120,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: list_countries ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_radio_browser_list_countries", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement countries locally (paywall removed)
+    try { return textError("Not yet implemented: countries") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -142,10 +137,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: stations_by_language ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_radio_browser_stations_by_language", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement language locally (paywall removed)
+    try { return textError("Not yet implemented: language") } catch (e) { return textError(String(e)) }
     }
   )
 

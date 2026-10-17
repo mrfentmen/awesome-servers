@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { token, trending, networks, pool, newPools, search, tokenPools, tokenPrices, dexes } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await token(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await token(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await trending(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await trending(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await networks()) } catch (e) { return textError(error(e)) }
+    try { return text(await networks()) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -55,7 +54,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await pool(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await pool(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -67,7 +66,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await newPools(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await newPools(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -79,7 +78,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await search(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -91,7 +90,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await tokenPools(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await tokenPools(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -104,7 +103,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await tokenPrices(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await tokenPrices(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -117,7 +116,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await dexes(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await dexes(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -135,10 +134,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: pool_ohlc ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_geckoterminal_pool_ohlc", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement ohlc locally (paywall removed)
+      try { return textError("Not yet implemented: ohlc") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -155,10 +152,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: pool_trades ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_geckoterminal_pool_trades", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement trades locally (paywall removed)
+      try { return textError("Not yet implemented: trades") } catch (e) { return textError(String(e)) }
     }
   )
 

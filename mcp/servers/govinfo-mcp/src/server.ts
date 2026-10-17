@@ -1,4 +1,3 @@
-import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { formatHit, GovInfoError, listCollections, searchPublished, collectionStatistics } from "./api.js"
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No collections.")
         return text(rows.map((c, i) => `${i + 1}. [${c.code}] ${c.name ?? ""}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -51,7 +50,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`Nothing found for "${query}".`)
         return text(rows.map((h, i) => formatHit(h, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -71,13 +70,11 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: federal_register_search ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_govinfo_federal_register_search", args))
+        // TODO: implement search locally (paywall removed)
+        try { return textError("Not yet implemented: search") } catch (e) { return textError(String(e)) }
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -93,13 +90,11 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: federal_register_document ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_govinfo_federal_register_document", args))
+        // TODO: implement document locally (paywall removed)
+        try { return textError("Not yet implemented: document") } catch (e) { return textError(String(e)) }
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -119,7 +114,7 @@ export function createServer(): McpServer {
       try {
         return text(await collectionStatistics({ query, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

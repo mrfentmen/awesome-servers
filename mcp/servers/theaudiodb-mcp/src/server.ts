@@ -19,7 +19,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_artist(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_artist(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -31,7 +31,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_album(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_album(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -43,7 +43,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_track(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_track(args)) } catch (e) { return textError(String(e)) }
   }
   )
   return server

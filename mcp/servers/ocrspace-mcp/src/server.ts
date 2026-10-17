@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, parseImageUrl, parseImagePost, ocrCleanup, documentFields, ocrConfusionAudit } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(await parseImageUrl(image_url, language));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -49,7 +48,7 @@ export function createServer(): McpServer {
       try {
         return text(await parseImagePost(image_url, overlay));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -66,11 +65,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: ocr_cleanup ----
-    const paywallMessage = await premiumRequired("ocr_cleanup")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await ocrCleanup(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await ocrCleanup(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -86,11 +81,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: document_fields ----
-    const paywallMessage = await premiumRequired("document_fields")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await documentFields(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await documentFields(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -106,7 +97,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await ocrConfusionAudit(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await ocrConfusionAudit(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

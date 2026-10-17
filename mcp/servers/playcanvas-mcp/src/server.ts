@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { errorMessage, listProjectAssets, getAsset, getRateLimits } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
       try {
         return text(await listProjectAssets(project_id, branch_id, limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -50,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(await getAsset(asset_id, branch_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -67,7 +66,7 @@ export function createServer(): McpServer {
       try {
         return text(await getRateLimits());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -84,10 +83,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: engine_release_channels ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_playcanvas_engine_release_channels", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement channels locally (paywall removed)
+    try { return textError("Not yet implemented: channels") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -104,10 +101,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: engine_release_notes ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_playcanvas_engine_release_notes", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement notes locally (paywall removed)
+    try { return textError("Not yet implemented: notes") } catch (e) { return textError(String(e)) }
   }
   )
 

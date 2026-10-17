@@ -1,4 +1,3 @@
-import { premiumTool } from "./gateway.js"
 // @ts-nocheck
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
@@ -458,10 +457,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: archive_item_files ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_rom_archive_item_files", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement files locally (paywall removed)
+    try { return textError("Not yet implemented: files") } catch (e) { return textError(String(e)) }
   }
   )
 

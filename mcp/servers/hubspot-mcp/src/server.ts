@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listContacts, listCompanies, listDeals, listTickets, listOwners, getContact, getCompany, getDeal, searchContacts, dealPipelines, legalEntityLookup, secCompany } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await listContacts(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await listCompanies(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -66,7 +65,7 @@ export function createServer(): McpServer {
       try {
         return text(await listDeals(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -85,7 +84,7 @@ export function createServer(): McpServer {
       try {
         return text(await listTickets(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -102,7 +101,7 @@ export function createServer(): McpServer {
       try {
         return text(await listOwners());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -121,7 +120,7 @@ export function createServer(): McpServer {
       try {
         return text(await getContact(contact_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -140,7 +139,7 @@ export function createServer(): McpServer {
       try {
         return text(await getCompany(company_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -159,7 +158,7 @@ export function createServer(): McpServer {
       try {
         return text(await getDeal(deal_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -178,7 +177,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchContacts(email));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -195,7 +194,7 @@ export function createServer(): McpServer {
       try {
         return text(await dealPipelines());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -209,11 +208,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: legal_entity_lookup ----
-      const paywallMessage = await premiumRequired("legal_entity_lookup")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await legalEntityLookup(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await legalEntityLookup(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -226,11 +221,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: sec_company ----
-      const paywallMessage = await premiumRequired("sec_company")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await secCompany(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await secCompany(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

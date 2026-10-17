@@ -1,4 +1,3 @@
-import { premiumTool } from "./gateway.js"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { analyzeMeal, formatFood, NutritionixError, searchFoods } from "./api.js"
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No foods for "${query}".`)
         return text(rows.map((f, i) => formatFood(f, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -53,7 +52,7 @@ export function createServer(): McpServer {
         const total = rows.reduce((n, f) => n + (f.calories ?? 0), 0)
         return text(`${rows.map((f, i) => formatFood(f, i)).join("\n")}\n\nTotal: ${Math.round(total)} kcal`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -71,13 +70,11 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: nutrient_food_search ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_nutritionix_nutrient_food_search", args))
+        // TODO: implement search locally (paywall removed)
+        try { return textError("Not yet implemented: search") } catch (e) { return textError(String(e)) }
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -93,13 +90,11 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: nutrient_food_profile ----
-      // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
       try {
-        return text(await premiumTool("mcp_nutritionix_nutrient_food_profile", args))
+        // TODO: implement profile locally (paywall removed)
+        try { return textError("Not yet implemented: profile") } catch (e) { return textError(String(e)) }
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

@@ -31,7 +31,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`Nothing found for "${query}".`)
         return text(rows.map((r, i) => formatRecord(r, i)).join("\n\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -51,7 +51,7 @@ export function createServer(): McpServer {
       try {
         return text(await catalogueSearch({ query, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -71,7 +71,7 @@ export function createServer(): McpServer {
       try {
         return text(await authorSearch({ query, limit }))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )

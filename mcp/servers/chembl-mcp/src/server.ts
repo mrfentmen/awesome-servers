@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { molecule, search, moleculeMechanism, chemblRelease } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await molecule(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await molecule(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await search(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,10 +42,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: molecule_activities ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_chembl_molecule_activities", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement activities locally (paywall removed)
+    try { return textError("Not yet implemented: activities") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -59,7 +56,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await moleculeMechanism(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await moleculeMechanism(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -72,10 +69,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: molecule_indications ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_chembl_molecule_indications", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement indications locally (paywall removed)
+    try { return textError("Not yet implemented: indications") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -88,7 +83,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await chemblRelease(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await chemblRelease(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

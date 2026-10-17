@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, search, family, publicationRecord, legalStatus, epoRegister } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -29,7 +28,7 @@ export function createServer(): McpServer {
       try {
         return text(await search(query, range));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -50,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(await family(country, number, kind));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -69,11 +68,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: publication_record ----
-    const paywallMessage = await premiumRequired("publication_record")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await publicationRecord(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await publicationRecord(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -91,11 +86,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: legal_status ----
-    const paywallMessage = await premiumRequired("legal_status")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await legalStatus(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await legalStatus(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -111,7 +102,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await epoRegister(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await epoRegister(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

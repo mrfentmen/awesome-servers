@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { forecast, intensity, regional, nationalFuelMix } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await intensity(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await intensity(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await forecast(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await forecast(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -43,7 +42,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await regional(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await regional(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -55,10 +54,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: regional_generation_mix ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_carbon_intensity_regional_generation_mix", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement mix locally (paywall removed)
+    try { return textError("Not yet implemented: mix") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -84,10 +81,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: cleanest_window ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_carbon_intensity_cleanest_window", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement window locally (paywall removed)
+    try { return textError("Not yet implemented: window") } catch (e) { return textError(String(e)) }
   }
   )
 

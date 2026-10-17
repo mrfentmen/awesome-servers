@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections, collectionProducts, restockCheck } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchProducts(query, limit, maxPrice, productType));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -51,7 +50,7 @@ export function createServer(): McpServer {
       try {
         return text(await listNewest(limit, page, productType));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -70,7 +69,7 @@ export function createServer(): McpServer {
       try {
         return text(await getProduct(handle));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -89,7 +88,7 @@ export function createServer(): McpServer {
       try {
         return text(await priceOverview(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -109,7 +108,7 @@ export function createServer(): McpServer {
       try {
         return text(await findDeals(limit, sample));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -126,7 +125,7 @@ export function createServer(): McpServer {
       try {
         return text(await listCategories());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -142,7 +141,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ limit }) => {
-      try { return text(await listCollections(limit)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await listCollections(limit)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -159,7 +158,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ handle, limit, sort }) => {
-      try { return text(await collectionProducts(handle, limit, sort)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await collectionProducts(handle, limit, sort)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -174,7 +173,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ handles }) => {
-      try { return text(await restockCheck(handles)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await restockCheck(handles)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -187,10 +186,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: material_census ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_ifandco_material_census", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement census locally (paywall removed)
+      try { return textError("Not yet implemented: census") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -203,10 +200,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: personalisation_census ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_ifandco_personalisation_census", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement census locally (paywall removed)
+      try { return textError("Not yet implemented: census") } catch (e) { return textError(String(e)) }
     }
   )
 

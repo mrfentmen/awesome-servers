@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { AudiusError, formatTrack, formatUser, getUserTracks, searchTracks, searchUsers, trendingTracks, artistFollowers } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -35,7 +34,7 @@ export function createServer(): McpServer {
             tracks.map((t, i) => formatTrack(t, i)).join("\n\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -55,7 +54,7 @@ export function createServer(): McpServer {
         if (tracks.length === 0) return text(`No tracks match "${query}".`)
         return text(`Tracks matching "${query}":\n\n${tracks.map((t, i) => formatTrack(t, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -75,7 +74,7 @@ export function createServer(): McpServer {
         if (users.length === 0) return text(`No artists match "${query}".`)
         return text(`Artists matching "${query}":\n\n${users.map((u, i) => formatUser(u, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -95,7 +94,7 @@ export function createServer(): McpServer {
         if (tracks.length === 0) return text(`No tracks for user ${userId}.`)
         return text(`Tracks from user ${userId}:\n\n${tracks.map((t, i) => formatTrack(t, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -109,10 +108,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: trending_playlists ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_audius_trending_playlists", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement playlists locally (paywall removed)
+    try { return textError("Not yet implemented: playlists") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -125,10 +122,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: track_comments ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_audius_track_comments", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement comments locally (paywall removed)
+    try { return textError("Not yet implemented: comments") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -144,7 +139,7 @@ export function createServer(): McpServer {
       try {
         return text(await artistFollowers(args))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -158,10 +153,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: track_detail ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_audius_track_detail", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement detail locally (paywall removed)
+    try { return textError("Not yet implemented: detail") } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { BitError, formatRelease, getRelease, listReleases, listArtists } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
             releases.map((r, i) => formatRelease(r, i)).join("\n\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -51,7 +50,7 @@ export function createServer(): McpServer {
         if (!r) return text(`No release at ${slug}.`)
         return text(formatRelease(r))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await listArtists(args.limit ?? 100)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await listArtists(args.limit ?? 100)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -78,10 +77,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: artist_releases ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_8bitpeoples_artist_releases", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement releases locally (paywall removed)
+    try { return textError("Not yet implemented: releases") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -94,10 +91,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: release_tracks ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_8bitpeoples_release_tracks", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement tracks locally (paywall removed)
+    try { return textError("Not yet implemented: tracks") } catch (e) { return textError(String(e)) }
   }
   )
 

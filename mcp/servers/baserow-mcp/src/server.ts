@@ -29,7 +29,7 @@ export function createServer(): McpServer {
       try {
         return text(await getDashboard());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -48,7 +48,7 @@ export function createServer(): McpServer {
       try {
         return text(await listTables(database_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

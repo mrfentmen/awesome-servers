@@ -1,7 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { m0_fact, m1_randomFact, dailyFact } from './api.js'
-import { premiumRequired } from "./license.js"
 
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -20,7 +19,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_fact(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m0_fact(args)) } catch (e) { return textError(String(e)) }
   }
   )
 server.registerTool(
@@ -32,7 +31,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_randomFact(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await m1_randomFact(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -44,11 +43,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async () => {
-    // ---- paywall: daily_fact ----
-    const paywallMessage = await premiumRequired("daily_fact")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await dailyFact()) } catch (e) { return textError(error(e)) }
+    try { return text(await dailyFact()) } catch (e) { return textError(String(e)) }
   }
   )
 

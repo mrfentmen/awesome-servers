@@ -35,7 +35,7 @@ export function createServer(): McpServer {
       try {
         return text(await querySubgraph(subgraphId, query, variables));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -54,7 +54,7 @@ export function createServer(): McpServer {
       try {
         return text(await getSubgraphSchema(subgraphId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -73,7 +73,7 @@ export function createServer(): McpServer {
       try {
         return text(await getLatestBlock(subgraphId));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )

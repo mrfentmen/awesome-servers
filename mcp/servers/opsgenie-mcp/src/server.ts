@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { errorMessage, listAlerts, getAlert, listOnCalls, escalationTimeline, platformReliability, incidentResponseStats } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await listAlerts(limit));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await getAlert(alert_id));
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -64,7 +63,7 @@ export function createServer(): McpServer {
       try {
         return text(await listOnCalls());
       } catch (e) {
-        return textError(errorMessage(e));
+        return textError(String(e));
       }
     }
   )
@@ -83,7 +82,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await escalationTimeline(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await escalationTimeline(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -96,11 +95,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (_args) => {
-    // ---- paywall: platform_reliability ----
-    const paywallMessage = await premiumRequired("platform_reliability")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await platformReliability(_args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await platformReliability(_args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -113,11 +108,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: incident_response_stats ----
-    const paywallMessage = await premiumRequired("incident_response_stats")
-    if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-    // ---- paywall: end ----
-    try { return text(await incidentResponseStats(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await incidentResponseStats(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

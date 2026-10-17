@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { search, schema_versions } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +18,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await search(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await search(args)) } catch (e) { return textError(String(e)) }
   }
   )
   server.registerTool(
@@ -34,10 +33,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: match_filename ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_json_schema_store_match_filename", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement filename locally (paywall removed)
+      try { return textError("Not yet implemented: filename") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -52,7 +49,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ name }) => {
-      try { return text(await schema_versions({ name })) } catch (e) { return textError(error(e)) }
+      try { return text(await schema_versions({ name })) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -67,10 +64,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: catalog_census ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_json_schema_store_catalog_census", args)) } catch (e) { return textError(error(e)) }
+      // TODO: implement census locally (paywall removed)
+      try { return textError("Not yet implemented: census") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -83,10 +78,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: schema_digest ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_json_schema_store_schema_digest", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement digest locally (paywall removed)
+    try { return textError("Not yet implemented: digest") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -99,10 +92,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: schema_refs ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_json_schema_store_schema_refs", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement refs locally (paywall removed)
+    try { return textError("Not yet implemented: refs") } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { YugiohError, formatCard, getBanlist, getCardById, searchCardsByArchetype, searchCardsByName, stapleCards } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
         if (cards.length === 0) return text(`No Yu-Gi-Oh! card named "${name}".`)
         return text(`Cards matching "${name}":\n\n${cards.map((c, i) => formatCard(c, i)).join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -51,7 +50,7 @@ export function createServer(): McpServer {
             cards.slice(0, limit).map((c, i) => formatCard(c, i)).join("\n\n")
         )
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -71,7 +70,7 @@ export function createServer(): McpServer {
         if (!card) return text(`No Yu-Gi-Oh! card with id ${id}.`)
         return text(formatCard(card))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -102,7 +101,7 @@ export function createServer(): McpServer {
         }
         return text(`${format.toUpperCase()} banlist:\n\n${out.join("\n\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -117,10 +116,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: highest_attack_cards ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_yugioh_highest_attack_cards", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement cards locally (paywall removed)
+    try { return textError("Not yet implemented: cards") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -134,7 +131,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await stapleCards(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await stapleCards(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

@@ -1,4 +1,3 @@
-import { premiumTool } from "./gateway.js"
 const error = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
@@ -62,10 +61,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: npm_release_metadata ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_dependency_drift_npm_release_metadata", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement metadata locally (paywall removed)
+    try { return textError("Not yet implemented: metadata") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -78,10 +75,8 @@ export function createServer() {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: npm_version_advisories ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_dependency_drift_npm_version_advisories", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement advisories locally (paywall removed)
+    try { return textError("Not yet implemented: advisories") } catch (e) { return textError(String(e)) }
   }
   )
 

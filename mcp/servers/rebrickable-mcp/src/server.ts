@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatSet, getSet, RebrickableError, searchSets, setParts, colorRoster } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No LEGO sets for "${query}".`)
         return text(rows.map((s, i) => formatSet(s, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -50,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(await getSet(number))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -72,7 +71,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No parts for set ${number}.`)
         return text(rows.map((p, i) => `${i + 1}. ${p}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -90,10 +89,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: era_census ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_rebrickable_era_census", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement census locally (paywall removed)
+    try { return textError("Not yet implemented: census") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -110,10 +107,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: theme_tree ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_rebrickable_theme_tree", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement tree locally (paywall removed)
+    try { return textError("Not yet implemented: tree") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -130,7 +125,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await colorRoster(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await colorRoster(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

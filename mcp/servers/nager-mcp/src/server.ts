@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { countries, countryInfo, errorMessage, formatCountryInfo, formatHoliday, formatHolidays, formatLongWeekends, holidays, isTodayHoliday, longWeekends, nextHolidays, worldwideHolidays, regionalHolidays, holidayOnDate, compareCountries } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -30,7 +29,7 @@ export function createServer(): McpServer {
         const lines = list.map((c) => `  ${c.countryCode}  ${c.name}`)
         return text(`${list.length} countries:\n\n${lines.join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -47,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(formatCountryInfo(await countryInfo(country)))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -65,7 +64,7 @@ export function createServer(): McpServer {
         const list = await holidays(year, country)
         return text(formatHolidays(list, `${country.toUpperCase()} public holidays in ${year}`))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -83,7 +82,7 @@ export function createServer(): McpServer {
         const list = await nextHolidays(country)
         return text(formatHolidays(list, `Upcoming holidays in ${country.toUpperCase()}`))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -106,7 +105,7 @@ export function createServer(): McpServer {
         const lines = shown.map((h) => `${formatHoliday(h)}  [${h.countryCode}]`)
         return text(`Next holidays worldwide (${shown.length} of ${list.length}):\n\n${lines.join("\n")}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -125,7 +124,7 @@ export function createServer(): McpServer {
         const list = await longWeekends(year, country)
         return text(formatLongWeekends(list, `Long weekends in ${country.toUpperCase()} ${year}`))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -146,7 +145,7 @@ export function createServer(): McpServer {
         }
         return text(`Today is a public holiday in ${country.toUpperCase()}:\n\n${formatHoliday(result.holiday).trim()}`)
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -164,7 +163,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ year, country, county }) => {
-      try { return text(await regionalHolidays(year, country, county)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await regionalHolidays(year, country, county)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -180,7 +179,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ date, country }) => {
-      try { return text(await holidayOnDate(date, country)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await holidayOnDate(date, country)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -197,7 +196,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async ({ year, country_a: countryA, country_b: countryB }) => {
-      try { return text(await compareCountries(year, countryA, countryB)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await compareCountries(year, countryA, countryB)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -210,10 +209,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: working_day_calendar ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_nager_working_day_calendar", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement calendar locally (paywall removed)
+      try { return textError("Not yet implemented: calendar") } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -226,10 +223,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: holiday_observance_audit ----
-          // The body runs on the gateway, behind the licence gate.
-      // ---- paywall: end ----
-      try { return text(await premiumTool("mcp_nager_holiday_observance_audit", args)) } catch (e) { return textError(errorMessage(e)) }
+      // TODO: implement audit locally (paywall removed)
+      try { return textError("Not yet implemented: audit") } catch (e) { return textError(String(e)) }
     }
   )
 

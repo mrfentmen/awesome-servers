@@ -2,7 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
 import { formatObject, graphqlQuery, listClasses, listObjects, WeaviateError, schemaDiff } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -28,7 +27,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No collections.")
         return text(rows.map((c, i) => `${i + 1}. ${c.name} (${c.properties.join(", ") || "no props"})`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -50,7 +49,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No objects in ${cls}.`)
         return text(rows.map((o, i) => formatObject(o, i)).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -69,7 +68,7 @@ export function createServer(): McpServer {
       try {
         return text(JSON.stringify(await graphqlQuery(query)).slice(0, 2000))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -85,10 +84,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: schema_health ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_weaviate_schema_health", args)) } catch (e) { return textError(errorMessage(e)) }
+    // TODO: implement health locally (paywall removed)
+    try { return textError("Not yet implemented: health") } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -104,7 +101,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await schemaDiff(args)) } catch (e) { return textError(errorMessage(e)) }
+    try { return text(await schemaDiff(args)) } catch (e) { return textError(String(e)) }
   }
   )
 

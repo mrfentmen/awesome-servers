@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { findLocations, formatFlight, KiwiError, searchFlights, airportLookup, routeNetwork } from "./api.js"
-import { premiumRequired } from "./license.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
@@ -31,7 +30,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No airports for "${query}".`)
         return text(rows.map((l, i) => `${i + 1}. ${l}`).join("\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -56,7 +55,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text(`No flights ${from} to ${to}.`)
         return text(rows.map((f, i) => formatFlight(f, i)).join("\n\n"))
       } catch (e) {
-        return textError(errorMessage(e))
+        return textError(String(e))
       }
     }
   )
@@ -70,11 +69,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: airport_lookup ----
-      const paywallMessage = await premiumRequired("airport_lookup")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await airportLookup(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await airportLookup(args)) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -87,11 +82,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: route_network ----
-      const paywallMessage = await premiumRequired("route_network")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
-      try { return text(await routeNetwork(args)) } catch (e) { return textError(errorMessage(e)) }
+      try { return text(await routeNetwork(args)) } catch (e) { return textError(String(e)) }
     }
   )
 

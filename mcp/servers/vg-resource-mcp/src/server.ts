@@ -4,7 +4,6 @@ import type { ResourceType } from "./types.js"
 import { RESOURCES } from "./types.js"
 import { crossReference, downloadAsset, getAssetDetail, getConsoles, getDownloadUrl, getGameAssets, getGames, getLatestAssets, getPopularAssets, getRandomAsset, searchAssets } from "./scraper.js"
 import { getSiteStats } from "./api.js"
-import { premiumTool } from "./gateway.js"
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const text = textResult
 const error = (e: unknown) => e instanceof Error ? e.message : String(e)
@@ -343,7 +342,7 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await getSiteStats(args)) } catch (e) { return textError(error(e)) }
+    try { return text(await getSiteStats(args)) } catch (e) { return textError(String(e)) }
   }
   )
 
@@ -356,10 +355,8 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-    // ---- paywall: search_tags ----
-        // The body runs on the gateway, behind the licence gate.
-    // ---- paywall: end ----
-    try { return text(await premiumTool("mcp_vg_resource_search_tags", args)) } catch (e) { return textError(error(e)) }
+    // TODO: implement tags locally (paywall removed)
+    try { return textError("Not yet implemented: tags") } catch (e) { return textError(String(e)) }
   }
   )
 
