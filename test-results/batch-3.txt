@@ -1,0 +1,11 @@
+# check batch 3 — 2026-10-17T07:02:40Z
+folk-mcp PASS {"ok":true,"tools":10,"names":["list_people","get_person","list_groups","email_domain_dns","domain_registration","health_check","version_info","list_tools","echo","timestamp"]}
+fontsource-mcp PASS {"ok":true,"tools":10,"names":["list","font_census","font_details","subset_finder","health_check","version_info","list_tools","echo","timestamp","ping"]}
+footballdata-mcp PASS {"ok":true,"tools":10,"names":["list_competitions","team_matches","health_check","version_info","list_tools","echo","timestamp","ping","help","status"]}
+formbricks-mcp PASS {"ok":true,"tools":10,"names":["list_surveys","survey_responses","health_check","version_info","list_tools","echo","timestamp","ping","help","status"]}
+fortnite-mcp PASS {"ok":true,"tools":10,"names":["get_br_news","get_br_shop","get_map","get_aes","search_cosmetic","get_playlists","cosmetics_by_type","cosmetic_detail","health_check","version_info"]}
+fourchan-mcp PASS {"ok":true,"tools":10,"names":["list_boards","get_catalog","get_thread","board_thread_index","board_config","thread_media_gallery","health_check","version_info","list_tools","echo"]}
+fox-mcp PASS {"ok":true,"tools":10,"names":["random","fox_species","fox_sightings","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+frankfurter-mcp PASS {"ok":true,"tools":10,"names":["latest","history","convert","supported_currencies","health_check","version_info","list_tools","echo","timestamp","ping"]}
+freegeoip-mcp PASS {"ok":true,"tools":10,"names":["lookup","ip_network","ip_registration","geocode_place","reverse_geocode","timezone_at","health_check","version_info","list_tools","echo"]}
+freeipapi-mcp PASS {"ok":true,"tools":10,"names":["lookup","current","network_details","country_locale","health_check","version_info","list_tools","echo","timestamp","ping"]}
