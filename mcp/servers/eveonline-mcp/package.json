@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/eveonline-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Keyless EVE Online ESI: server status, universal search, characters, corporations, alliances, market prices.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/eveonline-mcp",

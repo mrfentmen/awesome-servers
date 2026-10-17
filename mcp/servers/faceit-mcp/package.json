@@ -1,6 +1,6 @@
 {
   "name": "faceit-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "FACEIT API: player search and profiles, per-game stats, match history, teams, championships.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/faceit-mcp",
