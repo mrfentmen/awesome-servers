@@ -1,6 +1,6 @@
 {
   "name": "bulbapedia-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Keyless MCP server for Bulbapedia, the Pokemon encyclopedia: species, moves, abilities, episodes, TCG sets.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/bulbapedia-mcp",
