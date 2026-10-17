@@ -1,0 +1,11 @@
+# check batch 53 — 2026-10-17T07:29:22Z
+timeapi-mcp PASS {"ok":true,"tools":10,"names":["current","convert","time_in_zone","list_zones","available_zones","health_check","version_info","list_tools","echo","timestamp"],"stderr":""}
+toolchain-lens-mcp PASS {"ok":true,"tools":10,"names":["explain_toolchain","reproducibility_gap_matrix","check_toolchain_declarations","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":"MCP server running on stdio\n"}
+torah-mcp PASS {"ok":true,"tools":10,"names":["get_weekly_portion","get_tanakh_text","get_commentaries","get_connections","search_texts","book_index","word_lookup","health_check","version_info","list_tools"],"stderr":"MCP server running on stdio\n"}
+trakt-mcp PASS {"ok":true,"tools":10,"names":["search_shows","trending_shows","trending_movies","match_title","dedupe_entries","show_identifiers","health_check","version_info","list_tools","echo"],"stderr":"MCP server running on stdio\n"}
+translation-mcp PASS {"ok":true,"tools":10,"names":["translate","detect_and_translate","translate_batch","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":""}
+traxnyc-mcp PASS {"ok":true,"tools":12,"names":["search_products","list_newest","get_product","price_overview","find_deals","list_categories","list_collections","browse_collection","find_by_size","size_matrix","price_distribution","catalogue_health"],"stderr":"MCP server running on stdio\n"}
+trivia-mcp PASS {"ok":true,"tools":10,"names":["get_question","categories","get_categories","get_questions","boolean_question","category_list","health_check","version_info","list_tools","echo"],"stderr":""}
+trove-mcp PASS {"ok":true,"tools":10,"names":["search_records","catalogue_search","author_search","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":"MCP server running on stdio\n"}
+tunein-mcp PASS {"ok":true,"tools":10,"names":["browse","genre_index","station_search","stream_survey","health_check","version_info","list_tools","echo","timestamp","ping"],"stderr":""}
+turbosquid-mcp PASS {"ok":true,"tools":10,"names":["list_file_formats","get_product","list_drafts","get_draft","mesh_format_survey","free_model_search","health_check","version_info","list_tools","echo"],"stderr":"MCP server running on stdio\n"}
