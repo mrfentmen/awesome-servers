@@ -1,0 +1,11 @@
+# check batch 58 — 2026-10-17T07:31:25Z
+vndb-mcp PASS {"ok":true,"tools":10,"names":["search_vns","get_vn","search_characters","get_vn_releases","producer_search","staff_search","health_check","version_info","list_tools","echo"],"stderr":"VNDB MCP server running on stdio\n"}
+vocadb-mcp PASS {"ok":true,"tools":10,"names":["search","artist_search","album_search","song_detail","artist_profile","tag_search","health_check","version_info","list_tools","echo"],"stderr":""}
+walkthrough-mcp PASS {"ok":true,"tools":10,"names":["search_games","get_game_pages","get_guide","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":"Walkthrough MCP server running on stdio\n"}
+waqi-mcp PASS {"ok":true,"tools":10,"names":["city","station_search","nearest_station","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":""}
+warframe-mcp PASS {"ok":true,"tools":10,"names":["state","invasions","nightwave","sortie","archon_hunt","daily_deals","health_check","version_info","list_tools","echo"],"stderr":""}
+wargaming-mcp PASS {"ok":true,"tools":10,"names":["search_wot_accounts","get_wot_account","get_wot_tanks","search_wot_clans","search_wows_accounts","get_wows_account","health_check","version_info","list_tools","echo"],"stderr":"MCP server running on stdio\n"}
+wasabi-mcp PASS {"ok":true,"tools":10,"names":["list_buckets","list_objects","health_check","version_info","list_tools","echo","timestamp","ping","help","status"],"stderr":"MCP server running on stdio\n"}
+wayback-mcp PASS {"ok":true,"tools":12,"names":["get_snapshots","domain_snapshots","site_history","get_availability","read_snapshot","compare_years","status_history","capture_gaps","snapshot_diff","broken_pages","content_profile","prefix_inventory"],"stderr":"MCP server running on stdio\n"}
+weather-mcp PASS {"ok":true,"tools":10,"names":["get_forecast","get_earthquakes","get_fema_disasters","active_alerts","alerts_for_point","alerts_for_area","disasters_by_state","health_check","version_info","list_tools"],"stderr":""}
+weatherbit-mcp PASS {"ok":true,"tools":10,"names":["get_current","get_daily_forecast","get_hourly_forecast","get_alerts","get_air_quality","nws_point_forecast","open_meteo_air_quality","health_check","version_info","list_tools"],"stderr":"MCP server running on stdio\n"}
