@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/bitwarden-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Bitwarden public API: organization members, collections, groups, event logs. Needs API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/bitwarden-mcp",

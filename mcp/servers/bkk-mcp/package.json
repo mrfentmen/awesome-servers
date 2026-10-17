@@ -1,6 +1,6 @@
 {
   "name": "bkk-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Budapest BKK Futar: stops by location plus live arrivals and departures.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/bkk-mcp",
