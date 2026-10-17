@@ -1,6 +1,6 @@
 {
   "name": "commafeed-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CommaFeed RSS: entries, tags, subscribe. Self-hosted.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/commafeed-mcp",

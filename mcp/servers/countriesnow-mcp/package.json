@@ -1,6 +1,6 @@
 {
   "name": "countriesnow-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "CountriesNow country, city, flag, and ISO data.",
   "type": "module",
   "main": "dist/index.js",

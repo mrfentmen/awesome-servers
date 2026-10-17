@@ -1,6 +1,6 @@
 {
   "name": "contract-diff-mcp",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Aggregate local contract snapshot changes without exposing schema contents. Tools include compare contract snapshots",
   "type": "module",
   "mcpName": "io.github.mrfentmen/contract-diff-mcp",
