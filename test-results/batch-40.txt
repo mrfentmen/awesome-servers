@@ -1,0 +1,11 @@
+# check batch 40 — 2026-10-17T07:20:02Z
+release-notes-forge-mcp PASS {"ok":true,"tools":10,"names":["summarize_release_history","draft_release_digest","review_changelog_coverage","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+remoteok-mcp PASS {"ok":true,"tools":11,"names":["jobs","search","job","top_salaries","companies","tags","newest_jobs","tag_combinations","company_jobs","market_census","salary_by_tag"]}
+repo-forensics-mcp PASS {"ok":true,"tools":10,"names":["repository_summary","recent_changes","file_hotspots","top_level_hygiene","churn_profile","contributor_concentration","health_check","version_info","list_tools","echo"]}
+repology-mcp PASS {"ok":true,"tools":10,"names":["project","projects","health_check","version_info","list_tools","echo","timestamp","ping","help","status"]}
+resend-mcp PASS {"ok":true,"tools":13,"names":["list_domains","get_domain","get_email","list_api_keys","list_audiences","get_audience","list_contacts","list_broadcasts","get_broadcast","create_contact","add_domain","build_mime_message","dkim_canonicalisation"]}
+restful-api-dev-mcp PASS {"ok":true,"tools":10,"names":["objects","object","mock_users","mock_posts","post_comments","health_check","version_info","list_tools","echo","timestamp"]}
+retrogachievements-mcp PASS {"ok":true,"tools":10,"names":["game_extended","user_progress","set_scorecard","library_breakdown","health_check","version_info","list_tools","echo","timestamp","ping"]}
+rhymebrain-mcp PASS {"ok":true,"tools":10,"names":["rhymes","pronunciation","health_check","version_info","list_tools","echo","timestamp","ping","help","status"]}
+rick-and-morty-mcp PASS {"ok":true,"tools":10,"names":["character","search","episode","location","location_residents","health_check","version_info","list_tools","echo","timestamp"]}
+riddles-mcp PASS {"ok":true,"tools":10,"names":["random","trivia_questions","word_entry","rhyme_candidates","crossword_matches","trivia_categories","health_check","version_info","list_tools","echo"]}
