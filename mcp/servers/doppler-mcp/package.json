@@ -1,6 +1,6 @@
 {
   "name": "doppler-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Doppler API: projects, configs, secrets listing and download. Needs service or personal token.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/doppler-mcp",
