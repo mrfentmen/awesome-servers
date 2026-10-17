@@ -1,6 +1,6 @@
 {
   "name": "delinea-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Delinea Secret Server API: OAuth login, secret search, secret retrieval, folders.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/delinea-mcp",
