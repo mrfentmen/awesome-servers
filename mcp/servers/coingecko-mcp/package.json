@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/coingecko-mcp",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "CoinGecko prices and trending coins.",
   "type": "module",
   "main": "dist/index.js",

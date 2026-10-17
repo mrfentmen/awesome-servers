@@ -1,6 +1,6 @@
 {
   "name": "coinmetrics-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Keyless Coin Metrics community data: asset metrics time series and catalogs.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/coinmetrics-mcp",

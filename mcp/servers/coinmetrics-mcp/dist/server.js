@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { errorMessage, getAssetMetrics, listMetrics, metricDefinitions, candlePairs } from "./api.js";
-import { premiumTool } from "./gateway.js";
+import { getAssetMetrics, listMetrics, metricDefinitions, candlePairs } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -26,7 +25,7 @@ export function createServer() {
             return text(await getAssetMetrics(assets, metrics, startTime, endTime, frequency));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("list_metrics", {
@@ -41,7 +40,7 @@ export function createServer() {
             return text(await listMetrics(assets));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("asset_catalog", {
@@ -50,14 +49,12 @@ export function createServer() {
         inputSchema: z.object({ search: z.string().describe("Filter by name or id, e.g. bitcoin.").optional(), limit: z.number().describe("Max assets.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: asset_catalog ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
+        // TODO: implement catalog locally (paywall removed)
         try {
-            return text(await premiumTool("mcp_coinmetrics_asset_catalog", args));
+            return textError("Not yet implemented: catalog");
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("metric_definitions", {
@@ -70,7 +67,7 @@ export function createServer() {
             return text(await metricDefinitions(args));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("candle_pairs", {
@@ -83,7 +80,7 @@ export function createServer() {
             return text(await candlePairs(args));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("pair_candles", {
@@ -92,14 +89,12 @@ export function createServer() {
         inputSchema: z.object({ pair: z.string().describe("Pair identifier, default btc-usd.").optional(), frequency: z.string().describe("1m, 5m, 10m, 15m, 30m, 1h, 4h or 1d.").optional(), startTime: z.string().describe("Start ISO timestamp.").optional(), limit: z.number().describe("Maximum candles, 1-50.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: pair_candles ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
+        // TODO: implement candles locally (paywall removed)
         try {
-            return text(await premiumTool("mcp_coinmetrics_pair_candles", args));
+            return textError("Not yet implemented: candles");
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     return server;
