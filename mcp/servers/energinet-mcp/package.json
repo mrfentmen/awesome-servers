@@ -1,6 +1,6 @@
 {
   "name": "energinet-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Keyless Danish Energinet electricity data: live power system plus any open dataset.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/energinet-mcp",

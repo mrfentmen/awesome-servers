@@ -1,6 +1,6 @@
 {
   "name": "emby-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Emby: server info, users, libraries. Works with any instance.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/emby-mcp",

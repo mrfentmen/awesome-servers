@@ -1,6 +1,6 @@
 {
   "name": "env-contract-mcp",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Local value-free environment contract and configuration drift inspection. Tools include inspect contract",
   "type": "module",
   "mcpName": "io.github.mrfentmen/env-contract-mcp",

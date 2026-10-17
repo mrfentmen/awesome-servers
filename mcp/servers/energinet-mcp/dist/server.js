@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { errorMessage, getPowerNow, getDataset, datasetCatalog, datasetSchema } from "./api.js";
-import { premiumTool } from "./gateway.js";
+import { getPowerNow, getDataset, datasetCatalog, datasetSchema } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -22,7 +21,7 @@ export function createServer() {
             return text(await getPowerNow(limit));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("get_dataset", {
@@ -38,7 +37,7 @@ export function createServer() {
             return text(await getDataset(dataset, limit));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("day_ahead_prices", {
@@ -47,14 +46,12 @@ export function createServer() {
         inputSchema: z.object({ hours: z.number().describe("How many hours to list, 1 to 48.").optional(), zone: z.string().describe("Restrict to one price area, e.g. DK1 or DE.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: day_ahead_prices ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
+        // TODO: implement prices locally (paywall removed)
         try {
-            return text(await premiumTool("mcp_energinet_day_ahead_prices", args));
+            return textError("Not yet implemented: prices");
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("dataset_catalog", {
@@ -67,7 +64,7 @@ export function createServer() {
             return text(await datasetCatalog(args));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("dataset_schema", {
@@ -80,7 +77,7 @@ export function createServer() {
             return text(await datasetSchema(args));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     server.registerTool("carbon_trend", {
@@ -89,14 +86,12 @@ export function createServer() {
         inputSchema: z.object({ samples: z.number().describe("Samples per area, 1-288, default 24.").optional(), zone: z.string().describe("DK1 or DK2; omit for both.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: carbon_trend ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
+        // TODO: implement trend locally (paywall removed)
         try {
-            return text(await premiumTool("mcp_energinet_carbon_trend", args));
+            return textError("Not yet implemented: trend");
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return textError(String(e));
         }
     });
     return server;
