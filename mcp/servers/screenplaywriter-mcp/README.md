@@ -19,6 +19,10 @@ Parse Fountain files into a queryable AST. Edit scenes while preserving formatti
 - scene_breakdown. Production breakdown per scene with locations, characters, and line counts.
 - runtime_estimate. Total pages, minutes, day or night split, interior or exterior split.
 - export_fountain. Save stored screenplay back to a .fountain file.
+- export_for_website. Save a ScriptWriter website backup (.json) — the user clicks Restore on the site and the script appears with title, logline and body intact.
+- list_templates. The 24 starter templates from the ScriptWriter website, with descriptions.
+- start_from_template. Load a site template skeleton and write the story into it.
+- site_guide. How the site reads Fountain (title-page contract, elements, force markers, hand-off paths) — call before writing for the site.
 
 ## Install
 
@@ -53,6 +57,10 @@ Or use npx:
   }
 }
 ```
+
+## Works with the ScriptWriter website
+
+This server writes the exact Fountain the free ScriptWriter website imports: pass `title`/`logline`/`byline` to `write_screenplay` (or stamp a template with `start_from_template`), then hand the user the file via `export_for_website`. On the site they click Restore (for the `.json`) or Import (for the `.fountain`) — title, logline and scenes land in the editor. The parser reads screenplays the same way the site does: multi-line dialogue blocks, standalone parentheticals, `Notes:` loglines, force markers (`.`, `!`, `@`, `>`), and the site's structural inserts (MONTAGE, ACT ONE, COLD OPEN…) as action, never as characters.
 
 ## Example usage
 
