@@ -89,6 +89,9 @@ claim-check in `MISSING.md`):
 * **scopink** — the scope agent in his own repo
   [`mrfentmen/scopink`](https://github.com/mrfentmen/scopink): checks if an action is within
   the scope of what was asked. Detects scope creep in agent plans.
+* **curious** — the curiosity agent in his own repo
+  [`mrfentmen/curious`](https://github.com/mrfentmen/curious): proactively seeks information
+  it doesn't have. Scans for knowledge gaps, seeks answers, learns facts.
 
 Point the polymath at a checkout of this repo with `AWESOME_SERVERS_HOME=$PWD/awesome-servers`
 and it federates across the two repos live.
