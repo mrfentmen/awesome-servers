@@ -75,6 +75,10 @@ claim-check in `MISSING.md`):
   means it — one sentence installs the full crown of watches (air + quakes, gauge-named
   flood) in one permissioned write, and your other questions are forwarded to the siblings
   above with every row cited.
+* **instink** — the instinct agent in his own repo
+  [`mrfentmen/instink`](https://github.com/mrfentmen/instink): compiles a skill into a
+  reflex — a matcher plus the answer it fires, with hit/miss counters and honest
+  promotion/demotion. The skill doc stays one step away, never deleted.
 
 Point the polymath at a checkout of this repo with `AWESOME_SERVERS_HOME=$PWD/awesome-servers`
 and it federates across the two repos live.
