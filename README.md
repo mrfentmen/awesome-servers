@@ -6,8 +6,10 @@ can still be built, run and published on its own.
 | Subtree | What it holds | Run one |
 |---|---|---|
 | [`mcp/`](mcp) | 869 TypeScript MCP servers (one npm package each) | `cd mcp/servers/<slug> && npm install && npm run build` |
-| [`acp/`](acp) | 76 Python ACP agents | `python3 acp/agents/<name>/agent.py` |
+| [`acp/`](acp) | 79 Python ACP agents | `python3 acp/agents/<name>/agent.py` |
 | [`a2a/`](a2a) | 37 Python A2A servers plus the shared `a2a_kit` | `python3 a2a/servers/<name>/server.py` |
+| [`watchd/`](watchd) | a threshold watcher that runs the feeds between editor sessions | `python3 watchd/watchd.py --config conditions.json --loop` |
+| [`site/`](site) | the published site: registry with search, the public-feed atlas, watchd plans | <https://mrfentmen.github.io/awesome-servers/> |
 
 Most servers read public data with no key of their own; the ones wrapping a vendor API take
 that vendor's key. **There is no paywall anywhere in this repo any more.** On 2026-10-17 the
@@ -34,11 +36,17 @@ domain, and the research logs record what was found and why it still counted as 
   documents the check that preceded every build: what was searched, what was skipped and why
   the domain still counted as uncovered.
 * On the ACP side there were **zero domain agents** before this repo — every agent on the
-  official list was a coding agent. These 76 Python agents are the first non-coding ACP
+  official list was a coding agent. These 79 Python agents are the first non-coding ACP
   agents, and several use protocol surfaces no other agent uses in production
   (`session/request_permission` for dataset reads, `fs/write_text_file` for a briefing file,
   `session/cancel` for a conditional watch, image content blocks, a live SSE push feed), each
-  proved-unused in the wild by search at build time.
+  proved-unused in the wild by search at build time. Two more firsts carry their own proof:
+  the [`orchestrator`](acp/agents/orchestrator) is an agent whose feeds are *agents* — it
+  spawns sibling repo agents as real ACP child processes and merges their answers — and the
+  [`nyc`](acp/agents/nyc) pack is the first multi-agency city surface.
+* [`acp/MISSING.md`](acp/MISSING.md) doubles as the **public-feed atlas**: every keyless
+  feed probed live, with its date, what it answered and whether it still works. The
+  published site renders that table at <https://mrfentmen.github.io/awesome-servers/atlas.html>.
 * The pattern across all three subtrees is the same thesis: wrap one real, keyless public
   dataset, answer honestly about what the feed did and did not say, and keep the whole thing
   small, tested and self-contained.

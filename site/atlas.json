@@ -1,0 +1,608 @@
+[
+ {
+  "name": "airports2",
+  "feed": "davidmegginson.github.io/ourairports-data/airports.csv",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "the full airport table"
+ },
+ {
+  "name": "apod",
+  "feed": "api.nasa.gov/planetary/apod?api_key=DEMO_KEY",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "the shared DEMO_KEY works, so APOD is usable",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/apod"
+ },
+ {
+  "name": "archive",
+  "feed": "archive.org/advancedsearch.php",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "Internet Archive search \u2014 built",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/archive"
+ },
+ {
+  "name": "asteroids",
+  "feed": "ssd.jpl.nasa.gov/api/horizons.api",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "NASA JPL Horizons ephemeris, keyless",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/asteroids"
+ },
+ {
+  "name": "bluesky",
+  "feed": "public.api.bsky.app/xrpc/app.bsky.actor.getProfile",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "keyless AT Protocol reads"
+ },
+ {
+  "name": "btc2",
+  "feed": "blockchain.info/ticker",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "BTC in ~250 currencies"
+ },
+ {
+  "name": "citations",
+  "feed": "api.crossref.org/works",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "789,000 results with DOIs"
+ },
+ {
+  "name": "congress",
+  "feed": "govtrack.us/api/v2/role?current=true",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "541 sitting members"
+ },
+ {
+  "name": "defi",
+  "feed": "api.llama.fi/protocols",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "DeFi TVL across protocols \u2014 built into crypto"
+ },
+ {
+  "name": "domains",
+  "feed": "rdap.org/domain/example.com",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "registration, registrar, expiry (whois replacement)",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/domains"
+ },
+ {
+  "name": "eustats",
+  "feed": "ec.europa.eu/eurostat/.../prc_hicp_manr",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "EU inflation series"
+ },
+ {
+  "name": "fediverse",
+  "feed": "lemmy.world/api/v3/post/list",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "Lemmy posts"
+ },
+ {
+  "name": "geocode",
+  "feed": "nominatim.openstreetmap.org/search",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "address to coordinates (ODbL)"
+ },
+ {
+  "name": "grid",
+  "feed": "api.carbonintensity.org.uk/intensity",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "UK grid 176 gCO2/kWh (re-confirmed, still unbuilt)",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/grid"
+ },
+ {
+  "name": "healthstats",
+  "feed": "ghoapi.azureedge.net/api/Indicator",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "WHO global health indicators"
+ },
+ {
+  "name": "images",
+  "feed": "commons.wikimedia.org/w/api.php",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "Commons file search with direct image URLs"
+ },
+ {
+  "name": "ip",
+  "feed": "ipwho.is/8.8.8.8",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "200 (re-confirmed)"
+ },
+ {
+  "name": "japanese",
+  "feed": "jisho.org/api/v1/search/words",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "Japanese dictionary + readings"
+ },
+ {
+  "name": "labor",
+  "feed": "api.bls.gov/publicAPI/v2/timeseries/data/...",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "US labor statistics"
+ },
+ {
+  "name": "lyrics",
+  "feed": "api.lyrics.ovh/v1/Coldplay/Yellow",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "full lyrics"
+ },
+ {
+  "name": "markets",
+  "feed": "query1.finance.yahoo.com/v8/finance/chart/AAPL",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "live quote + history, keyless \u2014 built as stocks"
+ },
+ {
+  "name": "novelty",
+  "feed": "dog.ceo/api/breeds/image/random",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "random photo; noted only because it is keyless"
+ },
+ {
+  "name": "papers",
+  "feed": "eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "PubMed, 1,258 hits for \"urban fox\"",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/papers"
+ },
+ {
+  "name": "places",
+  "feed": "overpass-api.de/api/interpreter",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "any OSM POI: fountains, benches, EV chargers, ATMs"
+ },
+ {
+  "name": "preprints",
+  "feed": "export.arxiv.org/api/query",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "arXiv metadata"
+ },
+ {
+  "name": "radar",
+  "feed": "api.rainviewer.com/public/weather-maps.json",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "live weather-radar frames"
+ },
+ {
+  "name": "radio",
+  "feed": "de1.api.radio-browser.info/json/stations/search",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "the global radio-station directory"
+ },
+ {
+  "name": "rules",
+  "feed": "federalregister.gov/api/v1/documents.json",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "the latest federal rules"
+ },
+ {
+  "name": "satellites",
+  "feed": "celestrak.org/NORAD/elements/gp.php?GROUP=stations",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "live TLEs for the whole fleet (the row above was never probed)",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/satellites"
+ },
+ {
+  "name": "spaceflight",
+  "feed": "api.spaceflightnewsapi.net/v4/articles",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "36,157 space-news articles"
+ },
+ {
+  "name": "tides",
+  "feed": "api.tidesandcurrents.noaa.gov/mdapi/.../stations.json",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "3,499 tide-prediction stations",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/tides"
+ },
+ {
+  "name": "trending",
+  "feed": "wikimedia.org/api/rest_v1/metrics/pageviews/top",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "what the world is reading today \u2014 built",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/trending"
+ },
+ {
+  "name": "weather2",
+  "feed": "api.met.no/weatherapi/locationforecast/2.0/compact",
+  "status": "dead",
+  "probed": "2026-09-22",
+  "note": "MET Norway, a second source to Open-Meteo"
+ },
+ {
+  "name": "airports",
+  "feed": "aviationweather.gov/api/data/metar",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "KJFK METAR 19.4 \u00b0C"
+ },
+ {
+  "name": "almanac",
+  "feed": "api.sunrise-sunset.org/json",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "sunset 2026-09-22T22:54:52Z for New York \u2014 built into moon"
+ },
+ {
+  "name": "bayarea",
+  "feed": "api.bart.gov/api/etd.aspx",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "BART departures (the published demo key is public)",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/bayarea"
+ },
+ {
+  "name": "bitcoin",
+  "feed": "mempool.space/api/v1/fees/recommended",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "fastestFee 6 sat/vB, plus blocks and tx lookup"
+ },
+ {
+  "name": "boston",
+  "feed": "api-v3.mbta.com/predictions",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "live predictions at Park St, keyless",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/boston"
+ },
+ {
+  "name": "brewery",
+  "feed": "api.openbrewerydb.org/v1/breweries",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "global brewery directory"
+ },
+ {
+  "name": "buoys",
+  "feed": "ndbc.noaa.gov/data/realtime2/41025.txt",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "live wave height/period, wind, water temp for 1,353 stations \u2014 built",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/buoys"
+ },
+ {
+  "name": "chess",
+  "feed": "lichess.org/api/user/thibault",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "ratings and game history",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/chess"
+ },
+ {
+  "name": "clock",
+  "feed": "timeapi.io/api/Time/current/zone",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "any timezone",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/clock"
+ },
+ {
+  "name": "comics",
+  "feed": "xkcd.com/info.0.json",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "latest comic #3301",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/comics"
+ },
+ {
+  "name": "companies",
+  "feed": "api.gleif.org/api/v1/lei-records",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "370 LEI records matched \"Apple\" (legal entity identity)",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/companies"
+ },
+ {
+  "name": "courts",
+  "feed": "courtlistener.com/api/rest/v4/search",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "117,101 opinions matched \"privacy\" (keyless v4!)",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/courts"
+ },
+ {
+  "name": "crypto",
+  "feed": "api.coingecko.com/api/v3/simple/price",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "BTC $86,239 \u2014 built (with DefiLlama below)",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/crypto"
+ },
+ {
+  "name": "crypto2",
+  "feed": "api.coinbase.com/v2/exchange-rates",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "BTC in ~250 currencies"
+ },
+ {
+  "name": "cves",
+  "feed": "api.first.org/data/v1/epss",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "EPSS exploit probability for a CVE"
+ },
+ {
+  "name": "dailymed",
+  "feed": "dailymed.nlm.nih.gov/.../spls.json",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "LIPITOR SPL (a second label source to labels)",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/dailymed"
+ },
+ {
+  "name": "deals",
+  "feed": "cheapshark.com/api/1.0/deals",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "game deals across stores"
+ },
+ {
+  "name": "deps",
+  "feed": "api.osv.dev/v1/query",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "lodash ReDoS advisory (POST, keyless)"
+ },
+ {
+  "name": "depsreport",
+  "feed": "api.deps.dev/v3alpha/...",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "Google's dependency graph"
+ },
+ {
+  "name": "development",
+  "feed": "api.worldbank.org/v2/country/US/indicator/...",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "GDP and 16k other series"
+ },
+ {
+  "name": "disease",
+  "feed": "disease.sh/v3/covid-19/all",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "global case stats"
+ },
+ {
+  "name": "drinks",
+  "feed": "thecocktaildb.com/api/json/v1/1/search.php",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "Margarita"
+ },
+ {
+  "name": "drugnames",
+  "feed": "rxnav.nlm.nih.gov/REST/drugs.json",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "\"lipitor\" \u2192 atorvastatin 80 MG \u2014 built into chem"
+ },
+ {
+  "name": "f1",
+  "feed": "api.jolpi.ca/ergast/f1/2026/next/",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "next race (the community successor to Ergast)",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/f1"
+ },
+ {
+  "name": "floodwatch",
+  "feed": "flood-api.open-meteo.com/v1/flood",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "200, but useless: see \"the flood API was the wrong river\" below",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/floodwatch"
+ },
+ {
+  "name": "football",
+  "feed": "api.openligadb.de/getmatchdata/bl1",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "Bundesliga fixtures/results"
+ },
+ {
+  "name": "holidays",
+  "feed": "date.nager.at/api/v3/PublicHolidays/2026/US",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "public holidays, 100+ countries"
+ },
+ {
+  "name": "mtg",
+  "feed": "api.scryfall.com/cards/named",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "Lightning Bolt, oracle text + prices"
+ },
+ {
+  "name": "music",
+  "feed": "api.deezer.com/search",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "\"Creep\" with 30 s previews",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/music"
+ },
+ {
+  "name": "music2",
+  "feed": "itunes.apple.com/search",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "albums/podcasts, artwork"
+ },
+ {
+  "name": "nasamedia",
+  "feed": "images-api.nasa.gov/search",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "140,000+ images/video/audio, keyless (unlike most NASA APIs)",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/nasamedia"
+ },
+ {
+  "name": "nature",
+  "feed": "api.gbif.org/v1/occurrence/search",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "9,535,182 occurrences for \"quercus\" \u2014 built, see the 2026-09-23 session below",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/nature"
+ },
+ {
+  "name": "nba",
+  "feed": "site.api.espn.com/.../nba/scoreboard",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "live scoreboard"
+ },
+ {
+  "name": "nutrition",
+  "feed": "world.openfoodfacts.org/api/v2/product/...",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "3M+ products, allergens + Nutri-Score \u2014 built as food"
+ },
+ {
+  "name": "planes",
+  "feed": "opensky-network.org/api/states/all",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "live aircraft states over a bbox (anonymous, fair-use)"
+ },
+ {
+  "name": "poetry",
+  "feed": "poetrydb.org/author/Emily%20Dickinson",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "full poems"
+ },
+ {
+  "name": "pokedex",
+  "feed": "pokeapi.co/api/v2/pokemon/pikachu",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "full Pok\u00e9dex"
+ },
+ {
+  "name": "radiation",
+  "feed": "api.safecast.org/measurements.json",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "52.0 cpm at the latest volunteer sensor",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/radiation"
+ },
+ {
+  "name": "recipes",
+  "feed": "themealdb.com/api/json/v1/1/search.php",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "Chicken Handi",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/recipes"
+ },
+ {
+  "name": "spending",
+  "feed": "api.usaspending.gov/api/v2/...",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "federal agencies, awards",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/spending"
+ },
+ {
+  "name": "stargazing",
+  "feed": "7timer.info/bin/api.pl?product=astro",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "cloudcover 9, seeing 7, transparency 3 for the next nights",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/stargazing"
+ },
+ {
+  "name": "steam",
+  "feed": "store.steampowered.com/api/appdetails",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "Dota 2 app metadata"
+ },
+ {
+  "name": "surf",
+  "feed": "marine-api.open-meteo.com/v1/marine",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "wave height, direction, period for any coast \u2014 built",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/surf"
+ },
+ {
+  "name": "teams",
+  "feed": "thesportsdb.com/api/v1/json/3/...",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "Arsenal, badges, stadiums"
+ },
+ {
+  "name": "trials",
+  "feed": "clinicaltrials.gov/api/v2/studies",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "melanoma trials, structured protocol"
+ },
+ {
+  "name": "trivia",
+  "feed": "opentdb.com/api.php",
+  "status": "open",
+  "probed": "2026-09-22",
+  "note": "quiz bank"
+ },
+ {
+  "name": "tv",
+  "feed": "api.tvmaze.com/search/shows",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "\"Severance\", full episode lists, air dates",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/tv"
+ },
+ {
+  "name": "uk-postcode",
+  "feed": "api.postcodes.io/postcodes/SW1A1AA",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "coordinates + NHS region",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/uk-postcode"
+ },
+ {
+  "name": "zip",
+  "feed": "api.zippopotam.us/us/11235",
+  "status": "built",
+  "probed": "2026-09-22",
+  "note": "ZIP \u2192 Brooklyn",
+  "agent": "https://github.com/mrfentmen/awesome-servers/tree/main/acp/agents/zip"
+ }
+]

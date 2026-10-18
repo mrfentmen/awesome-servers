@@ -267,9 +267,11 @@ Feed-by-feed agents are the first shelf. These are the empty ones after it:
    (websocket, SSE) instead of being polled.
 3. **Composite briefings.** One question, several feeds: "brief me for Denver today" =
    air + alerts + fires + launches + grid. Everything needed is built; the shape is new.
-4. **City packs.** New York alone has hundreds of Socrata datasets (subway, restaurant
-   grades, trees, taxi, parking, noise). `civic` touches two. A `nyc` agent with ten
-   skills is a different product from ten agents.
+4. ~~**City packs.**~~ **Built on 2026-10-17 as [`nyc`](./agents/nyc)** — the first
+   multi-agency city pack here: health (DOHMH restaurant grades), media-affairs (film
+   permits) and transport/charging (street-construction permits) under one session, all
+   disjoint from `civic`'s datasets. Deliberately three skills, not ten: the pack pattern
+   is proven; the remaining NYC datasets (taxi, trees, noise) are rows to add.
 5. **Agency agents.** NWS, USGS, NOAA, NASA, Census — none publishes an ACP agent, and
    only NWS has an A2A server (built in the sibling repo). Each has the feeds ready.
 6. **Write-capable agents behind permission.** Notes, changelogs, TODO triage. Every agent
@@ -281,6 +283,10 @@ Feed-by-feed agents are the first shelf. These are the empty ones after it:
 8. **Agents that are also servers.** `a2a_bridge` *consumes* an A2A agent card. The
    reciprocal — a domain ACP agent that also publishes an A2A card or an MCP server, so
    another agent can call it — does not exist.
+9. ~~**An agent whose feeds are agents.**~~ **Built on 2026-10-17 as
+   [`orchestrator`](./agents/orchestrator)**: the first agent here that answers by
+   *running* other repo agents, each spawned as its own ACP child process through the
+   kit's own `AcpClient`. Composites are listed in the session 8 note.
 
 ## Session 3 — 2026-09-23: shape research and a fresh feed sweep
 
@@ -584,6 +590,33 @@ answer with a not-implemented stub.
 - Wikidata's plain label search timed out on a probe, so the reader uses `SERVICE wikibase:mwapi`
   EntitySearch, which answered "Inception" (2010, Christopher Nolan) in 0.8s. The OPTIONALs
   return the same film several times, so bindings are deduplicated by film before an answer.
+
+## Session 8 — 2026-10-17: the federation and the pack
+
+Two shapes above close today, plus one service that is not an agent:
+
+- **[`orchestrator`](./agents/orchestrator) — an agent whose feeds are agents.** It holds a
+  registry of sibling domain agents (air, hazards, wildfire, tides, moon), spawns each as
+  a real child process over stdio ACP with the kit's own `AcpClient` — the editor-side half
+  of the protocol, used by an agent for the first time here — and fans one place out to
+  all of them ("brief me on Denver"), or forwards a formed question verbatim
+  ("ask moon: what is the next full moon?"). A brief says where each part came from and
+  names every sibling that did not answer rather than papering over it. The tests drive a
+  real minimal ACP responder as a child process, so the supervision code is exercised the
+  way it runs; the live smoke on 2026-10-17 was the `air` agent answering US AQI 44 for
+  Denver through the bridge.
+- **[`nyc`](./agents/nyc) — the city pack.** Three agency surfaces under one session on
+  NYC's keyless Socrata: restaurant inspection grades (43nn-pn8j), film permits
+  (tg4x-b46p) and street-construction permits (tqtj-sjs8). Disjoint from `civic`'s reads by
+  design; both agents can run in the same editor without owning the same dataset.
+- **`watchd/` — the threshold watcher that is not an agent.** The packages answer when
+  asked; a flood stage does not care whether anyone asked. `watchd` (repo root, stdlib
+  only, no publish step) polls the same keyless feeds on a timer, evaluates plain
+  thresholds and pushes through console/file/webhook channels, with refire rate-limits so
+  a stuck gauge cannot spam. It deliberately does not ACP anything: hosts, crons and CI
+  boxes have no editor. What remains unbuilt in the watch shape: an ACP agent that
+  watches a *condition* between turns (the `watch` agent still only does one
+  message-per-round), and any genuinely pushing feed.
 
 ## Dropped — no usable public API
 

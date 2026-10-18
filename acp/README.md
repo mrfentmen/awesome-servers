@@ -6,8 +6,8 @@ Every agent on the official ACP list is a coding agent or a coding-agent harness
 are the other kind: agents that answer a real-world question inside Zed, JetBrains or any
 ACP client, straight from a public dataset, with no API key and nothing invented.
 
-- **77 agents** in [`agents/`](./agents)
-- **2315 unit tests**, all offline, all passing
+- **79 agents** in [`agents/`](./agents)
+- **2063 unit tests** (offline), all passing except `radiation`, whose 30-day fixtures crossed the window on 2026-10-17 — its session below says exactly which
 - **76 live probes** over real ACP stdio against real public data (see [Proof](#proof))
 
 ## The agents
@@ -65,7 +65,9 @@ ACP client, straight from a public dataset, with no API key and nothing invented
 | [`nasamedia`](./agents/nasamedia) | "find NASA images of the Apollo 11 landing", "what media is in collection Apollo 11", "how many apollo 11 images are there, by decade?" (not implemented here) | NASA Image and Video Library |
 | [`nature`](./agents/nature) | "how many monarch butterflies are recorded in Canada?", "what is seen near 40.71,-74.01?", "trend for Danaus plexippus in Canada from 2020 to 2024" (not implemented here) | GBIF occurrence records |
 | [`nonprofit`](./agents/nonprofit) | "what does the Red Cross report as revenue?", "compare the Red Cross and Habitat for Humanity", "how big is the Red Cross compared to other charities?" (not implemented here) | ProPublica Nonprofit Explorer (IRS Business Master File) |
+| [`nyc`](./agents/nyc) | "restaurant grades for 10001", "what is filming in Brooklyn this week?", "street work in Manhattan next 3 days" | NYC Open Data Socrata (DOHMH inspections, film permits, street-construction permits) |
 | [`osm`](./agents/osm) | "nearest drinking water to Bryant Park, New York", "pharmacies near Miami Beach", "area profile within 300 m of 40.7536,-73.9832" (not implemented here) | OpenStreetMap (Nominatim + Overpass) |
+| [`orchestrator`](./agents/orchestrator) | "brief me on Denver" (fans out to five repo agents over ACP), "ask tides: what are the tides in Boston tomorrow?", "what agents can you run?" | this repo's own agents, spawned as child processes (no dataset of its own) |
 | [`papers`](./agents/papers) | "papers about CRISPR sickle cell", "what is DOI 10.1038/nature12373?", "topic board for CRISPR from 2022 to 2024" (not implemented here) | PubMed + arXiv + Crossref |
 | [`pollen`](./agents/pollen) | "how bad is the pollen today in Denver?", "grass pollen this week in Berlin", "pollen week grade at 52.52,13.41" (not implemented here) | Open-Meteo air quality (pollen) |
 | [`radiation`](./agents/radiation) | "what is the radiation level near Fukushima?", "what has device 100422 been reading?", "is the radiation near Chernobyl rising?" (not implemented here) | Safecast measurements |
@@ -108,7 +110,7 @@ python3 tools/probe.py --agent "python3 agents/forecast/agent.py" \
 # every agent, one live question each
 python3 tools/probe_all.py
 
-# all 2315 unit tests (offline, no network)
+# all 2063 unit tests (offline, no network; see the run note before publishing)
 bash scripts/test-all.sh
 ```
 
