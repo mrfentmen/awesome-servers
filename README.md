@@ -70,6 +70,11 @@ claim-check in `MISSING.md`):
   watch: a permission-asked protocol write produces the conditions file this repo's
   `watchd/` obeys unchanged, plus the activation lines. Checks it can author today:
   air thresholds, quake magnitudes within a radius, river gauges at flood stage.
+* **fedora hat guy** — the persona agent in his own repo
+  [`mrfentmen/fedora-hat`](https://github.com/mrfentmen/fedora-hat): says "never miss" and
+  means it — one sentence installs the full crown of watches (air + quakes, gauge-named
+  flood) in one permissioned write, and your other questions are forwarded to the siblings
+  above with every row cited.
 
 Point the polymath at a checkout of this repo with `AWESOME_SERVERS_HOME=$PWD/awesome-servers`
 and it federates across the two repos live.
