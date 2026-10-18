@@ -83,6 +83,9 @@ claim-check in `MISSING.md`):
   [`mrfentmen/contextink`](https://github.com/mrfentmen/contextink): you say "do this" and
   it acquires the context from the repo, git, and recent files so you don't have to explain
   it; asks only the minimal high-information-gain questions when acquisition fails.
+* **rewind** — the replay agent in his own repo
+  [`mrfentmen/rewind`](https://github.com/mrfentmen/rewind): replays agent runs and mutates
+  one variable to see what would have happened. Replay + mutate + diff for agent traces.
 
 Point the polymath at a checkout of this repo with `AWESOME_SERVERS_HOME=$PWD/awesome-servers`
 and it federates across the two repos live.
