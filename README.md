@@ -79,6 +79,10 @@ claim-check in `MISSING.md`):
   [`mrfentmen/instink`](https://github.com/mrfentmen/instink): compiles a skill into a
   reflex — a matcher plus the answer it fires, with hit/miss counters and honest
   promotion/demotion. The skill doc stays one step away, never deleted.
+* **contextink** — the context agent in his own repo
+  [`mrfentmen/contextink`](https://github.com/mrfentmen/contextink): you say "do this" and
+  it acquires the context from the repo, git, and recent files so you don't have to explain
+  it; asks only the minimal high-information-gain questions when acquisition fails.
 
 Point the polymath at a checkout of this repo with `AWESOME_SERVERS_HOME=$PWD/awesome-servers`
 and it federates across the two repos live.
