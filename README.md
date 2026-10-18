@@ -21,6 +21,28 @@ has its own unit tests (`mcp/servers/<slug>/tests`, `acp/agents/<name>/tests`,
 `a2a/servers/<name>/tests`) plus a live smoke check (`tools/smoke*.py`,
 `a2a/tools/smoke_all.py`).
 
+## Novel and original
+
+Nearly all of this is first-of-its-kind work, not a port of an existing catalogue. Before each
+server or agent was built, it was checked against the official tool lists (the MCP registries,
+`agentclientprotocol.com`'s agent list and registry) and a live GitHub search for the same
+domain, and the research logs record what was found and why it still counted as missing — see
+[`mcp/MISSING.md`](mcp/MISSING.md), [`acp/MISSING.md`](acp/MISSING.md) and
+[`a2a/docs/`](a2a/docs). Highlights:
+
+* The MCP side holds 869 TypeScript servers, one npm package each, and mcp/MISSING.md
+  documents the check that preceded every build: what was searched, what was skipped and why
+  the domain still counted as uncovered.
+* On the ACP side there were **zero domain agents** before this repo — every agent on the
+  official list was a coding agent. These 76 Python agents are the first non-coding ACP
+  agents, and several use protocol surfaces no other agent uses in production
+  (`session/request_permission` for dataset reads, `fs/write_text_file` for a briefing file,
+  `session/cancel` for a conditional watch, image content blocks, a live SSE push feed), each
+  proved-unused in the wild by search at build time.
+* The pattern across all three subtrees is the same thesis: wrap one real, keyless public
+  dataset, answer honestly about what the feed did and did not say, and keep the whole thing
+  small, tested and self-contained.
+
 ## Publishing
 
 * MCP servers publish from `mcp/servers/<slug>` (its own `package.json`, version and README).
