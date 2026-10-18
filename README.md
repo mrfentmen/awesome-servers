@@ -55,3 +55,21 @@ domain, and the research logs record what was found and why it still counted as 
 
 * MCP servers publish from `mcp/servers/<slug>` (its own `package.json`, version and README).
 * ACP and A2A servers are repo-run today (Python, no packaging step).
+
+## Built on top of it
+
+Creatures that use this corpus as their world live in the sibling repo
+[`mrfentmen/superagents`](https://github.com/mrfentmen/superagents) (public, with its own
+claim-check in `MISSING.md`):
+
+* **polymath** — routes your question to the most fitting agents of this repo, spawns each
+  as a real ACP child process, and merges the answers into one brief with per-row citations;
+  a sibling that fails appears as a named row, never silence. Its registry is a data file
+  and its ranking is deterministic word-scoring, not a model opinion.
+* **sentry** — one plain sentence ("watch air quality in Denver over 150") becomes a tracked
+  watch: a permission-asked protocol write produces the conditions file this repo's
+  `watchd/` obeys unchanged, plus the activation lines. Checks it can author today:
+  air thresholds, quake magnitudes within a radius, river gauges at flood stage.
+
+Point the polymath at a checkout of this repo with `AWESOME_SERVERS_HOME=$PWD/awesome-servers`
+and it federates across the two repos live.
