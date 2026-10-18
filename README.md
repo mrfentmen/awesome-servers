@@ -92,6 +92,9 @@ claim-check in `MISSING.md`):
 * **curious** — the curiosity agent in his own repo
   [`mrfentmen/curious`](https://github.com/mrfentmen/curious): proactively seeks information
   it doesn't have. Scans for knowledge gaps, seeks answers, learns facts.
+* **bored** — the idle agent in his own repo
+  [`mrfentmen/bored`](https://github.com/mrfentmen/bored): uses idle time productively.
+  Consolidates memories, explores areas, prepares for tasks.
 
 Point the polymath at a checkout of this repo with `AWESOME_SERVERS_HOME=$PWD/awesome-servers`
 and it federates across the two repos live.
