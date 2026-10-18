@@ -86,6 +86,9 @@ claim-check in `MISSING.md`):
 * **rewind** — the replay agent in his own repo
   [`mrfentmen/rewind`](https://github.com/mrfentmen/rewind): replays agent runs and mutates
   one variable to see what would have happened. Replay + mutate + diff for agent traces.
+* **scopink** — the scope agent in his own repo
+  [`mrfentmen/scopink`](https://github.com/mrfentmen/scopink): checks if an action is within
+  the scope of what was asked. Detects scope creep in agent plans.
 
 Point the polymath at a checkout of this repo with `AWESOME_SERVERS_HOME=$PWD/awesome-servers`
 and it federates across the two repos live.
