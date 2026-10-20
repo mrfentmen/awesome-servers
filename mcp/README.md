@@ -477,6 +477,7 @@ Browser extensions are maintained separately in private repositories and are int
 - [`patents-mcp`](./servers/patents-mcp)
 - [`pbdb-mcp`](./servers/pbdb-mcp)
 - [`pdf-generator-mcp`](./servers/pdf-generator-mcp)
+- [`pod-upload-mcp`](./servers/pod-upload-mcp)
 - [`peertube-mcp`](./servers/peertube-mcp)
 - [`pexels-mcp`](./servers/pexels-mcp)
 - [`phemex-mcp`](./servers/phemex-mcp)
