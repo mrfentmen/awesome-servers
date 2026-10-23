@@ -53,6 +53,21 @@ premium-mcps), Ticketmaster Discovery (@delorenj/mcp-server-ticketmaster +
 (@pipeworx/mcp-geocodio), Ecwid (usefulapi hosted MCP), Clover + Braintree
 (multiple community servers each).
 
+**Wave 2 of the vendor-API sweep (2026-10-23, same day, npm + registry +
+web checks before each build):** `collegefootballdata-mcp` (CollegeFootball
+Data.com CFBD API — free Bearer key; 20 tools over conferences, venues,
+teams, games, scoreboard, box scores, betting lines, weather, polls,
+player game/season stats, advanced stats, player search, recruiting,
+coaches, SP+, SRS, calendar) and `stadiamaps-mcp` (Stadia Maps — free-tier
+key; 12 tools over Pelias geocoding/search/autocomplete/reverse/structured,
+Valhalla directions/isochrones/route-matrix/elevation, timezone lookup).
+Degraded-fork angle checked and skipped honestly: the near-candidates all
+turn out covered — OpenLigaDB (@pipeworx + our own openligadb-soccer-mcp),
+Visual Crossing (@pipeworx), SeatGeek (our own seatgeek-mcp in premium-mcps),
+Fastly (@fastly/mcp official), Regulations.gov (pipeworx + @blen + cyanheads).
+OpenUV is genuinely uncovered on npm but ships only two real endpoints —
+logged as a thin target rather than padded to 10 tools.
+
 ## Skipped — already a thing
 
 Do not build; covered by others or by this repo.

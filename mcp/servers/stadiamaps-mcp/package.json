@@ -1,0 +1,22 @@
+{
+  "name": "stadiamaps-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for the Stadia Maps geospatial APIs: Pelias geocoding/search/autocomplete, Valhalla routing (directions, isochrones, matrices, elevation) and timezone lookup. Free-tier API key, no paywall in the server itself.",
+  "type": "module",
+  "private": false,
+  "bin": { "stadiamaps-mcp": "dist/index.js" },
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test tests/"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "typescript": "^5.8.0"
+  },
+  "engines": { "node": ">=20" },
+  "license": "MIT"
+}
