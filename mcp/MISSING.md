@@ -79,6 +79,32 @@ game details + summaries, sales comparison, plus the weekly, yearly and
 pre-order charts with their indexes. 15 unit tests and every tool smoke-tested
 live against vgchartz.com.
 
+**Keyless open-data sweep (built 2026-10-23, live-probed each API before
+building; npm + PyPI + GitHub checked per candidate):**
+- `crtsh-mcp` — crt.sh certificate-transparency search, zero MCPs anywhere
+  (8 tools: search/subdomains/issuers/cert-detail/expiring/expired/history/
+  wildcards; cert detail pages are HTML-only, parsed with regex slicing).
+  14 tests, all tools live. [`mrfentmen/crtsh-mcp`](https://github.com/mrfentmen/crtsh-mcp)
+- `adsbdb-mcp` — adsbdb.com open aviation database, zero MCPs (5 tools:
+  aircraft by registration, callsign→airline+origin+destination, airline
+  lookup, mode-s→registration, one-shot flight overview). 14 tests, all live.
+  [`mrfentmen/adsbdb-mcp`](https://github.com/mrfentmen/adsbdb-mcp)
+- `pskreporter-mcp` — PSK Reporter ham-radio propagation reports, zero MCPs
+  (5 tools: who heard a sender, what a receiver heard, propagation summary
+  with Maidenhead-locator distance math, active monitors, best-frequency
+  recommender). 21 tests; 4/5 tools live-verified, the receiver-direction
+  tool shares the verified fetch path (API rate-limits ~5 queries/min, so
+  the server spaces live queries 30s and caches 90s).
+  [`mrfentmen/pskreporter-mcp`](https://github.com/mrfentmen/pskreporter-mcp)
+
+Checked and skipped same day (already covered): NOAA SWPC space weather
+(`space-weather-mcp` on npm), NDBC ocean buoys (`ndbc-buoy-mcp` npm +
+`ndbc-mcp` PyPI), 7Timer astro weather (`@pipeworx/mcp-7timer`), OONI
+(`@pipeworx/mcp-ooni`), IODA outages (`mcp-internet-outages`), iNaturalist
+(3 MCPs), TheSpaceDevs launches (`spacedevs-mcp`), met.no (`yr-metno-mcp`),
+Wayback Machine (`mcp-wayback-machine`), GTFOBins/LOLBAS
+(living-off-the-land-lolbins-mcp-server).
+
 ## Skipped — already a thing
 
 Do not build; covered by others or by this repo.
