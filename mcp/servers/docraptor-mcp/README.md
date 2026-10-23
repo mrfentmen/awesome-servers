@@ -12,11 +12,22 @@ MCP package under this name (only their generated OpenAPI client). See
 
 | Tool | What it does |
 |---|---|
-| `docraptor_create_document` | render one document from `document_content` (HTML) or `document_url`; `test` defaults to **true** so nothing bills until you flip it |
+| `docraptor_create_pdf` | render one PDF from `document_content` (HTML) or `document_url`; `test` defaults to **true** so nothing bills until you flip it |
+| `docraptor_create_xlsx` | render one XLSX from HTML/CSV-ish content or a URL |
+| `docraptor_create_xlsx_from_rows` | headers + rows → table HTML → XLSX, composed locally |
+| `docraptor_create_report` | title + meta line + table → styled PDF report |
+| `docraptor_create_async` | queue on the async API; returns `download_url` + `status_url` instead of bytes |
+| `docraptor_async_status` | read an async job's `status_url` |
+| `docraptor_async_fetch` | fetch a finished async job's presigned `download_url`; save or inline |
+| `docraptor_create_production` | test=false render that spends credits — requires explicit `confirm: true` |
+| `docraptor_test_ping` | render one tiny free test PDF as a health check |
+| `docraptor_validate_html` | local HTML sanity checks (structure, tag balance, http:// assets) before spending a render |
+| `docraptor_check_source_url` | GET a `document_url` once to confirm the renderer can reach it |
 
 Output handling: pass `save_path` to write the file to disk; without it,
 documents under 1 MB come back inline as base64 and bigger ones are refused
-with the suggestion to use `save_path`.
+with the suggestion to use `save_path`. The async tools validate that the
+URLs they fetch point back at `api.docraptor.com`.
 
 ## Auth
 

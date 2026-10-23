@@ -5,11 +5,17 @@
  */
 import {
   assertSuccess,
+  classifyCheck,
+  jobsCreatePayload,
   jobsResultsPayload,
   jobsStatusPayload,
+  poeConfirmPayload,
+  resultsTally,
   shapeAccountInfo,
   shapeSingleCheck,
   singleCheckPayload,
+  validateJobId,
+  type JobCreateOpts,
 } from './util.js';
 
 const BASE = 'https://api.neverbounce.com/v4.2';
@@ -68,4 +74,55 @@ export function jobDelete(jobId: unknown): Promise<unknown> {
     assertSuccess('jobs/delete', d);
     return d;
   });
+}
+
+export function accountUsage(): Promise<Record<string, unknown>> {
+  return nbPost('account/info', { key: requireApiKey() }).then((d) => shapeAccountInfo('account/info', d));
+}
+
+export async function verifyEmailVerdict(email: string, timeout?: unknown): Promise<Record<string, unknown>> {
+  const shaped = (await verifyEmail(email, timeout)) as {
+    result?: string;
+    flags?: Record<string, unknown>;
+  };
+  return { ...shaped, verdict: classifyCheck(shaped.result, shaped.flags) };
+}
+
+export function jobCreate(opts: JobCreateOpts): Promise<unknown> {
+  return nbPost('jobs/create', jobsCreatePayload(requireApiKey(), opts)).then((d) => {
+    assertSuccess('jobs/create', d);
+    return d;
+  });
+}
+
+export function jobStart(jobId: unknown): Promise<unknown> {
+  return nbPost('jobs/start', { key: requireApiKey(), job_id: validateJobId(jobId) }).then((d) => {
+    assertSuccess('jobs/start', d);
+    return d;
+  });
+}
+
+export function poeConfirm(transactionId: unknown, token: unknown): Promise<unknown> {
+  return nbPost('poe/confirm', poeConfirmPayload(requireApiKey(), transactionId, token)).then((d) => {
+    assertSuccess('poe/confirm', d);
+    return d;
+  });
+}
+
+export function jobDownload(jobId: unknown, fileFormat: unknown): Promise<unknown> {
+  const fmt = String(fileFormat ?? 'json');
+  if (fmt !== 'json' && fmt !== 'csv') throw new Error('file_format must be "json" or "csv"');
+  return nbPost('jobs/download', { key: requireApiKey(), job_id: validateJobId(jobId), file_format: fmt }).then((d) => {
+    assertSuccess('jobs/download', d);
+    return d;
+  });
+}
+
+export async function jobResultsSummary(
+  jobId: unknown,
+  startPage: unknown,
+  itemsPerPage: unknown,
+): Promise<Record<string, unknown>> {
+  const d = (await jobResults(jobId, startPage, itemsPerPage)) as Record<string, unknown>;
+  return { ...resultsTally(d), query_info: (d as { query_info?: unknown }).query_info ?? null };
 }

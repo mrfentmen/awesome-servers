@@ -116,3 +116,42 @@ export function threatSummary(data: Record<string, unknown>): Record<string, unk
     vpn: rec.vpn ?? {},
   };
 }
+
+/**
+ * Named top-level field whitelists the sliced tools use. Every entry is a
+ * real block in the ipdata response; the tools just keep the answer small
+ * for the caller. Each set starts with `ip` so rows stay self-describing.
+ */
+export const FIELD_SETS: Record<string, string[]> = {
+  location: [
+    'ip', 'city', 'region', 'region_code', 'country_name', 'country_code',
+    'continent_name', 'continent_code', 'latitude', 'longitude', 'postal', 'time_zone',
+  ],
+  timezone: ['ip', 'time_zone'],
+  currency: ['ip', 'currency'],
+  languages: ['ip', 'languages'],
+  carrier: ['ip', 'carrier'],
+  asn: ['ip', 'asn'],
+  company: ['ip', 'company'],
+  threat: ['ip', 'threat'],
+  vpn: ['ip', 'vpn'],
+};
+
+/**
+ * Bulk answers come back as an array of profiles (some responses nest them
+ * under `results`). Reduce to the light rows the bulk_country tool returns.
+ */
+export function bulkCountryRows(
+  data: unknown,
+): Array<{ ip?: string; country_code?: string }> {
+  const rows: unknown[] | null = Array.isArray(data)
+    ? (data as unknown[])
+    : typeof data === 'object' && data !== null && Array.isArray((data as { results?: unknown }).results)
+      ? ((data as { results: unknown[] }).results)
+      : null;
+  if (rows === null) throw new Error('unexpected bulk response shape; nothing to reduce');
+  return rows.map((row) => {
+    const r = (row ?? {}) as { ip?: string; country_code?: string };
+    return { ip: r.ip, country_code: r.country_code };
+  });
+}

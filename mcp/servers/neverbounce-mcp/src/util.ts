@@ -107,3 +107,80 @@ export function shapeAccountInfo(endpoint: string, data: Record<string, unknown>
     monthly_limit: data.monthly_limit ?? null,
   };
 }
+
+export interface JobCreateOpts {
+  email_filename?: string;
+  email_list_folder?: string;
+  auto_parse?: boolean;
+  run_sample?: boolean;
+  job_name?: string;
+}
+
+/** Build the /jobs/create body; the vendor takes exactly one list source. */
+export function jobsCreatePayload(key: string, opts: JobCreateOpts): Record<string, unknown> {
+  const sources = [opts.email_filename, opts.email_list_folder].filter(
+    (v) => typeof v === 'string' && v.trim() !== '',
+  );
+  if (sources.length !== 1) {
+    throw new Error('pass exactly one of email_filename or email_list_folder (uploaded in the NeverBounce dashboard)');
+  }
+  const payload: Record<string, unknown> = { key };
+  if (opts.email_filename) payload.email_filename = opts.email_filename.trim();
+  if (opts.email_list_folder) payload.email_list_folder = opts.email_list_folder.trim();
+  payload.auto_parse = opts.auto_parse ?? true;
+  if (opts.run_sample != null) payload.run_sample = opts.run_sample;
+  if (opts.job_name && opts.job_name.trim() !== '') payload.job_name = opts.job_name.trim();
+  return payload;
+}
+
+/** Build the /poe/confirm body (Proof of Email token verification). */
+export function poeConfirmPayload(key: string, transactionId: unknown, token: unknown): Record<string, unknown> {
+  const tid = String(transactionId ?? '').trim();
+  const tok = String(token ?? '').trim();
+  if (tid === '' || tok === '') throw new Error('transaction_id and token are both required');
+  return { key, transaction_id: tid, token: tok };
+}
+
+export type MailVerdict = 'safe' | 'risky' | 'dead' | 'unknown';
+
+/**
+ * Client-side decision layer over one verification answer: should an agent
+ * send to this address? Honest about which verdicts are judgments.
+ */
+export function classifyCheck(
+  result: string | undefined,
+  flags: Record<string, unknown> | undefined,
+): { verdict: MailVerdict; reason: string } {
+  const f = flags ?? {};
+  if (f.spamtrap === true) return { verdict: 'dead', reason: 'flagged as a spamtrap' };
+  switch (result) {
+    case 'valid':
+      return { verdict: 'safe', reason: 'mailbox verified deliverable' };
+    case 'catchall':
+      return { verdict: 'risky', reason: 'catchall domain - mailbox acceptance cannot be verified' };
+    case 'disposable':
+      return { verdict: 'risky', reason: 'disposable email provider' };
+    case 'invalid':
+      return { verdict: 'dead', reason: 'mailbox does not exist' };
+    case 'unknown':
+      return { verdict: 'unknown', reason: 'provider could not verify; retry later' };
+    default:
+      return { verdict: 'unknown', reason: `unexpected result ${String(result)}` };
+  }
+}
+
+/**
+ * Tally one page of /jobs/results rows by verification result. Honest about
+ * being a per-page count, not a job total.
+ */
+export function resultsTally(data: Record<string, unknown>): { tally: Record<string, number>; counted: number } {
+  const raw = (data as { results?: unknown }).results;
+  const results = Array.isArray(raw) ? (raw as Array<Record<string, unknown>>) : [];
+  const tally: Record<string, number> = {};
+  for (const row of results) {
+    const v = (row.verification ?? {}) as { result?: string };
+    const k = String(v.result ?? 'unknown');
+    tally[k] = (tally[k] ?? 0) + 1;
+  }
+  return { tally, counted: results.length };
+}

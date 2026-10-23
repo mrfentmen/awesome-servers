@@ -11,11 +11,25 @@ which makes this the covered gap.
 
 ## Tools
 
+All lookup tools take one optional `ip` (omitted = the caller's own IP). Each
+sliced tool is one real ipdata call that keeps only the block its name says.
+
 | Tool | What it does |
 |---|---|
-| `ipdata_lookup` | full profile for one IP (or the caller's own IP when `ip` is omitted), with an optional top-level `fields` whitelist |
-| `ipdata_bulk` | 1–50 unique IPs in one POST to `/bulk` |
-| `ipdata_threat_summary` | compact fraud-triage view: threat flags, ASN, company, carrier, VPN, one-line location |
+| `ipdata_lookup` | full profile, with an optional top-level `fields` whitelist |
+| `ipdata_self` | full profile for the caller's own IP ("which network am I on") |
+| `ipdata_location` | city, region, country, continent, lat/long, postal, timezone |
+| `ipdata_timezone` | timezone block (name, UTC offset, current time) |
+| `ipdata_currency` | currency block for the IP's country |
+| `ipdata_languages` | languages spoken in the IP's country |
+| `ipdata_carrier` | mobile carrier block (name, MCC, MNC) |
+| `ipdata_asn` | ASN block (number, type, domain, name, route) |
+| `ipdata_company` | company block (organisation, domain, type) |
+| `ipdata_threat` | threat-intelligence flags (tor/proxy/attacker/abuser/cloud/bogon/mobile) |
+| `ipdata_vpn` | VPN detection block (tier-dependent) |
+| `ipdata_threat_summary` | compact fraud-triage view: threat + ASN + company + carrier + one-line location |
+| `ipdata_bulk` | 1–50 unique IPs, full profiles, in one POST to `/bulk` |
+| `ipdata_bulk_country` | same bulk call reduced to light `ip → country_code` rows |
 
 ## Auth
 

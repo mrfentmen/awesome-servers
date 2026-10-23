@@ -13,14 +13,22 @@ Third-party connector platforms exist but ship no MCP package — see
 
 | Tool | What it does |
 |---|---|
-| `nb_account_info` | credits remaining + monthly usage |
+| `nb_account_info` | raw account envelope: status, credits, monthly usage + limit |
+| `nb_account_usage` | just the credit figures |
 | `nb_verify_email` | one `/single/check`: result (valid/invalid/disposable/catchall/unknown), flags, suggested correction |
+| `nb_verify_email_strict` | same verification + a `safe / risky / dead / unknown` verdict computed here for send/don't-send decisions |
+| `nb_poe_confirm` | confirm a Proof of Email token against its original transaction |
+| `nb_job_create` | create a bulk job from a list file or folder uploaded in the NeverBounce dashboard |
+| `nb_job_start` | start a created (parsed) job |
 | `nb_job_status` | poll a bulk job |
 | `nb_job_results` | page through a finished job's per-email results |
+| `nb_job_results_summary` | one page reduced to a per-result tally + the vendor's totals |
+| `nb_job_download` | JSON or CSV download payload for a finished job |
 | `nb_job_delete` | delete a bulk job (destructive, scoped to that job) |
 
-Deliberately out of scope: `jobs/create` — the vendor requires a list file
-uploaded through their own workflow first, which no MCP server should fake.
+`nb_job_create` only accepts list sources that were already uploaded through
+the NeverBounce dashboard (the vendor's own upload workflow) - this server
+never fakes the file-upload half.
 
 ## Auth
 
