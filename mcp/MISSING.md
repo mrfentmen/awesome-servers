@@ -37,6 +37,22 @@ saintlaurent, balenciaga, fendi, bottegaveneta (all `-mcp`). Brand-owned
 sites excluded: edge bot-walls (LV Akamai 403, Hermès Cloudflare 403,
 Gucci fingerprint-drop), no public APIs.
 
+**Vendor-API sweep (built 2026-10-23, web research + vendor docs + npm check
+before each build):** `ipdata-mcp` (ipdata.co IP intelligence: geolocation,
+carrier, ASN, company, threat/VPN — free key, EU endpoint option),
+`neverbounce-mcp` (NeverBounce/ZoomInfo email verification: single/check,
+account credits, job status/results/delete — `secret_xxx` key from a Custom
+Integration App), `docraptor-mcp` (DocRaptor HTML→PDF/XLSX, Basic auth with
+the key as username, test mode default). Checked clean the same day: no
+first-party MCP servers from ipdata (org ships client libraries only),
+NeverBounce, or DocRaptor, and no npm MCP packages under those plain names.
+
+Skipped in the same sweep — covered: USPS (our own `usps-mcp` already in
+premium-mcps), Ticketmaster Discovery (@delorenj/mcp-server-ticketmaster +
+@pipeworx/mcp-ticketmaster), 17TRACK (mcp-server-17track), Geocodio
+(@pipeworx/mcp-geocodio), Ecwid (usefulapi hosted MCP), Clover + Braintree
+(multiple community servers each).
+
 ## Skipped — already a thing
 
 Do not build; covered by others or by this repo.
