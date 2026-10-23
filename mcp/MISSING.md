@@ -68,6 +68,17 @@ Fastly (@fastly/mcp official), Regulations.gov (pipeworx + @blen + cyanheads).
 OpenUV is genuinely uncovered on npm but ships only two real endpoints —
 logged as a thin target rather than padded to 10 tools.
 
+**Gaming sweep (built 2026-10-23, npm + GitHub checks before each build):**
+`vgchartz-mcp` — VGChartz game-sales data had zero MCPs on npm or GitHub
+(checked 2026-10-23; the closest community work is scrapers, not MCP servers).
+Built as a Python standalone at
+[`mrfentmen/vgchartz-mcp`](https://github.com/mrfentmen/vgchartz-mcp):
+15 tools over the gamedb search (keyword/platform/publisher/developer filters,
+platform-name→code mapping), per-game sales splits (total/NA/Europe/Japan/others),
+game details + summaries, sales comparison, plus the weekly, yearly and
+pre-order charts with their indexes. 15 unit tests and every tool smoke-tested
+live against vgchartz.com.
+
 ## Skipped — already a thing
 
 Do not build; covered by others or by this repo.
