@@ -97,6 +97,23 @@ building; npm + PyPI + GitHub checked per candidate):**
   the server spaces live queries 30s and caches 90s).
   [`mrfentmen/pskreporter-mcp`](https://github.com/mrfentmen/pskreporter-mcp)
 
+- `erddap-mcp` — ERDDAP ocean-data *protocol* server, zero MCPs for the
+  protocol itself (GitHub probed 2026-10-23: every "ocean" MCP wraps one
+  single API; none speak ERDDAP, which hundreds of servers use). 5 tools:
+  list_servers (5 curated keyless servers), keyword catalogue search,
+  dataset metadata+coverage+variable list, tabledap queries (time range,
+  lat/lon box, `!=NaN`-style constraints, dedup, row cap), griddap queries
+  (latest-grid default, stride + 20k-cell guard). 29 tests; all tools
+  live-verified against coastwatch + gliders servers (real SST grids and
+  buoy temps returned). [`mrfentmen/erddap-mcp`](https://github.com/mrfentmen/erddap-mcp)
+
+Checked and skipped in the 2026-10-23 second pass (already covered):
+NOAA CO-OPS tides (`cyanheads/noaa-marine-mcp-server`), aviation METAR/TAF
+(5+ servers incl. cyanheads), OpenAlex (6+ servers), GWAS Catalog (official
+`gwas-catalog/mcp`), USGS streamflow (`pipeworx-io/mcp-usgswater`),
+Common Crawl CDX (`arturseo-geo/mcp-common-crawl`, SEO-angle). ERDDAP was
+the last unclaimed keyless ocean-data layer.
+
 Checked and skipped same day (already covered): NOAA SWPC space weather
 (`space-weather-mcp` on npm), NDBC ocean buoys (`ndbc-buoy-mcp` npm +
 `ndbc-mcp` PyPI), 7Timer astro weather (`@pipeworx/mcp-7timer`), OONI
