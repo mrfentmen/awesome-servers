@@ -182,7 +182,6 @@ export function createServer() {
         inputSchema: z.object({ limit: z.string().describe("How many values per facet (default 12, max 40).").optional(), sample: z.string().describe("How many listings to sample (default 400, max 2000).").optional(), facet: z.enum(["condition", "price_band", "category", "country"]).default("condition").describe("Which facet to count.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: tag_facets ----
         try {
             return text(await tagFacets(args));
         }
@@ -196,7 +195,6 @@ export function createServer() {
         inputSchema: z.object({ limit: z.string().describe("How many recent listings to print (default 10, max 30).").optional(), sample: z.string().describe("How many listings to sample (default 400, max 2000).").optional(), days: z.string().describe("Window in days (default 30, max 365).").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: listing_velocity ----
         try {
             return text(await listingVelocity(args));
         }

@@ -143,7 +143,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: pool_ohlc ----
         try {
             return text(await poolOhlc(args));
         }
@@ -161,7 +160,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: pool_trades ----
         try {
             return text(await poolTrades(args));
         }

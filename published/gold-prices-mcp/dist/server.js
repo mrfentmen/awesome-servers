@@ -168,7 +168,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: tokenised_metal ----
         try {
             return text(await tokenisedMetal(args));
         }
@@ -185,7 +184,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: futures_curve ----
         try {
             return text(await futuresCurve(args));
         }

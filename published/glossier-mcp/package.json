@@ -1,6 +1,6 @@
 {
   "name": "glossier-mcp",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Query the Glossier catalog (glossier.com, NYC): search beauty and skincare, newest arrivals, enriched product details (shades/sizes), price stats, below-median deals, and category counts.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/glossier-mcp",

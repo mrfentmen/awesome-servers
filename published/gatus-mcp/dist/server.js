@@ -158,7 +158,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: resolver_agreement ----
         try {
             return text(await resolverAgreement(args));
         }
@@ -176,7 +175,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: port_check ----
         try {
             return text(await tcpPortCheck(args));
         }

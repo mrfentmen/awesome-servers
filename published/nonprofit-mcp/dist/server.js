@@ -145,7 +145,6 @@ export function createServer() {
         inputSchema: z.object({ state: z.string().describe("Two-letter state code, e.g. NY."), limit: z.number().int().min(1).max(40).default(12).describe("Codes to print (default 12, max 40)."), pages: z.number().int().min(1).max(5).default(2).describe("Result pages to read (default 2, max 5).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: state_sector_census ----
         try {
             return text(await stateSectorCensus(args));
         }
@@ -159,7 +158,6 @@ export function createServer() {
         inputSchema: z.object({ eins: z.string().describe("Up to twelve EINs, e.g. '131660611 131632409'."), limit: z.number().int().min(1).max(12).default(6).describe("Rows to print (default 6, max 12).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: filing_recency_audit ----
         try {
             return text(await filingRecencyAudit(args));
         }

@@ -20,22 +20,3 @@ Query the GitHub REST API (free token; set GITHUB_TOKEN, Bearer): profile, repos
 ## Source
 
 [github-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/github-mcp)
-
-<!-- paywall -->
-## Premium tools
-
-These tools need a license key:
-
-* `repo_releases`
-* `repo_contributors`
-
-Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-github-mcp and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
-```
-
-The key is checked against MCP Marketplace, cached for 24 hours, and keeps
-working offline once one check has succeeded. Every other tool on this server
-stays free.
-<!-- /paywall -->

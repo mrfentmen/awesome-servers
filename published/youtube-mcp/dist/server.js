@@ -176,7 +176,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: channel_feed ----
         try {
             return text(await channelFeed(args));
         }

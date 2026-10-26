@@ -171,7 +171,6 @@ export function createServer() {
         inputSchema: z.object({ isbn: z.string().describe("ISBN-10 or ISBN-13, dashes are fine.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: read_availability ----
         try {
             return text(await readAvailability(args));
         }
@@ -185,7 +184,6 @@ export function createServer() {
         inputSchema: z.object({ ocaid: z.string().describe("Internet Archive item id, e.g. fantasticmrfoxpu00roal. read_availability lists them.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: scanned_copy_report ----
         try {
             return text(await scannedCopyReport(args));
         }

@@ -182,7 +182,6 @@ export function createServer() {
         inputSchema: z.object({ sample: z.string().describe("How many listings to sample (default 400, max 2000).").optional(), types: z.string().describe("Comma separated product types to keep, e.g. 'bags,scarves'. No filter by default.").optional(), limit: z.string().describe("How many combinations to print (default 12, max 30).").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: condition_matrix ----
         try {
             return text(await conditionMatrix(args));
         }
@@ -196,7 +195,6 @@ export function createServer() {
         inputSchema: z.object({ sample: z.string().describe("How many listings to sample (default 400, max 2000).").optional(), bands: z.string().describe("Band width in dollars (default 500, max 5000).").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: price_distribution ----
         try {
             return text(await priceDistribution(args));
         }

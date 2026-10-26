@@ -173,7 +173,6 @@ export function createServer() {
         inputSchema: z.object({ topic: z.string().describe("Unused, kept for a uniform signature.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: ntfy_server_capabilities ----
         try {
             return text(await ntfyServerCapabilities(args));
         }
@@ -187,7 +186,6 @@ export function createServer() {
         inputSchema: z.object({ topic: z.string().describe("Topic name, e.g. alerts."), hours: z.number().int().min(1).max(720).default(24).describe("How far back to read (default 24 hours, max 720)."), limit: z.number().int().min(1).max(30).default(10).describe("Events to print (default 10, max 30).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: topic_message_history ----
         try {
             return text(await topicMessageHistory(args));
         }

@@ -17,22 +17,3 @@ Query the Glossier catalog (glossier.com, NYC): search beauty and skincare, newe
 ## Source
 
 [glossier-mcp](https://github.com/mrfentmen/awesome-mcps/tree/main/servers/glossier-mcp)
-
-<!-- paywall -->
-## Premium tools
-
-These tools need a license key:
-
-* `catalog_sitemap`
-* `collection_detail`
-
-Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-glossier-mcp and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
-```
-
-The key is checked against MCP Marketplace, cached for 24 hours, and keeps
-working offline once one check has succeeded. Every other tool on this server
-stays free.
-<!-- /paywall -->

@@ -185,7 +185,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: watch_spec_matrix ----
         try {
             return text(await watchSpecMatrix(args));
         }
@@ -201,7 +200,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: reference_lookup ----
         try {
             return text(await referenceLookup(args));
         }

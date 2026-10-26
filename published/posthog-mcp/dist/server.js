@@ -166,7 +166,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: certificate_transparency ----
         try {
             return text(await certificateTransparency(args));
         }
@@ -183,7 +182,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: markup_audit ----
         try {
             return text(await markupAudit(args));
         }

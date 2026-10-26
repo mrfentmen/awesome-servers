@@ -172,7 +172,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: message_limit_audit ----
         try {
             return text(await messageLimitAudit(args));
         }
@@ -186,7 +185,6 @@ export function createServer() {
         inputSchema: z.object({ keyboard: z.string().describe("The inline keyboard as JSON, e.g. [[{\"text\":\"Yes\",\"callback_data\":\"y\"}]].") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: inline_keyboard_audit ----
         try {
             return text(await inlineKeyboardAudit(args));
         }

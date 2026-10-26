@@ -173,7 +173,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: expiry_ladder ----
         try {
             return text(await expiryLadder({ limit: args.limit, withinDays: args.within_days }));
         }
@@ -190,7 +189,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: spread_analysis ----
         try {
             return text(await spreadAnalysis({ limit: args.limit, minSpreadCents: args.min_spread_cents }));
         }

@@ -187,7 +187,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: cross_market_match ----
         try {
             return text(await crossMarketMatch(args));
         }
@@ -205,7 +204,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: price_ladder ----
         try {
             return text(await priceLadder(args));
         }

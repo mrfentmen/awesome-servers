@@ -161,7 +161,6 @@ export function createServer() {
         inputSchema: z.object({ name: z.string().describe("Company name to look up, e.g. Stripe"), limit: z.number().int().min(1).max(20).default(5).describe("How many records to print (default 5, max 20).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: legal_entity_lookup ----
         try {
             return text(await legalEntityLookup(args));
         }
@@ -175,7 +174,6 @@ export function createServer() {
         inputSchema: z.object({ name: z.string().describe("Company name or ticker, e.g. Apple or AAPL"), limit: z.number().int().min(1).max(30).default(5).describe("How many filings to print (default 5, max 30).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: sec_company ----
         try {
             return text(await secCompany(args));
         }

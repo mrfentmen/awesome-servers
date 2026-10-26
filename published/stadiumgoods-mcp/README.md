@@ -17,21 +17,3 @@ Query the Stadium Goods catalog (stadiumgoods.com, NYC): search sneakers and str
 ## Source
 
 [stadiumgoods-mcp](https://github.com/mrfentmen/awesome-mcps/tree/main/servers/stadiumgoods-mcp)
-
-<!-- paywall -->
-## Premium tools
-
-These tools need a license key:
-
-* `size_availability`
-
-Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-stadiumgoods-mcp and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
-```
-
-The key is checked against MCP Marketplace, cached for 24 hours, and keeps
-working offline once one check has succeeded. Every other tool on this server
-stays free.
-<!-- /paywall -->

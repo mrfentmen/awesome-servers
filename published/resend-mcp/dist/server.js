@@ -183,7 +183,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: build_mime_message ----
         try {
             return text(await buildMimeMessage(args));
         }
@@ -201,7 +200,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: dkim_canonicalisation ----
         try {
             return text(await dkimCanonicalization(args));
         }

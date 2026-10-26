@@ -140,7 +140,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: gog_news ----
         try {
             return text(await gogNews(args));
         }
@@ -157,7 +156,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: steam_reception ----
         try {
             return text(await steamReception(args));
         }

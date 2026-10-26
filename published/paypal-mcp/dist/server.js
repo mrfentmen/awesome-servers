@@ -161,7 +161,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: payout_market_profile ----
         try {
             return text(await payoutMarketProfile(args));
         }
@@ -195,7 +194,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: payout_market_scan ----
         try {
             return text(await payoutMarketScan(args));
         }

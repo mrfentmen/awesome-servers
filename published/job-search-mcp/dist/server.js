@@ -170,7 +170,6 @@ export function createServer() {
         inputSchema: z.object({ month: z.string().describe("Month or year fragment of the thread, e.g. 'March 2018'. The biggest thread by default.").optional(), limit: z.number().int().min(1).max(40).default(15).describe("How many postings to print (default 15, max 40)."), comments: z.number().int().min(10).max(200).default(60).describe("How many top level comments to read (default 60, max 200).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: hiring_thread ----
         try {
             return text(await hiringThread(args));
         }
@@ -184,7 +183,6 @@ export function createServer() {
         inputSchema: z.object({ query: z.string().describe("Restrict the harvest to these keywords.").optional(), limit: z.number().int().min(1).max(30).default(12).describe("How many families to print (default 12, max 30)."), sample: z.number().int().min(10).max(300).default(120).describe("How many postings per board to pull (default 120, max 300)."), boards: z.string().describe("Comma separated board ids, e.g. remotive,arbeitnow.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: role_taxonomy ----
         try {
             return text(await roleTaxonomy(args));
         }

@@ -166,7 +166,6 @@ export function createServer() {
         inputSchema: z.object({ hexcode: z.string().describe("Codepoints in hex, e.g. 1F44D, or a full sequence like 1F469 200D 1F4BB.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: unicode_reference ----
         try {
             return text(await unicodeReference(args));
         }
@@ -180,7 +179,6 @@ export function createServer() {
         inputSchema: z.object({ limit: z.number().describe("How many of the newest additions to name, 3-12.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: unicode_version_census ----
         try {
             return text(await unicodeVersionCensus(args));
         }

@@ -172,7 +172,6 @@ export function createServer() {
         inputSchema: z.object({ country: z.string().describe("Two-letter country code, e.g. AT."), year: z.string().describe("Four-digit year, e.g. 2026.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: working_day_calendar ----
         try {
             return text(await workingDayCalendar(args));
         }
@@ -186,7 +185,6 @@ export function createServer() {
         inputSchema: z.object({ country: z.string().describe("Two-letter country code, e.g. DE."), year: z.string().describe("Four-digit year, e.g. 2026.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: holiday_observance_audit ----
         try {
             return text(await holidayObservanceAudit(args));
         }

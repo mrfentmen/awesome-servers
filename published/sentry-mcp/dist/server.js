@@ -171,7 +171,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: release_feed ----
         try {
             return text(await releaseFeed(args));
         }
@@ -188,7 +187,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: dependency_drift ----
         try {
             return text(await dependencyDrift(args));
         }

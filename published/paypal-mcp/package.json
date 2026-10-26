@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/paypal-mcp",
-  "version": "1.1.2",
+  "version": "1.1.4",
   "description": "Query PayPal sandbox (set PAYPAL_SANDBOX_CLIENT_ID + PAYPAL_SANDBOX_SECRET, OAuth auto-token): orders, captures, billing plans. Sandbox only.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/paypal-mcp",

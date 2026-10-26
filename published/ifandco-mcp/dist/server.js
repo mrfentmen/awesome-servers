@@ -156,7 +156,6 @@ export function createServer() {
         inputSchema: z.object({ sample: z.string().describe("How many products to sample (default 400, max 2000).").optional(), limit: z.string().describe("How many materials to print (default 16, max 30).").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: material_census ----
         try {
             return text(await materialCensus(args));
         }
@@ -170,7 +169,6 @@ export function createServer() {
         inputSchema: z.object({ sample: z.string().describe("How many products to sample (default 400, max 2000).").optional(), limit: z.string().describe("How many personalisation types to print (default 10, max 20).").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: personalisation_census ----
         try {
             return text(await personalisationCensus(args));
         }

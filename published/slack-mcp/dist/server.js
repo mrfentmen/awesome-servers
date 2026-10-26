@@ -172,7 +172,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: service_incident_history ----
         try {
             return text(await serviceIncidentHistory(args));
         }

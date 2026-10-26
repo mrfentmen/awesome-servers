@@ -185,7 +185,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: size_matrix ----
         try {
             return text(await sizeMatrix({ sample: args.sample, productType: args.product_type }));
         }
@@ -202,7 +201,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: flag_report ----
         try {
             return text(await flagReport({ sample: args.sample, limit: args.limit }));
         }

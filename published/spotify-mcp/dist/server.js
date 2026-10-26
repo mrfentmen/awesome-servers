@@ -170,7 +170,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: artist_identity ----
         try {
             return text(await artistIdentity(args));
         }

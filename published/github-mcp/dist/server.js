@@ -186,7 +186,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: repo_releases ----
         try {
             return text(await repoReleases(args));
         }
@@ -204,7 +203,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: repo_contributors ----
         try {
             return text(await repoContributors(args));
         }

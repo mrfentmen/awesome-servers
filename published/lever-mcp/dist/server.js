@@ -150,7 +150,6 @@ export function createServer() {
         inputSchema: z.object({ company: z.string().describe("Lever company slug, e.g. leverdemo"), days: z.number().int().min(1).max(3650).default(90).describe("Window in days (default 90)."), limit: z.number().int().min(1).max(40).default(10).describe("How many openings to print (default 10, max 40).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: hiring_velocity ----
         try {
             return text(await hiringVelocity(args));
         }
@@ -164,7 +163,6 @@ export function createServer() {
         inputSchema: z.object({ companies: z.array(z.string()).describe("Lever company slugs, e.g. ['leverdemo','ashby']."), limit: z.number().int().min(1).max(25).default(5).describe("Reserved for the per-company detail rows.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: company_comparison ----
         try {
             return text(await companyComparison(args));
         }

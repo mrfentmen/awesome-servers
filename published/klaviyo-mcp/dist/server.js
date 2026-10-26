@@ -151,7 +151,6 @@ export function createServer() {
         inputSchema: z.object({ email: z.string().describe("Address or domain to check, e.g. throwaway@mailinator.com"), related: z.array(z.string()).describe("Other addresses or domains to check in the same call.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: disposable_check ----
         try {
             return text(await disposableCheck(args));
         }
@@ -165,7 +164,6 @@ export function createServer() {
         inputSchema: z.object({ domain: z.string().describe("Sending domain, e.g. shop.example.com"), dkim_selectors: z.array(z.string()).describe("DKIM selectors to check, e.g. ['dkim','google'].") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: sending_readiness ----
         try {
             return text(await sendingReadiness(args));
         }

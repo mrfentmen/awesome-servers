@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/supabase-mcp",
-  "version": "1.1.2",
+  "version": "1.1.4",
   "description": "Query your Supabase project (set SUPABASE_URL + SUPABASE_SERVICE_KEY, apikey header): table rows, auth users, RPC. Endpoints per official docs.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/supabase-mcp",

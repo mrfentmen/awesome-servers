@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { all, convert, errorMessage, marketOverview, metalRatios, portfolioValue, price, symbols, meltValue, premiumCheck, priceTrend, tokenisedMetal, futuresCurve } from "./api.js"
-import { premiumRequired } from "./license.js"
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 
@@ -181,10 +180,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: tokenised_metal ----
-      const paywallMessage = await premiumRequired("tokenised_metal")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try { return text(await tokenisedMetal(args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )
@@ -201,10 +196,6 @@ export function createServer(): McpServer {
       annotations: READ_ONLY,
     },
     async (args) => {
-      // ---- paywall: futures_curve ----
-      const paywallMessage = await premiumRequired("futures_curve")
-      if (paywallMessage) return { content: [{ type: "text" as const, text: paywallMessage }], isError: true }
-      // ---- paywall: end ----
       try { return text(await futuresCurve(args)) } catch (e) { return textError(errorMessage(e)) }
     }
   )

@@ -18,22 +18,3 @@ Query the Open Library (openlibrary.org, keyless): full-text book search, work d
 ## Source
 
 [openlibrary-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/openlibrary-mcp)
-
-<!-- paywall -->
-## Premium tools
-
-These tools need a license key:
-
-* `read_availability`
-* `scanned_copy_report`
-
-Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-openlibrary-mcp and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
-```
-
-The key is checked against MCP Marketplace, cached for 24 hours, and keeps
-working offline once one check has succeeded. Every other tool on this server
-stays free.
-<!-- /paywall -->

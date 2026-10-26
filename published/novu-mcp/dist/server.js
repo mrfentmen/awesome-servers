@@ -153,7 +153,6 @@ export function createServer() {
         inputSchema: z.object({ limit: z.number().int().min(1).max(30).default(12).describe("Operations to print (default 12, max 30)."), filter: z.string().describe("Only operations whose path or operationId contains this text.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: notification_api_audit ----
         try {
             return text(await notificationApiAudit(args));
         }
@@ -167,7 +166,6 @@ export function createServer() {
         inputSchema: z.object({ package: z.string().describe("npm package name, e.g. @novu/node or @novu/api."), limit: z.number().int().min(1).max(20).default(6).describe("Recent releases to print (default 6, max 20).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: novu_sdk_release_check ----
         try {
             return text(await novuSdkReleaseCheck(args));
         }

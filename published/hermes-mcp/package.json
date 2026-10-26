@@ -1,6 +1,6 @@
 {
   "name": "hermes-mcp",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Herm\u00e8s resale listings from Fashionphile and Rebag. Keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/hermes-mcp",

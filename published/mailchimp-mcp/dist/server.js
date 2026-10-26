@@ -163,7 +163,6 @@ export function createServer() {
         inputSchema: z.object({ addresses: z.string().describe("Addresses, one per line or comma-separated."), checkDns: z.boolean().default(true).describe("Look up MX for each distinct domain (default true).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: audience_hygiene_audit ----
         try {
             return text(await audienceHygieneAudit(args));
         }
@@ -177,7 +176,6 @@ export function createServer() {
         inputSchema: z.object({ html: z.string().describe("The campaign HTML to scan."), limit: z.number().int().min(1).max(40).default(10).describe("How many link hosts to list (default 10, max 40).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: email_compliance_scan ----
         try {
             return text(await emailComplianceScan(args));
         }

@@ -207,7 +207,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: distractor_quality ----
         try {
             return text(await distractorQuality(args));
         }
@@ -225,7 +224,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: quiz_exploitability ----
         try {
             return text(await quizExploitability(args));
         }

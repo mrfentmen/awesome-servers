@@ -199,7 +199,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: solar_variability ----
         try {
             return text(await solarVariability(args));
         }
@@ -216,7 +215,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: diurnal_profile ----
         try {
             return text(await diurnalProfile(args));
         }

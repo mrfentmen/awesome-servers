@@ -180,7 +180,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: incident_timeline ----
         try {
             return text(await incidentTimeline(args));
         }

@@ -1,6 +1,6 @@
 {
   "name": "gold-prices-mcp",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Gold and metal prices from gold-api.com (merged).",
   "type": "module",
   "main": "dist/index.js",

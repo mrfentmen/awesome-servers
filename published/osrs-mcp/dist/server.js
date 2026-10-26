@@ -238,7 +238,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: item_lore ----
         try {
             return text(await itemLore(args));
         }

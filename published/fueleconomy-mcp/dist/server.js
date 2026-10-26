@@ -161,7 +161,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: model_recalls ----
         try {
             return text(await modelRecalls(args));
         }
@@ -180,7 +179,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: model_complaints ----
         try {
             return text(await modelComplaints(args));
         }

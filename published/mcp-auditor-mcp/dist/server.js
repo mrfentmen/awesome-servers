@@ -215,7 +215,6 @@ export function createServer() {
         inputSchema: z.object({ url: z.string().describe("https:// URL of the OpenAPI or Swagger JSON document."), limit: z.number().int().min(1).max(30).default(12).describe("Operations to print (default 12, max 30).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: openapi_spec_audit ----
         try {
             return text(await openapiSpecAudit(args));
         }
@@ -229,7 +228,6 @@ export function createServer() {
         inputSchema: z.object({ urls: z.string().describe("Up to ten endpoint URLs, separated by spaces or commas."), method: z.string().describe("GET or HEAD (default GET).").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: endpoint_latency_matrix ----
         try {
             return text(await endpointLatencyMatrix(args));
         }

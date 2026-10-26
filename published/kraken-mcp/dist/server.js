@@ -160,7 +160,6 @@ export function createServer() {
         inputSchema: z.object({ symbol: z.string().describe("Asset symbol, e.g. BTC, ETH or SOL") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: cross_exchange_price ----
         try {
             return text(await crossExchangePrice(args));
         }
@@ -174,7 +173,6 @@ export function createServer() {
         inputSchema: z.object({ quote: z.string().describe("Quote asset filter, e.g. USD.").optional(), limit: z.number().int().min(1).max(40).default(15).describe("How many pairs to print (default 15, max 40)."), min_volume: z.number().min(0).default(100000).describe("Only pairs with at least this 24 hour volume (default 100,000).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: liquidity_map ----
         try {
             return text(await liquidityMap(args));
         }

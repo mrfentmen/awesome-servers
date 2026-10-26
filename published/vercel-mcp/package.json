@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/vercel-mcp",
-  "version": "1.1.2",
+  "version": "1.1.4",
   "description": "Query the Vercel API (token; set VERCEL_TOKEN, Bearer): projects, project details, deployments.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/vercel-mcp",

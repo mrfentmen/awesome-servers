@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/fueleconomy-mcp",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "US EPA car MPG, CO2 and pump prices - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/fueleconomy-mcp",

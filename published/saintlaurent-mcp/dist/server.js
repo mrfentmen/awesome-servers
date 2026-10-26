@@ -185,7 +185,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: line_matrix ----
         try {
             return text(await lineMatrix(args));
         }
@@ -202,7 +201,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: material_census ----
         try {
             return text(await materialCensus(args));
         }

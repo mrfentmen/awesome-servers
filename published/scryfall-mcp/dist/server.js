@@ -199,7 +199,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: set_profile ----
         try {
             return text(await setProfile(args));
         }
@@ -216,7 +215,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: keyword_index ----
         try {
             return text(await keywordIndex(args));
         }

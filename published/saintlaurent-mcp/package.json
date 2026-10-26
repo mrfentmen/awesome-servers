@@ -1,6 +1,6 @@
 {
   "name": "saintlaurent-mcp",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Saint Laurent resale listings from Fashionphile and Rebag. Keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/saintlaurent-mcp",

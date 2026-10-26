@@ -1,6 +1,6 @@
 {
   "name": "gatus-mcp",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Endpoint conditions, latency and TLS checks - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/gatus-mcp",

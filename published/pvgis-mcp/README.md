@@ -20,22 +20,3 @@ Solar yield, irradiation and system sizing - no API key.
 No setup. Solar data comes from the public PVGIS API of the EU Joint Research Centre.
 
 Part of [awesome-mcps](https://github.com/mrfentmen/awesome-mcps).
-
-<!-- paywall -->
-## Premium tools
-
-These tools need a license key:
-
-* `solar_variability`
-* `diurnal_profile`
-
-Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-pvgis-mcp and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
-```
-
-The key is checked against MCP Marketplace, cached for 24 hours, and keeps
-working offline once one check has succeeded. Every other tool on this server
-stays free.
-<!-- /paywall -->

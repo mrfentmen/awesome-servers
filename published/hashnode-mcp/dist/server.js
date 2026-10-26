@@ -166,7 +166,6 @@ export function createServer() {
         inputSchema: z.object({ username: z.string().describe("Hashnode username, e.g. sandeep") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: user_profile ----
         try {
             return text(await userProfile(args.username));
         }
@@ -180,7 +179,6 @@ export function createServer() {
         inputSchema: z.object({ username: z.string().describe("Hashnode username, e.g. sandeep"), limit: z.number().int().min(1).max(20).default(8).describe("How many posts to report (default 8, max 20).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: author_engagement ----
         try {
             return text(await authorEngagement(args));
         }

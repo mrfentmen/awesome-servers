@@ -132,7 +132,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: apple_podcast_search ----
         try {
             return text(await applePodcastSearch(args));
         }
@@ -149,7 +148,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: podcast_feed_cadence ----
         try {
             return text(await podcastFeedCadence(args));
         }

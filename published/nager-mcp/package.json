@@ -1,6 +1,6 @@
 {
   "name": "nager-mcp",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Worldwide public holidays and long weekends - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nager-mcp",

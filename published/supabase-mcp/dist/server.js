@@ -201,7 +201,6 @@ export function createServer() {
         inputSchema: z.object({}),
         annotations: READ_ONLY,
     }, async (_args) => {
-        // ---- paywall: platform_status ----
         try {
             return text(await platformStatus(_args));
         }
@@ -215,7 +214,6 @@ export function createServer() {
         inputSchema: z.object({}),
         annotations: READ_ONLY,
     }, async (_args) => {
-        // ---- paywall: postgres_version_watch ----
         try {
             return text(await postgresVersionWatch(_args));
         }

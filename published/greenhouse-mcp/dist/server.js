@@ -156,7 +156,6 @@ export function createServer() {
         inputSchema: z.object({ board: z.string().describe("Board token, e.g. figma"), days: z.number().describe("Window in days (default 30, max 365).").optional(), limit: z.number().describe("How many openings to print (default 10, max 30).").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: hiring_velocity ----
         try {
             return text(await hiringVelocity(args));
         }
@@ -170,7 +169,6 @@ export function createServer() {
         inputSchema: z.object({ company: z.string().describe("Ashby job board name, e.g. Ramp"), query: z.string().describe("Role or team to match, e.g. 'engineer'"), limit: z.number().describe("How many matches to print (default 5, max 20).").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: ashby_posting ----
         try {
             return text(await ashbyPosting(args));
         }

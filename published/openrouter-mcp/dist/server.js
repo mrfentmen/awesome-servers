@@ -164,7 +164,6 @@ export function createServer() {
         inputSchema: z.object({}),
         annotations: READ_ONLY,
     }, async (_args) => {
-        // ---- paywall: model_economics_matrix ----
         try {
             return text(await modelEconomicsMatrix(_args));
         }
@@ -178,7 +177,6 @@ export function createServer() {
         inputSchema: z.object({ limit: z.number().describe("How many expiring models to name, 1-10.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: deprecation_watch ----
         try {
             return text(await deprecationWatch(args));
         }

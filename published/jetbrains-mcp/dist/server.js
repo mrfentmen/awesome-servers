@@ -170,7 +170,6 @@ export function createServer() {
         inputSchema: z.object({ product: z.string().describe("Product code, e.g. IU, PY, WS or IC") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: product_release ----
         try {
             return text(await productRelease(args));
         }
@@ -184,7 +183,6 @@ export function createServer() {
         inputSchema: z.object({ id: z.string().describe("Numeric plugin id, e.g. 9525"), limit: z.number().int().min(1).max(20).default(6).describe("How many releases to report (default 6, max 20).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: plugin_compatibility ----
         try {
             return text(await pluginCompatibility(args));
         }

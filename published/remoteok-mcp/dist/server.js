@@ -141,7 +141,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: market_census ----
         try {
             return text(await marketCensus(args));
         }
@@ -158,7 +157,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: salary_by_tag ----
         try {
             return text(await salaryByTag(args));
         }

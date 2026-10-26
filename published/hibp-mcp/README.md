@@ -19,22 +19,3 @@ Data breach catalogue and password leak checks - no API key.
 No setup. The catalogue and the password range API are public, so there is no key or account.
 
 Part of [awesome-mcps](https://github.com/mrfentmen/awesome-mcps).
-
-<!-- paywall -->
-## Premium tools
-
-These tools need a license key:
-
-* `package_vulnerabilities`
-* `cve_search`
-
-Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-hibp-mcp and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
-```
-
-The key is checked against MCP Marketplace, cached for 24 hours, and keeps
-working offline once one check has succeeded. Every other tool on this server
-stays free.
-<!-- /paywall -->

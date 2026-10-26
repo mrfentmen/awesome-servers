@@ -177,7 +177,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: schema_lint ----
         try {
             return text(await schemaLint(args));
         }

@@ -167,7 +167,6 @@ export function createServer() {
         inputSchema: z.object({ url: z.string().describe("Public Notion page URL, e.g. https://www.notion.so/workspace/Page-Title-83715d7703ee4b8699b4ba7b334859b6.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: notion_page_metadata ----
         try {
             return text(await notionPageMetadata(args));
         }
@@ -181,7 +180,6 @@ export function createServer() {
         inputSchema: z.object({ ids: z.string().describe("Notion ids or URLs, separated by spaces or commas.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: notion_id_audit ----
         try {
             return text(await notionIdAudit(args));
         }

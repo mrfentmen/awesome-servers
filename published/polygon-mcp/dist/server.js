@@ -201,7 +201,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: sec_filings ----
         try {
             return text(await secFilings(args));
         }
@@ -218,7 +217,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: sec_revenue ----
         try {
             return text(await secRevenue(args));
         }

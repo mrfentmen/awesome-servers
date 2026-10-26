@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/polygon-mcp",
-  "version": "1.1.2",
+  "version": "1.1.4",
   "description": "Query Polygon.io (free key; set POLYGON_API_KEY, query param): tickers, ticker details, daily aggregates.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/polygon-mcp",

@@ -159,7 +159,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: catalog_sitemap ----
         try {
             return text(await catalogSitemap(args.limit, args.days));
         }
@@ -175,7 +174,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: collection_detail ----
         try {
             return text(await collectionDetail(args.handle));
         }

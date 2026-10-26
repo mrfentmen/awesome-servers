@@ -154,7 +154,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: service_status ----
         try {
             return text(await serviceStatus(args));
         }
@@ -172,7 +171,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: domain_certificates ----
         try {
             return text(await domainCertificates(args));
         }

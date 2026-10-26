@@ -149,7 +149,6 @@ export function createServer() {
         inputSchema: z.object({ package: z.string().describe("Package name, e.g. lodash"), version: z.string().describe("Version to check. Omit to see every advisory against the name.").optional(), ecosystem: z.string().describe("npm, pypi, cargo, go, maven, composer, nuget, rubygems or packagist. Defaults to npm.").optional(), limit: z.number().int().min(1).max(30).default(10).describe("How many advisories to print (default 10, max 30).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: package_vulnerabilities ----
         try {
             return text(await packageVulnerabilities(args));
         }
@@ -163,7 +162,6 @@ export function createServer() {
         inputSchema: z.object({ query: z.string().describe("Keyword, or a CVE id such as CVE-2021-44228"), limit: z.number().int().min(1).max(20).default(5).describe("How many CVEs to print (default 5, max 20).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: cve_search ----
         try {
             return text(await cveSearch(args));
         }

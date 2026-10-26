@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/hashnode-mcp",
-  "version": "1.1.2",
+  "version": "1.1.4",
   "description": "Query Hashnode GraphQL (token; set HASHNODE_TOKEN, raw Authorization; uses gql-beta endpoint): profile, publication posts, user.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/hashnode-mcp",

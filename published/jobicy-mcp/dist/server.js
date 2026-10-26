@@ -166,7 +166,6 @@ export function createServer() {
         inputSchema: z.object({ geo: z.string().describe("Country code filter, e.g. USA.").optional(), industry: z.string().describe("Industry filter.").optional(), tag: z.string().describe("Tag filter.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: feed_status ----
         try {
             return text(await feedStatus(args));
         }
@@ -180,7 +179,6 @@ export function createServer() {
         inputSchema: z.object({ count: z.number().int().min(1).max(50).default(50).describe("How many postings to pull (default 50, the API maximum)."), geo: z.string().describe("Country code filter.").optional(), industry: z.string().describe("Industry filter.").optional(), tag: z.string().describe("Tag filter.").optional(), limit: z.number().int().min(1).max(20).default(5).describe("How many recent postings to list (default 5).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: posting_freshness ----
         try {
             return text(await postingFreshness(args));
         }

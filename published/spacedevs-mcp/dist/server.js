@@ -204,7 +204,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: solar_flux_profile ----
         try {
             return text(await solarFluxProfile(args));
         }

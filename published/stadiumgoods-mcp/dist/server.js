@@ -178,7 +178,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: size_availability ----
         try {
             return text(await sizeAvailability(args));
         }

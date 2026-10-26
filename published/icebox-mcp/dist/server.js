@@ -159,7 +159,6 @@ export function createServer() {
         inputSchema: z.object({ axis: z.string().describe("Axis name filter, e.g. 'Diamond Type'. All axes by default.").optional(), limit: z.string().describe("How many values per axis to print (default 10, max 30).").optional(), sample: z.string().describe("How many products to sample (default 400, max 2000).").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: option_price_matrix ----
         try {
             return text(await optionPriceMatrix(args));
         }
@@ -173,7 +172,6 @@ export function createServer() {
         inputSchema: z.object({ limit: z.string().describe("How many of the most recently edited products to print (default 12, max 40).").optional(), days: z.string().describe("Count products edited in the last N days (default 30, max 3650).").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: catalog_sitemap ----
         try {
             return text(await catalogSitemap(args));
         }

@@ -155,7 +155,6 @@ export function createServer() {
         inputSchema: z.object({ count: z.number().int().min(1).max(30).default(12).describe("How many jokes to measure (default 12, max 30)."), type: z.string().describe("Type filter, e.g. twopart, chain, programming, dark. No filter by default.").optional(), flags: z.string().describe("Comma separated flags to request, e.g. explicit,sexist.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: joke_length_profile ----
         try {
             return text(await jokeLengthProfile(args));
         }
@@ -169,7 +168,6 @@ export function createServer() {
         inputSchema: z.object({ samples: z.number().int().min(2).max(30).default(8).describe("How many times to ask per type (default 8, max 30).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: joke_type_coverage ----
         try {
             return text(await jokeTypeCoverage(args));
         }

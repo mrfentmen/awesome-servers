@@ -19,22 +19,3 @@ Query Freshdesk (set FRESHDESK_DOMAIN + FRESHDESK_API_KEY, key:X Basic): tickets
 ## Source
 
 [freshdesk-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/freshdesk-mcp)
-
-<!-- paywall -->
-## Premium tools
-
-These tools need a license key:
-
-* `service_status`
-* `domain_certificates`
-
-Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-freshdesk-mcp and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
-```
-
-The key is checked against MCP Marketplace, cached for 24 hours, and keeps
-working offline once one check has succeeded. Every other tool on this server
-stays free.
-<!-- /paywall -->

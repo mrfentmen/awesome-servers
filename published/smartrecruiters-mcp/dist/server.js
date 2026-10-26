@@ -165,7 +165,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: posting_age ----
         try {
             return text(await postingAge(args));
         }

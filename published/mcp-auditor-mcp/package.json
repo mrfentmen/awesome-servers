@@ -1,6 +1,6 @@
 {
   "name": "mcp-auditor-mcp",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Audit MCP servers and the APIs behind them - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/mcp-auditor-mcp",

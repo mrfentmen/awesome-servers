@@ -168,7 +168,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: file_variables ----
         try {
             return text(await fileVariables(args));
         }
@@ -186,7 +185,6 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: component_sets ----
         try {
             return text(await componentSets(args));
         }
