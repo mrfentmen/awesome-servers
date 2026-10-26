@@ -1,0 +1,43 @@
+{
+  "name": "posthog-mcp",
+  "version": "1.1.1",
+  "description": "Query PostHog (personal key; set POSTHOG_PERSONAL_API_KEY, Bearer; optional POSTHOG_BASE_URL us/eu): profile, projects, insights.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/posthog-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
+  },
+  "bin": {
+    "posthog-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "posthog",
+    "analytics",
+    "product",
+    "insights"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

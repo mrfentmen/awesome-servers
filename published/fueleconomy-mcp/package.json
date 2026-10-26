@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/fueleconomy-mcp",
+  "version": "1.0.1",
+  "description": "US EPA car MPG, CO2 and pump prices - no API key.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/fueleconomy-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
+  },
+  "bin": {
+    "fueleconomy-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "keywords": [
+    "cars",
+    "fuel",
+    "epa",
+    "mpg",
+    "emissions",
+    "mcp"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

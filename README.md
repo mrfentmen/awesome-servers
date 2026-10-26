@@ -1,12 +1,24 @@
 # Premium MCPs (private)
 
-> npm distribution discontinued — all packages deprecated on the public registry. Install from this repo or the private registry. Do not `npm publish`.
+> Everything here is published on npm and installable today — `npx <package>`. The
+> packages are free: there is no licence key and no hosted gate.
+>
+> [`published/`](./published) mirrors exactly what the registry serves, regenerated
+> with `python3 scripts/sync-published-snapshot.py`. [`servers/`](./servers) holds the
+> older source that is still in git; where the two disagree, `published/` is correct.
 
 Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, betting, finance-data, and pro-tier API servers. Private commercial monorepo.
 
+## The repo is behind the registry
+
+The paywall-removal pass was published from a working copy that was never committed,
+so npm carries code that does not exist in git. `published/INDEX.md` records the
+current state per package — version, whether `src/` shipped, and two known gaps:
+a leftover licence gate and tools that answer `Not yet implemented`.
+
 ## Contents
 
-- **229 MCP servers** in [`servers/`](./servers)
+- **230 MCP servers** in [`servers/`](./servers)
 
 ## MCP servers
 - [`adguardhome-mcp`](./servers/adguardhome-mcp)

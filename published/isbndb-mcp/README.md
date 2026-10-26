@@ -1,0 +1,24 @@
+# isbndb-mcp
+
+ISBNdb books: lookup by ISBN, search, batch lookup. Needs API key.
+
+## Setup
+
+```bash
+export ISBNDB_API_KEY=...
+```
+
+Key goes in the raw Authorization header (no Bearer prefix).
+
+## Tools
+
+- `get_book` — ISBNdb book detail: title, authors, publisher, pages, cover.
+- `search_books` — Search ISBNdb by title, author or subject with pagination.
+- `get_books_batch` — Look up several ISBNdb books in one call.
+
+## Licence — no paywall
+
+Every tool in this package is free: no licence key, no premium tier, no hosted
+licence gateway. The paywall machinery this repo once carried (per-tool licence
+checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
+that this package installs or calls asks you to pay.

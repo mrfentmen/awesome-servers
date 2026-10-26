@@ -1,0 +1,38 @@
+# icebox-mcp
+
+Query the Icebox Diamonds & Watches catalog (icebox.com, NYC): search diamond jewelry and watches, newest arrivals by type, enriched product details (metal/size/clarity variants), price stats, below-median deals, and category counts. Public storefront data, no API key required. Not affiliated with Icebox.
+
+## Tools
+
+- `search_products` — Keyword search across the catalog.
+- `list_newest` — Newest catalog products, sorted by publish date.
+- `get_product` — Full details: variants with parsed options, images, description, tags.
+- `price_overview` — Ask-price distribution (min/p25/median/p75/max).
+- `find_deals` — Available products priced below the median.
+- `list_categories` — Product-type counts in the catalog sample.
+- `list_collections` — Curated store collections with handles for browse_collection, e.g. sale or category collections.
+- `browse_collection` — Listings inside one collection handle from list_collections, optionally only in-stock sizes.
+- `find_by_size` — In-stock items in a size, with that size's price and the other sizes still in stock.
+
+## Source
+
+[icebox-mcp](https://github.com/mrfentmen/awesome-mcps/tree/main/servers/icebox-mcp)
+
+<!-- paywall -->
+## Premium tools
+
+These tools need a license key:
+
+* `option_price_matrix`
+* `catalog_sitemap`
+
+Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-icebox-mcp and set it in your MCP client config:
+
+```json
+"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
+```
+
+The key is checked against MCP Marketplace, cached for 24 hours, and keeps
+working offline once one check has succeeded. Every other tool on this server
+stays free.
+<!-- /paywall -->

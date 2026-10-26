@@ -1,0 +1,43 @@
+{
+  "name": "netdata-mcp",
+  "version": "1.0.2",
+  "description": "Query your Netdata agent (self-hosted; set NETDATA_URL; optional NETDATA_TOKEN): node info, chart list, chart data. Endpoints per official docs.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/netdata-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/premium-mcps.git"
+  },
+  "bin": {
+    "netdata-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "netdata",
+    "metrics",
+    "monitoring",
+    "self-hosted"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

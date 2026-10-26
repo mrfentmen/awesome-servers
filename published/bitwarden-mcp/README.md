@@ -1,0 +1,25 @@
+# bitwarden-mcp
+
+Bitwarden public API: organization members, collections, groups, event logs. Needs API key.
+
+## Setup
+
+```bash
+export BITWARDEN_CLIENT_ID=...
+```
+
+Needs a Bitwarden API key (client id + secret) from Account Settings, plus org access. Optional BITWARDEN_API_URL / BITWARDEN_IDENTITY_URL for self-hosted servers.
+
+## Tools
+
+- `list_members` — Organization members: names, emails, status, collections access.
+- `list_collections` — Organization collections with member and group assignments.
+- `list_groups` — Organization groups with member ids and collection access.
+- `get_events` — Organization event log: logins, item actions, admin changes. Optional date range.
+
+## Licence — no paywall
+
+Every tool in this package is free: no licence key, no premium tier, no hosted
+licence gateway. The paywall machinery this repo once carried (per-tool licence
+checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
+that this package installs or calls asks you to pay.
