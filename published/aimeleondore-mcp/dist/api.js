@@ -75,6 +75,65 @@ async function sampleCatalog(maxItems, pages) {
     }
     return out;
 }
+const STORE_META = "https://aimeleondore.com/meta.json";
+const STORE_PAGES = "https://aimeleondore.com/pages.json";
+const stripHtml = (html) => String(html ?? "")
+    .replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, " ")
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+/**
+ * The storefront's own record of itself, which Shopify publishes as meta.json.
+ */
+export async function shopInfo() {
+    const meta = await getJson(STORE_META);
+    if (!meta?.name && !meta?.domain)
+        throw new AimeLeonDoreError("The storefront answered without shop metadata; the theme may be hiding meta.json.");
+    const currency = String(meta.currency ?? "USD");
+    const rows = [
+        `${meta.name ?? "Aimé Leon Dore"} — storefront metadata (Shopify meta.json)`,
+        `  shop id          ${meta.id ?? "not published"}`,
+        `  domain           ${meta.domain ?? "not published"}`,
+        `  url              ${meta.url ?? `https://${meta.domain ?? "aimeleondore.com"}`}`,
+        `  headquarters     ${[meta.city, meta.province, meta.country].filter(Boolean).join(", ") || "not published"}`,
+        `  currency         ${currency}`,
+    ];
+    if (meta.money_format)
+        rows.push(`  money format     ${stripHtml(meta.money_format)}`);
+    if (meta.description)
+        rows.push(`  description      ${stripHtml(meta.description).slice(0, 240)}`);
+    rows.push("", "note: this is what the store tells any client that asks, not a company profile; headquarters is the address Shopify holds for the shop, and prices across the other tools are in the currency named here.");
+    return rows.join("\n");
+}
+/**
+ * The informational pages the catalogue never lists: about, sizing, shipping.
+ */
+export async function listPages(args) {
+    const limit = Math.round(Math.min(Math.max(Number(args?.limit ?? 15) || 15, 1), 100));
+    const body = await getJson(STORE_PAGES);
+    const pages = Array.isArray(body?.pages) ? body.pages : [];
+    if (!pages.length)
+        throw new AimeLeonDoreError("The storefront publishes no informational page; pages.json returned an empty list.");
+    const rows = [
+        `Store pages published by the Aimé Leon Dore storefront — ${pages.length} page(s)`, "",
+    ];
+    for (const page of pages.slice(0, limit)) {
+        const text = stripHtml(page.body_html);
+        const published = String(page.published_at ?? "").slice(0, 10) || "undated";
+        rows.push(`  ${page.title ?? "untitled"}  (${published})`);
+        rows.push(`    https://aimeleondore.com/pages/${page.handle ?? ""}`);
+        rows.push(`    ${text ? text.slice(0, 260) : "page body is empty"}`);
+    }
+    if (pages.length > limit)
+        rows.push(`  ... ${pages.length - limit} further page(s); raise limit to see them`);
+    rows.push("", "note: only published pages are listed, and the body text is stripped of markup and cut at 260 characters; the page itself is the reference. Sizing and shipping content often lives in the theme rather than a page, so an absent page is not proof the policy is absent.");
+    return rows.join("\n");
+}
 export async function searchProducts(query, limit, maxPrice, productType) {
     const n = Math.min(Number(limit ?? 10) || 10, 25);
     const mp = maxPrice !== undefined ? Number(maxPrice) : undefined;

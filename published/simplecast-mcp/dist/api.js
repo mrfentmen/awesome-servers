@@ -288,3 +288,156 @@ const durationSeconds = (raw) => {
         return null;
     return parts.reduce((acc, n) => acc * 60 + n, 0);
 };
+const channelBlock = (xml) => /<channel[\s\S]*?<\/channel>/i.exec(xml)?.[0] ?? xml;
+const itemBlocks = (xml) => {
+    const channel = channelBlock(xml);
+    const items = [...channel.matchAll(/<item\b[\s\S]*?<\/item>/gi)].map((m) => m[0]);
+    if (items.length)
+        return items;
+    return [...channel.matchAll(/<entry\b[\s\S]*?<\/entry>/gi)].map((m) => m[0]);
+};
+const channelArtwork = (channel) => {
+    const href = attrValue(channel, "itunes:image", "href");
+    if (href)
+        return href;
+    const image = /<image[\s\S]*?<\/image>/i.exec(channel)?.[0];
+    return image ? tagValue(image, "url") : null;
+};
+const htmlText = (value) => String(value ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+const bytesOf = (raw) => {
+    const value = String(raw ?? "").trim();
+    return /^\d+$/.test(value) ? Number(value) : null;
+};
+function readItems(xml) {
+    const blocks = itemBlocks(xml);
+    if (!blocks.length)
+        throw new Error("That URL returned no podcast episodes, so there is nothing to audit.");
+    const channel = channelBlock(xml);
+    const art = channelArtwork(channel);
+    return blocks.map((block) => {
+        const durationRaw = tagValue(block, "itunes:duration") ?? tagValue(block, "duration");
+        const seconds = durationRaw ? (durationSeconds(durationRaw) ?? parseDuration(durationRaw)) : null;
+        const mime = attrValue(block, "enclosure", "type");
+        const title = stripTags(tagValue(block, "title") ?? "untitled");
+        const summary = htmlText(tagValue(block, "description") ?? tagValue(block, "summary") ?? tagValue(block, "itunes:summary") ?? "");
+        return {
+            title,
+            seconds: seconds && seconds > 0 ? seconds : null,
+            size: bytesOf(attrValue(block, "enclosure", "length")),
+            mime: mime ? mime.trim().toLowerCase() : null,
+            url: attrValue(block, "enclosure", "url"),
+            guid: (tagValue(block, "guid") ?? tagValue(block, "id") ?? "").trim(),
+            summary,
+            explicit: (tagValue(block, "itunes:explicit") ?? "").trim().toLowerCase(),
+            artwork: attrValue(block, "itunes:image", "href") ?? art,
+            episodeType: (tagValue(block, "itunes:episodeType") ?? "").trim().toLowerCase(),
+            pubDate: tagValue(block, "pubDate") ?? tagValue(block, "published") ?? tagValue(block, "updated") ?? "",
+        };
+    });
+}
+export async function feedAudit(args) {
+    const xml = await getText(feedUrl(args?.feed_url));
+    const feed = parseFeed(xml);
+    const items = readItems(xml);
+    const total = items.length;
+    const pct = (n) => `${total ? Math.round((n / total) * 1000) / 10 : 0}%`;
+    const checks = [
+        ["a duration", items.filter((i) => i.seconds !== null).length],
+        ["an enclosure length", items.filter((i) => i.size !== null).length],
+        ["an enclosure MIME type", items.filter((i) => i.mime !== null).length],
+        ["an explicit flag", items.filter((i) => i.explicit === "yes" || i.explicit === "no" || i.explicit === "true" || i.explicit === "false").length],
+        ["a guid", items.filter((i) => i.guid.length > 0).length],
+        ["a summary", items.filter((i) => i.summary.length > 0).length],
+        ["artwork", items.filter((i) => Boolean(i.artwork)).length],
+    ];
+    const types = {};
+    for (const item of items) {
+        const key = item.episodeType || "not declared";
+        types[key] = (types[key] ?? 0) + 1;
+    }
+    const lines = [
+        `Feed audit for ${feed.title} — ${total} item(s) in the feed`,
+        "",
+        "Coverage, the way a directory grades a feed:",
+    ];
+    for (const [label, count] of checks)
+        lines.push(`  ${label.padEnd(24)}${String(count).padStart(4)} of ${total}  (${pct(count)})`);
+    lines.push("", "Episode types:");
+    for (const [name, count] of Object.entries(types).sort((a, b) => b[1] - a[1]))
+        lines.push(`  ${name.padEnd(14)}${count}`);
+    const gaps = checks.filter(([, count]) => count < total);
+    lines.push("", gaps.length ? "Gaps a directory would notice:" : "Nothing missing: every item carries all seven fields.");
+    for (const [label, count] of gaps) {
+        const missing = items.filter((i) => {
+            if (label === "a duration")
+                return i.seconds === null;
+            if (label === "an enclosure length")
+                return i.size === null;
+            if (label === "an enclosure MIME type")
+                return i.mime === null;
+            if (label === "an explicit flag")
+                return !["yes", "no", "true", "false"].includes(i.explicit);
+            if (label === "a guid")
+                return i.guid.length === 0;
+            if (label === "a summary")
+                return i.summary.length === 0;
+            return !i.artwork;
+        });
+        lines.push(`  ${count === 0 ? "every item lacks" : `${total - count} item(s) lack`} ${label} — e.g. ${missing.slice(0, 3).map((i) => i.title.slice(0, 40)).join("; ")}`);
+    }
+    if (types.trailer || types.bonus)
+        lines.push("", `Of ${total} item(s), ${(types.trailer ?? 0) + (types.bonus ?? 0)} are declared trailers or bonus episodes rather than the show itself.`);
+    lines.push("", `Note: coverage is read from the feed's own tags, so an item that hides its duration in a media:content element counts as missing here.`);
+    return lines.join("\n");
+}
+export async function audioProfile(args) {
+    const xml = await getText(feedUrl(args?.feed_url));
+    const feed = parseFeed(xml);
+    const items = readItems(xml);
+    const limit = Math.min(Math.max(Number(args?.limit ?? 10) || 10, 1), 30);
+    const typed = {};
+    for (const item of items) {
+        const key = item.mime ?? "not declared";
+        typed[key] = (typed[key] ?? 0) + 1;
+    }
+    const measurable = items.filter((i) => i.size !== null && i.seconds !== null && i.seconds > 0);
+    const hours = items.reduce((sum, i) => sum + (i.seconds ?? 0), 0) / 3600;
+    const totalBytes = items.reduce((sum, i) => sum + (i.size ?? 0), 0);
+    const lines = [
+        `Audio profile for ${feed.title} — ${items.length} item(s)`,
+        `Declared audio carried by the feed: ${hours.toFixed(1)} hour(s), ${(totalBytes / 1e9).toFixed(2)} GB.`,
+        "",
+        "Declared MIME types:",
+    ];
+    for (const [name, count] of Object.entries(typed).sort((a, b) => b[1] - a[1]))
+        lines.push(`  ${name.padEnd(22)}${count}`);
+    if (!measurable.length) {
+        lines.push("", "No item declares both a file size and a duration, so no bitrate can be computed from this feed.");
+        lines.push("Note: bitrate needs enclosure length and itunes:duration on the same item.");
+        return lines.join("\n");
+    }
+    const withBitrate = measurable.map((i) => ({
+        ...i,
+        kbps: Math.round(((i.size * 8) / i.seconds) / 1000),
+    }));
+    const sorted = [...withBitrate].sort((a, b) => a.kbps - b.kbps);
+    const mid = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 ? sorted[mid].kbps : Math.round((sorted[mid - 1].kbps + sorted[mid].kbps) / 2);
+    lines.push("", `Implied bitrate across ${withBitrate.length} item(s) with both fields: median ${median} kbps, lowest ${sorted[0].kbps} kbps, highest ${sorted[sorted.length - 1].kbps} kbps.`);
+    const outliers = withBitrate
+        .filter((i) => median > 0 && Math.abs(i.kbps - median) / median >= 0.3)
+        .sort((a, b) => Math.abs(b.kbps - median) - Math.abs(a.kbps - median));
+    lines.push("", outliers.length ? `${outliers.length} bitrate outlier(s) against the show's own median:` : "No item sits 30% or more away from the median, so the encode is consistent.");
+    for (const item of outliers.slice(0, 8)) {
+        const share = Math.round(((item.kbps - median) / median) * 100);
+        lines.push(`  ${item.kbps} kbps (${share > 0 ? "+" : ""}${share}%) ${String(Math.round(item.size / 1e6)).padStart(5)} MB  ${item.title.slice(0, 60)}`);
+    }
+    lines.push("", `The ${Math.min(limit, withBitrate.length)} most recent item(s), as the feed orders them:`);
+    for (const item of withBitrate.slice(0, limit)) {
+        const mb = (item.size / 1e6).toFixed(1);
+        const minutes = Math.round(item.seconds / 60);
+        lines.push(`  ${item.kbps.toString().padStart(5)} kbps  ${mb.padStart(6)} MB  ${String(minutes).padStart(4)} min  ${item.mime ?? "no type"}  ${item.title.slice(0, 50)}`);
+    }
+    lines.push("", "Note: bitrate is computed as declared enclosure bytes times eight over declared duration, so a wrong length attribute or a rounded duration shows up as an outlier here.");
+    return lines.join("\n");
+}

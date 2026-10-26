@@ -1,6 +1,6 @@
 {
   "name": "pingdom-mcp",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Measure site performance and catch broken links - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/pingdom-mcp",

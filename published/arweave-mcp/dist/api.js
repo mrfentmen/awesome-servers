@@ -171,6 +171,41 @@ export async function addressTransactions(args) {
     ].join("\n");
 }
 /**
+ * The gateway quotes one size at a time, so a table is a handful of sequential
+ * quotes. Sizes are megabytes; the price is winston, converted to AR here.
+ */
+export async function priceTable(sizesMb) {
+    const defaults = [1, 10, 100, 500];
+    const requested = Array.isArray(sizesMb) && sizesMb.length ? sizesMb : defaults;
+    const sizes = requested
+        .map((v) => Number(v))
+        .filter((v) => Number.isFinite(v) && v > 0)
+        .slice(0, 12);
+    if (!sizes.length)
+        throw new ArweaveError("Give at least one positive size in megabytes, e.g. [1, 10, 100].");
+    const rows = [];
+    for (const mb of sizes) {
+        const bytes = Math.round(mb * 1048576);
+        const winston = Number(await getText(`/price/${bytes}`));
+        if (!Number.isFinite(winston))
+            throw new ArweaveError(`Arweave returned no price for ${mb} MB.`);
+        rows.push({ mb, bytes, winston, ar: winston / E12 });
+    }
+    const smallest = rows[0];
+    const largest = rows[rows.length - 1];
+    const perMb = rows.map((r) => r.ar / r.mb);
+    return [
+        `Arweave storage price for ${rows.length} size(s), quoted live by ${BASE}`,
+        "",
+        "   size            bytes            winston        AR",
+        ...rows.map((r) => `${String(r.mb).padStart(7)} MB  ${String(r.bytes).padStart(14)}  ${String(r.winston).padStart(14)}  ${r.ar.toFixed(6).padStart(10)}`),
+        "",
+        `Cheapest per MB here: ${Math.min(...perMb).toFixed(6)} AR/MB; dearest ${Math.max(...perMb).toFixed(6)} AR/MB.`,
+        `Going from ${smallest.mb} MB to ${largest.mb} MB multiplies the cost by ${(largest.ar / (smallest.ar || 1)).toFixed(1)}x.`,
+        "These are the gateway's live quotes and move with network congestion; they are not a reservation of space.",
+    ].join("\n");
+}
+/**
  * Everything one block carries, including the mining reward and the weave size,
  * which the /info summary does not expose. Height "current" reads the tip.
  */

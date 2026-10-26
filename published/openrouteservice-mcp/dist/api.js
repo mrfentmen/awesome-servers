@@ -94,6 +94,105 @@ function orsDuration(seconds) {
         return `${m} min`;
     return `${Math.floor(m / 60)} h ${m % 60} min`;
 }
+function orsCoord(value, limit) {
+    const n = Number(value);
+    if (!Number.isFinite(n) || Math.abs(n) > limit)
+        throw new OrsError(`Coordinate ${value} is out of range (|value| must be at most ${limit}).`);
+    return n;
+}
+function orsManoeuvre(step) {
+    const m = step?.maneuver ?? {};
+    const kind = [m.type, m.modifier].filter(Boolean).join(" ") || "continue";
+    return { kind, instruction: String(step?.name ? `on ${step.name}` : "unspecified road"), road: String(step?.name ?? "") };
+}
+/** Turn-by-turn steps from OSRM: a different router and data pipeline from this server's own directions. */
+export async function osrmRouteSteps(args) {
+    const fromLat = orsCoord(args?.from_lat, 90);
+    const fromLon = orsCoord(args?.from_lon, 180);
+    const toLat = orsCoord(args?.to_lat, 90);
+    const toLon = orsCoord(args?.to_lon, 180);
+    const alternatives = args?.alternatives === true ? "true" : "false";
+    const coords = `${fromLon},${fromLat};${toLon},${toLat}`;
+    const url = `${ORS_OSRM}/route/v1/driving/${coords}?steps=true&alternatives=${alternatives}&overview=false&annotations=false`;
+    const data = await orsFetch(url);
+    if (String(data?.code ?? "") !== "Ok" || !Array.isArray(data?.routes) || !data.routes.length)
+        throw new OrsError(`OSRM found no drivable route: ${String(data?.message ?? data?.code ?? "no answer")}.`);
+    const rows = [];
+    const routes = data.routes.slice(0, alternatives === "true" ? 3 : 1);
+    rows.push(`OSRM driving route over OpenStreetMap data — ${routes.length} route(s) for ${coords}`);
+    routes.forEach((route, index) => {
+        const steps = (route.legs ?? []).flatMap((leg) => leg.steps ?? []);
+        const roads = [...new Set(steps.map((s) => String(s.name ?? "").trim()).filter(Boolean))];
+        rows.push("");
+        rows.push(`Route ${index + 1}: ${orsMetres(Number(route.distance ?? 0))} | ${orsDuration(Number(route.duration ?? 0))} | ${steps.length} manoeuvre(s)`);
+        rows.push(`  distinct named roads: ${roads.length}${roads.length ? ` — ${roads.slice(0, 8).join(", ")}${roads.length > 8 ? ", …" : ""}` : " — none named"}`);
+        steps.forEach((step, i) => {
+            const m = step.maneuver ?? {};
+            const kind = [m.type, m.modifier].filter(Boolean).join(" ") || "continue";
+            rows.push(`  ${String(i + 1).padStart(2)}. ${kind.padEnd(22)} ${String(step.name ?? "(unnamed)").slice(0, 40).padEnd(40)} ${orsMetres(Number(step.distance ?? 0))}`);
+        });
+    });
+    rows.push("", "OSRM is a different engine on the same OpenStreetMap data as this server's directions tool, so distances and turn instructions will differ.");
+    return rows.join("\n");
+}
+/** The same journey costed by several Valhalla modes, side by side. */
+export async function valhallaModeCompare(args) {
+    const fromLat = orsCoord(args?.from_lat, 90);
+    const fromLon = orsCoord(args?.from_lon, 180);
+    const toLat = orsCoord(args?.to_lat, 90);
+    const toLon = orsCoord(args?.to_lon, 180);
+    const offered = ["auto", "bicycle", "pedestrian", "multimodal", "truck", "taxi"];
+    const requested = String(args?.modes ?? "")
+        .split(",")
+        .map((m) => m.trim().toLowerCase())
+        .filter(Boolean);
+    const modes = requested.length ? offered.filter((m) => requested.includes(m)) : ["auto", "bicycle", "pedestrian"];
+    if (!modes.length)
+        throw new OrsError(`None of ${requested.join(", ")} is a Valhalla costing here; use any of ${offered.join(", ")}.`);
+    const rows = [`Valhalla journey comparison for ${fromLat},${fromLon} to ${toLat},${toLon}`];
+    for (const mode of modes) {
+        let summary;
+        try {
+            const data = await orsFetch(`${ORS_VALHALLA}/route`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    locations: [{ lat: fromLat, lon: fromLon }, { lat: toLat, lon: toLon }],
+                    costing: mode,
+                    directions_options: { units: "kilometers" },
+                }),
+            });
+            const trip = data?.trip ?? {};
+            const legs = Array.isArray(trip.legs) ? trip.legs : [];
+            const maneuvers = legs.flatMap((leg) => Array.isArray(leg.maneuvers) ? leg.maneuvers : []);
+            summary = {
+                ok: true,
+                distance: Number(trip.summary?.length ?? maneuvers.reduce((s, m) => s + Number(m.length ?? 0), 0)) * 1000,
+                seconds: Number(trip.summary?.time ?? 0),
+                cost: trip.summary?.cost,
+                toll: Boolean(trip.summary?.has_toll),
+                ferry: Boolean(trip.summary?.has_ferry),
+                motorway: Boolean(trip.summary?.has_highway),
+                energy: data?.trip?.summary?.energy_consumption ?? null,
+                opening: maneuvers.slice(0, 3).map((m) => String(m.instruction ?? m.type ?? "manoeuvre").trim()),
+            };
+        }
+        catch (e) {
+            summary = { ok: false, reason: e instanceof Error ? e.message : String(e) };
+        }
+        rows.push("");
+        if (!summary.ok) {
+            rows.push(`${mode.padEnd(11)} unavailable — ${summary.reason.slice(0, 140)}`);
+            continue;
+        }
+        rows.push(`${mode.padEnd(11)} ${orsMetres(summary.distance)} | ${orsDuration(summary.seconds)} | toll ${summary.toll ? "yes" : "no"} | ferry ${summary.ferry ? "yes" : "no"} | motorway ${summary.motorway ? "yes" : "no"}`);
+        rows.push(`            cost ${summary.cost === undefined || summary.cost === null ? "not returned" : `${Number(summary.cost).toFixed(2)} (Valhalla cost units, not a currency)`}${summary.energy !== null && summary.energy !== undefined ? ` | energy estimate ${summary.energy}` : ""}`);
+        if (summary.opening.length)
+            rows.push(`            opens with: ${summary.opening.join(" → ")}`);
+    }
+    rows.push("", "Each mode is a separate Valhalla request against the public OSM instance; a mode that fails is reported rather than guessed, and cost/tolls only appear where the engine returns them.");
+    return rows.join("\n");
+}
 /** Geocode against OpenStreetMap itself, so you can see how the answer moves between geocoders. */
 export async function nominatimLookup(args) {
     const limit = orsBound(args?.limit, 1, ORS_LIST_CAP, 5);

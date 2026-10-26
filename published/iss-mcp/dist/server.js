@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { m0_issNow, m0_issPasses, m1_position } from "./api.js";
+import { m0_issNow, m0_issPasses, m1_position, issGroundTrack, resolvePlace } from "./api.js";
 const text = (value) => ({ content: [{ type: 'text', text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -53,9 +53,8 @@ export function createServer() {
         inputSchema: z.object({}),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement track locally (paywall removed)
         try {
-            return textError("Not yet implemented: track");
+            return text(await issGroundTrack());
         }
         catch (e) {
             return textError(String(e));
@@ -67,9 +66,8 @@ export function createServer() {
         inputSchema: z.object({ place: z.string().describe("Place name, e.g. Reykjavik"), limit: z.number().int().min(1).max(10).default(3).describe("How many matches to print (default 3, max 10).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement place locally (paywall removed)
         try {
-            return textError("Not yet implemented: place");
+            return text(await resolvePlace(args.place, args.limit));
         }
         catch (e) {
             return textError(String(e));

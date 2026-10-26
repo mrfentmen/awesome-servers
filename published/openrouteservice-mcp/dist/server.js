@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { geocode, reverse, directions, nominatimLookup } from "./api.js";
+import { geocode, reverse, directions, nominatimLookup, osrmRouteSteps, valhallaModeCompare } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -89,9 +89,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement steps locally (paywall removed)
         try {
-            return textError("Not yet implemented: steps");
+            return text(await osrmRouteSteps(args));
         }
         catch (e) {
             return textError(String(e));
@@ -109,9 +108,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement compare locally (paywall removed)
         try {
-            return textError("Not yet implemented: compare");
+            return text(await valhallaModeCompare(args));
         }
         catch (e) {
             return textError(String(e));

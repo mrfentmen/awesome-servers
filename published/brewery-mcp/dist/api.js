@@ -209,3 +209,118 @@ export async function typesByRegion(args) {
         lines.push(`...and ${shown.length - 15} more country/countries in the sample.`);
     return truncate(lines.join("\n"));
 }
+// ---- muxF tools:
+const EARTH_KM = 6371;
+function distanceKm(lat1, lng1, lat2, lng2) {
+    const toRad = (deg) => (deg * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a = Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+    return 2 * EARTH_KM * Math.asin(Math.sqrt(a));
+}
+function coords(b) {
+    const lat = Number(b?.latitude);
+    const lng = Number(b?.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng))
+        return null;
+    if (lat === 0 && lng === 0)
+        return null;
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180)
+        return null;
+    return { lat, lng };
+}
+async function sampleCatalog(pages) {
+    const rows = [];
+    let scanned = 0;
+    for (let page = 1; page <= pages; page += 1) {
+        const batch = await getJson("/breweries", { per_page: "200", page: String(page) });
+        for (const b of batch)
+            rows.push(b);
+        scanned += batch.length;
+        if (batch.length < 200)
+            break;
+    }
+    return { rows, scanned };
+}
+export async function nearestBreweries(args) {
+    const lat = Number(args.latitude);
+    const lng = Number(args.longitude);
+    if (!Number.isFinite(lat) || lat < -90 || lat > 90)
+        throw new BreweryError("latitude must be a number between -90 and 90");
+    if (!Number.isFinite(lng) || lng < -180 || lng > 180)
+        throw new BreweryError("longitude must be a number between -180 and 180");
+    const pages = Math.max(1, Math.min(Math.floor(Number(args.sample ?? 3) || 3), 10));
+    const { rows, scanned } = await sampleCatalog(pages);
+    const located = [];
+    for (const b of rows) {
+        const c = coords(b);
+        if (!c)
+            continue;
+        located.push({ b, km: distanceKm(lat, lng, c.lat, c.lng) });
+    }
+    if (!located.length)
+        throw new BreweryError(`None of the ${scanned} record(s) scanned carried usable coordinates.`);
+    located.sort((x, y) => x.km - y.km);
+    const nearest = located.slice(0, 10);
+    const lines = [
+        `Breweries nearest to ${lat}, ${lng} — scanned ${scanned.toLocaleString("en-US")} record(s), ${located.length.toLocaleString("en-US")} with coordinates.`,
+        "",
+    ];
+    nearest.forEach(({ b, km }, i) => {
+        const place = dedupe([clean(b.city), clean(b.state_province ?? b.state), clean(b.country)]).join(", ");
+        lines.push(`${i + 1}. ${km.toFixed(1)} km — ${clean(b.name) || "Unnamed"} [${clean(b.brewery_type) || "unknown type"}]${place ? ` — ${place}` : ""}`);
+        lines.push(`   id ${clean(b.id)}`);
+    });
+    lines.push("", "Open Brewery DB has no radius filter, so this ranks the sample it fetched rather than the whole directory.");
+    return truncate(lines.join("\n"));
+}
+export async function recordCoverage(args) {
+    const pages = Math.max(1, Math.min(Math.floor(Number(args.sample ?? 2) || 2), 10));
+    const { rows, scanned } = await sampleCatalog(pages);
+    if (!scanned)
+        throw new BreweryError("Open Brewery DB returned no records to audit.");
+    const has = (b, key) => clean(b?.[key]).length > 0;
+    const fields = [
+        ["coordinates", (b) => coords(b) !== null],
+        ["phone", (b) => has(b, "phone")],
+        ["website", (b) => has(b, "website_url")],
+        ["street address", (b) => dedupe([clean(b.address_1), clean(b.street)]).length > 0],
+        ["city", (b) => has(b, "city")],
+        ["postal code", (b) => has(b, "postal_code")],
+        ["brewery type", (b) => has(b, "brewery_type")],
+    ];
+    const counts = fields.map(([label, test]) => ({ label, n: rows.filter(test).length }));
+    const byCountry = new Map();
+    for (const b of rows) {
+        const country = clean(b.country) || "country not reported";
+        const row = byCountry.get(country) ?? { country, n: 0, located: 0 };
+        row.n += 1;
+        if (coords(b))
+            row.located += 1;
+        byCountry.set(country, row);
+    }
+    const weakest = [...byCountry.values()]
+        .filter((r) => r.n >= 5)
+        .map((r) => ({ ...r, pct: (r.located / r.n) * 100 }))
+        .sort((a, b) => a.pct - b.pct)
+        .slice(0, 10);
+    const pct = (n) => `${((n / scanned) * 100).toFixed(1)}%`;
+    const lines = [
+        `Open Brewery DB record coverage across ${scanned.toLocaleString("en-US")} record(s) from ${pages} page(s) of 200.`,
+        "",
+        "Field completeness:",
+        ...counts.map((c) => `  ${c.label.padEnd(15)} ${c.n.toLocaleString("en-US").padStart(6)} of ${scanned.toLocaleString("en-US")} (${pct(c.n)})`),
+        "",
+    ];
+    if (weakest.length) {
+        lines.push("Weakest coordinate coverage (countries with at least 5 records):");
+        for (const r of weakest)
+            lines.push(`  ${r.country.padEnd(28)} ${r.located.toLocaleString("en-US")} of ${r.n.toLocaleString("en-US")} (${r.pct.toFixed(1)}%)`);
+    }
+    else {
+        lines.push("No country in the sample had five or more records, so no per-country ranking is possible.");
+    }
+    lines.push("", `This is a ${pages}-page sample of the directory, not the whole catalogue.`);
+    return truncate(lines.join("\n"));
+}

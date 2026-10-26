@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { exchange, buy, currencies, sell, spot, time, exchangeStats, candles, exchangeTicker, orderBook, tradingProducts, marketOverview } from "./api.js";
+import { exchange, buy, currencies, sell, spot, time, exchangeStats, candles, exchangeTicker, orderBook, tradingProducts, marketOverview, productInfo, recentTrades } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -158,9 +158,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement info locally (paywall removed)
         try {
-            return textError("Not yet implemented: info");
+            return text(await productInfo(args));
         }
         catch (e) {
             return textError(String(e));
@@ -176,9 +175,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement trades locally (paywall removed)
         try {
-            return textError("Not yet implemented: trades");
+            return text(await recentTrades(args));
         }
         catch (e) {
             return textError(String(e));

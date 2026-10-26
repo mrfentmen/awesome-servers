@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { domainStats, formatStats, listBounces, listDomains, MailgunError } from "./api.js";
+import { domainStats, formatStats, listBounces, listDomains, MailgunError, dkimSelectorScan, mailgunStatusAudit } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -67,9 +67,8 @@ export function createServer() {
         inputSchema: z.object({ domain: z.string().describe("Sending domain, e.g. acme.com"), selectors: z.string().describe("Extra selector names to probe, space separated.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement scan locally (paywall removed)
         try {
-            return textError("Not yet implemented: scan");
+            return text(await dkimSelectorScan(args.domain, args.selectors));
         }
         catch (e) {
             return textError(String(e));
@@ -80,10 +79,9 @@ export function createServer() {
         description: "Mailgun's public status page, component by component: what is not operational, any open incident with its latest update, and any maintenance that is scheduled.",
         inputSchema: z.object({ instance: z.string().describe("Unused, kept for a uniform signature.").optional() }),
         annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement audit locally (paywall removed)
+    }, async () => {
         try {
-            return textError("Not yet implemented: audit");
+            return text(await mailgunStatusAudit());
         }
         catch (e) {
             return textError(String(e));

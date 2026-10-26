@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { exchangeRate, getBalances, listProfiles, WiseError, serviceHealth } from "./api.js";
+import { exchangeRate, getBalances, listProfiles, WiseError, serviceHealth, incidentHistory } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -83,9 +83,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement history locally (paywall removed)
         try {
-            return textError("Not yet implemented: history");
+            return text(await incidentHistory(args));
         }
         catch (e) {
             return textError(String(e));

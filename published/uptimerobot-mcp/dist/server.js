@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { checkEndpoints, checkUrl, dnsHealth, monitorReport, portMonitor, sslExpiry } from "./local.js";
-import { vendorUptime } from "./api.js";
+import { multiRegionCheck, vendorUptime } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -107,9 +107,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement check locally (paywall removed)
         try {
-            return textError("Not yet implemented: check");
+            return text(await multiRegionCheck(args));
         }
         catch (e) {
             return textError(String(e));

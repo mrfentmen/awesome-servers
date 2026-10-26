@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { searchGames, getGame } from "./api.js";
+import { searchGames, getGame, steamGameProfile, steamSpecialsCensus } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -46,9 +46,8 @@ export function createServer() {
         inputSchema: z.object({ appid: z.number().int().positive().describe("Steam app id, e.g. 400 for Portal."), limit: z.number().int().min(1).max(20).default(8).describe("Highlighted achievements to print (default 8, max 20).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement profile locally (paywall removed)
         try {
-            return textError("Not yet implemented: profile");
+            return text(await steamGameProfile(args.appid, args.limit));
         }
         catch (e) {
             return textError(String(e));
@@ -60,9 +59,8 @@ export function createServer() {
         inputSchema: z.object({ limit: z.number().int().min(1).max(40).default(10).describe("Specials to print (default 10, max 40).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement census locally (paywall removed)
         try {
-            return textError("Not yet implemented: census");
+            return text(await steamSpecialsCensus(args.limit));
         }
         catch (e) {
             return textError(String(e));

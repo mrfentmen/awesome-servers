@@ -1,6 +1,6 @@
 {
   "name": "rollbar-mcp",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Query the Rollbar API (free tier token; set ROLLBAR_ACCESS_TOKEN, query param): projects, project items, item details.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/rollbar-mcp",

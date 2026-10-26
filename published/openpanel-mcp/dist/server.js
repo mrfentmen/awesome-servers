@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getMetrics, getLive, getPages, getReferrer, referrerTaxonomy } from "./api.js";
+import { getMetrics, getLive, getPages, getReferrer, referrerTaxonomy, trackerSdkMatrix, projectHealth } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -77,9 +77,8 @@ export function createServer() {
         inputSchema: z.object({}),
         annotations: READ_ONLY,
     }, async (_args) => {
-        // TODO: implement matrix locally (paywall removed)
         try {
-            return textError("Not yet implemented: matrix");
+            return text(await trackerSdkMatrix());
         }
         catch (e) {
             return textError(String(e));
@@ -91,9 +90,8 @@ export function createServer() {
         inputSchema: z.object({ limit: z.number().describe("How many contributors, tags and commits to show, 1-10.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement health locally (paywall removed)
         try {
-            return textError("Not yet implemented: health");
+            return text(await projectHealth(args));
         }
         catch (e) {
             return textError(String(e));

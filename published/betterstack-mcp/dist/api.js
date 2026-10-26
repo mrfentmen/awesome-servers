@@ -575,3 +575,129 @@ async function fetchText(target, timeoutMs = 15000) {
     });
     return { status: res.status, body: (await res.text()).slice(0, 200000) };
 }
+const ISO_DAY = (value) => {
+    const date = new Date(String(value ?? ""));
+    return Number.isNaN(date.getTime()) ? "not published" : date.toISOString().slice(0, 10);
+};
+function cleanDomain(input) {
+    const raw = String(input ?? "").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+    if (!raw || !raw.includes("."))
+        throw new Error("Provide a domain like example.com.");
+    return raw;
+}
+export async function domainRegistration(args) {
+    const domain = cleanDomain(args.domain);
+    const res = await fetch(`${RDAP_BOOTSTRAP}${encodeURIComponent(domain)}`, {
+        headers: { "User-Agent": UA, Accept: "application/rdap+json, application/json" },
+        signal: AbortSignal.timeout(20000),
+        redirect: "follow",
+    });
+    if (res.status === 404)
+        throw new Error(`No RDAP record for ${domain} — the domain may be unregistered, or its registry may not publish RDAP.`);
+    if (!res.ok)
+        throw new Error(`The RDAP service returned ${res.status} for ${domain}.`);
+    const data = (await res.json());
+    const events = new Map((data.events ?? []).map((event) => [String(event.eventAction ?? ""), String(event.eventDate ?? "")]));
+    const registrar = (data.entities ?? []).find((entity) => Array.isArray(entity.roles) && entity.roles.includes("registrar"));
+    const registrarName = registrar ? vcardName(registrar) ?? String(registrar.handle ?? "not published") : "not published";
+    const nameservers = (data.nameservers ?? []).map((ns) => String(ns.ldhName ?? "").toLowerCase()).filter(Boolean);
+    const statuses = (data.status ?? []).map((value) => String(value));
+    const expiry = events.get("expiration") ?? "";
+    const expiryDate = expiry ? new Date(expiry) : null;
+    const daysLeft = expiryDate && !Number.isNaN(expiryDate.getTime())
+        ? Math.floor((expiryDate.getTime() - Date.now()) / 86400000)
+        : null;
+    const createdAt = events.get("registration") ?? "";
+    const ageDays = createdAt && !Number.isNaN(new Date(createdAt).getTime())
+        ? Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000)
+        : null;
+    const locks = statuses.filter((value) => /lock|hold|prohibited/i.test(value));
+    return [
+        `RDAP registration record for ${domain}`,
+        `Registrar: ${registrarName}`,
+        `Created: ${createdAt ? ISO_DAY(createdAt) : "not published"}${ageDays !== null ? ` (${ageDays} day(s) old)` : ""}`,
+        `Expires: ${expiry ? ISO_DAY(expiry) : "not published"}${daysLeft !== null ? ` (${daysLeft} day(s) left${daysLeft < 30 ? ", renewal is due" : ""})` : ""}`,
+        `Last changed: ${events.get("last changed") ? ISO_DAY(events.get("last changed")) : "not published"}`,
+        `DNSSEC: ${data.secureDNS?.delegationSigned === true ? `signed${data.secureDNS.dsData ? " (DS published)" : ""}` : "not signed"}`,
+        `Registry locks: ${locks.length ? locks.join(", ") : "none"}`,
+        `All registry status codes: ${statuses.length ? statuses.join(", ") : "none published"}`,
+        `Nameservers (${nameservers.length}): ${nameservers.length ? nameservers.join(", ") : "none published"}`,
+        "",
+        daysLeft !== null && daysLeft < 30
+            ? "The domain expires soon: renew it before the registrar's grace period ends."
+            : "The domain is not close to expiry.",
+    ].join("\n");
+}
+export async function crawlRules(args) {
+    const url = normalizeTarget(args.url);
+    const target = new URL("/robots.txt", url.origin).toString();
+    const { status, body } = await fetchText(target, 15000);
+    if (status === 404) {
+        return [
+            `Crawl rules for ${url.origin}`,
+            `No robots.txt is published (HTTP 404), so by convention every crawler may fetch the whole site.`,
+            "Sitemaps: none declared in robots.txt (look for /sitemap.xml separately).",
+        ].join("\n");
+    }
+    if (status >= 400)
+        throw new Error(`robots.txt returned HTTP ${status} for ${url.origin}.`);
+    const lines = body
+        .split(/\r?\n/)
+        .map((line) => line.replace(/#.*$/, "").trim())
+        .filter(Boolean);
+    const groups = [];
+    let current = null;
+    const sitemaps = [];
+    for (const line of lines) {
+        const colon = line.indexOf(":");
+        if (colon < 0)
+            continue;
+        const key = line.slice(0, colon).trim().toLowerCase();
+        const value = line.slice(colon + 1).trim();
+        if (key === "sitemap") {
+            if (value)
+                sitemaps.push(value);
+            continue;
+        }
+        if (key === "user-agent") {
+            if (!current || current.rules.length) {
+                current = { agents: [], rules: [] };
+                groups.push(current);
+            }
+            current.agents.push(value.toLowerCase());
+            continue;
+        }
+        if (!current)
+            continue;
+        if (key === "disallow" || key === "allow")
+            current.rules.push({ type: key, path: value });
+        else if (key === "crawl-delay")
+            current.rules.push({ type: key, path: value });
+    }
+    const generic = groups.filter((group) => group.agents.includes("*"));
+    const rules = generic.flatMap((group) => group.rules);
+    if (!groups.length) {
+        return [`Crawl rules for ${url.origin}`, `robots.txt answered HTTP ${status} but declares no user-agent groups, so no rule applies.`, `Sitemaps declared: ${sitemaps.length ? sitemaps.join(", ") : "none"}`].join("\n");
+    }
+    const lines2 = [
+        `Crawl rules for ${url.origin} (robots.txt, HTTP ${status}, ${groups.length} user-agent group(s))`,
+        generic.length
+            ? `A generic crawler (*) matches ${generic.length} group(s) with ${rules.length} directive(s).`
+            : "No group names a generic crawler (*), so nothing here restricts one; only the named agents are addressed.",
+    ];
+    if (rules.length) {
+        const denied = rules.filter((rule) => rule.type === "disallow" && rule.path);
+        const allowed = rules.filter((rule) => rule.type === "allow" && rule.path);
+        if (denied.length)
+            lines2.push(`Disallowed (${denied.length}): ${denied.slice(0, 15).map((rule) => rule.path).join(", ")}${denied.length > 15 ? " …" : ""}`);
+        else
+            lines2.push("Disallowed: nothing, so every path is open to a generic crawler.");
+        if (allowed.length)
+            lines2.push(`Allowed back (${allowed.length}): ${allowed.slice(0, 15).map((rule) => rule.path).join(", ")}${allowed.length > 15 ? " …" : ""}`);
+        const delays = rules.filter((rule) => rule.type === "crawl-delay" && rule.path);
+        if (delays.length)
+            lines2.push(`Crawl delay: ${delays.map((rule) => `${rule.path}s`).join(", ")}`);
+    }
+    lines2.push(`Sitemaps declared: ${sitemaps.length ? sitemaps.join(", ") : "none"}`);
+    return lines2.join("\n");
+}

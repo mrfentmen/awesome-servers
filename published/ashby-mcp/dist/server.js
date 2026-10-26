@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { AshbyError, compensation, departments, formatJob, getJob, listJobs, listLocations, listTeams, newestJobs, remoteJobs, searchJobs } from "./api.js";
+import { AshbyError, compensation, departments, formatJob, getJob, listJobs, listLocations, listTeams, newestJobs, postingAge, remoteJobs, searchJobs } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -193,9 +193,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement age locally (paywall removed)
         try {
-            return textError("Not yet implemented: age");
+            return text(await postingAge(args.org, args.limit));
         }
         catch (e) {
             return textError(String(e));

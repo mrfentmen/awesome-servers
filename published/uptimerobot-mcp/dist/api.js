@@ -5,6 +5,9 @@
 // been behaving. Both read public, keyless sources.
 const UR_UA = "mcfentmen-uptimerobot-mcp/1.1 (https://github.com/mcfentmen/uptimerobot-mcp)";
 const UR_STATUS = "https://status.uptimerobot.com/api";
+// Globalping runs measurements from volunteer probes in many countries and needs
+// no account for a handful of them.
+const UR_GP = "https://api.globalping.io/v1";
 // This identifier is published in the page's own asset URLs, so it is not a credential.
 const UR_BOARD = "MQWpGhqM";
 async function urJson(url, label, accept = "application/json") {
@@ -23,6 +26,135 @@ async function urJson(url, label, accept = "application/json") {
     if (!res.ok)
         throw new Error(`${label} returned HTTP ${res.status}.`);
     return (await res.json());
+}
+async function urGlobalping(path, init = {}) {
+    let res;
+    try {
+        res = await fetch(`${UR_GP}${path}`, {
+            method: init.method ?? "GET",
+            headers: {
+                "User-Agent": UR_UA,
+                Accept: "application/json",
+                ...(init.body ? { "Content-Type": "application/json" } : {}),
+            },
+            body: init.body ? JSON.stringify(init.body) : undefined,
+            signal: AbortSignal.timeout(30000),
+        });
+    }
+    catch (e) {
+        throw new Error(`Could not reach the global measurement network: ${e.message}`);
+    }
+    if (res.status === 429)
+        throw new Error("The global measurement network is rate-limiting this client; try again in a minute.");
+    if (!res.ok) {
+        const detail = (await res.text()).slice(0, 200);
+        throw new Error(`The global measurement network returned HTTP ${res.status}: ${detail}`);
+    }
+    return await res.json();
+}
+// The measurement network takes a hostname plus a path, not a full URL, and the
+// scheme picks the protocol it dials.
+function urTarget(raw) {
+    const text = String(raw ?? "").trim();
+    if (!text)
+        throw new Error("Give a URL to check, for example https://example.com.");
+    const withScheme = /^https?:\/\//i.test(text) ? text : `https://${text}`;
+    let parsed;
+    try {
+        parsed = new URL(withScheme);
+    }
+    catch {
+        throw new Error(`"${text}" is neither a URL nor a hostname.`);
+    }
+    if (!parsed.hostname)
+        throw new Error(`"${text}" has no hostname to check.`);
+    return {
+        host: parsed.hostname,
+        path: `${parsed.pathname || "/"}${parsed.search || ""}`,
+        protocol: parsed.protocol === "http:" ? "HTTP" : "HTTPS",
+        shown: withScheme,
+    };
+}
+function urResultLine(entry) {
+    const probe = entry?.probe ?? {};
+    const result = entry?.result ?? {};
+    const where = [probe.country, probe.city].filter(Boolean).join(", ") || "location not published";
+    const network = String(probe.network ?? "network not published");
+    const ms = typeof result?.timings?.total === "number" ? `${Math.round(result.timings.total)} ms` : "no timing";
+    const code = result?.statusCode ? `HTTP ${result.statusCode}${result.statusCodeName ? ` ${result.statusCodeName}` : ""}` : "no HTTP status";
+    const state = result?.status === "finished" ? code : `${code} (${String(result?.status ?? "failed")})`;
+    return { where, network, ms, state, ok: Boolean(result?.statusCode && result.statusCode < 400), probe };
+}
+/**
+ * The same URL fetched from probes in several countries at once, so a fault that
+ * only exists in one region is visible instead of hiding behind one vantage point.
+ */
+export async function multiRegionCheck(args) {
+    const target = urTarget(args?.url);
+    const nodes = Math.min(Math.max(Number(args?.nodes ?? 4) || 4, 1), 8);
+    const created = await urGlobalping("/measurements", {
+        method: "POST",
+        body: {
+            type: "http",
+            target: target.host,
+            locations: [{ magic: "World" }],
+            limit: nodes,
+            measurementOptions: {
+                protocol: target.protocol,
+                request: { method: "GET", path: target.path },
+            },
+        },
+    });
+    const id = created?.id;
+    if (!id)
+        throw new Error("The measurement network accepted the request but returned no id to poll.");
+    let measurement = null;
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        const polled = await urGlobalping(`/measurements/${encodeURIComponent(id)}`);
+        if (polled?.status === "finished" || polled?.status === "failed") {
+            measurement = polled;
+            break;
+        }
+    }
+    if (!measurement)
+        throw new Error("The measurement did not finish within 30 seconds; the network was probably busy, so try again.");
+    const entries = Array.isArray(measurement.results) ? measurement.results : [];
+    if (!entries.length)
+        throw new Error("The measurement network returned no probe results for that URL.");
+    const rows = entries.map(urResultLine);
+    const ok = rows.filter((r) => r.ok);
+    const failed = rows.filter((r) => !r.ok);
+    const timings = rows
+        .map((r) => Number.parseInt(String(r.ms), 10))
+        .filter((n) => Number.isFinite(n))
+        .sort((a, b) => a - b);
+    const median = timings.length
+        ? timings.length % 2
+            ? timings[(timings.length - 1) / 2]
+            : Math.round((timings[timings.length / 2 - 1] + timings[timings.length / 2]) / 2)
+        : null;
+    const countries = new Set(rows.map((r) => r.probe?.country).filter(Boolean));
+    return [
+        `Multi-region check of ${target.shown}`,
+        `  requested ${target.protocol} ${target.host}${target.path === "/" ? "" : target.path} from ${nodes} probe(s)`,
+        `  ${rows.length} probe(s) answered from ${countries.size} country(ies); ${ok.length} reached it, ${failed.length} did not`,
+        median === null ? "  no probe reported a timing" : `  median response time ${median} ms, range ${timings[0]}–${timings[timings.length - 1]} ms`,
+        "",
+        "Probe                       Network                       Status                      Time",
+        ...rows
+            .slice()
+            .sort((a, b) => (a.ok === b.ok ? String(a.where).localeCompare(String(b.where)) : a.ok ? -1 : 1))
+            .map((r) => `  ${String(r.where).slice(0, 26).padEnd(26)} ${String(r.network).slice(0, 28).padEnd(29)} ${String(r.state).slice(0, 26).padEnd(27)} ${r.ms}`),
+        ...(failed.length
+            ? [
+                "",
+                "Even the failures are region-specific evidence: a probe that could not connect says something different from a probe that got an HTTP error, and only the code shows which one happened.",
+            ]
+            : []),
+        "",
+        "Each row is an independent volunteer probe, so its country and network describe where the request came from, not where the site is hosted. Probe choice is random within the requested spread, so two runs are not directly comparable and a single failing probe is not proof of an outage.",
+    ].join("\n");
 }
 /**
  * How UptimeRobot's own service has been behaving, from its public status board:

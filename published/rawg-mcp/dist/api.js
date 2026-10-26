@@ -100,3 +100,99 @@ const stripTags = (html) => String(html ?? "")
     .replace(/&quot;/g, '"')
     .replace(/\s+/g, " ")
     .trim();
+const STEAM_REVIEWS = "https://store.steampowered.com/appreviews/";
+const shown = (v) => (v === undefined || v === null || v === "" ? "not published" : String(v));
+const listOf = (arr, key = "description") => (Array.isArray(arr) ? arr.map((x) => (typeof x === "string" ? x : x?.[key])).filter(Boolean) : []);
+const hours = (minutes) => {
+    const n = Number(minutes);
+    if (!Number.isFinite(n) || n <= 0)
+        return "not published";
+    return `${(n / 60).toFixed(1)} h`;
+};
+async function steamReviews(appId) {
+    try {
+        const res = await fetch(`${STEAM_REVIEWS}${encodeURIComponent(appId)}?json=1&language=all&purchase_type=all&num_per_page=0`, {
+            headers: { Accept: "application/json", "User-Agent": RAWG_UA },
+            signal: AbortSignal.timeout(25000),
+        });
+        if (!res.ok)
+            return null;
+        const body = (await res.json());
+        return body?.success ? body.query_summary ?? null : null;
+    }
+    catch {
+        return null;
+    }
+}
+/**
+ * Steam's own store record, which is the canonical answer to "what is this
+ * title" for anything sold on Steam, and needs no key.
+ */
+export async function steamStoreInfo(appId) {
+    const id = String(appId ?? "").trim();
+    const { app } = await steamApp(id);
+    const platforms = app.platforms ?? {};
+    const onPlatforms = [platforms.windows && "Windows", platforms.mac && "macOS", platforms.linux && "Linux"].filter(Boolean);
+    const genres = listOf(app.genres);
+    const features = listOf(app.categories);
+    const price = app.price_overview;
+    const priceLine = app.is_free
+        ? "free to play"
+        : price
+            ? `${(price.final / 100).toFixed(2)} ${price.currency}${price.discount_percent ? ` (${price.discount_percent}% off, was ${(price.initial / 100).toFixed(2)})` : ""}`
+            : "no price published";
+    const release = app.release_date?.date ? `${app.release_date.date}${app.release_date.coming_soon ? " (coming soon)" : ""}` : "not published";
+    const content = app.content_descriptors;
+    const contentNotes = content?.notes ? stripTags(content.notes) : "";
+    const rows = [
+        `${shown(app.name)} (app ${id}) — ${shown(app.type)}`,
+        `  developer        ${listOf(app.developers).join(", ") || "not published"}`,
+        `  publisher        ${listOf(app.publishers).join(", ") || "not published"}`,
+        `  released         ${release}`,
+        `  platforms        ${onPlatforms.length ? onPlatforms.join(", ") : "none listed"}`,
+        `  genres           ${genres.length ? genres.slice(0, 8).join(", ") : "not published"}`,
+        `  features         ${features.length ? features.slice(0, 10).join(", ") : "not published"}`,
+        `  price            ${priceLine}`,
+        `  reviews          ${app.recommendations?.total ?? "not published"} total on Steam`,
+        `  metacritic       ${app.metacritic?.score ?? "not published"}`,
+        `  achievements     ${app.achievements?.total ?? "not published"}`,
+        `  content notes    ${contentNotes || (content?.ids ? `descriptor ids ${content.ids.join(", ")}` : "none")}`,
+    ];
+    if (app.short_description)
+        rows.push(`  summary          ${stripTags(app.short_description).slice(0, 240)}`);
+    rows.push("", "note: read from store.steampowered.com for the English storefront; prices outside this region, delisted apps and review-bomb periods will not match what a local store page shows.");
+    return rows.join("\n");
+}
+/**
+ * SteamSpy publishes the ownership and concurrency estimates Valve never does,
+ * and Steam's review summary gives the split. Together they size a title.
+ */
+export async function steamReach(appId) {
+    const id = String(appId ?? "").trim();
+    const { app } = await steamApp(id);
+    const spy = await steamSpyApp(id);
+    const reviews = await steamReviews(id);
+    const positive = reviews?.total_positive ?? spy?.positive;
+    const negative = reviews?.total_negative ?? spy?.negative;
+    const total = reviews?.total_reviews ?? (Number(positive) || 0) + (Number(negative) || 0);
+    const split = Number(total) > 0
+        ? `${Number(positive)} positive / ${Number(negative)} negative — ${((Number(positive) / Number(total)) * 100).toFixed(1)}% positive${reviews?.review_score_desc ? ` (${reviews.review_score_desc})` : ""}`
+        : "no reviews published";
+    const tags = spy?.tags && typeof spy.tags === "object"
+        ? Object.entries(spy.tags).sort((a, b) => Number(b[1]) - Number(a[1])).slice(0, 12)
+        : [];
+    const rows = [
+        `${shown(app.name)} (app ${id}) — reach`,
+        `  owners (estimate)  ${spy?.owners ?? "SteamSpy did not answer"}`,
+        `  players online     ${spy?.ccu !== undefined ? spy.ccu.toLocaleString("en-US") : "SteamSpy did not answer"}`,
+        `  reviews            ${split}`,
+        `  median playtime    ${hours(spy?.median_forever)}`,
+        `  average playtime   ${hours(spy?.average_forever)}`,
+        `  userscore          ${spy?.userscore ? `${spy.userscore}/100` : "not published"}`,
+        `  tags               ${tags.length ? tags.map(([t, n]) => `${t} (${n})`).join(", ") : "not published"}`,
+    ];
+    if (Number(spy?.discount ?? 0) > 0 && spy?.price)
+        rows.push(`  current price      ${(Number(spy.price) / 100).toFixed(2)} USD, ${spy.discount}% off (initial ${(Number(spy.initialprice) / 100).toFixed(2)})`);
+    rows.push("", "note: online players and the ownership bracket are SteamSpy estimates, not Valve figures; the review split is Steam's own summary across all languages and purchase types. A very new or very small title often has no estimate at all, which is shown rather than guessed.");
+    return rows.join("\n");
+}

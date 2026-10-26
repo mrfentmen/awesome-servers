@@ -89,6 +89,102 @@ const spoken = (ms) => {
     const s = total % 60;
     return h ? `${h}h ${String(m).padStart(2, "0")}m` : `${m}m ${String(s).padStart(2, "0")}s`;
 };
+const UNKNOWN = "not reported";
+const daysBetween = (stamp) => {
+    const then = Date.parse(String(stamp ?? "").replace(" ", "T") + "Z");
+    if (!Number.isFinite(then))
+        return null;
+    return (Date.now() - then) / 86400000;
+};
+/**
+ * Everything a network or a sponsor asks about a publisher, from the public
+ * user record and its show list: who they are, how much they publish, in what
+ * categories, how recently, and how much is flagged explicit or machine-made.
+ */
+export async function publisherProfile(args) {
+    const id = String(args?.user_id ?? "").trim();
+    if (!/^\d{1,12}$/.test(id))
+        throw new SpreakerError(`"${id}" is not a Spreaker user id; those are the digits in spreaker.com/user/<name>--<id>.`);
+    const limit = Math.min(Math.max(Number(args?.limit ?? 12) || 12, 1), 50);
+    const user = (await skGet(`/users/${id}`)).user;
+    if (!user)
+        throw new SpreakerError(`Spreaker has no public user ${id}. A deleted or fully private account answers like this.`);
+    // Spreaker's public user-shows endpoint answers with the first eight shows
+    // only; larger limits and offset/page are ignored, so this is a sample and
+    // the output says so rather than implying a census.
+    const shows = (await skGet(`/users/${id}/shows?limit=${Math.min(Math.max(limit, 8), 50)}`)).items ?? [];
+    if (!shows.length)
+        throw new SpreakerError(`User ${id} has no public show; a draft or unlisted show does not appear in this list.`);
+    const categories = new Map();
+    const flagged = { explicit: 0, ai: 0 };
+    const ages = [];
+    for (const s of shows) {
+        const name = s.category?.name ?? "uncategorised";
+        categories.set(name, (categories.get(name) ?? 0) + 1);
+        if (s.explicit)
+            flagged.explicit += 1;
+        if (s.ai_generated)
+            flagged.ai += 1;
+        const days = daysBetween(s.last_episode_at);
+        if (days !== null)
+            ages.push(days);
+    }
+    const sortedShows = [...shows].sort((a, b) => String(b.last_episode_at ?? "").localeCompare(String(a.last_episode_at ?? "")));
+    const fresh7 = ages.filter((d) => d <= 7).length;
+    const fresh30 = ages.filter((d) => d <= 30).length;
+    const stale365 = ages.filter((d) => d > 365).length;
+    const sortedAges = [...ages].sort((a, b) => a - b);
+    const medianAge = sortedAges.length ? sortedAges[Math.floor(sortedAges.length / 2)] : null;
+    const followerRatio = Number(user.followings_count) > 0 ? Number(user.followers_count) / Number(user.followings_count) : null;
+    const catRows = [...categories.entries()].sort((a, b) => b[1] - a[1]);
+    const rows = [
+        `${user.fullname ?? `user ${id}`} — Spreaker publisher (${user.kind ?? "kind not reported"})`,
+        `  plan             ${user.plan ?? UNKNOWN}`,
+        `  user id          ${user.user_id ?? id}`,
+        `  shows            ${user.shows_count ?? shows.length}${user.shows_count > shows.length ? ` (${shows.length} sampled)` : ""}`,
+        `  followers        ${user.followers_count ?? UNKNOWN}`,
+        `  following        ${user.followings_count ?? UNKNOWN}${followerRatio !== null ? ` — ${followerRatio.toFixed(1)} follower(s) per account followed` : ""}`,
+        `  description      ${user.description ? String(user.description).replace(/\s+/g, " ").slice(0, 200) : "none published"}`,
+        `  page             ${user.site_url ?? `https://www.spreaker.com/user/${id}`}`,
+        "",
+        `Across the ${shows.length} sampled show(s):`,
+        `  categories       ${catRows.map(([c, n]) => `${c} ${n}`).join(" | ") || "none recorded"}`,
+        `  published in     last 7 days: ${fresh7} | last 30: ${fresh30} | nothing for over a year: ${stale365}`,
+        `  median silence   ${medianAge === null ? UNKNOWN : `${medianAge.toFixed(1)} day(s) since the last episode`}`,
+        `  flags            ${flagged.explicit} explicit | ${flagged.ai} machine-generated`,
+        "",
+        `Most recently active shows (top ${Math.min(limit, sortedShows.length)}):`,
+    ];
+    for (const s of sortedShows.slice(0, limit)) {
+        const when = String(s.last_episode_at ?? "").slice(0, 10) || "no episode date";
+        const flags = [s.explicit ? "explicit" : null, s.ai_generated ? "machine-generated" : null].filter(Boolean);
+        rows.push(`  ${when}  ${s.title ?? "untitled"} — ${s.category?.name ?? "uncategorised"}${flags.length ? ` [${flags.join(", ")}]` : ""}`);
+        if (s.site_url)
+            rows.push(`              ${s.site_url}`);
+    }
+    // Recent episodes for the few shows that are actually still publishing.
+    const active = sortedShows.filter((s) => {
+        const d = daysBetween(s.last_episode_at);
+        return d !== null && d <= 90 && s.show_id;
+    }).slice(0, 3);
+    if (active.length) {
+        rows.push("", "Latest episodes from the most recently active show(s):");
+        for (const show of active) {
+            const episodes = (await skGet(`/shows/${encodeURIComponent(show.show_id)}/episodes?limit=2`)).items ?? [];
+            if (!episodes.length)
+                continue;
+            rows.push(`  ${show.title ?? show.show_id}`);
+            for (const e of episodes) {
+                rows.push(`    ${String(e.published_at ?? "").slice(0, 10) || "undated"}  ${spoken(e.duration)}  ${e.title ?? "untitled"}${e.explicit ? " [explicit]" : ""}${e.ai_generated ? " [machine-generated]" : ""}`);
+            }
+        }
+    }
+    else {
+        rows.push("", "No show has published in the last 90 days, so there are no recent episodes to list.");
+    }
+    rows.push("", `note: counts and categories come from the first ${shows.length} show(s) on the public list, not all ${user.shows_count ?? "?"} — Spreaker returns no more than eight shows per publisher on this endpoint and ignores paging, so a large network is sampled, not censused. Durations are as published; Spreaker reports some episodes without one.`);
+    return rows.join("\n");
+}
 /**
  * Find individual episodes anywhere on Spreaker by keyword, which the show-scoped
  * episode list cannot do: it returns the show each hit belongs to, so a phrase

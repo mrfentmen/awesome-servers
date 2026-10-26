@@ -456,3 +456,176 @@ export async function a11yBasics(args) {
     checks.push({ name: "skip link", passed: skipLink, detail: skipLink ? "a skip-to-content link is present, so keyboard users can bypass repeated navigation" : "no skip link found, so keyboard users tab through the whole nav on every page" });
     return summarise(`Accessibility basics for ${r.finalUrl} (HTTP ${r.status})`, checks);
 }
+/** Transport and browser-side security for one URL, read from the live response. */
+export async function httpSecurityReport(args) {
+    const method = methodOf(args?.method);
+    const r = await fetchChain(args?.url, 25000, method);
+    const header = (name) => r.headers.get(name) ?? "";
+    const issues = [];
+    const notes = [];
+    const checks = [];
+    // Plain HTTP at the very first hop is the one failure that undermines the rest.
+    let plainHop = r.hops.some((h) => h.url.startsWith("http://"));
+    if (plainHop)
+        issues.push("the page was reached over plain HTTP at least once, so everything below can be rewritten in transit");
+    const hsts = header("strict-transport-security");
+    if (!hsts) {
+        issues.push("no Strict-Transport-Security header, so a browser will try plain HTTP first next time");
+    }
+    else {
+        const maxAge = Number(/max-age\s*=\s*(\d+)/i.exec(hsts)?.[1] ?? 0);
+        const bits = [`max-age ${maxAge}s`];
+        if (/includeSubDomains/i.test(hsts))
+            bits.push("includeSubDomains");
+        if (/preload/i.test(hsts))
+            bits.push("preload");
+        checks.push(`HSTS present: ${bits.join(", ")}`);
+        if (maxAge > 0 && maxAge < 15552000)
+            issues.push(`HSTS max-age is ${maxAge}s, under the six months browsers expect before they stop offering plain HTTP`);
+        if (!/includeSubDomains/i.test(hsts))
+            notes.push("HSTS does not cover subdomains, which is usually where staging and old services live");
+    }
+    const csp = header("content-security-policy");
+    if (!csp) {
+        issues.push("no Content-Security-Policy, so any injected script runs with the page's full privileges");
+    }
+    else {
+        checks.push(`CSP present (${csp.length} characters)`);
+        if (/unsafe-inline/i.test(csp))
+            issues.push("CSP allows 'unsafe-inline', which gives back most of the protection a CSP is for");
+        if (/unsafe-eval/i.test(csp))
+            notes.push("CSP allows 'unsafe-eval'");
+        if (/(^|[\s;])\*([\s;]|$)/.test(csp))
+            notes.push("CSP uses a bare * source, which allows any origin");
+        if (/http:/i.test(csp))
+            notes.push("CSP still lists an http: source, which a secure page should not need");
+    }
+    if (!/nosniff/i.test(header("x-content-type-options")))
+        issues.push("no X-Content-Type-Options: nosniff, so a browser may sniff a response into a different type than served");
+    else
+        checks.push("X-Content-Type-Options: nosniff");
+    const referrer = header("referrer-policy");
+    if (!referrer)
+        issues.push("no Referrer-Policy, so full URLs leak to third parties by browser default");
+    else
+        checks.push(`Referrer-Policy: ${referrer}`);
+    const permissions = header("permissions-policy") || header("feature-policy");
+    if (!permissions)
+        notes.push("no Permissions-Policy, so features such as camera and geolocation are governed only by the browser prompt");
+    else
+        checks.push(`Permissions-Policy present (${permissions.split(",").filter((s) => s.trim()).length} feature(s) named)`);
+    const coop = header("cross-origin-opener-policy");
+    if (!coop)
+        notes.push("no Cross-Origin-Opener-Policy, so a cross-origin window can keep a reference to this one");
+    else
+        checks.push(`Cross-Origin-Opener-Policy: ${coop}`);
+    const rawCookies = typeof r.headers.getSetCookie === "function" ? r.headers.getSetCookie() : [];
+    const cookies = rawCookies.map((line) => {
+        const name = String(line).split("=")[0].trim() || "(unnamed)";
+        return { name, secure: /;\s*secure\b/i.test(line), httpOnly: /;\s*httponly\b/i.test(line), sameSite: /;\s*samesite\s*=\s*([^;]+)/i.exec(line)?.[1]?.trim() ?? "" };
+    });
+    for (const c of cookies) {
+        if (!c.secure)
+            issues.push(`cookie "${c.name}" is set without Secure, so it can travel over plain HTTP`);
+        if (!c.httpOnly)
+            notes.push(`cookie "${c.name}" is readable from JavaScript (no HttpOnly)`);
+        if (!c.sameSite)
+            notes.push(`cookie "${c.name}" declares no SameSite policy`);
+    }
+    const mixed = [...r.html.matchAll(/(?:src|href)\s*=\s*["'](http:\/\/[^"']+)["']/gi)].map((m) => m[1]);
+    const uniqueMixed = [...new Set(mixed)].slice(0, 8);
+    if (uniqueMixed.length)
+        issues.push(`${uniqueMixed.length}+ plain-HTTP resource(s) referenced by the page itself, which browsers will block or warn about on an HTTPS page`);
+    const rows = [
+        `${r.finalUrl} — HTTP security report (${method}, HTTP ${r.status}, ${r.hops.length} hop(s))`,
+        "",
+        issues.length ? "Problems:" : "Problems: none found by these checks",
+        ...issues.map((i) => `  - ${i}`),
+        "",
+        "What is present:",
+        ...(checks.length ? checks.map((c) => `  - ${c}`) : ["  - nothing beyond the response itself"]),
+        "",
+        `Cookies set on this response: ${cookies.length ? cookies.map((c) => `${c.name}${c.secure ? " [Secure]" : " [NOT Secure]"}${c.httpOnly ? " [HttpOnly]" : " [no HttpOnly]"}${c.sameSite ? ` [SameSite=${c.sameSite}]` : " [no SameSite]"}`).join(", ") : "none"}`,
+    ];
+    if (uniqueMixed.length)
+        rows.push(`Plain-HTTP resources: ${uniqueMixed.join(", ")}`);
+    if (notes.length) {
+        rows.push("", "Worth knowing:");
+        for (const n of notes)
+            rows.push(`  - ${n}`);
+    }
+    rows.push("", "note: read from one live response, so headers set only on some routes will not appear here, and a header being present says nothing about whether the policy behind it is correct. Cookie values are deliberately not shown, only their flags.");
+    return rows.join("\n");
+}
+const titleOf = (html) => (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "").replace(/\s+/g, " ").trim();
+const attrOf = (tagHtml, name) => new RegExp("\\b" + name + "\\s*=\\s*[\"']([^\"']*)[\"']", "i").exec(tagHtml)?.[1]?.trim() ?? "";
+/** Search metadata as actually served, including the parts that quietly break. */
+export async function seoMeta(args) {
+    const r = await fetchChain(args?.url, 25000);
+    const html = r.html;
+    const min = Number.isFinite(Number(args?.min_title)) ? Number(args.min_title) : 10;
+    const max = Number.isFinite(Number(args?.max_title)) ? Number(args.max_title) : 70;
+    const title = titleOf(html);
+    const description = metaContent(html, "description", "name");
+    const robots = metaContent(html, "robots", "name");
+    const canonicalTag = html.match(/<link[^>]*\brel\s*=\s*["']canonical["'][^>]*>/i)?.[0] ?? "";
+    const canonical = attrOf(canonicalTag, "href");
+    const hreflangs = [...html.matchAll(/<link[^>]*\bhreflang\s*=\s*["']([^"']+)["'][^>]*>/gi)].map((m) => m[1].toLowerCase());
+    const ld = ldJsonBlocks(html);
+    const og = {
+        title: metaContent(html, "og:title", "property"),
+        description: metaContent(html, "og:description", "property"),
+        image: metaContent(html, "og:image", "property"),
+        type: metaContent(html, "og:type", "property"),
+        url: metaContent(html, "og:url", "property"),
+    };
+    const tw = {
+        card: metaContent(html, "twitter:card", "name"),
+        title: metaContent(html, "twitter:title", "name"),
+        image: metaContent(html, "twitter:image", "name"),
+    };
+    const issues = [];
+    const titleLen = title.length;
+    if (!titleLen)
+        issues.push("no <title> at all, so a search result has nothing to show");
+    else if (titleLen < min)
+        issues.push(`title is ${titleLen} characters, under the ${min} minimum: too thin to say what the page is`);
+    else if (titleLen > max)
+        issues.push(`title is ${titleLen} characters, over the ${max} maximum: search results will cut it`);
+    if (!description)
+        issues.push("no meta description, so the engine writes its own snippet");
+    else if (description.length < 50)
+        issues.push(`meta description is only ${description.length} characters`);
+    else if (description.length > 320)
+        issues.push(`meta description is ${description.length} characters, well past what is shown`);
+    if (!canonical)
+        issues.push("no rel=canonical, so a paginated or parameterised copy can compete with this page");
+    if (/noindex/i.test(robots))
+        issues.push(`robots is "${robots}": this page is telling engines not to index it`);
+    if (!og.title || !og.description || !og.image)
+        issues.push(`Open Graph is incomplete (${["title", "description", "image"].filter((k) => !og[k]).join(", ")} missing)`);
+    if (!tw.card)
+        issues.push("no twitter:card, so sharing this on X produces a bare link");
+    if (ld.total && ld.valid < ld.total)
+        issues.push(`${ld.total - ld.valid} of ${ld.total} JSON-LD block(s) do not parse, so the structured data is silently ignored`);
+    if (hreflangs.length && !hreflangs.includes("x-default"))
+        issues.push("hreflang alternates exist but none is x-default, so there is no fallback for unmatched languages");
+    const rows = [
+        `${r.finalUrl} — SEO metadata as served (HTTP ${r.status})`,
+        "",
+        `  title            ${title ? `${titleLen} chars — ${title}` : "MISSING"}`,
+        `  description      ${description ? `${description.length} chars — ${description.slice(0, 160)}` : "MISSING"}`,
+        `  canonical        ${canonical || "MISSING"}`,
+        `  robots           ${robots || "not set (indexable by default)"}`,
+        `  Open Graph       ${["title", "description", "image", "type", "url"].map((k) => `${k}: ${og[k] ? "yes" : "no"}`).join(" | ")}`,
+        `  Twitter card     ${tw.card ? `${tw.card}${tw.title ? ", title" : ""}${tw.image ? ", image" : ""}` : "MISSING"}`,
+        `  hreflang         ${hreflangs.length ? `${hreflangs.length} alternate(s): ${hreflangs.slice(0, 8).join(", ")}${hreflangs.length > 8 ? " …" : ""}` : "none"}`,
+        `  JSON-LD          ${ld.total ? `${ld.valid}/${ld.total} block(s) parse` : "no structured data"}`,
+        "",
+        issues.length ? "Problems:" : "Problems: none found by these checks",
+        ...issues.map((i) => `  - ${i}`),
+        "",
+        `note: this reads the HTML the server returns to a plain client with no special user agent. A page that renders its metadata in JavaScript will look empty here even if a browser shows it, and title length limits are conventions that each search engine applies differently.`,
+    ];
+    return rows.join("\n");
+}

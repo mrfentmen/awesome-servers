@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { checkMany, checkUrl, dnsHealth, securityHeaders, siteReport, sslCertificate, archivedSnapshot } from "./api.js";
+import { checkMany, checkUrl, dnsHealth, securityHeaders, siteReport, sslCertificate, archivedSnapshot, certificateTransparency, domainRegistration } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -108,9 +108,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement transparency locally (paywall removed)
         try {
-            return textError("Not yet implemented: transparency");
+            return text(await certificateTransparency(args));
         }
         catch (e) {
             return textError(String(e));
@@ -122,9 +121,8 @@ export function createServer() {
         inputSchema: z.object({ domain: z.string().describe("Domain or URL to look up, e.g. mozilla.org.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement registration locally (paywall removed)
         try {
-            return textError("Not yet implemented: registration");
+            return text(await domainRegistration(args));
         }
         catch (e) {
             return textError(String(e));

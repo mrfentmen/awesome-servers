@@ -2,6 +2,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import * as Invoice from "./invoice.js";
+import { vatNumberCheck, ibanCheck, currencyReference } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const errorMessage = (e) => `Error: ${e instanceof Error ? e.message : String(e)}`;
@@ -98,9 +99,8 @@ export function createServer() {
         description: "Validate a VAT or TVA number with the checksum its country actually uses - MOD 11-2 for most EU states, the weighted 97 rule for the UK - and warn when the national part is the wrong length.",
         inputSchema: z.object({ vat_number: z.string().describe("VAT number with or without its country prefix, e.g. DE123456789") }),
     }, async (args) => {
-        // TODO: implement check locally (paywall removed)
         try {
-            return textError("Not yet implemented: check");
+            return text(vatNumberCheck(args.vat_number));
         }
         catch (e) {
             return textError(String(e));
@@ -111,9 +111,8 @@ export function createServer() {
         description: "Validate an IBAN with the ISO 7064 mod 97-10 checksum, check its length against the country table, and pull out the bank identifier and account tail.",
         inputSchema: z.object({ iban: z.string().describe("IBAN, spaces allowed, e.g. DE89 3704 0044 0532 0130 00") }),
     }, async (args) => {
-        // TODO: implement check locally (paywall removed)
         try {
-            return textError("Not yet implemented: check");
+            return text(ibanCheck(args.iban));
         }
         catch (e) {
             return textError(String(e));
@@ -124,9 +123,8 @@ export function createServer() {
         description: "Convert an invoice total with today's ECB reference rate, reporting the rate, the rate date and the converted figure, for quoting a foreign-currency invoice.",
         inputSchema: z.object({ amount: z.number().describe("Invoice total to convert"), from: z.string().describe("Three-letter source currency, e.g. USD"), to: z.string().describe("Three-letter target currency, e.g. EUR") }),
     }, async (args) => {
-        // TODO: implement reference locally (paywall removed)
         try {
-            return textError("Not yet implemented: reference");
+            return text(await currencyReference(args.amount, args.from, args.to));
         }
         catch (e) {
             return textError(String(e));

@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { quote, fxHistory } from "./api.js";
+import { quote, fxBoard, fxHistory } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -29,9 +29,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement board locally (paywall removed)
         try {
-            return textError("Not yet implemented: board");
+            return text(await fxBoard(args));
         }
         catch (e) {
             return textError(String(e));

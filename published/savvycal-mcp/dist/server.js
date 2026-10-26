@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { addBusinessDays, businessDays, convertTime, meetingSlots, teamOverlap, timezoneInfo, worldClock } from "./api.js";
+import { addBusinessDays, businessDays, calendarArithmetic, convertTime, durationReport, meetingSlots, teamOverlap, timezoneInfo, worldClock } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -142,9 +142,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement arithmetic locally (paywall removed)
         try {
-            return textError("Not yet implemented: arithmetic");
+            return text(await calendarArithmetic(args));
         }
         catch (e) {
             return textError(String(e));
@@ -160,9 +159,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement report locally (paywall removed)
         try {
-            return textError("Not yet implemented: report");
+            return text(await durationReport(args));
         }
         catch (e) {
             return textError(String(e));

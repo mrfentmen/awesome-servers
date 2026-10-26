@@ -222,6 +222,130 @@ const cgNum = (v) => {
 };
 const cgPct = (v) => (Number.isFinite(cgNum(v)) ? `${cgNum(v).toFixed(2)}%` : '?');
 const cgSpreadOf = (t) => cgNum(t.converted_last?.usd ?? t.last);
+/**
+ * Every market one coin trades on, ranked by real 24 hour USD volume, with the
+ * dispersion of prices across those markets and the flags that decide whether a
+ * print can be trusted at all.
+ */
+export async function coinTickers(args) {
+    const coin = (args.coin ?? '').trim().toLowerCase();
+    if (!coin)
+        throw new CgBatch3Error('Provide a coin id, e.g. bitcoin or ethereum.');
+    const limit = Math.min(Math.max(Math.floor(args.limit ?? 12), 1), 40);
+    const minVolume = Math.max(cgNum(args.min_volume) || 0, 0);
+    const onlyClean = String(args.only_clean ?? '').trim().toLowerCase() === 'true';
+    const d = await cgBatch3Get(`/coins/${encodeURIComponent(coin)}/tickers`);
+    const all = d.tickers ?? [];
+    if (!all.length)
+        throw new CgBatch3Error(`CoinGecko lists no markets for "${coin}".`);
+    const name = d.name ?? coin;
+    const flagged = (t) => ({
+        stale: t.is_stale === true,
+        anomaly: t.is_anomaly === true,
+        incentive: t.has_trading_incentive === true,
+        untrusted: t.trust_score === null || t.trust_score === undefined,
+    });
+    const rows = all.map((t) => {
+        const price = cgNum(t.converted_last?.usd);
+        return { t, price, vol: cgNum(t.converted_volume?.usd), f: flagged(t) };
+    }).filter((r) => Number.isFinite(r.vol));
+    if (!rows.length)
+        throw new CgBatch3Error(`CoinGecko returned ${all.length} market(s) for ${name} but none carried a usable USD volume.`);
+    const isClean = (r) => !r.f.stale && !r.f.anomaly && !r.f.incentive && !r.f.untrusted;
+    const kept = rows.filter((r) => (!onlyClean || isClean(r)) && r.vol >= minVolume);
+    if (!kept.length) {
+        const flaggedCount = rows.filter((r) => !isClean(r)).length;
+        return `${name}: ${rows.length} market(s), none passed the filters. ${flaggedCount} carry a data-quality flag` +
+            (minVolume > 0 ? ` and the 24h USD volume floor is ${usd3(minVolume)}.` : '.');
+    }
+    const ranked = kept.slice().sort((a, b) => b.vol - a.vol);
+    const totalVol = ranked.reduce((s, r) => s + r.vol, 0);
+    const shown = ranked.slice(0, limit);
+    const priced = ranked.map((r) => r.price).filter((n) => Number.isFinite(n) && n > 0).sort((a, b) => a - b);
+    const medianPrice = priced.length
+        ? (priced.length % 2 ? priced[(priced.length - 1) / 2] : (priced[priced.length / 2 - 1] + priced[priced.length / 2]) / 2)
+        : NaN;
+    const dispersion = priced.length > 1 && medianPrice > 0 ? ((priced[priced.length - 1] - priced[0]) / medianPrice) * 100 : NaN;
+    const dirty = rows.length - rows.filter((r) => isClean(r)).length;
+    const lines = [
+        `${name} (${coin}): ${all.length} market(s), ${rows.length} with a usable USD volume, ${kept.length} passed the filters`,
+        `Combined 24h volume ${usd3(totalVol)} across ${new Set(ranked.map((r) => r.t.market?.name ?? '?')).size} exchange(s)`,
+        priced.length > 1
+            ? `Prices ${usd3(priced[0])} to ${usd3(priced[priced.length - 1])} around a median of ${usd3(medianPrice)} — a ${dispersion.toFixed(1)}% spread top to bottom`
+            : 'Only one market carried a usable price, so no cross-market dispersion can be measured.',
+        dirty ? `${dirty} of ${rows.length} market(s) carried at least one data-quality flag; only_clean drops them.` : '',
+        '',
+        `${'market'.padEnd(26)}${'price USD'.padStart(16)}${'24h vol'.padStart(14)}${'share'.padStart(8)}${'trust'.padStart(7)}  flags`,
+        ...shown.map((r) => {
+            const share = totalVol > 0 ? (r.vol / totalVol) * 100 : NaN;
+            const flags = [
+                r.f.stale ? 'stale' : null,
+                r.f.anomaly ? 'anomaly' : null,
+                r.f.incentive ? 'incentive' : null,
+                r.f.untrusted ? 'no trust score' : null,
+            ].filter(Boolean);
+            return [
+                `${r.t.market?.name ?? '?'} ${r.t.base ?? '?'}/${r.t.target ?? '?'}`.slice(0, 26).padEnd(26),
+                (Number.isFinite(r.price) ? usd3(r.price) : '?').padStart(16),
+                usd3(r.vol).padStart(14),
+                `${(Number.isFinite(share) ? share.toFixed(1) : '?').padStart(7)}%`,
+                String(r.t.trust_score ?? 'n/a').padStart(7),
+                `  ${flags.length ? flags.join(', ') : 'clean'}`,
+            ].join('');
+        }),
+    ].filter((l) => l !== '');
+    if (ranked.length > shown.length)
+        lines.push('', `...and ${ranked.length - shown.length} more above the floor; raise limit to see them.`);
+    return lines.join('\n');
+}
+/**
+ * Real OHLC candles, with the cadence CoinGecko used named outright because it
+ * changes with the window, and a plain reading of where the last candle closed.
+ */
+export async function coinOhlc(args) {
+    const coin = (args.coin ?? '').trim().toLowerCase();
+    if (!coin)
+        throw new CgBatch3Error('Provide a coin id, e.g. bitcoin or ethereum.');
+    const currency = String(args.currency ?? 'usd').trim().toLowerCase();
+    const allowed = [1, 7, 14, 30, 90, 180, 365];
+    const days = Math.floor(Number(args.days ?? 7));
+    if (!allowed.includes(days))
+        throw new CgBatch3Error(`Days must be one of ${allowed.join(', ')}; CoinGecko only accepts those windows.`);
+    const cadence = days <= 2 ? '30-minute' : days <= 30 ? '4-hour' : '4-day';
+    const d = await cgBatch3Get(`/coins/${encodeURIComponent(coin)}/ohlc?vs_currency=${encodeURIComponent(currency)}&days=${days}`);
+    const rows = Array.isArray(d) ? d : [];
+    if (!rows.length)
+        throw new CgBatch3Error(`CoinGecko returned no OHLC candles for "${coin}" over ${days} day(s) in ${currency.toUpperCase()}.`);
+    const candles = rows.map((r) => ({ t: r[0], o: cgNum(r[1]), h: cgNum(r[2]), l: cgNum(r[3]), c: cgNum(r[4]) }))
+        .filter((k) => [k.o, k.h, k.l, k.c].every((n) => Number.isFinite(n)));
+    if (!candles.length)
+        throw new CgBatch3Error(`CoinGecko returned ${rows.length} OHLC row(s) for ${coin} but none carried four usable numbers.`);
+    const first = candles[0].o;
+    const last = candles[candles.length - 1];
+    const high = Math.max(...candles.map((k) => k.h));
+    const low = Math.min(...candles.map((k) => k.l));
+    const change = first > 0 ? ((last.c - first) / first) * 100 : NaN;
+    const rangePct = low > 0 ? ((high - low) / low) * 100 : NaN;
+    const span = last.h - last.l;
+    const position = span > 0 ? ((last.c - last.l) / span) * 100 : NaN;
+    const where = !Number.isFinite(position)
+        ? 'The last candle had no range to read.'
+        : position >= 66.7 ? `closed in the top third of its own range (${position.toFixed(0)}% up from the low)`
+            : position >= 33.3 ? `closed mid-range (${position.toFixed(0)}% up from the low)`
+                : `closed in the bottom third of its own range (${position.toFixed(0)}% up from the low)`;
+    const step = Math.max(1, Math.floor(candles.length / 12));
+    const shown = candles.filter((_, i) => i % step === 0 || i === candles.length - 1);
+    const usd = (n) => n.toLocaleString(undefined, { maximumFractionDigits: n >= 1000 ? 0 : 4 });
+    return [
+        `${coin} OHLC in ${currency.toUpperCase()}, last ${days} day(s) — ${candles.length} ${cadence} candle(s):`,
+        `Open ${usd(first)} | close ${usd(last.c)} | change ${Number.isFinite(change) ? change.toFixed(2) + '%' : '?'}`,
+        `Range ${usd(low)} to ${usd(high)}${Number.isFinite(rangePct) ? ` (${rangePct.toFixed(2)}% of the low)` : ''}`,
+        `Latest candle: ${where}; it traded ${usd(last.l)} to ${usd(last.h)}.`,
+        '',
+        ...shown.map((k) => `${new Date(k.t).toISOString().slice(0, 16).replace('T', ' ')} | O ${usd(k.o)} H ${usd(k.h)} L ${usd(k.l)} C ${usd(k.c)}`),
+        shown.length < candles.length ? `(every ${step}th candle shown)` : '',
+    ].filter((l) => l !== '').join('\n');
+}
 /** What one exchange is actually quoting, ranked by volume, which shows where its liquidity really sits. */
 export async function exchangeTickers(args) {
     const id = (args.exchange ?? '').trim().toLowerCase();

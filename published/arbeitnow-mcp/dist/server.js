@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { companies, companyJobs, hiringTrends, job, jobs, locations, remoteJobs, searchJobs, similarJobs, tags } from "./api.js";
+import { companies, companyJobs, hiringTrends, job, jobs, locations, relatedTags, remoteJobs, searchJobs, similarJobs, tags } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -172,9 +172,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement tags locally (paywall removed)
         try {
-            return textError("Not yet implemented: tags");
+            return text(await relatedTags(args));
         }
         catch (e) {
             return textError(String(e));

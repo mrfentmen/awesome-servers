@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { listModels, getModel, listModelFiles, getMe, categoryPath } from "./api.js";
+import { listModels, getModel, listModelFiles, getMe, categoryPath, categoryTree, taxonomyProfile } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -77,9 +77,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement tree locally (paywall removed)
         try {
-            return textError("Not yet implemented: tree");
+            return text(await categoryTree(args));
         }
         catch (e) {
             return textError(String(e));
@@ -108,9 +107,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement profile locally (paywall removed)
         try {
-            return textError("Not yet implemented: profile");
+            return text(await taxonomyProfile(args));
         }
         catch (e) {
             return textError(String(e));

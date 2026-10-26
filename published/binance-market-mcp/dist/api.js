@@ -212,3 +212,110 @@ export async function compareTickers(args) {
     }
     return lines.join("\n");
 }
+// ---- muxF tools:
+const price8 = (n) => Number(n ?? 0).toLocaleString(undefined, { maximumFractionDigits: 8 });
+function moverLine(t, quote) {
+    const last = Number(t.lastPrice ?? 0);
+    const change = Number(t.priceChangePercent ?? 0);
+    const low = Number(t.lowPrice ?? 0);
+    const high = Number(t.highPrice ?? 0);
+    const position = high > low ? ((last - low) / (high - low)) * 100 : null;
+    return (`${t.symbol ?? "?"} | ${price8(last)} | ${change >= 0 ? "+" : ""}${change.toFixed(2)}%` +
+        ` | range ${price8(low)} - ${price8(high)}` +
+        (position === null ? "" : ` | ${position.toFixed(0)}% through`) +
+        ` | vol ${Math.round(Number(t.quoteVolume ?? 0)).toLocaleString()} ${quote}`);
+}
+export async function marketMovers(args) {
+    const quote = (args.quote ?? "USDT").trim().toUpperCase();
+    if (!/^[A-Z]{2,6}$/.test(quote))
+        throw new BinanceError("Quote like USDT, BTC or USDC");
+    const limit = Math.min(Math.max(Math.floor(Number(args.limit ?? 8) || 8), 1), 20);
+    const d = await get(`${BASE}/ticker/24hr`);
+    if (!Array.isArray(d))
+        throw new BinanceError(`Binance: ${readMsg(d) ?? "ticker list unavailable"}`);
+    const rows = d.filter((t) => {
+        const s = t.symbol ?? "";
+        return s.endsWith(quote) && s.length > quote.length && Number(t.quoteVolume ?? 0) > 0;
+    });
+    if (!rows.length)
+        throw new BinanceError(`Binance lists no ${quote} pairs with 24h volume`);
+    const ranked = [...rows].sort((a, b) => Number(b.priceChangePercent ?? 0) - Number(a.priceChangePercent ?? 0));
+    const gainers = ranked.slice(0, limit);
+    const gainerSymbols = new Set(gainers.map((t) => t.symbol));
+    const losers = ranked
+        .slice(-Math.min(limit * 2, ranked.length))
+        .filter((t) => !gainerSymbols.has(t.symbol))
+        .slice(-limit)
+        .reverse();
+    return [
+        `Binance ${quote}: ${rows.length.toLocaleString()} pairs with 24h volume, ${rows.filter((t) => Number(t.priceChangePercent ?? 0) >= 0).length.toLocaleString()} up and ${rows.filter((t) => Number(t.priceChangePercent ?? 0) < 0).length.toLocaleString()} down.`,
+        "",
+        `Top ${gainers.length} gainer(s) in 24h:`,
+        ...gainers.map((t, i) => `  ${i + 1}. ${moverLine(t, quote)}`),
+        "",
+        `Top ${losers.length} loser(s) in 24h:`,
+        ...(losers.length ? losers.map((t, i) => `  ${i + 1}. ${moverLine(t, quote)}`) : ["  none"]),
+    ].join("\n");
+}
+const CANDLES_PER_YEAR = { "1m": 525600, "5m": 105120, "15m": 35040, "1h": 8760, "4h": 2190, "1d": 365, "1w": 52 };
+export async function klineIndicators(args) {
+    const symbol = (args.symbol ?? "").trim().toUpperCase();
+    if (!VALID.test(symbol))
+        throw new BinanceError("Provide a symbol like BTCUSDT");
+    const interval = (args.interval ?? "1d").toLowerCase();
+    if (!(interval in CANDLES_PER_YEAR))
+        throw new BinanceError("Interval must be 1m, 5m, 15m, 1h, 4h, 1d, or 1w");
+    const limit = Math.min(Math.max(Math.floor(Number(args.limit ?? 100) || 100), 30), 500);
+    const d = await get(`${BASE}/klines?symbol=${encodeURIComponent(symbol)}&interval=${interval}&limit=${limit}`);
+    if (!Array.isArray(d))
+        throw new BinanceError(`Binance: ${readMsg(d) ?? "invalid symbol"}`);
+    const candles = d
+        .map((k) => ({ openTime: Number(k[0]), close: Number(k[4]) }))
+        .filter((c) => Number.isFinite(c.close) && c.close > 0);
+    if (candles.length < 30)
+        throw new BinanceError(`Binance returned ${candles.length} usable candles, which is too few for these indicators`);
+    const closes = candles.map((c) => c.close);
+    const last = closes[closes.length - 1];
+    const sma = (window) => (closes.length >= window
+        ? closes.slice(-window).reduce((a, b) => a + b, 0) / window
+        : null);
+    const returns = [];
+    for (let i = 1; i < closes.length; i += 1)
+        returns.push(Math.log(closes[i] / closes[i - 1]));
+    const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
+    const variance = returns.reduce((a, b) => a + (b - mean) ** 2, 0) / Math.max(returns.length - 1, 1);
+    const vol = Math.sqrt(variance) * Math.sqrt(CANDLES_PER_YEAR[interval]) * 100;
+    const period = 14;
+    let gain = 0;
+    let loss = 0;
+    const rsiWindow = closes.slice(-(period + 1));
+    for (let i = 1; i < rsiWindow.length; i += 1) {
+        const diff = rsiWindow[i] - rsiWindow[i - 1];
+        if (diff >= 0)
+            gain += diff;
+        else
+            loss -= diff;
+    }
+    const avgGain = gain / period;
+    const avgLoss = loss / period;
+    const rsi = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+    const peak = Math.max(...closes);
+    const drawdown = ((last - peak) / peak) * 100;
+    const windowChange = ((last - closes[0]) / closes[0]) * 100;
+    const fmtPct = (n) => `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
+    const smaLine = [7, 30, 50]
+        .map((w) => {
+        const v = sma(w);
+        return v === null ? `SMA ${w}: n/a` : `SMA ${w}: ${price8(v)}`;
+    })
+        .join(" | ");
+    const tone = rsi >= 70 ? "overbought" : rsi <= 30 ? "oversold" : "neutral";
+    return [
+        `${symbol} ${interval} — ${candles.length} candles, ${new Date(candles[0].openTime).toISOString().slice(0, 10)} to ${new Date(candles[candles.length - 1].openTime).toISOString().slice(0, 10)}`,
+        `Last close ${price8(last)} | change over the window ${fmtPct(windowChange)}`,
+        smaLine,
+        `RSI 14: ${rsi.toFixed(1)} (${tone})`,
+        `Annualised realised volatility: ${vol.toFixed(1)}% (from ${returns.length} candle returns)`,
+        `Drawdown from the window high (${price8(peak)}): ${drawdown.toFixed(2)}%`,
+    ].join("\n");
+}

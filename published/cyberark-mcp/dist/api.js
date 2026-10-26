@@ -602,3 +602,126 @@ function mutations(base, year) {
     }
     return [...out];
 }
+// ---- muxE tools:
+/**
+ * NS answers normally arrive in the Authority section rather than Answer, so a
+ * lookup that only reads Answer would report a delegated domain as having none.
+ */
+function recordsFromSections(body, type) {
+    const want = DNS_TYPES[type];
+    if (want === undefined)
+        throw new Error(`Unsupported record type ${type}.`);
+    const sections = [...(body.Answer ?? []), ...(body.Authority ?? [])];
+    return sections
+        .filter((row) => row.type === want)
+        .map((row) => String(row.data ?? "").trim().replace(/^"([\s\S]*)"$/, "$1"));
+}
+/** The whole public DNS picture for one domain, read in a single pass. */
+export async function dnsRecordInventory(args) {
+    const raw = cleanDomain(args.domain);
+    if (!raw || !raw.includes("."))
+        return "Provide a domain like example.com.";
+    const [nsBody, aBody, aaaaBody, mxBody, txtBody, dmarcBody, soaBody, caaBody] = await Promise.all([
+        dns(raw, "NS"),
+        dns(raw, "A"),
+        dns(raw, "AAAA"),
+        dns(raw, "MX"),
+        dns(raw, "TXT"),
+        dns(`_dmarc.${raw}`, "TXT"),
+        dns(raw, "SOA"),
+        dns(raw, "CAA"),
+    ]);
+    const ns = recordsFromSections(nsBody, "NS");
+    const a = recordsFromSections(aBody, "A");
+    const aaaa = recordsFromSections(aaaaBody, "AAAA");
+    const mx = recordsFromSections(mxBody, "MX");
+    const txt = recordsFromSections(txtBody, "TXT");
+    const dmarc = recordsFromSections(dmarcBody, "TXT").filter((r) => r.startsWith("v=DMARC1"));
+    const soa = recordsFromSections(soaBody, "SOA");
+    const caa = recordsFromSections(caaBody, "CAA");
+    const spf = txt.filter((r) => r.startsWith("v=spf1"));
+    const verification = txt.filter((r) => /site-?verification|verify|domain-verification|_domainconnect|MS=/i.test(r));
+    const mxRows = mx.map((row) => {
+        const [priority, host] = row.split(/\s+/);
+        return { priority: Number(priority), host: (host ?? "").replace(/\.$/, "") || "(root)" };
+    });
+    const nullMx = mxRows.length > 0 && mxRows.every((r) => r.host === "" || r.host === "." || (r.priority === 0 && r.host === "(root)"));
+    const soaParts = (soa[0] ?? "").split(/\s+/);
+    const serial = Number(soaParts[2]);
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const epochSerial = Number.isFinite(serial) && serial >= 1_000_000_000 && serial <= nowSeconds + 31_536_000;
+    const claimsMail = spf.length > 0 || dmarc.length > 0;
+    const notes = [];
+    if (nullMx)
+        notes.push("Null MX published (0 .), which explicitly declares the domain accepts no email. That is deliberate, but it means mail to it is rejected by design.");
+    if (!mx.length && claimsMail)
+        notes.push("No MX record, yet the domain publishes SPF or DMARC. It claims to send mail but cannot receive replies, bounces included.");
+    if (!mx.length && !claimsMail)
+        notes.push("No MX record and no SPF or DMARC, so the domain neither sends nor receives mail.");
+    if (!caa.length)
+        notes.push("No CAA record, so any certificate authority may issue a certificate for this domain. Publish a CAA record listing only the authorities you actually use.");
+    if (soa.length && !epochSerial)
+        notes.push(`SOA serial ${soaParts[2] ?? "?"} is not an epoch timestamp. Many DNS providers use a plain counter instead, which is fine, but secondary nameservers then rely on counter arithmetic rather than a date.`);
+    if (!ns.length)
+        notes.push("No NS records were returned, which usually means the domain is not delegated to any nameserver.");
+    const lines = [
+        `DNS inventory for ${raw} (DNS-over-HTTPS, one pass)`,
+        "",
+        `Delegation: ${ns.length ? `${ns.length} nameserver(s) — ${ns.join(", ")}` : "none returned"}`,
+        `A records: ${a.length ? a.join(", ") : "none"}`,
+        `AAAA records: ${aaaa.length ? aaaa.join(", ") : "none (IPv4 only)"}`,
+        `MX records: ${mx.length ? mxRows.map((r) => `${r.priority} ${r.host}`).join(", ") : "none"}`,
+        `TXT records: ${txt.length}`,
+        ...txt.map((r) => `  ${r.length > 120 ? `${r.slice(0, 117)}...` : r}`),
+        `SPF: ${spf.length ? spf[0] : "none"}`,
+        `DMARC: ${dmarc.length ? dmarc[0] : "none at _dmarc"}`,
+        `Verification records: ${verification.length ? verification.length : "none"}`,
+        `SOA: ${soa.length ? soa[0] : "none returned"}`,
+        epochSerial ? "  serial looks epoch-based, so it also encodes the last change date." : "",
+        `CAA: ${caa.length ? caa.join(" | ") : "none"}`,
+        "",
+        notes.length ? `Things to know (${notes.length}):\n${notes.map((n) => `  - ${n}`).join("\n")}` : "No structural problems found in the records returned.",
+    ].filter((l) => l !== "");
+    return lines.join("\n");
+}
+/** The mutation dictionary a credential-stuffing run would try, checked against HIBP. */
+export async function passwordVariationAudit(args) {
+    const base = String(args.base ?? "").trim();
+    if (!base)
+        throw new Error("Provide a base word, name or company to mutate, e.g. acme.");
+    const year = Math.floor(Number(args.year ?? new Date().getFullYear()) || new Date().getFullYear());
+    const limit = Math.min(Math.max(Math.floor(Number(args.limit ?? 40) || 40), 5), 80);
+    const candidates = mutations(base, year).slice(0, limit);
+    if (!candidates.length)
+        throw new Error("No variants could be built from that base word.");
+    const checked = [];
+    let leaked = 0;
+    let leakedRecords = 0;
+    // Sequential on purpose: each candidate is one HIBP range request and a burst gets throttled.
+    for (const candidate of candidates) {
+        const count = await pwnedCount(candidate);
+        if (count > 0) {
+            leaked += 1;
+            leakedRecords += count;
+        }
+        checked.push({ candidate, count });
+    }
+    const clean = checked.length - leaked;
+    const worst = [...checked].sort((a, b) => b.count - a.count).slice(0, 8);
+    const safe = checked.filter((r) => r.count === 0).slice(0, 8);
+    return [
+        `Password variation audit for "${base}" (${year}), ${checked.length} candidate(s) checked against Have I Been Pwned`,
+        `${leaked} of ${checked.length} variants already appear in breach data, covering ${leakedRecords.toLocaleString("en-US")} record(s). ${clean} are not in any breach and are still predictable, so they are not safe to use.`,
+        leaked > 0
+            ? "A leaked variant is not made safe by adding another symbol or a different year; attackers enumerate exactly those. Use a generated password instead."
+            : "None of these variants is leaked yet, which does not make them safe: they are the first guesses any attacker tries.",
+        "",
+        `Most leaked variants:`,
+        ...(worst.length ? worst.map((r) => `  ${r.candidate.padEnd(24)} ${r.count > 0 ? `${r.count.toLocaleString("en-US")} record(s)` : "not in any breach"}`) : ["  none"]),
+        "",
+        `Still clean but predictable (${safe.length} shown of ${clean}):`,
+        ...(safe.length ? safe.map((r) => `  ${r.candidate}`) : ["  none — every variant checked is already leaked"]),
+        "",
+        "Each candidate was hashed locally and only its 5-character SHA-1 prefix was sent, and the results are not stored.",
+    ].join("\n");
+}

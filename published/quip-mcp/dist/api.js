@@ -127,3 +127,105 @@ export async function documentProfile(args) {
         "Readability is scored from the supplied text alone; no model, no service and no fabricated data is involved.",
     ].join("\n");
 }
+// ---- muxH tools:
+// A Quip thread is a document, so these two read a public encyclopedia article
+// the same way: its lead with its provenance, and the skeleton of its headings.
+const WIKI = "https://en.wikipedia.org/w/api.php";
+const WIKI_UA = "quip-mcp/1.2 (https://github.com/mrfentmen/quip-mcp)";
+async function wikiJson(params) {
+    const qs = new URLSearchParams({ format: "json", formatversion: "2", ...params });
+    let res;
+    try {
+        res = await fetch(`${WIKI}?${qs}`, {
+            signal: AbortSignal.timeout(30000),
+            headers: { "User-Agent": WIKI_UA, Accept: "application/json" },
+        });
+    }
+    catch (e) {
+        throw new QuipError(`Network error talking to Wikipedia: ${errorMessage(e)}`);
+    }
+    if (!res.ok)
+        throw new QuipError(`Wikipedia answered HTTP ${res.status}.`);
+    return res.json();
+}
+const oneLine = (text) => String(text ?? "").replace(/\s+/g, " ").trim();
+const clipped = (text, max) => (text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text);
+function requireTitle(title) {
+    const wanted = String(title ?? "").trim();
+    if (!wanted)
+        throw new QuipError("Give an article title, for example 'Bitcoin'.");
+    return wanted;
+}
+export async function wikiArticle(title) {
+    const wanted = requireTitle(title);
+    const data = await wikiJson({
+        action: "query",
+        redirects: "1",
+        prop: "extracts|pageimages|pageprops|revisions",
+        exintro: "1",
+        explaintext: "1",
+        exlimit: "1",
+        pithumbsize: "1024",
+        rvprop: "ids|timestamp|size|user",
+        rvslots: "main",
+        titles: wanted,
+    });
+    const page = data?.query?.pages?.[0];
+    if (!page || page.missing)
+        throw new QuipError(`Wikipedia has no article called "${wanted}".`);
+    const revision = page.revisions?.[0] ?? {};
+    const bytes = Number(revision.size ?? 0);
+    const lead = oneLine(page.extract);
+    const words = lead ? lead.split(/\s+/).length : 0;
+    const qid = page.pageprops?.wikibase_item ?? null;
+    const image = page.thumbnail?.source ?? null;
+    const lines = [
+        `${page.title} (page id ${page.pageid})`,
+        revision.revid
+            ? `Read at revision ${revision.revid}, saved ${String(revision.timestamp ?? "").slice(0, 19).replace("T", " ")} UTC by ${revision.user ?? "an anonymous editor"}`
+            : "Wikipedia did not return revision metadata for this page.",
+        `Wikitext at that revision: ${bytes.toLocaleString()} byte(s)`,
+        `Lead: ${lead.length.toLocaleString()} character(s), ${words.toLocaleString()} word(s)`,
+        qid ? `Knowledge item: ${qid} (https://www.wikidata.org/wiki/${qid})` : "Knowledge item: none recorded for this page",
+        image ? `Lead image: ${image}` : "Lead image: none on this page",
+        "",
+        lead ? clipped(lead, 1200) : "Wikipedia has no plain-text lead for this page.",
+        "",
+        "The lead and the revision are what Wikipedia served at read time; nothing here is summarised or invented.",
+    ];
+    return lines.join("\n");
+}
+export async function wikiOutline(title, maxDepth) {
+    const wanted = requireTitle(title);
+    const depth = Math.min(Math.max(Number(maxDepth ?? 3) || 3, 1), 6);
+    const data = await wikiJson({ action: "parse", page: wanted, prop: "sections", redirects: "1" });
+    const parsed = data?.parse;
+    if (!parsed)
+        throw new QuipError(`Wikipedia could not parse an article called "${wanted}".`);
+    const sections = Array.isArray(parsed.sections) ? parsed.sections : [];
+    if (!sections.length)
+        throw new QuipError(`"${parsed.title}" has no sections to outline.`);
+    const perLevel = {};
+    const shown = [];
+    for (const section of sections) {
+        const level = Math.max(1, Math.min(6, Number(section.toclevel ?? 1)));
+        perLevel[level] = (perLevel[level] ?? 0) + 1;
+        if (level <= depth)
+            shown.push({ level, line: String(section.line ?? "").trim(), anchor: section.anchor ?? "", number: section.number ?? "" });
+    }
+    const counts = Object.keys(perLevel).sort().map((level) => `H${level}: ${perLevel[level]}`).join(" | ");
+    const lines = [
+        `${parsed.title} — ${sections.length} section heading(s)`,
+        `Counts by level (whole article): ${counts}`,
+        `Showing levels 1 to ${depth}: ${shown.length} heading(s)`,
+        "",
+    ];
+    for (const row of shown) {
+        const indent = "  ".repeat(row.level - 1);
+        const anchor = row.anchor ? ` #${row.anchor}` : "";
+        lines.push(`${indent}H${row.level} ${row.line}${anchor}`);
+    }
+    if (shown.length < sections.length)
+        lines.push("", `${sections.length - shown.length} deeper heading(s) hidden by max_depth.`);
+    return lines.join("\n");
+}

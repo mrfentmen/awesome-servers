@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { checkServices, dnsPropagation, portCheck, serviceStatus, sslChain, statusSummary, dns_records, cert_forecast } from "./api.js";
+import { checkServices, dnsPropagation, portCheck, serviceStatus, sslChain, statusSummary, dns_records, cert_forecast, headerAudit } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -107,9 +107,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement audit locally (paywall removed)
         try {
-            return textError("Not yet implemented: audit");
+            return text(await headerAudit({ url: args.url, path: args.path }));
         }
         catch (e) {
             return textError(String(e));

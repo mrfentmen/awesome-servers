@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { listProjectAssets, getAsset, getRateLimits } from "./api.js";
+import { listProjectAssets, getAsset, getRateLimits, engineReleaseChannels, engineReleaseNotes } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -63,9 +63,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement channels locally (paywall removed)
         try {
-            return textError("Not yet implemented: channels");
+            return text(await engineReleaseChannels(args));
         }
         catch (e) {
             return textError(String(e));
@@ -80,9 +79,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement notes locally (paywall removed)
         try {
-            return textError("Not yet implemented: notes");
+            return text(await engineReleaseNotes(args));
         }
         catch (e) {
             return textError(String(e));

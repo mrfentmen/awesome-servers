@@ -477,3 +477,67 @@ export async function http_timing(args) {
     lines.push('  The existing check_url reports one total response time per host, so a slow page caused by a slow handshake is indistinguishable from a slow page caused by a slow server.');
     return lines.join('\n');
 }
+const SECURITY_HEADERS = [
+    ['strict-transport-security', 'tells the browser to refuse plain HTTP to this host for the lifetime it names'],
+    ['content-security-policy', 'restricts which scripts, styles, frames and endpoints the page may load from'],
+    ['x-content-type-options', 'stops the browser sniffing a different MIME type than the one declared'],
+    ['x-frame-options', 'stops another site framing this page, which is what clickjacking needs'],
+    ['referrer-policy', 'limits how much of the current URL leaks to other sites in the Referer header'],
+    ['permissions-policy', 'switches off browser features such as camera, microphone and geolocation'],
+    ['cross-origin-opener-policy', 'isolates this page from any window it opens, closing a whole class of script bugs'],
+    ['cross-origin-resource-policy', 'stops other origins reading this response as a resource'],
+];
+const LEAKY_HEADERS = ['server', 'x-powered-by', 'x-aspnet-version', 'x-generator', 'via'];
+export async function headerAudit(args) {
+    const target = normalizeTarget(args?.url ?? '');
+    const requested = target.toString();
+    const extra = String(args?.path ?? '').trim();
+    if (extra) {
+        target.pathname = extra.startsWith('/') ? extra : `/${extra}`;
+        target.search = '';
+    }
+    const auditUrl = target.toString();
+    const start = Date.now();
+    const res = await fetch(auditUrl, {
+        redirect: 'follow',
+        headers: { 'User-Agent': UA, Accept: '*/*' },
+        signal: AbortSignal.timeout(20000),
+    });
+    const bytes = (await res.arrayBuffer()).byteLength;
+    const ms = Date.now() - start;
+    const headers = [...res.headers.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    const lowered = new Map(headers.map(([k, v]) => [k.toLowerCase(), v]));
+    const lines = [
+        `Header audit for ${auditUrl}${auditUrl !== requested ? ` (requested ${requested})` : ''}`,
+        `HTTP ${res.status} ${res.statusText} in ${ms} ms${res.url && res.url !== auditUrl ? `, after redirects to ${res.url}` : ''}`,
+        `Body read: ${bytes.toLocaleString('en-US')} byte(s). ${headers.length} response header(s).`,
+        '',
+        'Security-relevant headers:',
+    ];
+    let missing = 0;
+    for (const [name, why] of SECURITY_HEADERS) {
+        const value = lowered.get(name);
+        if (!value) {
+            missing += 1;
+            lines.push(`  MISSING ${name}`);
+            lines.push(`          ${why}`);
+        }
+        else {
+            lines.push(`  present ${name}: ${value.length > 120 ? `${value.slice(0, 120)}…` : value}`);
+            lines.push(`          ${why}`);
+        }
+    }
+    lines.push('', `  ${SECURITY_HEADERS.length - missing} of ${SECURITY_HEADERS.length} security headers set, ${missing} absent.`);
+    const leaks = LEAKY_HEADERS.filter((name) => lowered.has(name));
+    if (leaks.length) {
+        lines.push('', 'Disclosure worth a look:');
+        for (const name of leaks)
+            lines.push(`  ${name}: ${lowered.get(name)}`);
+    }
+    lines.push('', 'Every header the response returned:');
+    for (const [name, value] of headers)
+        lines.push(`  ${name}: ${value.length > 160 ? `${value.slice(0, 160)}…` : value}`);
+    lines.push('');
+    lines.push('Note: headers are read from one live response, so a route that sets its own headers will differ — pass path to audit another route on the same host.');
+    return lines.join('\n');
+}

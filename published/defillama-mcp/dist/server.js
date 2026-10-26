@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { m0_chains, m0_protocol, m1_chainTvl, m1_protocolInfo, m1_topProtocols, topYields, hacks, stablecoins, dexVolume, feesOverview, stablecoinChains } from "./api.js";
+import { m0_chains, m0_protocol, m1_chainTvl, m1_protocolInfo, m1_topProtocols, topYields, hacks, stablecoins, dexVolume, feesOverview, stablecoinChains, stablecoinHistory, aggregatorVolume } from "./api.js";
 const text = (value) => ({ content: [{ type: 'text', text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -162,9 +162,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement history locally (paywall removed)
         try {
-            return textError("Not yet implemented: history");
+            return text(await stablecoinHistory(args));
         }
         catch (e) {
             return textError(String(e));
@@ -179,9 +178,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement volume locally (paywall removed)
         try {
-            return textError("Not yet implemented: volume");
+            return text(await aggregatorVolume(args));
         }
         catch (e) {
             return textError(String(e));

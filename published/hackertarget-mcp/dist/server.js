@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { dnsLookup, reverseDns, whoisLookup, geoIpLookup, httpHeaders, reverseIp } from "./api.js";
+import { dnsLookup, reverseDns, whoisLookup, geoIpLookup, httpHeaders, reverseIp, hostSearch, asLookup } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -105,9 +105,8 @@ export function createServer() {
         inputSchema: z.object({ domain: z.string().describe("Domain to enumerate, e.g. stripe.com"), limit: z.number().int().min(1).max(200).default(25).describe("How many hostnames to print (default 25, max 200).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement search locally (paywall removed)
         try {
-            return textError("Not yet implemented: search");
+            return text(await hostSearch(args));
         }
         catch (e) {
             return textError(String(e));
@@ -119,9 +118,8 @@ export function createServer() {
         inputSchema: z.object({ query: z.string().describe("IP address or AS number, e.g. 8.8.8.8 or AS13335"), limit: z.number().int().min(1).max(100).default(15).describe("How many prefixes to print (default 15, max 100).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement lookup locally (paywall removed)
         try {
-            return textError("Not yet implemented: lookup");
+            return text(await asLookup(args));
         }
         catch (e) {
             return textError(String(e));

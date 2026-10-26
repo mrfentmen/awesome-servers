@@ -138,3 +138,178 @@ export async function campaignParameters(args) {
     out.push(problems.length ? "Problems found:" : "No parameter problem found in what you supplied.", ...problems.map((p) => `  - ${p}`), "", "Analytics tools agree on names and case, not on everything else: utm_source and utm_medium and utm_campaign are the near-universal three, while term and content are the ones most often left out. Lowercase matters because a report treats Source and source as two different values.", "This reads the URLs as text. It cannot tell you whether the tags are being received by your analytics tool, which is the failure that actually costs you the data.");
     return out.filter(Boolean).join("\n");
 }
+// ---- muxF tools:
+// Release cadence and project shape are read from npm and GitHub, both of which
+// answer without a Swetrix API key, so these two must not go through req().
+const SW_NPM = "https://registry.npmjs.org";
+const SW_DL = "https://api.npmjs.org/downloads/point/last-week";
+const SW_GH = "https://api.github.com";
+const SW_PKG = "swetrix";
+async function swPublic(url, label) {
+    let res;
+    try {
+        res = await fetch(url, { signal: AbortSignal.timeout(30000), headers: { ...UA, Accept: "application/json" } });
+    }
+    catch (e) {
+        throw new SwetrixError(`Could not reach ${label}: ${e.message}`);
+    }
+    if (res.status === 404)
+        throw new SwetrixError(`${label} has no record at ${url}.`);
+    if (res.status === 403 || res.status === 429)
+        throw new SwetrixError(`${label} is rate-limiting this client (HTTP ${res.status}); wait and retry.`);
+    if (!res.ok)
+        throw new SwetrixError(`${label} returned HTTP ${res.status}.`);
+    return await res.json();
+}
+function swReposlug(data) {
+    const raw = data?.repository;
+    const url = typeof raw === "string" ? raw : raw?.url;
+    if (!url)
+        return null;
+    const m = String(url).match(/github\.com[/:]([^/]+)\/([^/#?]+)/i);
+    if (!m)
+        return null;
+    return `${m[1]}/${m[2].replace(/\.git$/i, "")}`;
+}
+function swMedian(values) {
+    const a = [...values].sort((x, y) => x - y);
+    if (!a.length)
+        return null;
+    return a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2;
+}
+function swDayGap(fromIso, toIso) {
+    const a = Date.parse(String(fromIso ?? ""));
+    const b = Date.parse(String(toIso ?? ""));
+    if (!Number.isFinite(a) || !Number.isFinite(b))
+        return null;
+    return Math.round(((a - b) / 86400000) * 10) / 10;
+}
+function swFixed(n, digits = 1) {
+    return n === null ? "-" : n.toFixed(digits);
+}
+/** Release cadence of the published tracker package, with the GitHub tags beside it. */
+export async function sdkReleaseFeed(args) {
+    const limit = swBound(args?.limit, 1, 10, 5);
+    const pack = await swPublic(`${SW_NPM}/${SW_PKG}`, "the npm registry");
+    const versions = Object.keys(pack.versions ?? {});
+    if (!versions.length)
+        throw new SwetrixError(`The npm registry lists no published versions of ${SW_PKG}.`);
+    const times = pack.time ?? {};
+    const latest = pack["dist-tags"]?.latest ?? versions[versions.length - 1];
+    const dated = versions
+        .map((version) => ({ version, at: times[version] }))
+        .filter((v) => v.at)
+        .sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+    const gaps = [];
+    for (let i = 1; i < dated.length; i += 1) {
+        const gap = swDayGap(dated[i - 1].at, dated[i].at);
+        if (gap !== null && gap >= 0)
+            gaps.push(gap);
+    }
+    const manifest = pack.versions?.[latest] ?? {};
+    const deps = Object.keys(manifest.dependencies ?? {});
+    const peers = Object.keys(manifest.peerDependencies ?? {});
+    let downloads = null;
+    let downloadNote = "";
+    try {
+        const dl = await swPublic(`${SW_DL}/${SW_PKG}`, "npm download counts");
+        downloads = typeof dl?.downloads === "number" ? dl.downloads : null;
+    }
+    catch (e) {
+        downloadNote = errorMessage(e);
+    }
+    // npm keeps `repository` on the packument, not on each version manifest.
+    const slug = swReposlug(pack) ?? swReposlug(manifest);
+    let releases = [];
+    let releaseNote = "";
+    if (slug) {
+        try {
+            const raw = await swPublic(`${SW_GH}/repos/${slug}/releases?per_page=${Math.min(limit, 10)}`, "GitHub releases");
+            releases = (Array.isArray(raw) ? raw : []).map((r) => ({ tag: r.tag_name, at: r.published_at, pre: Boolean(r.prerelease) }));
+        }
+        catch (e) {
+            releaseNote = errorMessage(e);
+        }
+    }
+    else {
+        releaseNote = "the package metadata names no GitHub repository";
+    }
+    const daysSince = dated.length ? swDayGap(new Date().toISOString(), dated[0].at) : null;
+    const newest = dated.slice(0, limit);
+    const lines = [
+        `Published release feed for the ${SW_PKG} tracker package`,
+        `  latest ${latest}, published ${dated[0]?.at?.slice(0, 10) ?? "date not published"}${daysSince === null ? "" : ` (${daysSince} day(s) ago)`}`,
+        `  ${versions.length} version(s) on npm; ${gaps.length} release gap(s) measurable`,
+        `  gap between releases: median ${swFixed(swMedian(gaps), 1)} day(s), shortest ${swFixed(gaps.length ? Math.min(...gaps) : null, 1)}, longest ${swFixed(gaps.length ? Math.max(...gaps) : null, 1)}`,
+        `  dependencies ${deps.length} (${deps.slice(0, 6).join(", ") || "none"}) | peer dependencies ${peers.length}`,
+        downloads === null
+            ? `  last week's downloads: not available${downloadNote ? ` (${downloadNote})` : ""}`
+            : `  last week's downloads: ${downloads.toLocaleString("en-US")}`,
+        "",
+        `Newest ${newest.length} version(s) by publish date:`,
+        ...newest.map((v) => `  ${v.version.padEnd(14)} ${String(v.at).slice(0, 10)}`),
+        "",
+        releases.length
+            ? `GitHub releases on ${slug} (newest ${releases.length}):`
+            : `GitHub releases: none listed${releaseNote ? ` (${releaseNote})` : ""}`,
+        ...releases.map((r) => `  ${String(r.tag ?? "?").padEnd(14)} ${String(r.at ?? "").slice(0, 10)}${r.pre ? "  pre-release" : ""}`),
+        "",
+        "Gaps are measured between publish timestamps, so a batch of patch releases published in one afternoon counts as many small gaps and pulls the median down. Version count and download count describe the published package, not the repository's commit activity.",
+    ];
+    return lines.filter(Boolean).join("\n");
+}
+/** Project shape from GitHub: licence, size, language mix and who writes the code. */
+export async function ecosystemAudit(args) {
+    const limit = swBound(args?.limit, 1, 10, 5);
+    const pack = await swPublic(`${SW_NPM}/${SW_PKG}`, "the npm registry");
+    const latest = pack["dist-tags"]?.latest;
+    const slug = swReposlug(pack) ?? swReposlug(pack.versions?.[latest]);
+    if (!slug)
+        throw new SwetrixError(`${SW_PKG}'s package metadata names no GitHub repository, so there is nothing to audit.`);
+    const repo = await swPublic(`${SW_GH}/repos/${slug}`, "GitHub");
+    const languages = await swPublic(`${SW_GH}/repos/${slug}/languages`, "GitHub languages");
+    const contributors = await swPublic(`${SW_GH}/repos/${slug}/contributors?per_page=${Math.min(limit, 10)}&anon=1`, "GitHub contributors");
+    const totalBytes = Object.values(languages ?? {}).reduce((sum, n) => sum + (Number(n) || 0), 0);
+    const mix = Object.entries(languages ?? {})
+        .map(([name, bytes]) => ({ name, bytes: Number(bytes) || 0, share: totalBytes ? ((Number(bytes) || 0) / totalBytes) * 100 : 0 }))
+        .sort((a, b) => b.bytes - a.bytes);
+    const people = (Array.isArray(contributors) ? contributors : [])
+        .map((c) => ({ name: String(c.login ?? c.name ?? "anonymous"), commits: Number(c.contributions) || 0 }))
+        .sort((a, b) => b.commits - a.commits);
+    const totalCommits = people.reduce((sum, p) => sum + p.commits, 0);
+    const topShare = totalCommits ? (people[0].commits / totalCommits) * 100 : null;
+    const topTwoShare = people.length > 1 && totalCommits ? ((people[0].commits + people[1].commits) / totalCommits) * 100 : null;
+    const ageDays = swDayGap(new Date().toISOString(), repo.created_at);
+    const pushDays = swDayGap(new Date().toISOString(), repo.pushed_at);
+    const licence = repo.license?.spdx_id ?? repo.license?.name ?? "none declared";
+    const busFactor = topShare === null
+        ? "unknown, because no contributor list came back"
+        : topShare >= 70
+            ? `fragile: one person wrote ${swFixed(topShare, 1)}% of the commits, so they are a single point of failure`
+            : topShare >= 40
+                ? `concentrated: the top contributor wrote ${swFixed(topShare, 1)}%, which usually means one maintainer carries it`
+                : `shared: the top contributor wrote ${swFixed(topShare, 1)}%, so more than one person knows the code`;
+    const dominant = mix.length ? mix[0] : null;
+    const languageVerdict = !dominant
+        ? "no language breakdown came back"
+        : dominant.share >= 80
+            ? `${dominant.name} dominates at ${swFixed(dominant.share, 1)}% of the bytes, so a rewrite would essentially be a rewrite of that language`
+            : `${dominant.name} is the largest at ${swFixed(dominant.share, 1)}%, but no single language holds the codebase`;
+    return [
+        `Ecosystem audit of ${slug}`,
+        `  licence ${licence} | created ${String(repo.created_at ?? "").slice(0, 10)}${ageDays === null ? "" : ` (${Math.round(ageDays / 365.25)} year(s) old)`} | last push ${String(repo.pushed_at ?? "").slice(0, 10)}${pushDays === null ? "" : ` (${pushDays} day(s) ago)`}`,
+        `  stars ${repo.stargazers_count ?? "?"} | forks ${repo.forks_count ?? "?"} | watchers ${repo.subscribers_count ?? repo.watchers_count ?? "?"} | open issues ${repo.open_issues_count ?? "?"}`,
+        `  default branch ${repo.default_branch ?? "?"}${repo.archived ? " | ARCHIVED" : ""}`,
+        "",
+        `Languages by byte share (${Math.min(limit, mix.length)} of ${mix.length}):`,
+        ...mix.slice(0, limit).map((l) => `  ${l.name.padEnd(16)} ${swFixed(l.share, 1).padStart(6)}%  ${l.bytes.toLocaleString("en-US")} byte(s)`),
+        `  verdict: ${languageVerdict}`,
+        "",
+        `Contributors by commits (${Math.min(limit, people.length)} of ${people.length}):`,
+        ...people.slice(0, limit).map((p, i) => `  ${String(i + 1).padStart(2)}. ${p.name.slice(0, 24).padEnd(24)} ${String(p.commits).padStart(7)} commit(s)  ${totalCommits ? swFixed((p.commits / totalCommits) * 100, 1) : "-"}%`),
+        `  bus factor: ${busFactor}`,
+        topTwoShare === null ? "" : `  the top two together wrote ${swFixed(topTwoShare, 1)}% of the commits`,
+        "",
+        "Contributor counts are the ones GitHub returns for the default branch and an anonymous contributor entry is one person GitHub could not map to an account, so the ranking understates anyone who commits under several identities. Byte share measures line length, not complexity, which is why a large lockfile can make a language look dominant.",
+    ].filter(Boolean).join("\n");
+}

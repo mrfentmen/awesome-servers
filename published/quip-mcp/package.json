@@ -1,6 +1,6 @@
 {
   "name": "quip-mcp",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Quip Automation API: thread search, thread content, folders. Needs token.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/quip-mcp",

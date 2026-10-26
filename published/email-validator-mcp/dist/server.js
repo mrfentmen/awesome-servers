@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { checkDomain, disposableDomains, extractEmails, normalizeEmail, validateBatch, validateEmail, emailAuthRecords, mxHealth, correctTypo, aliasVariants } from "./api.js";
+import { checkDomain, disposableDomains, extractEmails, normalizeEmail, validateBatch, validateEmail, emailAuthRecords, mxHealth, correctTypo, aliasVariants, smtpMailboxCheck, spfEvaluate } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -154,9 +154,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement check locally (paywall removed)
         try {
-            return textError("Not yet implemented: check");
+            return text(await smtpMailboxCheck(args));
         }
         catch (e) {
             return textError(String(e));
@@ -172,9 +171,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement evaluate locally (paywall removed)
         try {
-            return textError("Not yet implemented: evaluate");
+            return text(await spfEvaluate(args));
         }
         catch (e) {
             return textError(String(e));

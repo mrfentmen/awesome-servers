@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getBook, searchBooks, getBooksBatch } from "./api.js";
+import { getBook, searchBooks, getBooksBatch, locCatalog, bookBackground } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -61,9 +61,8 @@ export function createServer() {
         inputSchema: z.object({ query: z.string().describe("Title, author or subject to search for"), limit: z.number().int().min(1).max(20).default(5).describe("How many records to print (default 5, max 20).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement catalog locally (paywall removed)
         try {
-            return textError("Not yet implemented: catalog");
+            return text(await locCatalog(args.query, args.limit));
         }
         catch (e) {
             return textError(String(e));
@@ -75,9 +74,8 @@ export function createServer() {
         inputSchema: z.object({ title: z.string().describe("Book title or author name, e.g. The Dispossessed") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement background locally (paywall removed)
         try {
-            return textError("Not yet implemented: background");
+            return text(await bookBackground(args.title));
         }
         catch (e) {
             return textError(String(e));

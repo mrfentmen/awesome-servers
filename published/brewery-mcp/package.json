@@ -1,6 +1,6 @@
 {
   "name": "brewery-mcp",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Open Brewery DB: search breweries, details, random. Keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/brewery-mcp",

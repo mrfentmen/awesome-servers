@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { boardPins, formatBoard, formatPin, getBoard, getPin, listBoards, myAccount, PinterestError, imageSources } from "./api.js";
+import { boardPins, formatBoard, formatPin, getBoard, getPin, listBoards, myAccount, PinterestError, imageSources, findLicensedImages, imageLicence } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -85,9 +85,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement images locally (paywall removed)
         try {
-            return textError("Not yet implemented: images");
+            return text(await findLicensedImages(args));
         }
         catch (e) {
             return textError(String(e));
@@ -101,9 +100,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement licence locally (paywall removed)
         try {
-            return textError("Not yet implemented: licence");
+            return text(await imageLicence(args.id));
         }
         catch (e) {
             return textError(String(e));

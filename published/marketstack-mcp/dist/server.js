@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getLatestEod, getEodOnDate, searchTickers, listExchanges, getDividends } from "./api.js";
+import { getLatestEod, getEodOnDate, searchTickers, listExchanges, getDividends, symbolDividendLedger, priceWindowReview } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -90,9 +90,8 @@ export function createServer() {
         inputSchema: z.object({ symbol: z.string().describe("Ticker, e.g. AAPL."), limit: z.number().int().min(1).max(20).default(8).describe("Distributions to print (default 8, max 20).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement ledger locally (paywall removed)
         try {
-            return textError("Not yet implemented: ledger");
+            return text(await symbolDividendLedger(args.symbol, args.limit));
         }
         catch (e) {
             return textError(String(e));
@@ -104,9 +103,8 @@ export function createServer() {
         inputSchema: z.object({ symbol: z.string().describe("Ticker, e.g. MSFT."), from: z.string().describe("Start date YYYY-MM-DD (default 30 days ago).").optional(), to: z.string().describe("End date YYYY-MM-DD (default today).").optional(), limit: z.number().int().min(1).max(60).default(10).describe("Sessions to print (default 10, max 60).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement review locally (paywall removed)
         try {
-            return textError("Not yet implemented: review");
+            return text(await priceWindowReview(args.symbol, args.from, args.to, args.limit));
         }
         catch (e) {
             return textError(String(e));

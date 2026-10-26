@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { formatStream, formatUser, getUser, topGames, topStreams, TwitchError, serviceStatus } from "./api.js";
+import { formatStream, formatUser, getUser, topGames, topStreams, TwitchError, serviceStatus, gameDemand } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -85,9 +85,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement demand locally (paywall removed)
         try {
-            return textError("Not yet implemented: demand");
+            return text(await gameDemand(args));
         }
         catch (e) {
             return textError(String(e));

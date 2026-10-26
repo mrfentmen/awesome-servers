@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { breweryStats, findBreweries, getBrewery, randomBrewery, searchAllBreweries, searchBreweries, autocompleteBreweries, randomBreweries, breweriesByIds, typesByRegion } from "./api.js";
+import { breweryStats, findBreweries, getBrewery, randomBrewery, searchAllBreweries, searchBreweries, autocompleteBreweries, randomBreweries, breweriesByIds, typesByRegion, nearestBreweries, recordCoverage } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -161,9 +161,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement breweries locally (paywall removed)
         try {
-            return textError("Not yet implemented: breweries");
+            return text(await nearestBreweries(args));
         }
         catch (e) {
             return textError(String(e));
@@ -177,9 +176,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement coverage locally (paywall removed)
         try {
-            return textError("Not yet implemented: coverage");
+            return text(await recordCoverage(args));
         }
         catch (e) {
             return textError(String(e));

@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { searchGames, getGame } from "./api.js";
+import { searchGames, getGame, steamStoreInfo, steamReach } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -48,9 +48,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement info locally (paywall removed)
         try {
-            return textError("Not yet implemented: info");
+            return text(await steamStoreInfo(args.app_id));
         }
         catch (e) {
             return textError(String(e));
@@ -64,9 +63,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement reach locally (paywall removed)
         try {
-            return textError("Not yet implemented: reach");
+            return text(await steamReach(args.app_id));
         }
         catch (e) {
             return textError(String(e));

@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { listProjects, listItems, getItem } from "./api.js";
+import { listProjects, listItems, getItem, dependencyAudit, advisoryDetail } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -64,9 +64,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement audit locally (paywall removed)
         try {
-            return textError("Not yet implemented: audit");
+            return text(await dependencyAudit(args));
         }
         catch (e) {
             return textError(String(e));
@@ -80,9 +79,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement detail locally (paywall removed)
         try {
-            return textError("Not yet implemented: detail");
+            return text(await advisoryDetail(args));
         }
         catch (e) {
             return textError(String(e));

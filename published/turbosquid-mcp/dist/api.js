@@ -122,6 +122,76 @@ function tsModels(entries) {
     }
     return [...models.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
+const tsMedian = (values) => {
+    if (!values.length)
+        return 0;
+    const sorted = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+};
+/**
+ * What a real public model library is made of: which formats are actually
+ * published, how big the files are, and how often a model ships more than one
+ * form. Counted from the repository tree, so every number is an observation.
+ */
+export async function meshFormatSurvey(args) {
+    const limit = Math.round(Math.min(Math.max(Number(args?.limit ?? 12) || 12, 1), 30));
+    const tree = await tsTree();
+    const models = tsModels(tree);
+    if (!models.length)
+        throw new TurboSquidError("The public model library tree held no model directories under 3D Models/.");
+    const meshFiles = [];
+    let withMesh = 0;
+    let withPreview = 0;
+    let multiFormat = 0;
+    let archivedOnly = 0;
+    const formats = new Map();
+    for (const model of models) {
+        const meshes = model.files.filter((f) => TS_MESH.has(f.ext));
+        const previews = model.files.filter((f) => TS_PREVIEW.has(f.ext));
+        const archives = model.files.filter((f) => TS_ARCHIVE.has(f.ext));
+        if (meshes.length)
+            withMesh += 1;
+        else if (archives.length)
+            archivedOnly += 1;
+        if (previews.length)
+            withPreview += 1;
+        const distinct = new Set(meshes.map((m) => m.ext));
+        if (distinct.size > 1)
+            multiFormat += 1;
+        for (const file of meshes) {
+            meshFiles.push({ ...file, model: model.name });
+            const entry = formats.get(file.ext) ?? { ext: file.ext, files: [], models: new Set() };
+            entry.files.push(file.size);
+            entry.models.add(model.name);
+            formats.set(file.ext, entry);
+        }
+    }
+    if (!meshFiles.length)
+        throw new TurboSquidError("The public model library holds no mesh file in any known format; only images or archives are published.");
+    const totalMeshBytes = meshFiles.reduce((a, f) => a + f.size, 0);
+    const ranked = [...formats.values()].sort((a, b) => b.files.length - a.files.length);
+    const largest = [...meshFiles].sort((a, b) => b.size - a.size).slice(0, limit);
+    const rows = [
+        "Mesh format survey of NASA's public 3D Resources repository (GitHub tree, keyless)",
+        `  models            ${models.length} model director(ies), ${meshFiles.length} mesh file(s), ${tsMb(totalMeshBytes)} of mesh data`,
+        `  with a mesh       ${withMesh} (${((withMesh / models.length) * 100).toFixed(1)}%)${archivedOnly ? `; ${archivedOnly} publish only an archive, so the mesh is inside a zip` : ""}`,
+        `  with a preview    ${withPreview} (${((withPreview / models.length) * 100).toFixed(1)}%) have an image beside the model`,
+        `  more than one     ${multiFormat} model(s) ship the same asset in two or more mesh formats`,
+        "",
+        "  format            files   share   median size   total       models",
+        ...ranked.slice(0, limit).map((f) => {
+            const total = f.files.reduce((a, n) => a + n, 0);
+            return `  ${(TS_FORMATS[f.ext]?.label ?? f.ext.toUpperCase()).padEnd(16)} ${String(f.files.length).padStart(5)}  ${`${((f.files.length / meshFiles.length) * 100).toFixed(1)}%`.padStart(6)}  ${tsMb(tsMedian(f.files)).padStart(12)}  ${tsMb(total).padStart(9)}  ${String(f.models.size).padStart(6)}`;
+        }),
+        "",
+        `Largest mesh files (top ${Math.min(limit, largest.length)}):`,
+        ...largest.map((f) => `  ${tsMb(f.size).padStart(9)}  ${(TS_FORMATS[f.ext]?.label ?? f.ext.toUpperCase()).padEnd(14)} ${f.model}/${f.name}`),
+        "",
+        "note: this counts one public, freely reusable repository (NASA 3D Resources), so the mix is that library's habit rather than the whole market's. Sizes are the git blob sizes; a preview image is strong evidence a model was meant to be looked at, not proof it renders correctly, and the .blend and .ma files carry scenes that may include more than the mesh.",
+    ];
+    return rows.join("\n");
+}
 /**
  * Freely reusable models on a given subject, with the real file inventory of each
  * hit: which formats it ships in, how big those files are, and whether a preview

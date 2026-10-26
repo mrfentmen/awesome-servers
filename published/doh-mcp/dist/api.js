@@ -488,3 +488,121 @@ export async function wildcardCheck(args) {
     lines.push("", "Only four labels are probed, and some zones wildcard selectively by record type or by pattern, so a clean result is strong evidence rather than proof.");
     return lines.join("\n");
 }
+/** Why a lookup returned what it did, plus a second opinion from the other resolvers. */
+export async function diagnoseLookup(args) {
+    const name = (args.name ?? "").trim().replace(/\.$/, "");
+    if (!name)
+        throw new DohError("Give a hostname to diagnose, e.g. www.example.com");
+    const type = normaliseType(args.type);
+    const provider = normaliseProvider(args.provider);
+    const verdict = await classify(name, type, provider);
+    const lines = [
+        `Diagnosis for ${name} (${type}, asked of ${provider})`,
+        "",
+        `Result: ${verdict.label}`,
+        `  ${verdict.detail}`,
+        "",
+        `What to do: ${verdict.advice}`,
+    ];
+    if (verdict.label !== "ANSWERED") {
+        const others = PROVIDER_NAMES.filter((p) => p !== provider);
+        const rows = [];
+        for (const other of others) {
+            try {
+                const res = await resolve(name, type, other);
+                const summary = res.answers.length
+                    ? `${res.answers.length} answer(s): ${res.answers.slice(0, 2).map((a) => formatValue(a)).join(", ")}`
+                    : `${res.statusText}${res.comment ? ` (${res.comment})` : ""}`;
+                rows.push(`  ${other.padEnd(11)} ${summary}`);
+            }
+            catch (e) {
+                rows.push(`  ${other.padEnd(11)} error: ${errorMessage(e)}`);
+            }
+        }
+        const answeredElsewhere = rows.filter((row) => /answer\(s\):/.test(row)).length;
+        lines.push("", `Asked the other ${others.length} resolver(s), because failing everywhere and failing on one resolver have opposite fixes:`);
+        lines.push(...rows);
+        lines.push("", answeredElsewhere
+            ? `${answeredElsewhere} other resolver(s) did answer. That points at ${provider} rather than the zone: its cache, its DNSSEC validation, or a policy block on this name. Retry with provider set to one that answered.`
+            : "No resolver produced an answer, so the problem is in the zone itself or in the delegation above it, not in your resolver.");
+    }
+    return lines.join("\n");
+}
+/** The NS delegation from the TLD downwards, then a lame-delegation check on the final zone. */
+export async function delegationChain(args) {
+    const domain = (args.domain ?? "").trim().toLowerCase().replace(/^\.+/, "").replace(/\.$/, "");
+    if (!domain || !domain.includes("."))
+        throw new DohError("Give a domain like www.example.com");
+    const provider = normaliseProvider(args.provider);
+    const maxHops = Math.min(Math.max(Math.floor(Number(args.max_hops ?? 8)) || 8, 1), 20);
+    const labels = domain.split(".").filter(Boolean);
+    const allLevels = [];
+    // Shortest suffix first, so the walk starts at the TLD and ends at the name asked for.
+    for (let i = labels.length - 1; i >= 0; i -= 1)
+        allLevels.push(labels.slice(i).join("."));
+    const levels = allLevels.slice(-maxHops);
+    const lines = [`Delegation for ${domain} (via ${provider}, ${levels.length} level(s) walked)`, ""];
+    const nsByLevel = [];
+    for (const level of levels) {
+        let ns = [];
+        let status = "";
+        try {
+            const res = await resolve(level, "NS", provider);
+            status = res.statusText;
+            ns = res.answers.filter((a) => a.type === 2).map((a) => String(a.data ?? "").replace(/\.$/, ""));
+        }
+        catch (e) {
+            status = `error ${errorMessage(e)}`;
+        }
+        if (!ns.length) {
+            lines.push(`${level}  ->  no NS records (${status})`);
+            continue;
+        }
+        nsByLevel.push({ level, ns });
+        lines.push(`${level}  ->  ${ns.join(", ")}`);
+    }
+    if (!nsByLevel.length) {
+        lines.push("", "No level published NS records, so the name is not delegated and cannot be resolved by any resolver.");
+        return lines.join("\n");
+    }
+    const finalLevel = nsByLevel[nsByLevel.length - 1];
+    let primary = "";
+    try {
+        const soa = await resolve(finalLevel.level, "SOA", provider);
+        const row = soa.answers.find((a) => a.type === 6);
+        if (row)
+            primary = String(row.data ?? "").trim().split(/\s+/)[0]?.replace(/\.$/, "") ?? "";
+    }
+    catch {
+        primary = "";
+    }
+    lines.push("", `Zone ${finalLevel.level} publishes ${finalLevel.ns.length} name server(s).` + (primary ? ` SOA primary: ${primary}.` : " No SOA was returned, which alone is a sign the zone is not answering authoritatively."));
+    lines.push("", "Name server reachability:");
+    let lame = 0;
+    for (const host of finalLevel.ns) {
+        const addresses = [];
+        for (const type of ["A", "AAAA"]) {
+            try {
+                const res = await resolve(host, type, provider);
+                for (const a of res.answers)
+                    addresses.push(String(a.data ?? ""));
+            }
+            catch {
+                /* one family failing is normal */
+            }
+        }
+        if (!addresses.length) {
+            lame += 1;
+            lines.push(`  ${host.padEnd(34)} NO address record — lame delegation`);
+        }
+        else {
+            lines.push(`  ${host.padEnd(34)} ${addresses.slice(0, 2).join(", ")}`);
+        }
+    }
+    lines.push("", lame
+        ? `${lame} of ${finalLevel.ns.length} name server(s) have no address record. A parent that points at servers with no address is a lame delegation: some resolvers will return SERVFAIL for the whole zone while others still work, which is why a name can resolve for one person and not another.`
+        : `Every name server for ${finalLevel.level} resolves to an address, so the delegation is not lame.`);
+    if (primary)
+        lines.push(`If the zone still fails, query ${primary} directly: it is the server the zone claims to be authoritative.`);
+    return lines.join("\n");
+}

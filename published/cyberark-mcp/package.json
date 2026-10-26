@@ -1,6 +1,6 @@
 {
   "name": "cyberark-mcp",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Password breach checks and identity security audits - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/cyberark-mcp",

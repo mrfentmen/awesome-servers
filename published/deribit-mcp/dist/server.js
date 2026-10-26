@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { indexPrice, ticker, supported, book, instruments, trades, summary, fundingRateHistory, historicalVolatility, optionsSummary, currencies, optionsPositioning } from "./api.js";
+import { indexPrice, ticker, supported, book, instruments, trades, summary, fundingRateHistory, historicalVolatility, optionsSummary, currencies, optionsPositioning, futuresOpenInterest, impliedVolatilityHistory } from "./api.js";
 const text = (value) => ({ content: [{ type: 'text', text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -160,9 +160,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement interest locally (paywall removed)
         try {
-            return textError("Not yet implemented: interest");
+            return text(await futuresOpenInterest(args));
         }
         catch (e) {
             return textError(String(e));
@@ -177,9 +176,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement history locally (paywall removed)
         try {
-            return textError("Not yet implemented: history");
+            return text(await impliedVolatilityHistory(args));
         }
         catch (e) {
             return textError(String(e));

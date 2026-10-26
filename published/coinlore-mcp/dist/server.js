@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { tickers, coin, globalStats, markets, movers, searchCoins, socialStats, rankRange, volumeLeaders, momentumGrid } from "./api.js";
+import { tickers, coin, globalStats, markets, movers, searchCoins, socialStats, rankRange, volumeLeaders, momentumGrid, supplyProfile, capConcentration } from "./api.js";
 const text = (value) => ({ content: [{ type: 'text', text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -132,9 +132,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement profile locally (paywall removed)
         try {
-            return textError("Not yet implemented: profile");
+            return text(await supplyProfile(args));
         }
         catch (e) {
             return textError(String(e));
@@ -149,9 +148,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement concentration locally (paywall removed)
         try {
-            return textError("Not yet implemented: concentration");
+            return text(await capConcentration(args));
         }
         catch (e) {
             return textError(String(e));

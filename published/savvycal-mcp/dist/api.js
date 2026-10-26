@@ -368,3 +368,164 @@ export async function teamOverlap(args) {
 // things a calendar actually gets wrong: moving by whole months across a short
 // month, and expressing a span of time in the several different units a
 // deadline has to be stated in.
+const ISO_DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
+function parseDay(value) {
+    const raw = String(value ?? "").trim();
+    const match = ISO_DATE_ONLY.exec(raw);
+    if (!match)
+        throw new Error(`"${value}" is not a date. Use YYYY-MM-DD.`);
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const probe = new Date(Date.UTC(year, month - 1, day));
+    if (probe.getUTCFullYear() !== year || probe.getUTCMonth() !== month - 1 || probe.getUTCDate() !== day)
+        throw new Error(`"${raw}" is not a real calendar date.`);
+    return { year, month, day };
+}
+function daysInMonth(year, month) {
+    return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+/** ISO 8601 week numbering: the week of the year that contains a Thursday. */
+function isoWeekOf(date) {
+    const probe = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+    const weekday = (probe.getUTCDay() + 6) % 7;
+    probe.setUTCDate(probe.getUTCDate() - weekday + 3);
+    const weekYear = probe.getUTCFullYear();
+    const firstThursday = new Date(Date.UTC(weekYear, 0, 4));
+    const firstWeekday = (firstThursday.getUTCDay() + 6) % 7;
+    firstThursday.setUTCDate(firstThursday.getUTCDate() - firstWeekday + 3);
+    const week = Math.round((probe.getTime() - firstThursday.getTime()) / (7 * 86400000)) + 1;
+    return { week, weekYear };
+}
+function factsFor(date) {
+    const year = date.getUTCFullYear();
+    const janFirst = Date.UTC(year, 0, 1);
+    const dayOfYear = Math.floor((date.getTime() - janFirst) / 86400000) + 1;
+    const iso = isoWeekOf(date);
+    const leap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+    return {
+        iso: isoDate(date),
+        weekday: DAY_NAMES[date.getUTCDay()],
+        dayOfYear,
+        isoWeek: iso.week,
+        isoWeekYear: iso.weekYear,
+        quarter: Math.floor(date.getUTCMonth() / 3) + 1,
+        leap,
+    };
+}
+function stepLine(label, date, note) {
+    const f = factsFor(date);
+    const week = `ISO ${f.isoWeekYear}-W${String(f.isoWeek).padStart(2, "0")}`;
+    const tail = `day ${f.dayOfYear} of the year, ${week}, Q${f.quarter}, ${f.leap ? "leap" : "common"} year`;
+    return `  ${label.padEnd(14)} ${f.iso} (${f.weekday}) — ${tail}${note ? ` — ${note}` : ""}`;
+}
+export async function calendarArithmetic(args) {
+    const start = parseDay(args.date);
+    const months = Number(args.months ?? 0) || 0;
+    const years = Number(args.years ?? 0) || 0;
+    const days = Number(args.days ?? 0) || 0;
+    for (const [name, value] of [["months", months], ["years", years], ["days", days]]) {
+        if (!Number.isInteger(value))
+            return `${name} must be a whole number, positive or negative.`;
+    }
+    if (!months && !years && !days)
+        return "Give at least one of months, years or days to move the date by.";
+    let cursor = { ...start };
+    let cursorDate = new Date(Date.UTC(start.year, start.month - 1, start.day));
+    const steps = [stepLine("Start", cursorDate)];
+    if (months) {
+        const total = cursor.year * 12 + (cursor.month - 1) + months;
+        const targetYear = Math.floor(total / 12);
+        const targetMonth = ((total % 12) + 12) % 12;
+        const wanted = cursor.day;
+        const clamped = Math.min(wanted, daysInMonth(targetYear, targetMonth + 1));
+        cursorDate = new Date(Date.UTC(targetYear, targetMonth, clamped));
+        cursor = { year: targetYear, month: targetMonth + 1, day: clamped };
+        const note = clamped < wanted
+            ? `${targetYear}-${String(targetMonth + 1).padStart(2, "0")} has only ${clamped} day(s), so day ${wanted} clamps to ${clamped}`
+            : "";
+        steps.push(stepLine(`${months > 0 ? "+" : ""}${months} month(s)`, cursorDate, note));
+    }
+    if (years) {
+        const targetYear = cursor.year + years;
+        const wanted = cursor.day;
+        const clamped = Math.min(wanted, daysInMonth(targetYear, cursor.month));
+        cursorDate = new Date(Date.UTC(targetYear, cursor.month - 1, clamped));
+        cursor = { year: targetYear, month: cursor.month, day: clamped };
+        const note = clamped < wanted ? `February of ${targetYear} has only ${clamped} day(s), so day ${wanted} clamps to ${clamped}` : "";
+        steps.push(stepLine(`${years > 0 ? "+" : ""}${years} year(s)`, cursorDate, note));
+    }
+    if (days) {
+        cursorDate = new Date(cursorDate.getTime() + days * 86400000);
+        steps.push(stepLine(`${days > 0 ? "+" : ""}${days} day(s)`, cursorDate));
+    }
+    return [
+        `Calendar arithmetic from ${start.year}-${String(start.month).padStart(2, "0")}-${String(start.day).padStart(2, "0")}`,
+        "Applied in a fixed order: months, then years, then days, each step starting from the previous result.",
+        "",
+        ...steps,
+        "",
+        "End-of-month clamping is stated on the step where it happens; nothing is silently rounded.",
+    ].join("\n");
+}
+export async function durationReport(args) {
+    const from = parseDay(args.from);
+    const to = parseDay(args.to);
+    const fromMs = Date.UTC(from.year, from.month - 1, from.day);
+    const toMs = Date.UTC(to.year, to.month - 1, to.day);
+    const forward = toMs >= fromMs;
+    const a = forward ? from : to;
+    const b = forward ? to : from;
+    const aMs = Date.UTC(a.year, a.month - 1, a.day);
+    const bMs = Date.UTC(b.year, b.month - 1, b.day);
+    const totalDays = Math.round((bMs - aMs) / 86400000);
+    const totalSeconds = totalDays * 86400;
+    // Step the start date forward by whole months, clamped, and only keep a month
+    // count whose result still lands on or before the end date. Subtracting day
+    // numbers directly goes wrong across a short month (31 Jan to 1 Mar).
+    let monthsTotal = (b.year - a.year) * 12 + (b.month - a.month);
+    const shiftMonths = (months) => {
+        const total = a.year * 12 + (a.month - 1) + months;
+        const year = Math.floor(total / 12);
+        const month = total % 12;
+        const day = Math.min(a.day, daysInMonth(year, month + 1));
+        return new Date(Date.UTC(year, month, day));
+    };
+    while (monthsTotal > 0 && shiftMonths(monthsTotal).getTime() > bMs)
+        monthsTotal -= 1;
+    const monthsAnchor = shiftMonths(monthsTotal);
+    const days = Math.round((bMs - monthsAnchor.getTime()) / 86400000);
+    const years = Math.trunc(monthsTotal / 12);
+    const months = monthsTotal - years * 12;
+    const week = new Set((args.workweek?.length ? args.workweek : [1, 2, 3, 4, 5])
+        .map((d) => Number(d))
+        .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6));
+    let working = 0;
+    let weekendDays = 0;
+    for (let t = aMs; t <= bMs; t += 86400000) {
+        if (week.has(new Date(t).getUTCDay()))
+            working += 1;
+        else
+            weekendDays += 1;
+    }
+    const iso = `P${years ? `${years}Y` : ""}${months ? `${months}M` : ""}${days || (!years && !months) ? `${days}D` : ""}`;
+    const dayNames = [...week].sort().map((d) => DAY_NAMES[d]).join(", ") || "none";
+    const lines = [
+        forward
+            ? `Span from ${isoDate(new Date(aMs))} to ${isoDate(new Date(bMs))}`
+            : `Span from ${isoDate(new Date(bMs))} to ${isoDate(new Date(aMs))} (the arguments were given the other way round, so this is the absolute span)`,
+        "",
+        `  ISO 8601 duration   ${iso}`,
+        `  Calendar breakdown  ${years ? `${years} year(s) ` : ""}${months ? `${months} month(s) ` : ""}${days} day(s)`,
+        `  Total days          ${totalDays.toLocaleString()}`,
+        `  Total seconds       ${totalSeconds.toLocaleString()}`,
+        `  Days and hours      ${totalDays.toLocaleString()} day(s) and 0 hour(s), because both ends are dates without a time of day`,
+        `  Whole weeks         ${Math.floor(totalDays / 7)} week(s) and ${totalDays % 7} day(s)`,
+        "",
+        `  Working days        ${working.toLocaleString()} of ${(totalDays + 1).toLocaleString()} inclusive day(s)`,
+        `  Non-working days    ${weekendDays.toLocaleString()} (working weekdays: ${dayNames})`,
+        "",
+        "Months and years are counted on the calendar, not as 30- or 365-day blocks, so the breakdown and the total days only agree when you add them back up on the calendar.",
+    ];
+    return lines.join("\n");
+}

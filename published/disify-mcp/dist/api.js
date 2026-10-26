@@ -513,3 +513,125 @@ export async function mxProviderProfile(args) {
     lines.push("", "The provider decides what your sending setup has to satisfy. Cross-check this with email_auth, which reads the SPF, DKIM and DMARC records that have to match what the provider expects.");
     return lines.join('\n');
 }
+/** When a domain was registered, read from the registry's own RDAP record. */
+export async function domainRegistration(args) {
+    const domain = cleanDomain(args?.domain);
+    if (!domain || !domain.includes('.'))
+        return 'Provide a domain like example.com.';
+    const res = await fetch(RDAP_BOOTSTRAP + encodeURIComponent(domain), {
+        headers: { 'User-Agent': UA, Accept: 'application/rdap+json' },
+        signal: AbortSignal.timeout(20000),
+    });
+    if (res.status === 404) {
+        return `${domain} has no RDAP record. Either the name is not registered, or its registry does not publish RDAP data (a few country-code registries do not).`;
+    }
+    if (!res.ok)
+        throw new Error(`RDAP returned HTTP ${res.status} for ${domain}`);
+    const body = (await res.json());
+    const events = Array.isArray(body.events) ? body.events : [];
+    const at = (action) => {
+        const hit = events.find((e) => String(e?.eventAction ?? '').toLowerCase() === action);
+        const raw = hit?.eventDate;
+        if (!raw)
+            return null;
+        const when = new Date(String(raw));
+        return Number.isNaN(when.getTime()) ? null : when;
+    };
+    const day = (d) => (d ? d.toISOString().slice(0, 10) : 'not published');
+    const registered = at('registration');
+    const expires = at('expiration');
+    const changed = at('last changed') ?? at('last update of rdap database');
+    const ageDays = registered ? Math.floor((Date.now() - registered.getTime()) / 86400000) : null;
+    const entities = Array.isArray(body.entities) ? body.entities : [];
+    const byRole = (role) => entities
+        .filter((e) => Array.isArray(e?.roles) && e.roles.map((r) => String(r).toLowerCase()).includes(role))
+        .map((e) => rdapName(e))
+        .filter(Boolean);
+    const registrar = byRole('registrar');
+    const status = (Array.isArray(body.status) ? body.status : []).map((s) => String(s));
+    const servers = (Array.isArray(body.nameservers) ? body.nameservers : [])
+        .map((n) => String(n?.ldhName ?? '').toUpperCase())
+        .filter(Boolean);
+    const signed = body.secureDNS?.delegationSigned === true;
+    const verdict = ageDays === null
+        ? 'Registration date not published by this registry, so age cannot be judged here.'
+        : ageDays < 30
+            ? `Registered ${ageDays} day(s) ago — a brand-new domain. New domains are the single strongest signal of throwaway and phishing infrastructure.`
+            : ageDays < 365
+                ? `Registered ${Math.floor(ageDays / 30)} month(s) ago — still young enough to be worth a second look before trusting mail from it.`
+                : `Registered ${(ageDays / 365).toFixed(1)} year(s) ago — old enough that throwaway use is unlikely.`;
+    return [
+        `Registration record for ${String(body.ldhName ?? domain).toLowerCase()}:`,
+        `Verdict: ${verdict}`,
+        `Registered: ${day(registered)}${ageDays !== null ? ` (${ageDays} day(s) ago)` : ''}`,
+        `Expires: ${day(expires)}`,
+        `Last changed: ${day(changed)}`,
+        `Registrar: ${registrar.length ? registrar.join(', ') : 'not published'}`,
+        `Status: ${status.length ? status.join(', ') : 'none published'}`,
+        `Nameservers: ${servers.length ? servers.join(', ') : 'none published'}`,
+        `DNSSEC delegation signed: ${signed ? 'yes' : 'no'}`,
+        '',
+        'Source: the registry RDAP record via rdap.org. Registrant details are redacted for most TLDs, so only the dates, registrar and status are reliable.',
+    ].join('\n');
+}
+/** Characters that look like other characters, for spotting a fake provider domain. */
+const DOMAIN_HOMOGLYPHS = [['0', 'o'], ['1', 'l'], ['3', 'e'], ['5', 's'], ['7', 't'], ['9', 'g'], ['vv', 'w'], ['rn', 'm'], ['cl', 'd']];
+function foldDomain(value) {
+    let out = value;
+    for (const [from, to] of DOMAIN_HOMOGLYPHS)
+        out = out.split(from).join(to);
+    return out.replace(/[^a-z0-9.-]/g, '');
+}
+/** Whether one address looks like an impersonation of a real provider or a named brand. */
+export async function typoCheck(args) {
+    const raw = String(args?.email ?? '').trim().toLowerCase();
+    const at = raw.lastIndexOf('@');
+    if (at <= 0 || at === raw.length - 1)
+        return 'Provide an email address like support@gmial.com.';
+    const local = raw.slice(0, at);
+    const domain = raw.slice(at + 1);
+    if (!domain.includes('.'))
+        return `"${domain}" is not a domain name.`;
+    const brandArg = String(args?.brand ?? '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+    const brands = [...new Set([...TARGET_BRANDS, ...(brandArg ? [brandArg] : [])])];
+    const exact = brands.includes(domain);
+    const ranked = brands
+        .map((brand) => ({ brand, distance: editDistance(domain, brand) }))
+        .sort((a, b) => a.distance - b.distance);
+    const nearest = ranked[0];
+    const folded = foldDomain(domain);
+    const foldedHit = brands.find((brand) => brand !== domain && foldDomain(brand) === folded) ?? null;
+    const localSignals = [];
+    if (/\b(19|20)\d{2}$/.test(local))
+        localSignals.push(`ends in a year ("${local.slice(-4)}"), the shape of throwaway signup accounts`);
+    if (/[a-z]{2,}\d{2,}$/.test(local))
+        localSignals.push('a word followed by digits, which is how credential-stuffing lists name the second account on a mailbox');
+    if (/(.)\1{2,}/.test(local))
+        localSignals.push('three or more repeated characters');
+    const leetLocal = local.replace(/[0134578@$!|]/g, (ch) => LEET_UNMAP[ch] ?? ch);
+    if (leetLocal !== local && /[a-z]/.test(leetLocal))
+        localSignals.push(`leetspeak substitutions (reads as "${leetLocal}")`);
+    if (/^[a-z]{1,2}\d{4,}$/.test(local))
+        localSignals.push('one or two letters plus a long number, typical of generated addresses');
+    const impersonation = !exact && (foldedHit ? 1 : nearest && nearest.distance <= 2 ? 2 : 0);
+    const verdict = exact
+        ? `The domain is the real ${domain} — this is not a lookalike, so judge the local part instead.`
+        : impersonation === 1
+            ? `The domain only looks like ${foldedHit}: swapping lookalike characters turns it into ${foldedHit}. Treat it as an impersonation of that provider.`
+            : impersonation === 2
+                ? `The domain is ${nearest.distance} character(s) away from ${nearest.brand}, which is the classic typosquat of that provider. No legitimate mail comes from it.`
+                : 'The domain is not a close edit of any provider this server knows about, so there is no typo-squat signature here.';
+    const lines = [
+        `Impersonation check for ${raw}:`,
+        `Verdict: ${verdict}`,
+        `Domain: ${domain}${exact ? ' (exact known provider)' : ''}`,
+        `Closest known domain: ${nearest ? `${nearest.brand} (edit distance ${nearest.distance})` : 'none'}`,
+    ];
+    if (impersonation === 1)
+        lines.push(`Lookalike-normalised domain: ${folded} = ${foldedHit}`);
+    lines.push('', `Local part "${local}":`, localSignals.length
+        ? localSignals.map((signal) => `  - ${signal}`).join('\n')
+        : '  - no generated-address pattern found; it looks like an ordinary chosen address');
+    lines.push('', `Compared against ${TARGET_BRANDS.length} major providers${brandArg ? ` plus "${brandArg}"` : ''}. This judges the address you supplied; lookalike_domains searches for variants that are actually registered.`);
+    return lines.join('\n');
+}

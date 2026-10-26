@@ -96,6 +96,79 @@ const wbBn = (n) => {
         return `${(n / 1e3).toFixed(1)}K`;
     return String(n);
 };
+const wbBytes = (n) => {
+    if (!Number.isFinite(n) || n <= 0)
+        return "size not reported";
+    if (n >= 1073741824)
+        return `${(n / 1073741824).toFixed(2)} GB`;
+    if (n >= 1048576)
+        return `${(n / 1048576).toFixed(1)} MB`;
+    return `${Math.max(1, Math.round(n / 1024))} KB`;
+};
+const WB_WEIGHT = /\.(safetensors|bin|pt|pth|gguf|ckpt|onnx|msgpack|h5)$/i;
+const WB_CONFIG = /(^|\/)(config\.json|generation_config\.json|tokenizer\.json|tokenizer_config\.json|special_tokens_map\.json|preprocessor_config\.json|vocab\.(json|txt))$/i;
+/**
+ * What a public model card and its weight index actually declare, read from the
+ * public index rather than a marketing page: licence, data, languages, size and
+ * precision, and whether the weights are in a format a loader can read.
+ */
+export async function modelCardAudit(args) {
+    let model = String(args?.model ?? "").trim();
+    if (!model)
+        throw new Error("Give a model id such as google-bert/bert-base-uncased, or its full huggingface.co URL.");
+    model = model
+        .replace(/^https?:\/\/(www\.)?huggingface\.co\//i, "")
+        .replace(/[?#].*$/, "")
+        .replace(/^\/+|\/+$/g, "");
+    if (!/^[^/\s]+\/[^/\s]+$/.test(model))
+        throw new Error(`"${model}" is not a model id; they look like author/name.`);
+    const siblingLimit = Math.round(Math.min(Math.max(Number(args?.siblings ?? 6) || 6, 0), 20));
+    const repoPath = model.split("/").map(encodeURIComponent).join("/");
+    const detail = await wbHfGet(`/models/${repoPath}?blobs=true`, `model ${model}`);
+    const card = detail.cardData ?? {};
+    const safetensors = detail.safetensors ?? null;
+    const params = Number(safetensors?.total ?? 0) || null;
+    const precisions = safetensors?.parameters ? Object.entries(safetensors.parameters).sort((a, b) => b[1] - a[1]) : [];
+    const files = Array.isArray(detail.siblings) ? detail.siblings : [];
+    const names = files.map((f) => String(f.rfilename ?? "")).filter(Boolean);
+    const weightFiles = files.filter((f) => WB_WEIGHT.test(String(f.rfilename ?? "")));
+    const configFiles = names.filter((n) => WB_CONFIG.test(n));
+    const weightBytes = weightFiles.reduce((a, f) => a + (Number(f.size) || 0), 0);
+    const datasets = card.datasets ?? [];
+    const languages = card.language ?? [];
+    const tasks = card.task_categories ?? card.tasks ?? [];
+    const tags = (detail.tags ?? []).filter((t) => !String(t).startsWith("region:") && !String(t).startsWith("size_categories:"));
+    const licence = wbList(card.license);
+    const rows = [
+        `${detail.id ?? model}${detail.pipeline_tag ? ` — ${detail.pipeline_tag}` : ""}`,
+        `  author           ${detail.author ?? "not reported"}`,
+        `  licence          ${licence}`,
+        `  library          ${detail.library_name ?? "not declared"}`,
+        `  parameters       ${params ? wbBn(params) : "no safetensors index, so the count is not published"}${precisions.length ? ` (${precisions.map(([p, n]) => `${p} ${wbBn(n)}`).join(", ")})` : ""}`,
+        `  weights on disk  ${weightFiles.length} file(s), ${wbBytes(weightBytes)}${weightFiles.length ? ` — ${weightFiles.slice(0, 6).map((f) => f.rfilename).join(", ")}${weightFiles.length > 6 ? `, +${weightFiles.length - 6}` : ""}` : ""}`,
+        `  config files     ${configFiles.length ? configFiles.slice(0, 8).join(", ") : "none of the usual tokenizer/config files"}`,
+        `  data declared    ${wbList(datasets.length ? datasets : null)}`,
+        `  languages        ${wbList(languages.length ? languages : null)}`,
+        `  tasks            ${wbList(tasks.length ? tasks : null)}`,
+        `  tags             ${tags.slice(0, 10).join(", ") || "none"}`,
+        `  downloads        ${wbBn(detail.downloads)} | likes ${wbBn(detail.likes)} | files ${files.length}`,
+        `  storage          ${wbBytes(Number(detail.usedStorage))}`,
+        `  created          ${String(detail.createdAt ?? "not reported").slice(0, 10)} | last modified ${String(detail.lastModified ?? "not reported").slice(0, 10)}`,
+        `  access           ${detail.gated ? `gated (${typeof detail.gated === "string" ? detail.gated : "terms attached"})` : "public"}${detail.private ? " | private" : ""}${detail.disabled ? " | disabled" : ""}`,
+        `  card             https://huggingface.co/${detail.id ?? model}`,
+    ];
+    if (siblingLimit > 0 && detail.author) {
+        const others = await wbHfGet(`/models?author=${encodeURIComponent(detail.author)}&sort=downloads&direction=-1&limit=${siblingLimit}`, `models by ${detail.author}`);
+        const list = (Array.isArray(others) ? others : []).filter((m) => m.id !== detail.id);
+        if (list.length) {
+            rows.push("", `Other public models by ${detail.author}, by downloads:`);
+            for (const m of list)
+                rows.push(`  ${String(wbBn(m.downloads)).padStart(8)} dl  ${m.id}`);
+        }
+    }
+    rows.push("", "note: every value here is the uploader's own declaration or the index's own count. A card that names no dataset does not mean none was used, a declared licence is a claim rather than a legal review, and the parameter count comes from the safetensors index so a repository publishing only .bin weights reports none.");
+    return rows.join("\n");
+}
 /**
  * The public dataset index: what exists for a subject, how much it is used, and
  * what each entry declares about itself. A training run is only reproducible if

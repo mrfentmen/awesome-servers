@@ -1,6 +1,6 @@
 {
   "name": "onesignal-mcp",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Query the OneSignal API (free tier; use a current v2 Organization API key for ONESIGNAL_USER_KEY and the app REST API key for ONESIGNAL_APP_KEY, Basic auth).",
   "type": "module",
   "mcpName": "io.github.mrfentmen/onesignal-mcp",

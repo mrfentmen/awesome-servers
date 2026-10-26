@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { listChannels, getChannel, getChannelUsers } from "./api.js";
+import { listChannels, getChannel, getChannelUsers, websocketRoundTrip, websocketPayloadProbe } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -65,9 +65,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement trip locally (paywall removed)
         try {
-            return textError("Not yet implemented: trip");
+            return text(await websocketRoundTrip(args));
         }
         catch (e) {
             return textError(String(e));
@@ -82,9 +81,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement probe locally (paywall removed)
         try {
-            return textError("Not yet implemented: probe");
+            return text(await websocketPayloadProbe(args));
         }
         catch (e) {
             return textError(String(e));

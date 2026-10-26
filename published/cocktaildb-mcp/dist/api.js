@@ -259,3 +259,122 @@ export async function catalogueIndex(args = {}) {
     }
     return truncate(lines.join("\n"));
 }
+// ---- muxF tools:
+/** The full record for one drink, including the fields the recipe view drops, plus data-quality flags. */
+export async function drinkRecordAudit(id) {
+    const wanted = String(id ?? "").trim();
+    if (!/^\d+$/.test(wanted))
+        throw new CocktailError("Give a numeric drink id, e.g. 11007 for a Margarita.");
+    const found = drinksOf(await getJson(`/lookup.php?i=${encodeURIComponent(wanted)}`));
+    if (!found.length)
+        throw new CocktailError(`No drink with id ${wanted}. Find ids with search_cocktails.`);
+    const d = found[0];
+    const ingredients = [];
+    const holes = [];
+    let lastFilled = 0;
+    for (let i = 1; i <= 15; i += 1) {
+        const name = str(d[`strIngredient${i}`]);
+        if (!name) {
+            holes.push(i);
+            continue;
+        }
+        lastFilled = i;
+        const measure = str(d[`strMeasure${i}`]);
+        ingredients.push({ slot: i, ingredient: name, measure: measure || null, has_measure: Boolean(measure) });
+    }
+    const emptySlots = holes.filter((i) => i < lastFilled);
+    const translations = TRANSLATIONS.map(([language, field]) => ({ language, instructions: str(d[field]) || null })).filter((t) => t.instructions);
+    const cc = str(d.strCreativeCommonsConfirmed).toLowerCase();
+    const documented = ["strDrinkAlternate", "strTags", "strIBA", "strVideo", "strImageSource"];
+    return truncate(JSON.stringify({
+        id: str(d.idDrink),
+        name: str(d.strDrink),
+        alternate_name: str(d.strDrinkAlternate) || null,
+        iba: str(d.strIBA) || null,
+        category: str(d.strCategory) || null,
+        alcoholic: str(d.strAlcoholic) || null,
+        glass: str(d.strGlass) || null,
+        tags: str(d.strTags) ? str(d.strTags).split(",").map((t) => t.trim()).filter(Boolean) : [],
+        instructions: str(d.strInstructions) || null,
+        translations_held: translations.length,
+        translations,
+        video: str(d.strVideo) || null,
+        image: str(d.strDrinkThumb) || null,
+        image_source: str(d.strImageSource) || null,
+        image_attribution: str(d.strImageAttribution) || null,
+        creative_commons_confirmed: cc === "yes" ? true : cc === "no" ? false : null,
+        last_modified: str(d.dateModified) || null,
+        ingredients,
+        quality: {
+            ingredients_listed: ingredients.length,
+            empty_ingredient_slots: emptySlots.length,
+            empty_slot_positions: emptySlots,
+            ingredients_without_measure: ingredients.filter((i) => !i.has_measure).length,
+            image_licence_confirmed: cc === "yes",
+            missing_documented_fields: documented.filter((f) => !str(d[f])),
+            has_translations: translations.length > 0,
+        },
+        note: "Read straight from TheCocktailDB's lookup record; an unconfirmed Creative Commons flag is the site's silence, not a denial.",
+    }, null, 2), 9000);
+}
+/** Name families: a drink joins the longest other drink name it actually contains. */
+export async function nameVariants(args = {}) {
+    const refresh = args.refresh === "true" || args.refresh === "1";
+    const top = Math.min(Math.max(Math.trunc(Number(args.top ?? 15)) || 15, 1), 40);
+    const minFamily = Math.min(Math.max(Math.trunc(Number(args.min_family ?? 2)) || 2, 2), 20);
+    const index = await drinksByLetter(refresh);
+    const unique = new Map();
+    for (const list of index.values())
+        for (const row of list)
+            unique.set(str(row.idDrink), row);
+    const drinks = [...unique.values()].filter((d) => str(d.strDrink));
+    if (!drinks.length)
+        throw new CocktailError("The catalogue index came back empty; retry with refresh=true.");
+    const byName = new Map();
+    for (const d of drinks) {
+        const key = str(d.strDrink).toLowerCase();
+        if (!byName.has(key))
+            byName.set(key, d);
+    }
+    const candidates = [...byName.keys()].sort((a, b) => b.length - a.length);
+    const families = new Map();
+    let standalone = 0;
+    for (const d of drinks) {
+        const name = str(d.strDrink).toLowerCase();
+        let parent = null;
+        for (const cand of candidates) {
+            if (cand.length >= name.length)
+                continue;
+            if (name.startsWith(`${cand} `) || name.startsWith(`${cand}'s `) || name.startsWith(`${cand}s `) || name.endsWith(` ${cand}`)) {
+                parent = cand;
+                break;
+            }
+        }
+        if (!parent) {
+            standalone += 1;
+            continue;
+        }
+        if (!families.has(parent))
+            families.set(parent, []);
+        families.get(parent).push(str(d.strDrink));
+    }
+    const rows = [...families.entries()]
+        .map(([base, members]) => ({ family: byName.get(base) ? str(byName.get(base).strDrink) : base, variants: members.length + 1, members: members.sort() }))
+        .filter((r) => r.variants >= minFamily)
+        .sort((a, b) => b.variants - a.variants || a.family.localeCompare(b.family));
+    if (!rows.length)
+        return `No name family with at least ${minFamily} member(s) among the ${drinks.length} reachable drinks.`;
+    const shown = rows.slice(0, top);
+    const lines = [
+        `${rows.length} drink name famil${rows.length === 1 ? "y" : "ies"} with at least ${minFamily} member(s), from ${drinks.length} distinct reachable drink(s) (showing ${shown.length})`,
+        `${standalone} drink(s) match no other name and stand alone.`,
+        "",
+    ];
+    for (const row of shown) {
+        lines.push(`${row.variants}. ${row.family}`);
+        for (const member of row.members)
+            lines.push(`     - ${member}`);
+    }
+    lines.push("", "A family is named after the longest other drink name the variant actually contains, so a base drink must exist in the data for its variants to group.");
+    return truncate(lines.join("\n"), 9000);
+}

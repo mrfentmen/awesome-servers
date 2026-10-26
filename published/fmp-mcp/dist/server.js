@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { companyProfile, FmpError, incomeStatement, stockQuote } from "./api.js";
+import { companyProfile, currencyRates, FmpError, fxHistory, incomeStatement, priceHistory, stockQuote } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -64,9 +64,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement rates locally (paywall removed)
         try {
-            return textError("Not yet implemented: rates");
+            return text(await currencyRates(args.base, args.symbols));
         }
         catch (e) {
             return textError(String(e));
@@ -83,9 +82,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement history locally (paywall removed)
         try {
-            return textError("Not yet implemented: history");
+            return text(await fxHistory(args.pair, args.start, args.end, args.limit));
         }
         catch (e) {
             return textError(String(e));
@@ -102,9 +100,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement history locally (paywall removed)
         try {
-            return textError("Not yet implemented: history");
+            return text(await priceHistory(args.symbol, args.range, args.interval, args.limit));
         }
         catch (e) {
             return textError(String(e));

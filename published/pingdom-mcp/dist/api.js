@@ -404,3 +404,118 @@ function describeRecord(type, row) {
     }
     return String(row);
 }
+export async function securityHeaders(args) {
+    const { url, res } = await securityFetch(args.url);
+    const present = [];
+    const missing = [];
+    let earned = 0;
+    let possible = 0;
+    for (const header of SECURITY_HEADERS) {
+        possible += header.weight;
+        const value = res.headers.get(header.name);
+        if (value) {
+            earned += header.weight;
+            present.push({ name: header.name, value: value.replace(/\s+/g, " ").slice(0, 200), why: header.why });
+        }
+        else {
+            missing.push({ name: header.name, why: header.why, weight: header.weight });
+        }
+    }
+    const notes = [];
+    const hsts = res.headers.get("strict-transport-security");
+    if (hsts) {
+        const maxAge = Number((hsts.match(/max-age=(\d+)/i) ?? [])[1] ?? 0);
+        if (!maxAge)
+            notes.push("HSTS is sent without max-age, so browsers ignore it.");
+        else if (maxAge < 15552000)
+            notes.push(`HSTS max-age is ${maxAge}s (${Math.round(maxAge / 86400)} day(s)); a year is the usual target and is required for preload lists.`);
+        if (!/includeSubDomains/i.test(hsts))
+            notes.push("HSTS does not set includeSubDomains, so a plain-HTTP subdomain stays reachable.");
+    }
+    const csp = res.headers.get("content-security-policy");
+    if (csp && /'unsafe-inline'/i.test(csp))
+        notes.push("The CSP allows 'unsafe-inline', which removes most of its protection against injected scripts.");
+    if (csp && /'unsafe-eval'/i.test(csp))
+        notes.push("The CSP allows 'unsafe-eval', so string-evaluated code still runs.");
+    const frameOptions = res.headers.get("x-frame-options");
+    if (!frameOptions && !(csp && /frame-ancestors/i.test(csp)))
+        notes.push("Neither X-Frame-Options nor a CSP frame-ancestors directive is set, so the page can be framed by another site.");
+    if (url.protocol !== "https:")
+        notes.push(`${url.hostname} answered over plain HTTP, so these headers only take effect once the site is served over TLS.`);
+    const pct = possible ? Math.round((earned / possible) * 100) : 0;
+    return [
+        `Security headers for ${url.toString()}`,
+        `Weighted score: ${earned} of ${possible} points (${pct}%) — ${pct >= 80 ? "well covered" : pct >= 50 ? "partly covered" : "mostly missing"}`,
+        "",
+        `Present (${present.length}):`,
+        ...(present.length
+            ? present.map((h) => `  ${h.name}: ${h.value}`)
+            : ["  none of the headers checked are present"]),
+        "",
+        `Missing (${missing.length}):`,
+        ...(missing.length
+            ? missing.map((h) => `  ${h.name} (weight ${h.weight}) — ${h.why}`)
+            : ["  none — every header checked is set"]),
+        ...(notes.length ? ["", "Worth a look:", ...notes.map((n) => `  - ${n}`)] : []),
+        "",
+        "Weights are this tool's own: transport and script policy count more than the referrer hint. A header being present does not prove it is enforced, so treat this as configuration evidence, not a guarantee.",
+    ].join("\n");
+}
+export async function dnsRecords(args) {
+    const host = String(args?.host ?? "").trim().toLowerCase();
+    if (!host)
+        throw new Error("Provide a hostname, for example github.com.");
+    if (!host.includes("."))
+        throw new Error(`"${host}" does not look like a public hostname.`);
+    const all = ["A", "AAAA", "CNAME", "MX", "NS", "TXT", "SOA", "CAA"];
+    const wanted = String(args?.type ?? "ALL").trim().toUpperCase();
+    if (wanted !== "ALL" && !all.includes(wanted))
+        throw new Error(`type must be one of ${all.join(", ")} or ALL.`);
+    const types = wanted === "ALL" ? all : [wanted];
+    const blocks = [];
+    const empty = [];
+    const failed = [];
+    const seen = {};
+    // Sequential: resolvers rate-limit, and a burst also makes the answer harder
+    // to read when one type times out.
+    for (const type of types) {
+        try {
+            const rows = (await resolveAny(host, type)) ?? [];
+            const values = rows.map((row) => describeRecord(type, row)).filter(Boolean);
+            if (!values.length) {
+                empty.push(type);
+                continue;
+            }
+            seen[type] = values;
+            blocks.push(`${type} (${values.length}):`, ...values.map((v) => `  ${v}`));
+        }
+        catch (e) {
+            const code = String(e?.code ?? "");
+            if (code === "ENODATA" || code === "ENOTFOUND" || code === "ENODOMAIN" || /queryTxt EBADNAME/i.test(code))
+                empty.push(type);
+            else
+                failed.push(`${type} (${code || errorMessage(e)})`);
+        }
+    }
+    const notes = [];
+    if (!seen.MX && (wanted === "ALL" || wanted === "MX"))
+        notes.push("No MX records: the domain cannot receive mail. A null MX (\".\") is the deliberate way to say so.");
+    if (!seen.CAA && (wanted === "ALL" || wanted === "CAA"))
+        notes.push("No CAA records: any certificate authority may issue for this name.");
+    if (!seen.AAAA && seen.A && wanted === "ALL")
+        notes.push("IPv4 addresses but no AAAA record, so IPv6-only clients reach the host over a translated path or not at all.");
+    const txt = (seen.TXT ?? []).join(" " );
+    if (/v=spf1/i.test(txt))
+        notes.push("An SPF record is published; DMARC lives at _dmarc.<domain> and is not queried by this tool.");
+    if (failed.length)
+        notes.push(`Could not answer for ${failed.join(", ")} — that is a resolver or zone problem, not proof the records are absent.`);
+    if (!blocks.length)
+        throw new Error(`No DNS records of the requested type(s) exist for ${host}${empty.length ? ` (asked ${empty.join(", ")})` : ""}.`);
+    return [
+        `DNS records for ${host}${wanted === "ALL" ? "" : ` (${wanted} only)`}`,
+        "",
+        ...blocks,
+        ...(empty.length ? ["", `No ${empty.join(", ")} record(s) published.`] : []),
+        ...(notes.length ? ["", "Worth a look:", ...notes.map((n) => `  - ${n}`)] : []),
+    ].join("\n");
+}

@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { searchMovies, getMovie, findFilmIds } from "./api.js";
+import { searchMovies, getMovie, findFilmIds, wikidataFacts, cinemetaDetails } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -65,9 +65,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement facts locally (paywall removed)
         try {
-            return textError("Not yet implemented: facts");
+            return text(await wikidataFacts(args));
         }
         catch (e) {
             return textError(String(e));
@@ -79,9 +78,8 @@ export function createServer() {
         inputSchema: z.object({ imdb_id: z.string().describe("IMDb id such as tt0083658, digits alone are accepted too.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement details locally (paywall removed)
         try {
-            return textError("Not yet implemented: details");
+            return text(await cinemetaDetails(args.imdb_id));
         }
         catch (e) {
             return textError(String(e));

@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { deals, freeGames, gameDetails, searchGames, storeList, topDeals, steamLookup, filterDeals, valuePicks } from "./api.js";
+import { deals, freeGames, gameDetails, searchGames, storeList, topDeals, steamLookup, filterDeals, valuePicks, dealMarketScan, storeLeaderboard } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -146,9 +146,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement scan locally (paywall removed)
         try {
-            return textError("Not yet implemented: scan");
+            return text(await dealMarketScan(args));
         }
         catch (e) {
             return textError(String(e));
@@ -163,9 +162,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement leaderboard locally (paywall removed)
         try {
-            return textError("Not yet implemented: leaderboard");
+            return text(await storeLeaderboard(args));
         }
         catch (e) {
             return textError(String(e));

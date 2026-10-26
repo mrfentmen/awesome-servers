@@ -93,6 +93,64 @@ async function ovGet(path) {
     return (await res.json());
 }
 const ovSize = (w, h) => typeof w === "number" && typeof h === "number" ? `${w}x${h}` : "dimensions not reported";
+export async function findLicensedImages(args) {
+    const q = String(args.query ?? "").trim();
+    if (!q)
+        throw new PinterestError("Give something to search for, e.g. 'mountain landscape'.");
+    const limit = Math.min(Math.max(Math.trunc(Number(args.limit ?? 8)) || 8, 1), 20);
+    const source = String(args.source ?? "").trim();
+    const params = new URLSearchParams({ q, page_size: String(limit) });
+    if (source)
+        params.set("source", source);
+    if (args.commercial_only === true)
+        params.set("license_type", "commercial");
+    const data = await ovGet(`/images/?${params.toString()}`);
+    const rows = Array.isArray(data.results) ? data.results : [];
+    if (!rows.length)
+        throw new PinterestError(`Openverse found no image for "${q}"${source ? ` on ${source}` : ""}${args.commercial_only === true ? " with a commercial licence" : ""}.`);
+    const lines = [
+        `Openly licensed images for "${q}" — ${rows.length} of ${data.result_count ?? rows.length} match(es)`,
+        source || args.commercial_only === true
+            ? `Filters: ${[source ? `source ${source}` : null, args.commercial_only === true ? "commercial use only" : null].filter(Boolean).join(", ")}`
+            : "Filters: none",
+        "",
+    ];
+    rows.forEach((r, i) => {
+        lines.push(`${i + 1}. ${r.title ?? "(untitled)"}${r.creator ? ` — by ${r.creator}` : ""}`);
+        lines.push(`   Licence: ${r.license ?? "not reported"} ${r.license_version ?? ""}`.trimEnd());
+        lines.push(`   Source: ${r.source ?? "not reported"} | ${ovSize(r.width, r.height)}`);
+        if (r.foreign_landing_url)
+            lines.push(`   Page: ${r.foreign_landing_url}`);
+        if (r.url)
+            lines.push(`   File: ${r.url}`);
+    });
+    lines.push("", "Every result carries its own licence: check the licence URL before publishing, and credit the creator as the licence requires.");
+    return lines.join("\n");
+}
+export async function imageLicence(id) {
+    const wanted = String(id ?? "").trim();
+    if (!wanted)
+        throw new PinterestError("Give an Openverse image id (a UUID).");
+    const r = await ovGet(`/images/${encodeURIComponent(wanted)}/`);
+    const licence = `${r.license ?? "not reported"} ${r.license_version ?? ""}`.trimEnd();
+    const attribution = r.attribution || [r.title, r.creator, r.source, licence].filter(Boolean).join(" — ");
+    return [
+        `${r.title ?? "(untitled)"}${r.creator ? ` — by ${r.creator}` : ""}`,
+        `Openverse id: ${r.id ?? wanted}`,
+        "",
+        `Licence: ${licence}`,
+        r.license_url ? `Licence terms: ${r.license_url}` : "Licence terms: not reported",
+        `Source: ${r.source ?? "not reported"}`,
+        `Dimensions: ${ovSize(r.width, r.height)}`,
+        r.foreign_landing_url ? `Source page: ${r.foreign_landing_url}` : "Source page: not reported",
+        r.url ? `File: ${r.url}` : "File: not reported",
+        r.creator_url ? `Creator: ${r.creator_url}` : "Creator: not reported",
+        "",
+        `Attribution: ${attribution}`,
+        "",
+        "Credit this line wherever the image is published; a licence that needs no credit still needs the terms checked.",
+    ].join("\n");
+}
 const ovPixelCount = (r) => typeof r.width === "number" && typeof r.height === "number" ? r.width * r.height : 0;
 /**
  * How the openly licensed image index is made up: which source holds how much,

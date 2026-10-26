@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { comparePodcasts, latestEpisodes, podcastCharts, podcastDetails, podcastStats, searchEpisodes, searchPodcasts } from "./api.js";
+import { audioProfile, comparePodcasts, feedAudit, latestEpisodes, podcastCharts, podcastDetails, podcastStats, searchEpisodes, searchPodcasts } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -129,9 +129,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement audit locally (paywall removed)
         try {
-            return textError("Not yet implemented: audit");
+            return text(await feedAudit({ feed_url: args.feed_url, limit: args.limit }));
         }
         catch (e) {
             return textError(String(e));
@@ -146,9 +145,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement profile locally (paywall removed)
         try {
-            return textError("Not yet implemented: profile");
+            return text(await audioProfile({ feed_url: args.feed_url, limit: args.limit }));
         }
         catch (e) {
             return textError(String(e));

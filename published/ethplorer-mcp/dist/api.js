@@ -256,6 +256,116 @@ const CRITERIA = {
  * each, and asking about "USDT" without naming a chain is the single most common
  * way to read a balance wrong.
  */
+const TOP_ENDPOINT = { trade: "trade", cap: "cap", count: "count" };
+/** getTop answers either with a bare array or wrapped in tokens; accept both. */
+const tokenArray = (d) => {
+    if (Array.isArray(d))
+        return d;
+    const wrapped = d?.tokens ?? d?.result ?? [];
+    return Array.isArray(wrapped) ? wrapped : [];
+};
+const topRow = (t) => ({
+    symbol: String(t?.symbol ?? "?"),
+    name: String(t?.name ?? "?"),
+    address: String(t?.address ?? ""),
+    trade: num(t?.tradeVolume ?? t?.volume),
+    cap: num(t?.marketCap ?? t?.cap),
+    count: num(t?.countOps ?? t?.txsCount ?? t?.count),
+    holders: num(t?.holdersCount),
+    price: t?.price && t.price !== false ? num(t.price.rate) : NaN,
+});
+/**
+ * getTop takes a single criterion, so "which tokens are big but not liquid" is
+ * only answerable by asking it three times and comparing. That comparison is the
+ * point of the tool: rank by one measure, then show where the other two disagree.
+ */
+export async function topTokensBy(args = {}) {
+    const criteria = String(args.criteria ?? "trade");
+    if (!TOP_ENDPOINT[criteria])
+        throw new Error(`criteria must be one of ${Object.keys(TOP_ENDPOINT).join(", ")}.`);
+    const limit = Math.min(Math.max(Number(args.limit ?? 15) || 15, 1), 50);
+    const compare = args.compare !== false;
+    const wanted = compare ? Object.keys(TOP_ENDPOINT) : [criteria];
+    const lists = {};
+    for (const key of wanted) {
+        const d = await epGet(CHAINS["1"].base, "/getTop", { criteria: TOP_ENDPOINT[key], limit });
+        lists[key] = tokenArray(d).map(topRow);
+    }
+    const primary = lists[criteria] ?? [];
+    if (!primary.length)
+        throw new Error(`Ethplorer returned no tokens for criteria=${criteria}.`);
+    const label = CRITERIA[criteria].label;
+    const lines = [`Top ${primary.length} token(s) by ${label} on Ethereum Mainnet`, ""];
+    primary.forEach((t, i) => {
+        const value = t[criteria];
+        const shown = criteria === "cap" || criteria === "trade" ? compactUsd(value) : Number.isFinite(value) ? value.toLocaleString() : "?";
+        lines.push(`${String(i + 1).padStart(2)}. ${t.symbol.slice(0, 12).padEnd(12)} ${t.name.slice(0, 36).padEnd(36)} ${shown}`);
+    });
+    if (compare) {
+        const others = Object.keys(TOP_ENDPOINT).filter((k) => k !== criteria);
+        lines.push("", `Where the rankings disagree with ${label}:`);
+        for (const key of others) {
+            const rank = new Map((lists[key] ?? []).map((t, i) => [t.address.toLowerCase() || t.symbol.toLowerCase(), i + 1]));
+            const here = new Map(primary.map((t, i) => [t.address.toLowerCase() || t.symbol.toLowerCase(), i + 1]));
+            const absent = primary.filter((t) => !rank.has(t.address.toLowerCase() || t.symbol.toLowerCase()));
+            lines.push(`  vs ${CRITERIA[key].label}: ${primary.length - absent.length} of ${primary.length} also rank there${absent.length ? `, ${absent.length} absent — ${absent.slice(0, 4).map((t) => t.symbol).join(", ")}` : ""}`);
+            const movers = primary
+                .map((t) => {
+                const k = t.address.toLowerCase() || t.symbol.toLowerCase();
+                return { symbol: t.symbol, here: here.get(k), there: rank.get(k) };
+            })
+                .filter((m) => m.there && Math.abs(m.there - m.here) >= 3)
+                .sort((a, b) => Math.abs(b.there - b.here) - Math.abs(a.there - a.here))
+                .slice(0, 3);
+            for (const m of movers)
+                lines.push(`    ${m.symbol.slice(0, 12).padEnd(12)} #${m.here} by ${label} but #${m.there} by ${CRITERIA[key].label}`);
+        }
+        lines.push("", "The three criteria come from three separate calls, so a token can appear in one and not another. A high trade volume against a small cap is the closest this data gets to a liquidity signal, and it is still not one: volume can be wash trading.");
+    }
+    const noPrice = primary.filter((t) => !Number.isFinite(t.price)).length;
+    if (noPrice)
+        lines.push("", `${noPrice} of these have no price from Ethplorer, so their cap figures are unavailable rather than zero.`);
+    return lines.join("\n");
+}
+/**
+ * getTokensNew is a firehose of freshly deployed contracts. Every field in a
+ * token's name and symbol is chosen by whoever deployed it, so the only honest
+ * read of this list is "unknown, unvetted", and it says so.
+ */
+export async function newTokens(args = {}) {
+    const limit = Math.min(Math.max(Number(args.limit ?? 20) || 20, 1), 100);
+    const withPriceOnly = args.with_price_only === true;
+    const d = await epGet(CHAINS["1"].base, "/getTokensNew", { limit });
+    const all = tokenArray(d).map(topRow);
+    const rows = withPriceOnly ? all.filter((t) => Number.isFinite(t.price) && t.price > 0) : all;
+    if (!all.length)
+        throw new Error("Ethplorer returned no newly indexed tokens.");
+    if (!rows.length)
+        throw new Error(`Ethplorer returned ${all.length} new token(s) but none carries a price, and with_price_only was set.`);
+    const noPrice = rows.filter((t) => !Number.isFinite(t.price)).length;
+    const noHolders = rows.filter((t) => !Number.isFinite(t.holders) || t.holders === 0).length;
+    const lines = [
+        `Ethplorer's ${rows.length} most recently indexed token(s) on Ethereum Mainnet${withPriceOnly ? " that carry a price" : ""}`,
+        "",
+    ];
+    rows.forEach((t, i) => {
+        const bits = [];
+        bits.push(Number.isFinite(t.price) ? compactUsd(t.price) : "no price");
+        bits.push(Number.isFinite(t.holders) ? `${t.holders.toLocaleString()} holder(s)` : "holders unknown");
+        if (Number.isFinite(t.cap) && t.cap > 0)
+            bits.push(`cap ${compactUsd(t.cap)}`);
+        lines.push(`${String(i + 1).padStart(3)}. ${t.symbol.slice(0, 14).padEnd(14)} ${t.name.slice(0, 34).padEnd(34)} ${bits.join(" | ")}`);
+        if (t.address)
+            lines.push(`     ${t.address}`);
+    });
+    lines.push("");
+    if (noPrice)
+        lines.push(`${noPrice} of these have no price yet${withPriceOnly ? " after filtering" : ", which is normal for a contract hours old"}.`);
+    if (noHolders)
+        lines.push(`${noHolders} have zero or unknown holders, so nobody has received them yet.`);
+    lines.push("This is a deployment stream, not a recommendation: the name, the symbol and any logo are supplied by whoever deployed the contract, and being indexed as tradable is not an audit or a listing decision. Nothing here has been reviewed for scams, honeypots, mint authority or unlocked liquidity.");
+    return lines.join("\n");
+}
 export async function chainHoldings(args) {
     const address = String(args.address ?? "").trim();
     if (!/^0x[0-9a-fA-F]{40}$/.test(address)) {

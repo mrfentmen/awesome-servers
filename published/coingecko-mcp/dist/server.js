@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { m0_price, m0_trending, markets, coin, chart, global, categories, exchanges, search, history, exchangeTickers } from "./api.js";
+import { m0_price, m0_trending, markets, coin, chart, global, categories, exchanges, search, history, exchangeTickers, coinTickers, coinOhlc } from "./api.js";
 const text = (value) => ({ content: [{ type: 'text', text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -148,9 +148,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement tickers locally (paywall removed)
         try {
-            return textError("Not yet implemented: tickers");
+            return text(await coinTickers(args));
         }
         catch (e) {
             return textError(String(e));
@@ -184,9 +183,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement ohlc locally (paywall removed)
         try {
-            return textError("Not yet implemented: ohlc");
+            return text(await coinOhlc(args));
         }
         catch (e) {
             return textError(String(e));

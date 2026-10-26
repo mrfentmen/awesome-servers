@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { brokenLinks, certificateExpiry, checkRedirects, checkUrl, performanceReport, responseTimes } from "./api.js";
+import { brokenLinks, certificateExpiry, checkRedirects, checkUrl, performanceReport, responseTimes, securityHeaders, dnsRecords } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -109,9 +109,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement headers locally (paywall removed)
         try {
-            return textError("Not yet implemented: headers");
+            return text(await securityHeaders(args));
         }
         catch (e) {
             return textError(String(e));
@@ -126,9 +125,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement records locally (paywall removed)
         try {
-            return textError("Not yet implemented: records");
+            return text(await dnsRecords(args));
         }
         catch (e) {
             return textError(String(e));

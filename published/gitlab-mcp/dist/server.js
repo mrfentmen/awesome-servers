@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { search, projectBranches } from "./api.js";
+import { search, projectBranches, projectDetail, projectIssues } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -26,9 +26,8 @@ export function createServer() {
         inputSchema: z.object({ project: z.string().describe("Project as namespace/project, or its numeric id.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement detail locally (paywall removed)
         try {
-            return textError("Not yet implemented: detail");
+            return text(await projectDetail(args));
         }
         catch (e) {
             return textError(String(e));
@@ -44,9 +43,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement issues locally (paywall removed)
         try {
-            return textError("Not yet implemented: issues");
+            return text(await projectIssues(args));
         }
         catch (e) {
             return textError(String(e));

@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { addressInfo, addressHistory, tokenHistory, tokenHolders, tokenInfo, topTokens, lastBlock, addressTransactions, txInfo, chainHoldings } from "./api.js";
+import { addressInfo, addressHistory, tokenHistory, tokenHolders, tokenInfo, topTokens, lastBlock, addressTransactions, txInfo, chainHoldings, topTokensBy, newTokens } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -134,9 +134,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement by locally (paywall removed)
         try {
-            return textError("Not yet implemented: by");
+            return text(await topTokensBy(args));
         }
         catch (e) {
             return textError(String(e));
@@ -151,9 +150,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement tokens locally (paywall removed)
         try {
-            return textError("Not yet implemented: tokens");
+            return text(await newTokens(args));
         }
         catch (e) {
             return textError(String(e));

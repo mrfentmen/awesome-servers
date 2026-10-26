@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { address, addressBalance, latestBlock, networkStats, ticker, transaction, blockByHeight, blockByHash, mempool, feePressure } from "./api.js";
+import { address, addressBalance, latestBlock, networkStats, ticker, transaction, blockByHeight, blockByHash, mempool, feePressure, coinSupply, addressTimeline } from "./api.js";
 const text = (value) => ({ content: [{ type: 'text', text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -140,9 +140,8 @@ export function createServer() {
         inputSchema: z.object({}),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement supply locally (paywall removed)
         try {
-            return textError("Not yet implemented: supply");
+            return text(await coinSupply());
         }
         catch (e) {
             return textError(String(e));
@@ -157,9 +156,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement timeline locally (paywall removed)
         try {
-            return textError("Not yet implemented: timeline");
+            return text(await addressTimeline(args));
         }
         catch (e) {
             return textError(String(e));

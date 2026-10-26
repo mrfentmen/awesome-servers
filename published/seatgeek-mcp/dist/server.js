@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { formatEvent, recommendEvents, searchEvents, SeatGeekError } from "./api.js";
+import { formatEvent, recommendEvents, searchEvents, SeatGeekError, artistBriefing, artistCatalogue } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -57,9 +57,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement briefing locally (paywall removed)
         try {
-            return textError("Not yet implemented: briefing");
+            return text(await artistBriefing(args));
         }
         catch (e) {
             return textError(String(e));
@@ -73,9 +72,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement catalogue locally (paywall removed)
         try {
-            return textError("Not yet implemented: catalogue");
+            return text(await artistCatalogue(args));
         }
         catch (e) {
             return textError(String(e));

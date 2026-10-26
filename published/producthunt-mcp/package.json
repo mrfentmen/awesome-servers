@@ -1,6 +1,6 @@
 {
   "name": "producthunt-mcp",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Query Product Hunt GraphQL (token; set PRODUCTHUNT_TOKEN, Bearer): viewer, latest posts, post details.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/producthunt-mcp",

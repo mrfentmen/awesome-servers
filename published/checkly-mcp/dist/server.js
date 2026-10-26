@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { assertContent, assertHeaders, assertStatus, brokenLinks, checkRedirects, checkUrl, assertResponseTime, assertJson, assertRedirect, a11yBasics } from "./api.js";
+import { assertContent, assertHeaders, assertStatus, brokenLinks, checkRedirects, checkUrl, assertResponseTime, assertJson, assertRedirect, a11yBasics, httpSecurityReport, seoMeta } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -166,9 +166,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement report locally (paywall removed)
         try {
-            return textError("Not yet implemented: report");
+            return text(await httpSecurityReport(args));
         }
         catch (e) {
             return textError(String(e));
@@ -200,9 +199,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement meta locally (paywall removed)
         try {
-            return textError("Not yet implemented: meta");
+            return text(await seoMeta(args));
         }
         catch (e) {
             return textError(String(e));

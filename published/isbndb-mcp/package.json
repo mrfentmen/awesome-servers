@@ -1,6 +1,6 @@
 {
   "name": "isbndb-mcp",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "ISBNdb books: lookup by ISBN, search, batch lookup. Needs API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/isbndb-mcp",

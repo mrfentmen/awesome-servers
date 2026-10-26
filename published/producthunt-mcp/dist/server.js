@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { viewer, listPosts } from "./api.js";
+import { viewer, listPosts, showHnLaunches, githubFootprint, competitiveScan } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -47,9 +47,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement launches locally (paywall removed)
         try {
-            return textError("Not yet implemented: launches");
+            return text(await showHnLaunches(args));
         }
         catch (e) {
             return textError(String(e));
@@ -63,9 +62,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement footprint locally (paywall removed)
         try {
-            return textError("Not yet implemented: footprint");
+            return text(await githubFootprint(args));
         }
         catch (e) {
             return textError(String(e));
@@ -81,9 +79,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement scan locally (paywall removed)
         try {
-            return textError("Not yet implemented: scan");
+            return text(await competitiveScan(args));
         }
         catch (e) {
             return textError(String(e));

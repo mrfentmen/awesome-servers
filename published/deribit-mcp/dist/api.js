@@ -163,7 +163,7 @@ const dbUsd = (n) => {
 const DVOL_PERIODS = {
     '1d': { resolution: 3600, points: 24, label: 'the last day, hourly' },
     '7d': { resolution: 3600, points: 168, label: 'the last week, hourly' },
-    '30d': { resolution: 4 * 3600, points: 180, label: 'the last 30 days, 4-hourly' },
+    '30d': { resolution: 3600, points: 720, label: 'the last 30 days, hourly' },
     '90d': { resolution: 12 * 3600, points: 180, label: 'the last 90 days, 12-hourly' },
     '1y': { resolution: 24 * 3600, points: 365, label: 'the last year, daily' },
 };
@@ -262,4 +262,126 @@ export async function optionsPositioning(args) {
         'Moneyness is strike against the underlying index price, so a positive number is an out-of-the-money call and a negative one an out-of-the-money put. Open interest shows where contracts were placed, not which way those holders expect price to move.',
     ].filter((l) => l !== '');
     return lines.join('\n');
+}
+const DB_SPARK = '▁▂▃▄▅▆▇█';
+function dbSpark(values) {
+    if (!values.length)
+        return '';
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    if (max === min)
+        return DB_SPARK[0].repeat(values.length);
+    return values.map((v) => DB_SPARK[Math.min(DB_SPARK.length - 1, Math.floor(((v - min) / (max - min)) * DB_SPARK.length))]).join('');
+}
+const dbPct = (n, dp = 2) => (Number.isFinite(n) ? `${n >= 0 ? '+' : ''}${n.toFixed(dp)}%` : 'n/a');
+/** Open interest across every future on a currency, ranked, with basis and turnover. */
+export async function futuresOpenInterest(args = {}) {
+    const currency = String(args.currency ?? '').trim().toUpperCase();
+    if (!currency)
+        throw new DeribitError('Provide a currency, for example BTC or ETH.');
+    const kind = String(args.kind ?? 'future').trim().toLowerCase();
+    const limit = Math.min(Math.max(Math.floor(Number(args.limit ?? 12) || 12), 1), 60);
+    const d = await get(`${BASE}/public/get_book_summary_by_currency?currency=${encodeURIComponent(currency)}&kind=${encodeURIComponent(kind)}`);
+    const rows = (d.result ?? []).filter((r) => Number.isFinite(dbNum(r.open_interest)) && dbNum(r.open_interest) > 0);
+    if (!rows.length)
+        return `Deribit reports no ${kind} open interest for ${currency} right now.`;
+    // Funding exists on the perpetual only, so it is read once rather than per instrument.
+    let funding = NaN;
+    if (kind === 'future') {
+        try {
+            const t = await get(`${BASE}/public/ticker?instrument_name=${encodeURIComponent(`${currency}-PERPETUAL`)}`);
+            funding = dbNum(t.result?.funding_8h);
+        }
+        catch {
+            funding = NaN;
+        }
+    }
+    const parsed = rows.map((r) => {
+        const oi = dbNum(r.open_interest);
+        const volume = dbNum(r.volume);
+        const mark = dbNum(r.mark_price);
+        const index = dbNum(r.index_price ?? r.underlying_price);
+        const low = dbNum(r.low);
+        const high = dbNum(r.high);
+        return {
+            name: String(r.instrument_name ?? '?'),
+            oi,
+            volume,
+            mark,
+            index,
+            low,
+            high,
+            basis: Number.isFinite(mark) && Number.isFinite(index) ? mark - index : NaN,
+            basisPct: Number.isFinite(mark) && Number.isFinite(index) && index > 0 ? ((mark - index) / index) * 100 : NaN,
+            turnover: Number.isFinite(volume) && oi > 0 ? volume / oi : NaN,
+            rangePos: Number.isFinite(low) && Number.isFinite(high) && high > low && Number.isFinite(mark)
+                ? ((mark - low) / (high - low)) * 100
+                : NaN,
+            funding: /-PERPETUAL$/.test(String(r.instrument_name ?? '')) ? funding : NaN,
+        };
+    }).sort((a, b) => b.oi - a.oi);
+    const totalOi = parsed.reduce((s, r) => s + r.oi, 0);
+    const totalVol = parsed.reduce((s, r) => s + (Number.isFinite(r.volume) ? r.volume : 0), 0);
+    const top = parsed.slice(0, limit);
+    const topShare = top.reduce((s, r) => s + r.oi, 0) / totalOi;
+    const negative = parsed.filter((r) => Number.isFinite(r.funding) && r.funding < 0);
+    const width = Math.max(...top.map((r) => r.name.length), 20);
+    const lines = [
+        `Deribit ${currency} ${kind} open interest: ${parsed.length} instrument(s), ${dbUsd(totalOi)} notional in total`,
+        `24h volume across them: ${dbUsd(totalVol)}; the ${top.length} listed hold ${(topShare * 100).toFixed(1)}% of open interest.`,
+        negative.length
+            ? `Funding is negative on ${negative.map((r) => r.name).join(', ')} (${dbPct(negative[0].funding * 100, 4)} per 8h), so shorts pay longs there.`
+            : Number.isFinite(funding)
+                ? `Perpetual funding is ${dbPct(funding * 100, 4)} per 8h, so longs pay shorts.`
+                : 'No perpetual funding rate was returned for this currency.',
+        '',
+        `${'instrument'.padEnd(width)}${'open interest'.padStart(15)}${'share'.padStart(8)}${'mark'.padStart(13)}${'basis'.padStart(9)}${'24h range'.padStart(10)}${'vol/OI'.padStart(9)}`,
+    ];
+    for (const r of top) {
+        const range = Number.isFinite(r.rangePos) ? `${r.rangePos.toFixed(0)}%` : 'n/a';
+        lines.push(`${r.name.slice(0, width).padEnd(width)}${dbUsd(r.oi).padStart(15)}${((r.oi / totalOi) * 100).toFixed(2).padStart(7)}%${(Number.isFinite(r.mark) ? r.mark.toLocaleString() : 'n/a').padStart(13)}${dbPct(r.basisPct).padStart(9)}${range.padStart(10)}${(Number.isFinite(r.turnover) ? r.turnover.toFixed(2) : 'n/a').padStart(9)}`);
+    }
+    if (parsed.length > top.length)
+        lines.push(`  ...and ${parsed.length - top.length} more instrument(s).`);
+    lines.push('', 'Open interest for futures is USD notional on Deribit. Basis is mark price minus the index, so a positive basis means the future trades above spot. The range column is where mark sits inside the last 24h low and high, and vol/OI is how many times the book turned over in a day — under 1 means positions are being held rather than churned.');
+    return lines.join('\n');
+}
+/** The DVOL implied volatility index over a window, with the move it implies. */
+export async function impliedVolatilityHistory(args = {}) {
+    const currency = String(args.currency ?? '').trim().toUpperCase();
+    if (!currency)
+        throw new DeribitError('Provide a currency, for example BTC or ETH.');
+    if (!DVOL_CURRENCIES.includes(currency))
+        throw new DeribitError(`Deribit publishes the DVOL index for ${DVOL_CURRENCIES.join(' and ')} only, so ${currency} has no series.`);
+    const period = String(args.period ?? '7d').trim().toLowerCase();
+    if (!DVOL_PERIODS[period])
+        throw new DeribitError(`period must be one of ${Object.keys(DVOL_PERIODS).join(', ')}.`);
+    const spec = DVOL_PERIODS[period];
+    const end = Date.now();
+    const start = end - spec.points * spec.resolution * 1000;
+    const d = await get(`${BASE}/public/get_volatility_index_data?currency=${encodeURIComponent(currency)}&start_timestamp=${Math.floor(start)}&end_timestamp=${Math.floor(end)}&resolution=${spec.resolution}`);
+    const rows = (d.result?.data ?? []).filter((r) => Array.isArray(r) && r.length >= 5 && Number.isFinite(dbNum(r[4])));
+    if (!rows.length)
+        throw new DeribitError(`Deribit returned no DVOL data for ${currency} over ${spec.label}.`);
+    const closes = rows.map((r) => dbNum(r[4]));
+    const first = closes[0];
+    const last = closes[closes.length - 1];
+    const avg = closes.reduce((s, n) => s + n, 0) / closes.length;
+    const high = Math.max(...closes);
+    const low = Math.min(...closes);
+    const dayLabel = (ts) => new Date(Number(ts)).toISOString().slice(0, 16).replace('T', ' ');
+    // DVOL is an annualised percentage, so a one-sigma move divides it by the root
+    // of the number of periods in a year.
+    const sigmaDay = (last / 100 / Math.sqrt(365)) * 100;
+    const sigmaWeek = (last / 100 / Math.sqrt(52)) * 100;
+    const series = closes.filter((_, i) => i % Math.max(1, Math.floor(closes.length / 24)) === 0);
+    return [
+        `Deribit ${currency} DVOL implied volatility, ${spec.label} (${rows.length} points, ${dayLabel(rows[0][0])} to ${dayLabel(rows[rows.length - 1][0])} UTC)`,
+        `Latest ${last.toFixed(2)} | period change ${dbPct(((last - first) / (first || 1)) * 100)} | average ${avg.toFixed(2)}`,
+        `Range ${low.toFixed(2)} to ${high.toFixed(2)}, so the index is ${high > low ? `${(((last - low) / (high - low)) * 100).toFixed(0)}% up its own range` : 'flat across the window'}.`,
+        `Trend: ${dbSpark(series)}`,
+        '',
+        `At ${last.toFixed(2)}% annualised this prices a one-sigma move of about ${sigmaDay.toFixed(2)}% over a day and ${sigmaWeek.toFixed(2)}% over a week.`,
+        'DVOL is the options market\'s own price of risk and is forward-looking, unlike realised volatility computed from past prices.',
+    ].join('\n');
 }

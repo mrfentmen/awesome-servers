@@ -51,6 +51,60 @@ const tdIso = (offsetDays) => {
     const d = new Date(Date.now() - offsetDays * 86400000);
     return d.toISOString().slice(0, 10);
 };
+function tdSigned(n, digits = 2) {
+    if (n === null || !Number.isFinite(n))
+        return "-";
+    return `${n >= 0 ? "+" : ""}${n.toFixed(digits)}`;
+}
+/**
+ * The whole board against one base: every currency the ECB fixes, how far each
+ * moved since the previous fixing, and which end of the move each sits on.
+ * `latest` alone cannot show a move, so this reads the last few published days.
+ */
+export async function fxBoard(args) {
+    const base = (String(args?.base ?? "EUR").trim().toUpperCase() || "EUR");
+    if (!tdValid(base))
+        throw new Error("Give a three-letter base currency code, for example EUR or USD.");
+    const limit = Math.min(Math.max(Number(args?.limit ?? 12) || 12, 1), 30);
+    const series = await tdFx(`/${tdIso(10)}..${tdIso(0)}?base=${base}`);
+    const byDate = series.rates ?? {};
+    const dates = Object.keys(byDate).sort();
+    if (dates.length < 2) {
+        throw new Error(`The reference rate service published ${dates.length} fixing(s) for ${base} in the last ten days, too few to compare against a prior fixing.`);
+    }
+    const latestDate = dates[dates.length - 1];
+    const priorDate = dates[dates.length - 2];
+    const latest = byDate[latestDate] ?? {};
+    const prior = byDate[priorDate] ?? {};
+    const codes = Object.keys(latest).filter((c) => typeof latest[c] === "number" && c !== base).sort();
+    if (!codes.length)
+        throw new Error(`The service published no rates against ${base} on ${latestDate}.`);
+    const rows = codes.map((code) => {
+        const rate = latest[code];
+        const before = typeof prior[code] === "number" ? prior[code] : null;
+        const change = before === null ? null : rate - before;
+        const pct = before === null || before === 0 ? null : ((rate - before) / before) * 100;
+        return { code, rate, before, change, pct };
+    });
+    const moved = rows.filter((r) => r.pct !== null);
+    const strongest = moved.length ? moved.reduce((a, b) => (b.pct > a.pct ? b : a)) : null;
+    const weakest = moved.length ? moved.reduce((a, b) => (b.pct < a.pct ? b : a)) : null;
+    const biggest = moved.length ? moved.reduce((a, b) => (Math.abs(b.pct) > Math.abs(a.pct) ? b : a)) : null;
+    const listed = [...rows].sort((a, b) => Math.abs(b.pct ?? 0) - Math.abs(a.pct ?? 0)).slice(0, limit);
+    const unchanged = moved.filter((r) => Math.abs(r.pct) < 0.0001).length;
+    return [
+        `European Central Bank reference rates against ${base}`,
+        `  fixing of ${latestDate}, compared with the prior fixing of ${priorDate}`,
+        `  ${rows.length} currency(ies) published; ${moved.length} could be compared, ${unchanged} of those unchanged`,
+        strongest ? `  strongest ${strongest.code} ${tdSigned(strongest.pct)}%   weakest ${weakest.code} ${tdSigned(weakest.pct)}%   biggest move ${biggest.code} ${tdSigned(biggest.pct)}%` : "  no pair had a prior fixing to compare against",
+        "",
+        `Rates and moves, largest move first (${Math.min(limit, rows.length)} of ${rows.length}):`,
+        ...listed.map((r) => `  ${r.code}  ${r.rate.toFixed(4).padStart(11)}  ${tdSigned(r.pct).padStart(8)}%  ${r.change === null ? "     -" : tdSigned(r.change, 4).padStart(9)}`),
+        rows.length > listed.length ? `  ...and ${rows.length - listed.length} more currency(ies) the limit hid.` : "",
+        "",
+        `A rate here is how many units of the quote currency one ${base} buys at the ECB's daily fixing, so a positive move means ${base} strengthened against that currency. Fixings are published on working days only, which is why the prior date is not always yesterday.`,
+    ].filter(Boolean).join("\n");
+}
 /**
  * What one currency pair actually did over a stretch of published days: its
  * opening and closing fix, the high and low it touched, the average, and the size

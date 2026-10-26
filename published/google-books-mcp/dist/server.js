@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { searchBooks, getVolume } from "./api.js";
+import { searchBooks, getVolume, isbnLookup, authorWorks } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -48,9 +48,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement lookup locally (paywall removed)
         try {
-            return textError("Not yet implemented: lookup");
+            return text(await isbnLookup(args.isbn));
         }
         catch (e) {
             return textError(String(e));
@@ -65,9 +64,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement works locally (paywall removed)
         try {
-            return textError("Not yet implemented: works");
+            return text(await authorWorks(args.author, args.limit));
         }
         catch (e) {
             return textError(String(e));

@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { formatGame, gameOdds, listSports, OddsError, fixtureForm } from "./api.js";
+import { formatGame, gameOdds, listSports, OddsError, fixtureForm, impliedProbability, expectedValue } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -53,9 +53,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement probability locally (paywall removed)
         try {
-            return textError("Not yet implemented: probability");
+            return text(await impliedProbability(args));
         }
         catch (e) {
             return textError(String(e));
@@ -71,9 +70,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement value locally (paywall removed)
         try {
-            return textError("Not yet implemented: value");
+            return text(await expectedValue(args));
         }
         catch (e) {
             return textError(String(e));

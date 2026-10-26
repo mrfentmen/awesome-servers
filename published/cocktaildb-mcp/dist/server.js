@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { searchCocktails, getCocktail, randomCocktail, listIngredients, filterCocktails, ingredientInfo, listFilters, searchByLetter, filterMultiIngredient, catalogueIndex } from "./api.js";
+import { searchCocktails, getCocktail, randomCocktail, listIngredients, filterCocktails, ingredientInfo, listFilters, searchByLetter, filterMultiIngredient, catalogueIndex, drinkRecordAudit, nameVariants } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -158,9 +158,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement audit locally (paywall removed)
         try {
-            return textError("Not yet implemented: audit");
+            return text(await drinkRecordAudit(args.id));
         }
         catch (e) {
             return textError(String(e));
@@ -191,9 +190,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement variants locally (paywall removed)
         try {
-            return textError("Not yet implemented: variants");
+            return text(await nameVariants(args));
         }
         catch (e) {
             return textError(String(e));

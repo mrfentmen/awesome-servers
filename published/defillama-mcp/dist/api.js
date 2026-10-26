@@ -256,3 +256,127 @@ export async function stablecoinChains(args = {}) {
     lines.push('', 'Supply is measured in USD at current prices, so a depeg shows up here as a fall in value even if the token count is unchanged.');
     return lines.filter((l) => l !== '').join('\n');
 }
+const SPARK = '▁▂▃▄▅▆▇█';
+function sparkline(values) {
+    if (!values.length)
+        return '';
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    if (max === min)
+        return SPARK[0].repeat(values.length);
+    return values.map((v) => SPARK[Math.min(SPARK.length - 1, Math.floor(((v - min) / (max - min)) * SPARK.length))]).join('');
+}
+const pctChange = (from, to) => (from > 0 ? ((to - from) / from) * 100 : NaN);
+const signedPct = (n, dp = 2) => (Number.isFinite(n) ? `${n >= 0 ? '+' : ''}${n.toFixed(dp)}%` : 'n/a');
+/** How supply on one chain, or the whole market, has moved against real values on those dates. */
+export async function stablecoinHistory(args = {}) {
+    const chain = String(args.chain ?? 'all').trim() || 'all';
+    const days = Math.min(Math.max(Math.floor(Number(args.days ?? 90) || 90), 7), 1095);
+    const url = chain.toLowerCase() === 'all'
+        ? `${STABLECOIN_BASE}/stablecoincharts/all`
+        : `${STABLECOIN_BASE}/stablecoincharts/${encodeURIComponent(chain)}`;
+    const d = await llamaGet(url);
+    const rows = (Array.isArray(d) ? d : [])
+        .map((r) => ({
+        t: Number(r?.date ?? 0),
+        usd: pegValue(r?.totalCirculatingUSD) || pegValue(r?.totalCirculating),
+        unreleased: pegValue(r?.totalUnreleased),
+    }))
+        .filter((r) => r.t > 0 && Number.isFinite(r.usd) && r.usd > 0)
+        .sort((a, b) => a.t - b.t);
+    if (!rows.length)
+        throw new LlamaBatch3Error(`DefiLlama has no supply history for ${chain}.`);
+    const latest = rows[rows.length - 1];
+    const cutoff = latest.t - days * 86400;
+    const window = rows.filter((r) => r.t >= cutoff);
+    const inWindow = window.length ? window : [rows[rows.length - 1]];
+    const onOrBefore = (secondsAgo) => {
+        const target = latest.t - secondsAgo * 86400;
+        let best = null;
+        for (const r of rows) {
+            if (r.t <= target)
+                best = r;
+            else
+                break;
+        }
+        return best;
+    };
+    const windows = [[7, '7 day'], [30, '30 day'], [90, '90 day'], [365, '1 year']];
+    const growth = windows.map(([ago, label]) => {
+        const before = onOrBefore(ago);
+        if (!before)
+            return `${label.padEnd(8)} no data that far back (series starts ${new Date(rows[0].t * 1000).toISOString().slice(0, 10)})`;
+        return `${label.padEnd(8)} ${dlUsd(before.usd).padStart(10)} -> ${dlUsd(latest.usd).padStart(10)}  ${signedPct(pctChange(before.usd, latest.usd)).padStart(8)}`;
+    });
+    const high = inWindow.reduce((a, b) => (b.usd > a.usd ? b : a));
+    const low = inWindow.reduce((a, b) => (b.usd < a.usd ? b : a));
+    const series = inWindow
+        .filter((_, i) => i % Math.max(1, Math.floor(inWindow.length / 24)) === 0)
+        .map((r) => r.usd);
+    return [
+        `Stablecoin supply history${chain.toLowerCase() === 'all' ? ' for the whole market' : ` on ${chain}`}: ${rows.length} daily point(s), ${new Date(rows[0].t * 1000).toISOString().slice(0, 10)} to ${new Date(latest.t * 1000).toISOString().slice(0, 10)}`,
+        `Latest supply: ${dlUsd(latest.usd)}${latest.unreleased > 0 ? ` | ${dlUsd(latest.unreleased)} minted but not circulating` : ''}`,
+        '',
+        `Growth against the supply actually recorded on those dates:`,
+        ...growth.map((g) => `  ${g}`),
+        '',
+        `Last ${days} days: high ${dlUsd(high.usd)} on ${new Date(high.t * 1000).toISOString().slice(0, 10)}, low ${dlUsd(low.usd)} on ${new Date(low.t * 1000).toISOString().slice(0, 10)}, a ${((high.usd - low.usd) / (low.usd || 1) * 100).toFixed(2)}% band.`,
+        `Trend: ${sparkline(series)}`,
+        '',
+        'Supply is valued in USD at the price on each date, so a depeg shows up as a fall even when the token count is unchanged. DefiLlama publishes circulating and unreleased supply, not a lifetime minted total.',
+    ].join('\n');
+}
+/** Volume routed through DEX aggregators, with a real period-over-period comparison. */
+export async function aggregatorVolume(args = {}) {
+    const limit = Math.min(Math.max(Math.floor(Number(args.limit ?? 12) || 12), 1), 40);
+    const minShare = Math.max(Number(args.min_share_pct ?? 0) || 0, 0);
+    const d = await llamaGet(`${LLAMA_BASE}/overview/aggregators?excludeTotalDataChart=true&excludeTotalDataChartBreakdown=true`);
+    const all = (d.protocols ?? []).filter((p) => Number(p.total24h ?? 0) > 0);
+    if (!all.length)
+        throw new LlamaBatch3Error('DefiLlama returned no aggregator volume.');
+    const total24h = Number(d.total24h ?? 0) || all.reduce((s, p) => s + Number(p.total24h ?? 0), 0);
+    const total7d = Number(d.total7d ?? 0) || all.reduce((s, p) => s + Number(p.total7d ?? 0), 0);
+    const rows = [...all].sort((a, b) => Number(b.total24h ?? 0) - Number(a.total24h ?? 0));
+    // DefiLlama normally ships the previous windows; derive them from its own
+    // change percentages when it does not, so the comparison is never invented.
+    const prevWindow = (row, key, changeKey) => {
+        const direct = Number(row[key]);
+        if (Number.isFinite(direct) && direct > 0)
+            return { value: direct, derived: false };
+        const change = Number(row[changeKey]);
+        const current = Number(row.total24h ?? 0);
+        if (!Number.isFinite(change) || change === -100 || !current)
+            return { value: NaN, derived: true };
+        return { value: current / (1 + change / 100), derived: true };
+    };
+    const kept = minShare > 0 ? rows.filter((r) => (Number(r.total24h ?? 0) / total24h) * 100 >= minShare) : rows;
+    if (!kept.length)
+        throw new LlamaBatch3Error(`No aggregator holds at least ${minShare}% of 24h volume; the largest is ${((Number(rows[0].total24h ?? 0) / total24h) * 100).toFixed(2)}%.`);
+    const shown = kept.slice(0, limit);
+    const top2 = rows.slice(0, 2).reduce((s, r) => s + Number(r.total24h ?? 0), 0) / total24h;
+    const total7dPrev = Number.isFinite(Number(d.change_7d)) && Number(d.change_7d) !== -100
+        ? total7d / (1 + Number(d.change_7d) / 100)
+        : NaN;
+    const width = Math.max(...shown.map((r) => String(r.name ?? '?').length), 10);
+    const lines = [
+        `DEX aggregator volume: ${dlUsd(total24h)} in 24h across ${all.length} aggregator(s)`,
+        `7d total ${dlUsd(total7d)}${Number.isFinite(total7dPrev) ? ` against ${dlUsd(total7dPrev)} for the previous 7 days, ${signedPct(Number(d.change_7d))} over the week` : ''}${Number.isFinite(Number(d.change_1d)) ? `; ${signedPct(Number(d.change_1d))} against the previous day` : ''}`,
+        Number.isFinite(Number(d.totalAllTime)) ? `All time: ${dlUsd(Number(d.totalAllTime))}` : '',
+        `The top two aggregators route ${(top2 * 100).toFixed(1)}% of all 24h volume, so routing is ${top2 > 0.7 ? 'highly concentrated' : top2 > 0.45 ? 'concentrated' : 'fairly spread'}.`,
+        minShare > 0 ? `Only aggregators at or above ${minShare}% of 24h volume are listed.` : '',
+        '',
+        `${'aggregator'.padEnd(width)}${'24h'.padStart(11)}${'share'.padStart(8)}${'7d'.padStart(11)}${'d/d'.padStart(9)}${'w/w'.padStart(9)}`,
+    ].filter((l) => l !== '');
+    for (const r of shown) {
+        const v24 = Number(r.total24h ?? 0);
+        const v7 = Number(r.total7d ?? 0);
+        const prev24 = prevWindow(r, 'totalPrev24h', 'change_1d');
+        const d1 = Number.isFinite(prev24.value) ? pctChange(prev24.value, v24) : NaN;
+        const d7 = Number(r.change_7d);
+        lines.push(`${String(r.name ?? '?').slice(0, width).padEnd(width)}${dlUsd(v24).padStart(11)}${((v24 / total24h) * 100).toFixed(2).padStart(7)}%${dlUsd(v7).padStart(11)}${signedPct(d1).padStart(9)}${signedPct(d7).padStart(9)}`);
+    }
+    if (kept.length > shown.length)
+        lines.push(`  ...and ${kept.length - shown.length} more aggregator(s) above the threshold.`);
+    lines.push('', 'Shares are of 24h volume. The daily and weekly changes come from the aggregator\'s own published change figures where the previous window totals are not included in the response.');
+    return lines.join('\n');
+}

@@ -1,6 +1,6 @@
 {
   "name": "fmp-mcp",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "MCP server for Financial Modeling Prep: quotes, profiles, financials. Free key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/fmp-mcp",

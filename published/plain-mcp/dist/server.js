@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { listCustomers, listThreads, getThread } from "./api.js";
+import { listCustomers, listThreads, getThread, emailDeliverability, responseTimeReport } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -62,9 +62,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement deliverability locally (paywall removed)
         try {
-            return textError("Not yet implemented: deliverability");
+            return text(await emailDeliverability(args.email));
         }
         catch (e) {
             return textError(String(e));
@@ -83,9 +82,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement report locally (paywall removed)
         try {
-            return textError("Not yet implemented: report");
+            return text(responseTimeReport(args.target_hours, args.samples));
         }
         catch (e) {
             return textError(String(e));

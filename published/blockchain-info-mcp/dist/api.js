@@ -238,3 +238,99 @@ export async function feePressure(args = {}) {
         `Transactions over 50 sat/byte: ${sorted.filter((x) => x.r >= 50).length}`,
     ].join('\n');
 }
+// ---- muxF tools:
+const CAP_SATS = 21_000_000 * 1e8;
+const HALVING_BLOCKS = 210_000;
+export async function coinSupply(_args = {}) {
+    const d = await get(`${BASE}/stats?format=json`);
+    const minedSats = Number(d?.totalbc);
+    const height = Number(d?.n_blocks_total);
+    if (!Number.isFinite(minedSats) || !Number.isFinite(height))
+        throw new BcError('blockchain.info did not return supply figures');
+    const mined = minedSats / 1e8;
+    const remaining = CAP_SATS / 1e8 - mined;
+    const epoch = Math.floor(height / HALVING_BLOCKS);
+    const subsidy = 50 / 2 ** epoch;
+    const toHalving = HALVING_BLOCKS - (height % HALVING_BLOCKS);
+    const days = (toHalving * 10) / (60 * 24);
+    const price = Number(d?.market_price_usd);
+    const pct = (mined / (CAP_SATS / 1e8)) * 100;
+    return [
+        `Bitcoin supply: ${mined.toLocaleString(undefined, { maximumFractionDigits: 0 })} BTC mined of 21,000,000 (${pct.toFixed(2)}%), ${remaining.toLocaleString(undefined, { maximumFractionDigits: 0 })} BTC still unmined.`,
+        `Block height: ${height.toLocaleString()} — halving epoch ${epoch}, subsidy ${subsidy} BTC per block.`,
+        `Next halving in ${toHalving.toLocaleString()} blocks (~${Math.round(days).toLocaleString()} days at 10-minute blocks).`,
+        Number.isFinite(price) && price > 0
+            ? `At the current price of ${usd(price)} the unmined remainder is worth ${usd(remaining * price)}.`
+            : 'Current price unavailable, so the unmined remainder is not valued here.',
+        'Supply comes from blockchain.info totalbc; the subsidy and halving distance are derived from the block height.',
+    ].join('\n');
+}
+export async function addressTimeline(args) {
+    const addr = (args.address ?? '').trim();
+    if (!/^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bc1[a-z0-9]{11,71}$/.test(addr))
+        throw new BcError('Provide a valid Bitcoin address');
+    const sample = Math.min(Math.max(Math.floor(Number(args.sample ?? 200) || 200), 10), 500);
+    const d = await get(`${BASE}/rawaddr/${encodeURIComponent(addr)}?limit=${sample}`);
+    const txs = Array.isArray(d.txs) ? d.txs : [];
+    if (!txs.length)
+        throw new BcError(`blockchain.info returned no transactions for ${addr}`);
+    const years = new Map();
+    let feesPaid = 0;
+    let valueIn = 0;
+    let valueOut = 0;
+    let dated = 0;
+    let received = 0;
+    let spent = 0;
+    for (const t of txs) {
+        const ins = Array.isArray(t.inputs) ? t.inputs : [];
+        const outs = Array.isArray(t.out) ? t.out : [];
+        const fromAddress = ins
+            .filter((i) => i?.prev_out?.addr === addr)
+            .reduce((s, i) => s + (Number(i?.prev_out?.value) || 0), 0);
+        const toAddress = outs
+            .filter((o) => o?.addr === addr)
+            .reduce((s, o) => s + (Number(o?.value) || 0), 0);
+        const fee = Number(t.fee ?? 0) || 0;
+        const net = toAddress - fromAddress;
+        valueIn += toAddress;
+        valueOut += fromAddress;
+        feesPaid += fee;
+        if (net >= 0)
+            received += 1;
+        else
+            spent += 1;
+        const when = Number(t.time);
+        if (!Number.isFinite(when))
+            continue;
+        dated += 1;
+        const year = new Date(when * 1000).getUTCFullYear();
+        const row = years.get(year) ?? { year, txs: 0, in: 0, out: 0, fee: 0, net: 0, first: when, last: when };
+        row.txs += 1;
+        row.in += toAddress;
+        row.out += fromAddress;
+        row.fee += fee;
+        row.net += net;
+        row.first = Math.min(row.first, when);
+        row.last = Math.max(row.last, when);
+        years.set(year, row);
+    }
+    const rows = [...years.values()].sort((a, b) => b.year - a.year);
+    const lines = [
+        `Address ${addr} — lifetime ${Number(d.n_tx ?? 0).toLocaleString()} transaction(s), received ${btc(d.total_received)}, sent ${btc(d.total_sent)}, balance ${btc(d.final_balance)}.`,
+        `Analysed the most recent ${txs.length} transaction(s)${dated ? `, ${dated} of them dated` : ', none dated'}: ${received} net-receiving and ${spent} net-spending.`,
+        `Inside this window: ${btc(valueIn)} flowed in, ${btc(valueOut)} flowed out, ${btc(feesPaid)} paid in fees.`,
+    ];
+    if (rows.length) {
+        lines.push('', 'By year (newest first):');
+        for (const r of rows) {
+            const from = new Date(r.first * 1000).toISOString().slice(0, 10);
+            const to = new Date(r.last * 1000).toISOString().slice(0, 10);
+            lines.push(`  ${r.year}: ${r.txs} tx (${from} to ${to}) | in ${btc(r.in)} | out ${btc(r.out)} | fees ${btc(r.fee)} | net ${btc(r.net)}`);
+        }
+    }
+    else {
+        lines.push('', 'No transaction in the sample carried a timestamp, so no yearly breakdown is possible.');
+    }
+    lines.push('', 'Flow is measured from the inputs and outputs that name this address, so change sent back to it is counted on both sides; net is the true change for the window.');
+    return lines.join('\n');
+}

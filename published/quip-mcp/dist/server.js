@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { searchThreads, getThread, listFolders, getUser, documentProfile } from "./api.js";
+import { searchThreads, getThread, listFolders, getUser, documentProfile, wikiArticle, wikiOutline } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -73,9 +73,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement article locally (paywall removed)
         try {
-            return textError("Not yet implemented: article");
+            return text(await wikiArticle(args.title));
         }
         catch (e) {
             return textError(String(e));
@@ -90,9 +89,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement outline locally (paywall removed)
         try {
-            return textError("Not yet implemented: outline");
+            return text(await wikiOutline(args.title, args.max_depth));
         }
         catch (e) {
             return textError(String(e));

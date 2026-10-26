@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { listApps, getApp, listNotifications, pushSdkPopularity } from "./api.js";
+import { listApps, getApp, listNotifications, pushSdkPopularity, sdkReleaseTimeline, platformStatus } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -75,9 +75,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement timeline locally (paywall removed)
         try {
-            return textError("Not yet implemented: timeline");
+            return text(await sdkReleaseTimeline(args));
         }
         catch (e) {
             return textError(String(e));
@@ -89,9 +88,8 @@ export function createServer() {
         inputSchema: z.object({ limit: z.number().describe("How many incidents to show, 1-15.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement status locally (paywall removed)
         try {
-            return textError("Not yet implemented: status");
+            return text(await platformStatus(args));
         }
         catch (e) {
             return textError(String(e));

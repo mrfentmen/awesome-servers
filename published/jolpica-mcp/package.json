@@ -1,6 +1,6 @@
 {
   "name": "jolpica-mcp",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Formula 1 data (Jolpica, the Ergast replacement).",
   "type": "module",
   "main": "dist/index.js",

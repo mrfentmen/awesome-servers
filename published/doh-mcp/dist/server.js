@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { caaRecords, emailRecords, normaliseProvider, resolve, resolveMany, reverseLookup, formatAnswer, providersHelp, recordSummary, dnssecCheck, propagationCheck, txtContains, wildcardCheck } from "./api.js";
+import { caaRecords, delegationChain, diagnoseLookup, emailRecords, normaliseProvider, resolve, resolveMany, reverseLookup, formatAnswer, providersHelp, recordSummary, dnssecCheck, propagationCheck, txtContains, wildcardCheck } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -169,9 +169,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement lookup locally (paywall removed)
         try {
-            return textError("Not yet implemented: lookup");
+            return text(await diagnoseLookup(args));
         }
         catch (e) {
             return textError(String(e));
@@ -187,9 +186,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement chain locally (paywall removed)
         try {
-            return textError("Not yet implemented: chain");
+            return text(await delegationChain(args));
         }
         catch (e) {
             return textError(String(e));

@@ -1,6 +1,6 @@
 {
   "name": "savvycal-mcp",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Timezone, business-day and meeting-slot maths - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/savvycal-mcp",

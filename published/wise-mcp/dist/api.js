@@ -89,6 +89,89 @@ const wiClean = (raw) => String(raw ?? "")
     .replace(/&#39;/g, "'")
     .replace(/\s+/g, " ")
     .trim();
+const wiMedian = (values) => {
+    if (!values.length)
+        return null;
+    const sorted = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+};
+const wiComponentsOf = (incident) => (incident.components ?? []).map((c) => wiLabel(c.name)).filter(Boolean);
+const wiLatestNote = (incident) => {
+    const updates = Array.isArray(incident.incident_updates) ? incident.incident_updates : [];
+    const latest = updates.find((u) => u?.body) ?? updates[0];
+    return latest?.body ? wiClean(latest.body).slice(0, 160) : "no note published";
+};
+/**
+ * The incident record read as a reliability history: how often each part fails,
+ * how long it takes to recover, and whether it is getting better. Statuspage
+ * keeps only what Wise chose to publish, which is the honest limit of this.
+ */
+export async function incidentHistory(args) {
+    const area = String(args?.area ?? "").trim();
+    const limit = Math.round(Math.min(Math.max(Number(args?.limit ?? 10) || 10, 1), 30));
+    const body = await wiGet("incidents.json");
+    const all = Array.isArray(body?.incidents) ? body.incidents : [];
+    if (!all.length)
+        throw new Error("Wise's status service published no incident history at all; either the account has never posted an incident or the feed is empty right now.");
+    const filtered = area
+        ? all.filter((i) => `${i.name ?? ""} ${wiComponentsOf(i).join(" ")}`.toLowerCase().includes(area.toLowerCase()))
+        : all;
+    if (!filtered.length)
+        throw new Error(`No incident in Wise's published record matches "${area}". Try a component name such as payments, API or card, or omit the filter.`);
+    const timed = filtered.map((i) => ({ incident: i, mins: i.resolved_at ? wiMinutes(i.created_at, i.resolved_at) : null }));
+    const resolvedMins = timed.map((t) => t.mins).filter((m) => Number.isFinite(m));
+    const open = filtered.filter((i) => !i.resolved_at);
+    const mean = resolvedMins.length ? resolvedMins.reduce((a, b) => a + b, 0) / resolvedMins.length : null;
+    const median = wiMedian(resolvedMins);
+    const areaCounts = new Map();
+    for (const i of filtered) {
+        const parts = wiComponentsOf(i);
+        for (const name of parts.length ? parts : ["unattributed"])
+            areaCounts.set(name, (areaCounts.get(name) ?? 0) + 1);
+    }
+    const byYear = new Map();
+    for (const t of timed) {
+        const year = String(t.incident.created_at ?? "").slice(0, 4) || "undated";
+        const entry = byYear.get(year) ?? { count: 0, mins: [] };
+        entry.count += 1;
+        if (Number.isFinite(t.mins))
+            entry.mins.push(t.mins);
+        byYear.set(year, entry);
+    }
+    const byImpact = new Map();
+    for (const i of filtered) {
+        const impact = String(i.impact ?? "not rated");
+        byImpact.set(impact, (byImpact.get(impact) ?? 0) + 1);
+    }
+    const recent = [...filtered].sort((a, b) => String(b.created_at ?? "").localeCompare(String(a.created_at ?? "")));
+    const rows = [
+        `Wise incident record${area ? ` matching "${area}"` : ""} — ${filtered.length} of ${all.length} published incident(s)`,
+        `  resolved         ${filtered.length - open.length}${open.length ? ` | still open ${open.length}` : " | none open"}`,
+        `  time to resolve  ${mean === null ? "no resolved incident to time" : `mean ${wiSpan(Math.round(mean))} | median ${wiSpan(median)} (from ${resolvedMins.length} timed)`}`,
+        `  by impact        ${[...byImpact.entries()].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(" | ")}`,
+        "",
+        "Product areas named by the incidents:",
+        ...[...areaCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit).map(([name, n]) => `  ${String(n).padStart(4)}  ${name}`),
+        "",
+        "By year:",
+        ...[...byYear.entries()].sort((a, b) => b[0].localeCompare(a[0])).map(([year, e]) => {
+            const avg = e.mins.length ? Math.round(e.mins.reduce((a, b) => a + b, 0) / e.mins.length) : null;
+            return `  ${year}  ${String(e.count).padStart(4)} incident(s)${avg === null ? "" : `, mean resolution ${wiSpan(avg)}`}`;
+        }),
+        "",
+        `Most recent (top ${Math.min(limit, recent.length)}):`,
+        ...recent.slice(0, limit).map((i) => {
+            const mins = i.resolved_at ? wiMinutes(i.created_at, i.resolved_at) : null;
+            const state = i.resolved_at ? `resolved in ${Number.isFinite(mins) ? wiSpan(mins) : "unknown time"}` : `still ${i.status ?? "open"}`;
+            const parts = wiComponentsOf(i);
+            return `  ${String(i.created_at ?? "").slice(0, 10)}  ${(i.name ?? "untitled").slice(0, 64)} — ${state}, impact ${i.impact ?? "not rated"}${parts.length ? ` | ${parts.join(", ")}` : ""}\n      last note: ${wiLatestNote(i)}`;
+        }),
+        "",
+        "note: this is only what Wise published on its status page. Incidents below its own reporting threshold never appear, so a quiet record is a claim about reporting as much as about reliability, and resolution time measures when Wise called it resolved, not when every customer was whole.",
+    ];
+    return rows.join("\n");
+}
 /**
  * Which parts of Wise are working right now, and which have a declared fault.
  * Every component is listed with its own state, because a transfer working while

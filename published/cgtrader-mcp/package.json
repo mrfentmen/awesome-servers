@@ -1,6 +1,6 @@
 {
   "name": "cgtrader-mcp",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "description": "CGTrader 3D marketplace: models, files, profile. Needs token.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/cgtrader-mcp",

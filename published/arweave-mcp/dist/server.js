@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { ArweaveError, networkInfo, storagePrice, txStatus, walletBalance, searchByTag, addressTransactions, blockDetail } from "./api.js";
+import { ArweaveError, networkInfo, storagePrice, priceTable, txStatus, walletBalance, searchByTag, addressTransactions, blockDetail } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -121,9 +121,8 @@ export function createServer() {
         inputSchema: z.object({ sizesMb: z.array(z.number()).describe("Sizes in megabytes, e.g. [1,10,100].").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement table locally (paywall removed)
         try {
-            return textError("Not yet implemented: table");
+            return text(await priceTable(args?.sizesMb));
         }
         catch (e) {
             return textError(String(e));

@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getShow, listShowEpisodes, getEpisode, searchShows, createShow, episodeSearch } from "./api.js";
+import { getShow, listShowEpisodes, getEpisode, searchShows, createShow, episodeSearch, publisherProfile } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -97,9 +97,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement profile locally (paywall removed)
         try {
-            return textError("Not yet implemented: profile");
+            return text(await publisherProfile(args));
         }
         catch (e) {
             return textError(String(e));

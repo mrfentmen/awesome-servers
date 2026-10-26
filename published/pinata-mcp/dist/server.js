@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { formatPin, listPins, pinJson, unpin } from "./vendor-api.js";
-import { PinataError, convertCid } from "./api.js";
+import { PinataError, convertCid, decodeCidReport, compareCids } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -69,9 +69,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement cid locally (paywall removed)
         try {
-            return textError("Not yet implemented: cid");
+            return text(await decodeCidReport(args));
         }
         catch (e) {
             return textError(String(e));
@@ -85,9 +84,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement cids locally (paywall removed)
         try {
-            return textError("Not yet implemented: cids");
+            return text(await compareCids(args));
         }
         catch (e) {
             return textError(String(e));

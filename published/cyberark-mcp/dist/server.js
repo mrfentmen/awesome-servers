@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { breachCatalog, breachDetail, checkPassword, checkPasswords, domainEmailSecurity, generatePassword, passwordStrength, identifyHash, hashText, breachTimeline, subdomainInventory, dnssecStatus } from "./api.js";
+import { breachCatalog, breachDetail, checkPassword, checkPasswords, domainEmailSecurity, generatePassword, passwordStrength, identifyHash, hashText, breachTimeline, subdomainInventory, dnssecStatus, dnsRecordInventory, passwordVariationAudit } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -191,9 +191,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement inventory locally (paywall removed)
         try {
-            return textError("Not yet implemented: inventory");
+            return text(await dnsRecordInventory(args));
         }
         catch (e) {
             return textError(String(e));
@@ -224,9 +223,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement audit locally (paywall removed)
         try {
-            return textError("Not yet implemented: audit");
+            return text(await passwordVariationAudit(args));
         }
         catch (e) {
             return textError(String(e));

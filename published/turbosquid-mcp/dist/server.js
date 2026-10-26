@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { listFileFormats, getProduct, listDrafts, getDraft, freeModelSearch } from "./api.js";
+import { listFileFormats, getProduct, listDrafts, getDraft, freeModelSearch, meshFormatSurvey } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -73,9 +73,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement survey locally (paywall removed)
         try {
-            return textError("Not yet implemented: survey");
+            return text(await meshFormatSurvey(args));
         }
         catch (e) {
             return textError(String(e));

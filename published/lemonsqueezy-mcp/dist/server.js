@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { listStores, listProducts, getProduct } from "./api.js";
+import { listStores, listProducts, getProduct, feeBreakdown, payoutSchedule } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -58,9 +58,8 @@ export function createServer() {
         inputSchema: z.object({ gross: z.number().describe("Gross amount of the sale."), percentage_fee: z.number().describe("Processor percentage fee, e.g. 0.05 for 5%.").optional(), fixed_fee: z.number().describe("Fixed per-transaction fee.").optional(), currency_fee: z.number().describe("Currency conversion fee.").optional(), tax_withheld: z.number().describe("Tax withheld by the processor.").optional(), refund: z.number().describe("Amount refunded to the buyer.").optional(), currency: z.string().describe("ISO currency code, default USD.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement breakdown locally (paywall removed)
         try {
-            return textError("Not yet implemented: breakdown");
+            return text(feeBreakdown(args));
         }
         catch (e) {
             return textError(String(e));
@@ -72,9 +71,8 @@ export function createServer() {
         inputSchema: z.object({ cadence: z.enum(["daily", "weekly", "biweekly", "monthly"]).default("monthly").describe("Payout cadence."), min_threshold: z.number().describe("Minimum balance before a payout is made.").optional(), reserve_rate: z.number().describe("Share held back, e.g. 0.05 for 5%.").optional(), periods: z.number().int().min(1).max(12).default(6).describe("How many payout dates to list (default 6, max 12)."), starting_balance: z.number().describe("Balance the schedule starts from.").optional(), currency: z.string().describe("ISO currency code, default USD.").optional(), from_date: z.string().describe("Anchor date, YYYY-MM-DD. Today by default.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement schedule locally (paywall removed)
         try {
-            return textError("Not yet implemented: schedule");
+            return text(payoutSchedule(args));
         }
         catch (e) {
             return textError(String(e));

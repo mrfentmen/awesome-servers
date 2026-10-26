@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getBalances, getTransactions, getNfts, getTokenMetadata, parseTransactions } from "./api.js";
+import { getBalances, getTransactions, getNfts, getTokenMetadata, parseTransactions, walletHoldings, tokenMarket } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -92,9 +92,8 @@ export function createServer() {
         inputSchema: z.object({ address: z.string().describe("Solana wallet address"), limit: z.number().int().min(1).max(40).default(10).describe("How many tokens to list (default 10, max 40).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement holdings locally (paywall removed)
         try {
-            return textError("Not yet implemented: holdings");
+            return text(await walletHoldings(args.address, args.limit));
         }
         catch (e) {
             return textError(String(e));
@@ -106,9 +105,8 @@ export function createServer() {
         inputSchema: z.object({ token: z.string().describe("SPL mint address to look up.").optional(), query: z.string().describe("Symbol or name to search for, used when no mint is given.").optional(), limit: z.number().int().min(1).max(20).default(5).describe("How many pairs to print (default 5, max 20).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement market locally (paywall removed)
         try {
-            return textError("Not yet implemented: market");
+            return text(await tokenMarket(args.token, args.query, args.limit));
         }
         catch (e) {
             return textError(String(e));

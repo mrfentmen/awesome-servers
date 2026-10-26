@@ -110,6 +110,110 @@ const twClean = (raw) => String(raw ?? "")
     .replace(/&#39;/g, "'")
     .replace(/\s+/g, " ")
     .trim();
+const TW_CHART = "https://api.steampowered.com/ISteamChartsService/GetMostPlayedGames/v1/";
+const TW_APP = "https://store.steampowered.com/api/appdetails";
+const TW_SPY = "https://steamspy.com/api.php";
+const TW_REVIEWS = "https://store.steampowered.com/appreviews/";
+async function twSteamApp(appId) {
+    try {
+        const res = await fetch(`${TW_APP}?appids=${encodeURIComponent(appId)}&l=english`, {
+            headers: { "User-Agent": TW_UA, Accept: "application/json" },
+            signal: AbortSignal.timeout(25000),
+        });
+        if (!res.ok)
+            return null;
+        const body = (await res.json());
+        const entry = body?.[appId];
+        return entry?.success ? entry.data ?? null : null;
+    }
+    catch {
+        return null;
+    }
+}
+async function twSteamSpy(appId) {
+    try {
+        const res = await fetch(`${TW_SPY}?request=appdetails&appid=${encodeURIComponent(appId)}`, {
+            headers: { "User-Agent": TW_UA, Accept: "application/json" },
+            signal: AbortSignal.timeout(25000),
+        });
+        if (!res.ok)
+            return null;
+        const body = (await res.json());
+        return body?.error ? null : body;
+    }
+    catch {
+        return null;
+    }
+}
+async function twSteamReviews(appId) {
+    try {
+        const res = await fetch(`${TW_REVIEWS}${encodeURIComponent(appId)}?json=1&language=all&purchase_type=all&num_per_page=0`, {
+            headers: { "User-Agent": TW_UA, Accept: "application/json" },
+            signal: AbortSignal.timeout(25000),
+        });
+        if (!res.ok)
+            return null;
+        const body = (await res.json());
+        return body?.success ? body.query_summary ?? null : null;
+    }
+    catch {
+        return null;
+    }
+}
+const twNum = (n) => (Number.isFinite(Number(n)) ? Number(n).toLocaleString("en-US") : "not reported");
+/**
+ * The demand side of a streaming decision, from Steam's weekly most-played chart
+ * enriched per title. Twitch tells you who is watching; this tells you what they
+ * are already playing.
+ */
+export async function gameDemand(args) {
+    const limit = Math.round(Math.min(Math.max(Number(args?.limit ?? 6) || 6, 1), 12));
+    const chart = await twGet(TW_CHART, "Steam's most-played chart");
+    const response = chart?.response ?? {};
+    const ranks = Array.isArray(response.ranks) ? response.ranks : [];
+    if (!ranks.length)
+        throw new TwitchError("Steam's chart came back with no ranks; the endpoint publishes a weekly rollup and can be briefly empty while it recalculates.");
+    const rollup = response.rollup_date ? new Date(response.rollup_date * 1000).toISOString().slice(0, 10) : "date not reported";
+    const picked = ranks.slice(0, limit);
+    const rows = [
+        `Steam's most-played chart, rollup ${rollup} — top ${picked.length} of ${ranks.length} ranked title(s)`, "",
+        "  rank  last  move   peak this week   playing now   title",
+    ];
+    const enriched = [];
+    for (const entry of picked) {
+        const appId = String(entry.appid ?? "");
+        if (!/^\d+$/.test(appId))
+            continue;
+        const app = await twSteamApp(appId);
+        const spy = await twSteamSpy(appId);
+        const reviews = await twSteamReviews(appId);
+        const last = Number(entry.last_week_rank ?? 0);
+        const rank = Number(entry.rank ?? 0);
+        const move = last > 0 ? last - rank : null;
+        const moveLabel = move === null ? "new" : move === 0 ? "=" : move > 0 ? `up ${move}` : `down ${-move}`;
+        const title = app?.name ?? spy?.name ?? `app ${appId}`;
+        rows.push(`  ${String(rank).padStart(4)}  ${String(last || "-").padStart(4)}  ${moveLabel.padEnd(5)}  ${twNum(entry.peak_in_game).padStart(15)}  ${twNum(spy?.ccu).padStart(12)}   ${title}`);
+        const positive = reviews?.total_positive ?? spy?.positive;
+        const negative = reviews?.total_negative ?? spy?.negative;
+        const totalReviews = Number(reviews?.total_reviews ?? (Number(positive) + Number(negative)));
+        const split = totalReviews > 0 ? `${((Number(positive) / totalReviews) * 100).toFixed(1)}% positive of ${twNum(totalReviews)}` : "no reviews published";
+        const genres = (app?.genres ?? []).map((g) => g.description).filter(Boolean);
+        const price = app?.is_free ? "free" : app?.price_overview ? `${(app.price_overview.final / 100).toFixed(2)} ${app.price_overview.currency}` : "price not reported";
+        rows.push(`        ${genres.length ? genres.join(", ") : "genre not reported"} | ${(app?.developers ?? []).join(", ") || "developer not reported"} | ${price} | owners ${spy?.owners ?? "estimate unavailable"} | ${split}`);
+        enriched.push({ title, rank, move, peak: Number(entry.peak_in_game) });
+    }
+    const movers = enriched.filter((e) => e.move !== null && e.move !== 0);
+    const risers = movers.filter((e) => e.move > 0).sort((a, b) => b.move - a.move);
+    const fallers = movers.filter((e) => e.move < 0).sort((a, b) => a.move - b.move);
+    rows.push("");
+    rows.push(`This week: ${risers.length} riser(s), ${fallers.length} faller(s), ${enriched.filter((e) => e.move === null).length} new to the chart.`);
+    if (risers.length)
+        rows.push(`  biggest riser  ${risers[0].title} — ${risers[0].move} place(s) to #${risers[0].rank}`);
+    if (fallers.length)
+        rows.push(`  biggest faller ${fallers[0].title} — ${-fallers[0].move} place(s) to #${fallers[0].rank}`);
+    rows.push("", "note: rank and the weekly peak are Valve's own chart; 'playing now' and the ownership bracket are SteamSpy estimates taken at the time of the call, so the two do not share a clock. The chart ranks by peak concurrent players in the week, which rewards a big launch and hides a game with a steady smaller audience.");
+    return rows.join("\n");
+}
 const twStatusWord = (raw) => {
     const key = String(raw ?? "").toLowerCase();
     if (key === "operational")

@@ -1,6 +1,6 @@
 {
   "name": "doh-mcp",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "DNS lookups, email records and reverse DNS - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/doh-mcp",

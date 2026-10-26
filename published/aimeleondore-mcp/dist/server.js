@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections, browseCollection, find_by_size } from "./api.js";
+import { searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections, browseCollection, find_by_size, shopInfo, listPages } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -159,9 +159,8 @@ export function createServer() {
         inputSchema: z.object({}),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement info locally (paywall removed)
         try {
-            return textError("Not yet implemented: info");
+            return text(await shopInfo());
         }
         catch (e) {
             return textError(String(e));
@@ -173,9 +172,8 @@ export function createServer() {
         inputSchema: z.object({ limit: z.number().describe("Max pages.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement pages locally (paywall removed)
         try {
-            return textError("Not yet implemented: pages");
+            return text(await listPages(args));
         }
         catch (e) {
             return textError(String(e));

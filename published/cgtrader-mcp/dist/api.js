@@ -123,3 +123,117 @@ export async function categoryPath(args) {
         lines.push(`  ...and ${siblings.length - 30} more`);
     return lines.join("\n");
 }
+// ---- muxF tools:
+/** Children grouped by parent id, each list title-sorted, computed once per read. */
+function childIndex(rows) {
+    const byParent = new Map();
+    for (const row of rows) {
+        const key = row.parent_category_id ?? null;
+        if (!byParent.has(key))
+            byParent.set(key, []);
+        byParent.get(key).push(row);
+    }
+    for (const list of byParent.values())
+        list.sort((a, b) => String(a.title ?? "").localeCompare(String(b.title ?? "")));
+    return byParent;
+}
+/** Every id reachable below this one, cycle-safe, excluding the node itself. */
+function descendantsOf(byParent, id) {
+    const seen = new Set();
+    const stack = [...(byParent.get(id) ?? [])];
+    while (stack.length) {
+        const node = stack.pop();
+        if (seen.has(node.id))
+            continue;
+        seen.add(node.id);
+        stack.push(...(byParent.get(node.id) ?? []));
+    }
+    return seen;
+}
+export async function categoryTree(args) {
+    const rows = await allCategories();
+    const byParent = childIndex(rows);
+    const depth = Math.min(Math.max(Math.trunc(Number(args.depth ?? 2)) || 2, 1), 5);
+    const minChildren = Math.max(Math.trunc(Number(args.min_children ?? 0)) || 0, 0);
+    const startId = args.parent_id;
+    const roots = startId === undefined || startId === null
+        ? byParent.get(null) ?? []
+        : byParent.get(startId) ?? [];
+    if (!roots.length) {
+        const known = startId === undefined || startId === null
+            ? "the category list came back without any root"
+            : `category ${startId} has no children`;
+        throw new CGTraderError(`Cannot build a tree: ${known}. Check the id with category_path.`);
+    }
+    const lines = [
+        `CGTrader category tree${startId === undefined || startId === null ? " from the roots" : ` under [${startId}]`}`,
+        `Levels: ${depth} | minimum children to show a branch: ${minChildren} | ${rows.length} categories in the taxonomy`,
+        "",
+    ];
+    const seen = new Set();
+    let shown = 0;
+    let skipped = 0;
+    const walk = (node, level) => {
+        if (seen.has(node.id))
+            return;
+        seen.add(node.id);
+        const kids = byParent.get(node.id) ?? [];
+        if (kids.length < minChildren) {
+            skipped += 1;
+            return;
+        }
+        shown += 1;
+        lines.push(`${"  ".repeat(level)}[${node.id}] ${node.title ?? "(untitled)"}${node.slug ? ` (${node.slug})` : ""} — ${kids.length} child${kids.length === 1 ? "" : "ren"}`);
+        if (level + 1 >= depth)
+            return;
+        for (const kid of kids)
+            walk(kid, level + 1);
+    };
+    for (const root of roots)
+        walk(root, 0);
+    if (!shown)
+        throw new CGTraderError(`Every branch under this point has fewer than ${minChildren} child categories. Lower min_children or raise depth.`);
+    const deeper = roots.reduce((n, r) => n + (byParent.get(r.id) ?? []).length, 0);
+    lines.push("", `Showed ${shown} node(s)${skipped ? `, skipped ${skipped} branch(es) under the child threshold` : ""}. ${deeper} child categor${deeper === 1 ? "y" : "ies"} sit directly under the starting point.`);
+    if (depth > 1)
+        lines.push("Deeper levels are cut at the depth limit; raise depth (max 5) to go further.");
+    return lines.join("\n");
+}
+export async function taxonomyProfile(args) {
+    const minDescendants = Math.max(Math.trunc(Number(args.min_descendants ?? 1)) || 1, 1);
+    const rows = await allCategories();
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    const byParent = childIndex(rows);
+    const roots = rows.filter((r) => r.parent_category_id === null || r.parent_category_id === undefined);
+    const leaves = rows.filter((r) => !(byParent.get(r.id) ?? []).length);
+    const dangling = rows.filter((r) => r.parent_category_id !== null && r.parent_category_id !== undefined && !byId.has(r.parent_category_id));
+    const depths = rows.map((r) => pathOf(byId, r).length - 1);
+    const maxDepth = depths.length ? Math.max(...depths) : 0;
+    const types = {};
+    for (const row of rows) {
+        const key = String(row.type ?? "unreported");
+        types[key] = (types[key] ?? 0) + 1;
+    }
+    const ranked = roots
+        .map((r) => ({ id: r.id, title: r.title ?? null, slug: r.slug ?? null, descendants: descendantsOf(byParent, r.id).size }))
+        .filter((r) => r.descendants >= minDescendants)
+        .sort((a, b) => b.descendants - a.descendants)
+        .slice(0, 15);
+    return pretty({
+        categories: rows.length,
+        roots: roots.length,
+        leaves: leaves.length,
+        max_depth: maxDepth,
+        average_children_per_parent: (() => {
+            const parents = [...byParent.values()].filter((kids) => kids.length).length;
+            const children = rows.length - roots.length;
+            return parents ? Math.round((children / parents) * 100) / 100 : null;
+        })(),
+        by_type: types,
+        dangling_parent_references: dangling.length,
+        dangling_examples: dangling.slice(0, 10).map((r) => ({ id: r.id, title: r.title ?? null, missing_parent: r.parent_category_id })),
+        roots_ranked_by_descendants: ranked,
+        min_descendants: minDescendants,
+        note: "Counts come from the whole published category list; a dangling parent means the row points at an id that is not in the taxonomy.",
+    });
+}

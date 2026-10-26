@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { instance, trends } from "./api.js";
+import { instance, trends, accountLookup, hashtagTimeline } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -39,9 +39,8 @@ export function createServer() {
         inputSchema: z.object({ acct: z.string().describe("Handle, e.g. Gargron@mastodon.social or just gargron."), instance: z.string().describe("Instance to assume when the handle has no domain, e.g. hachyderm.io").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement lookup locally (paywall removed)
         try {
-            return textError("Not yet implemented: lookup");
+            return text(await accountLookup(args));
         }
         catch (e) {
             return textError(String(e));
@@ -53,9 +52,8 @@ export function createServer() {
         inputSchema: z.object({ tag: z.string().describe("Hashtag without the #, e.g. opensource."), instance: z.string().describe("Instance domain (default mastodon.social).").optional(), limit: z.number().int().min(1).max(20).default(10).describe("Posts to read (default 10, max 20).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement timeline locally (paywall removed)
         try {
-            return textError("Not yet implemented: timeline");
+            return text(await hashtagTimeline(args));
         }
         catch (e) {
             return textError(String(e));

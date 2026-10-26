@@ -212,6 +212,46 @@ export async function similarJobs(args) {
     return `Jobs similar to "${source.title ?? slug}" at ${source.company_name ?? '?'} (${scored.length} of ${list.length} newest postings):\n` +
         lines.join('\n');
 }
+/** The other tags that travel with one tag across the newest feed pages. */
+export async function relatedTags(args) {
+    const tag = String(args?.tag ?? '').trim();
+    if (!tag)
+        throw new Error('tag is required.');
+    const pages = clamp(args?.pages, 3, 6);
+    const limit = clamp(args?.limit, 10, 25);
+    const list = await fetchRecent(pages);
+    const needle = tag.toLowerCase();
+    const matching = list.filter((entry) => (entry.tags ?? []).some((value) => String(value).trim().toLowerCase() === needle));
+    if (!matching.length) {
+        return `No Arbeitnow posting carries the tag "${tag}" in the ${list.length} newest postings. Use the tags tool to see the tags that are in use.`;
+    }
+    const counts = new Map();
+    const labels = new Map();
+    for (const entry of matching) {
+        const seen = new Set();
+        for (const value of entry.tags ?? []) {
+            const label = String(value).trim();
+            if (!label)
+                continue;
+            const key = label.toLowerCase();
+            if (key === needle || seen.has(key))
+                continue;
+            seen.add(key);
+            if (!labels.has(key))
+                labels.set(key, label);
+            counts.set(key, (counts.get(key) ?? 0) + 1);
+        }
+    }
+    if (!counts.size) {
+        return `The ${matching.length} Arbeitnow posting(s) tagged "${tag}" carry no other tag.`;
+    }
+    const ranked = [...counts.entries()]
+        .sort((a, b) => b[1] - a[1] || labels.get(a[0]).localeCompare(labels.get(b[0])))
+        .slice(0, limit);
+    const share = (count) => Math.round((count / matching.length) * 100);
+    return `Tags that share Arbeitnow postings with "${tag}" (${matching.length} of ${list.length} newest postings):\n` +
+        ranked.map(([key, count], i) => `${i + 1}. ${labels.get(key)} - on ${count} posting(s) (${share(count)}%)`).join('\n');
+}
 /** Posting volume per day over the newest feed pages, plus the remote share. */
 export async function hiringTrends(args) {
     const pages = clamp(args?.pages, 3, 6);

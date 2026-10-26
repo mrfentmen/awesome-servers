@@ -179,6 +179,98 @@ function decodeCid(input) {
     };
 }
 /**
+ * Decode one CID and print every field in it, entirely from the bytes. No
+ * network call is made: a CID is self-describing, so the answer cannot be
+ * stale and does not depend on an IPFS gateway being up.
+ */
+export async function decodeCidReport(args) {
+    const cid = decodeCid(args.cid);
+    const hex = Array.from(cid.digest).map((b) => b.toString(16).padStart(2, "0")).join("");
+    const v1Body = Buffer.concat([Buffer.from([0x01]), encodeVarint(cid.codecCode), cid.multihash]);
+    const canonicalV1 = `b${encodeBase32(v1Body)}`;
+    const canonicalV0 = cid.codecCode === 0x70 && cid.hashCode === 0x12 && cid.digest.length === 32 ? encodeBase58(cid.multihash) : null;
+    const rows = [
+        `CID ${shorten(cid.text, 70)}`,
+        `  version      CIDv${cid.version}`,
+        `  multibase    ${cid.multibase}`,
+        `  multicodec   0x${cid.codecCode.toString(16)} (${cid.codec})`,
+        `  multihash    0x${cid.hashCode.toString(16)} (${cid.hash}), ${cid.digest.length}-byte digest`,
+        `  digest hex   ${hex}`,
+        `  total bytes  ${cid.multihash.length + (cid.version === 1 ? 2 + encodeVarint(cid.codecCode).length : 0)}`,
+        "",
+        `Same content, canonical forms:`,
+        `  CIDv1 base32  ${canonicalV1}`,
+    ];
+    if (canonicalV0)
+        rows.push(`  CIDv0 base58  ${canonicalV0}`);
+    else
+        rows.push(`  CIDv0 base58  not possible — v0 only exists for dag-pb over sha2-256 with a 32-byte digest.`);
+    rows.push("", "Decoded locally from the CID bytes; a CID is self-describing, so nothing here depends on a gateway being reachable.");
+    return rows.join("\n");
+}
+/**
+ * Compare a list of CIDs: which entries are malformed, which are exact
+ * duplicates, and which name the same content in a different encoding.
+ */
+export async function compareCids(args) {
+    const list = Array.isArray(args.cids) ? args.cids : [];
+    const capped = list.slice(0, 25).map((c) => String(c ?? "").trim()).filter(Boolean);
+    if (!capped.length)
+        throw new PinataError("Give at least one CID to compare.");
+    const decoded = [];
+    const malformed = [];
+    capped.forEach((text, index) => {
+        try {
+            decoded.push({ index, text, cid: decodeCid(text) });
+        }
+        catch (e) {
+            malformed.push({ index, text, reason: e instanceof Error ? e.message : String(e) });
+        }
+    });
+    const byText = new Map();
+    for (const row of decoded)
+        byText.set(row.text, (byText.get(row.text) ?? 0) + 1);
+    const duplicates = [...byText.entries()].filter(([, n]) => n > 1);
+    const groups = new Map();
+    for (const row of decoded) {
+        const key = `${row.cid.codecCode}:${row.cid.hashCode}:${row.cid.digest.toString("hex")}`;
+        if (!groups.has(key))
+            groups.set(key, []);
+        groups.get(key).push(row);
+    }
+    const sameContent = [...groups.entries()].filter(([, rows]) => rows.length > 1);
+    const rows = [
+        `Compared ${capped.length} CID(s)${list.length > 25 ? ` (first 25 of ${list.length})` : ""}`,
+        `  decoded    ${decoded.length}`,
+        `  malformed  ${malformed.length}`,
+        `  exact duplicates  ${duplicates.length}`,
+        `  content groups sharing bytes  ${sameContent.length}`,
+    ];
+    if (malformed.length) {
+        rows.push("", "Malformed:");
+        for (const m of malformed)
+            rows.push(`  #${m.index + 1} ${shorten(m.text, 48)} — ${m.reason}`);
+    }
+    if (duplicates.length) {
+        rows.push("", "Exact duplicates (same string more than once):");
+        for (const [text, n] of duplicates)
+            rows.push(`  ${shorten(text, 60)} — ${n} times`);
+    }
+    if (sameContent.length) {
+        rows.push("", "Same content in more than one form:");
+        for (const [, group] of sameContent) {
+            const first = group[0].cid;
+            rows.push(`  ${first.codec} over ${first.hash} (${first.digest.length}-byte digest) — ${group.length} entries`);
+            for (const row of group)
+                rows.push(`    #${row.index + 1} CIDv${row.cid.version} ${row.cid.multibase.split(",")[0]}: ${shorten(row.text, 58)}`);
+        }
+    }
+    if (!malformed.length && !duplicates.length && !sameContent.length)
+        rows.push("", "Every entry decoded, and no two name the same bytes — these are distinct objects or distinct encodings of nothing shared.");
+    rows.push("", "Local check only: identical digests mean identical bytes, not that either CID is pinned or retrievable.");
+    return rows.join("\n");
+}
+/**
  * Re-encode one CID into another form, copying the multihash bytes unchanged,
  * so a v0 and its v1 equivalent can be compared or pasted side by side.
  */

@@ -1,6 +1,6 @@
 {
   "name": "turbosquid-mcp",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Query the TurboSquid 3D marketplace API v1 (JSON API): list file formats, product metadata, and seller draft management. Requires `TURBOSQUID_API_TOKEN` (sent as `Authorization: Token`).",
   "type": "module",
   "mcpName": "io.github.mrfentmen/turbosquid-mcp",

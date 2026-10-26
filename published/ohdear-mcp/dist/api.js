@@ -298,6 +298,159 @@ export async function siteReport(args) {
     return lines.join("\n");
 }
 // ---- muxG tools:
+const OHDEAR_CRTSH = "https://crt.sh/";
+const OHDEAR_RDAP = "https://rdap.org/domain/";
+const ohDate = (value) => {
+    const stamp = Date.parse(String(value ?? ""));
+    return Number.isFinite(stamp) ? new Date(stamp).toISOString().slice(0, 10) : null;
+};
+const ohDays = (value) => {
+    const stamp = Date.parse(String(value ?? ""));
+    return Number.isFinite(stamp) ? Math.round((stamp - Date.now()) / 86400000) : null;
+};
+/** Groups rows by a key and returns the busiest first. */
+const ohRank = (map, take) => [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, take);
+export async function certificateTransparency(args = {}) {
+    const domain = normalizeTarget(args.domain ?? "").hostname;
+    const limit = Math.min(Math.max(Number(args.limit ?? 8) || 8, 1), 12);
+    const res = await fetch(`${OHDEAR_CRTSH}?q=${encodeURIComponent(`%.${domain}`)}&output=json`, {
+        headers: { "User-Agent": UA, Accept: "application/json" },
+        signal: AbortSignal.timeout(45000),
+    });
+    if (res.status === 404)
+        throw new Error(`The transparency log has no record matching ${domain}.`);
+    if (!res.ok)
+        throw new Error(`The transparency log returned ${res.status} for ${domain}; crt.sh throttles under load, so retry in a minute.`);
+    const body = (await res.text()).trim();
+    if (!body || body === "[]")
+        throw new Error(`The transparency log has no certificate for ${domain}.`);
+    let rows;
+    try {
+        rows = JSON.parse(body);
+    }
+    catch {
+        throw new Error("The transparency log answered with something that is not JSON; it is probably throttling. Retry in a minute.");
+    }
+    if (!Array.isArray(rows) || !rows.length)
+        throw new Error(`The transparency log has no certificate for ${domain}.`);
+    // The same certificate is logged by several logs, so count each serial once.
+    const seen = new Map();
+    for (const row of rows) {
+        const key = String(row.serial_number ?? row.id ?? Math.random());
+        if (!seen.has(key))
+            seen.set(key, row);
+    }
+    const certs = [...seen.values()];
+    const issuers = new Map();
+    const names = new Set();
+    let valid = 0;
+    let expiringSoon = 0;
+    let soonest = null;
+    for (const cert of certs) {
+        const issuer = String(cert.issuer_name ?? "unknown").replace(/\s+/g, " ").trim();
+        issuers.set(issuer, (issuers.get(issuer) ?? 0) + 1);
+        for (const name of String(cert.name_value ?? cert.common_name ?? "").split("\n")) {
+            const clean = name.trim().toLowerCase();
+            if (clean)
+                names.add(clean);
+        }
+        const days = ohDays(cert.not_after);
+        if (days !== null && days > 0) {
+            valid += 1;
+            if (days <= 30)
+                expiringSoon += 1;
+            if (soonest === null || days < soonest.days)
+                soonest = { days, name: String(cert.common_name ?? ""), expires: ohDate(cert.not_after) };
+        }
+    }
+    const recent = [...certs]
+        .sort((a, b) => String(b.not_before ?? "").localeCompare(String(a.not_before ?? "")))
+        .slice(0, limit)
+        .map((cert) => ({
+        common_name: String(cert.common_name ?? "").trim() || null,
+        issuer: String(cert.issuer_name ?? "unknown").replace(/\s+/g, " ").trim(),
+        not_before: ohDate(cert.not_before),
+        not_after: ohDate(cert.not_after),
+        days_left: ohDays(cert.not_after),
+        names_covered: String(cert.name_value ?? "").split("\n").filter((n) => n.trim()).length,
+    }));
+    const lines = [
+        `Certificate transparency for ${domain} — ${certs.length} distinct certificate(s) logged, ${rows.length} log entries`,
+        `Names covered: ${names.size}`,
+        `Still valid: ${valid} | expiring within 30 days: ${expiringSoon}`,
+        soonest ? `Soonest expiry: ${soonest.expires} (${soonest.days} day(s)) for ${soonest.name || "an unnamed certificate"}` : "Soonest expiry: no unexpired certificate in the log",
+        "",
+        `Issuers (${issuers.size}):`,
+    ];
+    for (const [issuer, count] of ohRank(issuers, 8)) {
+        lines.push(`  ${count} — ${issuer}`);
+    }
+    lines.push("", `Most recently issued (${recent.length} of ${certs.length}):`);
+    for (const cert of recent) {
+        const window = `${cert.not_before ?? "?"} to ${cert.not_after ?? "?"}`;
+        lines.push(`  ${cert.common_name ?? "(no common name)"} — ${window}${cert.days_left !== null ? ` (${cert.days_left} day(s) left)` : ""}, ${cert.names_covered} name(s)`);
+    }
+    lines.push("", "A certificate in the log only proves it was issued, not that it is still served; the live TLS certificate is what the ssl_certificate tool reads.");
+    return lines.join("\n");
+}
+export async function domainRegistration(args = {}) {
+    const domain = normalizeTarget(args.domain ?? "").hostname;
+    const res = await fetch(`${OHDEAR_RDAP}${encodeURIComponent(domain)}`, {
+        headers: { "User-Agent": UA, Accept: "application/rdap+json, application/json" },
+        signal: AbortSignal.timeout(30000),
+    });
+    if (res.status === 404) {
+        throw new Error(`The registry publishes no RDAP record for ${domain}. Many country-code registries still do not, which is not the same as the domain being unregistered.`);
+    }
+    if (!res.ok)
+        throw new Error(`RDAP lookup for ${domain} returned ${res.status}.`);
+    const d = (await res.json());
+    if (!d || typeof d !== "object")
+        throw new Error(`RDAP returned no record for ${domain}.`);
+    const events = Array.isArray(d.events) ? d.events : [];
+    const eventDate = (action, fallbackAction) => {
+        const hit = events.find((e) => String(e.eventAction ?? "").toLowerCase() === action)
+            ?? (fallbackAction ? events.find((e) => String(e.eventAction ?? "").toLowerCase() === fallbackAction) : undefined);
+        return hit ? ohDate(hit.eventDate) : null;
+    };
+    const registered = eventDate("registration");
+    const expires = eventDate("expiration");
+    const changed = eventDate("last changed", "last update of rdap database");
+    const transferred = eventDate("transfer");
+    const statuses = Array.isArray(d.status) ? d.status.map((s) => String(s)) : [];
+    const entities = Array.isArray(d.entities) ? d.entities : [];
+    const vcardValue = (entity, key) => {
+        const card = entity?.vcardArray;
+        const rows = Array.isArray(card) && Array.isArray(card[1]) ? card[1] : [];
+        const row = rows.find((r) => Array.isArray(r) && r[0] === key);
+        return row && row[3] != null ? String(row[3]) : null;
+    };
+    const registrar = entities.find((e) => Array.isArray(e.roles) && e.roles.includes("registrar"));
+    const registrarName = registrar ? vcardValue(registrar, "fn") : null;
+    const registrarId = registrar && Array.isArray(registrar.publicIds)
+        ? registrar.publicIds.find((p) => /iana/i.test(String(p.type ?? "")))?.identifier ?? null
+        : null;
+    const nameservers = Array.isArray(d.nameservers)
+        ? d.nameservers.map((ns) => String(ns.ldhName ?? "").toLowerCase()).filter(Boolean)
+        : [];
+    const signed = d.secureDNS ? d.secureDNS.delegationSigned === true : null;
+    const ageDays = registered ? Math.round((Date.now() - Date.parse(`${registered}T00:00:00Z`)) / 86400000) : null;
+    const daysLeft = expires ? ohDays(`${expires}T00:00:00Z`) : null;
+    const lines = [
+        `Registration record for ${String(d.ldhName ?? domain).toLowerCase()} (RDAP)`,
+        `Registrar: ${registrarName ?? "not disclosed"}${registrarId ? ` (IANA id ${registrarId})` : ""}`,
+        `Registered: ${registered ?? "not published"}${ageDays !== null ? ` (${ageDays} day(s) old)` : ""}`,
+        `Expires: ${expires ?? "not published"}${daysLeft !== null ? ` (${daysLeft} day(s) left)` : ""}`,
+        `Last changed: ${changed ?? "not published"}`,
+        transferred ? `Last transfer: ${transferred}` : null,
+        `DNSSEC signed: ${signed === null ? "not reported" : signed ? "yes" : "no"}`,
+        `Status: ${statuses.length ? statuses.join(", ") : "not published"}`,
+        nameservers.length ? `Nameservers (${nameservers.length}): ${nameservers.slice(0, 8).join(", ")}` : "Nameservers: none published",
+        "",
+        "RDAP is the registry's own record; it says nothing about whether the site is up or what it serves.",
+    ].filter(Boolean);
+    return lines.join("\n");
+}
 const OHDEAR_WAYBACK_URL = "https://archive.org/wayback/available";
 /** The archive's view of the page: when it was last captured, and what it looked like at a point in time. */
 export async function archivedSnapshot(args) {

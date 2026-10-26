@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { avg, book, depth, klines, markets, price, ticker, recentTrades, symbolInfo, volumeLeaders, compareTickers } from "./api.js";
+import { avg, book, depth, klines, markets, price, ticker, recentTrades, symbolInfo, volumeLeaders, compareTickers, marketMovers, klineIndicators } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -146,9 +146,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement movers locally (paywall removed)
         try {
-            return textError("Not yet implemented: movers");
+            return text(await marketMovers(args));
         }
         catch (e) {
             return textError(String(e));
@@ -164,9 +163,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement indicators locally (paywall removed)
         try {
-            return textError("Not yet implemented: indicators");
+            return text(await klineIndicators(args));
         }
         catch (e) {
             return textError(String(e));

@@ -183,6 +183,93 @@ const clCompact = (v) => {
 };
 const clCoin = (c) => `${String(c.name ?? '?')} (${String(c.symbol ?? '?')}) #${String(c.rank ?? '?')}`;
 /**
+ * How much of the coin is actually issued, what is still coming, and what the
+ * fully diluted valuation implies against the cap that is circulating today.
+ */
+export async function supplyProfile(args) {
+    const id = Number(args.id);
+    if (!Number.isFinite(id) || id <= 0)
+        throw new CoinloreError('Provide a CoinLore coin id, e.g. 90 for Bitcoin.');
+    const d = await get(`${BASE}/ticker/?id=${id}`);
+    const c = Array.isArray(d) ? d[0] : null;
+    if (!c)
+        throw new CoinloreError(`CoinLore has no coin with id ${id}.`);
+    const price = num(c.price_usd);
+    const circ = num(c.csupply);
+    const total = num(c.tsupply);
+    const max = num(c.msupply);
+    const mcap = num(c.market_cap_usd);
+    const vol = num(c.volume24a);
+    const ceiling = Number.isFinite(max) && max > 0 ? max : total;
+    const basis = Number.isFinite(max) && max > 0 ? 'max' : 'total';
+    const circPct = Number.isFinite(circ) && Number.isFinite(ceiling) && ceiling > 0 ? (circ / ceiling) * 100 : NaN;
+    const overhang = Number.isFinite(circ) && Number.isFinite(ceiling) ? ceiling - circ : NaN;
+    const overhangPct = Number.isFinite(overhang) && Number.isFinite(ceiling) && ceiling > 0 ? (overhang / ceiling) * 100 : NaN;
+    const fdv = Number.isFinite(price) && Number.isFinite(ceiling) && ceiling > 0 ? price * ceiling : NaN;
+    const dilution = Number.isFinite(fdv) && Number.isFinite(mcap) && mcap > 0 ? ((fdv - mcap) / mcap) * 100 : NaN;
+    const turnover = Number.isFinite(vol) && Number.isFinite(mcap) && mcap > 0 ? (vol / mcap) * 100 : NaN;
+    const lines = [
+        `${c.name ?? '?'} (${c.symbol ?? '?'}) #${c.rank ?? '?'} — supply profile`,
+        `Price ${clUsd(price, 6)}`,
+        `Circulating ${Number.isFinite(circ) ? circ.toLocaleString() : 'n/a'}`,
+        `Total issued ${Number.isFinite(total) ? total.toLocaleString() : 'n/a'}`,
+        `Maximum supply ${Number.isFinite(max) && max > 0 ? max.toLocaleString() : 'not capped'}`,
+        `Circulating against ${basis} supply: ${Number.isFinite(circPct) ? circPct.toFixed(2) + '% issued' : 'n/a'}` +
+            (Number.isFinite(overhang) ? `, ${overhang.toLocaleString()} (${Number.isFinite(overhangPct) ? overhangPct.toFixed(2) + '%' : '?'}) still to come` : ''),
+        `Market cap today: ${clCompact(mcap)}`,
+        `Fully diluted at ${basis} supply: ${clCompact(fdv)}` +
+            (Number.isFinite(dilution) ? ` — ${dilution >= 0 ? '+' : ''}${dilution.toFixed(1)}% against the circulating cap` : ''),
+        `24h turnover: ${Number.isFinite(turnover) ? (turnover).toFixed(2) + '% of the cap changes hands per day' : 'n/a'}`,
+    ];
+    if (!Number.isFinite(max) || max <= 0)
+        lines.push('CoinLore reports no maximum supply, so dilution is measured against the total issued, not a cap.');
+    return lines.join('\n');
+}
+/**
+ * How much of the whole market a handful of names hold: the observed shares in
+ * the sample with a running total, set against the published dominance figures.
+ */
+export async function capConcentration(args = {}) {
+    const sample = Math.min(Math.max(Math.floor(args.sample ?? 100), 10), 100);
+    const top = Math.min(Math.max(Math.floor(args.top ?? 10), 1), 50);
+    const d = await get(`${BASE}/tickers/?start=0&limit=${sample}`);
+    const rows = (d.data ?? [])
+        .map((c) => ({ c, cap: num(c.market_cap_usd) }))
+        .filter((r) => Number.isFinite(r.cap) && r.cap > 0)
+        .sort((a, b) => b.cap - a.cap);
+    if (!rows.length)
+        throw new CoinloreError(`CoinLore returned no market caps across the top ${sample} coins.`);
+    const g = (await get(`${BASE}/global/`))?.[0] ?? {};
+    const sampleCap = rows.reduce((s, r) => s + r.cap, 0);
+    const shown = rows.slice(0, top);
+    const topN = (n) => rows.slice(0, n).reduce((s, r) => s + r.cap, 0);
+    const totalCap = num(g.total_mcap);
+    const ath = num(g.mcap_ath);
+    const fromAth = Number.isFinite(ath) && ath > 0 && Number.isFinite(totalCap) ? ((totalCap - ath) / ath) * 100 : NaN;
+    let running = 0;
+    const lines = [
+        `Market concentration across the ${rows.length} largest coins CoinLore prices:`,
+        `Sample market cap ${clCompact(sampleCap)}`,
+        `BTC dominance ${Number.isFinite(num(g.btc_d)) ? num(g.btc_d).toFixed(2) + '%' : 'n/a'} | ` +
+            `ETH dominance ${Number.isFinite(num(g.eth_d)) ? num(g.eth_d).toFixed(2) + '%' : 'n/a'}`,
+        Number.isFinite(totalCap) ? `Whole market ${clCompact(totalCap)}` +
+            (Number.isFinite(fromAth) ? ` — ${fromAth >= 0 ? '+' : ''}${fromAth.toFixed(1)}% against its all-time high of ${clCompact(ath)}` : '') : '',
+        `Top 1 holds ${((topN(1) / sampleCap) * 100).toFixed(1)}% of the sample | ` +
+            `top 3 ${((topN(3) / sampleCap) * 100).toFixed(1)}% | ` +
+            `top 10 ${((topN(Math.min(10, rows.length)) / sampleCap) * 100).toFixed(1)}%`,
+        '',
+        `${'#'.padStart(3)}  ${'coin'.padEnd(26)}${'cap'.padStart(14)}${'share'.padStart(9)}${'cumulative'.padStart(12)}`,
+        ...shown.map((r, i) => {
+            const share = (r.cap / sampleCap) * 100;
+            running += share;
+            return `${String(i + 1).padStart(3)}  ${clCoin(r.c).slice(0, 26).padEnd(26)}${clCompact(r.cap).padStart(14)}${(share.toFixed(1) + '%').padStart(9)}${(running.toFixed(1) + '%').padStart(12)}`;
+        }),
+    ].filter((l) => l !== '');
+    if (rows.length > shown.length)
+        lines.push('', `(${rows.length - shown.length} more coin(s) in the sample are not listed; raise top to see them.)`);
+    return lines.join('\n');
+}
+/**
  * Sorts the large caps by short-term against longer-term move, so a genuine
  * trend stands apart from a coin that is simply bouncing after a drop.
  */

@@ -63,3 +63,87 @@ export const m0_issPasses = m0.issPasses;
 export const m0_IssError = m0.IssError;
 export const m0_issNow = m0.issNow;
 export const m1_position = m1.position;
+// ---- muxF tools:
+const NOMINATIM = 'https://nominatim.openstreetmap.org';
+const NOMINATIM_UA = 'mrfentmen-iss-mcp/1.0 (https://github.com/mrfentmen)';
+async function mapJson(url, label) {
+    let res;
+    try {
+        res = await fetch(url, {
+            headers: { 'User-Agent': NOMINATIM_UA, Accept: 'application/json' },
+            signal: AbortSignal.timeout(25000),
+        });
+    }
+    catch (e) {
+        throw new IssError(`${label} could not be reached: ${e instanceof Error ? e.message : String(e)}`);
+    }
+    if (res.status === 403 || res.status === 429)
+        throw new IssError(`${label} rate-limited the lookup; wait a second and retry.`);
+    if (!res.ok)
+        throw new IssError(`${label} returned ${res.status}`);
+    return res.json();
+}
+async function reversePlace(lat, lon) {
+    const qs = new URLSearchParams({
+        lat: String(lat),
+        lon: String(lon),
+        format: 'jsonv2',
+        addressdetails: '1',
+        zoom: '10',
+    });
+    return mapJson(`${NOMINATIM}/reverse?${qs.toString()}`, 'OpenStreetMap');
+}
+function placeName(place) {
+    const a = (place?.address ?? {});
+    const local = place?.name || a.city || a.town || a.village || a.hamlet || a.county || a.state_district || a.state;
+    if (!local)
+        return 'open water';
+    const country = a.country ?? null;
+    return country && country !== local ? `${local}, ${country}` : String(local);
+}
+export async function issGroundTrack() {
+    const d = await mapJson('https://api.wheretheiss.at/v1/satellites/25544', 'Where The ISS At');
+    const lat = Number(d.latitude);
+    const lon = Number(d.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon))
+        throw new IssError('Where The ISS At returned no usable coordinates.');
+    const when = d.timestamp ? new Date(Number(d.timestamp) * 1000).toISOString() : new Date().toISOString();
+    let place = null;
+    let placeNote = '';
+    try {
+        place = await reversePlace(lat, lon);
+    }
+    catch (e) {
+        placeNote = ` Reverse geocoding failed: ${e instanceof Error ? e.message : String(e)}`;
+    }
+    const over = place ? placeName(place) : 'open water (no place name at this point)';
+    const a = (place?.address ?? {});
+    const region = [a.state, a.country].filter(Boolean).join(', ');
+    const lines = [
+        `The ISS is over ${over} at ${when}.`,
+        `Position ${lat.toFixed(4)}, ${lon.toFixed(4)} | altitude ${Math.round(Number(d.altitude ?? 0))} km | speed ${Math.round(Number(d.velocity ?? 0))} km/h`,
+        region ? `Region: ${region}` : '',
+        place?.display_name ? `Name in OpenStreetMap: ${place.display_name}` : '',
+        `Map: https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=4/${lat}/${lon}`,
+        placeNote ? placeNote.trim() : '',
+    ].filter(Boolean);
+    return lines.join('\n');
+}
+export async function resolvePlace(place, limit) {
+    const q = String(place ?? '').trim();
+    if (!q)
+        throw new IssError('Give a place name, e.g. Reykjavik.');
+    const n = Math.min(Math.max(Number(limit ?? 3) || 3, 1), 10);
+    const qs = new URLSearchParams({ q, format: 'jsonv2', addressdetails: '1', limit: String(n) });
+    const rows = await mapJson(`${NOMINATIM}/search?${qs.toString()}`, 'OpenStreetMap');
+    if (!Array.isArray(rows) || !rows.length)
+        throw new IssError(`OpenStreetMap found no place called "${q}".`);
+    const lines = rows.slice(0, n).map((r, i) => {
+        const lat = Number(r.lat);
+        const lon = Number(r.lon);
+        const kind = [r.type, r.category].filter(Boolean).join(' / ');
+        return `${i + 1}. ${r.display_name ?? r.name ?? q} (${kind || 'place'}) — lat ${lat}, lon ${lon}`;
+    });
+    lines.push('', `Pass these numbers to iss_passes as lat and lon.`);
+    return lines.join('\n');
+}

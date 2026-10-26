@@ -161,3 +161,33 @@ export async function newestJobs(org, limit = 10) {
         sorted.slice(0, limit).map(brief).join("\n");
 }
 // ---- gap1 tools:
+/** How long the currently open roles have been listed for. */
+export async function postingAge(org, limit = 10) {
+    const jobs = await fetchBoard(org);
+    if (!jobs.length)
+        return `No open roles at ${org}.`;
+    const dated = jobs
+        .filter((job) => job.publishedAt && !Number.isNaN(new Date(job.publishedAt).getTime()))
+        .map((job) => ({
+        job,
+        days: Math.max(0, Math.floor((Date.now() - new Date(job.publishedAt).getTime()) / 86400000)),
+    }))
+        .sort((a, b) => b.days - a.days);
+    if (!dated.length) {
+        return `Ashby publishes no date for any of the ${jobs.length} open roles at ${org}, so posting age cannot be measured.`;
+    }
+    const days = dated.map((entry) => entry.days).sort((a, b) => a - b);
+    const median = days.length % 2 === 1
+        ? days[(days.length - 1) / 2]
+        : Math.round((days[days.length / 2 - 1] + days[days.length / 2]) / 2);
+    const olderThan = (bound) => dated.filter((entry) => entry.days > bound).length;
+    const shown = Math.min(Math.max(Number(limit ?? 10) || 10, 1), 50);
+    return `Posting age on the ${org} board (${dated.length} dated of ${jobs.length} open role(s)):\n` +
+        `Median days open: ${median} | newest ${days[0]} day(s) | oldest ${days[days.length - 1]} day(s)\n` +
+        `Open longer than 30 days: ${olderThan(30)} | 60 days: ${olderThan(60)} | 90 days: ${olderThan(90)}\n` +
+        `Oldest roles still open:\n` +
+        dated
+            .slice(0, shown)
+            .map((entry, i) => `${i + 1}. ${entry.job.title ?? "(untitled)"} — ${entry.days} day(s) since ${String(entry.job.publishedAt).slice(0, 10)} (${teamOf(entry.job)})`)
+            .join("\n");
+}

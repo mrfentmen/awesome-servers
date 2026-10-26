@@ -160,6 +160,102 @@ export async function tradingProducts(args) {
     ].join('\n');
 }
 /**
+ * The rules that decide whether an order is accepted at all: lot sizes, the
+ * minimum order value and the per-order restrictions, with the smallest legal
+ * lot priced in cash because that is usually what a rejection is really about.
+ */
+export async function productInfo(args) {
+    const pair = (args.pair ?? '').trim().toUpperCase();
+    if (!pair)
+        throw new Error('Provide a product id such as BTC-USD.');
+    const p = await exGet(`/products/${encodeURIComponent(pair)}`);
+    const quote = String(p.quote_currency ?? pair.split('-')[1] ?? '?');
+    let lastPrice = NaN;
+    let priceNote = '';
+    try {
+        const s = await exGet(`/products/${encodeURIComponent(pair)}/stats`);
+        lastPrice = Number(s.last);
+    }
+    catch (e) {
+        priceNote = ` Last price was unavailable (${e instanceof Error ? e.message : String(e)}), so the cash figure is omitted.`;
+    }
+    const baseMin = Number(p.base_min_size);
+    const cashMin = Number.isFinite(baseMin) && Number.isFinite(lastPrice) ? baseMin * lastPrice : NaN;
+    const flags = [
+        p.trading_disabled === true ? 'trading disabled' : null,
+        p.post_only === true ? 'post only' : null,
+        p.limit_only === true ? 'limit only' : null,
+        p.cancel_only === true ? 'cancel only' : null,
+        p.auction_mode === true ? 'auction mode' : null,
+        p.fx_stablecoin === true ? 'FX stablecoin' : null,
+    ].filter(Boolean);
+    return [
+        `Coinbase Exchange ${p.id ?? pair} — ${p.display_name ?? pair}, ${p.status ?? 'status unknown'}`,
+        `Base ${p.base_currency ?? '?'} / quote ${quote}`,
+        `Lots: base ${p.base_min_size ?? '?'} to ${p.base_max_size ?? '?'} (increment ${p.base_increment ?? '?'})`,
+        `Quote increment ${p.quote_increment ?? '?'} | quote lot ${p.quote_min_size ?? '?'} to ${p.quote_max_size ?? '?'}`,
+        `Minimum order value: ${p.min_market_funds ?? '?'} ${quote} | maximum ${p.max_market_funds ?? '?'} ${quote}`,
+        `Smallest legal lot: ${Number.isFinite(baseMin) ? baseMin : '?'} ${p.base_currency ?? '?'}` +
+            (Number.isFinite(cashMin) ? ` = about ${cashMin.toFixed(2)} ${quote} at the last price of ${lastPrice}` : '') + priceNote,
+        `Restrictions: ${flags.length ? flags.join(', ') : 'none reported'}`,
+        p.status_message ? `Exchange says: ${p.status_message}` : null,
+    ].filter(Boolean).join('\n');
+}
+/**
+ * The recent public tape, summarised so it can be read rather than skimmed:
+ * price range, notional, who was the aggressor, and how much of the money
+ * changed hands in blocks above a size floor.
+ */
+export async function recentTrades(args) {
+    const pair = (args.pair ?? '').trim().toUpperCase();
+    if (!pair)
+        throw new Error('Provide a product id such as BTC-USD.');
+    const limit = Math.min(Math.max(Math.floor(args.limit ?? 12), 1), 50);
+    const minSize = Math.max(Number(args.min_size ?? 0) || 0, 0);
+    const base = pair.split('-')[0] ?? pair;
+    const quote = pair.split('-')[1] ?? 'USD';
+    const rows = await exGet(`/products/${encodeURIComponent(pair)}/trades?limit=${limit}`);
+    if (!Array.isArray(rows) || !rows.length)
+        throw new Error(`Coinbase Exchange returned no trades for ${pair}.`);
+    const trades = rows.map((t) => ({
+        time: t.time ?? null,
+        price: Number(t.price),
+        size: Number(t.size),
+        side: String(t.side ?? '').toLowerCase(),
+    })).filter((t) => Number.isFinite(t.price) && Number.isFinite(t.size));
+    if (!trades.length)
+        throw new Error(`Coinbase Exchange returned ${rows.length} trade(s) for ${pair} but none carried a usable price and size.`);
+    const priced = trades.map((t) => t.price);
+    const low = Math.min(...priced);
+    const high = Math.max(...priced);
+    const totalSize = trades.reduce((s, t) => s + t.size, 0);
+    const notional = trades.reduce((s, t) => s + t.size * t.price, 0);
+    const buy = trades.filter((t) => t.side === 'buy');
+    const sell = trades.filter((t) => t.side === 'sell');
+    const sideNotional = (list) => list.reduce((s, t) => s + t.size * t.price, 0);
+    const buyNotional = sideNotional(buy);
+    const sellNotional = sideNotional(sell);
+    const spread = low > 0 ? ((high - low) / low) * 100 : NaN;
+    const mine = minSize > 0 ? trades.filter((t) => t.size >= minSize) : [];
+    const blockNotional = mine.reduce((s, t) => s + t.size * t.price, 0);
+    const print = (t) => `${t.time ? String(t.time).slice(11, 19) : '?'} ${t.side === 'buy' ? 'BUY ' : t.side === 'sell' ? 'SELL' : '?   '} ${t.size} ${base} @ ${t.price} = ${(t.size * t.price).toFixed(2)} ${quote}${minSize > 0 && t.size >= minSize ? ' [block]' : ''}`;
+    const lines = [
+        `Coinbase Exchange ${pair} tape — last ${trades.length} public trade(s):`,
+        `Price range ${low} to ${high} (${Number.isFinite(spread) ? spread.toFixed(2) + '%' : '?'}) | last ${trades[0].price}`,
+        `Total ${totalSize.toFixed(8)} ${base} = ${notional.toFixed(2)} ${quote} notional`,
+        `Aggression: buys ${buy.length} trade(s) ${buyNotional.toFixed(2)} ${quote} | sells ${sell.length} trade(s) ${sellNotional.toFixed(2)} ${quote}` +
+            (notional > 0 ? ` (${((buyNotional / notional) * 100).toFixed(1)}% of money was buyer-initiated)` : ''),
+    ];
+    if (minSize > 0) {
+        lines.push(mine.length
+            ? `Blocks at or above ${minSize} ${base}: ${mine.length} trade(s), ${blockNotional.toFixed(2)} ${quote}` +
+                (notional > 0 ? ` = ${((blockNotional / notional) * 100).toFixed(1)}% of the notional on the tape` : '')
+            : `No trade on this tape reached ${minSize} ${base}; every print was smaller.`);
+    }
+    lines.push('', 'Tape (newest first):', ...trades.map(print));
+    return lines.join('\n');
+}
+/**
  * Ranks every online product quoted in one currency by 24 hour volume from the
  * exchange stats endpoint, so it shows what is actually liquid rather than what
  * merely exists in the product list.

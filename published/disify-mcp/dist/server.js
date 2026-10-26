@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { check, checkBulk, checkDomain, dnsLookup, dnssecCheck, domainSummary, emailAuth, lookalikeDomains, mxRecords, mxProviderProfile } from "./api.js";
+import { check, checkBulk, checkDomain, dnsLookup, dnssecCheck, domainRegistration, domainSummary, emailAuth, lookalikeDomains, mxRecords, mxProviderProfile, typoCheck } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -144,9 +144,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement registration locally (paywall removed)
         try {
-            return textError("Not yet implemented: registration");
+            return text(await domainRegistration(args));
         }
         catch (e) {
             return textError(String(e));
@@ -161,9 +160,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement check locally (paywall removed)
         try {
-            return textError("Not yet implemented: check");
+            return text(await typoCheck(args));
         }
         catch (e) {
             return textError(String(e));
