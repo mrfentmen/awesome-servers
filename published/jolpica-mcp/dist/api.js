@@ -100,65 +100,65 @@ const m1 = (() => {
             return "No schedule data";
         return races.map((r) => `${r.round}. ${r.raceName} | ${r.date ?? ""} | ${r.Circuit?.circuitName ?? ""}`).join("\n");
     }
-    // ---- muxF tools:
+    // ---- muxF tools: the constructor championship and the qualifying session
     async function constructorStandings(args) {
-        const season = String(args.season ?? 'current').trim() || 'current';
+        const season = String(args.season ?? "current").trim() || "current";
         const limit = Math.min(Math.max(Number(args.limit ?? 10) || 10, 1), 30);
         const d = await get(`${BASE}/${season}/constructorstandings/?format=json`);
         const table = d?.MRData?.StandingsTable?.StandingsLists?.[0];
         if (!table)
             throw new F1Error(`No constructor standings for the ${season} season.`);
-        const rows = (table.ConstructorStandings ?? []);
+        const rows = table.ConstructorStandings ?? [];
         if (!rows.length)
             throw new F1Error(`The ${season} season has no constructor standings yet.`);
         const leader = Number(rows[0]?.points ?? 0);
         const lines = [
             `F1 ${table.season} constructor championship after round ${table.round} (${rows.length} team(s))`,
-            '',
+            "",
             ...rows.slice(0, limit).map((s, i) => {
-                const c = (s?.Constructor ?? {});
+                const c = s?.Constructor ?? {};
                 const pts = Number(s.points ?? 0);
-                const share = leader > 0 ? `${((pts / leader) * 100).toFixed(1)}% of the leader` : 'the leader';
-                return `${s.position ?? i + 1}. ${c.name ?? 'unknown'} (${c.nationality ?? 'n/a'}) — ${pts} pts, ${s.wins ?? 0} win(s), ${share}`;
+                const share = leader > 0 ? `${((pts / leader) * 100).toFixed(1)}% of the leader` : "the leader";
+                return `${s.position ?? i + 1}. ${c.name ?? "unknown"} (${c.nationality ?? "n/a"}) — ${pts} pts, ${s.wins ?? 0} win(s), ${share}`;
             }),
-            '',
-            'Constructor points are the sum of both cars, so they double the driver table and cannot be compared with it directly.',
+            "",
+            "Constructor points are the sum of both cars, so they double the driver table and cannot be compared with it directly.",
         ];
-        return lines.join('\n');
+        return lines.join("\n");
     }
     async function qualifyingReport(args) {
-        const season = String(args.season ?? 'current').trim() || 'current';
-        const round = String(args.round ?? '').trim();
+        const season = String(args.season ?? "current").trim() || "current";
+        const round = String(args.round ?? "").trim();
         const limit = Math.min(Math.max(Number(args.limit ?? 10) || 10, 1), 30);
         const path = round ? `${season}/${round}/qualifying/` : `${season}/last/qualifying/`;
         const d = await get(`${BASE}/${path}?format=json`);
         const race = d?.MRData?.RaceTable?.Races?.[0];
         if (!race)
             throw new F1Error(round ? `No qualifying session recorded for round ${round} of ${season}.` : `No qualifying session recorded for the last round of ${season}.`);
-        const rows = (race.QualifyingResults ?? []);
+        const rows = race.QualifyingResults ?? [];
         if (!rows.length)
-            throw new F1Error(`Qualifying for ${race.raceName ?? 'that round'} has no recorded times.`);
+            throw new F1Error(`Qualifying for ${race.raceName ?? "that round"} has no recorded times.`);
         // Jolpica returns a session time as a plain string in some seasons and as
         // {time} in others, so both shapes have to be read.
         const time = (v) => {
             if (!v)
-                return '—';
-            if (typeof v === 'string')
+                return "—";
+            if (typeof v === "string")
                 return v;
-            return v.time ? String(v.time) : '—';
+            return v.time ? String(v.time) : "—";
         };
         const lines = [
-            `F1 ${race.season} round ${race.round} — ${race.raceName ?? ''} qualifying, ${race.Circuit?.circuitName ?? ''} (${race.date ?? ''})`,
-            '',
+            `F1 ${race.season} round ${race.round} — ${race.raceName ?? ""} qualifying, ${race.Circuit?.circuitName ?? ""} (${race.date ?? ""})`,
+            "",
             ...rows.slice(0, limit).map((r) => {
-                const dr = (r?.Driver ?? {});
-                const who = [dr.code, dr.givenName, dr.familyName].filter(Boolean).join(' ');
-                return `${r.position ?? '?'}. ${who} (${r.Constructor?.name ?? 'n/a'}) | Q1 ${time(r.Q1)} | Q2 ${time(r.Q2)} | Q3 ${time(r.Q3)}`;
+                const dr = r?.Driver ?? {};
+                const who = [dr.code, dr.givenName, dr.familyName].filter(Boolean).join(" ");
+                return `${r.position ?? "?"}. ${who} (${r.Constructor?.name ?? "n/a"}) | Q1 ${time(r.Q1)} | Q2 ${time(r.Q2)} | Q3 ${time(r.Q3)}`;
             }),
-            '',
-            'A dash means the driver did not take part in that session, having already been eliminated or not entered.',
+            "",
+            "A dash means the driver did not take part in that session, having already been eliminated or not entered.",
         ];
-        return lines.join('\n');
+        return lines.join("\n");
     }
     return { F1Error, constructorStandings, driverStandings, lastRace, qualifyingReport, seasonSchedule };
 })();

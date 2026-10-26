@@ -48,10 +48,12 @@ def main() -> int:
             continue
         shipped = sorted(pkg_dir.glob("dist/*.js"))
         source = sorted(pkg_dir.glob("src/*.ts"))
+        # node_modules only exists because someone ran a build; it never ships,
+        # so counting it would report a package size nobody downloads.
         size = sum(
             f.stat().st_size
             for f in pkg_dir.rglob("*")
-            if f.is_file() and not f.name.endswith(".map")
+            if f.is_file() and not f.name.endswith(".map") and "node_modules" not in f.parts
         )
         rows.append(
             {

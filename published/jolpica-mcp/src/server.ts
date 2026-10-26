@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
-import { m0_current, m0_drivers, m0_races, m1_driverStandings, m1_lastRace, m1_seasonSchedule } from "./api.js"
+import { m0_current, m0_drivers, m0_races, m1_constructorStandings, m1_driverStandings, m1_lastRace, m1_qualifyingReport, m1_seasonSchedule } from "./api.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -91,9 +91,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-      // TODO: implement standings locally (paywall removed)
-      try { return textError("Not yet implemented: standings") } catch (e) { return textError(String(e)) }
-    }
+    try { return text(await m1_constructorStandings(args)) } catch (e) { return textError(String(e)) }
+  }
   )
 
   server.registerTool(
@@ -105,9 +104,8 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-      // TODO: implement report locally (paywall removed)
-      try { return textError("Not yet implemented: report") } catch (e) { return textError(String(e)) }
-    }
+    try { return text(await m1_qualifyingReport(args)) } catch (e) { return textError(String(e)) }
+  }
   )
 const serverName = "jolpica-mcp"
 

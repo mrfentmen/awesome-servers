@@ -63,25 +63,20 @@ export const m0_issPasses = m0.issPasses;
 export const m0_IssError = m0.IssError;
 export const m0_issNow = m0.issNow;
 export const m1_position = m1.position;
-// ---- muxF tools:
 const NOMINATIM = 'https://nominatim.openstreetmap.org';
 const NOMINATIM_UA = 'mrfentmen-iss-mcp/1.0 (https://github.com/mrfentmen)';
 async function mapJson(url, label) {
-    let res;
-    try {
-        res = await fetch(url, {
-            headers: { 'User-Agent': NOMINATIM_UA, Accept: 'application/json' },
-            signal: AbortSignal.timeout(25000),
-        });
-    }
-    catch (e) {
+    const res = await fetch(url, {
+        headers: { 'User-Agent': NOMINATIM_UA, Accept: 'application/json' },
+        signal: AbortSignal.timeout(25000),
+    }).catch((e) => {
         throw new IssError(`${label} could not be reached: ${e instanceof Error ? e.message : String(e)}`);
-    }
+    });
     if (res.status === 403 || res.status === 429)
         throw new IssError(`${label} rate-limited the lookup; wait a second and retry.`);
     if (!res.ok)
         throw new IssError(`${label} returned ${res.status}`);
-    return res.json();
+    return (await res.json());
 }
 async function reversePlace(lat, lon) {
     const qs = new URLSearchParams({
@@ -94,13 +89,14 @@ async function reversePlace(lat, lon) {
     return mapJson(`${NOMINATIM}/reverse?${qs.toString()}`, 'OpenStreetMap');
 }
 function placeName(place) {
-    const a = (place?.address ?? {});
+    const a = place?.address ?? {};
     const local = place?.name || a.city || a.town || a.village || a.hamlet || a.county || a.state_district || a.state;
     if (!local)
         return 'open water';
     const country = a.country ?? null;
     return country && country !== local ? `${local}, ${country}` : String(local);
 }
+/** What the station is over right now, reverse geocoded from its live position. */
 export async function issGroundTrack() {
     const d = await mapJson('https://api.wheretheiss.at/v1/satellites/25544', 'Where The ISS At');
     const lat = Number(d.latitude);
@@ -117,7 +113,7 @@ export async function issGroundTrack() {
         placeNote = ` Reverse geocoding failed: ${e instanceof Error ? e.message : String(e)}`;
     }
     const over = place ? placeName(place) : 'open water (no place name at this point)';
-    const a = (place?.address ?? {});
+    const a = place?.address ?? {};
     const region = [a.state, a.country].filter(Boolean).join(', ');
     const lines = [
         `The ISS is over ${over} at ${when}.`,
@@ -129,6 +125,7 @@ export async function issGroundTrack() {
     ].filter(Boolean);
     return lines.join('\n');
 }
+/** A place name to coordinates, so iss_passes can be asked about a town. */
 export async function resolvePlace(place, limit) {
     const q = String(place ?? '').trim();
     if (!q)

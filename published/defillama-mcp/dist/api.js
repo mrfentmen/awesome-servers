@@ -268,6 +268,7 @@ function sparkline(values) {
 }
 const pctChange = (from, to) => (from > 0 ? ((to - from) / from) * 100 : NaN);
 const signedPct = (n, dp = 2) => (Number.isFinite(n) ? `${n >= 0 ? '+' : ''}${n.toFixed(dp)}%` : 'n/a');
+const isoDay = (seconds) => new Date(seconds * 1000).toISOString().slice(0, 10);
 /** How supply on one chain, or the whole market, has moved against real values on those dates. */
 export async function stablecoinHistory(args = {}) {
     const chain = String(args.chain ?? 'all').trim() || 'all';
@@ -301,11 +302,12 @@ export async function stablecoinHistory(args = {}) {
         }
         return best;
     };
-    const windows = [[7, '7 day'], [30, '30 day'], [90, '90 day'], [365, '1 year']];
-    const growth = windows.map(([ago, label]) => {
+    const ranges = [[7, '7 day'], [30, '30 day'], [90, '90 day'], [365, '1 year']];
+    const growth = ranges.map(([ago, label]) => {
         const before = onOrBefore(ago);
-        if (!before)
-            return `${label.padEnd(8)} no data that far back (series starts ${new Date(rows[0].t * 1000).toISOString().slice(0, 10)})`;
+        if (!before) {
+            return `${label.padEnd(8)} no data that far back (series starts ${isoDay(rows[0].t)})`;
+        }
         return `${label.padEnd(8)} ${dlUsd(before.usd).padStart(10)} -> ${dlUsd(latest.usd).padStart(10)}  ${signedPct(pctChange(before.usd, latest.usd)).padStart(8)}`;
     });
     const high = inWindow.reduce((a, b) => (b.usd > a.usd ? b : a));
@@ -314,13 +316,13 @@ export async function stablecoinHistory(args = {}) {
         .filter((_, i) => i % Math.max(1, Math.floor(inWindow.length / 24)) === 0)
         .map((r) => r.usd);
     return [
-        `Stablecoin supply history${chain.toLowerCase() === 'all' ? ' for the whole market' : ` on ${chain}`}: ${rows.length} daily point(s), ${new Date(rows[0].t * 1000).toISOString().slice(0, 10)} to ${new Date(latest.t * 1000).toISOString().slice(0, 10)}`,
+        `Stablecoin supply history${chain.toLowerCase() === 'all' ? ' for the whole market' : ` on ${chain}`}: ${rows.length} daily point(s), ${isoDay(rows[0].t)} to ${isoDay(latest.t)}`,
         `Latest supply: ${dlUsd(latest.usd)}${latest.unreleased > 0 ? ` | ${dlUsd(latest.unreleased)} minted but not circulating` : ''}`,
         '',
         `Growth against the supply actually recorded on those dates:`,
         ...growth.map((g) => `  ${g}`),
         '',
-        `Last ${days} days: high ${dlUsd(high.usd)} on ${new Date(high.t * 1000).toISOString().slice(0, 10)}, low ${dlUsd(low.usd)} on ${new Date(low.t * 1000).toISOString().slice(0, 10)}, a ${((high.usd - low.usd) / (low.usd || 1) * 100).toFixed(2)}% band.`,
+        `Last ${days} days: high ${dlUsd(high.usd)} on ${isoDay(high.t)}, low ${dlUsd(low.usd)} on ${isoDay(low.t)}, a ${(((high.usd - low.usd) / (low.usd || 1)) * 100).toFixed(2)}% band.`,
         `Trend: ${sparkline(series)}`,
         '',
         'Supply is valued in USD at the price on each date, so a depeg shows up as a fall even when the token count is unchanged. DefiLlama publishes circulating and unreleased supply, not a lifetime minted total.',
@@ -339,19 +341,20 @@ export async function aggregatorVolume(args = {}) {
     const rows = [...all].sort((a, b) => Number(b.total24h ?? 0) - Number(a.total24h ?? 0));
     // DefiLlama normally ships the previous windows; derive them from its own
     // change percentages when it does not, so the comparison is never invented.
-    const prevWindow = (row, key, changeKey) => {
-        const direct = Number(row[key]);
+    const previousValue = (row) => {
+        const direct = Number(row.totalPrev24h);
         if (Number.isFinite(direct) && direct > 0)
-            return { value: direct, derived: false };
-        const change = Number(row[changeKey]);
+            return direct;
+        const change = Number(row.change_1d);
         const current = Number(row.total24h ?? 0);
         if (!Number.isFinite(change) || change === -100 || !current)
-            return { value: NaN, derived: true };
-        return { value: current / (1 + change / 100), derived: true };
+            return NaN;
+        return current / (1 + change / 100);
     };
     const kept = minShare > 0 ? rows.filter((r) => (Number(r.total24h ?? 0) / total24h) * 100 >= minShare) : rows;
-    if (!kept.length)
+    if (!kept.length) {
         throw new LlamaBatch3Error(`No aggregator holds at least ${minShare}% of 24h volume; the largest is ${((Number(rows[0].total24h ?? 0) / total24h) * 100).toFixed(2)}%.`);
+    }
     const shown = kept.slice(0, limit);
     const top2 = rows.slice(0, 2).reduce((s, r) => s + Number(r.total24h ?? 0), 0) / total24h;
     const total7dPrev = Number.isFinite(Number(d.change_7d)) && Number(d.change_7d) !== -100
@@ -370,13 +373,13 @@ export async function aggregatorVolume(args = {}) {
     for (const r of shown) {
         const v24 = Number(r.total24h ?? 0);
         const v7 = Number(r.total7d ?? 0);
-        const prev24 = prevWindow(r, 'totalPrev24h', 'change_1d');
-        const d1 = Number.isFinite(prev24.value) ? pctChange(prev24.value, v24) : NaN;
+        const prev24 = previousValue(r);
+        const d1 = Number.isFinite(prev24) ? pctChange(prev24, v24) : NaN;
         const d7 = Number(r.change_7d);
         lines.push(`${String(r.name ?? '?').slice(0, width).padEnd(width)}${dlUsd(v24).padStart(11)}${((v24 / total24h) * 100).toFixed(2).padStart(7)}%${dlUsd(v7).padStart(11)}${signedPct(d1).padStart(9)}${signedPct(d7).padStart(9)}`);
     }
     if (kept.length > shown.length)
         lines.push(`  ...and ${kept.length - shown.length} more aggregator(s) above the threshold.`);
-    lines.push('', 'Shares are of 24h volume. The daily and weekly changes come from the aggregator\'s own published change figures where the previous window totals are not included in the response.');
+    lines.push('', "Shares are of 24h volume. The daily and weekly changes come from the aggregator's own published change figures where the previous window totals are not included in the response.");
     return lines.join('\n');
 }

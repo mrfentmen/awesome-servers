@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
-import { m0_issNow, m0_issPasses, m1_position } from "./api.js"
+import { m0_issNow, m0_issPasses, m1_position, issGroundTrack, resolvePlace } from "./api.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -54,9 +54,8 @@ server.registerTool(
       inputSchema: z.object({}),
       annotations: READ_ONLY,
     },
-    async (args) => {
-      // TODO: implement track locally (paywall removed)
-      try { return textError("Not yet implemented: track") } catch (e) { return textError(String(e)) }
+    async () => {
+      try { return text(await issGroundTrack()) } catch (e) { return textError(String(e)) }
     }
   )
 
@@ -69,8 +68,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-      // TODO: implement place locally (paywall removed)
-      try { return textError("Not yet implemented: place") } catch (e) { return textError(String(e)) }
+      try { return text(await resolvePlace(args.place, args.limit)) } catch (e) { return textError(String(e)) }
     }
   )
 const serverName = "iss-mcp"

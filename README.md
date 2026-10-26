@@ -37,13 +37,17 @@ one. The last eleven packages shipped the fix on 2026-10-26.
 - **`twilio-mcp` is not ours on npm.** The name belongs to another publisher
   (`griffinwork40`); the directory in `published/` mirrors their tarball because the
   sync script fell back to the bare name. Our own copy has never been published.
-- **Five packages cannot rebuild `dist/` from `src/`.** `coingecko-mcp`,
-  `defillama-mcp`, `iss-mcp`, `jolpica-mcp` still carry their pre-fix stub bodies in
-  `src/`, and `yfinance-mcp`'s `src/` still imports the deleted `./gateway.js`.
-  Their shipped `dist/` is correct; running `npm run build` on those five would
-  overwrite it with the old broken code.
 - **`servers/` is history, not source.** It predates the gate removal and was never
   brought forward. Do not build from it.
+
+### Every package now builds from source
+
+`coingecko-mcp`, `defillama-mcp`, `iss-mcp`, `jolpica-mcp` and `yfinance-mcp` were
+the last five whose `src/` tree disagreed with what ships: four still held their
+paywall stub bodies and one still imported the deleted `src/gateway.ts`. All five
+were ported back, and `tsconfig.json` now ships in the tarball, so a clean
+`npm install && npm run build` reproduces the published `dist/` — verified from the
+registry tarballs, not just from the working tree.
 
 ### Working on this tree
 

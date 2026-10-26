@@ -222,6 +222,59 @@ const cgNum = (v) => {
 };
 const cgPct = (v) => (Number.isFinite(cgNum(v)) ? `${cgNum(v).toFixed(2)}%` : '?');
 const cgSpreadOf = (t) => cgNum(t.converted_last?.usd ?? t.last);
+/** What one exchange is actually quoting, ranked by volume, which shows where its liquidity really sits. */
+export async function exchangeTickers(args) {
+    const id = (args.exchange ?? '').trim().toLowerCase();
+    if (!id)
+        throw new CgBatch3Error('Provide an exchange id, e.g. binance, coinbase or kraken. Use exchanges to list them.');
+    const limit = Math.min(Math.max(Math.floor(args.limit ?? 12), 1), 40);
+    const minVolume = Math.max(cgNum(args.min_volume) || 0, 0);
+    const quote = (args.quote ?? '').trim().toUpperCase();
+    const d = await cgBatch3Get(`/exchanges/${encodeURIComponent(id)}/tickers`);
+    const all = d.tickers ?? [];
+    if (!all.length)
+        throw new CgBatch3Error(`CoinGecko lists no markets for exchange "${id}".`);
+    const name = d.name ?? id;
+    const scored = all.map((t) => ({ t, volUsd: cgNum(t.converted_volume?.usd), usd: cgSpreadOf(t) }))
+        .filter((x) => Number.isFinite(x.volUsd));
+    if (!scored.length)
+        throw new CgBatch3Error(`CoinGecko returned ${all.length} market(s) for ${name} but none carried a usable volume in USD.`);
+    let kept = scored;
+    if (quote)
+        kept = kept.filter((x) => String(x.t.target ?? '').toUpperCase() === quote);
+    if (!kept.length) {
+        const targets = [...new Set(scored.map((x) => String(x.t.target ?? '?')))].sort();
+        return `${name} lists ${scored.length} market(s) but none quoted in ${quote}. Quote currencies present: ${targets.slice(0, 20).join(', ')}${targets.length > 20 ? ` and ${targets.length - 20} more` : ''}.`;
+    }
+    const liquid = minVolume > 0 ? kept.filter((x) => x.volUsd >= minVolume) : kept;
+    if (!liquid.length)
+        return `None of the ${kept.length} ${name} market(s) in ${quote} reached ${usd3(minVolume)} in 24h volume.`;
+    const ranked = liquid.slice().sort((a, b) => b.volUsd - a.volUsd);
+    const totalVol = ranked.reduce((s, x) => s + x.volUsd, 0);
+    const shown = ranked.slice(0, limit);
+    const bases = new Set(ranked.map((x) => x.t.base ?? '?'));
+    const lines = [
+        `${name} (${id}): ${all.length} market(s) listed, ${kept.length} match the filters, ${ranked.length} above the volume floor`,
+        `Combined 24h volume ${usd3(totalVol)} across ${bases.size} base asset(s)`,
+        ranked.length === 1 ? 'Only one market clears the floor, so the share column is 100% by definition.' : '',
+        '',
+        `${"pair".padEnd(18)}${"last".padStart(14)}${"24h vol USD".padStart(16)}${"share".padStart(8)}${"spread".padStart(10)}  last traded`,
+        ...shown.map((x) => {
+            const share = totalVol > 0 ? (x.volUsd / totalVol) * 100 : NaN;
+            return [
+                `${x.t.base ?? '?'}/${x.t.target ?? '?'}`.padEnd(18),
+                (Number.isFinite(x.usd) ? x.usd.toLocaleString(undefined, { maximumFractionDigits: 4 }) : '?').padStart(14),
+                usd3(x.volUsd).padStart(16),
+                `${(Number.isFinite(share) ? share.toFixed(1) : '?').padStart(7)}%`,
+                cgPct(x.t.bid_ask_spread_percentage).padStart(10),
+                `  ${String(x.t.last_traded_at ?? '?').slice(0, 19).replace('T', ' ')}`,
+            ].join('');
+        }),
+    ].filter((l) => l !== '');
+    if (ranked.length > shown.length)
+        lines.push('', `...and ${ranked.length - shown.length} more above the floor; raise limit to see them.`);
+    return lines.join('\n');
+}
 /**
  * Every market one coin trades on, ranked by real 24 hour USD volume, with the
  * dispersion of prices across those markets and the flags that decide whether a
@@ -255,8 +308,8 @@ export async function coinTickers(args) {
     const kept = rows.filter((r) => (!onlyClean || isClean(r)) && r.vol >= minVolume);
     if (!kept.length) {
         const flaggedCount = rows.filter((r) => !isClean(r)).length;
-        return `${name}: ${rows.length} market(s), none passed the filters. ${flaggedCount} carry a data-quality flag` +
-            (minVolume > 0 ? ` and the 24h USD volume floor is ${usd3(minVolume)}.` : '.');
+        return `${name}: ${rows.length} market(s), none passed the filters. ${flaggedCount} carry a data-quality flag`
+            + (minVolume > 0 ? ` and the 24h USD volume floor is ${usd3(minVolume)}.` : '.');
     }
     const ranked = kept.slice().sort((a, b) => b.vol - a.vol);
     const totalVol = ranked.reduce((s, r) => s + r.vol, 0);
@@ -345,57 +398,4 @@ export async function coinOhlc(args) {
         ...shown.map((k) => `${new Date(k.t).toISOString().slice(0, 16).replace('T', ' ')} | O ${usd(k.o)} H ${usd(k.h)} L ${usd(k.l)} C ${usd(k.c)}`),
         shown.length < candles.length ? `(every ${step}th candle shown)` : '',
     ].filter((l) => l !== '').join('\n');
-}
-/** What one exchange is actually quoting, ranked by volume, which shows where its liquidity really sits. */
-export async function exchangeTickers(args) {
-    const id = (args.exchange ?? '').trim().toLowerCase();
-    if (!id)
-        throw new CgBatch3Error('Provide an exchange id, e.g. binance, coinbase or kraken. Use exchanges to list them.');
-    const limit = Math.min(Math.max(Math.floor(args.limit ?? 12), 1), 40);
-    const minVolume = Math.max(cgNum(args.min_volume) || 0, 0);
-    const quote = (args.quote ?? '').trim().toUpperCase();
-    const d = await cgBatch3Get(`/exchanges/${encodeURIComponent(id)}/tickers`);
-    const all = d.tickers ?? [];
-    if (!all.length)
-        throw new CgBatch3Error(`CoinGecko lists no markets for exchange "${id}".`);
-    const name = d.name ?? id;
-    const scored = all.map((t) => ({ t, volUsd: cgNum(t.converted_volume?.usd), usd: cgSpreadOf(t) }))
-        .filter((x) => Number.isFinite(x.volUsd));
-    if (!scored.length)
-        throw new CgBatch3Error(`CoinGecko returned ${all.length} market(s) for ${name} but none carried a usable volume in USD.`);
-    let kept = scored;
-    if (quote)
-        kept = kept.filter((x) => String(x.t.target ?? '').toUpperCase() === quote);
-    if (!kept.length) {
-        const targets = [...new Set(scored.map((x) => String(x.t.target ?? '?')))].sort();
-        return `${name} lists ${scored.length} market(s) but none quoted in ${quote}. Quote currencies present: ${targets.slice(0, 20).join(', ')}${targets.length > 20 ? ` and ${targets.length - 20} more` : ''}.`;
-    }
-    const liquid = minVolume > 0 ? kept.filter((x) => x.volUsd >= minVolume) : kept;
-    if (!liquid.length)
-        return `None of the ${kept.length} ${name} market(s) in ${quote} reached ${usd3(minVolume)} in 24h volume.`;
-    const ranked = liquid.slice().sort((a, b) => b.volUsd - a.volUsd);
-    const totalVol = ranked.reduce((s, x) => s + x.volUsd, 0);
-    const shown = ranked.slice(0, limit);
-    const bases = new Set(ranked.map((x) => x.t.base ?? '?'));
-    const lines = [
-        `${name} (${id}): ${all.length} market(s) listed, ${kept.length} match the filters, ${ranked.length} above the volume floor`,
-        `Combined 24h volume ${usd3(totalVol)} across ${bases.size} base asset(s)`,
-        ranked.length === 1 ? 'Only one market clears the floor, so the share column is 100% by definition.' : '',
-        '',
-        `${"pair".padEnd(18)}${"last".padStart(14)}${"24h vol USD".padStart(16)}${"share".padStart(8)}${"spread".padStart(10)}  last traded`,
-        ...shown.map((x) => {
-            const share = totalVol > 0 ? (x.volUsd / totalVol) * 100 : NaN;
-            return [
-                `${x.t.base ?? '?'}/${x.t.target ?? '?'}`.padEnd(18),
-                (Number.isFinite(x.usd) ? x.usd.toLocaleString(undefined, { maximumFractionDigits: 4 }) : '?').padStart(14),
-                usd3(x.volUsd).padStart(16),
-                `${(Number.isFinite(share) ? share.toFixed(1) : '?').padStart(7)}%`,
-                cgPct(x.t.bid_ask_spread_percentage).padStart(10),
-                `  ${String(x.t.last_traded_at ?? '?').slice(0, 19).replace('T', ' ')}`,
-            ].join('');
-        }),
-    ].filter((l) => l !== '');
-    if (ranked.length > shown.length)
-        lines.push('', `...and ${ranked.length - shown.length} more above the floor; raise limit to see them.`);
-    return lines.join('\n');
 }

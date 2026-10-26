@@ -15,7 +15,7 @@ it overwrites `dist/` from the registry tarballs.
 - total size: **6.1 MB**
 - carrying a licence gate (`MCP_LICENSE_KEY`): **0**
 - carrying tools that answer `Not yet implemented` in the shipped `dist/`: **0**
-- whose `src/` still holds the pre-fix source (not shipped, cannot rebuild `dist/`): **5**
+- whose `src/` still holds the pre-fix source (not shipped, cannot rebuild `dist/`): **0**
 - names on npm owned by another publisher (1): `twilio-mcp` — the directory mirrors their tarball, our copy is unpublished
 
 | package | version | src? | gate | stubs |
@@ -61,7 +61,7 @@ it overwrites `dist/` from the registry tarballs.
 | `@mrfentmen/cloudflare-mcp` | 1.1.2 | no |  |  |
 | `cocktaildb-mcp` | 1.1.0 | no |  |  |
 | `@mrfentmen/coinbase-mcp` | 1.1.0 | no |  |  |
-| `@mrfentmen/coingecko-mcp` | 1.1.0 | yes |  |  |
+| `@mrfentmen/coingecko-mcp` | 1.1.1 | yes |  |  |
 | `coinlore-mcp` | 1.1.0 | no |  |  |
 | `confluent-mcp` | 1.0.5 | no |  |  |
 | `convertkit-mcp` | 1.0.6 | no |  |  |
@@ -70,7 +70,7 @@ it overwrites `dist/` from the registry tarballs.
 | `customerio-mcp` | 1.1.2 | no |  |  |
 | `cyberark-mcp` | 1.1.0 | no |  |  |
 | `deepgram-mcp` | 1.0.4 | no |  |  |
-| `@mrfentmen/defillama-mcp` | 1.1.0 | yes |  |  |
+| `@mrfentmen/defillama-mcp` | 1.1.1 | yes |  |  |
 | `deribit-mcp` | 1.1.0 | no |  |  |
 | `dior-mcp` | 1.1.0 | no |  |  |
 | `directus-mcp` | 1.0.4 | no |  |  |
@@ -117,13 +117,13 @@ it overwrites `dist/` from the registry tarballs.
 | `ifandco-mcp` | 1.0.5 | no |  |  |
 | `invoice-mcp` | 1.1.0 | no |  |  |
 | `isbndb-mcp` | 1.1.0 | no |  |  |
-| `@mrfentmen/iss-mcp` | 1.1.0 | yes |  |  |
+| `@mrfentmen/iss-mcp` | 1.1.1 | yes |  |  |
 | `jacquesmariemage-mcp` | 1.1.0 | no |  |  |
 | `jetbrains-mcp` | 1.0.5 | no |  |  |
 | `@mrfentmen/job-search-mcp` | 1.0.5 | no |  |  |
 | `jobicy-mcp` | 1.0.5 | no |  |  |
 | `jokeapi-mcp` | 1.0.4 | no |  |  |
-| `jolpica-mcp` | 1.1.0 | yes |  |  |
+| `jolpica-mcp` | 1.1.1 | yes |  |  |
 | `k6-mcp` | 1.0.2 | no |  |  |
 | `kith-mcp` | 1.0.4 | no |  |  |
 | `kiwi-mcp` | 1.0.3 | no |  |  |
@@ -247,6 +247,6 @@ it overwrites `dist/` from the registry tarballs.
 | `whiskyhunter-mcp` | 1.0.4 | no |  |  |
 | `@mrfentmen/wise-mcp` | 1.1.0 | no |  |  |
 | `workable-mcp` | 1.0.4 | no |  |  |
-| `@mrfentmen/yfinance-mcp` | 1.0.4 | yes |  |  |
+| `@mrfentmen/yfinance-mcp` | 1.0.5 | yes |  |  |
 | `@mrfentmen/youtrack-mcp` | 1.0.3 | no |  |  |
 | `@mrfentmen/youtube-mcp` | 1.1.5 | no |  |  |

@@ -52,7 +52,7 @@ export function createServer() {
         description: "What the ISS is actually over right now: the named place, country and region under it, reverse geocoded from its live position through OpenStreetMap, with altitude, speed and a map link.",
         inputSchema: z.object({}),
         annotations: READ_ONLY,
-    }, async (args) => {
+    }, async () => {
         try {
             return text(await issGroundTrack());
         }

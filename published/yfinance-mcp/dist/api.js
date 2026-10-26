@@ -381,6 +381,116 @@ async function yfResolve(tickerOrCik) {
     return { cik: hit.cik, ticker: raw.toUpperCase(), title: hit.title };
 }
 const yfPad = (n) => (n >= 1e12 ? `${(n / 1e12).toFixed(2)}T` : n >= 1e9 ? `${(n / 1e9).toFixed(2)}B` : n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n.toLocaleString());
+const YF_FILING_TAGS = {
+    revenue: ["RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "RevenueFromContractWithCustomerIncludingAssessedTax", "SalesRevenueNet"],
+    net_income: ["NetIncomeLoss", "ProfitLoss"],
+    assets: ["Assets"],
+    equity: ["StockholdersEquity", "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"],
+    operating_income: ["OperatingIncomeLoss"],
+    cash: ["CashAndCashEquivalentsAtCarryingValue", "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents"],
+    eps: ["EarningsPerShareDiluted", "EarningsPerShareBasic"],
+    shares: ["CommonStockSharesOutstanding", "EntityCommonStockSharesOutstanding"],
+    debt: ["LongTermDebtNoncurrent", "LongTermDebt", "DebtCurrent"],
+    dividends: ["PaymentsOfDividendsCommonStock", "PaymentsOfDividends"],
+};
+const YF_CONCEPT_LABEL = {
+    revenue: "revenue", net_income: "net income", assets: "total assets", equity: "shareholders' equity",
+    operating_income: "operating income", cash: "cash and equivalents", eps: "diluted EPS",
+    shares: "shares outstanding", debt: "long-term debt", dividends: "dividends paid",
+};
+/** One us-gaap tag for one filer, in whichever unit the SEC reports it. */
+async function yfConcept(cikStr, tag) {
+    try {
+        const body = await yfSecGet(`${YF_SEC}/api/xbrl/companyconcept/CIK${cikStr}/us-gaap/${tag}.json`, `the SEC's ${tag} series`);
+        const units = body.units ?? {};
+        const key = ["USD", "USD/shares", "shares"].find((u) => Array.isArray(units[u]) && units[u].length > 0) ??
+            Object.keys(units).find((u) => Array.isArray(units[u]) && units[u].length > 0);
+        return key ? { unit: key, facts: units[key] } : null;
+    }
+    catch {
+        return null;
+    }
+}
+/**
+ * A company's annual figures as filed, not as republished. Filings restate, so
+ * each fiscal year keeps the latest filing that reported it, and the accession
+ * is shown so any figure can be checked against the document it came from.
+ */
+export async function filingFundamentals(args) {
+    const who = await yfResolve(args?.ticker ?? "");
+    const concept = String(args?.concept ?? "net_income").trim().toLowerCase();
+    const tags = YF_FILING_TAGS[concept];
+    if (!tags)
+        throw new Error(`concept must be one of: ${Object.keys(YF_FILING_TAGS).join(", ")}.`);
+    const years = Math.min(Math.max(Math.trunc(Number(args?.years ?? 8) || 8), 2), 20);
+    const cikStr = String(who.cik).padStart(10, "0");
+    let series = null;
+    let usedTag = "";
+    for (const tag of tags) {
+        const found = await yfConcept(cikStr, tag);
+        if (found && found.facts.length) {
+            series = found;
+            usedTag = tag;
+            break;
+        }
+    }
+    if (!series)
+        throw new Error(`${who.title} has filed no XBRL series for ${YF_CONCEPT_LABEL[concept]} under any of the tags this tool knows (${tags.join(", ")}). Filers use their own tags, so this concept may simply not be tagged for this company.`);
+    const annual = series.facts.filter((f) => Boolean(f?.end) && Number.isFinite(Number(f.val)));
+    const byYear = new Map();
+    for (const f of annual) {
+        if (!(f.form === "10-K" && f.fp === "FY"))
+            continue;
+        const seen = byYear.get(f.end);
+        if (!seen || String(f.filed ?? "") > String(seen.filed ?? ""))
+            byYear.set(f.end, f);
+    }
+    if (!byYear.size) {
+        const dated = annual.map((f) => f.end).sort();
+        throw new Error(`The SEC's ${usedTag} series for ${who.title} holds ${annual.length} facts but none are annual (10-K, fiscal year). Its earliest entry is ${dated[0] ?? "unknown"} and the latest ${dated[dated.length - 1] ?? "unknown"}.`);
+    }
+    const rows = [...byYear.values()].sort((a, b) => a.end.localeCompare(b.end)).slice(-years);
+    const unit = series.unit;
+    const isMoney = unit === "USD";
+    const fmt = (v) => {
+        const n = Number(v);
+        if (!Number.isFinite(n))
+            return "—";
+        if (!isMoney)
+            return concept === "eps" ? n.toFixed(2) : Math.round(n).toLocaleString();
+        return (n < 0 ? "-" : "") + yfPad(Math.abs(n));
+    };
+    const lines = rows.map((r, i) => {
+        const prev = rows[i - 1];
+        const growth = prev && Number(prev.val) !== 0
+            ? ((Number(r.val) - Number(prev.val)) / Math.abs(Number(prev.val))) * 100
+            : null;
+        const arrow = growth === null || !prev ? "" : `  ${growth >= 0 ? "+" : ""}${growth.toFixed(1)}% vs ${prev.end.slice(0, 4)}`;
+        return `  ${r.end.padEnd(10)} ${fmt(r.val).padStart(11)}${arrow}${r.filed ? `   latest filing ${r.filed} (${r.accn ?? "no accession"})` : ""}`;
+    });
+    const first = rows[0];
+    const last = rows[rows.length - 1];
+    const span = Number(first.val) !== 0
+        ? ((Number(last.val) - Number(first.val)) / Math.abs(Number(first.val))) * 100
+        : null;
+    const yearSpan = Math.max(1, rows.length - 1);
+    const cagr = Number(first.val) > 0 && Number(last.val) > 0 ? (Math.pow(Number(last.val) / Number(first.val), 1 / yearSpan) - 1) * 100 : null;
+    return [
+        `${who.title} — ${YF_CONCEPT_LABEL[concept]}, annual, as filed with the SEC`,
+        `  CIK ${cikStr}${who.ticker !== "not resolved" ? ` (${who.ticker})` : ""} | tag us-gaap:${usedTag} | unit ${unit}`,
+        `  fiscal years shown ${rows.length}, ${first.end.slice(0, 4)} to ${last.end.slice(0, 4)}`,
+        "",
+        ...lines,
+        "",
+        cagr !== null
+            ? `Compound annual growth across the window: ${cagr.toFixed(1)}% a year.`
+            : span !== null
+                ? `Total change across the window: ${span >= 0 ? "+" : ""}${span.toFixed(1)}%.`
+                : "No growth rate is meaningful here — the series crosses zero.",
+        "",
+        `Read from ${YF_SEC}/api/xbrl/companyconcept/CIK${cikStr}/us-gaap/${usedTag}.json. Each fiscal year keeps the figure from the most recent 10-K that reported it, which is why an older year can carry a newer filing date — a later 10-K repeats prior years as comparatives, and a restatement replaces the earlier number rather than appearing twice. The accession identifies that filing. Figures are as tagged by the company, so a filer that tags a subtotal differently will show a step change; the tag above is the one actually used. Dividends are reported as cash paid, which is not the same as dividends declared.`,
+    ].join("\n");
+}
 /**
  * Who a company is on the SEC's own register: the filer number behind a ticker,
  * the standard industrial classification, the fiscal year end, its exchanges, and
@@ -429,116 +539,5 @@ export async function registrantProfile(args) {
         ...(forms.length > limit ? [`  (+${forms.length - limit} more filing(s) not shown)`] : []),
         "",
         "The recent window holds roughly the last thousand filings, so a company filing less often than that is fully covered while a very large filer is not; the older files are counted but not listed here. A SIC code is a single broad classification, so two very different businesses can share one. A deregistered company keeps its record, so a profile can describe a company that no longer files.",
-    ].join("\n");
-}
-// ---- filing_fundamentals: the figures a company reported, straight from XBRL ----
-const YF_FILING_TAGS = {
-    revenue: ["RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "RevenueFromContractWithCustomerIncludingAssessedTax", "SalesRevenueNet"],
-    net_income: ["NetIncomeLoss", "ProfitLoss"],
-    assets: ["Assets"],
-    equity: ["StockholdersEquity", "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"],
-    operating_income: ["OperatingIncomeLoss"],
-    cash: ["CashAndCashEquivalentsAtCarryingValue", "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents"],
-    eps: ["EarningsPerShareDiluted", "EarningsPerShareBasic"],
-    shares: ["CommonStockSharesOutstanding", "EntityCommonStockSharesOutstanding"],
-    debt: ["LongTermDebtNoncurrent", "LongTermDebt", "DebtCurrent"],
-    dividends: ["PaymentsOfDividendsCommonStock", "PaymentsOfDividends"],
-};
-const YF_CONCEPT_LABEL = {
-    revenue: "revenue", net_income: "net income", assets: "total assets", equity: "shareholders' equity",
-    operating_income: "operating income", cash: "cash and equivalents", eps: "diluted EPS",
-    shares: "shares outstanding", debt: "long-term debt", dividends: "dividends paid",
-};
-async function yfConcept(cikStr, tag) {
-    try {
-        const body = await yfSecGet(`${YF_SEC}/api/xbrl/companyconcept/CIK${cikStr}/us-gaap/${tag}.json`, `the SEC's ${tag} series`);
-        const units = body?.units ?? {};
-        const key = ["USD", "USD/shares", "shares"].find((u) => Array.isArray(units[u]) && units[u].length)
-            ?? Object.keys(units).find((u) => Array.isArray(units[u]) && units[u].length);
-        return key ? { unit: key, facts: units[key] } : null;
-    }
-    catch {
-        return null;
-    }
-}
-/**
- * A company's annual figures as filed, not as republished. Filings restate, so
- * each fiscal year keeps the latest filing that reported it, and the accession
- * is shown so any figure can be checked against the document it came from.
- */
-export async function filingFundamentals(args) {
-    const who = await yfResolve(args?.ticker ?? "");
-    const concept = String(args?.concept ?? "net_income").trim().toLowerCase();
-    const tags = YF_FILING_TAGS[concept];
-    if (!tags)
-        throw new Error(`concept must be one of: ${Object.keys(YF_FILING_TAGS).join(", ")}.`);
-    const years = Math.min(Math.max(Math.trunc(Number(args?.years ?? 8) || 8), 2), 20);
-    const cikStr = String(who.cik).padStart(10, "0");
-    let series = null;
-    let usedTag = "";
-    for (const tag of tags) {
-        const found = await yfConcept(cikStr, tag);
-        if (found?.facts?.length) {
-            series = found;
-            usedTag = tag;
-            break;
-        }
-    }
-    if (!series)
-        throw new Error(`${who.title} has filed no XBRL series for ${YF_CONCEPT_LABEL[concept]} under any of the tags this tool knows (${tags.join(", ")}). Filers use their own tags, so this concept may simply not be tagged for this company.`);
-    const annual = series.facts.filter((f) => f && f.end && Number.isFinite(Number(f.val)));
-    const byYear = new Map();
-    for (const f of annual) {
-        const isAnnual = f.form === "10-K" && f.fp === "FY";
-        if (!isAnnual)
-            continue;
-        const fiscalYear = String(f.fy ?? String(f.end).slice(0, 4));
-        const seen = byYear.get(f.end);
-        if (!seen || String(f.filed ?? "") > String(seen.filed ?? ""))
-            byYear.set(f.end, { ...f, fiscalYear });
-    }
-    if (!byYear.size) {
-        const dated = annual.map((f) => String(f.end ?? "")).sort();
-        throw new Error(`The SEC's ${usedTag} series for ${who.title} holds ${annual.length} facts but none are annual (10-K, fiscal year). Its earliest entry is ${dated[0] ?? "unknown"} and the latest ${dated[dated.length - 1] ?? "unknown"}.`);
-    }
-    const rows = [...byYear.values()].sort((a, b) => String(a.end).localeCompare(String(b.end))).slice(-years);
-    const isMoney = series.unit === "USD";
-    const fmt = (v) => {
-        const n = Number(v);
-        if (!Number.isFinite(n))
-            return "—";
-        if (!isMoney)
-            return concept === "eps" ? n.toFixed(2) : Math.round(n).toLocaleString();
-        return (n < 0 ? "-" : "") + yfPad(Math.abs(n));
-    };
-    const lines = rows.map((r, i) => {
-        const prev = rows[i - 1];
-        const growth = prev && Number(prev.val) !== 0
-            ? ((Number(r.val) - Number(prev.val)) / Math.abs(Number(prev.val))) * 100
-            : null;
-        const arrow = growth === null ? "" : `  ${growth >= 0 ? "+" : ""}${growth.toFixed(1)}% vs ${String(prev.end).slice(0, 4)}`;
-        return `  ${String(r.end).padEnd(10)} ${fmt(r.val).padStart(11)}${arrow}${r.filed ? `   latest filing ${r.filed} (${r.accn ?? "no accession"})` : ""}`;
-    });
-    const first = rows[0];
-    const last = rows[rows.length - 1];
-    const span = Number(first.val) !== 0
-        ? ((Number(last.val) - Number(first.val)) / Math.abs(Number(first.val))) * 100
-        : null;
-    const yearSpan = Math.max(1, rows.length - 1);
-    const cagr = Number(first.val) > 0 && Number(last.val) > 0 ? (Math.pow(Number(last.val) / Number(first.val), 1 / yearSpan) - 1) * 100 : null;
-    return [
-        `${who.title} — ${YF_CONCEPT_LABEL[concept]}, annual, as filed with the SEC`,
-        `  CIK ${cikStr}${who.ticker !== "not resolved" ? ` (${who.ticker})` : ""} | tag us-gaap:${usedTag} | unit ${series.unit}`,
-        `  fiscal years shown ${rows.length}, ${String(first.end).slice(0, 4)} to ${String(last.end).slice(0, 4)}`,
-        "",
-        ...lines,
-        "",
-        cagr !== null
-            ? `Compound annual growth across the window: ${cagr.toFixed(1)}% a year.`
-            : span !== null
-                ? `Total change across the window: ${span >= 0 ? "+" : ""}${span.toFixed(1)}%.`
-                : "No growth rate is meaningful here — the series crosses zero.",
-        "",
-        `Read from ${YF_SEC}/api/xbrl/companyconcept/CIK${cikStr}/us-gaap/${usedTag}.json. Each fiscal year keeps the figure from the most recent 10-K that reported it, which is why an older year can carry a newer filing date — a later 10-K repeats prior years as comparatives, and a restatement replaces the earlier number rather than appearing twice. The accession identifies that filing. Figures are as tagged by the company, so a filer that tags a subtotal differently will show a step change; the tag above is the one actually used. Dividends are reported as cash paid, which is not the same as dividends declared.`,
     ].join("\n");
 }
