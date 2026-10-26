@@ -1,6 +1,6 @@
 {
   "name": "novu-mcp",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Query Novu (key; set NOVU_API_KEY, ApiKey header; optional NOVU_BASE_URL for EU): subscribers, topics, notifications.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/novu-mcp",

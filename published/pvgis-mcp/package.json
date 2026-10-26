@@ -1,6 +1,6 @@
 {
   "name": "pvgis-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Solar yield, irradiation and system sizing - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/pvgis-mcp",

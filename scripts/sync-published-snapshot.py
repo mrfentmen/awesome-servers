@@ -49,8 +49,37 @@ def meta(pkg: str):
         return json.load(r)
 
 
+def local_version(slug: str) -> str:
+    manifest = OUT / slug / "package.json"
+    if not manifest.is_file():
+        return ""
+    try:
+        return json.loads(manifest.read_text()).get("version", "")
+    except Exception:
+        return ""
+
+
+def semver_gt(a: str, b: str) -> bool:
+    """True when a is a strictly higher version than b."""
+    def parts(v):
+        out = []
+        for chunk in v.split("-")[0].split(".")[:3]:
+            try:
+                out.append(int(chunk))
+            except ValueError:
+                out.append(0)
+        return out + [0] * (3 - len(out))
+
+    return parts(a) > parts(b)
+
+
 def fetch(slug: str) -> dict:
-    """Download one package and unpack the files users actually receive."""
+    """Download one package and unpack the files users actually receive.
+
+    A package whose local copy is ahead of the registry carries an unpublished
+    fix, so it is left alone: re-syncing would silently revert it.
+    """
+    mine = local_version(slug)
     for candidate in (f"@mrfentmen/{slug}", slug):
         try:
             m = meta(candidate)
@@ -59,6 +88,10 @@ def fetch(slug: str) -> dict:
         if "versions" not in m:
             continue
         latest = m["dist-tags"]["latest"]
+        if mine and semver_gt(mine, latest):
+            return {"slug": slug, "package": candidate, "version": mine, "published": "local",
+                    "files": 0, "bytes": 0, "gated": 0, "stubs": 0,
+                    "has_src": (OUT / slug / "src").is_dir(), "local_ahead": True}
         version_meta = m["versions"][latest]
         with urllib.request.urlopen(
             urllib.request.Request(version_meta["dist"]["tarball"], headers=UA), timeout=40
@@ -101,9 +134,10 @@ def fetch(slug: str) -> dict:
             "gated": joined.count("MCP_LICENSE_KEY"),
             "stubs": joined.count("Not yet implemented"),
             "has_src": (dest / "src").is_dir(),
+            "local_ahead": False,
         }
     return {"slug": slug, "package": "", "version": "MISSING", "published": "", "files": 0,
-            "bytes": 0, "gated": 0, "stubs": 0, "has_src": False}
+            "bytes": 0, "gated": 0, "stubs": 0, "has_src": False, "local_ahead": False}
 
 
 def main() -> int:
@@ -124,6 +158,7 @@ def main() -> int:
     missing = [r for r in rows if r["version"] == "MISSING"]
     gated = [r for r in rows if r["gated"] > 0]
     stubbed = [r for r in rows if r["stubs"] > 0]
+    ahead = [r for r in rows if r["local_ahead"]]
 
     lines = [
         "# Published snapshot",
@@ -139,6 +174,7 @@ def main() -> int:
         f"- still carrying a licence gate (`MCP_LICENSE_KEY`): **{len(gated)}**",
         f"- carrying tools that always answer `Not yet implemented`: **{len(stubbed)}**",
         f"- not on npm: **{len(missing)}**",
+        f"- carrying a local fix not yet published: **{len(ahead)}**",
         "",
         "| package | version | published | src? | gate | stubs |",
         "| --- | --- | --- | --- | --- | --- |",
@@ -155,6 +191,7 @@ def main() -> int:
     print(f"still gated   : {len(gated)}")
     print(f"stubbed tools : {len(stubbed)}")
     print(f"missing       : {len(missing)}")
+    print(f"local ahead   : {len(ahead)} (left untouched)")
     if missing:
         print("  " + ", ".join(r["slug"] for r in missing[:10]))
     return 0

@@ -1,6 +1,6 @@
 {
   "name": "ifandco-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Query the IF & Co. catalog: search custom pendants, chains, rings and bracelets, newest arrivals, enriched product details, price stats, below-median deals.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ifandco-mcp",

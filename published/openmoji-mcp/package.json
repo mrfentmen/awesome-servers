@@ -1,6 +1,6 @@
 {
   "name": "openmoji-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Search 4500+ open-source emoji with SVG links - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/openmoji-mcp",

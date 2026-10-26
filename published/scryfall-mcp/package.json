@@ -1,6 +1,6 @@
 {
   "name": "scryfall-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Use this MCP server to Scryfall, Magic: The Gathering card database with rulings, printings, and prices. Tools include search cards, get card, get rulings",
   "type": "module",
   "mcpName": "io.github.mrfentmen/scryfall-mcp",

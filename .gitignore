@@ -34,3 +34,9 @@ Thumbs.db
 dist/
 package-lock.json
 node_modules/
+
+# ...except the published snapshot, where dist/ is the only copy that exists.
+# The registry tarball is all that survived for most packages, so these files
+# are the record, not a build artifact.
+!published/*/dist/
+!published/*/dist/**

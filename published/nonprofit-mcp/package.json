@@ -1,6 +1,6 @@
 {
   "name": "nonprofit-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "US nonprofit profiles and finances by EIN - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nonprofit-mcp",

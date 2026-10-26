@@ -1,6 +1,6 @@
 {
   "name": "jetbrains-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Keyless MCP server for JetBrains Marketplace: plugin search, details, ratings, downloads.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/jetbrains-mcp",

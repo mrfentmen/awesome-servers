@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ntfy-mcp",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Use ntfy.sh (keyless; optional NTFY_BASE_URL + NTFY_TOKEN): publish notifications, poll a topic as JSON. Publishing is real.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ntfy-mcp",

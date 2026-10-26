@@ -7,10 +7,11 @@ This is what users actually install. `servers/` holds the older source that is
 still in git; where the two disagree, this directory is correct.
 
 - packages mirrored: **230** / 230
-- total size: **1.7 MB**
-- still carrying a licence gate (`MCP_LICENSE_KEY`): **73**
+- total size: **1.1 MB**
+- still carrying a licence gate (`MCP_LICENSE_KEY`): **13**
 - carrying tools that always answer `Not yet implemented`: **83**
 - not on npm: **0**
+- carrying a local fix not yet published: **60**
 
 | package | version | published | src? | gate | stubs |
 | --- | --- | --- | --- | --- | --- |
@@ -80,76 +81,76 @@ still in git; where the two disagree, this directory is correct.
 | `@mrfentmen/etsy-mcp` | 1.0.4 | 2026-10-18 | no |  |  |
 | `fbi-crime-mcp` | 1.0.2 | 2026-10-18 | no |  |  |
 | `feedly-mcp` | 1.0.2 | 2026-10-18 | no |  |  |
-| `fendi-mcp` | 1.0.2 | 2026-09-27 | no | 4 |  |
-| `@mrfentmen/figma-mcp` | 1.1.1 | 2026-09-27 | no | 4 |  |
+| `fendi-mcp` | 1.0.3 | local | no |  |  |
+| `@mrfentmen/figma-mcp` | 1.1.2 | local | no |  |  |
 | `flipside-mcp` | 1.0.3 | 2026-10-18 | no |  |  |
 | `fmp-mcp` | 1.0.4 | 2026-10-18 | no |  | 3 |
 | `folk-mcp` | 1.0.3 | 2026-10-18 | no |  |  |
-| `@mrfentmen/freshdesk-mcp` | 1.1.2 | 2026-09-28 | no | 4 |  |
-| `@mrfentmen/fueleconomy-mcp` | 1.0.1 | 2026-09-28 | no | 4 |  |
-| `gatus-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
-| `geckoterminal-mcp` | 1.0.4 | 2026-09-28 | no | 4 |  |
-| `@mrfentmen/github-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
+| `@mrfentmen/freshdesk-mcp` | 1.1.3 | local | no |  |  |
+| `@mrfentmen/fueleconomy-mcp` | 1.0.2 | local | no |  |  |
+| `gatus-mcp` | 1.0.3 | local | no |  |  |
+| `geckoterminal-mcp` | 1.0.5 | local | no |  |  |
+| `@mrfentmen/github-mcp` | 1.1.2 | local | no |  |  |
 | `@mrfentmen/gitlab-mcp` | 1.1.2 | 2026-10-18 | no |  | 2 |
-| `glossier-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
-| `gog-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
-| `gold-prices-mcp` | 1.0.2 | 2026-09-28 | yes | 7 |  |
+| `glossier-mcp` | 1.0.3 | local | no |  |  |
+| `gog-mcp` | 1.0.3 | local | no |  |  |
+| `gold-prices-mcp` | 1.0.3 | local | yes |  |  |
 | `google-books-mcp` | 1.0.4 | 2026-10-18 | no |  | 2 |
 | `google-fonts-mcp` | 1.0.3 | 2026-10-18 | no |  |  |
 | `gorjana-mcp` | 1.0.3 | 2026-10-18 | no |  | 2 |
 | `gotify-mcp` | 1.0.3 | 2026-10-18 | no |  |  |
-| `@mrfentmen/greenhouse-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
+| `@mrfentmen/greenhouse-mcp` | 1.0.3 | local | no |  |  |
 | `@mrfentmen/groq-mcp` | 1.0.3 | 2026-10-18 | no |  |  |
-| `gucci-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
+| `gucci-mcp` | 1.0.3 | local | no |  |  |
 | `hackertarget-mcp` | 1.0.2 | 2026-10-18 | no |  | 2 |
-| `@mrfentmen/hashnode-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
+| `@mrfentmen/hashnode-mcp` | 1.1.2 | local | no |  |  |
 | `@mrfentmen/helius-mcp` | 1.0.4 | 2026-10-18 | no |  | 2 |
-| `hermes-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
-| `hibp-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
-| `@mrfentmen/hubspot-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
-| `icebox-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
-| `ifandco-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
+| `hermes-mcp` | 1.0.3 | local | no |  |  |
+| `hibp-mcp` | 1.1.2 | local | no |  |  |
+| `@mrfentmen/hubspot-mcp` | 1.1.2 | local | no |  |  |
+| `icebox-mcp` | 1.0.3 | local | no |  |  |
+| `ifandco-mcp` | 1.0.3 | local | no |  |  |
 | `invoice-mcp` | 1.0.3 | 2026-10-18 | no |  | 3 |
 | `isbndb-mcp` | 1.0.4 | 2026-10-18 | no |  | 2 |
 | `@mrfentmen/iss-mcp` | 1.0.5 | 2026-10-18 | yes |  | 4 |
 | `jacquesmariemage-mcp` | 1.0.2 | 2026-10-18 | no |  | 2 |
-| `jetbrains-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
-| `@mrfentmen/job-search-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
-| `jobicy-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
-| `jokeapi-mcp` | 1.0.1 | 2026-09-28 | no | 4 |  |
+| `jetbrains-mcp` | 1.0.3 | local | no |  |  |
+| `@mrfentmen/job-search-mcp` | 1.0.3 | local | no |  |  |
+| `jobicy-mcp` | 1.0.3 | local | no |  |  |
+| `jokeapi-mcp` | 1.0.2 | local | no |  |  |
 | `jolpica-mcp` | 1.0.3 | 2026-10-18 | yes |  | 4 |
 | `k6-mcp` | 1.0.2 | 2026-10-18 | no |  |  |
 | `kith-mcp` | 1.0.3 | 2026-10-01 | no | 5 |  |
 | `kiwi-mcp` | 1.0.3 | 2026-10-18 | no |  |  |
-| `@mrfentmen/klaviyo-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
+| `@mrfentmen/klaviyo-mcp` | 1.1.2 | local | no |  |  |
 | `kong-mcp` | 1.0.2 | 2026-10-18 | no |  |  |
-| `kraken-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
+| `kraken-mcp` | 1.0.3 | local | no |  |  |
 | `lago-mcp` | 1.0.2 | 2026-10-18 | no |  |  |
 | `lastfm-mcp` | 1.0.2 | 2026-10-18 | no |  |  |
 | `lemonsqueezy-mcp` | 1.0.3 | 2026-10-18 | no |  | 2 |
-| `lever-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
+| `lever-mcp` | 1.0.3 | local | no |  |  |
 | `@mrfentmen/linear-mcp` | 1.1.2 | 2026-10-01 | no | 5 |  |
-| `listennotes-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
+| `listennotes-mcp` | 1.1.2 | local | no |  |  |
 | `@mrfentmen/loops-mcp` | 1.0.3 | 2026-10-18 | no |  |  |
 | `louisvuitton-mcp` | 1.0.3 | 2026-10-18 | no |  | 2 |
 | `madhappy-mcp` | 1.0.2 | 2026-10-18 | no |  | 2 |
-| `@mrfentmen/mailchimp-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
+| `@mrfentmen/mailchimp-mcp` | 1.1.2 | local | no |  |  |
 | `mailgun-mcp` | 1.0.4 | 2026-10-18 | no |  | 2 |
 | `mailjet-mcp` | 1.0.3 | 2026-10-18 | no |  |  |
 | `marketstack-mcp` | 1.0.5 | 2026-10-18 | no |  | 2 |
 | `@mrfentmen/mastodon-mcp` | 1.0.3 | 2026-10-18 | no |  | 2 |
-| `mcp-auditor-mcp` | 1.0.1 | 2026-09-28 | no | 4 |  |
+| `mcp-auditor-mcp` | 1.0.2 | local | no |  |  |
 | `mercury-mcp` | 1.0.2 | 2026-10-18 | no |  |  |
 | `missoma-mcp` | 1.0.2 | 2026-10-18 | no |  | 2 |
 | `@mrfentmen/mixpanel-mcp` | 1.0.5 | 2026-10-18 | no |  |  |
 | `mobygames-mcp` | 1.0.3 | 2026-10-18 | no |  | 2 |
-| `nager-mcp` | 1.0.1 | 2026-09-28 | no | 4 |  |
+| `nager-mcp` | 1.0.2 | local | no |  |  |
 | `netdata-mcp` | 1.0.2 | 2026-10-18 | no |  |  |
 | `noahny-mcp` | 1.0.2 | 2026-10-18 | no |  | 2 |
-| `nonprofit-mcp` | 1.0.1 | 2026-09-28 | no | 4 |  |
-| `@mrfentmen/notion-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
-| `novu-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
-| `@mrfentmen/ntfy-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
+| `nonprofit-mcp` | 1.0.2 | local | no |  |  |
+| `@mrfentmen/notion-mcp` | 1.1.2 | local | no |  |  |
+| `novu-mcp` | 1.1.2 | local | no |  |  |
+| `@mrfentmen/ntfy-mcp` | 1.1.2 | local | no |  |  |
 | `nyc-arrests-mcp` | 1.0.2 | 2026-10-01 | no | 5 |  |
 | `nylas-mcp` | 1.0.2 | 2026-10-18 | no |  |  |
 | `ocrspace-mcp` | 1.0.2 | 2026-10-18 | no |  |  |
@@ -157,17 +158,17 @@ still in git; where the two disagree, this directory is correct.
 | `omdb-mcp` | 1.0.3 | 2026-10-18 | no |  | 2 |
 | `onesignal-mcp` | 1.0.3 | 2026-10-18 | no |  | 2 |
 | `openchargemap-mcp` | 1.0.2 | 2026-10-18 | no |  |  |
-| `@mrfentmen/openlibrary-mcp` | 1.0.1 | 2026-09-28 | no | 4 |  |
-| `openmoji-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
+| `@mrfentmen/openlibrary-mcp` | 1.0.2 | local | no |  |  |
+| `openmoji-mcp` | 1.0.3 | local | no |  |  |
 | `openpanel-mcp` | 1.0.4 | 2026-10-18 | no |  | 2 |
-| `@mrfentmen/openrouter-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
+| `@mrfentmen/openrouter-mcp` | 1.1.2 | local | no |  |  |
 | `openrouteservice-mcp` | 1.0.3 | 2026-10-18 | no |  | 2 |
-| `opentdb-mcp` | 1.0.1 | 2026-09-28 | no | 4 |  |
+| `opentdb-mcp` | 1.0.2 | local | no |  |  |
 | `opnsense-mcp` | 1.0.2 | 2026-10-18 | no |  |  |
 | `@mrfentmen/opsgenie-mcp` | 1.0.2 | 2026-10-18 | no |  |  |
-| `osrs-mcp` | 1.0.1 | 2026-09-28 | no | 4 |  |
+| `osrs-mcp` | 1.0.2 | local | no |  |  |
 | `paddle-mcp` | 1.0.2 | 2026-10-18 | no |  |  |
-| `@mrfentmen/paypal-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
+| `@mrfentmen/paypal-mcp` | 1.1.2 | local | no |  |  |
 | `peakdesign-mcp` | 1.0.2 | 2026-10-18 | no |  | 1 |
 | `@mrfentmen/pinata-mcp` | 1.0.5 | 2026-10-19 | no |  | 2 |
 | `pingdom-mcp` | 1.0.3 | 2026-10-19 | no |  | 2 |
@@ -175,51 +176,51 @@ still in git; where the two disagree, this directory is correct.
 | `plaid-mcp` | 1.1.2 | 2026-10-01 | no | 5 |  |
 | `plain-mcp` | 1.0.3 | 2026-10-19 | no |  | 2 |
 | `playcanvas-mcp` | 1.0.4 | 2026-10-19 | no |  | 2 |
-| `@mrfentmen/polygon-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
-| `posthog-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
+| `@mrfentmen/polygon-mcp` | 1.1.2 | local | no |  |  |
+| `posthog-mcp` | 1.1.2 | local | no |  |  |
 | `@mrfentmen/postmark-mcp` | 1.0.2 | 2026-10-19 | no |  |  |
-| `prada-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
-| `predictit-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
+| `prada-mcp` | 1.0.3 | local | no |  |  |
+| `predictit-mcp` | 1.0.3 | local | no |  |  |
 | `producthunt-mcp` | 1.0.3 | 2026-10-19 | no |  | 3 |
 | `publicwww-mcp` | 1.0.2 | 2026-10-19 | no |  |  |
 | `pusher-mcp` | 1.0.3 | 2026-10-19 | no |  | 2 |
-| `pvgis-mcp` | 1.0.1 | 2026-09-28 | no | 4 |  |
+| `pvgis-mcp` | 1.0.2 | local | no |  |  |
 | `qbittorrent-mcp` | 1.0.2 | 2026-10-19 | no |  |  |
 | `quip-mcp` | 1.0.4 | 2026-10-19 | no |  | 2 |
 | `radarr-mcp` | 1.0.2 | 2026-10-19 | no |  |  |
 | `@mrfentmen/raindrop-mcp` | 1.0.2 | 2026-10-19 | no |  |  |
 | `rawg-mcp` | 1.0.3 | 2026-10-19 | no |  | 2 |
 | `@mrfentmen/readwise-mcp` | 1.0.2 | 2026-10-19 | no |  |  |
-| `remoteok-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
-| `@mrfentmen/resend-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
-| `rolex-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
+| `remoteok-mcp` | 1.0.3 | local | no |  |  |
+| `@mrfentmen/resend-mcp` | 1.1.2 | local | no |  |  |
+| `rolex-mcp` | 1.0.3 | local | no |  |  |
 | `rollbar-mcp` | 1.0.3 | 2026-10-19 | no |  | 2 |
 | `rybbit-mcp` | 1.0.3 | 2026-10-19 | no |  |  |
-| `saintlaurent-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
+| `saintlaurent-mcp` | 1.0.3 | local | no |  |  |
 | `savvycal-mcp` | 1.0.3 | 2026-10-19 | no |  | 2 |
-| `scryfall-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
+| `scryfall-mcp` | 1.0.3 | local | no |  |  |
 | `seatgeek-mcp` | 1.0.4 | 2026-10-19 | no |  | 2 |
-| `@mrfentmen/sentry-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
+| `@mrfentmen/sentry-mcp` | 1.1.2 | local | no |  |  |
 | `shootproof-mcp` | 1.0.4 | 2026-10-19 | no |  | 2 |
 | `simplecast-mcp` | 1.0.3 | 2026-10-19 | no |  | 2 |
-| `@mrfentmen/slack-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
-| `smartrecruiters-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
-| `spacedevs-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
+| `@mrfentmen/slack-mcp` | 1.1.2 | local | no |  |  |
+| `smartrecruiters-mcp` | 1.0.3 | local | no |  |  |
+| `spacedevs-mcp` | 1.1.2 | local | no |  |  |
 | `sportyandrich-mcp` | 1.0.2 | 2026-10-19 | no |  | 1 |
-| `@mrfentmen/spotify-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
+| `@mrfentmen/spotify-mcp` | 1.1.2 | local | no |  |  |
 | `spreaker-mcp` | 1.0.4 | 2026-10-19 | no |  | 1 |
 | `squarespace-mcp` | 1.0.3 | 2026-10-19 | no |  |  |
-| `stadiumgoods-mcp` | 1.0.2 | 2026-09-28 | no | 4 |  |
+| `stadiumgoods-mcp` | 1.0.3 | local | no |  |  |
 | `statping-mcp` | 1.0.3 | 2026-10-19 | no |  | 1 |
 | `statuscake-mcp` | 1.0.4 | 2026-10-19 | no |  | 1 |
 | `statuspage-mcp` | 1.1.0 | 2026-09-27 | no |  |  |
 | `@mrfentmen/steam-mcp` | 1.0.4 | 2026-10-01 | no | 5 |  |
 | `@mrfentmen/storyblok-mcp` | 1.0.2 | 2026-10-19 | no |  |  |
 | `@mrfentmen/stripe-mcp` | 1.1.0 | 2026-09-27 | no |  |  |
-| `@mrfentmen/supabase-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
+| `@mrfentmen/supabase-mcp` | 1.1.2 | local | no |  |  |
 | `swetrix-mcp` | 1.0.4 | 2026-10-19 | no |  | 2 |
 | `tally-mcp` | 1.1.2 | 2026-10-19 | no |  |  |
-| `@mrfentmen/telegram-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
+| `@mrfentmen/telegram-mcp` | 1.1.2 | local | no |  |  |
 | `themuse-mcp` | 1.0.3 | 2026-10-01 | no | 4 |  |
 | `theoddsapi-mcp` | 1.0.4 | 2026-10-19 | no |  | 2 |
 | `tiingo-mcp` | 1.0.3 | 2026-10-19 | no |  |  |
@@ -228,14 +229,14 @@ still in git; where the two disagree, this directory is correct.
 | `twelvedata-mcp` | 1.0.3 | 2026-10-19 | no |  | 1 |
 | `twilio-mcp` | 1.0.0 | 2025-12-12 | no |  |  |
 | `@mrfentmen/twitch-mcp` | 1.0.5 | 2026-10-19 | no |  | 1 |
-| `typeform-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
+| `typeform-mcp` | 1.1.2 | local | no |  |  |
 | `uptime-kuma-mcp` | 1.0.2 | 2026-10-19 | no |  |  |
 | `uptimerobot-mcp` | 1.0.5 | 2026-10-19 | no |  | 1 |
 | `urlhaus-mcp` | 1.0.4 | 2026-10-19 | no |  |  |
 | `usajobs-mcp` | 1.0.3 | 2026-10-19 | no |  |  |
 | `usps-mcp` | 1.0.2 | 2026-10-19 | no |  |  |
 | `vapi-mcp` | 1.0.2 | 2026-10-19 | no |  |  |
-| `@mrfentmen/vercel-mcp` | 1.1.1 | 2026-09-28 | no | 4 |  |
+| `@mrfentmen/vercel-mcp` | 1.1.2 | local | no |  |  |
 | `wayback-mcp` | 1.0.2 | 2026-10-01 | no | 5 |  |
 | `weightsbiases-mcp` | 1.0.4 | 2026-10-19 | no |  | 1 |
 | `whiskyhunter-mcp` | 1.0.3 | 2026-10-01 | no | 4 |  |
@@ -243,4 +244,4 @@ still in git; where the two disagree, this directory is correct.
 | `workable-mcp` | 1.0.3 | 2026-10-01 | no | 4 |  |
 | `@mrfentmen/yfinance-mcp` | 1.0.3 | 2026-10-01 | yes | 7 |  |
 | `@mrfentmen/youtrack-mcp` | 1.0.3 | 2026-10-19 | no |  |  |
-| `@mrfentmen/youtube-mcp` | 1.1.2 | 2026-09-28 | no | 4 |  |
+| `@mrfentmen/youtube-mcp` | 1.1.3 | local | no |  |  |
