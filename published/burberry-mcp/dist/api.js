@@ -542,3 +542,104 @@ export async function listingAge(args) {
         note: "Publish dates as reported by each resale source. Not affiliated with Burberry.",
     });
 }
+// ---- muxA tools: colour ladder + availability audit ----
+/** What each structured exterior colour is worth across the brand sample. */
+export async function colorLadder(sample, minItems) {
+    const per = Math.min(Math.max(Number(sample ?? 150) || 150, 1), 400);
+    const floor = Math.max(Number(minItems ?? 2) || 2, 1);
+    const rows = await sampleCatalog(per, [1, 2, 3]);
+    if (!rows.length)
+        throw new BurberryError("No Burberry listings were returned by either store.");
+    const groups = new Map();
+    let tagged = 0;
+    let priced = 0;
+    for (const { source: s, p } of rows) {
+        const sl = slim(s.name, s.base, p);
+        if (sl.price_usd !== null && sl.price_usd > 0)
+            priced += 1;
+        if (!sl.color)
+            continue;
+        tagged += 1;
+        const b = groups.get(sl.color) ?? { prices: [], total: 0, available: 0 };
+        b.total += 1;
+        if (sl.available)
+            b.available += 1;
+        if (sl.price_usd !== null && sl.price_usd > 0)
+            b.prices.push(sl.price_usd);
+        groups.set(sl.color, b);
+    }
+    if (!tagged) {
+        throw new BurberryError(`None of the ${rows.length} sampled Burberry listings carried an exterior-colour tag, so there is no colour ladder to report.`);
+    }
+    const ladder = [...groups.entries()]
+        .map(([color, b]) => {
+        const a = [...b.prices].sort((x, y) => x - y);
+        return {
+            color,
+            listings: b.total,
+            share_of_tagged_pct: Math.round((b.total / tagged) * 1000) / 10,
+            available: b.available,
+            priced: a.length,
+            min_usd: a.length ? a[0] : null,
+            median_usd: a.length ? Math.round(medianOf(a) * 100) / 100 : null,
+            max_usd: a.length ? a[a.length - 1] : null,
+        };
+    })
+        .filter((r) => r.listings >= floor)
+        .sort((a, b) => b.listings - a.listings);
+    return pretty({
+        brand: "Burberry", currency: "USD", sampled_listings: rows.length,
+        listings_with_colour: tagged, listings_without_colour: rows.length - tagged,
+        listings_with_a_price: priced, min_items_per_colour: floor,
+        colours_found: groups.size, by_colour: ladder,
+        note: "Colour comes from the source's own exterior-colour tag; listings without one are counted separately, not dropped silently. Not affiliated with Burberry.",
+    });
+}
+/** How much of the sample can be bought right now, split by source and product type. */
+export async function availabilityAudit(sample) {
+    const per = Math.min(Math.max(Number(sample ?? 200) || 200, 1), 500);
+    const rows = await sampleCatalog(per, [1, 2, 3, 4]);
+    if (!rows.length)
+        throw new BurberryError("No Burberry listings were returned by either store.");
+    const blank = () => ({ listings: 0, available: 0, priced: 0 });
+    const overall = blank();
+    const bySource = new Map();
+    const byType = new Map();
+    const bump = (b, sl) => {
+        b.listings += 1;
+        if (sl.available)
+            b.available += 1;
+        if (sl.price_usd !== null && sl.price_usd > 0)
+            b.priced += 1;
+    };
+    for (const { source: s, p } of rows) {
+        const sl = slim(s.name, s.base, p);
+        bump(overall, sl);
+        const sb = bySource.get(s.name) ?? blank();
+        bump(sb, sl);
+        bySource.set(s.name, sb);
+        const type = sl.product_type || "unknown";
+        const tb = byType.get(type) ?? blank();
+        bump(tb, sl);
+        byType.set(type, tb);
+    }
+    const pct = (part, whole) => (whole ? Math.round((part / whole) * 1000) / 10 : 0);
+    const shape = (b) => ({
+        listings: b.listings,
+        available: b.available,
+        available_pct: pct(b.available, b.listings),
+        priced: b.priced,
+        priced_pct: pct(b.priced, b.listings),
+    });
+    return pretty({
+        brand: "Burberry", currency: "USD", sampled_listings: rows.length,
+        overall: shape(overall),
+        by_source: [...bySource.entries()]
+            .map(([source, b]) => ({ source, ...shape(b) }))
+            .sort((a, b) => b.listings - a.listings),
+        by_product_type: [...byType.entries()]
+            .map(([product_type, b]) => ({ product_type, ...shape(b) }))
+            .sort((a, b) => b.listings - a.listings),
+        note: "Availability is the source's own in-stock flag on each listing; a listing without a usable price is reported as priced: 0 rather than assumed. Not affiliated with Burberry.",
+    });
+}

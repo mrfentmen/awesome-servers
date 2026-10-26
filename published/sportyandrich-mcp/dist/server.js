@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, storePolicies } from "./api.js";
+import { searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, storePolicies, collectionCensus } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -112,9 +112,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement census locally (paywall removed)
         try {
-            return textError("Not yet implemented: census");
+            return text(await collectionCensus(args));
         }
         catch (e) {
             return textError(String(e));

@@ -1,6 +1,6 @@
 {
   "name": "noahny-mcp",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Query the Noah catalog (noahny.com, NYC): search clothing, newest arrivals, enriched product details, price stats, below-median deals, and category counts.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/noahny-mcp",

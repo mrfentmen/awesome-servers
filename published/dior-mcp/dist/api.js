@@ -570,3 +570,129 @@ export async function inventoryDigest(args = {}) {
     lines.push("", "The two sites label the same kind of bag differently, so these counts are not directly comparable. Run source_coverage to see both vocabularies side by side.");
     return lines.join("\n");
 }
+const roundUsd = (n) => (Number.isFinite(n) ? Math.round(n * 100) / 100 : null);
+const SIZE_IN_TITLE = /\b(xxs|xs|s|m|l|xl|xxl|xxxl|one size|\d{2}(?:\.\d)?)\b/i;
+/** Per-line counts, stock, price band and condition mix, using the most-specific-first match in DIOR_LINES. */
+export async function lineCatalogue(args = {}) {
+    const maxItems = Math.min(Math.max(Math.floor(args.sample ?? 300) || 300, 40), 500);
+    const minItems = Math.min(Math.max(Math.floor(args.min_items ?? 1) || 1, 1), 20);
+    const limit = Math.min(Math.max(Math.floor(args.limit ?? 15) || 15, 1), 40);
+    const sampled = await sampleCatalog(maxItems, [1, 2, 3]);
+    if (!sampled.length)
+        throw new DiorError("No Dior listings came back from Fashionphile or Rebag in this sample.");
+    const byLine = new Map();
+    const unmatched = [];
+    for (const { source, p } of sampled) {
+        const sl = slim(source.name, source.base, p);
+        const { line } = lineOf(sl.title);
+        if (!line) {
+            unmatched.push(sl);
+            continue;
+        }
+        const row = byLine.get(line) ?? { line, listings: 0, available: 0, prices: [], sources: {}, conditions: {} };
+        row.listings += 1;
+        if (sl.available)
+            row.available += 1;
+        if (sl.price_usd !== null && sl.price_usd > 0)
+            row.prices.push(sl.price_usd);
+        row.sources[sl.source] = (row.sources[sl.source] ?? 0) + 1;
+        const c = sl.condition ?? "not reported";
+        row.conditions[c] = (row.conditions[c] ?? 0) + 1;
+        byLine.set(line, row);
+    }
+    const lines = [...byLine.values()]
+        .filter((r) => r.listings >= minItems)
+        .sort((a, b) => b.listings - a.listings)
+        .slice(0, limit)
+        .map((r) => ({
+        line: r.line,
+        listings: r.listings,
+        available: r.available,
+        share_pct: Math.round((r.listings / sampled.length) * 1000) / 10,
+        price_usd: r.prices.length
+            ? { min: roundUsd(Math.min(...r.prices)), median: roundUsd(median(r.prices)), max: roundUsd(Math.max(...r.prices)) }
+            : null,
+        sources: r.sources,
+        condition_mix: Object.keys(r.conditions).length ? r.conditions : "not published by either site",
+    }));
+    return pretty({
+        brand: "Dior", sampled_listings: sampled.length, lines_matched: lines.length,
+        lines_over_threshold: [...byLine.values()].filter((r) => r.listings >= minItems).length,
+        unmatched_listings: unmatched.length,
+        unmatched_examples: unmatched.slice(0, 5).map((s) => ({ title: s.title, source: s.source })),
+        min_listings: minItems, lines,
+        note: "Lines are matched from listing titles most-specific-first, so a listing is credited to one line only. Not affiliated with Dior.",
+    });
+}
+/** What each resale site actually publishes for Dior, side by side, so a filter's coverage is visible before it is trusted. */
+export async function sourceCoverage(args = {}) {
+    const maxItems = Math.min(Math.max(Math.floor(args.sample ?? 200) || 200, 40), 400);
+    const pages = [1, 2, 3, 4];
+    const report = [];
+    for (const s of SOURCES) {
+        const raw = [];
+        for (const pg of pages) {
+            if (raw.length >= maxItems)
+                break;
+            try {
+                const batch = await catalog(s, pg);
+                if (!batch.length)
+                    break;
+                for (const p of batch) {
+                    raw.push(p);
+                    if (raw.length >= maxItems)
+                        break;
+                }
+            }
+            catch { /* source down or page empty - keep what we have */ }
+        }
+        if (!raw.length) {
+            report.push({ source: s.name, reachable: false, note: "no Dior listings came back" });
+            continue;
+        }
+        const rows = raw.map((p) => slim(s.name, s.base, p));
+        const prices = rows.map((r) => r.price_usd).filter((n) => n !== null && n > 0);
+        const vocabulary = {};
+        let withColor = 0;
+        let withMaterial = 0;
+        let withCondition = 0;
+        let sizeInTitle = 0;
+        for (let i = 0; i < rows.length; i++) {
+            const r = rows[i];
+            const type = r.product_type || "(none)";
+            vocabulary[type] = (vocabulary[type] ?? 0) + 1;
+            if (r.color)
+                withColor += 1;
+            if (r.material)
+                withMaterial += 1;
+            if (r.condition)
+                withCondition += 1;
+            const variants = Array.isArray(raw[i].variants) ? raw[i].variants : [];
+            if (variants.some((v) => SIZE_IN_TITLE.test(String(v.title ?? ""))))
+                sizeInTitle += 1;
+        }
+        report.push({
+            source: s.name,
+            reachable: true,
+            listings: rows.length,
+            available: rows.filter((r) => r.available).length,
+            price_usd: prices.length
+                ? { min: roundUsd(Math.min(...prices)), median: roundUsd(median(prices)), max: roundUsd(Math.max(...prices)) }
+                : null,
+            published_fields: {
+                color: withColor,
+                material: withMaterial,
+                condition: withCondition,
+                size_in_variant_titles: sizeInTitle,
+            },
+            product_type_vocabulary: Object.entries(vocabulary).sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count })),
+        });
+    }
+    const types = new Set(report.flatMap((r) => (r.product_type_vocabulary ?? []).map((v) => v.name)));
+    return pretty({
+        brand: "Dior", pages_scanned: pages.length, sample_cap_per_source: maxItems,
+        sources: report,
+        distinct_product_types_across_sources: types.size,
+        note: "A field counts only listings where that site actually published the value; the two product_type vocabularies are the sites' own labels and do not map onto each other. Not affiliated with Dior.",
+    });
+}

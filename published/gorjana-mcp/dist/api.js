@@ -195,3 +195,76 @@ const cents = (value) => {
     const n = Math.round(Number(value));
     return Number.isFinite(n) && n > 0 ? n / 100 : null;
 };
+// ---- muxF tools:
+const COLLECTIONS = "https://gorjana.com/collections.json";
+const COLLECTION_BASE = "https://gorjana.com/collections";
+function median(nums) {
+    const a = [...nums].sort((x, y) => x - y);
+    if (!a.length)
+        return null;
+    return a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2;
+}
+function round2(n) {
+    return n === null ? null : Math.round(n * 100) / 100;
+}
+export function listCollections(limit) {
+    const lim = Math.min(Number(limit ?? 20) || 20, 50);
+    return getJson(`${COLLECTIONS}?limit=250`).then((data) => {
+        const rows = (Array.isArray(data.collections) ? data.collections : []).map((c) => ({
+            title: String(c.title ?? ""),
+            handle: String(c.handle ?? ""),
+            products_count: Number.isFinite(Number(c.products_count)) ? Number(c.products_count) : null,
+            updated_at: c.updated_at ?? null,
+            url: `${COLLECTION_BASE}/${String(c.handle ?? "")}`,
+        }));
+        rows.sort((a, b) => String(b.updated_at ?? "").localeCompare(String(a.updated_at ?? "")));
+        if (!rows.length)
+            throw new StoreError("No collections published by this storefront.");
+        return pretty({
+            store: "Gorjana",
+            collections_found: rows.length,
+            returned: Math.min(rows.length, lim),
+            collections: rows.slice(0, lim),
+            note: "Collections as the storefront publishes them; handles feed collection_products.",
+        });
+    });
+}
+export function collectionProducts(handle, limit, sort) {
+    const n = Math.min(Number(limit ?? 20) || 20, 50);
+    const order = String(sort ?? "featured").trim().toLowerCase();
+    const allowed = ["featured", "price_low", "price_high", "newest"];
+    if (!allowed.includes(order))
+        throw new StoreError(`Sort must be one of ${allowed.join(", ")}.`);
+    return getJson(`${COLLECTION_BASE}/${encodeURIComponent(handle)}/products.json?limit=250`).then((data) => {
+        const products = Array.isArray(data.products) ? data.products : [];
+        if (!products.length)
+            throw new StoreError(`Collection '${handle}' returned no products.`);
+        const rows = products.map((p) => slim(p));
+        if (order === "price_low")
+            rows.sort((a, b) => (a.price_usd ?? Infinity) - (b.price_usd ?? Infinity));
+        else if (order === "price_high")
+            rows.sort((a, b) => (b.price_usd ?? -Infinity) - (a.price_usd ?? -Infinity));
+        else if (order === "newest")
+            rows.sort((a, b) => String(b.published_at ?? "").localeCompare(String(a.published_at ?? "")));
+        const priced = rows.map((r) => r.price_usd).filter((x) => x !== null && x > 0);
+        const types = {};
+        for (const r of rows) {
+            const t = String(r.product_type || "unknown");
+            types[t] = (types[t] ?? 0) + 1;
+        }
+        return pretty({
+            store: "Gorjana",
+            collection: String(handle),
+            sort: order,
+            products_in_collection: rows.length,
+            returned: Math.min(rows.length, n),
+            in_stock: rows.filter((r) => r.available).length,
+            price_usd: priced.length
+                ? { min: round2(Math.min(...priced)), median: round2(median(priced)), max: round2(Math.max(...priced)) }
+                : null,
+            product_types: types,
+            products: rows.slice(0, n),
+            note: "Featured keeps the storefront's own collection order; prices are the lowest variant price per product.",
+        });
+    });
+}

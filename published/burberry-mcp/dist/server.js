@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { searchListings, listNewest, getListing, priceOverview, comparePrices, findDeals, brandOverview, listCollections, browseCollection, find_by_attribute, listingAge } from "./api.js";
+import { searchListings, listNewest, getListing, priceOverview, comparePrices, findDeals, brandOverview, listCollections, browseCollection, find_by_attribute, listingAge, colorLadder, availabilityAudit } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -184,10 +184,9 @@ export function createServer() {
             min_items: z.string().describe("Only show colours with at least this many listings (default 2).").optional()
         }),
         annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement ladder locally (paywall removed)
+    }, async ({ sample, min_items: minItems }) => {
         try {
-            return textError("Not yet implemented: ladder");
+            return text(await colorLadder(sample, minItems));
         }
         catch (e) {
             return textError(String(e));
@@ -200,10 +199,9 @@ export function createServer() {
             sample: z.string().describe("Listings sampled (default 200, max 500).").optional()
         }),
         annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement audit locally (paywall removed)
+    }, async ({ sample }) => {
         try {
-            return textError("Not yet implemented: audit");
+            return text(await availabilityAudit(sample));
         }
         catch (e) {
             return textError(String(e));

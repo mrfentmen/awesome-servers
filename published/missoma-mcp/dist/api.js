@@ -193,3 +193,144 @@ export function listCategories() {
 }
 // ---- muxF tools:
 const MS_TAG_LIMIT = 18;
+function msTagList(p) {
+    const t = p?.tags;
+    if (Array.isArray(t))
+        return t.map((x) => String(x).trim()).filter(Boolean);
+    return String(t ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+}
+function msMedian(nums) {
+    const a = [...nums].sort((x, y) => x - y);
+    if (!a.length)
+        return null;
+    return a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2;
+}
+function msRound(n) {
+    return n === null ? null : Math.round(n * 100) / 100;
+}
+function msBand(prices) {
+    if (!prices.length)
+        return null;
+    return { min: msRound(Math.min(...prices)), median: msRound(msMedian(prices)), max: msRound(Math.max(...prices)) };
+}
+async function msSample(n, cap) {
+    const max = Math.min(Number(n ?? cap) || cap, 1000);
+    const pages = [];
+    for (let i = 1; i <= Math.ceil(max / 250); i++)
+        pages.push(i);
+    return sampleCatalog(max, pages);
+}
+/**
+ * The facets the storefront filters on, read from the store's own colon-prefixed
+ * tags (Facet: Value) rather than from product_type, which only names the garment.
+ */
+export async function tagTaxonomyCensus(sample, limit) {
+    const lim = Math.min(Number(limit ?? 8) || 8, MS_TAG_LIMIT);
+    const products = await msSample(sample, 600);
+    const facets = {};
+    for (const p of products) {
+        const s = slim(p);
+        const price = s.price_usd;
+        const seen = new Set();
+        for (const tag of msTagList(p)) {
+            const at = tag.indexOf(":");
+            if (at <= 0 || at === tag.length - 1)
+                continue;
+            const facet = tag.slice(0, at).trim();
+            const value = tag.slice(at + 1).trim();
+            if (!facet || !value || seen.has(tag))
+                continue;
+            seen.add(tag);
+            const f = (facets[facet] ??= { facet, products: 0, values: {} });
+            f.products += 1;
+            const v = (f.values[value] ??= { value, products: 0, available: 0, prices: [] });
+            v.products += 1;
+            if (s.available)
+                v.available += 1;
+            if (Number.isFinite(price) && price > 0)
+                v.prices.push(price);
+        }
+    }
+    if (!Object.keys(facets).length)
+        throw new StoreError("No colon-prefixed tag facets found in the catalog sample.");
+    const rows = Object.values(facets)
+        .sort((a, b) => b.products - a.products)
+        .map((f) => ({
+        facet: f.facet,
+        values_found: Object.keys(f.values).length,
+        values: Object.values(f.values)
+            .sort((a, b) => b.products - a.products)
+            .slice(0, lim)
+            .map((v) => ({
+            value: v.value,
+            products: v.products,
+            available: v.available,
+            price_usd: msBand(v.prices),
+        })),
+    }));
+    return pretty({
+        store: "Missoma",
+        sample: products.length,
+        facets_found: rows.length,
+        facets: rows,
+        note: "Facets are the store's own colon-prefixed tags (Facet: Value); values per facet are capped, values_found counts them all.",
+    });
+}
+/**
+ * What each product option actually offers: products, units, stock rate and
+ * median price per value, read from the variant option fields the store publishes.
+ */
+export async function optionVariantMatrix(sample, limit) {
+    const lim = Math.min(Number(limit ?? 10) || 10, 30);
+    const products = await msSample(sample, 500);
+    const options = {};
+    let variantTotal = 0;
+    for (const p of products) {
+        const variants = Array.isArray(p.variants) ? p.variants : [];
+        const opts = Array.isArray(p.options) ? p.options : [];
+        variantTotal += variants.length;
+        for (let i = 0; i < opts.length; i += 1) {
+            const name = String(opts[i]?.name ?? `option ${i + 1}`).trim() || `option ${i + 1}`;
+            const row = (options[name] ??= { option: name, values: {} });
+            for (const v of variants) {
+                const value = String(v[`option${i + 1}`] ?? "").trim();
+                if (!value)
+                    continue;
+                const cell = (row.values[value] ??= { value, products: new Set(), units: 0, inStock: 0, prices: [] });
+                cell.products.add(p.id ?? p.handle);
+                cell.units += 1;
+                if (v.available)
+                    cell.inStock += 1;
+                const price = Number(v.price);
+                if (Number.isFinite(price) && price > 0)
+                    cell.prices.push(price);
+            }
+        }
+    }
+    if (!variantTotal)
+        throw new StoreError("No variants found in the catalog sample.");
+    const rows = Object.values(options)
+        .filter((r) => Object.keys(r.values).length)
+        .sort((a, b) => Object.keys(b.values).length - Object.keys(a.values).length)
+        .map((r) => ({
+        option: r.option,
+        values_found: Object.keys(r.values).length,
+        values: Object.values(r.values)
+            .sort((a, b) => b.units - a.units)
+            .slice(0, lim)
+            .map((c) => ({
+            value: c.value,
+            products: c.products.size,
+            units: c.units,
+            in_stock_pct: c.units ? Math.round((c.inStock / c.units) * 1000) / 10 : 0,
+            median_usd: msRound(msMedian(c.prices)),
+        })),
+    }));
+    return pretty({
+        store: "Missoma",
+        sample: products.length,
+        variants: variantTotal,
+        options: rows,
+        note: "Options are read from the variant option fields (option1..option3); a product counts once per value, units count every variant.",
+    });
+}

@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections } from "./api.js";
+import { searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections, collectionProducts, typePriceBands } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -128,9 +128,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement products locally (paywall removed)
         try {
-            return textError("Not yet implemented: products");
+            return text(await collectionProducts(args.handle, args.limit, args.product_type));
         }
         catch (e) {
             return textError(String(e));
@@ -144,9 +143,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement bands locally (paywall removed)
         try {
-            return textError("Not yet implemented: bands");
+            return text(await typePriceBands(args.sample));
         }
         catch (e) {
             return textError(String(e));

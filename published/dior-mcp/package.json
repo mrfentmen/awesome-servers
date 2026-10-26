@@ -1,6 +1,6 @@
 {
   "name": "dior-mcp",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Dior resale listings aggregated from Fashionphile and Rebag public catalogs (prices in USD).",
   "type": "module",
   "mcpName": "io.github.mrfentmen/dior-mcp",

@@ -249,3 +249,58 @@ export async function listCollections(args) {
         "Storefront metadata. Not affiliated with Peak Design.",
     ].join("\n");
 }
+// The collection products endpoint sits next to the index this package already
+// reads, so derive it from COLLECTIONS instead of restating the host.
+const pdCollectionProducts = (handle) => `${COLLECTIONS.replace(/\/collections\.json$/, "")}/collections/${encodeURIComponent(handle)}/products.json?limit=250`;
+const pdMoney = (n) => `$${Number(n).toFixed(2)}`;
+/**
+ * Every variant of a collection's products, with its own price, stock state and
+ * the store's strike-through price, so colour and size options stay visible
+ * instead of collapsing into one price per product.
+ */
+export async function collectionVariants(args) {
+    const handle = String(args.collection ?? "").trim();
+    if (!handle)
+        throw new StoreError("Give a collection handle, e.g. backpacks.");
+    const cap = Math.min(Math.max(Math.trunc(Number(args.limit ?? 20) || 20), 1), 60);
+    const body = await pdJson(pdCollectionProducts(handle));
+    const products = Array.isArray(body.products) ? body.products : [];
+    if (!products.length)
+        throw new StoreError(`Collection "${handle}" has no products, or the handle does not exist.`);
+    const rows = [];
+    let units = 0;
+    let buyable = 0;
+    for (const p of products) {
+        const variants = Array.isArray(p.variants) ? p.variants : [];
+        for (const v of variants) {
+            units += 1;
+            if (v.available)
+                buyable += 1;
+            const price = Number(v.price);
+            const was = v.compare_at_price === null || v.compare_at_price === undefined ? null : Number(v.compare_at_price);
+            rows.push({
+                product: String(p.title ?? "untitled"),
+                variant: String(v.title ?? "Default"),
+                price_usd: Number.isFinite(price) ? price : null,
+                was_usd: Number.isFinite(was) && Number.isFinite(price) && was > price ? was : null,
+                available: Boolean(v.available),
+                sku: v.sku ? String(v.sku) : null,
+            });
+        }
+    }
+    if (!units)
+        throw new StoreError(`Collection "${handle}" lists products but publishes no variants.`);
+    const shown = rows.slice(0, cap);
+    const lines = [
+        `Peak Design collection "${handle}": ${products.length} product(s), ${units} variant(s), ${buyable} buyable right now.`,
+        "",
+        ...shown.map((r, i) => [
+            `${String(i + 1).padStart(2)}. ${r.product} — ${r.variant}`,
+            `    ${r.price_usd === null ? "no price published" : pdMoney(r.price_usd)}${r.was_usd === null ? "" : ` (was ${pdMoney(r.was_usd)})`} · ${r.available ? "in stock" : "sold out"}${r.sku === null ? "" : ` · ${r.sku}`}`,
+        ].join("\n")),
+        ...(rows.length > shown.length ? [`(+${rows.length - shown.length} more variant(s) not shown)`] : []),
+        "",
+        "Prices are the storefront's own asking prices. Not affiliated with Peak Design.",
+    ];
+    return lines.join("\n");
+}

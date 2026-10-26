@@ -193,3 +193,165 @@ export function listCategories() {
 }
 // ---- muxF tools:
 const MAD_SIZE_ORDER = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+const MAD_SIZE_SET = new Set([...MAD_SIZE_ORDER, "OS", "ONE SIZE"]);
+function median(nums) {
+    const a = [...nums].sort((x, y) => x - y);
+    if (!a.length)
+        return null;
+    return a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2;
+}
+function round2(n) {
+    return n === null ? null : Math.round(n * 100) / 100;
+}
+function catalogSample(n, cap) {
+    const max = Math.min(Number(n ?? cap) || cap, 1000);
+    const pages = [];
+    for (let i = 1; i <= Math.ceil(max / 250); i++)
+        pages.push(i);
+    return sampleCatalog(max, pages);
+}
+function variantPrice(v) {
+    const n = Number(v?.price);
+    return Number.isFinite(n) && n > 0 ? n : null;
+}
+function topKey(counts) {
+    let best = null;
+    let bestN = -1;
+    for (const [k, v] of Object.entries(counts)) {
+        if (v > bestN) {
+            best = k;
+            bestN = v;
+        }
+    }
+    return best;
+}
+// Split a variant title into its size token and whatever else it names.
+function readVariant(variant) {
+    const parts = parseParts(variant?.title);
+    const size = parts.find((x) => MAD_SIZE_SET.has(x.toUpperCase())) ?? null;
+    const colour = parts.filter((x) => x !== size).join(" / ") || null;
+    return { size, colour };
+}
+export function colorwayCensus(sample, limit) {
+    const lim = Math.min(Number(limit ?? 15) || 15, 40);
+    return catalogSample(sample, 500).then((products) => {
+        const colours = {};
+        let units = 0;
+        for (const p of products) {
+            const type = String(p.product_type || "unknown");
+            const variants = Array.isArray(p.variants) ? p.variants : [];
+            for (const v of variants) {
+                units += 1;
+                const { colour } = readVariant(v);
+                if (!colour)
+                    continue;
+                const row = (colours[colour] ??= {
+                    colorway: colour, products: new Set(), units: 0, sold_out: 0,
+                    prices: [], types: {},
+                });
+                row.products.add(p.id ?? p.handle);
+                row.units += 1;
+                if (!v.available)
+                    row.sold_out += 1;
+                row.types[type] = (row.types[type] ?? 0) + 1;
+                const price = variantPrice(v);
+                if (price !== null)
+                    row.prices.push(price);
+            }
+        }
+        if (!units)
+            throw new StoreError("No variants found in the catalog sample.");
+        const rows = Object.values(colours)
+            .map((r) => ({
+            colorway: r.colorway,
+            products: r.products.size,
+            units: r.units,
+            sold_out: r.sold_out,
+            sold_out_pct: r.units ? Math.round((r.sold_out / r.units) * 1000) / 10 : 0,
+            price_usd: r.prices.length
+                ? { min: round2(Math.min(...r.prices)), median: round2(median(r.prices)), max: round2(Math.max(...r.prices)) }
+                : null,
+            main_type: topKey(r.types),
+        }))
+            .sort((a, b) => b.products - a.products || b.units - a.units)
+            .slice(0, lim);
+        if (!rows.length)
+            throw new StoreError("No colourway could be read from the variant titles in this sample.");
+        return pretty({
+            store: "Madhappy",
+            sample: products.length,
+            variants: units,
+            colorways_found: Object.keys(colours).length,
+            colorways: rows,
+            note: "A colourway is whatever a variant title names besides its size; sold-out counts variants that cannot be bought.",
+        });
+    });
+}
+export function sizeRunAvailability(sample, limit) {
+    const lim = Math.min(Number(limit ?? 10) || 10, 25);
+    return catalogSample(sample, 400).then((products) => {
+        const sizes = {};
+        const runs = [];
+        let sized = 0;
+        for (const p of products) {
+            const variants = Array.isArray(p.variants) ? p.variants : [];
+            const run = new Map();
+            for (const v of variants) {
+                const { size } = readVariant(v);
+                if (!size)
+                    continue;
+                sized += 1;
+                const row = (sizes[size] ??= { size, units: 0, in_stock: 0, prices: [] });
+                row.units += 1;
+                if (v.available)
+                    row.in_stock += 1;
+                const price = variantPrice(v);
+                if (price !== null)
+                    row.prices.push(price);
+                const prev = run.get(size) ?? { total: 0, available: 0 };
+                prev.total += 1;
+                if (v.available)
+                    prev.available += 1;
+                run.set(size, prev);
+            }
+            if (!run.size)
+                continue;
+            const left = [...run.entries()]
+                .filter(([, s]) => s.available > 0)
+                .map(([size]) => size);
+            runs.push({
+                title: String(p.title ?? ""),
+                handle: String(p.handle ?? ""),
+                sizes_total: run.size,
+                sizes_available: left.length,
+                remaining_sizes: left,
+                sold_out_sizes: [...run.keys()].filter((s) => !left.includes(s)),
+            });
+        }
+        if (!sized)
+            throw new StoreError("No sized variants found in the catalog sample.");
+        const order = (a, b) => MAD_SIZE_ORDER.indexOf(a.size.toUpperCase()) - MAD_SIZE_ORDER.indexOf(b.size.toUpperCase());
+        const sizeRows = Object.values(sizes)
+            .map((r) => ({
+            size: r.size,
+            units: r.units,
+            in_stock_pct: r.units ? Math.round((r.in_stock / r.units) * 1000) / 10 : 0,
+            median_usd: round2(median(r.prices)),
+        }))
+            .sort(order);
+        const thinnest = runs
+            .filter((r) => r.sizes_total > 1)
+            .sort((a, b) => a.sizes_available - b.sizes_available || a.sizes_total - b.sizes_total)
+            .slice(0, lim);
+        return pretty({
+            store: "Madhappy",
+            sample: products.length,
+            sized_variants: sized,
+            products_with_sizes: runs.length,
+            sold_out_products: runs.filter((r) => r.sizes_available === 0).length,
+            sizes: sizeRows,
+            thinnest_runs: thinnest,
+            note: "In-stock share counts sized variants that can be bought; thinnest runs are products down to the fewest sizes left.",
+        });
+    });
+}

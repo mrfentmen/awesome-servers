@@ -283,3 +283,75 @@ function cents(v) {
     const n = Number(v);
     return Number.isFinite(n) ? n / 100 : null;
 }
+// ---- muxF tools:
+function medianOf(values) {
+    const a = [...values].sort((x, y) => x - y);
+    if (!a.length)
+        return null;
+    return a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2;
+}
+function round2(n) {
+    const v = Number(n);
+    return Number.isFinite(v) ? Math.round(v * 100) / 100 : null;
+}
+function skuHead(skus) {
+    const clean = skus.filter((s) => typeof s === "string" && s.trim()).map((s) => s.trim());
+    if (!clean.length)
+        return null;
+    const head = clean[0].split("-")[0];
+    return clean.every((s) => s.split("-")[0] === head) ? head : null;
+}
+export async function variantDetail(handle) {
+    const p = await getJson(`${PRODUCT_BASE}/${encodeURIComponent(handle)}.js`);
+    if (!p || typeof p !== "object" || !Array.isArray(p.variants)) {
+        throw new AvianneError(`No product json for handle '${handle}'. Check the handle with search_products or list_newest.`);
+    }
+    const options = (Array.isArray(p.options) ? p.options : [])
+        .map((o) => (typeof o === "string" ? o : (o?.name ?? null)))
+        .filter(Boolean);
+    const variants = p.variants.map((v) => ({
+        title: v.title,
+        parts: parseParts(v.title),
+        sku: v.sku ?? null,
+        price_usd: round2(v.price),
+        compare_at_usd: round2(v.compare_at_price),
+        on_sale: v.compare_at_price !== null && v.compare_at_price !== undefined && Number(v.compare_at_price) > Number(v.price),
+        available: v.available === true,
+    }));
+    const inStock = variants.filter((v) => v.available);
+    return pretty({
+        store: "Avianne",
+        handle: p.handle ?? handle,
+        title: p.title ?? null,
+        product_type: p.product_type ?? null,
+        url: `${PRODUCT_BASE}/${p.handle ?? handle}`,
+        options,
+        variant_count: variants.length,
+        available_count: inStock.length,
+        all_sold_out: variants.length > 0 && inStock.length === 0,
+        sku_prefix: skuHead(variants.map((v) => v.sku)),
+        variants,
+        note: "Every variant with its own stock flag, sku and both prices, read from the store's own product json.",
+    });
+}
+export async function catalogByPage(page, limit) {
+    const pg = Math.max(Math.floor(Number(page ?? 1)) || 1, 1);
+    const n = Math.min(Math.max(Math.floor(Number(limit ?? 50)) || 50, 1), 250);
+    const data = await getJson(`${CATALOG}?limit=${n}&page=${pg}`);
+    const products = Array.isArray(data.products) ? data.products : [];
+    if (!products.length) {
+        throw new AvianneError(`Page ${pg} returned no products. The catalog has fewer pages than that.`);
+    }
+    const listings = products.map((p) => slim(p));
+    const prices = listings.map((s) => s.price_usd).filter((x) => typeof x === "number" && x > 0);
+    return pretty({
+        store: "Avianne",
+        page: pg,
+        per_page: n,
+        returned: listings.length,
+        available_count: listings.filter((s) => s.available).length,
+        price_band_usd: prices.length ? { min: round2(Math.min(...prices)), median: round2(medianOf(prices)), max: round2(Math.max(...prices)) } : null,
+        listings,
+        note: "One catalog page read directly from the store's products json, in the store's own order rather than by publish date.",
+    });
+}

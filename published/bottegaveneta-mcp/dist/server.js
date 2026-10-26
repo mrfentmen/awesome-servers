@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { searchListings, listNewest, getListing, priceOverview, comparePrices, findDeals, brandOverview, variantDepth } from "./api.js";
+import { searchListings, listNewest, getListing, priceOverview, comparePrices, findDeals, brandOverview, variantDepth, listingFreshness, productTypeLadder } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -130,9 +130,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement freshness locally (paywall removed)
         try {
-            return textError("Not yet implemented: freshness");
+            return text(await listingFreshness(args.sample));
         }
         catch (e) {
             return textError(String(e));
@@ -162,9 +161,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement ladder locally (paywall removed)
         try {
-            return textError("Not yet implemented: ladder");
+            return text(await productTypeLadder(args.sample, args.min_items));
         }
         catch (e) {
             return textError(String(e));

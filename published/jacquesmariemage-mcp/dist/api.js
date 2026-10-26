@@ -193,3 +193,161 @@ export function listCategories() {
 }
 // ---- muxG tools:
 // The frame colour is the first token of a "CODE-NAME / LENS" option value.
+const JM_TITLE_SPLIT = /\s+[-–—]\s+/;
+function median(nums) {
+    const a = [...nums].sort((x, y) => x - y);
+    if (!a.length)
+        return null;
+    return a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2;
+}
+function round2(n) {
+    return n === null ? null : Math.round(n * 100) / 100;
+}
+function catalogSample(n, cap) {
+    const max = Math.min(Number(n ?? cap) || cap, 1500);
+    const pages = [];
+    for (let i = 1; i <= Math.ceil(max / 250); i++)
+        pages.push(i);
+    return sampleCatalog(max, pages);
+}
+// A variant title reads "CODE-NAME / LENS"; the colour is the first token of
+// the part before the slash and the lens is whatever follows it.
+function readCode(variant) {
+    const parts = parseParts(variant?.title);
+    if (parts.length < 2)
+        return null;
+    const lens = parts[parts.length - 1].trim();
+    const code = parts.slice(0, -1).join(" / ").trim();
+    const colour = code.split(/\s+/)[0] || null;
+    return { lens: lens || null, colour: colour || null, code: code || null };
+}
+function variantPrice(v) {
+    const n = Number(v?.price);
+    return Number.isFinite(n) && n > 0 ? n : null;
+}
+// The label after the slash mixes colour into the lens name ("ORANGE CR39"),
+// so a lens type is the technology words it contains, not the whole label.
+const LENS_TECH = [
+    ["CR39", /\bCR-?39\b/],
+    ["POLARIZED", /\bPOLARI[SZ]ED\b/],
+    ["PRESCRIPTION", /\b(PRESCRIPTION|RX)\b/],
+    ["PHOTOCHROMIC", /\bPHOTOCHROMIC\b/],
+    ["MIRROR", /\bMIRROR(ED)?\b/],
+    ["BLUE LIGHT", /\bBLUE[- ]?LIGHT\b/],
+    ["DEMO LENS", /\bDEMO\b/],
+];
+function lensTypeOf(label) {
+    const up = String(label ?? "").toUpperCase();
+    const hits = LENS_TECH.filter(([, re]) => re.test(up)).map(([name]) => name);
+    if (hits.length)
+        return hits.join(" + ");
+    const words = up.split(/\s+/).filter(Boolean);
+    return words.length ? words[words.length - 1] : "unspecified";
+}
+export function lensMatrix(sample, limit) {
+    const lim = Math.min(Number(limit ?? 12) || 12, 30);
+    return catalogSample(sample, 300).then((products) => {
+        const lenses = {};
+        const colours = new Set();
+        const prices = [];
+        let variantTotal = 0;
+        let unparsed = 0;
+        for (const p of products) {
+            const variants = Array.isArray(p.variants) ? p.variants : [];
+            for (const v of variants) {
+                variantTotal += 1;
+                const price = variantPrice(v);
+                if (price !== null)
+                    prices.push(price);
+                const code = readCode(v);
+                if (!code || !code.lens) {
+                    unparsed += 1;
+                    continue;
+                }
+                if (code.colour)
+                    colours.add(code.colour);
+                const type = lensTypeOf(code.lens);
+                const row = (lenses[type] ??= { lens: type, labels: new Set(), variants: 0, products: new Set(), prices: [] });
+                row.labels.add(code.lens);
+                row.variants += 1;
+                row.products.add(p.id ?? p.handle);
+                if (price !== null)
+                    row.prices.push(price);
+            }
+        }
+        if (!variantTotal)
+            throw new StoreError("No variants found in the catalog sample.");
+        const rows = Object.values(lenses)
+            .map((r) => ({
+            lens: r.lens,
+            variants: r.variants,
+            products: r.products.size,
+            labels_merged: r.labels.size,
+            median_usd: round2(median(r.prices)),
+        }))
+            .sort((a, b) => b.variants - a.variants)
+            .slice(0, lim);
+        if (!rows.length)
+            throw new StoreError("No lens type could be read from the variant titles in this sample.");
+        return pretty({
+            store: "Jacques Marie Mage",
+            sample: products.length,
+            variants: variantTotal,
+            lens_types_found: Object.keys(lenses).length,
+            lens_types: rows,
+            colourways_found: colours.size,
+            price_usd: prices.length
+                ? { min: round2(Math.min(...prices)), median: round2(median(prices)), max: round2(Math.max(...prices)) }
+                : null,
+            variants_without_lens: unparsed,
+            note: "Lens type is the technology named in each variant's own lens label (CR39, polarised, prescription and so on); labels_merged counts how many colour-specific labels collapsed into one type.",
+        });
+    });
+}
+export function modelFamilies(sample, limit) {
+    const lim = Math.min(Number(limit ?? 15) || 15, 40);
+    return catalogSample(sample, 300).then((products) => {
+        const families = {};
+        for (const p of products) {
+            const title = String(p.title ?? "").trim();
+            if (!title)
+                continue;
+            const family = title.split(JM_TITLE_SPLIT)[0].trim() || title;
+            const row = (families[family] ??= { family, products: 0, colours: new Set(), handles: [], prices: [], newest: null });
+            row.products += 1;
+            if (row.handles.length < 3 && p.handle)
+                row.handles.push(String(p.handle));
+            if (p.published_at && String(p.published_at) > String(row.newest ?? ""))
+                row.newest = p.published_at;
+            const variants = Array.isArray(p.variants) ? p.variants : [];
+            for (const v of variants) {
+                const code = readCode(v);
+                if (code?.colour)
+                    row.colours.add(code.colour);
+                const price = variantPrice(v);
+                if (price !== null)
+                    row.prices.push(price);
+            }
+        }
+        if (!Object.keys(families).length)
+            throw new StoreError("No titled products in the catalog sample.");
+        const rows = Object.values(families)
+            .map((r) => ({
+            family: r.family,
+            products: r.products,
+            colourways: r.colours.size,
+            from_price_usd: r.prices.length ? round2(Math.min(...r.prices)) : null,
+            newest_listing: r.newest,
+            example_handles: r.handles,
+        }))
+            .sort((a, b) => b.products - a.products || a.family.localeCompare(b.family))
+            .slice(0, lim);
+        return pretty({
+            store: "Jacques Marie Mage",
+            sample: products.length,
+            families_found: Object.keys(families).length,
+            families: rows,
+            note: "A family is the product title up to its first dash; colourways count the distinct frame codes sold inside it.",
+        });
+    });
+}

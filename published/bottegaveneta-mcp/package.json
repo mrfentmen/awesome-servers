@@ -1,6 +1,6 @@
 {
   "name": "bottegaveneta-mcp",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Bottega Veneta resale listings from Fashionphile and Rebag. Keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/bottegaveneta-mcp",

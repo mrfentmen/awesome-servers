@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories } from "./api.js";
+import { searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, tagTaxonomyCensus, optionVariantMatrix } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -109,9 +109,8 @@ export function createServer() {
         inputSchema: z.object({ sample: z.string().describe("Products to scan (default 600, max 1000).").optional(), limit: z.string().describe("Values per facet to print (default 8, max 18).").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement census locally (paywall removed)
         try {
-            return textError("Not yet implemented: census");
+            return text(await tagTaxonomyCensus(args.sample, args.limit));
         }
         catch (e) {
             return textError(String(e));
@@ -123,9 +122,8 @@ export function createServer() {
         inputSchema: z.object({ sample: z.string().describe("Products to scan (default 500, max 1000).").optional(), limit: z.string().describe("Values per option to print (default 10, max 30).").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement matrix locally (paywall removed)
         try {
-            return textError("Not yet implemented: matrix");
+            return text(await optionVariantMatrix(args.sample, args.limit));
         }
         catch (e) {
             return textError(String(e));

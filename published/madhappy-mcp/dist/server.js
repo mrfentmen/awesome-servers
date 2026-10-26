@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories } from "./api.js";
+import { searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, colorwayCensus, sizeRunAvailability } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -109,9 +109,8 @@ export function createServer() {
         inputSchema: z.object({ sample: z.string().describe("Products to scan (default 500, max 1000).").optional(), limit: z.string().describe("Colourways to print (default 15, max 40).").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement census locally (paywall removed)
         try {
-            return textError("Not yet implemented: census");
+            return text(await colorwayCensus(args.sample, args.limit));
         }
         catch (e) {
             return textError(String(e));
@@ -123,9 +122,8 @@ export function createServer() {
         inputSchema: z.object({ sample: z.string().describe("Products to scan (default 400, max 1000).").optional(), limit: z.string().describe("Thinnest runs to print (default 10, max 25).").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement availability locally (paywall removed)
         try {
-            return textError("Not yet implemented: availability");
+            return text(await sizeRunAvailability(args.sample, args.limit));
         }
         catch (e) {
             return textError(String(e));

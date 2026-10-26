@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { searchListings, listNewest, getListing, priceOverview, comparePrices, findDeals, brandOverview, lineFamilyMix } from "./api.js";
+import { searchListings, listNewest, getListing, priceOverview, comparePrices, findDeals, brandOverview, lineFamilyMix, listStoreCollections, collectionCartierItems } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -130,10 +130,9 @@ export function createServer() {
             limit: z.string().describe("Max collections (default 30, max 60).").optional()
         }),
         annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement collections locally (paywall removed)
+    }, async ({ query, limit }) => {
         try {
-            return textError("Not yet implemented: collections");
+            return text(await listStoreCollections(query, limit));
         }
         catch (e) {
             return textError(String(e));
@@ -150,10 +149,9 @@ export function createServer() {
             condition: z.string().optional().describe("excellent, great, very good, good or fair").optional()
         }),
         annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement items locally (paywall removed)
+    }, async ({ handle, source, limit, max_price: maxPrice, condition }) => {
         try {
-            return textError("Not yet implemented: items");
+            return text(await collectionCartierItems(handle, source, limit, maxPrice, condition));
         }
         catch (e) {
             return textError(String(e));

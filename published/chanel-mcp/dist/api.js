@@ -574,3 +574,93 @@ export async function crossStoreArbitrage(args) {
         widest_gaps: byGap.slice(0, n),
     });
 }
+const roundUsd = (n) => (Number.isFinite(n) ? Math.round(n * 100) / 100 : null);
+/** How the sample splits across the line families the titles name, with each line's stock and price band. */
+export async function lineFamilyMix(sample, minItems) {
+    const per = Math.min(Math.max(Number(sample ?? 150) || 150, 20), 400);
+    const min = Math.max(Number(minItems ?? 1) || 1, 1);
+    const rows = await sampleCatalog(per, [1, 2, 3]);
+    if (!rows.length)
+        throw new ChanelError("No Chanel listings were returned by either store.");
+    const families = new Map();
+    let unmatched = 0;
+    for (const { source: s, p } of rows) {
+        const sl = slim(s.name, s.base, p);
+        const hit = LINE_KEYWORDS.find((l) => l.match.test(String(sl.title ?? "")));
+        if (!hit) {
+            unmatched += 1;
+            continue;
+        }
+        const row = families.get(hit.family) ?? { family: hit.family, listings: 0, available: 0, prices: [], sources: {} };
+        row.listings += 1;
+        if (sl.available)
+            row.available += 1;
+        if (sl.price_usd !== null && sl.price_usd > 0)
+            row.prices.push(sl.price_usd);
+        row.sources[sl.source] = (row.sources[sl.source] ?? 0) + 1;
+        families.set(hit.family, row);
+    }
+    const lines = [...families.values()]
+        .filter((r) => r.listings >= min)
+        .sort((a, b) => b.listings - a.listings)
+        .map((r) => ({
+        family: r.family,
+        listings: r.listings,
+        share_pct: Math.round((r.listings / rows.length) * 1000) / 10,
+        available: r.available,
+        price_usd: r.prices.length
+            ? { min: roundUsd(Math.min(...r.prices)), median: roundUsd(medianOf(r.prices)), max: roundUsd(Math.max(...r.prices)) }
+            : null,
+        sources: r.sources,
+    }));
+    return pretty({
+        brand: "Chanel", sampled_listings: rows.length, lines_matched: lines.length,
+        unmatched_listings: unmatched,
+        mostly: lines.length ? { family: lines[0].family, listings: lines[0].listings, share_pct: lines[0].share_pct } : null,
+        min_listings: min, lines,
+        note: "Lines are matched from listing titles; neither store publishes a line field. Not affiliated with Chanel.",
+    });
+}
+/** Median ask where product type meets condition, with the sample count behind each cell. */
+export async function conditionTypeGrid(sample, minCells) {
+    const per = Math.min(Math.max(Number(sample ?? 200) || 200, 20), 500);
+    const min = Math.max(Number(minCells ?? 1) || 1, 1);
+    const rows = await sampleCatalog(per, [1, 2, 3, 4]);
+    if (!rows.length)
+        throw new ChanelError("No Chanel listings were returned by either store.");
+    const cells = new Map();
+    const typeCounts = new Map();
+    const seenConditions = new Set();
+    for (const { source: s, p } of rows) {
+        const sl = slim(s.name, s.base, p);
+        const type = String(sl.product_type || "unknown");
+        const cond = sl.condition ?? "not reported";
+        typeCounts.set(type, (typeCounts.get(type) ?? 0) + 1);
+        seenConditions.add(cond);
+        const key = `${type}\u0000${cond}`;
+        const cell = cells.get(key) ?? { listings: 0, prices: [] };
+        cell.listings += 1;
+        if (sl.price_usd !== null && sl.price_usd > 0)
+            cell.prices.push(sl.price_usd);
+        cells.set(key, cell);
+    }
+    const conditions = [...CONDITIONS, "not reported"].filter((c) => seenConditions.has(c));
+    const grid = [...typeCounts.entries()]
+        .filter(([, n]) => n >= min)
+        .sort((a, b) => b[1] - a[1])
+        .map(([type, listings]) => {
+        const row = { product_type: type, listings, cells: {} };
+        for (const c of conditions) {
+            const cell = cells.get(`${type}\u0000${c}`);
+            if (!cell)
+                continue;
+            row.cells[c] = { listings: cell.listings, median_usd: cell.prices.length ? roundUsd(medianOf(cell.prices)) : null };
+        }
+        return row;
+    });
+    return pretty({
+        brand: "Chanel", sampled_listings: rows.length, conditions, min_listings: min,
+        product_types: grid.length, grid,
+        note: "A cell is the median asking price of listings carrying both that product type and that condition; an absent cell means the sample held no such listing. Not affiliated with Chanel.",
+    });
+}

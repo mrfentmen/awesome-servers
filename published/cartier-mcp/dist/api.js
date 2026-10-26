@@ -429,3 +429,100 @@ export async function lineFamilyMix(args) {
         note: "Grouped by product-line keywords appearing in the listing title. The stores do not publish a line field, so this is a title match, not a verified model. Not affiliated with Cartier.",
     });
 }
+// ---- muxC tools: store collections ----
+// Both resale sources are Shopify storefronts, so the collection index and the
+// per-collection product list come from the same json endpoints as the catalog.
+function collectionsOrigin(catalogUrl) {
+    return new URL(catalogUrl).origin;
+}
+/** Curated collections on both resale stores; store_products is the whole collection. */
+export async function listStoreCollections(query, limit) {
+    const lim = Math.min(Math.max(Number(limit ?? 30) || 30, 1), 60);
+    const wanted = query ? String(query).trim().toLowerCase() : null;
+    const rows = [];
+    const bySource = {};
+    for (const s of SOURCES) {
+        bySource[s.name] = 0;
+        try {
+            const all = [];
+            for (const page of [1, 2, 3]) {
+                const data = await getJson(`${collectionsOrigin(s.catalog)}/collections.json?limit=250&page=${page}`);
+                const list = Array.isArray(data.collections) ? data.collections : [];
+                if (!list.length)
+                    break;
+                all.push(...list);
+            }
+            for (const raw of all) {
+                const c = raw;
+                if (typeof c.title !== "string" || typeof c.handle !== "string")
+                    continue;
+                if (wanted && !c.title.toLowerCase().includes(wanted))
+                    continue;
+                bySource[s.name] += 1;
+                rows.push({
+                    source: s.name,
+                    title: c.title,
+                    handle: c.handle,
+                    store_products: typeof c.products_count === "number" ? c.products_count : null,
+                });
+            }
+        }
+        catch { /* source down - keep the other */
+        }
+    }
+    if (!rows.length) {
+        throw new CartierError(wanted
+            ? `Neither store published a collection whose title contains '${query}'.`
+            : "Neither store published a collection index.");
+    }
+    return pretty({
+        brand: "Cartier", query: query ?? null, matched: rows.length,
+        returned: Math.min(rows.length, lim), truncated: rows.length > lim,
+        by_source: bySource,
+        note: "Handles feed collection_cartier_items. store_products counts the whole collection on that store, not just its Cartier items. A source showing 0 published no matching collection index.",
+        collections: rows.slice(0, lim),
+    });
+}
+/** Every Cartier listing inside one store collection, looked up on both stores. */
+export async function collectionCartierItems(handle, source, limit, maxPrice, condition) {
+    const n = Math.min(Math.max(Number(limit ?? 20) || 20, 1), 50);
+    const mp = maxPrice !== undefined ? Number(maxPrice) : undefined;
+    const cond = condition !== undefined ? normCondition(condition) : undefined;
+    if (condition !== undefined && cond === null)
+        throw new CartierError(`Unknown condition '${condition}'. Use: ${CONDITIONS.join(", ")}.`);
+    const sources = source ? SOURCES.filter((s) => s.name === source) : SOURCES;
+    if (!sources.length)
+        throw new CartierError(`Unknown source '${source}'. Use ${SOURCES.map((s) => s.name).join(" or ")}.`);
+    const out = [];
+    let brandItems = 0;
+    for (const s of sources) {
+        try {
+            for (const page of [1, 2, 3]) {
+                const data = await getJson(`${collectionsOrigin(s.catalog)}/collections/${encodeURIComponent(handle)}/products.json?limit=250&page=${page}`);
+                const products = Array.isArray(data.products) ? data.products : [];
+                if (!products.length)
+                    break;
+                for (const raw of products) {
+                    if (!isProduct(raw) || !matchesBrand(raw.vendor))
+                        continue;
+                    brandItems += 1;
+                    const sl = slim(s.name, s.base, raw);
+                    if (passes(sl, mp, cond ?? undefined))
+                        out.push(sl);
+                }
+            }
+        }
+        catch { /* collection or source missing - keep the other */ }
+    }
+    if (!brandItems) {
+        throw new CartierError(`Collection '${handle}' has no Cartier listings on ${sources.map((s) => s.name).join(", ")}.`);
+    }
+    out.sort((a, b) => String(b.published_at ?? "").localeCompare(String(a.published_at ?? "")));
+    return pretty({
+        brand: "Cartier", collection: handle, sources: sources.map((s) => s.name),
+        cartier_items_matched: brandItems, matched_filters: out.length,
+        returned: Math.min(out.length, n), truncated: out.length > n,
+        note: "Counts and prices cover Cartier listings only; the collection itself is larger. Not affiliated with Cartier.",
+        listings: out.slice(0, n),
+    });
+}

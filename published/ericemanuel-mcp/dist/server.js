@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, catalogFacets } from "./api.js";
+import { searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, catalogFacets, collectionCatalog, variantMatrix } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -113,9 +113,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement catalog locally (paywall removed)
         try {
-            return textError("Not yet implemented: catalog");
+            return text(await collectionCatalog(args));
         }
         catch (e) {
             return textError(String(e));
@@ -130,9 +129,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement matrix locally (paywall removed)
         try {
-            return textError("Not yet implemented: matrix");
+            return text(await variantMatrix(args.handle, args.include_sold_out));
         }
         catch (e) {
             return textError(String(e));

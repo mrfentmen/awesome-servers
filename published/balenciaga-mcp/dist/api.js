@@ -506,3 +506,106 @@ function cents(v) {
     const n = Number(v);
     return Number.isFinite(n) ? n / 100 : null;
 }
+// Absent money fields arrive as null or ""; Number() would turn those into 0.
+function centsIfPresent(v) {
+    if (v === null || v === undefined || String(v).trim() === "")
+        return null;
+    return cents(v);
+}
+/** Every variant behind one listing, with the stock and price each carries. */
+export async function listingVariants(handle, store) {
+    const sources = pickLuxStore(store);
+    const failures = [];
+    for (const s of sources) {
+        let p;
+        try {
+            p = await luxFetchJson(`${s.host}/products/${encodeURIComponent(handle)}.js`);
+        }
+        catch (e) {
+            failures.push(`${s.name}: ${errorMessage(e)}`);
+            continue;
+        }
+        const raw = Array.isArray(p.variants) ? p.variants : [];
+        if (!raw.length) {
+            failures.push(`${s.name}: listing carries no variants`);
+            continue;
+        }
+        const variants = raw.map((v) => ({
+            title: String(v.title ?? "").trim() || null,
+            sku: v.sku ? String(v.sku) : null,
+            price_usd: cents(v.price),
+            compare_at_usd: centsIfPresent(v.compare_at_price),
+            available: v.available === true,
+            options: [v.option1, v.option2, v.option3].filter((o) => o !== null && o !== undefined && String(o).trim() !== ""),
+        }));
+        const priced = variants.map((v) => v.price_usd).filter((n) => n !== null && Number.isFinite(n) && n > 0);
+        const inStock = variants.filter((v) => v.available);
+        return pretty({
+            brand: "Balenciaga",
+            source: s.name,
+            handle: p.handle ?? handle,
+            title: p.title ?? null,
+            product_type: p.product_type ?? null,
+            vendor: p.vendor ?? null,
+            url: `${s.host}/products/${String(p.handle ?? handle)}`,
+            variant_count: variants.length,
+            in_stock_variants: inStock.length,
+            sold_out: inStock.length === 0,
+            price_usd: priced.length ? Math.min(...priced) : null,
+            price_range_usd: priced.length ? { min: Math.min(...priced), max: Math.max(...priced) } : null,
+            variants,
+            note: "Per-variant stock as the store publishes it; a variant is buyable only while it says available.",
+        });
+    }
+    throw new BalenciagaError(`Listing '${handle}' not readable on ${sources.map((s) => s.name).join(", ")} (${failures.join("; ")}).`);
+}
+/** The brand rows inside one gift-shop collection, read from its own json. */
+export async function collectionProducts(handle, store, limit) {
+    const n = Math.min(Number(limit ?? 20) || 20, 50);
+    const sources = pickLuxStore(store);
+    const out = [];
+    const perSource = {};
+    let inCollection = 0;
+    for (const s of sources) {
+        let products;
+        try {
+            const data = await luxFetchJson(`${s.host}/collections/${encodeURIComponent(handle)}/products.json?limit=250&page=1`);
+            products = Array.isArray(data.products) ? data.products : [];
+        }
+        catch {
+            perSource[s.name] = { error: "collection not readable" };
+            continue;
+        }
+        const brandRows = [];
+        for (const raw of products) {
+            if (!isProduct(raw))
+                continue;
+            inCollection += 1;
+            if (!matchesBrand(raw.vendor))
+                continue;
+            brandRows.push(slim(s.name, `${s.host}/products`, raw));
+        }
+        perSource[s.name] = { products_in_collection: products.length, brand_listings: brandRows.length };
+        out.push(...brandRows);
+    }
+    if (!out.length) {
+        const looked = Object.entries(perSource).map(([name, v]) => `${name}: ${v.error ?? `${v.products_in_collection} products, ${v.brand_listings} Balenciaga`}`).join("; ");
+        throw new BalenciagaError(`Collection '${handle}' has no Balenciaga listings (${looked || "nothing readable"}).`);
+    }
+    out.sort((a, b) => String(b.published_at ?? "").localeCompare(String(a.published_at ?? "")));
+    return pretty({
+        brand: "Balenciaga",
+        collection: handle,
+        products_in_collection: inCollection,
+        brand_listings: out.length,
+        price_range_usd: (() => {
+            const ps = out.map((x) => x.price_usd).filter((x) => x !== null && x > 0);
+            return ps.length ? { min: Math.min(...ps), max: Math.max(...ps) } : null;
+        })(),
+        per_source: perSource,
+        returned: Math.min(out.length, n),
+        truncated: out.length > n,
+        listings: out.slice(0, n),
+        note: "Collection json lists every brand in the collection; only Balenciaga rows are returned.",
+    });
+}

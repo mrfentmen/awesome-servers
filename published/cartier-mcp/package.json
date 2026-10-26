@@ -1,6 +1,6 @@
 {
   "name": "cartier-mcp",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Cartier resale listings from Fashionphile and Rebag. Keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/cartier-mcp",

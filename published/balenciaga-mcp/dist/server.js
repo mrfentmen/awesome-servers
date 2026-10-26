@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { searchListings, listNewest, getListing, priceOverview, comparePrices, findDeals, brandOverview, listCollections, browseCollection, find_by_attribute } from "./api.js";
+import { searchListings, listNewest, getListing, priceOverview, comparePrices, findDeals, brandOverview, listCollections, browseCollection, find_by_attribute, listingVariants, collectionProducts } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -182,9 +182,8 @@ export function createServer() {
         inputSchema: z.object({ handle: z.string().describe("Listing handle."), store: z.string().describe("fashionphile or rebag; omit to try both.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement variants locally (paywall removed)
         try {
-            return textError("Not yet implemented: variants");
+            return text(await listingVariants(args.handle, args.store));
         }
         catch (e) {
             return textError(String(e));
@@ -196,9 +195,8 @@ export function createServer() {
         inputSchema: z.object({ handle: z.string().describe("Collection handle, e.g. handbags."), store: z.string().describe("fashionphile or rebag.").optional(), limit: z.number().describe("Max products.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement products locally (paywall removed)
         try {
-            return textError("Not yet implemented: products");
+            return text(await collectionProducts(args.handle, args.store, args.limit));
         }
         catch (e) {
             return textError(String(e));

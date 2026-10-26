@@ -208,3 +208,76 @@ export function listCollections(limit) {
         return pretty({ store: "Beis", source: COLLECTIONS, returned: rows.length, summed_products_count: total, collections: rows });
     });
 }
+// ---- muxF tools:
+function medianOf(values) {
+    const a = [...values].sort((x, y) => x - y);
+    if (!a.length)
+        return null;
+    return a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2;
+}
+function round2(n) {
+    const v = Number(n);
+    return Number.isFinite(v) ? Math.round(v * 100) / 100 : null;
+}
+function storeOrigin() {
+    return new URL(COLLECTIONS).origin;
+}
+export function collectionProducts(handle, limit, productType) {
+    const n = Math.min(Number(limit ?? 20) || 20, 50);
+    const handleText = String(handle ?? "").trim();
+    return getJson(`${storeOrigin()}/collections/${encodeURIComponent(handleText)}/products.json?limit=250&page=1`).then((data) => {
+        const products = Array.isArray(data.products) ? data.products : [];
+        if (!products.length)
+            throw new StoreError(`Collection '${handleText}' is empty or does not exist. Check the handle with list_collections.`);
+        const out = [];
+        for (const p of products) {
+            const sl = slim(p);
+            if (productType && !sl.product_type.toLowerCase().includes(String(productType).toLowerCase()))
+                continue;
+            out.push(sl);
+        }
+        if (!out.length)
+            throw new StoreError(`Collection '${handleText}' holds ${products.length} product(s), none of type '${productType}'.`);
+        return pretty({
+            store: "Beis", collection: handleText, product_type: productType ?? null,
+            scanned: products.length, matched: out.length, returned: Math.min(out.length, n),
+            truncated: out.length > n, listings: out.slice(0, n),
+            note: "Price and availability come from the collection's own product json.",
+        });
+    });
+}
+export function typePriceBands(sample) {
+    const per = Math.min(Number(sample ?? 250) || 250, 500);
+    return sampleCatalog(per, [1, 2]).then((products) => {
+        if (!products.length)
+            throw new StoreError("No products found in the catalog sample.");
+        const groups = new Map();
+        let unpriced = 0;
+        for (const p of products) {
+            const sl = slim(p);
+            if (sl.price_usd === null || sl.price_usd <= 0) {
+                unpriced += 1;
+                continue;
+            }
+            const type = sl.product_type || "unknown";
+            if (!groups.has(type))
+                groups.set(type, []);
+            groups.get(type).push(sl.price_usd);
+        }
+        if (!groups.size)
+            throw new StoreError("No priced products found in the catalog sample.");
+        const types = [...groups.entries()]
+            .map(([type, prices]) => ({
+            type,
+            products: prices.length,
+            min_usd: round2(Math.min(...prices)),
+            median_usd: round2(medianOf(prices)),
+            max_usd: round2(Math.max(...prices)),
+        }))
+            .sort((a, b) => b.products - a.products);
+        return pretty({
+            store: "Beis", sample: products.length, unpriced, types,
+            note: "Asking-price min, median and max within each product type; a product counts once, at its lowest variant price.",
+        });
+    });
+}

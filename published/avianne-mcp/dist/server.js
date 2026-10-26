@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections, browseCollection, find_by_size } from "./api.js";
+import { searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections, browseCollection, find_by_size, variantDetail, catalogByPage } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -159,9 +159,8 @@ export function createServer() {
         inputSchema: z.object({ handle: z.string().describe("Product handle, e.g. 14k-60-grams-copy."), }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement detail locally (paywall removed)
         try {
-            return textError("Not yet implemented: detail");
+            return text(await variantDetail(args.handle));
         }
         catch (e) {
             return textError(String(e));
@@ -173,9 +172,8 @@ export function createServer() {
         inputSchema: z.object({ page: z.number().describe("Catalog page number.").optional(), limit: z.number().describe("Products per page.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement page locally (paywall removed)
         try {
-            return textError("Not yet implemented: page");
+            return text(await catalogByPage(args.page, args.limit));
         }
         catch (e) {
             return textError(String(e));

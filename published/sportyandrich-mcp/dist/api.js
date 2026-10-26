@@ -291,3 +291,109 @@ export async function storePolicies(args) {
         "This is the storefront's own published text, extracted and shortened, with the tags stripped; it is not legal advice and it is not a summary written by anyone, so a shopper still needs the page itself for the exact wording. Not affiliated with the store.",
     ].join("\n");
 }
+const SR_CATEGORIES = [
+    { label: "whole-catalogue", handleOnly: true, re: /^(all|everything|shop-?all|view-?all|all-?products|all-?items|full-?catalog(ue)?)$/i },
+    { label: "audience", re: /\b(women|woman|mens?|kids?|children|unisex|boys?|girls?)\b/i },
+    { label: "recency", re: /\b(new|newest|arrivals?|just-?in|latest|pre-?order|coming-?soon|restock)\b/i },
+    { label: "promotional", re: /\b(sale|sold-?out|archive|clearance|outlet|discount|last-?chance|gift)\b/i },
+];
+// A collection is filed by what its own title and handle say it is for; anything
+// that names neither a season, an audience nor a promotion is plain merchandising.
+function srCollectionKind(c) {
+    const handle = String(c.handle ?? "");
+    const hay = `${c.title ?? ""} ${handle}`;
+    for (const rule of SR_CATEGORIES) {
+        if (rule.re.test(rule.handleOnly ? handle : hay))
+            return rule.label;
+    }
+    return "merchandising";
+}
+function srMedian(nums) {
+    const a = [...nums].sort((x, y) => x - y);
+    if (!a.length)
+        return null;
+    return a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2;
+}
+const srMoney = (n) => `$${Number(n).toFixed(2)}`;
+/**
+ * How the store files its own catalogue: the collection index the storefront
+ * publishes, what each collection is for, where the largest ones overlap, and
+ * the asking-price range inside them. Product types are empty across this
+ * catalogue, so collections are the only taxonomy the store actually keeps.
+ */
+export async function collectionCensus(args) {
+    const listCap = Math.min(Math.max(Math.trunc(Number(args.limit ?? 20) || 20), 1), 30);
+    const priceCap = Math.min(Math.max(Math.trunc(Number(args.prices ?? 3) || 3), 0), 8);
+    const body = await srGet("collections.json?limit=250");
+    const collections = Array.isArray(body.collections) ? body.collections : [];
+    if (!collections.length)
+        throw new StoreError("The storefront published no collections.");
+    const rows = collections.map((c) => ({
+        title: String(c.title ?? c.handle ?? "untitled"),
+        handle: String(c.handle ?? ""),
+        count: Math.trunc(c.products_count ?? 0),
+        updated: String(c.updated_at ?? "").slice(0, 10) || "not reported",
+        kind: srCollectionKind(c),
+    }));
+    const nonEmpty = rows.filter((r) => r.count > 0 && r.handle);
+    const shown = nonEmpty.slice().sort((a, b) => b.count - a.count).slice(0, listCap);
+    const kindCounts = {};
+    for (const r of nonEmpty)
+        kindCounts[r.kind] = (kindCounts[r.kind] ?? 0) + 1;
+    const deep = nonEmpty
+        .slice()
+        .sort((a, b) => b.count - a.count)
+        .slice(0, Math.max(priceCap, 2))
+        .slice(0, 6);
+    const sets = new Map();
+    for (const r of deep) {
+        const page = await srGet(`collections/${encodeURIComponent(r.handle)}/products.json?limit=250`);
+        const products = Array.isArray(page.products) ? page.products : [];
+        const prices = products.map((p) => slim(p).price_usd).filter((n) => Number.isFinite(n) && n > 0);
+        sets.set(r.handle, { handles: new Set(products.map((p) => String(p.handle ?? ""))), prices });
+    }
+    const overlap = [];
+    const deepRows = deep.filter((r) => sets.has(r.handle));
+    for (let i = 0; i < deepRows.length; i += 1) {
+        for (let j = i + 1; j < deepRows.length; j += 1) {
+            const a = sets.get(deepRows[i].handle);
+            const b = sets.get(deepRows[j].handle);
+            let shared = 0;
+            for (const h of a.handles)
+                if (b.handles.has(h))
+                    shared += 1;
+            if (shared)
+                overlap.push({ a: deepRows[i].handle, b: deepRows[j].handle, shared, a_size: a.handles.size, b_size: b.handles.size });
+        }
+    }
+    overlap.sort((x, y) => y.shared - x.shared);
+    const priced = deepRows.slice(0, priceCap).filter((r) => sets.get(r.handle).prices.length);
+    return [
+        `Sporty & Rich collection census — ${rows.length} published collection(s), ${nonEmpty.length} with products.`,
+        "",
+        `Largest collections (of ${nonEmpty.length}):`,
+        ...shown.map((r, i) => `  ${String(i + 1).padStart(2)}. ${r.title} — ${r.count} product(s) — ${r.kind} — /collections/${r.handle} — updated ${r.updated}`),
+        nonEmpty.length > shown.length ? `  (+${nonEmpty.length - shown.length} more not listed)` : "",
+        "",
+        `What each collection is for: ${Object.entries(kindCounts).map(([k, v]) => `${k} ${v}`).join(", ")}`,
+        "",
+        `Overlap between the ${deepRows.length} largest collections (shared product handles):`,
+        ...(overlap.length
+            ? overlap.slice(0, 8).map((o) => `  ${o.a} ∩ ${o.b} — ${o.shared} shared of ${o.a_size} / ${o.b_size}`)
+            : ["  no shared products between them"]),
+        "",
+        ...(priceCap === 0
+            ? []
+            : priced.length
+                ? [
+                `Asking-price range inside the largest collections:`,
+                    ...priced.map((r) => {
+                        const prices = sets.get(r.handle).prices;
+                        return `  ${r.handle} — ${prices.length} priced product(s): ${srMoney(Math.min(...prices))} – ${srMoney(Math.max(...prices))}, median ${srMoney(srMedian(prices))}`;
+                    }),
+                ]
+                : [`No priced products found in the ${deepRows.length} largest collections.`]),
+        "",
+        "Counts are the storefront's own collection metadata; overlap and prices come from the products inside each collection, read up to 250 per collection. Not affiliated with the store.",
+    ].join("\n");
+}

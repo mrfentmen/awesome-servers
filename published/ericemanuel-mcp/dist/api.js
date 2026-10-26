@@ -320,3 +320,157 @@ export async function catalogFacets(args) {
     lines.push("", "Pass a facet and a value to list the products behind it, for example facet \"Material\" value \"Mesh\".");
     return lines.join("\n");
 }
+// ---- muxF tools:
+function round2(n) {
+    const v = Number(n);
+    return Number.isFinite(v) ? Math.round(v * 100) / 100 : null;
+}
+function storeOrigin() {
+    return new URL(CATALOG).origin;
+}
+function collectionRows(collections) {
+    return (Array.isArray(collections) ? collections : [])
+        .filter((c) => c && typeof c.handle === "string")
+        .map((c) => ({
+        title: c.title ?? "(untitled)",
+        handle: c.handle,
+        products_count: typeof c.products_count === "number" ? c.products_count : null,
+        sort_order: c.sort_order ?? null,
+        published_at: c.published_at ?? null,
+        updated_at: c.updated_at ?? null,
+    }));
+}
+// manual and best-selling are the store's own ordering, which the json endpoint
+// does not expose; for those the returned order is kept as-is.
+function sortListing(list, sortBy) {
+    const out = [...list];
+    const firstPrice = (p) => {
+        const v = Array.isArray(p?.variants) ? p.variants[0] : null;
+        const n = Number(v?.price);
+        return Number.isFinite(n) ? n : null;
+    };
+    switch (sortBy) {
+        case "price-ascending":
+            out.sort((a, b) => (firstPrice(a) ?? Infinity) - (firstPrice(b) ?? Infinity));
+            break;
+        case "price-descending":
+            out.sort((a, b) => (firstPrice(b) ?? -Infinity) - (firstPrice(a) ?? -Infinity));
+            break;
+        case "title-ascending":
+            out.sort((a, b) => String(a?.title ?? "").localeCompare(String(b?.title ?? "")));
+            break;
+        case "title-descending":
+            out.sort((a, b) => String(b?.title ?? "").localeCompare(String(a?.title ?? "")));
+            break;
+        case "created-ascending":
+            out.sort((a, b) => String(a?.published_at ?? "").localeCompare(String(b?.published_at ?? "")));
+            break;
+        case "created-descending":
+            out.sort((a, b) => String(b?.published_at ?? "").localeCompare(String(a?.published_at ?? "")));
+            break;
+        default:
+            break;
+    }
+    return out;
+}
+export function collectionCatalog(args) {
+    const limit = Math.min(Math.max(Math.floor(Number(args?.limit ?? 25)) || 25, 1), 250);
+    const want = args?.collection ? String(args.collection).trim() : "";
+    const sortBy = String(args?.sort_by ?? "manual").trim();
+    const serverSorted = sortBy === "manual" || sortBy === "best-selling";
+    return getJson(`${storeOrigin()}/collections.json?limit=250&page=1`).then((data) => {
+        const all = collectionRows(data.collections);
+        if (!all.length)
+            throw new StoreError("ericemanuel.com returned no collections.");
+        if (!want) {
+            return pretty({
+                store: "Eric Emanuel",
+                total_collections: all.length,
+                returned: Math.min(all.length, limit),
+                collections: all.slice(0, limit),
+                note: "The store's own collection list; product_type is empty on every product here, so collections are the working taxonomy.",
+            });
+        }
+        const needle = want.toLowerCase();
+        const hit = all.find((c) => c.handle === needle || c.title.toLowerCase() === needle)
+            ?? all.find((c) => c.handle.includes(needle) || c.title.toLowerCase().includes(needle));
+        if (!hit)
+            throw new StoreError(`No collection matches '${want}'. Handles include: ${all.slice(0, 12).map((c) => c.handle).join(", ")}.`);
+        return getJson(`${storeOrigin()}/collections/${encodeURIComponent(hit.handle)}/products.json?limit=250&page=1`).then((pd) => {
+            const products = Array.isArray(pd.products) ? pd.products : [];
+            if (!products.length)
+                throw new StoreError(`Collection '${hit.handle}' returned no products.`);
+            const ordered = sortListing(products, sortBy);
+            const listings = ordered.slice(0, limit).map((p) => slim(p));
+            return pretty({
+                store: "Eric Emanuel",
+                collection: { title: hit.title, handle: hit.handle, products_count: hit.products_count, published_at: hit.published_at },
+                requested_sort: sortBy,
+                sorted_locally: !serverSorted,
+                scanned: products.length,
+                returned: listings.length,
+                available_count: listings.filter((s) => s.available).length,
+                listings,
+                note: serverSorted
+                    ? "Store order as the json endpoint returns it; manual and best-selling ordering are not exposed there."
+                    : "Sorted here from the collection's own products, because the json endpoint has no sort parameter.",
+            });
+        });
+    });
+}
+export function variantMatrix(handle, includeSoldOut) {
+    const keepAll = includeSoldOut !== false;
+    const h = String(handle ?? "").trim();
+    if (!h)
+        throw new StoreError("Give a product handle from search_products, list_newest or collection_catalog.");
+    return getJson(`${PRODUCT_BASE}/${encodeURIComponent(h)}.js`).then((p) => {
+        if (!p || typeof p !== "object" || !Array.isArray(p.variants))
+            throw new StoreError(`No product json for handle '${h}'. Check the handle first.`);
+        const rows = p.variants.map((v) => {
+            const parts = parseParts(v.title);
+            const size = parts.length ? parts[parts.length - 1] : String(v.title ?? "");
+            const sku = typeof v.sku === "string" ? v.sku.trim() : null;
+            return {
+                size,
+                options: parts,
+                sku,
+                sku_parts: sku ? sku.split("-") : null,
+                price_usd: round2(v.price),
+                compare_at_usd: round2(v.compare_at_price),
+                available: v.available === true,
+            };
+        });
+        const inStock = rows.filter((r) => r.available);
+        const visible = keepAll ? rows : inStock;
+        if (!visible.length)
+            throw new StoreError(`Every size of '${h}' is sold out, so there is nothing to show with include_sold_out off.`);
+        const skus = rows.map((r) => r.sku).filter((s) => typeof s === "string" && s);
+        const longestCommonPrefix = (list) => {
+            if (!list.length)
+                return null;
+            let prefix = list[0];
+            for (const s of list) {
+                while (prefix && !s.startsWith(prefix))
+                    prefix = prefix.slice(0, -1);
+                if (!prefix)
+                    return null;
+            }
+            return prefix;
+        };
+        const prefix = longestCommonPrefix(skus);
+        return pretty({
+            store: "Eric Emanuel",
+            handle: p.handle ?? h,
+            title: p.title ?? null,
+            url: `${PRODUCT_BASE}/${p.handle ?? h}`,
+            options: (Array.isArray(p.options) ? p.options : []).map((o) => (typeof o === "string" ? o : (o?.name ?? null))).filter(Boolean),
+            sizes_in_run: rows.length,
+            available_sizes: inStock.map((r) => r.size),
+            sold_out_sizes: rows.filter((r) => !r.available).map((r) => r.size),
+            all_sold_out: rows.length > 0 && inStock.length === 0,
+            sku_prefix: prefix && prefix.length > 1 ? prefix.replace(/-+$/, "") : null,
+            variants: visible,
+            note: "One row per size with its own price and stock flag; a product can be in the catalog and completely sold out.",
+        });
+    });
+}

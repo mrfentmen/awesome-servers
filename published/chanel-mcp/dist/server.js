@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { searchListings, listNewest, getListing, priceOverview, comparePrices, findDeals, brandOverview, listCollections, browseCollection, find_by_attribute, crossStoreArbitrage } from "./api.js";
+import { searchListings, listNewest, getListing, priceOverview, comparePrices, findDeals, brandOverview, listCollections, browseCollection, find_by_attribute, crossStoreArbitrage, lineFamilyMix, conditionTypeGrid } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -185,9 +185,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement mix locally (paywall removed)
         try {
-            return textError("Not yet implemented: mix");
+            return text(await lineFamilyMix(args.sample, args.min_items));
         }
         catch (e) {
             return textError(String(e));
@@ -202,9 +201,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement grid locally (paywall removed)
         try {
-            return textError("Not yet implemented: grid");
+            return text(await conditionTypeGrid(args.sample, args.min_cells));
         }
         catch (e) {
             return textError(String(e));

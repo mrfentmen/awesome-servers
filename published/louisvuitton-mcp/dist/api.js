@@ -358,3 +358,144 @@ export async function brandOverview() {
 const LV_MONOGRAM_CODES = [
     "VLV", "LV", "GO", "TW", "GM", "PM", "MM", "BS", "DM", "OG", "TR", "MV", "BG", "EO", "RS", "SS",
 ];
+// Most specific first: a "Monogram Reverse" bag must not fall through to plain
+// "Monogram". Matched against the listing title and its tags.
+const LV_MONOGRAMS = [
+    { name: "Monogram Reverse", match: /monogram\s*reverse|reverse\s*monogram/ },
+    { name: "Monogram Eclipse", match: /monogram\s*eclipse|eclipse\s*monogram/ },
+    { name: "Monogram Macassar", match: /monogram\s*macassar|macassar/ },
+    { name: "Monogram Giant", match: /monogram\s*giant|giant\s*monogram/ },
+    { name: "Monogram Denim", match: /monogram\s*denim|denim\s*monogram/ },
+    { name: "Monogram Empreinte", match: /monogram\s*empreinte/ },
+    { name: "Monogram Vernis", match: /monogram\s*vernis/ },
+    { name: "Damier Ebene", match: /damier\s*eb[eè]ne/ },
+    { name: "Damier Azur", match: /damier\s*azur/ },
+    { name: "Damier Graphite", match: /damier\s*graphite/ },
+    { name: "Damier Infini", match: /damier\s*infini/ },
+    { name: "Empreinte", match: /empreinte/ },
+    { name: "Vernis", match: /vernis/ },
+    { name: "Taigarama", match: /taigarama/ },
+    { name: "Taurillon", match: /taurillon/ },
+    { name: "Aerogram", match: /aerogram/ },
+    { name: "Multicolore", match: /multicolore/ },
+    { name: "\u00c9pi", match: /\b[e\u00e9]pi\b/ },
+    { name: "Damier", match: /damier/ },
+    { name: "Monogram", match: /monogram/ },
+];
+const monogramOf = (title, tags) => {
+    const hay = `${title ?? ""} ${Array.isArray(tags) ? tags.join(" ") : ""}`.toLowerCase();
+    const hit = LV_MONOGRAMS.find((m) => m.match.test(hay));
+    return hit ? hit.name : null;
+};
+const lvRound = (n) => (Number.isFinite(n) ? Math.round(n * 100) / 100 : null);
+const lvMedian = (values) => {
+    const a = [...values].sort((x, y) => x - y);
+    if (!a.length)
+        return NaN;
+    return a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2;
+};
+/** Listings, stock, median ask and price range per monogram, read from titles and tags. */
+export async function monogramMatrix(limit, sample) {
+    const n = Math.min(Math.max(Number(limit ?? 12) || 12, 1), 20);
+    const per = Math.min(Math.max(Number(sample ?? 400) || 400, 20), 1000);
+    const pages = [];
+    for (let i = 1; i <= Math.ceil(per / 250); i++)
+        pages.push(i);
+    const rows = await sampleCatalog(per, pages);
+    if (!rows.length)
+        throw new LouisVuittonError("No Louis Vuitton listings were returned by either store.");
+    const groups = new Map();
+    let unmatched = 0;
+    for (const { source: s, p } of rows) {
+        const sl = slim(s.name, s.base, p);
+        const mono = monogramOf(sl.title, p.tags);
+        if (!mono) {
+            unmatched += 1;
+            continue;
+        }
+        const row = groups.get(mono) ?? { monogram: mono, listings: 0, available: 0, prices: [], sources: {} };
+        row.listings += 1;
+        if (sl.available)
+            row.available += 1;
+        if (sl.price_usd !== null && sl.price_usd > 0)
+            row.prices.push(sl.price_usd);
+        row.sources[sl.source] = (row.sources[sl.source] ?? 0) + 1;
+        groups.set(mono, row);
+    }
+    const matrix = [...groups.values()]
+        .sort((a, b) => b.listings - a.listings)
+        .slice(0, n)
+        .map((r) => ({
+        monogram: r.monogram,
+        listings: r.listings,
+        share_pct: Math.round((r.listings / rows.length) * 1000) / 10,
+        available: r.available,
+        median_usd: r.prices.length ? lvRound(lvMedian(r.prices)) : null,
+        price_usd: r.prices.length
+            ? { min: lvRound(Math.min(...r.prices)), max: lvRound(Math.max(...r.prices)) }
+            : null,
+        sources: r.sources,
+    }));
+    return pretty({
+        brand: "Louis Vuitton", sampled_listings: rows.length,
+        monograms_found: groups.size, unmatched_listings: unmatched,
+        returned: matrix.length, matrix,
+        note: "Monograms are read from listing titles and tags, most specific first. Asking prices, not appraisals. Not affiliated with Louis Vuitton.",
+    });
+}
+/** How much of each source's book was listed recently, with the median and oldest age. */
+export async function listingAgeLookback(sample) {
+    const per = Math.min(Math.max(Number(sample ?? 400) || 400, 20), 1000);
+    const pages = [];
+    for (let i = 1; i <= Math.ceil(per / 250); i++)
+        pages.push(i);
+    const rows = await sampleCatalog(per, pages);
+    if (!rows.length)
+        throw new LouisVuittonError("No Louis Vuitton listings were returned by either store.");
+    const now = Date.now();
+    const DAY = 24 * 60 * 60 * 1000;
+    const buckets = [7, 30, 90, 365];
+    const bySource = new Map();
+    let undated = 0;
+    for (const { source: s, p } of rows) {
+        const sl = slim(s.name, s.base, p);
+        const t = Date.parse(String(sl.published_at ?? ""));
+        if (!Number.isFinite(t)) {
+            undated += 1;
+            continue;
+        }
+        const ageDays = (now - t) / DAY;
+        if (ageDays < 0)
+            continue;
+        const row = bySource.get(sl.source) ?? { source: sl.source, dated: 0, ages: [], recent: Object.fromEntries(buckets.map((b) => [`last_${b}_days`, 0])) };
+        row.dated += 1;
+        row.ages.push(ageDays);
+        for (const b of buckets) {
+            if (ageDays <= b)
+                row.recent[`last_${b}_days`] += 1;
+        }
+        bySource.set(sl.source, row);
+    }
+    if (!bySource.size)
+        throw new LouisVuittonError("Neither store published a usable listing date in this sample, so age cannot be measured.");
+    const sources = [...bySource.values()].map((r) => {
+        const ages = [...r.ages].sort((a, b) => a - b);
+        const share = {};
+        for (const b of buckets)
+            share[`last_${b}_days_pct`] = Math.round((r.recent[`last_${b}_days`] / r.dated) * 1000) / 10;
+        return {
+            source: r.source,
+            dated_listings: r.dated,
+            recent_counts: r.recent,
+            recent_share_pct: share,
+            median_age_days: Math.round(lvMedian(ages) * 10) / 10,
+            oldest_age_days: Math.round(ages[ages.length - 1] * 10) / 10,
+            newest_age_days: Math.round(ages[0] * 10) / 10,
+        };
+    }).sort((a, b) => a.median_age_days - b.median_age_days);
+    return pretty({
+        brand: "Louis Vuitton", sampled_listings: rows.length, undated_listings: undated,
+        windows_days: buckets, sources,
+        note: "Age is measured from the listing's published_at against today. Asking prices, not appraisals. Not affiliated with Louis Vuitton.",
+    });
+}

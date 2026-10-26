@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { searchListings, listNewest, getListing, priceOverview, comparePrices, findDeals, brandOverview } from "./api.js";
+import { searchListings, listNewest, getListing, priceOverview, comparePrices, findDeals, brandOverview, monogramMatrix, listingAgeLookback } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -128,9 +128,8 @@ export function createServer() {
         inputSchema: z.object({ limit: z.string().describe("How many monograms to print (default 12, max 20).").optional(), sample: z.string().describe("Listings to scan (default 400, max 1000).").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement matrix locally (paywall removed)
         try {
-            return textError("Not yet implemented: matrix");
+            return text(await monogramMatrix(args.limit, args.sample));
         }
         catch (e) {
             return textError(String(e));
@@ -142,9 +141,8 @@ export function createServer() {
         inputSchema: z.object({ sample: z.string().describe("Listings to scan (default 400, max 1000).").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement lookback locally (paywall removed)
         try {
-            return textError("Not yet implemented: lookback");
+            return text(await listingAgeLookback(args.sample));
         }
         catch (e) {
             return textError(String(e));

@@ -404,3 +404,111 @@ export async function variantDepth(sample) {
         note: "Variant depth as published by each resale source. Not affiliated with Bottega Veneta.",
     });
 }
+const DAY_MS = 24 * 60 * 60 * 1000;
+function dayOf(value) {
+    const t = Date.parse(String(value ?? ""));
+    return Number.isFinite(t) ? t : null;
+}
+function isoDay(ms) {
+    return new Date(ms).toISOString().slice(0, 10);
+}
+/** How recently the brand's stock was listed, per source and per month. */
+export async function listingFreshness(sample) {
+    const n = Math.min(Number(sample ?? 200) || 200, 500);
+    const rows = await sampleCatalog(n, [1, 2, 3]);
+    if (!rows.length)
+        throw new BottegaVenetaError("No Bottega Veneta listings came back from either source.");
+    const now = Date.now();
+    const dated = [];
+    const bySource = {};
+    const perMonth = {};
+    for (const { source: s, p } of rows) {
+        const t = dayOf(p.published_at);
+        const bucket = (bySource[s.name] ??= { sampled: 0, dated: 0, added_last_30_days: 0, added_last_90_days: 0 });
+        bucket.sampled += 1;
+        if (t === null)
+            continue;
+        bucket.dated += 1;
+        const ageDays = (now - t) / DAY_MS;
+        if (ageDays <= 30)
+            bucket.added_last_30_days += 1;
+        if (ageDays <= 90)
+            bucket.added_last_90_days += 1;
+        dated.push(t);
+        const month = isoDay(t).slice(0, 7);
+        perMonth[month] = (perMonth[month] ?? 0) + 1;
+    }
+    if (!dated.length)
+        throw new BottegaVenetaError(`None of the ${rows.length} sampled listings carried a publish date.`);
+    const newest = Math.max(...dated);
+    const oldest = Math.min(...dated);
+    const within = (days) => dated.filter((t) => (now - t) / DAY_MS <= days).length;
+    const months = Object.entries(perMonth)
+        .sort((a, b) => b[0].localeCompare(a[0]))
+        .map(([month, listings]) => ({ month, listings }));
+    return pretty({
+        brand: "Bottega Veneta",
+        sampled_listings: rows.length,
+        listings_with_a_date: dated.length,
+        newest_listing: isoDay(newest),
+        oldest_listing: isoDay(oldest),
+        listing_span_days: Math.round((newest - oldest) / DAY_MS),
+        added_last_7_days: within(7),
+        added_last_30_days: within(30),
+        added_last_90_days: within(90),
+        listings_per_month: months.slice(0, 18),
+        by_source: bySource,
+        note: "Publish dates come from each source's own catalog json; undated listings are counted but never dated.",
+    });
+}
+/** Listing count, availability and asking price for each product type. */
+export async function productTypeLadder(sample, minItems) {
+    const n = Math.min(Number(sample ?? 250) || 250, 500);
+    const min = Math.max(Number(minItems ?? 3) || 3, 1);
+    const rows = await sampleCatalog(n, [1, 2, 3]);
+    if (!rows.length)
+        throw new BottegaVenetaError("No Bottega Veneta listings came back from either source.");
+    const byType = {};
+    let unpriced = 0;
+    for (const { source: s, p } of rows) {
+        const sl = slim(s.name, s.base, p);
+        const key = String(sl.product_type ?? "").trim() || "unknown";
+        const bucket = (byType[key] ??= { product_type: key, listings: 0, available: 0, prices: [] });
+        bucket.listings += 1;
+        if (sl.available)
+            bucket.available += 1;
+        if (sl.price_usd === null || sl.price_usd <= 0)
+            unpriced += 1;
+        else
+            bucket.prices.push(sl.price_usd);
+    }
+    const all = Object.values(byType);
+    const shown = all
+        .filter((b) => b.listings >= min)
+        .sort((a, b) => b.listings - a.listings)
+        .map((b) => {
+        const prices = [...b.prices].sort((x, y) => x - y);
+        return {
+            product_type: b.product_type,
+            listings: b.listings,
+            available: b.available,
+            available_pct: Math.round((b.available / b.listings) * 1000) / 10,
+            priced_listings: prices.length,
+            price_usd: prices.length
+                ? { min: prices[0], median: Math.round(medianOf(prices) * 100) / 100, max: prices[prices.length - 1] }
+                : null,
+        };
+    });
+    if (!shown.length)
+        throw new BottegaVenetaError(`No product type in the ${rows.length} sampled listings reached ${min} listings.`);
+    return pretty({
+        brand: "Bottega Veneta",
+        sampled_listings: rows.length,
+        product_types_seen: all.length,
+        unpriced_listings: unpriced,
+        min_listings_per_type: min,
+        types_shown: shown.length,
+        rows: shown,
+        note: "Types below the listing threshold are counted but not printed. Asking prices, not appraisals. Not affiliated with Bottega Veneta.",
+    });
+}
