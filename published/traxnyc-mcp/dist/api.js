@@ -369,3 +369,188 @@ export async function priceDistribution(args) {
         .filter(Boolean)
         .join("\n");
 }
+const SIZE_OPTION = /size|length|width|^ring|^chain|^bracelet/i;
+function sizeOf(variant, options) {
+    const list = Array.isArray(options) ? options : [];
+    for (let i = 0; i < Math.min(list.length, 3); i++) {
+        if (!SIZE_OPTION.test(String(list[i]?.name ?? "")))
+            continue;
+        const value = String(variant?.[`option${i + 1}`] ?? "").trim();
+        if (value && !/^default title$/i.test(value))
+            return value;
+    }
+    // A product that publishes named options but none of them is a size simply
+    // has no sizes; its variant titles are colour or finish combinations.
+    if (list.some((option) => String(option?.name ?? "").trim()))
+        return "";
+    const title = String(variant?.title ?? "").trim();
+    return title && !/^default title$/i.test(title) ? title : "";
+}
+/** Split a size value into what it measures: a ring number, a length, or neither. */
+const sizeGroup = (value) => {
+    const text = String(value).trim();
+    const bare = text.match(/^(\d{1,3}(?:\.\d+)?)$/);
+    if (bare)
+        return { group: 'ring', value: Number(bare[1]) };
+    const measured = text.match(/^(\d{1,3}(?:\.\d+)?)\s*("|in|inch|inches|mm|cm)?$/i);
+    if (measured)
+        return { group: 'length', value: Number(measured[1]) };
+    return { group: 'other', value: null };
+};
+/** Every size the catalogue carries, and which of them nobody can buy. */
+export async function sizeMatrix(args) {
+    const pages = Math.min(Math.max(Number(args?.pages ?? 2) || 2, 1), 3);
+    const threshold = Math.min(Math.max(Number(args?.threshold ?? 0) || 0, 0), 50);
+    const products = await sampleCatalog(pages * 250, Array.from({ length: pages }, (_, i) => i + 1));
+    if (!products.length)
+        throw new TraxnycError("TraxNYC's catalogue returned no products; try again shortly.");
+    const tally = new Map();
+    let noSize = 0;
+    let variants = 0;
+    for (const product of products) {
+        const list = Array.isArray(product.variants) ? product.variants : [];
+        variants += list.length;
+        let sized = 0;
+        for (const variant of list) {
+            const size = sizeOf(variant, product.options);
+            if (!size)
+                continue;
+            sized += 1;
+            const seen = tally.get(size) ?? { total: 0, inStock: 0, products: new Set() };
+            seen.total += 1;
+            if (variant.available)
+                seen.inStock += 1;
+            seen.products.add(product.id);
+            tally.set(size, seen);
+        }
+        if (!sized)
+            noSize += 1;
+    }
+    if (!tally.size)
+        throw new TraxnycError(`None of the ${products.length} sampled products offer a size choice at all.`);
+    const rows = [...tally.entries()]
+        .map(([size, v]) => ({ size, total: v.total, inStock: v.inStock, products: v.products.size, ...sizeGroup(size) }))
+        .filter((r) => r.inStock >= threshold);
+    const numeric = rows.filter((r) => r.group === 'ring').sort((a, b) => a.value - b.value);
+    const lengths = rows.filter((r) => r.group === 'length').sort((a, b) => a.value - b.value);
+    const other = rows.filter((r) => r.group === 'other').sort((a, b) => b.total - a.total);
+    const dead = rows.filter((r) => r.inStock === 0).sort((a, b) => b.total - a.total);
+    const thin = rows.filter((r) => r.inStock > 0 && r.inStock <= 2).sort((a, b) => a.inStock - b.inStock);
+    const line = (r) => `  ${r.size.padEnd(12)} ${String(r.total).padStart(4)} variants  ${String(r.inStock).padStart(4)} in stock  ${String(r.products).padStart(4)} products`;
+    const out = [
+        `TraxNYC size matrix — ${products.length} products, ${variants} variants, ${tally.size} distinct sizes`,
+        `  products with no size choice  ${noSize} of ${products.length}`,
+        `  sizes at or above threshold    ${rows.length} (threshold ${threshold} in stock)`,
+        '',
+        `Ring sizing (${numeric.length}):`,
+        ...(numeric.length ? numeric.map(line) : ['  none']),
+        '',
+        `Lengths (${lengths.length}):`,
+        ...(lengths.length ? lengths.map(line) : ['  none']),
+        '',
+        other.length ? `Other sizing (${other.length}), most common first:` : 'Other sizing: none',
+        ...(other.length ? other.slice(0, 20).map(line) : ['  none']),
+    ];
+    if (numeric.length > 1) {
+        const known = new Set(numeric.map((r) => r.value));
+        const lo = Math.floor(Math.min(...known));
+        const hi = Math.ceil(Math.max(...known));
+        const whole = numeric.every((r) => Number.isInteger(r.value));
+        const gaps = [];
+        const step = whole ? 1 : 0.5;
+        for (let v = lo; v <= hi + 1e-9; v += step)
+            if (!known.has(Number(v.toFixed(2))))
+                gaps.push(Number(v.toFixed(2)));
+        out.push('', `Numeric range covered: ${lo} to ${hi}${gaps.length ? ` — nothing at ${gaps.slice(0, 14).join(', ')}${gaps.length > 14 ? ` and ${gaps.length - 14} more` : ''}` : ' with no gaps'}`);
+    }
+    out.push('', `Sizes with nothing buyable (${dead.length}):`);
+    out.push(...(dead.length ? dead.slice(0, 15).map((r) => `  ${r.size.padEnd(12)} ${r.total} variants, all out of stock`) : ['  none — every size carries at least one available variant']));
+    if (thin.length) {
+        out.push('', `Sizes down to one or two units (${thin.length}):`);
+        out.push(...thin.slice(0, 10).map((r) => `  ${r.size.padEnd(12)} ${r.inStock} in stock`));
+    }
+    out.push('', `note: sizes come from each product's own option values, so a bare number is read as a ring size and a number with an inch or mm suffix as a length; values written as fractions or letter codes fall into the third block. Any size written two different ways is counted twice. ${noSize} products sell with no size choice, which is normal for one-size pieces.`);
+    return out.join('\n');
+}
+/** What is broken in the catalogue data rather than in the stock. */
+export async function catalogueHealth(args) {
+    const pages = Math.min(Math.max(Number(args?.pages ?? 2) || 2, 1), 3);
+    const products = await sampleCatalog(pages * 250, Array.from({ length: pages }, (_, i) => i + 1));
+    if (!products.length)
+        throw new TraxnycError("TraxNYC's catalogue returned no products; try again shortly.");
+    const tagCount = new Map();
+    const issues = { noType: [], noTags: [], noImage: [], noPrice: [], oneVariant: [], allSoldOut: [] };
+    let variants = 0;
+    let compared = 0;
+    let deep = 0;
+    let markdowns = 0;
+    for (const product of products) {
+        const list = Array.isArray(product.variants) ? product.variants : [];
+        variants += list.length;
+        const tags = Array.isArray(product.tags) ? product.tags : [];
+        if (!String(product.product_type ?? '').trim())
+            issues.noType.push(product.title ?? product.handle);
+        if (!tags.length)
+            issues.noTags.push(product.title ?? product.handle);
+        if (!Array.isArray(product.images) || !product.images.length)
+            issues.noImage.push(product.title ?? product.handle);
+        for (const tag of tags)
+            tagCount.set(tag, (tagCount.get(tag) ?? 0) + 1);
+        const prices = list.map((v) => Number(v.price)).filter((n) => Number.isFinite(n) && n > 0);
+        if (!prices.length)
+            issues.noPrice.push(product.title ?? product.handle);
+        const sized = list.filter((v) => sizeOf(v, product.options));
+        if (list.length === 1 && !sized.length)
+            issues.oneVariant.push(product.title ?? product.handle);
+        if (list.length && !list.some((v) => v.available))
+            issues.allSoldOut.push(product.title ?? product.handle);
+        for (const variant of list) {
+            const was = Number(variant.compare_at_price);
+            const now = Number(variant.price);
+            if (!Number.isFinite(was) || !Number.isFinite(now) || was <= now)
+                continue;
+            compared += 1;
+            const off = ((was - now) / was) * 100;
+            if (off >= 30)
+                deep += 1;
+            markdowns += 1;
+        }
+    }
+    const total = products.length;
+    const pct = (n) => `${n} (${Math.round((n / total) * 100)}%)`;
+    const singles = [...tagCount.values()].filter((c) => c === 1).length;
+    const listBlock = (title, names) => {
+        if (!names.length) {
+            return [`${title}: none`];
+        }
+        return [`${title}: ${names.length}`, ...names.slice(0, 6).map((n) => `  - ${String(n).slice(0, 78)}`), ...(names.length > 6 ? [`  ... ${names.length - 6} more`] : [])];
+    };
+    const out = [
+        `TraxNYC catalogue health — ${total} products, ${variants} variants`,
+        `  no product_type      ${pct(issues.noType.length)}`,
+        `  no tags              ${pct(issues.noTags.length)}`,
+        `  no image             ${pct(issues.noImage.length)}`,
+        `  no usable price      ${pct(issues.noPrice.length)}`,
+        `  single variant, no size choice  ${pct(issues.oneVariant.length)}`,
+        `  every variant sold out          ${pct(issues.allSoldOut.length)}`,
+        '',
+        `Markdowns: ${markdowns} of ${variants} variants carry a compare-at price, ${deep} of those are 30% or deeper.`,
+        `Tags: ${tagCount.size} distinct, ${singles} used exactly once (${Math.round((singles / Math.max(tagCount.size, 1)) * 100)}% of the vocabulary).`,
+        '',
+        ...listBlock('Products with no product_type', issues.noType),
+        '',
+        ...listBlock('Products with no tags', issues.noTags),
+        '',
+        ...listBlock('Products with no image', issues.noImage),
+        '',
+        ...listBlock('Products with no usable price', issues.noPrice),
+        '',
+        ...listBlock('Products with every variant unavailable', issues.allSoldOut),
+        '',
+        'Most used tags:',
+        ...[...tagCount.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([t, c]) => `  ${String(c).padStart(4)}  ${t}`),
+        '',
+        `note: read from TraxNYC's public products.json, ${pages} page(s) of up to 250. Counts describe the sample, not the whole catalogue; a product with one variant and no size option is only a problem when it should have had sizes.`,
+    ];
+    return out.join('\n');
+}

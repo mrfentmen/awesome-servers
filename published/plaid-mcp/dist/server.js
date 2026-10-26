@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { errorMessage, listInstitutions, listCategories, sandboxToken, getInstitution, sandboxBalance, sandboxTransactions, sandboxHoldings, sandboxLiabilities, sandboxAuth, sandboxIdentity, findBank } from "./api.js";
-import { premiumTool } from "./gateway.js";
+import { errorMessage, listInstitutions, listCategories, sandboxToken, getInstitution, sandboxBalance, sandboxTransactions, sandboxHoldings, sandboxLiabilities, sandboxAuth, sandboxIdentity, findBank, bankHealth, banksByState } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -185,11 +184,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: bank_health ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
         try {
-            return text(await premiumTool("mcp_plaid_bank_health", args));
+            return text(await bankHealth(args));
         }
         catch (e) {
             return textError(errorMessage(e));
@@ -204,11 +200,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: banks_by_state ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
         try {
-            return text(await premiumTool("mcp_plaid_banks_by_state", args));
+            return text(await banksByState(args));
         }
         catch (e) {
             return textError(errorMessage(e));

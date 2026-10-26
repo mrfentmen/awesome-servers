@@ -217,3 +217,119 @@ export async function datasetCoverage() {
     ];
     return lines.join("\n");
 }
+const NYCA_BOROUGH_NAMES = { M: "Manhattan", K: "Brooklyn", Q: "Queens", B: "Bronx", S: "Staten Island" };
+const nycaBoroughCode = (value) => {
+    const raw = String(value ?? "").trim();
+    if (!raw)
+        return null;
+    const upper = raw.toUpperCase();
+    if (NYCA_BOROUGH_NAMES[upper])
+        return upper;
+    const hit = Object.entries(NYCA_BOROUGH_NAMES).find(([, name]) => name.toLowerCase() === raw.toLowerCase());
+    return hit ? hit[0] : null;
+};
+const nycaWhere = (args) => {
+    const filters = [];
+    const boro = nycaBoroughCode(args?.borough);
+    if (args?.borough && !boro)
+        throw new NycArrestsError(`"${args.borough}" is not a borough; use Manhattan, Brooklyn, Queens, Bronx, Staten Island, or M, K, Q, B, S.`);
+    if (boro)
+        filters.push(`arrest_boro='${boro}'`);
+    const offense = String(args?.offense ?? "").trim();
+    if (offense)
+        filters.push(`upper(ofns_desc) like '%${offense.toUpperCase().replace(/'/g, "")}%'`);
+    const category = String(args?.category ?? "").trim().toUpperCase();
+    if (category)
+        filters.push(`law_cat_cd='${category.replace(/[^A-Z]/g, "")}'`);
+    const from = String(args?.from ?? "").trim();
+    const to = String(args?.to ?? "").trim();
+    if (from)
+        filters.push(`arrest_date >= '${from}T00:00:00'`);
+    if (to)
+        filters.push(`arrest_date <= '${to}T23:59:59'`);
+    return filters;
+};
+/** Arrest counts bucketed by day, month or year, with the shape of the series. */
+export async function arrestTrend(args) {
+    const granularity = String(args?.granularity ?? "month").trim().toLowerCase();
+    const bucketOf = { day: "date_trunc_ymd", month: "date_trunc_ym", year: "date_trunc_y" };
+    const fn = bucketOf[granularity];
+    if (!fn)
+        throw new NycArrestsError(`granularity must be day, month or year, not "${args?.granularity}".`);
+    const filters = nycaWhere(args);
+    const params = [
+        ["$select", `${fn}(arrest_date) as bucket,count(arrest_key) as n`],
+        ["$group", "bucket"],
+        ["$order", "bucket"],
+        ["$limit", "5000"],
+    ];
+    if (filters.length)
+        params.unshift(["$where", filters.join(" AND ")]);
+    const rows = await nycaAgg(NYCA_YTD, params, "The current-year file is smaller than the historic one, so this is a genuine failure rather than slowness.");
+    if (!rows.length)
+        throw new NycArrestsError("No arrest in the current-year file matches those filters. The current file covers this year only; use historic_search for older dates.");
+    const series = rows
+        .map((row) => ({ bucket: String(row.bucket ?? "").slice(0, granularity === "year" ? 4 : granularity === "month" ? 7 : 10), count: nycaNumber(row.n) }))
+        .filter((row) => row.bucket);
+    const total = series.reduce((sum, row) => sum + row.count, 0);
+    const busiest = series.reduce((a, b) => (b.count > a.count ? b : a));
+    const quietest = series.reduce((a, b) => (b.count < a.count ? b : a));
+    const average = total / series.length;
+    const values = series.map((r) => r.count);
+    const sd = Math.sqrt(values.reduce((sum, v) => sum + (v - average) ** 2, 0) / values.length);
+    const label = filters.length ? ` (${filters.join(" AND ")})` : "";
+    const show = series.slice(-24);
+    return [
+        `Arrests in the current-year file, by ${granularity}${label}`,
+        `  ${series.length} period(s), ${total.toLocaleString("en-US")} arrest(s) between ${series[0].bucket} and ${series[series.length - 1].bucket}`,
+        `  average          ${average.toFixed(1)} per ${granularity}, standard deviation ${sd.toFixed(1)}`,
+        `  busiest          ${busiest.bucket} with ${busiest.count.toLocaleString("en-US")}`,
+        `  quietest         ${quietest.bucket} with ${quietest.count.toLocaleString("en-US")}`,
+        "",
+        `Series${series.length > show.length ? ` (last ${show.length} of ${series.length})` : ""}:`,
+        ...show.map((row) => `  ${row.bucket}  ${String(row.count).padStart(6)}  ${"#".repeat(Math.max(0, Math.round((row.count / Math.max(...values)) * 40)))}`),
+        "",
+        "note: the current-year file is updated as reports are entered, so the most recent period is always incomplete and will look quiet for that reason alone. A day is counted by arrest date, not by when the report was filed.",
+    ].join("\n");
+}
+/** Borough against charge category, as one matrix. */
+export async function boroughCategoryMatrix(args) {
+    const filters = nycaWhere(args);
+    const params = [
+        ["$select", "arrest_boro,law_cat_cd,count(arrest_key) as n"],
+        ["$group", "arrest_boro,law_cat_cd"],
+        ["$order", "arrest_boro"],
+        ["$limit", "500"],
+    ];
+    if (filters.length)
+        params.unshift(["$where", filters.join(" AND ")]);
+    const rows = await nycaAgg(NYCA_YTD, params, "The current-year file is smaller than the historic one, so this is a genuine failure rather than slowness.");
+    if (!rows.length)
+        throw new NycArrestsError("No arrest in the current-year file matches those filters, so there is no matrix to build.");
+    const boroughs = [...new Set(rows.map((r) => String(r.arrest_boro ?? "?")))].sort();
+    const categories = [...new Set(rows.map((r) => String(r.law_cat_cd ?? "?")))].sort();
+    const cell = new Map(rows.map((r) => [`${r.arrest_boro}|${r.law_cat_cd}`, nycaNumber(r.n)]));
+    const totals = new Map(boroughs.map((b) => [b, categories.reduce((sum, c) => sum + (cell.get(`${b}|${c}`) ?? 0), 0)]));
+    const grand = [...totals.values()].reduce((a, b) => a + b, 0);
+    const header = `  ${"borough".padEnd(14)}${categories.map((c) => c.padStart(8)).join("")}${"total".padStart(10)}`;
+    const body = boroughs.map((b) => {
+        const total = totals.get(b) ?? 0;
+        return `  ${`${b} ${NYCA_BOROUGH_NAMES[b] ?? ""}`.slice(0, 13).padEnd(14)}${categories.map((c) => String(cell.get(`${b}|${c}`) ?? 0).padStart(8)).join("")}${String(total).padStart(10)}`;
+    });
+    const footer = `  ${"all".padEnd(14)}${categories.map((c) => String(boroughs.reduce((sum, b) => sum + (cell.get(`${b}|${c}`) ?? 0), 0)).padStart(8)).join("")}${String(grand).padStart(10)}`;
+    const shares = boroughs.map((b) => `${NYCA_BOROUGH_NAMES[b] ?? b} ${(((totals.get(b) ?? 0) / grand) * 100).toFixed(1)}%`);
+    return [
+        `Arrests by borough and charge category in the current-year file${filters.length ? ` (${filters.join(" AND ")})` : ""}`,
+        `  ${grand.toLocaleString("en-US")} arrest(s) across ${boroughs.length} borough(s)`,
+        "",
+        header,
+        ...body,
+        footer,
+        "",
+        `Share of the total: ${shares.join(", ")}`,
+        "",
+        `Categories: ${categories.join(", ")} — single letters are the charge class in the source (F felony, M misdemeanor, V violation), not offence names.`,
+        "",
+        "note: borough is the arresting command, which is where the arrest was made rather than where the person lives, and a matrix built from the current-year file says nothing about earlier years.",
+    ].join("\n");
+}

@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { auctionByDate, auctionCompare, auctionSummary, auctions, marketTrend, seasonality, topAuctions, marketMomentum, auctionLeaderboard, slugHeadToHead, marketStructure } from "./api.js";
-import { premiumTool } from "./gateway.js";
+import { auctionByDate, auctionCompare, auctionSummary, auctions, marketTrend, seasonality, topAuctions, marketMomentum, auctionLeaderboard, slugHeadToHead, marketStructure, liquidityProfile } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -178,11 +177,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: liquidity_profile ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
         try {
-            return text(await premiumTool("mcp_whiskyhunter_liquidity_profile", args));
+            return text(await liquidityProfile(args));
         }
         catch (e) {
             return textError(error(e));

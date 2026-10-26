@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/yfinance-mcp",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Yahoo Finance quotes and symbol search.",
   "type": "module",
   "main": "dist/index.js",

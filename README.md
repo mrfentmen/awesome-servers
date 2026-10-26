@@ -1,20 +1,60 @@
 # Premium MCPs (private)
 
-> Everything here is published on npm and installable today — `npx <package>`. The
-> packages are free: there is no licence key and no hosted gate.
->
-> [`published/`](./published) mirrors exactly what the registry serves, regenerated
-> with `python3 scripts/sync-published-snapshot.py`. [`servers/`](./servers) holds the
-> older source that is still in git; where the two disagree, `published/` is correct.
+> 230 package directories, 229 of them published under our own name and installable
+> today with `npx <package>`. Every one is free: no licence key, no hosted gate and
+> no per-call billing.
 
-Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, betting, finance-data, and pro-tier API servers. Private commercial monorepo.
+Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs,
+betting, finance-data, and pro-tier API servers. Private commercial monorepo.
 
-## The repo is behind the registry
+## State of the repo
 
-The paywall-removal pass was published from a working copy that was never committed,
-so npm carries code that does not exist in git. `published/INDEX.md` records the
-current state per package — version, whether `src/` shipped, and two known gaps:
-a leftover licence gate and tools that answer `Not yet implemented`.
+This is a snapshot of what users install, not a build tree.
+
+- `published/` holds one directory per package, byte-for-byte what npm serves —
+  version, `dist/`, README and `server.json`.
+- `servers/` holds the older source that is still in git. Where the two disagree,
+  `published/` is correct.
+- Every package in `published/` matches its npm `latest` version. `published/INDEX.md`
+  is generated from the tree by `python3 scripts/index-published.py`.
+- There are no licence gates and no stub tools left: **0** packages reference
+  `MCP_LICENSE_KEY` and **0** shipped tools answer `Not yet implemented`.
+
+### The paywall is gone, and so is the gateway
+
+A licence gate shipped in about twenty packages. Each gated tool proxied its work
+to a hosted gateway (`premiumTool("mcp_<product>_<tool>")`) that checked a Polar key
+and ran the real code server-side. That host no longer resolves, so every gated tool
+was dead: it failed before it did anything.
+
+All of those tools are now implemented inside their own package, against the same
+public API the gateway used. Nothing is proxied, nothing needs a key, and the
+`gateway.js` / `license.js` modules have been deleted from every package that had
+one. The last eleven packages shipped the fix on 2026-10-26.
+
+### Known gaps
+
+- **`twilio-mcp` is not ours on npm.** The name belongs to another publisher
+  (`griffinwork40`); the directory in `published/` mirrors their tarball because the
+  sync script fell back to the bare name. Our own copy has never been published.
+- **Five packages cannot rebuild `dist/` from `src/`.** `coingecko-mcp`,
+  `defillama-mcp`, `iss-mcp`, `jolpica-mcp` still carry their pre-fix stub bodies in
+  `src/`, and `yfinance-mcp`'s `src/` still imports the deleted `./gateway.js`.
+  Their shipped `dist/` is correct; running `npm run build` on those five would
+  overwrite it with the old broken code.
+- **`servers/` is history, not source.** It predates the gate removal and was never
+  brought forward. Do not build from it.
+
+### Working on this tree
+
+```bash
+python3 scripts/index-published.py        # regenerate published/INDEX.md from disk
+node scripts/verify-ungated.mjs <slug>    # start a package over stdio and call its tools
+```
+
+`scripts/sync-published-snapshot.py` re-downloads every package from npm. That is the
+right tool when npm is ahead of the repo, and the wrong one while a fix is still
+local — it overwrites `dist/` from the registry tarballs.
 
 ## Contents
 

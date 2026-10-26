@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { companyJobs, findJobs, job, jobInsights, jobs, MUSE_LEVELS, searchJobs, listCompanies, companySearch, compareCompanies, marketConcentration } from "./api.js";
-import { premiumTool } from "./gateway.js";
+import { companyJobs, findJobs, job, jobInsights, jobs, MUSE_LEVELS, searchJobs, listCompanies, companySearch, compareCompanies, marketConcentration, postingAgeCensus, requirementsScan } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -170,11 +169,8 @@ export function createServer() {
         inputSchema: z.object({ pages: z.number().describe("How many result pages to sample, 1-5.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: posting_age_census ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
         try {
-            return text(await premiumTool("mcp_themuse_posting_age_census", args));
+            return text(await postingAgeCensus(args));
         }
         catch (e) {
             return textError(error(e));
@@ -202,11 +198,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: requirements_scan ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
         try {
-            return text(await premiumTool("mcp_themuse_requirements_scan", args));
+            return text(await requirementsScan(args));
         }
         catch (e) {
             return textError(error(e));

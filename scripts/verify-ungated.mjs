@@ -24,8 +24,11 @@ function gatedTools(slug) {
   for (const file of candidates) {
     if (!existsSync(file)) continue;
     const src = readFileSync(file, "utf8");
+    // Two gate styles shipped: premiumRequired("tool") and premiumTool("mcp_<product>_<tool>").
+    // The second carries a gateway id, so it is resolved against tools/list below.
     const names = [...src.matchAll(/premiumRequired\("([^"]+)"\)/g)].map((m) => m[1]);
-    if (names.length) return [...new Set(names)];
+    const gatewayIds = [...src.matchAll(/premiumTool\("(mcp_[a-z0-9_]+)"/g)].map((m) => m[1]);
+    if (names.length || gatewayIds.length) return [...new Set([...names, ...gatewayIds])];
   }
   return [];
 }
@@ -94,7 +97,11 @@ function runServer(slug, tools) {
           state.listed = (msg.result?.tools ?? []).map((t) => t.name);
           const schemas = new Map((msg.result?.tools ?? []).map((t) => [t.name, t.inputSchema]));
           stage = "call";
-          for (const [i, tool] of tools.entries()) {
+          // A gateway id ("mcp_steam_game_requirements") names a tool registered
+          // under its bare name, so it resolves by suffix rather than exactly.
+          const resolve = (name) => (state.listed.includes(name) ? name : state.listed.find((t) => name.endsWith(`_${t}`)) ?? name);
+          state.wanted = [...new Set(tools.map(resolve))];
+          for (const [i, tool] of state.wanted.entries()) {
             send({
               jsonrpc: "2.0",
               id: 100 + i,
@@ -108,14 +115,14 @@ function runServer(slug, tools) {
           const text = JSON.stringify(msg.result ?? msg.error ?? "");
           state.answers[msg.id - 100] = text;
           seen.set(msg.id - 100, text);
-          if (seen.size === tools.length) finish("done");
+          if (seen.size === state.wanted.length) finish("done");
         }
       }
     });
 
     child.on("error", (e) => finish("spawn-error: " + e.message));
     child.on("exit", () => {
-      if (state.answers.length < tools.length) finish("exited-early");
+      if (state.answers.length < (state.wanted?.length ?? tools.length)) finish("exited-early");
     });
 
     child.stdin.on("error", () => {});
@@ -141,9 +148,12 @@ for (const slug of slugs) {
   const result = await runServer(slug, tools);
   checked++;
 
-  const missing = tools.filter((t) => !result.listed.includes(t));
+  // A raw gateway id ("mcp_steam_game_requirements") names a tool registered
+  // under its bare name, so it resolves by suffix rather than exactly.
+  const names = result.wanted ?? tools;
+  const missing = names.filter((t) => !result.listed.includes(t));
   const answers = [];
-  for (const [i, tool] of tools.entries()) {
+  for (const [i, tool] of names.entries()) {
     const text = result.answers?.[i] ?? "";
     answers.push({ tool, text });
   }
@@ -160,7 +170,7 @@ for (const slug of slugs) {
     if (missing.length) console.log(`  tools missing from tools/list: ${missing.join(", ")}`);
     for (const p of paywalled) console.log(`  still refuses ${p.tool}: ${String(p.text).slice(0, 120)}`);
   } else {
-    console.log(`ok   ${slug} — ${tools.length} former gate(s) gone, tools still registered`);
+    console.log(`ok   ${slug} — ${names.length} former gate(s) gone, tools still registered`);
   }
 }
 

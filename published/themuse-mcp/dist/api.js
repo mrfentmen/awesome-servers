@@ -348,3 +348,141 @@ export async function marketConcentration(args) {
         .filter(Boolean)
         .join("\n");
 }
+const ageInDays = (value) => {
+    const when = Date.parse(String(value ?? ''));
+    return Number.isFinite(when) ? Math.max(0, Math.floor((Date.now() - when) / 86400000)) : null;
+};
+const median = (list) => {
+    if (!list.length)
+        return null;
+    const s = [...list].sort((a, b) => a - b);
+    const mid = s.length >> 1;
+    return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+};
+/**
+ * Age profile of the newest listings. Volume says nothing about freshness: a
+ * board that reposts old adverts looks busy and hires nobody.
+ */
+export async function postingAgeCensus(args) {
+    const pages = clamp(args?.pages, 3, 5);
+    const filters = { level: (args?.level ?? '').trim(), location: (args?.location ?? '').trim() };
+    const fetched = await Promise.all(Array.from({ length: pages }, (_, i) => fetchPage(i + 1, filters)));
+    const list = fetched.flatMap((page) => page.results);
+    if (!list.length)
+        return 'No Muse jobs matched that filter.';
+    const dated = list
+        .map((entry) => ({ job: entry, days: ageInDays(entry.publication_date) }))
+        .filter((entry) => entry.days !== null);
+    if (!dated.length)
+        return `The Muse returned ${list.length} jobs but none carried a readable publication date, so no age profile is possible.`;
+    const ages = dated.map((entry) => entry.days);
+    const buckets = [
+        ['under 1 week', 0, 6],
+        ['1-2 weeks', 7, 13],
+        ['2-4 weeks', 14, 29],
+        ['1-3 months', 30, 89],
+        ['3-12 months', 90, 364],
+        ['over a year', 365, Infinity],
+    ].map(([label, lo, hi]) => ({ label, count: ages.filter((d) => d >= Number(lo) && d <= Number(hi)).length }));
+    const past30 = ages.filter((d) => d >= 30).length;
+    const past90 = ages.filter((d) => d >= 90).length;
+    const share = (n) => `${n} (${Math.round((n / dated.length) * 100)}%)`;
+    const byCompany = new Map();
+    for (const entry of dated) {
+        const name = entry.job.company?.name ?? '?';
+        const seen = byCompany.get(name) ?? { ages: [], gone: 0 };
+        seen.ages.push(entry.days);
+        if (entry.days >= 90)
+            seen.gone += 1;
+        byCompany.set(name, seen);
+    }
+    const stalest = [...byCompany.entries()]
+        .filter(([, v]) => v.ages.length >= 2)
+        .map(([name, v]) => ({ name, mean: Math.round(v.ages.reduce((a, b) => a + b, 0) / v.ages.length), count: v.ages.length, gone: v.gone }))
+        .sort((a, b) => b.mean - a.mean)
+        .slice(0, 6);
+    const rows = [
+        `Muse posting ages${filters.level ? ` at ${filters.level}` : ''}${filters.location ? ` in ${filters.location}` : ''} — ${dated.length} dated listings from ${pages} page(s)`,
+        `  median age       ${median(ages)} days`,
+        `  youngest / oldest ${Math.min(...ages)} / ${Math.max(...ages)} days`,
+        `  past 30 days     ${share(past30)}`,
+        `  past 90 days     ${share(past90)}`,
+        '',
+        'Age buckets:',
+        ...buckets.map((b) => `  ${b.label.padEnd(14)} ${String(b.count).padStart(5)}  ${'#'.repeat(Math.round((b.count / dated.length) * 40)) || '-'}`),
+        '',
+        'Employers whose listings look stalest (2+ listings, mean age):',
+        ...(stalest.length
+            ? stalest.map((c) => `  ${String(c.mean).padStart(4)} days  ${c.gone ? `${c.gone} over 90d` : 'all recent'}`.padEnd(34) + c.name)
+            : ['  none — every employer in the sample appears once']),
+        '',
+        `note: ages come from the publication date the Muse itself publishes, so a refreshed repost looks young. ${past30} of ${dated.length} listings are a month old or more.`,
+    ];
+    return rows.join('\n');
+}
+const STOPWORDS = new Set(('the and for with you your our are will have has that this from they their able team work working experience including ' +
+    'role job position about across into also more most other than then them these those who whom what when where which while ' +
+    'must should would could can may not all any out per use using used our you\'ll we\'re it\'s a an to of in on at by as or is ' +
+    'be been being do does did new company companies candidate candidates qualified apply applicants years year').split(' '));
+const MONEY = /\$\s?(\d{2,3}(?:,\d{3})+|\d+(?:\.\d+)?\s?[kK])|\b(\d{2,3}(?:,\d{3}))\s?(?:usd|dollars)|\b(\d{2,3})\s?[kK]\b/;
+/**
+ * What the adverts actually contain: money, real prose, seniority and the words
+ * that recur. Built from the description text, which most boards never sample.
+ */
+export async function requirementsScan(args) {
+    const pages = clamp(args?.pages, 2, 4);
+    const filters = { level: (args?.level ?? '').trim(), location: (args?.location ?? '').trim() };
+    const fetched = await Promise.all(Array.from({ length: pages }, (_, i) => fetchPage(i + 1, filters)));
+    const list = fetched.flatMap((page) => page.results);
+    if (!list.length)
+        return 'No Muse jobs matched that filter.';
+    const described = list.map((entry) => ({ job: entry, text: plain(entry.contents) }));
+    const withText = described.filter((entry) => entry.text.length >= 120);
+    const paid = [];
+    for (const entry of described) {
+        const m = entry.text.match(MONEY);
+        if (!m)
+            continue;
+        const raw = (m[1] ?? m[2] ?? m[3] ?? '').replace(/[, ]/g, '');
+        const lower = raw.toLowerCase();
+        const value = lower.endsWith('k') ? Number(lower.slice(0, -1)) * 1000 : Number(lower);
+        if (Number.isFinite(value) && value >= 10000)
+            paid.push(value);
+    }
+    const bucketOf = (value) => Math.round(value / 5000) * 5000;
+    const money = new Map();
+    for (const value of paid)
+        money.set(bucketOf(value), (money.get(bucketOf(value)) ?? 0) + 1);
+    const levels = new Map();
+    for (const entry of list)
+        for (const level of entry.levels ?? [])
+            if (level?.name)
+                levels.set(level.name, (levels.get(level.name) ?? 0) + 1);
+    const words = new Map();
+    for (const entry of withText) {
+        for (const word of entry.text.toLowerCase().match(new RegExp('[a-z][a-z+#.-]{2,}', 'g')) ?? []) {
+            if (word.length < 4 || STOPWORDS.has(word))
+                continue;
+            words.set(word, (words.get(word) ?? 0) + 1);
+        }
+    }
+    const rows = [
+        `Muse requirement scan${filters.level ? ` at ${filters.level}` : ''}${filters.location ? ` in ${filters.location}` : ''} — ${list.length} listings from ${pages} page(s)`,
+        `  with real text   ${withText.length} of ${list.length} (${Math.round((withText.length / list.length) * 100)}%)`,
+        `  states pay       ${paid.length} of ${list.length} (${Math.round((paid.length / list.length) * 100)}%)`,
+    ];
+    if (paid.length) {
+        rows.push(`  pay range        ${Math.min(...paid).toLocaleString()} - ${Math.max(...paid).toLocaleString()} (median ${median(paid).toLocaleString()})`, '', 'Pay figures, bucketed to the nearest 5,000:');
+        for (const [band, count] of [...money.entries()].sort((a, b) => a[0] - b[0]))
+            rows.push(`  ${(band.toLocaleString() + '+').padEnd(12)} ${String(count).padStart(4)}`);
+    }
+    else {
+        rows.push('', 'Not one listing in the sample publishes a compensation figure.');
+    }
+    rows.push('', 'Seniority tags across the sample:');
+    rows.push(...([...levels.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => `  ${String(v).padStart(4)}  ${k}`) || ['  none tagged']));
+    rows.push('', 'Most frequent significant words in the descriptions:');
+    rows.push(...[...words.entries()].sort((a, b) => b[1] - a[1]).slice(0, 20).map(([w, c]) => `  ${String(c).padStart(4)}  ${w}`));
+    rows.push('', 'note: a pay figure is only counted when the description contains a recognisable dollar amount; bands with no ceiling in the advert land once. Filler words are filtered, so the word list is closer to skills than to prose.');
+    return rows.join('\n');
+}

@@ -497,3 +497,80 @@ export async function marketStructure(args) {
         "Read as: a market whose top five take a rising share is one where scale is being lost to consolidation, and a falling share means smaller houses are taking volume. The mean hammer here averages each house's monthly mean rather than weighting by lots, so a small house selling one expensive cask moves it as much as a large one selling hundreds, which is why it should be read beside the lots column and not on its own. Months reported differs year to year, so a year with fewer months is a thinner record rather than a quieter market.",
     ].join("\n");
 }
+/**
+ * Volume against price. A house's mean hammer says what its bottles fetch; its
+ * lots and traded value say whether it is a business or a boutique, and the two
+ * orderings rarely agree.
+ */
+export async function liquidityProfile(args) {
+    const months = Math.min(Math.max(Number(args?.months ?? 24) || 24, 3), 120);
+    const limit = Math.min(Math.max(Number(args?.limit ?? 15) || 15, 1), 31);
+    const records = await allRecords();
+    if (!records.length)
+        throw new WhiskyhunterError("WhiskyHunter returned no auction records to profile.");
+    // WhiskyHunter stopped updating in late 2024, so a window anchored to today
+    // is empty. The window is anchored to the newest record instead, and the
+    // anchor is printed so nobody mistakes it for the present.
+    const dates = records.map((r) => String(r.dt ?? "")).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+    if (!dates.length)
+        throw new WhiskyhunterError("WhiskyHunter returned records with no usable dates.");
+    const latest = dates[dates.length - 1];
+    const cutoff = new Date(`${latest}T00:00:00Z`);
+    cutoff.setUTCMonth(cutoff.getUTCMonth() - months);
+    const from = cutoff.toISOString().slice(0, 10);
+    const window = records.filter((r) => {
+        const dt = String(r.dt ?? "");
+        return /^\d{4}-\d{2}-\d{2}$/.test(dt) && dt >= from;
+    });
+    if (!window.length)
+        return `No records fall between ${from} and ${latest}, the dataset's newest record, so that window is empty rather than missing.`;
+    const houses = new Map();
+    for (const r of window) {
+        const slug = String(r.auction_slug ?? "unknown");
+        const entry = houses.get(slug) ?? { slug, name: r.auction_name ?? slug, lots: 0, volume: 0, hammerSum: 0, months: 0 };
+        entry.lots += Number(r.auction_lots_count ?? 0) || 0;
+        entry.volume += Number(r.auction_trading_volume ?? 0) || 0;
+        entry.hammerSum += Number(r.winning_bid_mean ?? 0) || 0;
+        entry.months += 1;
+        houses.set(slug, entry);
+    }
+    const totalVolume = [...houses.values()].reduce((s, h) => s + h.volume, 0);
+    const totalLots = [...houses.values()].reduce((s, h) => s + h.lots, 0);
+    const ranked = [...houses.values()]
+        .map((h) => ({
+        ...h,
+        meanHammer: h.months ? h.hammerSum / h.months : 0,
+        perLot: h.lots ? h.volume / h.lots : 0,
+        volumeShare: totalVolume ? h.volume / totalVolume : 0,
+        lotShare: totalLots ? h.lots / totalLots : 0,
+    }))
+        .sort((a, b) => b.volume - a.volume);
+    const byHammer = [...ranked].sort((a, b) => b.meanHammer - a.meanHammer).map((h) => h.slug);
+    const rankOf = new Map(byHammer.map((slug, i) => [slug, i + 1]));
+    const maxVolume = ranked[0]?.volume || 1;
+    const lines = ranked.slice(0, limit).map((h, i) => {
+        const move = rankOf.get(h.slug) - (i + 1);
+        const verdict = h.lots >= totalLots / Math.max(ranked.length, 1) * 1.5 && h.meanHammer < ranked.reduce((s, x) => s + x.meanHammer, 0) / ranked.length
+            ? "volume seller"
+            : h.meanHammer > ranked.reduce((s, x) => s + x.meanHammer, 0) / ranked.length && h.lots < totalLots / Math.max(ranked.length, 1)
+                ? "boutique"
+                : "mid-market";
+        return (`  ${String(i + 1).padStart(2)}. ${h.name.slice(0, 34).padEnd(34)} ${whIntl(h.lots).padStart(8)} lots  ` +
+            `${whMoney(h.volume).padStart(13)}  ${whMoney(h.perLot).padStart(8)}/lot  ` +
+            `${(h.volumeShare * 100).toFixed(1).padStart(5)}% of value  hammer rank ${String(rankOf.get(h.slug)).padStart(2)} (${move === 0 ? "same" : move > 0 ? `+${move}` : move})  ${verdict}\n      ${"#".repeat(Math.max(1, Math.round((h.volume / maxVolume) * 44)))}`);
+    });
+    const silent = ranked.filter((h) => h.lots === 0);
+    return [
+        `Whisky auction liquidity, ${months} months to ${latest} (${from} onward)`,
+        `  ${window.length} monthly records from ${ranked.length} house(s)`,
+        `  ${whIntl(totalLots)} lots traded for ${whMoney(totalVolume)}`,
+        `  average per lot across the market ${whMoney(totalLots ? totalVolume / totalLots : 0)}`,
+        "",
+        "Ranked by traded value (hammer rank shows where the same house sits on price):",
+        ...lines,
+        "",
+        silent.length ? `${silent.length} house(s) reported months with no lots at all: ${silent.slice(0, 8).map((h) => h.name).join(", ")}` : "Every house in the window reported lots in every month it appeared.",
+        "",
+        "note: value per lot divides traded value by lots, so a house that sells few expensive bottles and one that sells many cheap ones can land in the same place — read it beside the lots column. Hammer rank is the position by mean winning bid, and the bracketed move is how far that differs from the value rank, so a large positive move means the house is cheaper than its turnover suggests. A \"volume seller\" here means above-average lots at a below-average hammer, not a judgement on quality.",
+    ].join("\n");
+}

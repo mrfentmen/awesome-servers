@@ -558,3 +558,79 @@ export async function prefixInventory(args) {
         "The index answers one row per distinct URL key, so this is the set of addresses that were stored, not the number of times each was fetched. A prefix matching nothing can still have been crawled, because the match is on the address as the site served it, and a site that has since moved will answer a different path than the one that used to exist.",
     ].join("\n");
 }
+/**
+ * What the archive is made of, not when it was captured: one HTML page pulls in
+ * dozens of scripts and images, so a domain with a million captures may hold
+ * only a few thousand pages — and the mix tells you what was being tracked.
+ */
+export async function contentProfile(args) {
+    const domain = String(args?.domain ?? "").trim().replace(/^https?:\/\//, "").replace(/\/$/, "");
+    if (!domain)
+        throw new WaybackError("Give a domain, e.g. 'example.com'.");
+    const limit = Math.min(Math.max(Number(args?.limit ?? 12) || 12, 1), 30);
+    const rows = await wb2Cdx(`url=${encodeURIComponent(domain)}&matchType=domain&output=json&fl=${WB2_FIELDS}&limit=1500`, `the captures under ${domain}`);
+    if (!rows.length)
+        return `The archive index holds no captures for ${domain}. Either it was never crawled or the domain is spelled differently.`;
+    const total = rows.length;
+    const families = new Map();
+    const mimes = new Map();
+    const codes = new Map();
+    const prefixes = new Map();
+    const schemes = new Map();
+    const years = new Set();
+    // A revisit record means the crawler found the bytes unchanged; it is not a
+    // binary file, and lumping it in with them makes the mix read wrongly.
+    const profileFamily = (mime) => (String(mime ?? "").toLowerCase().includes("warc/revisit") ? "duplicate revisits" : wb2Family(mime));
+    for (const row of rows) {
+        const family = profileFamily(row.mimetype);
+        families.set(family, (families.get(family) ?? 0) + 1);
+        const mime = String(row.mimetype ?? "").split(";")[0].trim() || "(none recorded)";
+        mimes.set(mime, (mimes.get(mime) ?? 0) + 1);
+        const code = String(row.statuscode ?? "?");
+        codes.set(code, (codes.get(code) ?? 0) + 1);
+        const year = String(row.timestamp ?? "").slice(0, 4);
+        if (new RegExp("^\\d{4}$").test(year))
+            years.add(year);
+        let path = "";
+        let protocol = "";
+        try {
+            const parsed = new URL(String(row.original ?? "").replace(/^\/\//, "http://"));
+            path = parsed.pathname;
+            protocol = parsed.protocol.replace(":", "");
+        }
+        catch {
+            path = "";
+        }
+        if (protocol)
+            schemes.set(protocol, (schemes.get(protocol) ?? 0) + 1);
+        const first = path.split("/").filter(Boolean)[0] ?? "(root)";
+        prefixes.set(first, (prefixes.get(first) ?? 0) + 1);
+    }
+    const pct = (n) => `${((n / total) * 100).toFixed(1)}%`;
+    const bar = (n) => "#".repeat(Math.max(1, Math.round((n / total) * 36)));
+    const ranked = [...families.entries()].sort((a, b) => b[1] - a[1]);
+    const ok2xx = [...codes.entries()].filter(([c]) => c.startsWith("2")).reduce((s, [, n]) => s + n, 0);
+    const bad = [...codes.entries()].filter(([c]) => c.startsWith("4") || c.startsWith("5")).reduce((s, [, n]) => s + n, 0);
+    return [
+        `Archive content profile of ${domain} — ${total} captures${years.size ? `, ${Math.min(...[...years].map(Number))}-${Math.max(...[...years].map(Number))}` : ""}`,
+        `  pages to everything else  ${ranked.find(([f]) => f === "html pages")?.[1] ?? 0} : ${total - (ranked.find(([f]) => f === "html pages")?.[1] ?? 0)}`,
+        `  successful (2xx)          ${ok2xx} (${pct(ok2xx)})`,
+        `  failed (4xx/5xx)          ${bad} (${pct(bad)})`,
+        "",
+        "What the captures are:",
+        ...ranked.map(([family, count]) => `  ${family.padEnd(22)} ${String(count).padStart(5)}  ${pct(count).padStart(6)}  ${bar(count)}`),
+        "",
+        `Top mimetypes (of ${mimes.size} distinct):`,
+        ...[...mimes.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([m, c]) => `  ${m.padEnd(34)} ${String(c).padStart(5)}  ${pct(c)}`),
+        "",
+        "Status codes:",
+        ...[...codes.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([c, n]) => `  ${c.padEnd(6)} ${String(n).padStart(5)}  ${pct(n)}`),
+        "",
+        `Busiest path prefixes (top ${Math.min(limit, prefixes.size)} of ${prefixes.size}):`,
+        ...[...prefixes.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit).map(([p, n]) => `  /${p.padEnd(30)} ${String(n).padStart(5)}  ${pct(n)}`),
+        "",
+        schemes.size ? `Schemes served: ${[...schemes.entries()].map(([s, n]) => `${s} ${n}`).join(", ")}` : "No parsable URLs in the index.",
+        "",
+        `note: read from a single CDX pass capped at 1,500 captures, so a large site is sampled rather than counted. Assets crawl far more often than pages, which is why the page share looks small. A "duplicate revisit" is a crawl that found the bytes unchanged, so it counts as a capture without being new content.`,
+    ].join("\n");
+}

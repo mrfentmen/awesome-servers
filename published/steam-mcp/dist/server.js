@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { SteamError, fmtPrice, formatAppDetail, formatStoreItem, getAppDetail, getNews, getPlayerCount, getReviewSummary, getTopSellers, searchStore, storeHighlights, salesCheck, playerCountRank, game_achievements } from "./api.js";
-import { premiumTool } from "./gateway.js";
+import { SteamError, fmtPrice, formatAppDetail, formatStoreItem, getAppDetail, getNews, getPlayerCount, getReviewSummary, getTopSellers, searchStore, storeHighlights, salesCheck, playerCountRank, game_achievements, gameRequirements, dlcCost } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -167,11 +166,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: game_requirements ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
         try {
-            return text(await premiumTool("mcp_steam_game_requirements", args));
+            return text(await gameRequirements(args));
         }
         catch (e) {
             return textError(errorMessage(e));
@@ -185,11 +181,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: game_dlc_cost ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
         try {
-            return text(await premiumTool("mcp_steam_game_dlc_cost", args));
+            return text(await dlcCost(args));
         }
         catch (e) {
             return textError(errorMessage(e));

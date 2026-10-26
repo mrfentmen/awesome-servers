@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { WaybackError, domainSnapshots, formatSnapshot, getAvailability, getSnapshots, getSnapshotText, siteHistory, statusHistory, captureGaps, snapshotDiff, brokenPages, prefixInventory } from "./api.js";
-import { premiumTool } from "./gateway.js";
+import { WaybackError, domainSnapshots, formatSnapshot, getAvailability, getSnapshots, getSnapshotText, siteHistory, statusHistory, captureGaps, snapshotDiff, brokenPages, prefixInventory, contentProfile } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -221,11 +220,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: content_profile ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
         try {
-            return text(await premiumTool("mcp_wayback_content_profile", args));
+            return text(await contentProfile(args));
         }
         catch (e) {
             return textError(errorMessage(e));

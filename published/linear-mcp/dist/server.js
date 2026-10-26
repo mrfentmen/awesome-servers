@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { errorMessage, me, listTeams, searchIssues, getIssue, teamIssues, listProjects, myIssues, listLabels, createIssue, updateIssueTitle } from "./api.js";
-import { premiumTool } from "./gateway.js";
+import { errorMessage, me, listTeams, searchIssues, getIssue, teamIssues, listProjects, myIssues, listLabels, createIssue, updateIssueTitle, packageAdoption, projectScorecard } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -166,11 +165,8 @@ export function createServer() {
         inputSchema: z.object({ package: z.string().describe("npm package name, e.g. lodash") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: package_adoption ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
         try {
-            return text(await premiumTool("mcp_linear_package_adoption", args));
+            return text(await packageAdoption(args));
         }
         catch (e) {
             return textError(errorMessage(e));
@@ -182,11 +178,8 @@ export function createServer() {
         inputSchema: z.object({ repo: z.string().describe("github.com owner/repository, e.g. expressjs/express"), limit: z.number().int().min(1).max(25).default(8).describe("How many checks to print (default 8, max 25).") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: project_scorecard ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
         try {
-            return text(await premiumTool("mcp_linear_project_scorecard", args));
+            return text(await projectScorecard(args));
         }
         catch (e) {
             return textError(errorMessage(e));

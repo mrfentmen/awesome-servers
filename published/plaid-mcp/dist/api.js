@@ -101,12 +101,17 @@ const usd = (value) => {
     const n = Number(value);
     if (!Number.isFinite(n))
         return "not reported";
+    if (Math.abs(n) >= 1e12)
+        return `$${(n / 1e12).toLocaleString(undefined, { maximumFractionDigits: 2 })}T`;
     if (Math.abs(n) >= 1e9)
         return `$${(n / 1e9).toLocaleString(undefined, { maximumFractionDigits: 2 })}B`;
     if (Math.abs(n) >= 1e6)
         return `$${(n / 1e6).toLocaleString(undefined, { maximumFractionDigits: 1 })}M`;
     return `$${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 };
+// FDIC call-report money fields are thousands of dollars, so 1907928000 is
+// $1.9 trillion, not $1.9 billion.
+const fdicUsd = (value) => (Number.isFinite(Number(value)) ? usd(Number(value) * 1000) : "not reported");
 const cleanDate = (value) => {
     const raw = String(value ?? "");
     if (/^\d{8}$/.test(raw))
@@ -137,10 +142,63 @@ export async function findBank(args) {
         ...rows.map((row, i) => [
             `${String(i + 1).padStart(2)}. ${String(row.NAME ?? "unnamed")} — certificate ${String(row.CERT ?? "not reported")}`,
             `    ${String(row.CITY ?? "city not reported")}, ${String(row.STALP ?? "state not reported")} | founded ${String(row.ESTYMD ?? "not reported")}`,
-            `    assets ${usd(row.ASSET)} | deposits ${usd(row.DEP)} | report date ${cleanDate(row.REPDTE)}`,
+            `    assets ${fdicUsd(row.ASSET)} | deposits ${fdicUsd(row.DEP)} | report date ${cleanDate(row.REPDTE)}`,
             `    regulator ${String(row.REGAGNT ?? "not reported")} | international banking facility ${row.INTLNET === 1 ? "yes" : "no"} | primary depositor ${row.SPECIALIZ === 1 ? "yes" : "no"}`,
         ].join("\n")),
         "",
         "Source: FDIC BankFind call report data, a public dataset.",
     ].join("\n");
+}
+const FINANCIAL_FIELDS = "REPDTE,ASSET,DEP,NETINC,ROA,ROE,NIMY";
+/** One bank's filed quarters, newest first, from the FDIC call report. */
+export async function bankHealth(args) {
+    const cert = String(args?.cert ?? "").trim().replace(/[^0-9]/g, "");
+    if (!cert)
+        throw new PlaidError("Give an FDIC certificate number, the digits that follow the routing number.");
+    const quarters = Math.round(Math.min(Math.max(Number(args?.quarters ?? 8) || 8, 2), 20));
+    const body = await fdciGet(`/financials?filters=CERT:${cert}&fields=${FINANCIAL_FIELDS}&sort_by=REPDTE&sort_order=DESC&limit=${quarters}&format=json`);
+    const rows = fdciRows(body);
+    if (!rows.length)
+        throw new PlaidError(`The FDIC has no call report filed under certificate ${cert}. A credit union is not in this dataset, and a bank that closed has no current filing.`);
+    const first = rows[rows.length - 1];
+    const latest = rows[0];
+    const change = (a, b) => (Number.isFinite(Number(a)) && Number.isFinite(Number(b)) && Number(b) !== 0 ? ((Number(a) - Number(b)) / Number(b)) * 100 : null);
+    const assetChange = change(latest.ASSET, first.ASSET);
+    const lines = [
+        `FDIC certificate ${cert} — call report health over ${rows.length} quarter(s)`,
+        `  newest filing    ${cleanDate(latest.REPDTE)} | assets ${fdicUsd(latest.ASSET)} | deposits ${fdicUsd(latest.DEP)}`,
+        `  net income       ${fdicUsd(latest.NETINC)} for the quarter`,
+        `  return on assets ${Number.isFinite(Number(latest.ROA)) ? `${Number(latest.ROA).toFixed(2)}%` : "not reported"}`,
+        `  return on equity ${Number.isFinite(Number(latest.ROE)) ? `${Number(latest.ROE).toFixed(2)}%` : "not reported"}`,
+        `  net interest margin ${Number.isFinite(Number(latest.NIMY)) ? `${Number(latest.NIMY).toFixed(2)}%` : "not reported"}`,
+        assetChange === null ? "  asset growth     not comparable across the window" : `  asset growth     ${assetChange >= 0 ? "+" : ""}${assetChange.toFixed(1)}% from ${cleanDate(first.REPDTE)}`,
+        "",
+        "  reported     assets        deposits      net income    ROA     ROE     NIM",
+        ...rows.map((r) => `  ${cleanDate(r.REPDTE)}  ${fdicUsd(r.ASSET).padStart(11)}  ${fdicUsd(r.DEP).padStart(12)}  ${fdicUsd(r.NETINC).padStart(12)}  ${Number.isFinite(Number(r.ROA)) ? `${Number(r.ROA).toFixed(2)}%` : "-"}  ${Number.isFinite(Number(r.ROE)) ? `${Number(r.ROE).toFixed(2)}%` : "-"}  ${Number.isFinite(Number(r.NIMY)) ? `${Number(r.NIMY).toFixed(2)}%` : "-"}`),
+        "",
+        "note: these are figures the bank filed with its regulator, not a measure of whether it is sound. A quarter with no filing is a reporting gap, and a bank that merged keeps its certificate, so a jump in assets can be an acquisition rather than growth.",
+    ];
+    return lines.join("\n");
+}
+/** The biggest active banks headquartered in one state, by filed assets. */
+export async function banksByState(args) {
+    const state = String(args?.state ?? "").trim().toUpperCase();
+    if (!/^[A-Z]{2}$/.test(state))
+        throw new PlaidError(`Give a two-letter US state code, for example OH or CA.`);
+    const limit = Math.round(Math.min(Math.max(Number(args?.limit ?? 10) || 10, 1), 25));
+    const body = await fdciGet(`/institutions?filters=STALP:${state}%20AND%20ACTIVE:1&fields=CERT,NAME,CITY,STALP,ASSET,DEP&sort_by=ASSET&sort_order=DESC&limit=${limit}&format=json`);
+    const rows = fdciRows(body);
+    if (!rows.length)
+        throw new PlaidError(`The FDIC lists no active institution headquartered in ${state}.`);
+    const total = body.meta?.total ?? rows.length;
+    const shownAssets = rows.reduce((sum, r) => sum + (Number(r.ASSET) || 0), 0);
+    const lines = [
+        `Active banks headquartered in ${state} — ${total} in the FDIC database, showing the ${rows.length} largest`,
+        `  the shown ${rows.length} hold ${fdicUsd(shownAssets)} of assets between them`,
+        "",
+        ...rows.map((r, i) => `  ${String(i + 1).padStart(2)}. ${String(r.NAME ?? "unnamed")} — certificate ${String(r.CERT ?? "?")}` + `\n      ${String(r.CITY ?? "?")}, ${state} | assets ${fdicUsd(r.ASSET)} | deposits ${fdicUsd(r.DEP)}`),
+        "",
+        "note: headquarters is where the charter sits, not where the branches are, so a state can be home to a bank with almost no local presence. Trust companies and savings institutions appear alongside commercial banks because the call report covers all of them.",
+    ];
+    return lines.join("\n");
 }

@@ -18,6 +18,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "published"
 GATE = "MCP_LICENSE_KEY"
 STUB = "Not yet implemented"
+# A src/ tree that still imports the removed gateway cannot rebuild the dist/
+# that ships, so it is reported next to the stub bodies rather than left to rot.
+GATEWAY_IMPORT = '"./gateway.js"'
+# Mirrored by the sync script's fallback to a bare name, but the name on npm
+# belongs to another publisher, so nothing here is installable as ours.
+FOREIGN_NAMES = {"twilio-mcp"}
 
 
 def count(paths, needle: str) -> int:
@@ -55,6 +61,7 @@ def main() -> int:
                 "gate": count(shipped, GATE),
                 "stubs": count(shipped, STUB),
                 "src_stubs": count(source, STUB),
+                "src_gateway": count(source, GATEWAY_IMPORT),
                 "src": (pkg_dir / "src").is_dir(),
                 "bytes": size,
             }
@@ -62,7 +69,8 @@ def main() -> int:
 
     gated = [r for r in rows if r["gate"]]
     stubbed = [r for r in rows if r["stubs"]]
-    stale_src = [r for r in rows if r["src_stubs"]]
+    stale_src = [r for r in rows if r["src_stubs"] or r["src_gateway"]]
+    foreign = [r for r in rows if r["name"] in FOREIGN_NAMES]
     scoped = [r for r in rows if r["name"].startswith("@")]
 
     lines = [
@@ -83,7 +91,18 @@ def main() -> int:
         f"- total size: **{sum(r['bytes'] for r in rows) / 1048576:.1f} MB**",
         f"- carrying a licence gate (`{GATE}`): **{len(gated)}**",
         f"- carrying tools that answer `{STUB}` in the shipped `dist/`: **{len(stubbed)}**",
-        f"- whose `src/` still holds the pre-fix source (not shipped): **{len(stale_src)}**",
+        f"- whose `src/` still holds the pre-fix source (not shipped, cannot rebuild `dist/`): **{len(stale_src)}**",
+        "",
+    ]
+    if foreign:
+        if lines and lines[-1] == "":
+            lines.pop()
+        lines += [
+            f"- names on npm owned by another publisher ({len(foreign)}): "
+            + ", ".join(f"`{r['name']}`" for r in foreign)
+            + " — the directory mirrors their tarball, our copy is unpublished",
+        ]
+    lines += [
         "",
         "| package | version | src? | gate | stubs |",
         "| --- | --- | --- | --- | --- |",
@@ -103,7 +122,12 @@ def main() -> int:
     for r in gated + stubbed:
         print(f"  {r['name']}: gate={r['gate']} stubs={r['stubs']}")
     for r in stale_src:
-        print(f"  stale src: {r['name']} ({r['src_stubs']} stub body/bodies in src/, dist is fixed)")
+        reasons = []
+        if r["src_stubs"]:
+            reasons.append(f"{r['src_stubs']} stub body/bodies")
+        if r["src_gateway"]:
+            reasons.append("still imports the removed ./gateway.js")
+        print(f"  stale src: {r['name']} ({', '.join(reasons)}; dist is fixed)")
     return 0
 
 

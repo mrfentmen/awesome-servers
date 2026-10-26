@@ -114,6 +114,8 @@ const OVERRIDES = {
   "shootproof-mcp:daylight_comparison": { locations: [{ name: "London", lat: 51.5074, lon: -0.1278 }], date: "2026-06-21" },
   "deribit-mcp:implied_vol_history": { currency: "BTC", period: "30d" },
   "twelvedata-mcp:fx_board": { base: "EUR" },
+  "kith-mcp:size_run_matrix": { sample: 60, limit: 8 },
+  "kith-mcp:collaboration_census": { sample: 60, limit: 8 },
   "checkly-mcp:http_security_report": { url: "https://github.com" },
   "checkly-mcp:seo_meta": { url: "https://github.com" },
   "aimeleondore-mcp:shop_info": {},

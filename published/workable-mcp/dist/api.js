@@ -478,3 +478,86 @@ function currencyFor(jobs, groupKey) {
     const hit = jobs.find((j) => (j.category ?? "not declared") === groupKey || (j.job_type ?? "not declared") === groupKey);
     return wkParseSalary(hit?.salary)?.currency ?? "unstated";
 }
+// ---- remote_market: a second board, so the answer is not Workable's own echo ----
+const REMOTIVE = "https://remotive.com/api/remote-jobs";
+const SKILL_WORDS = new Set(("experience work working team teams role job company companies years year strong excellent good ability skills " +
+    "requirements responsibilities benefits candidate candidates apply application applicants position offer offers salary " +
+    "remote fully worldwide time full part contract freelance about your you will with this that from have our are " +
+    "including required preferred plus nice must should would could more most other than then them these those which while " +
+    "within across using used use build building develop developing support supporting help helping manage managing").split(" "));
+/**
+ * The wider remote market for a role, read from Remotive rather than Workable.
+ * Workable answers with its own customers; this answers with the rest.
+ */
+export async function remoteMarket(args) {
+    const q = String(args?.query ?? "").trim();
+    if (q.length < 2)
+        throw new WorkableError("Give a role or skill to search for, e.g. 'python' or 'data engineer'.");
+    const limit = Math.min(Math.max(Math.trunc(Number(args?.limit ?? 12) || 12), 1), 50);
+    const url = `${REMOTIVE}?search=${encodeURIComponent(q)}`;
+    const res = await fetch(url, {
+        headers: { "User-Agent": UA, Accept: "application/json" },
+        signal: AbortSignal.timeout(30000),
+    });
+    if (!res.ok)
+        throw new WorkableError(`Remotive returned ${res.status} for "${q}".`);
+    const body = (await res.json());
+    const jobs = Array.isArray(body.jobs) ? body.jobs : [];
+    if (!jobs.length)
+        return `Remotive has no remote roles matching "${q}" right now. That board only carries roles employers post as fully remote.`;
+    const count = (values) => {
+        const m = new Map();
+        for (const v of values)
+            if (v && String(v).trim())
+                m.set(String(v).trim(), (m.get(String(v).trim()) ?? 0) + 1);
+        return [...m.entries()].sort((a, b) => b[1] - a[1]);
+    };
+    const ages = jobs
+        .map((j) => Date.parse(String(j.publication_date ?? "")))
+        .filter((t) => Number.isFinite(t))
+        .map((t) => Math.max(0, Math.floor((Date.now() - t) / 86400000)));
+    const paid = jobs.filter((j) => String(j.salary ?? "").trim());
+    const tags = count(jobs.flatMap((j) => (Array.isArray(j.tags) ? j.tags : [])));
+    const words = new Map();
+    for (const job of jobs) {
+        const text = plain(job.description, 4000).toLowerCase();
+        for (const w of text.match(/[a-z][a-z+#.]{2,}/g) ?? []) {
+            if (w.length < 4 || SKILL_WORDS.has(w) || /^\d+$/.test(w))
+                continue;
+            words.set(w, (words.get(w) ?? 0) + 1);
+        }
+    }
+    const regions = count(jobs.map((j) => j.candidate_required_location));
+    const sortedAges = [...ages].sort((a, b) => a - b);
+    const medianAge = sortedAges.length ? sortedAges[Math.floor(sortedAges.length / 2)] : null;
+    return [
+        `Remote market for "${q}" — ${jobs.length} live role(s) on Remotive`,
+        `  median age        ${medianAge === null ? "no dates published" : `${medianAge} day(s)`}`,
+        `  posted this week  ${ages.filter((a) => a <= 7).length} of ${ages.length} dated`,
+        `  publishes pay     ${paid.length} of ${jobs.length} (${Math.round((paid.length / jobs.length) * 100)}%)`,
+        `  distinct employers ${new Set(jobs.map((j) => j.company_name)).size}`,
+        "",
+        `Who is hiring remotely (top ${Math.min(8, count(jobs.map((j) => j.company_name)).length)}):`,
+        ...count(jobs.map((j) => j.company_name)).slice(0, 8).map(([c, n]) => `  ${String(n).padStart(3)}  ${c}`),
+        "",
+        "Categories:",
+        ...count(jobs.map((j) => j.category)).slice(0, 8).map(([c, n]) => `  ${String(n).padStart(3)}  ${c}`),
+        "",
+        "Contract types:",
+        ...count(jobs.map((j) => j.job_type)).slice(0, 6).map(([t, n]) => `  ${String(n).padStart(3)}  ${t}`),
+        "",
+        "Where the roles are open to:",
+        ...regions.slice(0, 6).map(([r, n]) => `  ${String(n).padStart(3)}  ${r}`),
+        "",
+        "Skills and tools that keep appearing in the descriptions:",
+        ...[...words.entries()].sort((a, b) => b[1] - a[1]).slice(0, 18).map(([w, n]) => `  ${String(n).padStart(3)}  ${w}`),
+        "",
+        tags.size ? `Most tagged skills: ${tags.slice(0, 12).map(([t, n]) => `${t} (${n})`).join(", ")}` : "No tags on these listings.",
+        "",
+        "Listings:",
+        ...jobs.slice(0, limit).map((j, i) => `${i + 1}. ${j.title ?? "?"} — ${j.company_name ?? "?"} | ${j.job_type ?? "?"} | ${j.candidate_required_location ?? "?"}` +
+            `${j.salary ? ` | ${j.salary}` : ""}${j.publication_date ? ` | posted ${String(j.publication_date).slice(0, 10)}` : ""}\n   ${j.url ?? ""}`),
+        "",
+        "Source: Remotive (remotive.com), which asks that its listings link back to the original URL and name it as the source — the links above do both. Its free feed is delayed by 24 hours, so the newest postings will not appear yet.",
+    ].join("\n");
+}

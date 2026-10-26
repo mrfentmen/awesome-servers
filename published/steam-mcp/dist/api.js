@@ -374,3 +374,122 @@ export function game_achievements(args) {
         return lines.join("\n");
     });
 }
+const STEAM_DETAIL = "https://store.steampowered.com/api/appdetails";
+const stripMarkup = (html) => String(html ?? "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(li|p|div)>/gi, "\n")
+    .replace(/<li[^>]*>/gi, "  - ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n\s*\n+/g, "\n")
+    .trim();
+async function steamRecord(appid, filters) {
+    const id = String(appid ?? "").trim();
+    if (!/^\d{1,10}$/.test(id))
+        throw new SteamError(`"${appid}" is not a Steam appid; those are the digits in store.steampowered.com/app/<id>/.`);
+    const url = `${STEAM_DETAIL}?appids=${id}&cc=US&l=en${filters ? `&filters=${filters}` : ""}`;
+    const payload = await getJson(url);
+    const entry = payload?.[id];
+    if (!entry?.success || !entry.data)
+        throw new SteamError(`Steam has no store entry for app ${id}; it may be region-locked, delisted, or a package rather than an app.`);
+    return entry.data;
+}
+/** Requirements and platform facts, with the store's HTML reduced to text. */
+export async function gameRequirements(args) {
+    const data = await steamRecord(args?.appid);
+    const platforms = data.platforms ?? {};
+    const onPlatforms = [platforms.windows && "Windows", platforms.mac && "macOS", platforms.linux && "Linux"].filter(Boolean);
+    const block = (label, value) => {
+        const text = stripMarkup(value?.minimum ? `${value.minimum}` : "");
+        const rec = stripMarkup(value?.recommended ? `${value.recommended}` : "");
+        const lines = [`  ${label} minimum:`];
+        lines.push(...(text ? text.split("\n").slice(0, 14).map((l) => `    ${l}`) : ["    not published"]));
+        lines.push(`  ${label} recommended:`);
+        lines.push(...(rec ? rec.split("\n").slice(0, 14).map((l) => `    ${l}`) : ["    not published"]));
+        return lines;
+    };
+    const languages = stripMarkup(data.supported_languages);
+    const rows = [
+        `${data.name ?? `app ${args?.appid}`} — requirements (app ${args?.appid})`,
+        `  platforms        ${onPlatforms.length ? onPlatforms.join(", ") : "none declared"}`,
+        `  required age     ${data.required_age ? `${data.required_age}+` : "not restricted"}`,
+        `  type             ${data.type ?? "not reported"}`,
+        "",
+        ...(platforms.windows ? block("Windows", data.pc_requirements) : ["  Windows: not sold for this platform"]),
+        "",
+        ...(platforms.mac ? block("macOS", data.mac_requirements) : ["  macOS: not sold for this platform"]),
+        "",
+        ...(platforms.linux ? block("Linux", data.linux_requirements) : ["  Linux: not sold for this platform"]),
+        "",
+        `  languages        ${languages ? languages.replace(/\n/g, "; ").slice(0, 400) : "not published"}`,
+        "",
+        "note: these are the developer's own published requirements, which are often the minimum to launch rather than to play well, and Steam does not verify them. A title that lists no requirement block has simply not filled the field in.",
+    ];
+    return rows.join("\n");
+}
+/** Base game plus every individually priced downloadable item, against the editions. */
+export async function dlcCost(args) {
+    const data = await steamRecord(args?.appid);
+    const currency = data.price_overview?.currency ?? "USD";
+    const money = (cents) => (Number.isFinite(Number(cents)) ? `${(Number(cents) / 100).toFixed(2)} ${currency}` : "no price in this region");
+    const base = data.price_overview?.final;
+    const baseLine = data.is_free ? "free to play" : data.price_overview ? money(base) : "no price published";
+    const ids = Array.isArray(data.dlc) ? data.dlc : [];
+    const priced = [];
+    for (const id of ids.slice(0, 25)) {
+        try {
+            const dlc = await steamRecord(id, "basic,price_overview");
+            priced.push({ id, name: dlc.name ?? `app ${id}`, cents: dlc.price_overview?.final ?? null, free: dlc.is_free === true });
+        }
+        catch {
+            priced.push({ id, name: `app ${id}`, cents: null, free: false });
+        }
+    }
+    const editions = [];
+    for (const group of data.package_groups ?? []) {
+        for (const sub of group.subs ?? []) {
+            if (!sub?.option_text)
+                continue;
+            editions.push({ text: stripMarkup(sub.option_text), cents: Number(sub.price_in_cents_with_discount) || null });
+        }
+    }
+    const pricedDlc = priced.filter((d) => Number.isFinite(d.cents));
+    const dlcTotal = pricedDlc.reduce((sum, d) => sum + d.cents, 0);
+    const unpriced = priced.filter((d) => !Number.isFinite(d.cents));
+    const allIn = Number.isFinite(Number(base)) ? Number(base) + dlcTotal : null;
+    const rows = [
+        `${data.name ?? `app ${args?.appid}`} — what the whole thing costs`,
+        `  base game        ${baseLine}`,
+        `  separate DLC     ${priced.length} item(s), ${pricedDlc.length} priced${unpriced.length ? `, ${unpriced.length} with no individual price` : ""}`,
+        `  DLC total        ${money(dlcTotal)}`,
+        allIn === null ? "  base + all DLC   cannot total without a base price" : `  base + all DLC   ${money(allIn)}`,
+    ];
+    if (editions.length) {
+        rows.push("", "Editions Steam sells as one purchase:");
+        for (const e of editions)
+            rows.push(`  ${money(e.cents).padEnd(14)} ${e.text.slice(0, 90)}`);
+        if (allIn !== null) {
+            const fullest = editions.filter((e) => Number.isFinite(e.cents)).sort((a, b) => b.cents - a.cents)[0];
+            if (fullest)
+                rows.push("", allIn > fullest.cents
+                    ? `Buying the base plus every DLC separately costs ${money(allIn - fullest.cents)} more than the fullest edition at ${money(fullest.cents)}.`
+                    : `Buying the base plus every DLC separately is ${money(fullest.cents - allIn)} cheaper than the fullest edition at ${money(fullest.cents)}.`);
+        }
+    }
+    else {
+        rows.push("", "Steam publishes no packaged edition for this title in this region.");
+    }
+    if (priced.length) {
+        rows.push("", "Individually priced DLC:");
+        for (const d of priced.slice(0, 25))
+            rows.push(`  ${money(d.cents).padEnd(14)} ${d.name.slice(0, 80)}`);
+        if (ids.length > 25)
+            rows.push(`  ... ${ids.length - 25} further DLC item(s) not priced here`);
+    }
+    rows.push("", "note: prices are the US storefront's and ignore sales, bundles and regional pricing. A DLC with no individual price is usually only sold inside a package, so the base + DLC total understates what a completionist would pay — the editions above are the accurate ceiling.");
+    return rows.join("\n");
+}

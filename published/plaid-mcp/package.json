@@ -1,6 +1,6 @@
 {
   "name": "plaid-mcp",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Query Plaid sandbox (set PLAID_CLIENT_ID + PLAID_SECRET): institutions, categories, sandbox public tokens. Sandbox only.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/plaid-mcp",

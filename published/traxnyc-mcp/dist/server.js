@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { errorMessage, searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections, browseCollection, find_by_size, priceDistribution } from "./api.js";
-import { premiumTool } from "./gateway.js";
+import { errorMessage, searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections, browseCollection, find_by_size, priceDistribution, sizeMatrix, catalogueHealth } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -163,11 +162,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: size_matrix ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
         try {
-            return text(await premiumTool("mcp_traxnyc_size_matrix", args));
+            return text(await sizeMatrix(args));
         }
         catch (e) {
             return textError(errorMessage(e));
@@ -195,11 +191,8 @@ export function createServer() {
         inputSchema: z.object({ pages: z.number().describe("Catalogue pages of 250 products to read, 1-3.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: catalogue_health ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
         try {
-            return text(await premiumTool("mcp_traxnyc_catalogue_health", args));
+            return text(await catalogueHealth(args));
         }
         catch (e) {
             return textError(errorMessage(e));

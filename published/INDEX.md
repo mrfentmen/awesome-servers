@@ -13,9 +13,10 @@ it overwrites `dist/` from the registry tarballs.
 - packages: **230**
 - scoped under `@mrfentmen`: **63**
 - total size: **6.1 MB**
-- carrying a licence gate (`MCP_LICENSE_KEY`): **11**
+- carrying a licence gate (`MCP_LICENSE_KEY`): **0**
 - carrying tools that answer `Not yet implemented` in the shipped `dist/`: **0**
-- whose `src/` still holds the pre-fix source (not shipped): **4**
+- whose `src/` still holds the pre-fix source (not shipped, cannot rebuild `dist/`): **5**
+- names on npm owned by another publisher (1): `twilio-mcp` — the directory mirrors their tarball, our copy is unpublished
 
 | package | version | src? | gate | stubs |
 | --- | --- | --- | --- | --- |
@@ -124,7 +125,7 @@ it overwrites `dist/` from the registry tarballs.
 | `jokeapi-mcp` | 1.0.4 | no |  |  |
 | `jolpica-mcp` | 1.1.0 | yes |  |  |
 | `k6-mcp` | 1.0.2 | no |  |  |
-| `kith-mcp` | 1.0.3 | no | 3 |  |
+| `kith-mcp` | 1.0.4 | no |  |  |
 | `kiwi-mcp` | 1.0.3 | no |  |  |
 | `@mrfentmen/klaviyo-mcp` | 1.1.4 | no |  |  |
 | `kong-mcp` | 1.0.2 | no |  |  |
@@ -133,7 +134,7 @@ it overwrites `dist/` from the registry tarballs.
 | `lastfm-mcp` | 1.0.2 | no |  |  |
 | `lemonsqueezy-mcp` | 1.1.0 | no |  |  |
 | `lever-mcp` | 1.0.5 | no |  |  |
-| `@mrfentmen/linear-mcp` | 1.1.2 | no | 3 |  |
+| `@mrfentmen/linear-mcp` | 1.1.4 | no |  |  |
 | `listennotes-mcp` | 1.1.4 | no |  |  |
 | `@mrfentmen/loops-mcp` | 1.0.3 | no |  |  |
 | `louisvuitton-mcp` | 1.1.0 | no |  |  |
@@ -155,7 +156,7 @@ it overwrites `dist/` from the registry tarballs.
 | `@mrfentmen/notion-mcp` | 1.1.4 | no |  |  |
 | `novu-mcp` | 1.1.4 | no |  |  |
 | `@mrfentmen/ntfy-mcp` | 1.1.4 | no |  |  |
-| `nyc-arrests-mcp` | 1.0.2 | no | 3 |  |
+| `nyc-arrests-mcp` | 1.0.3 | no |  |  |
 | `nylas-mcp` | 1.0.2 | no |  |  |
 | `ocrspace-mcp` | 1.0.2 | no |  |  |
 | `ohdear-mcp` | 1.1.0 | no |  |  |
@@ -177,7 +178,7 @@ it overwrites `dist/` from the registry tarballs.
 | `@mrfentmen/pinata-mcp` | 1.1.0 | no |  |  |
 | `pingdom-mcp` | 1.1.0 | no |  |  |
 | `@mrfentmen/pinterest-mcp` | 1.0.4 | no |  |  |
-| `plaid-mcp` | 1.1.2 | no | 3 |  |
+| `plaid-mcp` | 1.1.3 | no |  |  |
 | `plain-mcp` | 1.1.0 | no |  |  |
 | `playcanvas-mcp` | 1.1.0 | no |  |  |
 | `@mrfentmen/polygon-mcp` | 1.1.4 | no |  |  |
@@ -218,17 +219,17 @@ it overwrites `dist/` from the registry tarballs.
 | `statping-mcp` | 1.1.0 | no |  |  |
 | `statuscake-mcp` | 1.1.0 | no |  |  |
 | `statuspage-mcp` | 1.1.0 | no |  |  |
-| `@mrfentmen/steam-mcp` | 1.0.4 | no | 3 |  |
+| `@mrfentmen/steam-mcp` | 1.0.5 | no |  |  |
 | `@mrfentmen/storyblok-mcp` | 1.0.2 | no |  |  |
 | `@mrfentmen/stripe-mcp` | 1.1.0 | no |  |  |
 | `@mrfentmen/supabase-mcp` | 1.1.4 | no |  |  |
 | `swetrix-mcp` | 1.1.0 | no |  |  |
 | `tally-mcp` | 1.1.2 | no |  |  |
 | `@mrfentmen/telegram-mcp` | 1.1.4 | no |  |  |
-| `themuse-mcp` | 1.0.3 | no | 3 |  |
+| `themuse-mcp` | 1.0.4 | no |  |  |
 | `theoddsapi-mcp` | 1.1.0 | no |  |  |
 | `tiingo-mcp` | 1.0.3 | no |  |  |
-| `traxnyc-mcp` | 1.0.3 | no | 3 |  |
+| `traxnyc-mcp` | 1.0.4 | no |  |  |
 | `turbosquid-mcp` | 1.1.0 | no |  |  |
 | `twelvedata-mcp` | 1.1.0 | no |  |  |
 | `twilio-mcp` | 1.0.0 | no |  |  |
@@ -241,11 +242,11 @@ it overwrites `dist/` from the registry tarballs.
 | `usps-mcp` | 1.0.2 | no |  |  |
 | `vapi-mcp` | 1.0.2 | no |  |  |
 | `@mrfentmen/vercel-mcp` | 1.1.4 | no |  |  |
-| `wayback-mcp` | 1.0.2 | no | 3 |  |
+| `wayback-mcp` | 1.0.3 | no |  |  |
 | `weightsbiases-mcp` | 1.1.0 | no |  |  |
-| `whiskyhunter-mcp` | 1.0.3 | no | 3 |  |
+| `whiskyhunter-mcp` | 1.0.4 | no |  |  |
 | `@mrfentmen/wise-mcp` | 1.1.0 | no |  |  |
-| `workable-mcp` | 1.0.3 | no | 3 |  |
-| `@mrfentmen/yfinance-mcp` | 1.0.3 | yes | 3 |  |
+| `workable-mcp` | 1.0.4 | no |  |  |
+| `@mrfentmen/yfinance-mcp` | 1.0.4 | yes |  |  |
 | `@mrfentmen/youtrack-mcp` | 1.0.3 | no |  |  |
 | `@mrfentmen/youtube-mcp` | 1.1.5 | no |  |  |

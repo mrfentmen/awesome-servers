@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { errorMessage, searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections, browseCollection, find_by_size } from "./api.js";
-import { premiumTool } from "./gateway.js";
+import { errorMessage, searchProducts, listNewest, getProduct, priceOverview, findDeals, listCategories, listCollections, browseCollection, find_by_size, sizeRunMatrix, collaborationCensus } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -160,11 +159,8 @@ export function createServer() {
         inputSchema: z.object({ sample: z.string().describe("How many products to sample (default 300, max 1500).").optional(), limit: z.string().describe("How many values or axes to print (default 12, max 40).").optional(), axis: z.string().describe("Axis name filter, e.g. 'Size'. All axes by default.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: size_run_matrix ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
         try {
-            return text(await premiumTool("mcp_kith_size_run_matrix", args));
+            return text(await sizeRunMatrix(args));
         }
         catch (e) {
             return textError(errorMessage(e));
@@ -176,11 +172,8 @@ export function createServer() {
         inputSchema: z.object({ sample: z.string().describe("How many products to sample (default 300, max 1500).").optional(), limit: z.string().describe("How many partners to print (default 15, max 40).").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: collaboration_census ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
         try {
-            return text(await premiumTool("mcp_kith_collaboration_census", args));
+            return text(await collaborationCensus(args));
         }
         catch (e) {
             return textError(errorMessage(e));

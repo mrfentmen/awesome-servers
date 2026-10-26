@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { errorMessage, searchArrests, arrestDetails, historicSearch, topOffenses, precinctActivity, boroughStats, recentFelonies, recentMisdemeanors, offenseLookup, arrestMapData, datasetCoverage } from "./api.js";
-import { premiumTool } from "./gateway.js";
+import { errorMessage, searchArrests, arrestDetails, historicSearch, topOffenses, precinctActivity, boroughStats, recentFelonies, recentMisdemeanors, offenseLookup, arrestMapData, datasetCoverage, arrestTrend, boroughCategoryMatrix } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -205,11 +204,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: arrest_trend ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
         try {
-            return text(await premiumTool("mcp_nyc_arrests_arrest_trend", args));
+            return text(await arrestTrend(args));
         }
         catch (e) {
             return textError(errorMessage(e));
@@ -225,11 +221,8 @@ export function createServer() {
         }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // ---- paywall: borough_category_matrix ----
-        // The body runs on the gateway, behind the licence gate.
-        // ---- paywall: end ----
         try {
-            return text(await premiumTool("mcp_nyc_arrests_borough_category_matrix", args));
+            return text(await boroughCategoryMatrix(args));
         }
         catch (e) {
             return textError(errorMessage(e));

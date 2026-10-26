@@ -75,6 +75,175 @@ async function sampleCatalog(maxItems, pages) {
     }
     return out;
 }
+const kithClamp = (value, lo, hi, dflt) => {
+    const n = Number(value);
+    if (!Number.isFinite(n))
+        return dflt;
+    return Math.min(Math.max(Math.round(n), lo), hi);
+};
+const kithMedian = (values) => {
+    if (!values.length)
+        return null;
+    const sorted = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+};
+async function kithProducts(sample) {
+    const wanted = kithClamp(sample, 1, 1500, 300);
+    const products = await sampleCatalog(wanted, [1, 2, 3, 4, 5, 6]);
+    if (!products.length)
+        throw new KithError("The catalog returned no products. Kith rate-limits a shared address with HTTP 429, and when that happens every catalog tool here fails the same way; wait a minute and retry.");
+    return products;
+}
+/**
+ * Every option axis the shop sells on, with the run of values actually buyable.
+ * A size run is the thing a buyer checks first, and the product tools only ever
+ * print the first variant of one product.
+ */
+export async function sizeRunMatrix(args) {
+    const limit = kithClamp(args?.limit, 1, 40, 12);
+    const axisFilter = String(args?.axis ?? "").trim().toLowerCase();
+    const products = await kithProducts(args?.sample);
+    const axes = new Map();
+    for (const product of products) {
+        const options = Array.isArray(product.options) ? product.options : [];
+        const variants = Array.isArray(product.variants) ? product.variants : [];
+        options.forEach((option, index) => {
+            const name = String(option?.name ?? "").trim();
+            if (!name)
+                return;
+            if (axisFilter && !name.toLowerCase().includes(axisFilter))
+                return;
+            const axis = axes.get(name) ?? { name, values: new Map(), products: 0 };
+            axis.products += 1;
+            for (const variant of variants) {
+                const value = String(variant[`option${index + 1}`] ?? "").trim();
+                if (!value)
+                    continue;
+                const entry = axis.values.get(value) ?? { value, variants: 0, inStock: 0, prices: [] };
+                entry.variants += 1;
+                if (variant.available) {
+                    entry.inStock += 1;
+                    const price = Number(variant.price);
+                    if (Number.isFinite(price))
+                        entry.prices.push(price);
+                }
+                axis.values.set(value, entry);
+            }
+            axes.set(name, axis);
+        });
+    }
+    if (!axes.size) {
+        const names = [...new Set(products.flatMap((p) => (p.options ?? []).map((o) => o?.name).filter(Boolean)))];
+        throw new KithError(axisFilter
+            ? `No option axis matching "${args.axis}". This sample sells on: ${names.join(", ") || "no axes at all"}.`
+            : "The sampled products declare no option axis, so there is no size run to report.");
+    }
+    const rows = [
+        `Option axes across ${products.length} sampled product(s)`, "",
+    ];
+    for (const axis of [...axes.values()].sort((a, b) => b.values.size - a.values.size)) {
+        const values = [...axis.values.values()].sort((a, b) => b.inStock - a.inStock || b.variants - a.variants);
+        const totalVariants = values.reduce((sum, v) => sum + v.variants, 0);
+        const totalInStock = values.reduce((sum, v) => sum + v.inStock, 0);
+        rows.push(`  ${axis.name} — ${values.length} value(s) across ${axis.products} product(s), ${totalInStock} of ${totalVariants} variant(s) buyable (${totalVariants ? ((totalInStock / totalVariants) * 100).toFixed(1) : "0"}%)`);
+        rows.push("    value          variants  buyable  coverage  median in-stock price");
+        for (const value of values.slice(0, limit)) {
+            const coverage = value.variants ? `${((value.inStock / value.variants) * 100).toFixed(0)}%` : "-";
+            const median = kithMedian(value.prices);
+            rows.push(`    ${value.value.slice(0, 14).padEnd(14)} ${String(value.variants).padStart(8)} ${String(value.inStock).padStart(8)} ${coverage.padStart(9)}  ${median === null ? "-" : `$${median.toFixed(2)}`}`);
+        }
+        if (values.length > limit)
+            rows.push(`    ... ${values.length - limit} further value(s)`);
+        const soldOut = values.filter((v) => v.inStock === 0).map((v) => v.value);
+        if (soldOut.length)
+            rows.push(`    nothing left in: ${soldOut.slice(0, 12).join(", ")}${soldOut.length > 12 ? ` … (+${soldOut.length - 12})` : ""}`);
+        rows.push("");
+    }
+    rows.push(`note: counted over the first ${products.length} product(s) of the live catalog, not all of it, so a size that exists only on a later page will not appear. Coverage is per variant, not per unit: one buyable size can mean a single item left. Prices are the storefront's own, already in dollars.`);
+    return rows.join("\n");
+}
+/** Words that start the product part of a title, not the partner's name. */
+const PARTNER_STOP = new Set([
+    "for", "the", "and", "with", "x",
+    "leather", "suede", "canvas", "wool", "cotton", "denim", "nylon", "fleece", "merino", "cashmere", "satin", "mesh",
+    "chair", "stool", "table", "lamp", "rug", "sofa", "blanket", "candle", "mug",
+    "jacket", "coat", "parka", "vest", "hoodie", "crewneck", "sweatshirt", "sweater", "pullover", "cardigan",
+    "tee", "t-shirt", "shirt", "polo", "tank", "top", "short", "shorts", "pant", "pants", "trouser", "trousers",
+    "sweatpant", "sweatpants", "jean", "jeans", "cargo", "tight", "tights", "legging", "leggings",
+    "sneaker", "sneakers", "shoe", "shoes", "boot", "boots", "loafer", "sandal", "slide", "mule",
+    "cap", "hat", "beanie", "bucket", "visor", "headband", "scarf", "glove", "gloves", "sock", "socks",
+    "bag", "tote", "backpack", "duffle", "wallet", "card", "keychain", "lanyard",
+    "ring", "necklace", "earring", "bracelet", "watch", "sunglasses", "eyewear", "perfume", "cologne",
+]);
+/**
+ * The partner a title names, cut where the product starts. Titles read
+ * "Kith for <partner> <product>", so the partner is the leading words that are
+ * neither a product noun, a material, nor a model code.
+ */
+function partnerOf(title) {
+    const text = String(title ?? "");
+    const after = /\bkith\s*(?:×|x|&|for)\s+(.+)$/i.exec(text);
+    const before = /^(.+?)\s*(?:×|x|for)\s*kith\b/i.exec(text);
+    const raw = after?.[1] ?? before?.[1];
+    if (!raw)
+        return null;
+    const words = raw.replace(/[|,()].*$/, "").trim().split(/\s+/);
+    const kept = [];
+    for (const word of words) {
+        const clean = word.replace(/^["“”]+|["“”]+$/g, "").replace(/[^\w'’&.\-]/g, "");
+        if (!clean)
+            break;
+        const lower = clean.toLowerCase();
+        if (kept.length && (PARTNER_STOP.has(lower) || /\d/.test(clean)))
+            break;
+        // A model code such as XT-VYGR is all capitals and belongs to the product.
+        if (kept.length && clean === clean.toUpperCase() && /[A-Z]{2}/.test(clean))
+            break;
+        if (kept.length >= 3)
+            break;
+        kept.push(clean);
+    }
+    const name = kept.join(" ").replace(/\s+/g, " ").trim();
+    if (name.length < 2 || /^(kith|the|and|a)$/i.test(name))
+        return null;
+    return name;
+}
+export async function collaborationCensus(args) {
+    const limit = kithClamp(args?.limit, 1, 40, 15);
+    const products = await kithProducts(args?.sample);
+    const partners = new Map();
+    for (const product of products) {
+        const name = partnerOf(product.title);
+        if (!name)
+            continue;
+        const key = name.toLowerCase().replace(/^['‘’"“”]+/, "");
+        const entry = partners.get(key) ?? { name, products: 0, variants: 0, prices: [], example: "" };
+        entry.products += 1;
+        entry.variants += Array.isArray(product.variants) ? product.variants.length : 0;
+        const price = Number(product.variants?.[0]?.price ?? product.price);
+        if (Number.isFinite(price))
+            entry.prices.push(price);
+        if (!entry.example)
+            entry.example = product.title;
+        partners.set(key, entry);
+    }
+    if (!partners.size)
+        throw new KithError(`None of the ${products.length} sampled titles names a partner in a form this tool recognises ("Kith x …", "Kith for …", "… for Kith"). A drop titled without the partner will not be counted.`);
+    const ranked = [...partners.values()].sort((a, b) => b.products - a.products || a.name.localeCompare(b.name));
+    const rows = [
+        `Collaborations across ${products.length} sampled product(s) — ${partners.size} partner(s) recognised`,
+        `  ${ranked.reduce((sum, p) => sum + p.products, 0)} of the sample names a partner; the rest are in-house or unparseable`, "",
+        "  partner          products  variants  from",
+        ...ranked.slice(0, limit).map((p) => `  ${p.name.slice(0, 16).padEnd(16)} ${String(p.products).padStart(8)} ${String(p.variants).padStart(9)}  ${p.prices.length ? `$${Math.min(...p.prices).toFixed(2)}` : "-"}`),
+        "",
+        "Most carried:",
+        ...ranked.slice(0, Math.min(limit, 5)).map((p) => `  ${p.name} — e.g. ${p.example}`),
+        "",
+        "note: partners are read from product titles, so a collaboration titled only by product name is invisible here, and a brand that shares a word with a product line can be over-counted. This counts what is on sale now, not the history of drops. Sample pages are whatever the store returns first, which skews towards the current season.",
+    ];
+    return rows.join("\n");
+}
 export async function searchProducts(query, limit, maxPrice, productType) {
     const n = Math.min(Number(limit ?? 10) || 10, 25);
     const mp = maxPrice !== undefined ? Number(maxPrice) : undefined;
@@ -110,13 +279,13 @@ export async function getProduct(handle) {
     const sl = slim(p, true);
     const variants = (Array.isArray(p.variants) ? p.variants : []).map((v) => ({
         title: v.title, parts: parseParts(v.title),
-        price_usd: Math.round(Number(v.price)) / 100,
+        price_usd: Number(v.price),
         compare_at_usd: v.compare_at_price !== null && v.compare_at_price !== undefined ? Math.round(Number(v.compare_at_price)) / 100 : null,
         available: v.available,
     }));
     const images = (Array.isArray(p.images) ? p.images : []).map((i) => typeof i === "string" ? i : i.src).filter(Boolean);
     const html = typeof p.body_html === "string" ? p.body_html : (typeof p.description === "string" ? p.description : "");
-    const dollar = variants.length && Number.isFinite(variants[0].price_usd) ? variants[0].price_usd : (sl.price_usd !== null ? Math.round(sl.price_usd) / 100 : null);
+    const dollar = variants.length && Number.isFinite(variants[0].price_usd) ? variants[0].price_usd : sl.price_usd;
     return pretty({
         store: "KITH", ...sl, price_usd: dollar, variants, images,
         description: html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 1500) || null,
