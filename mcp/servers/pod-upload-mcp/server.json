@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/pod-upload-mcp",
-  "description": "MCP server that drives browser uploads of artwork to print-on-demand marketplaces (Redbubble, TeePublic). No API keys, no credentials handled - the human logs in, the agent drives the form.",
+  "description": "Browser-driven uploads of artwork to print-on-demand shops: Redbubble and TeePublic.",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"

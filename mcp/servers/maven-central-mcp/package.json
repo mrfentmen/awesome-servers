@@ -1,9 +1,9 @@
 {
   "name": "@mrfentmen/maven-central-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Maven Central: artifact search, version history, group listings, class lookup, dependency snippets.",
   "type": "module",
-  "mcpName": "io.github.mrfentmen/@mrfentmen/maven-central-mcp",
+  "mcpName": "io.github.mrfentmen/maven-central-mcp",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mrfentmen/awesome-servers.git"

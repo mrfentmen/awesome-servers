@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/thecocktaildb-mcp",
-  "description": "TheCocktailDB: search 600+ cocktails, full recipes with measures and steps, browse by letter \u2014 keyless.",
+  "description": "TheCocktailDB: search 600+ cocktails, full recipes with measures and steps, browse by letter.",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"

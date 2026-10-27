@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/launch-library-mcp",
-  "description": "Launch Library 2: upcoming and past rocket launches, missions, orbits, space events and agencies \u2014 keyless.",
+  "description": "Launch Library 2: upcoming and past rocket launches, missions, orbits, space events and agencies.",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"

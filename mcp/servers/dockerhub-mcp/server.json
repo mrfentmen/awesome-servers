@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.mrfentmen/container-registry-mcp",
-  "description": "Docker Hub images: search, details, tags with sizes and digests, official image ranking, tag manifests.",
+  "name": "io.github.mrfentmen/dockerhub-mcp",
+  "description": "Docker Hub: image search, details, tags with sizes and digests, and official image ranking.",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"

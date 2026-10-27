@@ -550,7 +550,7 @@ overwrites `dist/` from the registry tarballs.
 | `@mrfentmen/mastodon-mcp` | 1.1.2 | no |  |  |
 | `math-tools-mcp` | 1.0.2 | no |  | 2 |
 | `@mrfentmen/matrix-mcp` | 1.0.0 | no |  |  |
-| `@mrfentmen/maven-central-mcp` | 1.0.0 | no |  |  |
+| `@mrfentmen/maven-central-mcp` | 1.0.1 | no |  |  |
 | `maven-info-mcp` | 1.0.2 | no |  | 2 |
 | `@mrfentmen/maze-mcp` | 1.0.0 | no |  |  |
 | `mbta-mcp` | 1.0.2 | no |  | 2 |
