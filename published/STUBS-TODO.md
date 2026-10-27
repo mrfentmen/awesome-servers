@@ -1,19 +1,17 @@
 # Tools still answering "Not yet implemented"
 
-1002 tool(s) across 497 package(s) still ship a stub body.
+1000 tool(s) across 495 package(s) still ship a stub body.
 Each was a gateway-only tool whose implementation never existed in the package,
 so the body has to be written against the live service and checked with a real
-call before publishing. 30 package(s) are already fixed.
+call before publishing. 32 package(s) are already fixed.
 
 | package | tools | has src |
 | --- | --- | --- |
 | `bandcamp-mcp` | details | no |
 | `blizzard-mcp` | weights | no |
 | `browser-mcp` | records | no |
-| `cern-mcp` | files | no |
 | `cricapi-mcp` | scorecard | no |
 | `dependency-license-change-mcp` | matrix | no |
-| `discogs-mcp` | profile | no |
 | `documenso-mcp` | plan | no |
 | `document-generator-mcp` | citation | no |
 | `ebi-search-mcp` | info | no |

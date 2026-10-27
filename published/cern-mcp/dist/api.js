@@ -53,3 +53,35 @@ export function formatRecord(r, index) {
     const prefix = index !== undefined ? `${index + 1}. ` : "";
     return `${prefix}[${r.id ?? "?"}] ${r.title ?? "(untitled)"}${r.type ? ` (${r.type})` : ""}${r.experiment ? ` — ${r.experiment}` : ""}${r.year ? ` (${r.year})` : ""}`;
 }
+
+const CERN = 'https://opendata.cern.ch/api';
+export async function recordFiles(args = {}) {
+    const id = Number(args?.id);
+    if (!Number.isInteger(id) || id < 1)
+        throw new Error('Provide a CERN Open Data record id, like 1120.');
+    const limit = Math.min(Math.max(Number(args?.limit ?? 50) || 50, 1), 200);
+    const headers = { 'User-Agent': 'mrfentmen-cern-mcp/1.0', Accept: 'application/json' };
+    const recRes = await fetch(`${CERN}/records/${id}`, { headers, signal: AbortSignal.timeout(25000) });
+    if (recRes.status === 404)
+        throw new Error(`CERN Open Data has no record ${id}`);
+    if (!recRes.ok)
+        throw new Error(`CERN Open Data returned ${recRes.status}`);
+    const rec = (await recRes.json());
+    const bucket = rec.links?.bucket;
+    if (!bucket)
+        return `${rec.metadata?.title ?? `Record ${id}`} has no file bucket.`;
+    const bRes = await fetch(bucket, { headers, signal: AbortSignal.timeout(30000) });
+    if (!bRes.ok)
+        throw new Error(`The record's file bucket returned ${bRes.status}`);
+    const contents = (await bRes.json()).contents ?? [];
+    if (!contents.length)
+        return `${rec.metadata?.title ?? `Record ${id}`} has an empty file bucket.`;
+    const shown = contents.slice(0, limit);
+    const totalBytes = contents.reduce((sum, f) => sum + Number(f.size ?? 0), 0);
+    return [
+        `${rec.metadata?.title ?? `Record ${id}`} — ${contents.length} file(s), ${(totalBytes / 1048576).toFixed(1)} MB total`,
+        '',
+        ...shown.map((f, i) => `${i + 1}. ${f.key} · ${f.mimetype ?? 'unknown type'} · ${(Number(f.size ?? 0) / 1024).toFixed(0)} KB · ${f.checksum ?? 'no checksum'}`),
+        contents.length > shown.length ? `… ${contents.length - shown.length} more file(s).` : '',
+    ].filter(Boolean).join('\n');
+}

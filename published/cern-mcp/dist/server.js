@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { CernError, formatRecord, getRecord, searchRecords } from "./api.js";
+import { CernError, formatRecord, getRecord, searchRecords, recordFiles } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -52,9 +52,8 @@ export function createServer() {
         inputSchema: z.object({ id: z.number().describe("CERN record id, e.g. 60."), limit: z.number().describe("Max files.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement files locally (paywall removed)
         try {
-            return textError("Not yet implemented: files");
+            return text(await recordFiles(args));
         }
         catch (e) {
             return textError(String(e));

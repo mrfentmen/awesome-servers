@@ -14,7 +14,7 @@ overwrites `dist/` from the registry tarballs.
 - scoped under `@mrfentmen`: **195**
 - total size: **15.7 MB**
 - carrying a licence gate (`MCP_LICENSE_KEY`): **1**
-- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **497**
+- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **495**
 - whose `src/` still holds the pre-fix source (not shipped, cannot rebuild `dist/`): **36**
 
 | package | version | src? | gate | stubs |
@@ -132,7 +132,7 @@ overwrites `dist/` from the registry tarballs.
 | `census-geo-mcp` | 1.0.5 | no |  |  |
 | `census-mcp` | 1.1.0 | no |  |  |
 | `censys-mcp` | 1.0.7 | no |  |  |
-| `cern-mcp` | 1.0.5 | no |  | 1 |
+| `cern-mcp` | 1.0.6 | no |  |  |
 | `certspotter-mcp` | 1.0.5 | no |  | 2 |
 | `cex-mcp` | 1.0.5 | no |  | 2 |
 | `cfpb-mcp` | 1.0.5 | no |  | 2 |
@@ -232,7 +232,7 @@ overwrites `dist/` from the registry tarballs.
 | `digitalnz-mcp` | 1.0.5 | no |  | 2 |
 | `dior-mcp` | 1.1.1 | no |  |  |
 | `directus-mcp` | 1.0.7 | no |  |  |
-| `@mrfentmen/discogs-mcp` | 1.0.5 | no |  | 1 |
+| `@mrfentmen/discogs-mcp` | 1.0.6 | no |  |  |
 | `@mrfentmen/discord-mcp` | 1.1.0 | no |  |  |
 | `disify-mcp` | 1.1.1 | no |  |  |
 | `disney-mcp` | 1.0.5 | no |  | 2 |

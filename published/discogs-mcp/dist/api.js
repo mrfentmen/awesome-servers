@@ -141,3 +141,62 @@ export async function masterRelease(args) {
     lines.push("  a master groups every pressing of one recording, which is a different record from any single release and cannot be reached from the release id alone.");
     return lines.join("\n");
 }
+
+const DISCOGS_API = 'https://api.discogs.com';
+const DISCOGS_ARTIST_UA = { 'User-Agent': 'mrfentmen-discogs-mcp/1.0', Accept: 'application/json' };
+export async function artistProfile(args = {}) {
+    const id = Number(args?.artist_id);
+    if (!Number.isInteger(id) || id < 1)
+        throw new Error('Provide a Discogs artist id, like 1.');
+    const artistRes = await fetch(`${DISCOGS_API}/artists/${id}`, { headers: DISCOGS_ARTIST_UA, signal: AbortSignal.timeout(25000) });
+    if (artistRes.status === 404)
+        throw new Error(`Discogs has no artist ${id}`);
+    if (!artistRes.ok)
+        throw new Error(`Discogs returned ${artistRes.status}`);
+    const artist = (await artistRes.json());
+    const entries = [];
+    let total = 0;
+    let pages = 1;
+    for (let page = 1; page <= 5 && page <= pages; page++) {
+        const relRes = await fetch(`${DISCOGS_API}/artists/${id}/releases?per_page=100&page=${page}`, { headers: DISCOGS_ARTIST_UA, signal: AbortSignal.timeout(25000) });
+        if (!relRes.ok)
+            throw new Error(`Discogs releases returned ${relRes.status}`);
+        const rel = (await relRes.json());
+        pages = rel.pagination?.pages ?? 1;
+        total = rel.pagination?.items ?? entries.length;
+        entries.push(...(rel.releases ?? []));
+    }
+    const tally = (key) => {
+        const m = new Map();
+        for (const e of entries) {
+            const v = String(e[key] ?? 'unknown');
+            m.set(v, (m.get(v) ?? 0) + 1);
+        }
+        return [...m.entries()].sort((a, b) => b[1] - a[1]);
+    };
+    const years = new Map();
+    for (const e of entries) {
+        if (!e.year) continue;
+        years.set(String(e.year), (years.get(String(e.year)) ?? 0) + 1);
+    }
+    const yearKeys = [...years.keys()].sort();
+    const aliases = (artist.aliases ?? []).map((a) => a.name).filter(Boolean);
+    const groups = (artist.groups ?? []).map((g) => g.name).filter(Boolean);
+    const members = (artist.members ?? []).map((m) => `${m.name}${m.active === false ? ' (inactive)' : ''}`).filter(Boolean);
+    return [
+        `${artist.name}${artist.realname ? ` — ${artist.realname}` : ''} (id ${artist.id})`,
+        artist.profile ? String(artist.profile).trim().slice(0, 500) : 'No written profile.',
+        (artist.namevariations ?? []).length ? `Name variations: ${(artist.namevariations ?? []).join(', ')}` : '',
+        aliases.length ? `Aliases (${aliases.length}): ${aliases.slice(0, 12).join(', ')}` : '',
+        groups.length ? `Member of: ${groups.slice(0, 10).join(', ')}` : '',
+        members.length ? `Group members: ${members.slice(0, 10).join(', ')}` : '',
+        (artist.urls ?? []).length ? `Links: ${(artist.urls ?? []).slice(0, 5).join(', ')}` : '',
+        '',
+        `Credited catalogue: ${total} release(s), ${entries.length} read`,
+        `By type: ${tally('type').map(([k, n]) => `${k} ${n}`).join(' · ')}`,
+        `By role: ${tally('role').map(([k, n]) => `${k} ${n}`).join(' · ')}`,
+        `By format: ${tally('format').slice(0, 6).map(([k, n]) => `${k} ${n}`).join(' · ')}`,
+        yearKeys.length ? `Years: ${yearKeys[0]} to ${yearKeys[yearKeys.length - 1]} (${yearKeys.length} active years)` : 'Years: none recorded',
+        `https://www.discogs.com/artist/${artist.id}`,
+    ].filter(Boolean).join('\n');
+}
