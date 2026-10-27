@@ -1,0 +1,41 @@
+{
+  "name": "meme-reference-mcp",
+  "version": "1.0.0",
+  "description": "Meme template reference and image generation from the official Imgflip and memegen APIs: search, detail, popularity, random pick, generator list and rendered memes.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/meme-reference-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "meme-reference-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "memes",
+    "imgflip",
+    "memegen",
+    "image-generation"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
