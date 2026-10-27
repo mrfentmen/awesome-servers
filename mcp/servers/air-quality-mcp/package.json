@@ -1,0 +1,42 @@
+{
+  "name": "@mrfentmen/air-quality-mcp",
+  "version": "1.0.0",
+  "description": "Open-Meteo air quality: AQI, PM2.5, ozone, NO2 and pollen forecasts for any coordinate - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/air-quality-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "air-quality-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "air-quality",
+    "aqi",
+    "pollution",
+    "weather",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
