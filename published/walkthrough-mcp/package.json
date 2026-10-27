@@ -1,7 +1,7 @@
 {
-  "name": "walkthrough-mcp",
-  "version": "1.0.0",
-  "description": "MCP server for retro game walkthroughs, FAQs, and cheats — backed by StrategyWiki's open MediaWiki API.",
+  "name": "@mrfentmen/walkthrough-mcp",
+  "version": "1.0.1",
+  "description": "Use this MCP server to retro game walkthroughs, FAQs, and cheats, backed by StrategyWiki's open MediaWiki API",
   "type": "module",
   "mcpName": "io.github.mrfentmen/walkthrough-mcp",
   "repository": {
@@ -38,5 +38,8 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

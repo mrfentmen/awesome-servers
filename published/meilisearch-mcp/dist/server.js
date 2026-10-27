@@ -2,99 +2,148 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import * as MS from "./meilisearch.js";
+const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
+const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
+const WRITE = { readOnlyHint: false, openWorldHint: true };
+const DESTRUCTIVE = { readOnlyHint: false, destructiveHint: true, openWorldHint: true };
 export function createServer() {
     const server = new McpServer({ name: "meilisearch-mcp", version: "1.0.0" });
-    server.tool("check_health", "Check if the MeiliSearch server is running and healthy.", {}, async () => {
+    server.registerTool("check_health", {
+        title: "Check health",
+        description: "Check if the MeiliSearch server is running and healthy.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
         try {
             const health = await MS.checkHealth();
             return { content: [{ type: "text", text: JSON.stringify(health, null, 2) }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Health check error: ${err.message}` }] };
+            return { content: [{ type: "text", text: `Health check error: ${err.message}` }], isError: true };
         }
     });
-    server.tool("list_indexes", "List all MeiliSearch indexes.", { limit: z.number().min(1).max(100).optional().describe("Max indexes to return") }, async (args) => {
+    server.registerTool("list_indexes", {
+        title: "List indexes",
+        description: "List all MeiliSearch indexes.",
+        inputSchema: z.object({ limit: z.number().min(1).max(100).optional().describe("Max indexes to return") }),
+        annotations: READ_ONLY,
+    }, async (args) => {
         try {
             const indexes = await MS.listIndexes();
             return { content: [{ type: "text", text: JSON.stringify(indexes, null, 2) }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
         }
     });
-    server.tool("get_index", "Get details about a specific MeiliSearch index.", { index_uid: z.string().describe("The index UID") }, async (args) => {
+    server.registerTool("get_index", {
+        title: "Get index",
+        description: "Get details about a specific MeiliSearch index.",
+        inputSchema: z.object({ index_uid: z.string().describe("The index UID") }),
+        annotations: READ_ONLY,
+    }, async (args) => {
         try {
             const index = await MS.getIndex(args.index_uid);
             return { content: [{ type: "text", text: JSON.stringify(index, null, 2) }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
         }
     });
-    server.tool("create_index", "Create a new MeiliSearch index.", {
-        uid: z.string().describe("Unique index identifier"),
-        primary_key: z.string().optional().describe("Primary key for documents (default: id)"),
+    server.registerTool("create_index", {
+        title: "Create index",
+        description: "Create a new MeiliSearch index.",
+        inputSchema: z.object({
+            uid: z.string().describe("Unique index identifier"),
+            primary_key: z.string().optional().describe("Primary key for documents (default: id)"),
+        }),
+        annotations: WRITE,
     }, async (args) => {
         try {
             const result = await MS.createIndex(args.uid, args.primary_key);
             return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
         }
     });
-    server.tool("delete_index", "Delete a MeiliSearch index.", { index_uid: z.string().describe("The index UID to delete") }, async (args) => {
+    server.registerTool("delete_index", {
+        title: "Delete index",
+        description: "Delete a MeiliSearch index.",
+        inputSchema: z.object({ index_uid: z.string().describe("The index UID to delete") }),
+        annotations: DESTRUCTIVE,
+    }, async (args) => {
         try {
             const result = await MS.deleteIndex(args.index_uid);
             return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
         }
     });
-    server.tool("search_index", "Search for documents in a MeiliSearch index.", {
-        index_uid: z.string().describe("The index UID to search in"),
-        query: z.string().describe("Search query string"),
-        limit: z.number().min(1).max(1000).optional().describe("Max results to return (default 20)"),
-        offset: z.number().min(0).optional().describe("Number of results to skip"),
-        filter: z.string().optional().describe("Filter expression (e.g., price > 100)"),
+    server.registerTool("search_index", {
+        title: "Search index",
+        description: "Search for documents in a MeiliSearch index.",
+        inputSchema: z.object({
+            index_uid: z.string().describe("The index UID to search in"),
+            query: z.string().describe("Search query string"),
+            limit: z.number().min(1).max(1000).optional().describe("Max results to return (default 20)"),
+            offset: z.number().min(0).optional().describe("Number of results to skip"),
+            filter: z.string().optional().describe("Filter expression (e.g., price > 100)"),
+        }),
+        annotations: READ_ONLY,
     }, async (args) => {
         try {
             const result = await MS.searchIndex(args.index_uid, args.query, args.limit ?? 20, args.offset, args.filter);
             return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Search error: ${err.message}` }] };
+            return { content: [{ type: "text", text: `Search error: ${err.message}` }], isError: true };
         }
     });
-    server.tool("get_documents", "List documents in a MeiliSearch index.", {
-        index_uid: z.string().describe("The index UID"),
-        limit: z.number().min(1).max(1000).optional().describe("Max documents to return (default 20)"),
-        offset: z.number().min(0).optional().describe("Number of documents to skip (default 0)"),
+    server.registerTool("get_documents", {
+        title: "Get documents",
+        description: "List documents in a MeiliSearch index.",
+        inputSchema: z.object({
+            index_uid: z.string().describe("The index UID"),
+            limit: z.number().min(1).max(1000).optional().describe("Max documents to return (default 20)"),
+            offset: z.number().min(0).optional().describe("Number of documents to skip (default 0)"),
+        }),
+        annotations: READ_ONLY,
     }, async (args) => {
         try {
             const docs = await MS.getDocuments(args.index_uid, args.limit ?? 20, args.offset ?? 0);
             return { content: [{ type: "text", text: JSON.stringify(docs, null, 2) }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
         }
     });
-    server.tool("get_document", "Get a single document by ID from a MeiliSearch index.", {
-        index_uid: z.string().describe("The index UID"),
-        id: z.string().describe("The document ID"),
+    server.registerTool("get_document", {
+        title: "Get document",
+        description: "Get a single document by ID from a MeiliSearch index.",
+        inputSchema: z.object({
+            index_uid: z.string().describe("The index UID"),
+            id: z.string().describe("The document ID"),
+        }),
+        annotations: READ_ONLY,
     }, async (args) => {
         try {
             const doc = await MS.getDocument(args.index_uid, args.id);
             return { content: [{ type: "text", text: JSON.stringify(doc, null, 2) }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
         }
     });
-    server.tool("add_documents", "Add documents to a MeiliSearch index. Accepts a JSON array of document objects.", {
-        index_uid: z.string().describe("The index UID"),
-        documents: z.string().describe('JSON array of documents, e.g. [{"id":"1","title":"Doc"}]'),
+    server.registerTool("add_documents", {
+        title: "Add documents",
+        description: "Add documents to a MeiliSearch index. Accepts a JSON array of document objects.",
+        inputSchema: z.object({
+            index_uid: z.string().describe("The index UID"),
+            documents: z.string().describe('JSON array of documents, e.g. [{"id":"1","title":"Doc"}]'),
+        }),
+        annotations: WRITE,
     }, async (args) => {
         try {
             const docs = JSON.parse(args.documents);
@@ -104,60 +153,90 @@ export function createServer() {
             return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
         }
     });
-    server.tool("delete_document", "Delete a document by ID from a MeiliSearch index.", {
-        index_uid: z.string().describe("The index UID"),
-        id: z.string().describe("The document ID to delete"),
+    server.registerTool("delete_document", {
+        title: "Delete document",
+        description: "Delete a document by ID from a MeiliSearch index.",
+        inputSchema: z.object({
+            index_uid: z.string().describe("The index UID"),
+            id: z.string().describe("The document ID to delete"),
+        }),
+        annotations: DESTRUCTIVE,
     }, async (args) => {
         try {
             const result = await MS.deleteDocument(args.index_uid, args.id);
             return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
         }
     });
-    server.tool("get_stats", "Get statistics about the MeiliSearch instance.", {}, async () => {
+    server.registerTool("get_stats", {
+        title: "Get stats",
+        description: "Get statistics about the MeiliSearch instance.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
         try {
             const stats = await MS.getStats();
             return { content: [{ type: "text", text: JSON.stringify(stats, null, 2) }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
         }
     });
-    server.tool("get_index_stats", "Get statistics for a specific index.", { index_uid: z.string().describe("The index UID") }, async (args) => {
+    server.registerTool("get_index_stats", {
+        title: "Get index stats",
+        description: "Get statistics for a specific index.",
+        inputSchema: z.object({ index_uid: z.string().describe("The index UID") }),
+        annotations: READ_ONLY,
+    }, async (args) => {
         try {
             const stats = await MS.getIndexStats(args.index_uid);
             return { content: [{ type: "text", text: JSON.stringify(stats, null, 2) }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
         }
     });
-    server.tool("get_task", "Get the status of an asynchronous task.", { task_uid: z.string().describe("The task UID") }, async (args) => {
+    server.registerTool("get_task", {
+        title: "Get task",
+        description: "Get the status of an asynchronous task.",
+        inputSchema: z.object({ task_uid: z.string().describe("The task UID") }),
+        annotations: READ_ONLY,
+    }, async (args) => {
         try {
             const task = await MS.getTask(args.task_uid);
             return { content: [{ type: "text", text: JSON.stringify(task, null, 2) }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
         }
     });
-    server.tool("list_keys", "List all API keys for the MeiliSearch instance.", {}, async () => {
+    server.registerTool("list_keys", {
+        title: "List keys",
+        description: "List all API keys for the MeiliSearch instance.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
         try {
             const keys = await MS.listKeys();
             return { content: [{ type: "text", text: JSON.stringify(keys, null, 2) }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
         }
     });
-    server.tool("update_settings", "Update settings for a MeiliSearch index (searchable attributes, filterable, sortable, ranking rules, etc).", {
-        index_uid: z.string().describe("The index UID"),
-        settings: z.string().describe("JSON settings object (see MeiliSearch settings API)"),
+    server.registerTool("update_settings", {
+        title: "Update settings",
+        description: "Update settings for a MeiliSearch index (searchable attributes, filterable, sortable, ranking rules, etc).",
+        inputSchema: z.object({
+            index_uid: z.string().describe("The index UID"),
+            settings: z.string().describe("JSON settings object (see MeiliSearch settings API)"),
+        }),
+        annotations: WRITE,
     }, async (args) => {
         try {
             const settings = JSON.parse(args.settings);
@@ -165,7 +244,7 @@ export function createServer() {
             return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
         }
     });
     return server;

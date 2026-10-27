@@ -1,12 +1,12 @@
 {
-  "name": "mixpanel-mcp",
-  "version": "1.0.2",
+  "name": "@mrfentmen/mixpanel-mcp",
+  "version": "1.0.7",
   "description": "MCP server for Mixpanel product analytics. Query events, funnels, retention, cohorts, and user profiles.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/mixpanel-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/mixpanel-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "mixpanel-mcp": "./dist/index.js"
@@ -16,9 +16,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "/opt/homebrew/bin/tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "dev": "rm -rf dist && /opt/homebrew/bin/tsc -p tsconfig.json && node dist/index.js"
+    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js"
   },
   "keywords": [
     "mcp",
@@ -36,5 +36,8 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

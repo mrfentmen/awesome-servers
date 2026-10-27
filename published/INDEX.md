@@ -1,20 +1,20 @@
 # Published snapshot
 
-This directory is the code users install. It was mirrored from the npm
-registry by `scripts/sync-published-snapshot.py`, then repaired in place:
-every tool that answered `Not yet implemented` has a real implementation,
-and no package carries a licence gate. `servers/` holds the older source
-and is not what ships.
+This directory is the code users install. `scripts/mirror-registry.py`
+downloads every MCP package the account publishes on npm and keeps the
+highest version per slug, so this tree matches the registry rather than
+older local work. `servers/` holds the hand-written source and is not what
+ships.
 
 Regenerate this summary with `python3 scripts/index-published.py`. Re-run
-`sync-published-snapshot.py` only when every local fix has been published —
-it overwrites `dist/` from the registry tarballs.
+`mirror-registry.py` only when every local fix has been published — it
+overwrites `dist/` from the registry tarballs.
 
 - packages: **960**
-- scoped under `@mrfentmen`: **186**
+- scoped under `@mrfentmen`: **195**
 - total size: **15.6 MB**
 - carrying a licence gate (`MCP_LICENSE_KEY`): **2**
-- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **525**
+- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **526**
 - whose `src/` still holds the pre-fix source (not shipped, cannot rebuild `dist/`): **36**
 
 | package | version | src? | gate | stubs |
@@ -24,7 +24,7 @@ it overwrites `dist/` from the registry tarballs.
 | `abuseipdb-mcp` | 1.1.0 | no |  |  |
 | `ackee-mcp` | 1.0.6 | no |  |  |
 | `adguardhome-mcp` | 1.0.9 | no |  |  |
-| `adobe-premiere-mcp` | 1.0.1 | no |  |  |
+| `@mrfentmen/adobe-premiere-mcp` | 1.0.6 | no |  |  |
 | `advice-mcp` | 1.0.6 | no |  | 2 |
 | `affirmations-mcp` | 1.0.5 | no |  | 2 |
 | `agify-mcp` | 1.0.6 | no |  | 2 |
@@ -355,7 +355,7 @@ it overwrites `dist/` from the registry tarballs.
 | `geojs-mcp` | 1.0.2 | no |  | 1 |
 | `geolocation-db-mcp` | 1.0.2 | no |  | 1 |
 | `ghibli-mcp` | 1.0.2 | no |  | 2 |
-| `gimp-mcp` | 1.0.1 | no |  |  |
+| `@mrfentmen/gimp-mcp` | 1.0.3 | no |  |  |
 | `git-reflog-archaeologist-mcp` | 1.0.3 | no |  | 1 |
 | `@mrfentmen/gitea-mcp` | 1.0.3 | no |  | 2 |
 | `github-intel-mcp` | 1.0.2 | no |  |  |
@@ -530,7 +530,7 @@ it overwrites `dist/` from the registry tarballs.
 | `mcstatus-mcp` | 1.0.2 | no |  | 1 |
 | `mdn-search-mcp` | 1.0.2 | no |  | 2 |
 | `medrxiv-mcp` | 1.0.2 | no |  | 2 |
-| `meilisearch-mcp` | 1.0.1 | no |  |  |
+| `@mrfentmen/meilisearch-mcp` | 1.0.2 | no |  |  |
 | `@mrfentmen/meme-generator-mcp` | 1.0.2 | yes |  | 2 |
 | `meme-reference-mcp` | 1.0.0 | no |  |  |
 | `memegen-mcp` | 1.0.3 | no |  | 3 |
@@ -552,7 +552,7 @@ it overwrites `dist/` from the registry tarballs.
 | `missoma-mcp` | 1.1.3 | no |  |  |
 | `@mrfentmen/mitre-attack-mcp` | 1.0.3 | no |  | 4 |
 | `mixcloud-mcp` | 1.0.2 | no |  | 2 |
-| `mixpanel-mcp` | 1.0.2 | no |  |  |
+| `@mrfentmen/mixpanel-mcp` | 1.0.7 | no |  |  |
 | `mlb-mcp` | 1.0.2 | no |  | 2 |
 | `mlb-stats-mcp` | 1.0.0 | no |  |  |
 | `mobygames-mcp` | 1.1.3 | no |  |  |
@@ -751,7 +751,7 @@ it overwrites `dist/` from the registry tarballs.
 | `robohash-mcp` | 1.0.3 | no |  | 1 |
 | `rolex-mcp` | 1.0.6 | no |  |  |
 | `rollbar-mcp` | 1.1.3 | no |  |  |
-| `rom-mcp` | 1.2.0 | no |  |  |
+| `@mrfentmen/rom-mcp` | 1.2.1 | no |  |  |
 | `ron-swanson-mcp` | 1.0.2 | no |  | 2 |
 | `ror-mcp` | 1.0.0 | no |  |  |
 | `@mrfentmen/rss-mcp` | 1.0.5 | no |  | 2 |
@@ -767,7 +767,7 @@ it overwrites `dist/` from the registry tarballs.
 | `schema-compatibility-mcp` | 1.0.2 | no |  |  |
 | `schema-sieve-mcp` | 1.0.3 | no |  | 1 |
 | `scrabble-mcp` | 1.0.2 | no |  | 2 |
-| `screenplaywriter-mcp` | 1.0.2 | no |  |  |
+| `@mrfentmen/screenplaywriter-mcp` | 1.0.3 | no |  |  |
 | `scryfall-mcp` | 1.0.6 | no |  |  |
 | `seafile-mcp` | 1.0.1 | no |  |  |
 | `seatgeek-mcp` | 1.1.2 | no |  |  |
@@ -923,13 +923,13 @@ it overwrites `dist/` from the registry tarballs.
 | `vatcomply-mcp` | 1.0.2 | no |  | 1 |
 | `vatsim-mcp` | 1.0.2 | no |  | 2 |
 | `@mrfentmen/vercel-mcp` | 1.1.6 | no |  |  |
-| `vg-resource-mcp` | 1.0.2 | no | 3 |  |
+| `@mrfentmen/vg-resource-mcp` | 1.0.4 | no | 3 |  |
 | `vgmdb-mcp` | 1.0.3 | no |  | 3 |
 | `vin-decoder-mcp` | 1.0.3 | no |  | 4 |
 | `virustotal-mcp` | 1.0.1 | no |  |  |
-| `vndb-mcp` | 1.0.0 | no |  |  |
+| `@mrfentmen/vndb-mcp` | 1.0.4 | no |  | 2 |
 | `vocadb-mcp` | 1.0.3 | no |  | 4 |
-| `walkthrough-mcp` | 1.0.0 | no |  |  |
+| `@mrfentmen/walkthrough-mcp` | 1.0.1 | no |  |  |
 | `waqi-mcp` | 1.0.3 | no |  | 2 |
 | `warframe-mcp` | 1.0.3 | no |  | 3 |
 | `wargaming-mcp` | 1.0.1 | no |  |  |
