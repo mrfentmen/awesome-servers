@@ -321,6 +321,25 @@ function parseGameDetails(html: string, id: string): GameDetails {
 // MCP server
 // ---------------------------------------------------------------------------
 
+async function runSearch(
+  query: string,
+  limit: number,
+  sort: string,
+): Promise<{ content: [{ type: "text"; text: string }] }> {
+  const params = new URLSearchParams({ searchfor: query });
+  if (sort !== "relevance") params.set("sortby", SORT_OPTIONS[sort as keyof typeof SORT_OPTIONS]);
+  const html = await fetchIfdbPage(`${IFDB_BASE}/search?${params.toString()}`);
+  const { total, results } = parseSearchResults(html);
+  const payload = {
+    query,
+    sort,
+    totalResults: total > 0 ? total : null,
+    returned: Math.min(limit, results.length),
+    results: results.slice(0, limit),
+  };
+  return { content: [{ type: "text" as const, text: JSON.stringify(payload, null, 2) }] };
+}
+
 const server = new McpServer({
   name: "ifdb-mcp-server",
   version: "1.0.0",
@@ -349,20 +368,7 @@ server.registerTool(
         ),
     },
   },
-  async ({ query, limit, sort }) => {
-    const params = new URLSearchParams({ searchfor: query });
-    if (sort !== "relevance") params.set("sortby", SORT_OPTIONS[sort]);
-    const html = await fetchIfdbPage(`${IFDB_BASE}/search?${params.toString()}`);
-    const { total, results } = parseSearchResults(html);
-    const payload = {
-      query,
-      sort,
-      totalResults: total,
-      returned: Math.min(limit, results.length),
-      results: results.slice(0, limit),
-    };
-    return { content: [{ type: "text" as const, text: JSON.stringify(payload, null, 2) }] };
-  }
+  async ({ query, limit, sort }) => runSearch(query, limit, sort)
 );
 
 server.registerTool(
@@ -389,6 +395,48 @@ server.registerTool(
     }
     return { content: [{ type: "text" as const, text: JSON.stringify(details, null, 2) }] };
   }
+);
+
+server.registerTool(
+  "browse_by_author",
+  {
+    title: "Browse IFDB by author",
+    description:
+      "List the IFDB games credited to one author, using IFDB's author: search filter. No API key needed.",
+    inputSchema: {
+      author: z.string().min(2).describe("Author name, e.g. Andrew Plotkin"),
+      limit: z.number().int().min(1).max(50).default(10).describe("Maximum number of results."),
+    },
+  },
+  async ({ author, limit }) => runSearch(`author:"${author}"`, limit, "relevance")
+);
+
+server.registerTool(
+  "browse_by_year",
+  {
+    title: "Browse IFDB by release year",
+    description:
+      "List IFDB games released in a given year, using IFDB's year: search filter. No API key needed.",
+    inputSchema: {
+      year: z.number().int().min(1975).max(2100).describe("Release year, e.g. 1990"),
+      limit: z.number().int().min(1).max(50).default(10).describe("Maximum number of results."),
+    },
+  },
+  async ({ year, limit }) => runSearch(`year:${year}`, limit, "relevance")
+);
+
+server.registerTool(
+  "browse_by_genre",
+  {
+    title: "Browse IFDB by genre",
+    description:
+      "List IFDB games tagged with a genre, using IFDB's genre: search filter. No API key needed.",
+    inputSchema: {
+      genre: z.string().min(2).describe("Genre tag, e.g. Horror or Science Fiction"),
+      limit: z.number().int().min(1).max(50).default(10).describe("Maximum number of results."),
+    },
+  },
+  async ({ genre, limit }) => runSearch(`genre:${genre}`, limit, "relevance")
 );
 
 async function main() {

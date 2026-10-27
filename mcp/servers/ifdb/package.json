@@ -1,6 +1,6 @@
 {
   "bin": {
-    "ifdb-mcp-server": "dist/index.js"
+    "ifdb-mcp-server": "./dist/index.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
@@ -22,7 +22,7 @@
     "text-adventure"
   ],
   "license": "MIT",
-  "main": "dist/index.js",
+  "main": "./dist/index.js",
   "name": "ifdb-mcp-server",
   "scripts": {
     "build": "tsc",
@@ -33,5 +33,9 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mrfentmen/awesome-servers.git"
-  }
+  },
+  "files": [
+    "dist"
+  ],
+  "mcpName": "io.github.mrfentmen/ifdb"
 }

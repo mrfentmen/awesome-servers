@@ -145,7 +145,14 @@ const ENDPOINTS: Record<string, Endpoint> = {
   },
 };
 
-function argSchema(params: ParamDef[]): Record<string, unknown> {
+interface ArgSchema {
+  type: 'object';
+  properties: Record<string, unknown>;
+  required?: string[];
+  additionalProperties: false;
+}
+
+function argSchema(params: ParamDef[]): ArgSchema {
   const properties: Record<string, unknown> = {};
   const required: string[] = [];
   for (const p of params) {
@@ -181,7 +188,11 @@ function collect(args: Record<string, unknown> | undefined, params: ParamDef[]):
     else if (p.key === 'week') out.week = validateWeek(v);
     else if (p.key === 'seasonType') out.seasonType = validateSeasonType(v);
     else if (p.type === 'string') out[p.key] = optionalText(v, p.key) ?? '';
-    else out[p.key] = v;
+    else {
+      const n = Number(v);
+      if (!Number.isFinite(n)) throw new Error(`${p.key} must be a number`);
+      out[p.key] = n;
+    }
   }
   return out;
 }
@@ -204,7 +215,11 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
     let data = await cfbdGet(ep.path, collect(args, ep.params));
     if (name === 'cfbd_games') data = summarizeGames(data);
     if (name === 'cfbd_rankings') {
-      data = pollTop(data, typeof args?.poll === 'string' ? args.poll : undefined, args?.top_n);
+      data = pollTop(
+        data,
+        typeof args?.poll === 'string' ? args.poll : undefined,
+        typeof args?.top_n === 'number' ? args.top_n : undefined
+      );
     }
     return json(data);
   } catch (err) {

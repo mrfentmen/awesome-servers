@@ -208,3 +208,12 @@ export function isochroneContours(data: unknown): unknown {
   if (!rec?.features) return data;
   return rec.features.map((f) => f.properties ?? {});
 }
+
+/** Required non-empty text argument; throws a readable error instead of sending a blank query. */
+export function requireText(value: unknown, label: string, max = 200): string {
+  if (typeof value !== 'string') throw new Error(`${label} is required`);
+  const text = value.trim();
+  if (text.length === 0) throw new Error(`${label} is required`);
+  if (text.length > max) throw new Error(`${label} must be at most ${max} characters`);
+  return text;
+}

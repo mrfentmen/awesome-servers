@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/usgs-mcp",
   "description": "Use this MCP server to live earthquake data from the USGS. Latest quakes, magnitudes, locations, and depth",
   "repository": {
-    "url": "https://github.com/mrfentmen/usgs-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

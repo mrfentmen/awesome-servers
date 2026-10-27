@@ -63,7 +63,7 @@ export async function waitForHumanLogin(url: string, heartbeats: string, timeout
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     await new Promise((r) => setTimeout(r, 4000));
-    const u = await page.url().catch(() => '');
+    const u = page.url();
     if (!u.includes('login') && !u.includes('sign_in')) {
       let marked = false;
       try {
@@ -165,7 +165,7 @@ async function setMatureNo(page: Page): Promise<boolean> {
 
 async function ensureAgreement(page: Page): Promise<boolean> {
   return page.evaluate(() => {
-    const c = Array.from(document.querySelectorAll('input[type=checkbox]')).find((x) =>
+    const c = Array.from(document.querySelectorAll<HTMLInputElement>('input[type=checkbox]')).find((x) =>
       ((x.getAttribute('aria-label') || '') + ((x.parentElement && x.parentElement.textContent) || '')).includes('I agree to the Redbubble'),
     );
     if (!c) return false;
@@ -194,7 +194,7 @@ async function saveWork(page: Page): Promise<{ ok: boolean; url: string; errors:
   const errors = await page.evaluate(() =>
     Array.from(new Set(
       Array.from(document.querySelectorAll('[class*=error], [class*=Error]'))
-        .map((n) => (n.innerText || '').trim().replace(/\s+/g, ' '))
+        .map((n) => (n.textContent || '').trim().replace(/\s+/g, ' '))
         .filter((t) => t && t.length < 100),
     )).slice(0, 6),
   );
@@ -226,7 +226,7 @@ export async function rbUploadWork(args: RbUploadArgs): Promise<RbUploadResult> 
       const errors = await page.evaluate(() =>
         Array.from(new Set(
           Array.from(document.querySelectorAll('[class*=error], [class*=Error]'))
-            .map((n) => (n.innerText || '').trim().replace(/\s+/g, ' '))
+            .map((n) => (n.textContent || '').trim().replace(/\s+/g, ' '))
             .filter((t) => t && t.length < 100),
         )).slice(0, 4),
       ).catch(() => []);

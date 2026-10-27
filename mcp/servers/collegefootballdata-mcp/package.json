@@ -1,11 +1,13 @@
 {
   "name": "collegefootballdata-mcp",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "MCP server for the CollegeFootballData.com (CFBD) API: teams, games, scoreboard, rankings, betting lines, weather, player stats, recruiting, coaches, SP+/SRS ratings and the season calendar. One free Bearer key, no paywall in the server itself.",
   "type": "module",
   "private": false,
-  "bin": { "collegefootballdata-mcp": "dist/index.js" },
-  "main": "dist/index.js",
+  "bin": {
+    "collegefootballdata-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test tests/"
@@ -17,6 +19,16 @@
     "@types/node": "^22.13.0",
     "typescript": "^5.8.0"
   },
-  "engines": { "node": ">=20" },
-  "license": "MIT"
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "mcpName": "io.github.mrfentmen/collegefootballdata-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  }
 }

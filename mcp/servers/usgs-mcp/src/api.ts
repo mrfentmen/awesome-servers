@@ -59,6 +59,62 @@ export async function queryQuakes(
   return (d.features ?? []).slice(0, limit).map(mapFeature)
 }
 
+async function fdsn(params: URLSearchParams, label: string): Promise<Quake[]> {
+  const res = await fetch(`${QUERY}?${params}`, { signal: AbortSignal.timeout(20000) })
+  if (!res.ok) throw new UsgsError(`USGS ${label} error ${res.status}`)
+  const d = await res.json()
+  return (d.features ?? []).map(mapFeature)
+}
+
+/** One event by its USGS id (e.g. us7000abcd). */
+export async function quakeDetail(id: string): Promise<Quake> {
+  const clean = id.trim()
+  if (!/^[a-z0-9]{4,30}$/i.test(clean)) throw new UsgsError(`"${id}" is not a USGS event id`)
+  const rows = await fdsn(new URLSearchParams({ format: "geojson", eventid: clean }), "event lookup")
+  if (rows.length === 0) throw new UsgsError(`No USGS event with id ${clean}`)
+  return rows[0]
+}
+
+/** Earthquakes within a radius of a point, strongest first. */
+export async function quakesNear(
+  latitude: number,
+  longitude: number,
+  radiusKm: number,
+  minMagnitude: number,
+  limit: number,
+): Promise<Quake[]> {
+  if (latitude < -90 || latitude > 90) throw new UsgsError("latitude must be between -90 and 90")
+  if (longitude < -180 || longitude > 180) throw new UsgsError("longitude must be between -180 and 180")
+  if (radiusKm <= 0 || radiusKm > 20000) throw new UsgsError("radius must be between 0 and 20000 km")
+  return fdsn(
+    new URLSearchParams({
+      format: "geojson",
+      latitude: String(latitude),
+      longitude: String(longitude),
+      maxradiuskm: String(radiusKm),
+      minmagnitude: String(minMagnitude),
+      orderby: "magnitude",
+      limit: String(Math.min(limit, 50)),
+    }),
+    "radius query",
+  )
+}
+
+/** Strongest earthquakes over the last N days. */
+export async function biggestQuakes(days: number, minMagnitude: number, limit: number): Promise<Quake[]> {
+  const start = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10)
+  return fdsn(
+    new URLSearchParams({
+      format: "geojson",
+      starttime: start,
+      minmagnitude: String(minMagnitude),
+      orderby: "magnitude",
+      limit: String(Math.min(limit, 50)),
+    }),
+    "strength query",
+  )
+}
+
 export function formatQuake(q: Quake): string {
   const lines = [
     `M ${q.mag ?? "?"} ${q.place ?? "Unknown place"}`,
