@@ -43,4 +43,4 @@ Other
 yfinance, mcp, data, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/yfinance-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/yfinance-mcp

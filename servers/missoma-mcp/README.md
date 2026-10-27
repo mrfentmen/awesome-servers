@@ -13,4 +13,4 @@ Query the Missoma catalog (missoma.com): search demi-fine jewelry, newest arriva
 
 ## Source
 
-[missoma-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/missoma-mcp)
+[missoma-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/missoma-mcp)

@@ -18,4 +18,4 @@ Use ntfy.sh (keyless; optional NTFY_BASE_URL + NTFY_TOKEN): publish notification
 
 ## Source
 
-[ntfy-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/ntfy-mcp)
+[ntfy-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/ntfy-mcp)

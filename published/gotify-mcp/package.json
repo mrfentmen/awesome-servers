@@ -1,12 +1,12 @@
 {
   "name": "gotify-mcp",
-  "version": "1.0.3",
+  "version": "1.0.6",
   "description": "Query any Gotify server (self-hosted; set GOTIFY_BASE_URL + GOTIFY_TOKEN, sent as X-Gotify-Key): send messages, list messages, list applications.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/gotify-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "gotify-mcp": "./dist/index.js"

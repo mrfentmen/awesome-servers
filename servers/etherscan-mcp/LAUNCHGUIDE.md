@@ -36,4 +36,4 @@ Finance
 etherscan, ethereum, crypto, evm, defi
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/etherscan-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/etherscan-mcp

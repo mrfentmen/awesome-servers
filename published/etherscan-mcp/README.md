@@ -18,6 +18,6 @@ Query the Etherscan v2 API (free key; set ETHERSCAN_API_KEY; chainid default 1):
 
 ## Source
 
-[etherscan-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/etherscan-mcp)
+[etherscan-mcp](https://github.com/mrfentmen/awesome-servers)
 
 

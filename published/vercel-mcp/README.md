@@ -18,4 +18,4 @@ Query the Vercel API (token; set VERCEL_TOKEN, Bearer): projects, project detail
 
 ## Source
 
-[vercel-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/vercel-mcp)
+[vercel-mcp](https://github.com/mrfentmen/awesome-servers)

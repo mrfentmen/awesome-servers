@@ -9,4 +9,4 @@ Query your Appwrite instance (self-hosted or cloud; set APPWRITE_ENDPOINT + APPW
 
 ## Source
 
-[appwrite-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/appwrite-mcp)
+[appwrite-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/appwrite-mcp)

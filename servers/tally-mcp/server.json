@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/tally-mcp",
   "description": "Query Tally (key; set TALLY_API_KEY, Bearer): forms, form details, submissions.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.1.0",

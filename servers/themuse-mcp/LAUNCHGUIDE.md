@@ -41,4 +41,4 @@ Jobs
 themuse, mcp, data, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/themuse-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/themuse-mcp

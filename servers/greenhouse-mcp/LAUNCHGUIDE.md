@@ -41,4 +41,4 @@ Jobs
 greenhouse, mcp, data, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/greenhouse-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/greenhouse-mcp

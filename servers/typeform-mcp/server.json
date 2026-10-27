@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/typeform-mcp",
   "description": "Query Typeform (token; set TYPEFORM_TOKEN, Bearer): forms, form details, responses.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.1.0",

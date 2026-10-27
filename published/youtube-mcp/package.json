@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/youtube-mcp",
-  "version": "1.1.5",
+  "version": "1.1.7",
   "description": "Query the YouTube Data API v3 (free Google key; set YOUTUBE_API_KEY, query param): video search, video details, channel details.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/youtube-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "youtube-mcp": "./dist/index.js"

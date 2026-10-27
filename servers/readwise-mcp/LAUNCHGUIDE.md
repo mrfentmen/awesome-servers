@@ -29,4 +29,4 @@ Business Tools
 readwise, reading
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/readwise-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/readwise-mcp

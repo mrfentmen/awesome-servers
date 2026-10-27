@@ -1,12 +1,12 @@
 {
   "name": "google-fonts-mcp",
-  "version": "1.0.3",
+  "version": "1.0.6",
   "description": "Query the Google Fonts Developer API (free Google key; set GOOGLE_FONTS_KEY, query param): font list, search, family details.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/google-fonts-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "google-fonts-mcp": "./dist/index.js"

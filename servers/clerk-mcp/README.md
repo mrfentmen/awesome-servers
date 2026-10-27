@@ -9,4 +9,4 @@ Query the Clerk Backend API (secret key; set CLERK_SECRET_KEY, Bearer): users, u
 
 ## Source
 
-[clerk-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/clerk-mcp)
+[clerk-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/clerk-mcp)

@@ -41,4 +41,4 @@ Other
 cars, fuel, epa, mpg, emissions, mcp
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/fueleconomy-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/fueleconomy-mcp

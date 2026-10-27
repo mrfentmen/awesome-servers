@@ -9,4 +9,4 @@ Query your OPNsense (self-hosted; set OPNSENSE_URL + OPNSENSE_KEY + OPNSENSE_SEC
 
 ## Source
 
-[opnsense-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/opnsense-mcp)
+[opnsense-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/opnsense-mcp)

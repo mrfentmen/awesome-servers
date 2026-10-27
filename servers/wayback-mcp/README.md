@@ -17,4 +17,4 @@ MCP server for the Internet Archive Wayback Machine: closest snapshots, snapshot
 
 ## Source
 
-[wayback-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/wayback-mcp)
+[wayback-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/wayback-mcp)

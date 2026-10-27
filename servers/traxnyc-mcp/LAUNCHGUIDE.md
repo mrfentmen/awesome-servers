@@ -41,4 +41,4 @@ Ecommerce
 traxnyc, mcp, shopping, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/traxnyc-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/traxnyc-mcp

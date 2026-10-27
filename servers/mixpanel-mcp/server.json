@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/mixpanel-mcp",
   "description": "Query Mixpanel events, funnels, retention, cohorts, and user profiles.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.4",

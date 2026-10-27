@@ -18,4 +18,4 @@ Query Mailchimp (key; set MAILCHIMP_API_KEY, datacenter derived from key suffix)
 
 ## Source
 
-[mailchimp-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/mailchimp-mcp)
+[mailchimp-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/mailchimp-mcp)

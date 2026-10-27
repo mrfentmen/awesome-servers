@@ -10,4 +10,4 @@ Query the Folk API (free tier key; set FOLK_API_KEY, Bearer): people, person det
 
 ## Source
 
-[folk-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/folk-mcp)
+[folk-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/folk-mcp)

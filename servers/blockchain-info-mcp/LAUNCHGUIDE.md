@@ -41,4 +41,4 @@ Other
 blockchain info, mcp, shopping, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/blockchain-info-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/blockchain-info-mcp

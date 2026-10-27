@@ -29,4 +29,4 @@ Finance
 tiingo, mcp, data, api
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/tiingo-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/tiingo-mcp

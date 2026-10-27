@@ -18,4 +18,4 @@ Query the Slack Web API (bot token; set SLACK_BOT_TOKEN, xoxb): channels, histor
 
 ## Source
 
-[slack-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/slack-mcp)
+[slack-mcp](https://github.com/mrfentmen/awesome-servers)

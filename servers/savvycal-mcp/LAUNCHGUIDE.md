@@ -37,4 +37,4 @@ AI
 scheduling, timezone, meetings, calendar, productivity, mcp
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/savvycal-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/savvycal-mcp

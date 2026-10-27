@@ -30,4 +30,4 @@ Developer Tools
 rollbar, errors, crash-reporting, monitoring
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/rollbar-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/rollbar-mcp

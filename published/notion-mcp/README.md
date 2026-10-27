@@ -18,4 +18,4 @@ Query Notion (integration token; set NOTION_API_KEY, Bearer + version header): s
 
 ## Source
 
-[notion-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/notion-mcp)
+[notion-mcp](https://github.com/mrfentmen/awesome-servers)

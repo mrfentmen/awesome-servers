@@ -37,4 +37,4 @@ Business Tools
 sporty-and-rich, fashion, athleisure, shopping, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/sportyandrich-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/sportyandrich-mcp

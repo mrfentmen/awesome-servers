@@ -10,4 +10,4 @@ Query your Kong Admin API (self-hosted; set KONG_ADMIN_URL, default http://local
 
 ## Source
 
-[kong-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/kong-mcp)
+[kong-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/kong-mcp)

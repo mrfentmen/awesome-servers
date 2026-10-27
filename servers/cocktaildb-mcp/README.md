@@ -16,4 +16,4 @@ Query TheCocktailDB (keyless): cocktail search, full recipes with ingredients/me
 
 ## Source
 
-[cocktaildb-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/cocktaildb-mcp)
+[cocktaildb-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/cocktaildb-mcp)

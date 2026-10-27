@@ -31,4 +31,4 @@ The token is sent to Airtable as a Bearer header and nowhere else.
 
 ## Source
 
-[airtable-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/airtable-mcp)
+[airtable-mcp](https://github.com/mrfentmen/awesome-servers)

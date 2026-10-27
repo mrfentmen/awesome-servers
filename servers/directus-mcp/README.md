@@ -9,4 +9,4 @@ Query your Directus instance (self-hosted or cloud; set DIRECTUS_URL + DIRECTUS_
 
 ## Source
 
-[directus-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/directus-mcp)
+[directus-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/directus-mcp)

@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/resend-mcp",
-  "version": "1.1.4",
+  "version": "1.1.6",
   "description": "Query the Resend API (key; set RESEND_API_KEY, Bearer): domains, domain details, email details.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/resend-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "resend-mcp": "./dist/index.js"

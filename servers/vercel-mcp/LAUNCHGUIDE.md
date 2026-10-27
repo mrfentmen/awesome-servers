@@ -37,4 +37,4 @@ Developer Tools
 vercel, deploy, hosting
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/vercel-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/vercel-mcp

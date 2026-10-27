@@ -16,4 +16,4 @@ Query Open Brewery DB (keyless): search US breweries by name/city/state/type, de
 
 ## Source
 
-[brewery-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/brewery-mcp)
+[brewery-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/brewery-mcp)

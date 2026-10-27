@@ -29,4 +29,4 @@ Business Tools
 weightsbiases, mcp, data, api
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/weightsbiases-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/weightsbiases-mcp

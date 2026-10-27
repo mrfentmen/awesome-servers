@@ -10,4 +10,4 @@ Query Readwise (token; set READWISE_TOKEN, Token header): auth check, books, hig
 
 ## Source
 
-[readwise-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/readwise-mcp)
+[readwise-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/readwise-mcp)

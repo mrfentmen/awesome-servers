@@ -36,4 +36,4 @@ Finance
 paypal, payments, sandbox
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/paypal-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/paypal-mcp

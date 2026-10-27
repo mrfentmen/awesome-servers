@@ -1,12 +1,12 @@
 {
   "name": "tiingo-mcp",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "MCP server for Tiingo: stocks, forex, crypto. Needs a free API token.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/tiingo-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "tiingo-mcp": "./dist/index.js"

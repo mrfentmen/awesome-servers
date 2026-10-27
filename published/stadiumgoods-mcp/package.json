@@ -1,12 +1,12 @@
 {
   "name": "stadiumgoods-mcp",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Query the Stadium Goods catalog (stadiumgoods.com, NYC): search sneakers and streetwear, newest arrivals, enriched product details (sizes), price stats, below-median deals, and category counts.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/stadiumgoods-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "stadiumgoods-mcp": "./dist/index.js"

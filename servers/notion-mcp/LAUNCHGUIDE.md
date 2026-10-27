@@ -36,4 +36,4 @@ Business Tools
 notion, docs, wiki
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/notion-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/notion-mcp

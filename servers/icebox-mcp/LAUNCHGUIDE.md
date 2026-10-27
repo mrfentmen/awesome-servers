@@ -41,4 +41,4 @@ Ecommerce
 icebox, mcp, shopping, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/icebox-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/icebox-mcp

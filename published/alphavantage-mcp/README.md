@@ -37,9 +37,6 @@ This project is intentionally narrow. It should be treated as a practical helper
 * `priceHistory`  Price history.
 * `companyProfile`  Company profile.
 
-## Licence — no paywall
+## Licence
 
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.
+Every tool in this package is free: no licence key, no paid tier, no hosted gateway. Everything runs locally.

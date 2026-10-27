@@ -18,4 +18,4 @@ Query Hashnode GraphQL (token; set HASHNODE_TOKEN, raw Authorization; uses gql-b
 
 ## Source
 
-[hashnode-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/hashnode-mcp)
+[hashnode-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/hashnode-mcp)

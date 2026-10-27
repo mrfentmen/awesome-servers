@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/assemblyai-mcp",
-  "version": "1.0.3",
+  "version": "1.0.6",
   "description": "AssemblyAI transcripts: list, details, paragraphs. Needs key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/assemblyai-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "assemblyai-mcp": "./dist/index.js"

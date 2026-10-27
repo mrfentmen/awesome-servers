@@ -33,4 +33,4 @@ Business Tools
 blubrry, mcp, data, api
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/blubrry-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/blubrry-mcp

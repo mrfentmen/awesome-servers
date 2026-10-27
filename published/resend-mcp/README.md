@@ -19,4 +19,4 @@ Query the Resend API (key; set RESEND_API_KEY, Bearer): domains, domain details,
 
 ## Source
 
-[resend-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/resend-mcp)
+[resend-mcp](https://github.com/mrfentmen/awesome-servers)

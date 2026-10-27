@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/bitwarden-mcp",
-  "version": "1.0.5",
+  "version": "1.0.7",
   "description": "Bitwarden public API: organization members, collections, groups, event logs. Needs API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/bitwarden-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "bitwarden-mcp": "./dist/index.js"

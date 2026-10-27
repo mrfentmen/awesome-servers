@@ -20,4 +20,4 @@ Query Polygon.io (free key; set POLYGON_API_KEY, query param): tickers, ticker d
 
 ## Source
 
-[polygon-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/polygon-mcp)
+[polygon-mcp](https://github.com/mrfentmen/awesome-servers)

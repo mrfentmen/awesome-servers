@@ -13,4 +13,4 @@ Query the Madhappy catalog (madhappy.com): search streetwear, newest arrivals, e
 
 ## Source
 
-[madhappy-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/madhappy-mcp)
+[madhappy-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/madhappy-mcp)

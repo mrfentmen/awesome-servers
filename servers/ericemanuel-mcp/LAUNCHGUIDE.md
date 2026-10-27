@@ -37,4 +37,4 @@ Business Tools
 eric-emanuel, streetwear, fashion, shopping, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/ericemanuel-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/ericemanuel-mcp

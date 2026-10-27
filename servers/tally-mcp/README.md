@@ -13,4 +13,4 @@ Query Tally (key; set TALLY_API_KEY, Bearer): forms, form details, submissions.
 
 ## Source
 
-[tally-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/tally-mcp)
+[tally-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/tally-mcp)

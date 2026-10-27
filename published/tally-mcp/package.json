@@ -1,12 +1,12 @@
 {
   "name": "tally-mcp",
-  "version": "1.1.2",
+  "version": "1.1.5",
   "description": "Query Tally (key; set TALLY_API_KEY, Bearer): forms, form details, submissions.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/tally-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "tally-mcp": "./dist/index.js"

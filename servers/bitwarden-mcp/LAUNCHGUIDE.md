@@ -34,4 +34,4 @@ Business Tools
 bitwarden, mcp, data, api
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/bitwarden-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/bitwarden-mcp

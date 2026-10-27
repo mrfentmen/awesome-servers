@@ -27,4 +27,4 @@ Business Tools
 ev, charging, maps, geo
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/openchargemap-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/openchargemap-mcp

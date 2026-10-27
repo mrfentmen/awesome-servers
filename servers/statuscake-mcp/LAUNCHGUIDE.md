@@ -35,4 +35,4 @@ Developer Tools
 uptime, monitoring, ssl, ports, dns, mcp
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/statuscake-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/statuscake-mcp

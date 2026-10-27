@@ -30,4 +30,4 @@ Marketing
 onesignal, push, notifications, mobile
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/onesignal-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/onesignal-mcp

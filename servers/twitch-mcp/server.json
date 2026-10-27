@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/twitch-mcp",
   "description": "Query the Twitch Helix API (free app token; set TWITCH_CLIENT_ID + TWITCH_CLIENT_SECRET (app access.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.2",

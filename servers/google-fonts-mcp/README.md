@@ -10,4 +10,4 @@ Query the Google Fonts Developer API (free Google key; set GOOGLE_FONTS_KEY, que
 
 ## Source
 
-[google-fonts-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/google-fonts-mcp)
+[google-fonts-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/google-fonts-mcp)

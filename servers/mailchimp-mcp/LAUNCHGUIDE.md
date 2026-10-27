@@ -37,4 +37,4 @@ Business Tools
 mailchimp, email, marketing
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/mailchimp-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/mailchimp-mcp

@@ -17,4 +17,4 @@ Query the Open Library (openlibrary.org, keyless): full-text book search, work d
 
 ## Source
 
-[openlibrary-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/openlibrary-mcp)
+[openlibrary-mcp](https://github.com/mrfentmen/awesome-servers)

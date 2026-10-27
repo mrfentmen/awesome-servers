@@ -36,4 +36,4 @@ Developer Tools
 hashnode, blogging, dev
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/hashnode-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/hashnode-mcp

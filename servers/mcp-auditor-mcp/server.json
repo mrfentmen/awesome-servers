@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/mcp-auditor-mcp",
   "description": "Audit MCP servers and the APIs behind them - no API key.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

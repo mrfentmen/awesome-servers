@@ -18,4 +18,4 @@ Query PostHog (personal key; set POSTHOG_PERSONAL_API_KEY, Bearer; optional POST
 
 ## Source
 
-[posthog-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/posthog-mcp)
+[posthog-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/posthog-mcp)

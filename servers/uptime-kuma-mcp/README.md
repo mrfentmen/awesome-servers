@@ -9,4 +9,4 @@ Query your Uptime Kuma instance (self-hosted; set UPTIME_KUMA_URL; optional UPTI
 
 ## Source
 
-[uptime-kuma-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/uptime-kuma-mcp)
+[uptime-kuma-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/uptime-kuma-mcp)

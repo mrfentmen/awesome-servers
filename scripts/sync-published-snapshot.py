@@ -34,7 +34,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "published"
 KEEP_FILES = {"package.json", "README.md", "server.json", "LICENSE"}
 KEEP_DIRS = ("dist/", "src/")
-UA = {"User-Agent": "premium-mcps-sync"}
+UA = {"User-Agent": "awesome-servers-sync"}
 REGISTRY = "https://registry.npmjs.org/"
 
 
@@ -77,7 +77,9 @@ def fetch(slug: str) -> dict:
     """Download one package and unpack the files users actually receive.
 
     A package whose local copy is ahead of the registry carries an unpublished
-    fix, so it is left alone: re-syncing would silently revert it.
+    fix, so it is left alone: re-syncing would silently revert it. A bare name
+    that belongs to a different publisher is never mirrored either — npm's
+    `twilio-mcp` is not ours, and that collision is why this check exists.
     """
     mine = local_version(slug)
     for candidate in (f"@mrfentmen/{slug}", slug):
@@ -86,6 +88,9 @@ def fetch(slug: str) -> dict:
         except Exception:
             continue
         if "versions" not in m:
+            continue
+        owners = {x.get("name") if isinstance(x, dict) else str(x) for x in m.get("maintainers") or []}
+        if not candidate.startswith("@mrfentmen/") and "mrfentmen" not in owners:
             continue
         latest = m["dist-tags"]["latest"]
         if mine and semver_gt(mine, latest):

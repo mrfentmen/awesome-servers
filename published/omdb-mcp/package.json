@@ -1,12 +1,12 @@
 {
   "name": "omdb-mcp",
-  "version": "1.1.1",
+  "version": "1.1.4",
   "description": "Query the OMDb API (free key from omdbapi.com/apikey.aspx, 1,000/day; set OMDB_API_KEY): movie/series search and full details with ratings.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/omdb-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "omdb-mcp": "./dist/index.js"

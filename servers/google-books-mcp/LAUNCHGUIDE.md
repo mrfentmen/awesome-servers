@@ -27,4 +27,4 @@ Education & Research
 books, google-books, reading, library
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/google-books-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/google-books-mcp

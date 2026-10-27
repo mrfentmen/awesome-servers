@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/k6-mcp",
   "description": "Query a running k6: runtime status and metric list. Endpoints per k6 REST API docs.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

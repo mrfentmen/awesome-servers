@@ -18,4 +18,4 @@ Query Customer.io (set CUSTOMERIO_SITE_ID + CUSTOMERIO_API_KEY, Basic): customer
 
 ## Source
 
-[customerio-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/customerio-mcp)
+[customerio-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/customerio-mcp)

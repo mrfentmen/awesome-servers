@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/twitch-mcp",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "description": "MCP server for Twitch: top games, live streams, users. Needs free API credentials.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/twitch-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/awesome-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "twitch-mcp": "./dist/index.js"

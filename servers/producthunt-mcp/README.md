@@ -9,4 +9,4 @@ Query Product Hunt GraphQL (token; set PRODUCTHUNT_TOKEN, Bearer): viewer, lates
 
 ## Source
 
-[producthunt-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/producthunt-mcp)
+[producthunt-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/producthunt-mcp)

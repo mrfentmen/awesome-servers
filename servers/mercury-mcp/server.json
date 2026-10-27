@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/mercury-mcp",
   "description": "Query the Mercury API: accounts, account details, transactions.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

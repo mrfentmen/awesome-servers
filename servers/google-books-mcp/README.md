@@ -9,4 +9,4 @@ Query Google Books (keyless quota is shared and may 429; set GOOGLE_BOOKS_API_KE
 
 ## Source
 
-[google-books-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/google-books-mcp)
+[google-books-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/google-books-mcp)

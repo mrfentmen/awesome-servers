@@ -31,4 +31,4 @@ Security
 malware, urlhaus, threat-intel, abuse, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/urlhaus-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/urlhaus-mcp

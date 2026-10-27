@@ -39,4 +39,4 @@ Other
 nonprofit, charity, finance, irs, data, mcp
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/nonprofit-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/nonprofit-mcp

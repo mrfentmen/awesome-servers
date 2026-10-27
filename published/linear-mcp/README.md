@@ -18,4 +18,4 @@ Query the Linear GraphQL API (key; set LINEAR_API_KEY, raw Authorization): viewe
 
 ## Source
 
-[linear-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/linear-mcp)
+[linear-mcp](https://github.com/mrfentmen/awesome-servers)

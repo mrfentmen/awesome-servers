@@ -1,12 +1,12 @@
 {
   "name": "appveyor-mcp",
-  "version": "1.0.6",
+  "version": "1.0.8",
   "description": "CI pipeline monitoring for GitLab and GitHub - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/appveyor-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "appveyor-mcp": "./dist/index.js"

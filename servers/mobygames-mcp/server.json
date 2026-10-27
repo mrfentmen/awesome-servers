@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/mobygames-mcp",
   "description": "Query the MobyGames API (free key; set MOBYGAMES_API_KEY): game search across 300k+ titles incl.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

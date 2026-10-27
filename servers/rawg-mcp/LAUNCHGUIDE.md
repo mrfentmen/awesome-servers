@@ -27,4 +27,4 @@ Content & Media
 games, rawg, videogames, gaming
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/rawg-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/rawg-mcp

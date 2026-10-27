@@ -13,4 +13,4 @@ Query the Sporty & Rich catalog (sportyandrich.com): search clothing, newest arr
 
 ## Source
 
-[sportyandrich-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/sportyandrich-mcp)
+[sportyandrich-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/sportyandrich-mcp)

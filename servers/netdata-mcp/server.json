@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/netdata-mcp",
   "description": "Query your Netdata agent: node info, chart list, chart data. Endpoints per official docs.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

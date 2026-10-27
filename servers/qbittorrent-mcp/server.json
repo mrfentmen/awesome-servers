@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/qbittorrent-mcp",
   "description": "Query your qBittorrent WebUI: torrents, transfer stats, app version.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

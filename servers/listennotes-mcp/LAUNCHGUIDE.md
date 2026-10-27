@@ -34,4 +34,4 @@ Entertainment
 listennotes, podcasts, search
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/listennotes-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/listennotes-mcp

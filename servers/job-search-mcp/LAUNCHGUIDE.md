@@ -41,4 +41,4 @@ Jobs
 job search, mcp, data, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/job-search-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/job-search-mcp

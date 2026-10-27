@@ -18,4 +18,4 @@ Query Statuspage management API (key; set STATUSPAGE_API_KEY, OAuth header): pag
 
 ## Source
 
-[statuspage-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/statuspage-mcp)
+[statuspage-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/statuspage-mcp)

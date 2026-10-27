@@ -10,4 +10,4 @@ Read any Mastodon instance (keyless; set MASTODON_INSTANCE, default mastodon.soc
 
 ## Source
 
-[mastodon-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/mastodon-mcp)
+[mastodon-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/mastodon-mcp)

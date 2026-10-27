@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/openlibrary-mcp",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "Query the Open Library (openlibrary.org, keyless): full-text book search, work details, and author details with covers and publish years.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/openlibrary-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "openlibrary-mcp": "./dist/index.js"

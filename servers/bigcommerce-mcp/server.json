@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/bigcommerce-mcp",
   "description": "MCP server for BigCommerce: products, orders. Needs store API credentials.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.2",

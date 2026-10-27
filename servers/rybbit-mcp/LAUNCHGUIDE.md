@@ -30,4 +30,4 @@ Data & Analytics
 rybbit, mcp, data, api
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/rybbit-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/rybbit-mcp

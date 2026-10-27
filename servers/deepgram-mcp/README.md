@@ -10,4 +10,4 @@ Query the Deepgram API (free tier key; set DEEPGRAM_API_KEY, sent as Token): pro
 
 ## Source
 
-[deepgram-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/deepgram-mcp)
+[deepgram-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/deepgram-mcp)

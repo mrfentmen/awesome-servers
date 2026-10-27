@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/cgtrader-mcp",
   "description": "Query the CGTrader 3D marketplace REST API v1: page through models.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

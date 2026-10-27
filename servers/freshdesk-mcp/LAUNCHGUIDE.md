@@ -36,4 +36,4 @@ Business Tools
 freshdesk, support, helpdesk
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/freshdesk-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/freshdesk-mcp

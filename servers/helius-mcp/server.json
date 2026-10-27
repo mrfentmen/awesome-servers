@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/helius-mcp",
   "description": "Helius Solana API: balances, transactions, NFTs, token metadata.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

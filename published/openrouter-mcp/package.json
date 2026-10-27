@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/openrouter-mcp",
-  "version": "1.1.4",
+  "version": "1.1.6",
   "description": "Query OpenRouter (free key; set OPENROUTER_API_KEY, Bearer): model list, key info, credits.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/openrouter-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "openrouter-mcp": "./dist/index.js"

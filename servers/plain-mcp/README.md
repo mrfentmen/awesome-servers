@@ -10,4 +10,4 @@ Query the Plain GraphQL API (free tier key; set PLAIN_API_KEY, Bearer): customer
 
 ## Source
 
-[plain-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/plain-mcp)
+[plain-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/plain-mcp)

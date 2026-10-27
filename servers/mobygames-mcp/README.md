@@ -9,4 +9,4 @@ Query the MobyGames API (free key; set MOBYGAMES_API_KEY): game search across 30
 
 ## Source
 
-[mobygames-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/mobygames-mcp)
+[mobygames-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/mobygames-mcp)

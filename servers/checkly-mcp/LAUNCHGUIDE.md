@@ -41,4 +41,4 @@ Developer Tools
 synthetic, monitoring, assertions, smoke test, links, mcp
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/checkly-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/checkly-mcp

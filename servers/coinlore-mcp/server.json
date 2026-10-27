@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/coinlore-mcp",
   "description": "CoinLore crypto market data: top coins, single coin, global stats, and markets. No key required.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.2",

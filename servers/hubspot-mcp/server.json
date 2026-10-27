@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/hubspot-mcp",
   "description": "Query HubSpot (private-app token; set HUBSPOT_ACCESS_TOKEN, Bearer): contacts, companies, deals.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.1.0",

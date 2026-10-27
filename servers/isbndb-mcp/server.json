@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/isbndb-mcp",
   "description": "ISBNdb books: lookup by ISBN, search, batch lookup. Needs API key.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/folk-mcp",
   "description": "Query the Folk API (free tier key; set FOLK_API_KEY, Bearer): people, person details, groups.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

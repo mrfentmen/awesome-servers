@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/mastodon-mcp",
   "description": "Read any Mastodon instance: trending tags, trending posts, instance info.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

@@ -19,4 +19,4 @@ Query the GitHub REST API (free token; set GITHUB_TOKEN, Bearer): profile, repos
 
 ## Source
 
-[github-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/github-mcp)
+[github-mcp](https://github.com/mrfentmen/awesome-servers)

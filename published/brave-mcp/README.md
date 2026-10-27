@@ -18,6 +18,6 @@ Search with Brave Search API (free key; set BRAVE_API_KEY, X-Subscription-Token)
 
 ## Source
 
-[brave-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/brave-mcp)
+[brave-mcp](https://github.com/mrfentmen/awesome-servers)
 
 

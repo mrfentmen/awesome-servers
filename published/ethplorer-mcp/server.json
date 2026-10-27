@@ -3,15 +3,15 @@
   "name": "io.github.mrfentmen/ethplorer-mcp",
   "description": "Ethereum token explorer: token info, address holdings, transaction history. No key required for...",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
-  "version": "1.0.2",
+  "version": "1.1.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "ethplorer-mcp",
-      "version": "1.0.2",
+      "version": "1.1.1",
       "transport": {
         "type": "stdio"
       }

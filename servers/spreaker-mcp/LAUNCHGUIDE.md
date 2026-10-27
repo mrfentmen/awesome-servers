@@ -33,4 +33,4 @@ Business Tools
 spreaker, mcp, data, api
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/spreaker-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/spreaker-mcp

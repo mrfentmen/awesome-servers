@@ -18,4 +18,4 @@ Query Plaid sandbox (set PLAID_CLIENT_ID + PLAID_SECRET): institutions, categori
 
 ## Source
 
-[plaid-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/plaid-mcp)
+[plaid-mcp](https://github.com/mrfentmen/awesome-servers)

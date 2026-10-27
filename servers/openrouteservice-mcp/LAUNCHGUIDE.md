@@ -30,4 +30,4 @@ Business Tools
 maps, geocoding, routing, openstreetmap
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/openrouteservice-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/openrouteservice-mcp

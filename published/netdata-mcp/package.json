@@ -1,12 +1,12 @@
 {
   "name": "netdata-mcp",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "description": "Query your Netdata agent (self-hosted; set NETDATA_URL; optional NETDATA_TOKEN): node info, chart list, chart data. Endpoints per official docs.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/netdata-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "netdata-mcp": "./dist/index.js"

@@ -42,4 +42,4 @@ Other
 beer, breweries, craft-beer, travel, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/brewery-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/brewery-mcp

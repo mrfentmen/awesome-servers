@@ -18,4 +18,4 @@ Use the Telegram Bot API (free bot; set TELEGRAM_BOT_TOKEN): bot info, send mess
 
 ## Source
 
-[telegram-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/telegram-mcp)
+[telegram-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/telegram-mcp)

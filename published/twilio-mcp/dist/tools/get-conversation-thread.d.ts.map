@@ -1,1 +1,0 @@
-{"version":3,"file":"get-conversation-thread.d.ts","sourceRoot":"","sources":["../../src/tools/get-conversation-thread.ts"],"names":[],"mappings":"AAAA;;;GAGG;AAEH,OAAO,EAAE,CAAC,EAAE,MAAM,KAAK,CAAC;AAIxB,eAAO,MAAM,2BAA2B;;;;;;;;;EAGtC,CAAC;AAEH,MAAM,MAAM,2BAA2B,GAAG,CAAC,CAAC,KAAK,CAAC,OAAO,2BAA2B,CAAC,CAAC;AAEtF,wBAAsB,qBAAqB,CAAC,MAAM,EAAE,2BAA2B,gBAwC9E"}

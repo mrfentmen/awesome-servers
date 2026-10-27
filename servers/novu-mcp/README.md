@@ -18,4 +18,4 @@ Query Novu (key; set NOVU_API_KEY, ApiKey header; optional NOVU_BASE_URL for EU)
 
 ## Source
 
-[novu-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/novu-mcp)
+[novu-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/novu-mcp)

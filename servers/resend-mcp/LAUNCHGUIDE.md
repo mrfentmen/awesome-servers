@@ -37,4 +37,4 @@ Business Tools
 resend, email, transactional
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/resend-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/resend-mcp

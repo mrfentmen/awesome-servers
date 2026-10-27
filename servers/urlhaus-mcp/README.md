@@ -11,4 +11,4 @@ Query URLhaus (abuse.ch, free auth-key from abuse.ch; set URLHAUS_AUTH_KEY, sent
 
 ## Source
 
-[urlhaus-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/urlhaus-mcp)
+[urlhaus-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/urlhaus-mcp)

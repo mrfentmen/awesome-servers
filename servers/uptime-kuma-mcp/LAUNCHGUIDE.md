@@ -27,4 +27,4 @@ Developer Tools
 uptime-kuma, uptime, monitoring, self-hosted
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/uptime-kuma-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/uptime-kuma-mcp

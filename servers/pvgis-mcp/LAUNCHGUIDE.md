@@ -43,4 +43,4 @@ Other
 solar, pv, energy, irradiation, renewable, mcp
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/pvgis-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/pvgis-mcp

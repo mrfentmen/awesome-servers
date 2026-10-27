@@ -28,4 +28,4 @@ Developer Tools
 appwrite, backend, database, auth, self-hosted
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/appwrite-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/appwrite-mcp

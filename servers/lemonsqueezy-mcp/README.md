@@ -10,4 +10,4 @@ Query the Lemon Squeezy API (test-mode key; set LEMONSQUEEZY_API_KEY, Bearer): s
 
 ## Source
 
-[lemonsqueezy-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/lemonsqueezy-mcp)
+[lemonsqueezy-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/lemonsqueezy-mcp)

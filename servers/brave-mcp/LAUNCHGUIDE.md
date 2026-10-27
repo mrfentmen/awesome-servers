@@ -35,4 +35,4 @@ Business Tools
 brave, search, web, news
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/brave-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/brave-mcp

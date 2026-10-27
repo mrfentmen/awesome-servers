@@ -18,4 +18,4 @@ Query Freshdesk (set FRESHDESK_DOMAIN + FRESHDESK_API_KEY, key:X Basic): tickets
 
 ## Source
 
-[freshdesk-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/freshdesk-mcp)
+[freshdesk-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/freshdesk-mcp)

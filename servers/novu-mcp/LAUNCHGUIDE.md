@@ -36,4 +36,4 @@ Developer Tools
 novu, notifications
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/novu-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/novu-mcp

@@ -1,12 +1,12 @@
 {
   "name": "feedly-mcp",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "description": "Query Feedly (token; set FEEDLY_TOKEN, Bearer): profile, subscriptions, stream contents.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/feedly-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "feedly-mcp": "./dist/index.js"

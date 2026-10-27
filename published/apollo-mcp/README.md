@@ -31,4 +31,4 @@ The key is sent to Apollo as the X-Api-Key header and nowhere else.
 
 ## Source
 
-[apollo-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/apollo-mcp)
+[apollo-mcp](https://github.com/mrfentmen/awesome-servers)

@@ -43,4 +43,4 @@ Ecommerce
 burberry, mcp, shopping, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/burberry-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/burberry-mcp

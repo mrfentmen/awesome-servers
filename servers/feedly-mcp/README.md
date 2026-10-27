@@ -10,4 +10,4 @@ Query Feedly (token; set FEEDLY_TOKEN, Bearer): profile, subscriptions, stream c
 
 ## Source
 
-[feedly-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/feedly-mcp)
+[feedly-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/feedly-mcp)

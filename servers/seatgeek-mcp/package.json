@@ -6,7 +6,7 @@
   "mcpName": "io.github.mrfentmen/seatgeek-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "seatgeek-mcp": "./dist/index.js"

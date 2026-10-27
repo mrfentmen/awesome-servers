@@ -10,4 +10,4 @@ Query the Cartesia API (free tier key; set CARTESIA_API_KEY, Bearer): voice list
 
 ## Source
 
-[cartesia-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/cartesia-mcp)
+[cartesia-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/cartesia-mcp)

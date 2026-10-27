@@ -36,4 +36,4 @@ Developer Tools
 figma, design
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/figma-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/figma-mcp

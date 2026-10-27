@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/turbosquid-mcp",
   "description": "Query the TurboSquid 3D marketplace API v1: list file formats, product metadata.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

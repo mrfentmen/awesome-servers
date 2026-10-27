@@ -1,12 +1,12 @@
 {
   "name": "seatgeek-mcp",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "description": "MCP server for SeatGeek: events, venues, ticket stats. Needs a client ID.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/seatgeek-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "seatgeek-mcp": "./dist/index.js"

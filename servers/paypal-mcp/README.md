@@ -18,4 +18,4 @@ Query PayPal sandbox (set PAYPAL_SANDBOX_CLIENT_ID + PAYPAL_SANDBOX_SECRET, OAut
 
 ## Source
 
-[paypal-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/paypal-mcp)
+[paypal-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/paypal-mcp)

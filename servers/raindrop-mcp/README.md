@@ -10,4 +10,4 @@ Query Raindrop.io (token; set RAINDROP_TOKEN, Bearer): user, collections, bookma
 
 ## Source
 
-[raindrop-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/raindrop-mcp)
+[raindrop-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/raindrop-mcp)

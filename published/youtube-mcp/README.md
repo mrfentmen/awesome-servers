@@ -18,4 +18,4 @@ Query the YouTube Data API v3 (free Google key; set YOUTUBE_API_KEY, query param
 
 ## Source
 
-[youtube-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/youtube-mcp)
+[youtube-mcp](https://github.com/mrfentmen/awesome-servers)

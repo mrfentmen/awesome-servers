@@ -1,11 +1,11 @@
-# Premium MCPs (private)
+# Awesome Servers
 
-> 230 package directories, 229 of them published under our own name and installable
-> today with `npx <package>`. Every one is free: no licence key, no hosted gate and
-> no per-call billing.
+> 230 package directories, all published by us and installable today with
+> `npx <package>`. Every one is free: no licence key, no hosted gate and no
+> per-call billing.
 
-Monetizable MCP servers from the `mrfentmen` account: shopping/affiliate, jobs,
-betting, finance-data, and pro-tier API servers. Private commercial monorepo.
+MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, betting,
+finance data, developer tools and public-API servers. Public monorepo.
 
 ## State of the repo
 
@@ -19,24 +19,21 @@ This is a snapshot of what users install, not a build tree.
   is generated from the tree by `python3 scripts/index-published.py`.
 - There are no licence gates and no stub tools left: **0** packages reference
   `MCP_LICENSE_KEY` and **0** shipped tools answer `Not yet implemented`.
+- Our own Twilio server publishes as `twilio-mcp-server`; the bare `twilio-mcp`
+  name on npm belongs to another publisher and is not mirrored here.
 
-### The paywall is gone, and so is the gateway
+### Every tool runs locally
 
-A licence gate shipped in about twenty packages. Each gated tool proxied its work
-to a hosted gateway (`premiumTool("mcp_<product>_<tool>")`) that checked a Polar key
-and ran the real code server-side. That host no longer resolves, so every gated tool
-was dead: it failed before it did anything.
+Some packages once proxied a handful of tools to a hosted gateway. That host no
+longer exists, so those tools now run inside their own package against the same
+public API. Nothing is proxied, nothing needs a key, and the `gateway.js` /
+`license.js` modules have been deleted from every package that had one. The last
+packages shipped the fix on 2026-10-26.
 
-All of those tools are now implemented inside their own package, against the same
-public API the gateway used. Nothing is proxied, nothing needs a key, and the
-`gateway.js` / `license.js` modules have been deleted from every package that had
-one. The last eleven packages shipped the fix on 2026-10-26.
+Every package links to this repo (mrfentmen/awesome-servers) as its source.
 
 ### Known gaps
 
-- **`twilio-mcp` is not ours on npm.** The name belongs to another publisher
-  (`griffinwork40`); the directory in `published/` mirrors their tarball because the
-  sync script fell back to the bare name. Our own copy has never been published.
 - **`servers/` is history, not source.** It predates the gate removal and was never
   brought forward. Do not build from it.
 
@@ -276,7 +273,7 @@ local — it overwrites `dist/` from the registry tarballs.
 - [`traxnyc-mcp`](./servers/traxnyc-mcp)
 - [`turbosquid-mcp`](./servers/turbosquid-mcp)
 - [`twelvedata-mcp`](./servers/twelvedata-mcp)
-- [`twilio-mcp`](./servers/twilio-mcp)
+- [`twilio-mcp-server`](./servers/twilio-mcp-server)
 - [`twitch-mcp`](./servers/twitch-mcp)
 - [`typeform-mcp`](./servers/typeform-mcp)
 - [`uptime-kuma-mcp`](./servers/uptime-kuma-mcp)

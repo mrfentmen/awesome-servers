@@ -41,4 +41,4 @@ Other
 ethplorer, mcp, data, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/ethplorer-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/ethplorer-mcp

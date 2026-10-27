@@ -10,4 +10,4 @@ Query the Mercury API (sandbox key; set MERCURY_API_KEY, Bearer): accounts, acco
 
 ## Source
 
-[mercury-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/mercury-mcp)
+[mercury-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/mercury-mcp)

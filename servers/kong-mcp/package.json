@@ -6,7 +6,7 @@
   "mcpName": "io.github.mrfentmen/kong-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "kong-mcp": "./dist/index.js"

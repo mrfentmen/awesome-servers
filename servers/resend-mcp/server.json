@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/resend-mcp",
   "description": "Query the Resend API (key; set RESEND_API_KEY, Bearer): domains, domain details, email details.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.1.0",

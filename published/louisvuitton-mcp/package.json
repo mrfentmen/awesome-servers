@@ -1,12 +1,12 @@
 {
   "name": "louisvuitton-mcp",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "description": "Louis Vuitton resale listings from Fashionphile and Rebag. Keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/louisvuitton-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "louisvuitton-mcp": "./dist/index.js"

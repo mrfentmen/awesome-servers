@@ -18,4 +18,4 @@ Query Sentry (auth token; set SENTRY_AUTH_TOKEN, Bearer): organizations, project
 
 ## Source
 
-[sentry-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/sentry-mcp)
+[sentry-mcp](https://github.com/mrfentmen/awesome-servers)

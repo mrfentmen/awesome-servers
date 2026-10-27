@@ -30,4 +30,4 @@ Marketing
 assemblyai, transcription, audio, speech-to-text, ai
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/assemblyai-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/assemblyai-mcp

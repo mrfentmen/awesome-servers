@@ -1,12 +1,12 @@
 {
   "name": "gatus-mcp",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Endpoint conditions, latency and TLS checks - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/gatus-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "gatus-mcp": "./dist/index.js"

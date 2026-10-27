@@ -42,4 +42,4 @@ Marketing & Social
 twilio, mcp, data, api
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/twilio-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/twilio-mcp

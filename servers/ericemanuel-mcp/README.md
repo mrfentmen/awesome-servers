@@ -13,4 +13,4 @@ Query the Eric Emanuel catalog (ericemanuel.com): search streetwear, newest arri
 
 ## Source
 
-[ericemanuel-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/ericemanuel-mcp)
+[ericemanuel-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/ericemanuel-mcp)

@@ -44,4 +44,4 @@ Education
 books, open-library, reading, library, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/openlibrary-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/openlibrary-mcp

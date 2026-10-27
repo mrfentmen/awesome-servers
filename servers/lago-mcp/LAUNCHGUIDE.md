@@ -30,4 +30,4 @@ Business Tools
 lago, billing, invoicing, saas, open-source
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/lago-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/lago-mcp

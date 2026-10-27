@@ -37,4 +37,4 @@ Developer Tools
 supabase, postgres, database, backend
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/supabase-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/supabase-mcp

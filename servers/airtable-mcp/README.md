@@ -18,4 +18,4 @@ Query the Airtable API (PAT; set AIRTABLE_TOKEN, Bearer): bases, tables, records
 
 ## Source
 
-[airtable-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/airtable-mcp)
+[airtable-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/airtable-mcp)

@@ -43,4 +43,4 @@ Developer Tools
 observability, latency, performance, seo, headers, mcp
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/betterstack-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/betterstack-mcp

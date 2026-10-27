@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/nylas-mcp",
   "description": "Query the Nylas v3 API: grant info, calendars, recent messages.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

@@ -28,4 +28,4 @@ Developer Tools
 directus, cms, database, headless, self-hosted
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/directus-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/directus-mcp

@@ -37,4 +37,4 @@ Business Tools
 missoma, jewelry, gold, shopping, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/missoma-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/missoma-mcp

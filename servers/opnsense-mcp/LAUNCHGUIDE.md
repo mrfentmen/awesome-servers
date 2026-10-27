@@ -28,4 +28,4 @@ Developer Tools
 opnsense, firewall, network, router, self-hosted
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/opnsense-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/opnsense-mcp

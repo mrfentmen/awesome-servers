@@ -39,4 +39,4 @@ Developer Tools
 github, git, repos, dev
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/github-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/github-mcp

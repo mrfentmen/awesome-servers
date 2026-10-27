@@ -10,4 +10,4 @@ Query your qBittorrent WebUI (self-hosted; set QBITTORRENT_URL + QBITTORRENT_USE
 
 ## Source
 
-[qbittorrent-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/qbittorrent-mcp)
+[qbittorrent-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/qbittorrent-mcp)

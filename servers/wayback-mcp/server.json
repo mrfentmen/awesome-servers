@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/wayback-mcp",
   "description": "MCP server for the Wayback Machine, snapshot history, page availability, and dead site recovery.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

@@ -9,4 +9,4 @@ Run OCR.space (free key; set OCRSPACE_API_KEY, sent as apikey): text extraction 
 
 ## Source
 
-[ocrspace-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/ocrspace-mcp)
+[ocrspace-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/ocrspace-mcp)

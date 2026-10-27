@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/omdb-mcp",
   "description": "Query the OMDb API: movie/series search and full details with ratings.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

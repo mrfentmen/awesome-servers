@@ -18,4 +18,4 @@ Query the Spotify Web API (free app; set SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECR
 
 ## Source
 
-[spotify-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/spotify-mcp)
+[spotify-mcp](https://github.com/mrfentmen/awesome-servers)

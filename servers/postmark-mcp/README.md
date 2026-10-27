@@ -10,4 +10,4 @@ Query the Postmark API (free tier server token; set POSTMARK_SERVER_TOKEN, sent 
 
 ## Source
 
-[postmark-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/postmark-mcp)
+[postmark-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/postmark-mcp)

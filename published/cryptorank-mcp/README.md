@@ -20,9 +20,6 @@ node dist/index.js
 
 Data comes from the public CryptoRank API.
 
-## Licence — no paywall
+## Licence
 
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.
+Every tool in this package is free: no licence key, no paid tier, no hosted gateway. Everything runs locally.

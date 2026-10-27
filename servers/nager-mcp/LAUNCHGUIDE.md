@@ -43,4 +43,4 @@ Other
 holidays, calendar, planning, countries, mcp
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/nager-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/nager-mcp

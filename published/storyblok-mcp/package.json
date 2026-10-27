@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/storyblok-mcp",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "MCP server for Storyblok: stories, spaces. Needs an API token.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/storyblok-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "storyblok-mcp": "./dist/index.js"

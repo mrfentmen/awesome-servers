@@ -37,4 +37,4 @@ Business Tools
 peak-design, bags, camera, travel, shopping, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/peakdesign-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/peakdesign-mcp

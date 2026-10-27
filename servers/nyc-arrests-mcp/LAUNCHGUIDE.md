@@ -32,4 +32,4 @@ Business Tools
 nyc, nypd, arrests, crime, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/nyc-arrests-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/nyc-arrests-mcp

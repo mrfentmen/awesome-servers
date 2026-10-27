@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/openrouter-mcp",
   "description": "Query OpenRouter (free key; set OPENROUTER_API_KEY, Bearer): model list, key info, credits.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.1.0",

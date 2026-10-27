@@ -13,4 +13,4 @@ Query the Gorjana catalog (gorjana.com): search jewelry, newest arrivals, enrich
 
 ## Source
 
-[gorjana-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/gorjana-mcp)
+[gorjana-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/gorjana-mcp)

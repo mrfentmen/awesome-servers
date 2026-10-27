@@ -10,4 +10,4 @@ Query the Pusher HTTP API (free tier; set PUSHER_APP_ID, PUSHER_KEY, PUSHER_SECR
 
 ## Source
 
-[pusher-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/pusher-mcp)
+[pusher-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/pusher-mcp)

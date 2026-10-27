@@ -30,4 +30,4 @@ Marketing
 deepgram, voice, transcription, ai, speech-to-text
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/deepgram-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/deepgram-mcp

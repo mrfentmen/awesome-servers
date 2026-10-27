@@ -1,12 +1,12 @@
 {
   "name": "adguardhome-mcp",
-  "version": "1.0.6",
+  "version": "1.0.9",
   "description": "Query your AdGuard Home (self-hosted; set ADGUARD_URL; optional ADGUARD_USER + ADGUARD_PASS basic auth): status, stats, query log. Endpoints per official docs.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/adguardhome-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "adguardhome-mcp": "./dist/index.js"

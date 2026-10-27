@@ -41,4 +41,4 @@ Developer Tools
 health check, monitoring, latency, conditions, tls, mcp
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/gatus-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/gatus-mcp

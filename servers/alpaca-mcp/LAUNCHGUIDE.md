@@ -36,4 +36,4 @@ Finance
 alpaca, stocks, trading
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/alpaca-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/alpaca-mcp

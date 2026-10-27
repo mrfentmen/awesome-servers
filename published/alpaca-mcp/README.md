@@ -34,4 +34,4 @@ Credentials stay local and go only to Alpaca.
 
 ## Source
 
-[alpaca-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/alpaca-mcp)
+[alpaca-mcp](https://github.com/mrfentmen/awesome-servers)

@@ -28,4 +28,4 @@ Marketing & Social
 mailjet, mcp, data, api
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/mailjet-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/mailjet-mcp

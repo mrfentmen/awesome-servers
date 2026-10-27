@@ -36,4 +36,4 @@ Business Tools
 posthog, analytics
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/posthog-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/posthog-mcp

@@ -37,4 +37,4 @@ Business Tools
 louisvuitton, mcp, shopping, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/louisvuitton-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/louisvuitton-mcp

@@ -18,4 +18,4 @@ Query Typeform (token; set TYPEFORM_TOKEN, Bearer): forms, form details, respons
 
 ## Source
 
-[typeform-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/typeform-mcp)
+[typeform-mcp](https://github.com/mrfentmen/awesome-servers)

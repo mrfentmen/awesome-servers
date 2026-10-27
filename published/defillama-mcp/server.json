@@ -3,15 +3,15 @@
   "name": "io.github.mrfentmen/defillama-mcp",
   "description": "DefiLlama protocols, chains, and TVL (merged).",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
-  "version": "1.0.2",
+  "version": "1.1.2",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@mrfentmen/defillama-mcp",
-      "version": "1.0.2",
+      "version": "1.1.2",
       "transport": {
         "type": "stdio"
       }

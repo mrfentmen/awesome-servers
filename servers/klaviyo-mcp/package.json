@@ -6,7 +6,7 @@
   "mcpName": "io.github.mrfentmen/klaviyo-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "klaviyo-mcp": "./dist/index.js"

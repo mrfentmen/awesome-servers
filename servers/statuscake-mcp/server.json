@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/statuscake-mcp",
   "description": "Uptime, TCP port, SSL chain and DNS propagation checks - no API key.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

@@ -1,12 +1,12 @@
 {
   "name": "deepgram-mcp",
-  "version": "1.0.4",
+  "version": "1.0.7",
   "description": "Query the Deepgram API (free tier key; set DEEPGRAM_API_KEY, sent as Token): projects, project balances, and API keys.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/deepgram-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "deepgram-mcp": "./dist/index.js"

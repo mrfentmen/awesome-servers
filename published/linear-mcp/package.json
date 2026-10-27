@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/linear-mcp",
-  "version": "1.1.4",
+  "version": "1.1.6",
   "description": "Query the Linear GraphQL API (key; set LINEAR_API_KEY, raw Authorization): viewer, teams, issue search.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/linear-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "linear-mcp": "./dist/index.js"

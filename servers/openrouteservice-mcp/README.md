@@ -10,4 +10,4 @@ Query OpenRouteService (free key; set OPENROUTESERVICE_API_KEY): geocode, revers
 
 ## Source
 
-[openrouteservice-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/openrouteservice-mcp)
+[openrouteservice-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/openrouteservice-mcp)

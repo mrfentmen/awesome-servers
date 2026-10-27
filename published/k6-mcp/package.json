@@ -1,12 +1,12 @@
 {
   "name": "k6-mcp",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "description": "Query a running k6 (open source; set K6_URL, default http://localhost:6565): runtime status and metric list. Endpoints per k6 REST API docs.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/k6-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "k6-mcp": "./dist/index.js"

@@ -43,4 +43,4 @@ Ecommerce
 prada, mcp, shopping, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/prada-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/prada-mcp

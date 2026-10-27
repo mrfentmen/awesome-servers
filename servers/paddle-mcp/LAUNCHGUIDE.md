@@ -30,4 +30,4 @@ Business Tools
 paddle, billing, payments, saas, subscriptions
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/paddle-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/paddle-mcp

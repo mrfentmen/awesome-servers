@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/hackertarget-mcp",
   "description": "Query HackerTarget's free recon APIs: DNS lookup, reverse DNS, whois, geoIP, HTTP headers.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

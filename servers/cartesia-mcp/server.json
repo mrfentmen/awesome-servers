@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/cartesia-mcp",
   "description": "Query the Cartesia API: voice list, localized voices, and speech synthesis.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

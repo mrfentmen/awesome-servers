@@ -9,4 +9,4 @@ Query a running k6 (open source; set K6_URL, default http://localhost:6565): run
 
 ## Source
 
-[k6-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/k6-mcp)
+[k6-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/k6-mcp)

@@ -1,12 +1,12 @@
 {
   "name": "flipside-mcp",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Flipside Crypto SQL API: run onchain queries, poll status, fetch results, cancel runs.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/flipside-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "flipside-mcp": "./dist/index.js"

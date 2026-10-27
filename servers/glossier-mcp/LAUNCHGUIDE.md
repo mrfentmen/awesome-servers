@@ -41,4 +41,4 @@ Ecommerce
 glossier, mcp, shopping, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/glossier-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/glossier-mcp

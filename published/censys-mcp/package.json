@@ -1,12 +1,12 @@
 {
   "name": "censys-mcp",
-  "version": "1.0.4",
+  "version": "1.0.7",
   "description": "Censys internet scan: host lookup and search. Needs free key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/censys-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "censys-mcp": "./dist/index.js"

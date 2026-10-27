@@ -13,4 +13,4 @@ Query the Peak Design catalog (peakdesign.com): search bags and camera gear, new
 
 ## Source
 
-[peakdesign-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/peakdesign-mcp)
+[peakdesign-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/peakdesign-mcp)

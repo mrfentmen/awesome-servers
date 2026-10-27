@@ -30,4 +30,4 @@ Marketing
 cartesia, tts, voices, speech, ai
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/cartesia-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/cartesia-mcp

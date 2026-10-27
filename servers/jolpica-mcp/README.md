@@ -13,7 +13,7 @@ Query the Jolpica F1 API (Ergast-compatible, keyless): driver standings, constru
 
 ## Source
 
-[jolpica-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/jolpica-mcp)
+[jolpica-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/jolpica-mcp)
 
 - `last_race` — Results of the most recent race.
 - `list_drivers` — Drivers entered in a season, with codes.

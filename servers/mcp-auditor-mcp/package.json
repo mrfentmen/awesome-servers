@@ -6,7 +6,7 @@
   "mcpName": "io.github.mrfentmen/mcp-auditor-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "mcp-auditor-mcp": "./dist/index.js"

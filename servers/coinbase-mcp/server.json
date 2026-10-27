@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/coinbase-mcp",
   "description": "Crypto prices from the public Coinbase API. No key required.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.2",

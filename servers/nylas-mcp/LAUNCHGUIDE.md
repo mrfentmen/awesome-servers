@@ -30,4 +30,4 @@ Business Tools
 nylas, email, calendar, productivity
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/nylas-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/nylas-mcp

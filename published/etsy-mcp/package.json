@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/etsy-mcp",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "MCP server for Etsy shops and listings. Needs a free Etsy API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/etsy-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "etsy-mcp": "./dist/index.js"

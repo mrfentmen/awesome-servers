@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/censys-mcp",
   "description": "Query Censys Search: host lookup by IP and host search with the Censys query language.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

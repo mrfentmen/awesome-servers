@@ -18,4 +18,4 @@ Query Klaviyo (private key; set KLAVIYO_API_KEY, Klaviyo-API-Key header + revisi
 
 ## Source
 
-[klaviyo-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/klaviyo-mcp)
+[klaviyo-mcp](https://github.com/mrfentmen/awesome-servers)

@@ -16,4 +16,4 @@ Query the IF & Co. catalog (ifandco.com, NYC): search custom pendants, chains, r
 
 ## Source
 
-[ifandco-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/ifandco-mcp)
+[ifandco-mcp](https://github.com/mrfentmen/awesome-servers)

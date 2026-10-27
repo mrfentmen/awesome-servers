@@ -17,4 +17,4 @@ Query OpenRouter (free key; set OPENROUTER_API_KEY, Bearer): model list, key inf
 
 ## Source
 
-[openrouter-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/openrouter-mcp)
+[openrouter-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/openrouter-mcp)

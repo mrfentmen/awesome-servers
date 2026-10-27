@@ -43,4 +43,4 @@ Jobs
 workable, mcp, data, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/workable-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/workable-mcp

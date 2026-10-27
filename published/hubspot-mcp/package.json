@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/hubspot-mcp",
-  "version": "1.1.4",
+  "version": "1.1.6",
   "description": "Query HubSpot (private-app token; set HUBSPOT_ACCESS_TOKEN, Bearer): contacts, companies, deals.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/hubspot-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "hubspot-mcp": "./dist/index.js"

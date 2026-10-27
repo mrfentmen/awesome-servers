@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/weightsbiases-mcp",
   "description": "MCP server for Weights & Biases: profile, projects, runs. Needs a free API key.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

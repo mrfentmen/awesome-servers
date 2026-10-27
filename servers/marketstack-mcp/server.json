@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/marketstack-mcp",
   "description": "Marketstack API: EOD prices, history, tickers, exchanges, dividends.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

@@ -41,4 +41,4 @@ Business Tools
 jobicy, mcp, data, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/jobicy-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/jobicy-mcp

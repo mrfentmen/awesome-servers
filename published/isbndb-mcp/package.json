@@ -1,12 +1,12 @@
 {
   "name": "isbndb-mcp",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "description": "ISBNdb books: lookup by ISBN, search, batch lookup. Needs API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/isbndb-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "isbndb-mcp": "./dist/index.js"

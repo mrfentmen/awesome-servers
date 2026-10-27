@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/pinata-mcp",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "description": "MCP server for Pinata IPFS: pinned files, pin JSON, unpin. Needs a free API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/pinata-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "pinata-mcp": "./dist/index.js"

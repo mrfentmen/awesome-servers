@@ -43,4 +43,4 @@ Other
 emoji, icons, search, openmoji, assets, mcp
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/openmoji-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/openmoji-mcp

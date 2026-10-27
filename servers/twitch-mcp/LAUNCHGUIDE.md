@@ -32,4 +32,4 @@ Entertainment
 twitch, streaming, games, live
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/twitch-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/twitch-mcp

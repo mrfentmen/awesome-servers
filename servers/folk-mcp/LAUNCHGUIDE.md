@@ -30,4 +30,4 @@ Business Tools
 folk, crm, contacts, sales
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/folk-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/folk-mcp

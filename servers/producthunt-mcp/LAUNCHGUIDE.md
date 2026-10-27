@@ -27,4 +27,4 @@ Business Tools
 producthunt, startups
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/producthunt-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/producthunt-mcp

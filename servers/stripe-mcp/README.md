@@ -18,4 +18,4 @@ Query the Stripe API (test-mode key; set STRIPE_SECRET_KEY, Basic): charges, cus
 
 ## Source
 
-[stripe-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/stripe-mcp)
+[stripe-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/stripe-mcp)

@@ -36,4 +36,4 @@ Business Tools
 cal.com, scheduling, calendar
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/calcom-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/calcom-mcp

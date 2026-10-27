@@ -27,4 +27,4 @@ Business Tools
 patents, epo, ip, search
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/epo-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/epo-mcp

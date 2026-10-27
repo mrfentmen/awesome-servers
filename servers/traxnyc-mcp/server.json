@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/traxnyc-mcp",
   "description": "Query the TraxNYC catalog: search jewelry and pre-owned watches, newest arrivals by type.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

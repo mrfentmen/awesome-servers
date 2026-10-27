@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/scryfall-mcp",
   "description": "Use this MCP server to Scryfall, Magic: The Gathering card database with rulings, printings, and...",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

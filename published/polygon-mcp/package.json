@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/polygon-mcp",
-  "version": "1.1.4",
+  "version": "1.1.6",
   "description": "Query Polygon.io (free key; set POLYGON_API_KEY, query param): tickers, ticker details, daily aggregates.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/polygon-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "polygon-mcp": "./dist/index.js"

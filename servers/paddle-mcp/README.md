@@ -10,4 +10,4 @@ Query the Paddle Billing API (sandbox key; set PADDLE_API_KEY, Bearer; optional 
 
 ## Source
 
-[paddle-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/paddle-mcp)
+[paddle-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/paddle-mcp)

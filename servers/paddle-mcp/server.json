@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/paddle-mcp",
   "description": "Query the Paddle Billing API: products, product details, prices.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

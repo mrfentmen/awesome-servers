@@ -41,4 +41,4 @@ Other
 iss, space, satellite, tracking, science, mcp
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/iss-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/iss-mcp

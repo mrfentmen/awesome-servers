@@ -1,12 +1,12 @@
 {
   "name": "producthunt-mcp",
-  "version": "1.1.0",
+  "version": "1.1.3",
   "description": "Query Product Hunt GraphQL (token; set PRODUCTHUNT_TOKEN, Bearer): viewer, latest posts, post details.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/producthunt-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "producthunt-mcp": "./dist/index.js"

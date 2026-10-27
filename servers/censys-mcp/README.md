@@ -9,4 +9,4 @@ Query Censys Search (free tier; set CENSYS_API_ID + CENSYS_API_SECRET, HTTP Basi
 
 ## Source
 
-[censys-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/censys-mcp)
+[censys-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/censys-mcp)

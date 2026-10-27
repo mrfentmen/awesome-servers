@@ -1,12 +1,12 @@
 {
   "name": "doppler-mcp",
-  "version": "1.0.5",
+  "version": "1.0.7",
   "description": "Doppler API: projects, configs, secrets listing and download. Needs service or personal token.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/doppler-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "doppler-mcp": "./dist/index.js"

@@ -36,4 +36,4 @@ Finance
 plaid, banking, fintech, sandbox
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/plaid-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/plaid-mcp

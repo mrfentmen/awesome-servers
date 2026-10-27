@@ -37,4 +37,4 @@ Developer Tools
 issues, gitlab, tracker, agile, devops, mcp
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/youtrack-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/youtrack-mcp

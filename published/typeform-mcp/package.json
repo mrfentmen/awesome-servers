@@ -1,12 +1,12 @@
 {
   "name": "typeform-mcp",
-  "version": "1.1.4",
+  "version": "1.1.6",
   "description": "Query Typeform (token; set TYPEFORM_TOKEN, Bearer): forms, form details, responses.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/typeform-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "typeform-mcp": "./dist/index.js"

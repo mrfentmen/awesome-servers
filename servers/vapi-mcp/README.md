@@ -11,4 +11,4 @@ Query the Vapi API (free tier key; set VAPI_API_KEY, Bearer): assistants, single
 
 ## Source
 
-[vapi-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/vapi-mcp)
+[vapi-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/vapi-mcp)

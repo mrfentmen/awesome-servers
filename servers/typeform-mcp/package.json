@@ -6,7 +6,7 @@
   "mcpName": "io.github.mrfentmen/typeform-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "typeform-mcp": "./dist/index.js"

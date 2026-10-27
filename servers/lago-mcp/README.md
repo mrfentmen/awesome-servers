@@ -10,4 +10,4 @@ Query the Lago API (free self-host or cloud key; set LAGO_API_KEY, Bearer; optio
 
 ## Source
 
-[lago-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/lago-mcp)
+[lago-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/lago-mcp)

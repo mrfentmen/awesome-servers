@@ -36,4 +36,4 @@ Business Tools
 airtable, database, nocode
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/airtable-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/airtable-mcp

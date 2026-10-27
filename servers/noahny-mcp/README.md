@@ -13,4 +13,4 @@ Query the Noah catalog (noahny.com, NYC): search clothing, newest arrivals, enri
 
 ## Source
 
-[noahny-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/noahny-mcp)
+[noahny-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/noahny-mcp)

@@ -3,15 +3,15 @@
   "name": "io.github.mrfentmen/iss-mcp",
   "description": "ISS live position and passes.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.1.3",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@mrfentmen/iss-mcp",
-      "version": "1.0.0",
+      "version": "1.1.3",
       "transport": {
         "type": "stdio"
       }

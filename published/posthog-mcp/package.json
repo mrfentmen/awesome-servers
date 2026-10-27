@@ -1,12 +1,12 @@
 {
   "name": "posthog-mcp",
-  "version": "1.1.4",
+  "version": "1.1.6",
   "description": "Query PostHog (personal key; set POSTHOG_PERSONAL_API_KEY, Bearer; optional POSTHOG_BASE_URL us/eu): profile, projects, insights.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/posthog-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "posthog-mcp": "./dist/index.js"

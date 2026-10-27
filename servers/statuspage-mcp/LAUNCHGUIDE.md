@@ -36,4 +36,4 @@ Developer Tools
 statuspage, status, devops
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/statuspage-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/statuspage-mcp

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/gatus-mcp",
   "description": "Endpoint conditions, latency and TLS checks - no API key.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

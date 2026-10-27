@@ -18,4 +18,4 @@ Query Alpaca paper trading (set ALPACA_API_KEY_ID + ALPACA_API_SECRET_KEY, heade
 
 ## Source
 
-[alpaca-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/alpaca-mcp)
+[alpaca-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/alpaca-mcp)

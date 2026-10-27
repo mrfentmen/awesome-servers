@@ -30,4 +30,4 @@ Business Tools
 google-fonts, fonts, typography, design
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/google-fonts-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/google-fonts-mcp

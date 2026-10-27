@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/groq-mcp",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "MCP server for Groq: fast LLM chat, model list. Needs a free API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/groq-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "groq-mcp": "./dist/index.js"

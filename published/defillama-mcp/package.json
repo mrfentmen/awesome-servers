@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/defillama-mcp",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "DefiLlama protocols, chains, and TVL (merged).",
   "type": "module",
   "main": "dist/index.js",
@@ -23,6 +23,6 @@
   "mcpName": "io.github.mrfentmen/defillama-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   }
 }

@@ -28,4 +28,4 @@ Developer Tools
 clerk, auth, users, login, saas
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/clerk-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/clerk-mcp

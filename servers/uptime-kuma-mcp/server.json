@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/uptime-kuma-mcp",
   "description": "Query your Uptime Kuma instance: public status, Prometheus metrics. Endpoints per official docs.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

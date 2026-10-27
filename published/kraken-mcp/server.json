@@ -3,15 +3,15 @@
   "name": "io.github.mrfentmen/kraken-mcp",
   "description": "Crypto prices from Kraken. No key required.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
-  "version": "1.0.1",
+  "version": "1.0.6",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "kraken-mcp",
-      "version": "1.0.1",
+      "version": "1.0.6",
       "transport": {
         "type": "stdio"
       }

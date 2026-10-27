@@ -19,4 +19,4 @@ Query your Supabase project (set SUPABASE_URL + SUPABASE_SERVICE_KEY, apikey hea
 
 ## Source
 
-[supabase-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/supabase-mcp)
+[supabase-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/supabase-mcp)

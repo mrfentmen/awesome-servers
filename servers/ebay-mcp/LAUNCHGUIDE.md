@@ -36,4 +36,4 @@ Business Tools
 ebay, shopping, ecommerce
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/ebay-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/ebay-mcp

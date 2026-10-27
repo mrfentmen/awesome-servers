@@ -29,4 +29,4 @@ Social
 mastodon, fediverse, social, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/mastodon-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/mastodon-mcp

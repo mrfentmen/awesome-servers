@@ -10,4 +10,4 @@ Query the Rollbar API (free tier token; set ROLLBAR_ACCESS_TOKEN, query param): 
 
 ## Source
 
-[rollbar-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/rollbar-mcp)
+[rollbar-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/rollbar-mcp)

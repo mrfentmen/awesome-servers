@@ -9,4 +9,4 @@ Query your Baserow instance (self-hosted or cloud; set BASEROW_URL + BASEROW_TOK
 
 ## Source
 
-[baserow-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/baserow-mcp)
+[baserow-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/baserow-mcp)

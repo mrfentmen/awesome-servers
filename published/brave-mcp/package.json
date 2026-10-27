@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/brave-mcp",
-  "version": "1.1.2",
+  "version": "1.1.4",
   "description": "Search with Brave Search API (free key; set BRAVE_API_KEY, X-Subscription-Token): web results, news results.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/brave-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "brave-mcp": "./dist/index.js"

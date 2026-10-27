@@ -9,4 +9,4 @@ Query the OMDb API (free key from omdbapi.com/apikey.aspx, 1,000/day; set OMDB_A
 
 ## Source
 
-[omdb-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/omdb-mcp)
+[omdb-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/omdb-mcp)

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/arweave-mcp",
   "description": "Keyless MCP server for Arweave: network info, transactions, wallet balances, storage price.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

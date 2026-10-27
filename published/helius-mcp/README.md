@@ -16,9 +16,6 @@ export HELIUS_API_KEY=YOUR_KEY
 - `get_token_metadata` — Fungible token metadata for Solana mints: decimals, supply, name, symbol.
 - `parse_transactions` — Human-readable Helius parse of Solana transactions: type, source, transfers, swaps.
 
-## Licence — no paywall
+## Licence
 
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.
+Every tool in this package is free: no licence key, no paid tier, no hosted gateway. Everything runs locally.

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/fueleconomy-mcp",
   "description": "US EPA car MPG, CO2 and pump prices - no API key.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

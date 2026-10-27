@@ -36,4 +36,4 @@ Finance
 stripe, payments, billing, fintech
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/stripe-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/stripe-mcp

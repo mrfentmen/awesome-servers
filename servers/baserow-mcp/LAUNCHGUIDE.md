@@ -28,4 +28,4 @@ Business Tools
 baserow, database, nocode, airtable-alt, self-hosted
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/baserow-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/baserow-mcp

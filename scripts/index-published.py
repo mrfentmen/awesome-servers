@@ -104,6 +104,8 @@ def main() -> int:
             + ", ".join(f"`{r['name']}`" for r in foreign)
             + " — the directory mirrors their tarball, our copy is unpublished",
         ]
+    while lines and lines[-1] == "":
+        lines.pop()
     lines += [
         "",
         "| package | version | src? | gate | stubs |",

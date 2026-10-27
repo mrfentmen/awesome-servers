@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/calcom-mcp",
   "description": "Query Cal.com API v2: event types, bookings, schedules. v1 is decommissioned.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.1.0",

@@ -10,4 +10,4 @@ Query your Radarr instance (self-hosted; set RADARR_URL + RADARR_API_KEY, query 
 
 ## Source
 
-[radarr-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/radarr-mcp)
+[radarr-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/radarr-mcp)

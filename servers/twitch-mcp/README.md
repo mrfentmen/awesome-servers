@@ -11,4 +11,4 @@ Query the Twitch Helix API (free app token; set TWITCH_CLIENT_ID + TWITCH_CLIENT
 
 ## Source
 
-[twitch-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/twitch-mcp)
+[twitch-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/twitch-mcp)

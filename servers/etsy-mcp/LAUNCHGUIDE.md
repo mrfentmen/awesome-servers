@@ -29,4 +29,4 @@ Business Tools
 etsy, mcp, shopping, api
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/etsy-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/etsy-mcp

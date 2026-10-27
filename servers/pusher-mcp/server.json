@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/pusher-mcp",
   "description": "Query the Pusher HTTP API: channels, channel details, channel users.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

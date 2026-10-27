@@ -37,4 +37,4 @@ Business Tools
 noah, streetwear, menswear, shopping, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/noahny-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/noahny-mcp

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/doppler-mcp",
   "description": "Doppler API: projects, configs, secrets listing and download. Needs service or personal token.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

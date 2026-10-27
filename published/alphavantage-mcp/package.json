@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/alphavantage-mcp",
-  "version": "1.0.6",
+  "version": "1.0.8",
   "description": "MCP server for Alpha Vantage: stock quotes, forex, crypto. Needs a free API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/alphavantage-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "alphavantage-mcp": "./dist/index.js"

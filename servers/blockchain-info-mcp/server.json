@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/blockchain-info-mcp",
   "description": "Bitcoin data from blockchain.info: price ticker, latest block, and address balances. No key...",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.2",

@@ -10,4 +10,4 @@ Query the FBI Crime Data API (free key; set FBI_API_KEY from api.data.gov): arre
 
 ## Source
 
-[fbi-crime-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/fbi-crime-mcp)
+[fbi-crime-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/fbi-crime-mcp)

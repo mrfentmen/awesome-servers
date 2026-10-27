@@ -30,4 +30,4 @@ Business Tools
 lemon-squeezy, billing, payments, saas
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/lemonsqueezy-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/lemonsqueezy-mcp

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/jolpica-mcp",
   "description": "Query the Jolpica F1 API: driver standings, constructor standings, schedule, results.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

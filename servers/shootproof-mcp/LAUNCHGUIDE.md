@@ -33,4 +33,4 @@ Business Tools
 shootproof, mcp, data, api
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/shootproof-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/shootproof-mcp

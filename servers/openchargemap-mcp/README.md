@@ -9,4 +9,4 @@ Search Open Charge Map (free key; set OPENCHARGEMAP_API_KEY, query param): charg
 
 ## Source
 
-[openchargemap-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/openchargemap-mcp)
+[openchargemap-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/openchargemap-mcp)

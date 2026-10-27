@@ -18,6 +18,6 @@ Query Cal.com API v2 (key; set CAL_API_KEY, Bearer + version header): event type
 
 ## Source
 
-[calcom-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/calcom-mcp)
+[calcom-mcp](https://github.com/mrfentmen/awesome-servers)
 
 

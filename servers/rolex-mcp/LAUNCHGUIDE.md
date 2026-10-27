@@ -43,4 +43,4 @@ Ecommerce
 rolex, mcp, shopping, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/rolex-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/rolex-mcp

@@ -37,4 +37,4 @@ Business Tools
 beis, luggage, travel, bags, shopping, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/beis-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/beis-mcp

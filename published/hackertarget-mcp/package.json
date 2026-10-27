@@ -1,12 +1,12 @@
 {
   "name": "hackertarget-mcp",
-  "version": "1.1.0",
+  "version": "1.1.3",
   "description": "HackNotice HackerTarget recon: DNS, whois, geoIP, headers. Keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/hackertarget-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "hackertarget-mcp": "./dist/index.js"

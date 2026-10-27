@@ -1,12 +1,12 @@
 {
   "name": "spreaker-mcp",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "description": "Query the Spreaker podcast platform: get shows and episodes, list a show's episodes, search public shows (no key needed), and create shows with an OAuth token (SPREAKER_ACCESS_TOKEN).",
   "type": "module",
   "mcpName": "io.github.mrfentmen/spreaker-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "spreaker-mcp": "./dist/index.js"

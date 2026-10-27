@@ -43,4 +43,4 @@ Ecommerce
 gucci, mcp, shopping, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/gucci-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/gucci-mcp

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/email-validator-mcp",
   "description": "Validate email addresses by format, MX record, and disposable domain. No key required.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.2",

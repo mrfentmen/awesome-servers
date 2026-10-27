@@ -19,4 +19,4 @@ NYPD arrest records (NYC Open Data, keyless; optional NYC_APP_TOKEN): search by 
 
 ## Source
 
-[nyc-arrests-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/nyc-arrests-mcp)
+[nyc-arrests-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/nyc-arrests-mcp)

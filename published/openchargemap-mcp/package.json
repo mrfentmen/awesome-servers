@@ -1,12 +1,12 @@
 {
   "name": "openchargemap-mcp",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "description": "Search Open Charge Map (free key; set OPENCHARGEMAP_API_KEY, query param): chargers near coordinates, details.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/openchargemap-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "openchargemap-mcp": "./dist/index.js"

@@ -25,4 +25,4 @@ Business Tools
 publicwww, osint, search, security
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/publicwww-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/publicwww-mcp

@@ -43,4 +43,4 @@ Other
 wayback, archive, web-history, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/wayback-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/wayback-mcp

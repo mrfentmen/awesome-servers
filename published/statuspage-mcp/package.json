@@ -1,12 +1,12 @@
 {
   "name": "statuspage-mcp",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "description": "Query Statuspage management API (key; set STATUSPAGE_API_KEY, OAuth header): pages, page details, incidents. (Public per-page v2 is keyless but page-scoped; this covers management reads.)",
   "type": "module",
   "mcpName": "io.github.mrfentmen/statuspage-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "statuspage-mcp": "./dist/index.js"

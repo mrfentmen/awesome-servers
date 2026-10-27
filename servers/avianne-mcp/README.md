@@ -16,4 +16,4 @@ Query the Avianne & Co. catalog (avianneandco.com, NYC Diamond District): search
 
 ## Source
 
-[avianne-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/avianne-mcp)
+[avianne-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/avianne-mcp)

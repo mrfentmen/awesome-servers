@@ -6,7 +6,7 @@
   "mcpName": "io.github.mrfentmen/convertkit-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "convertkit-mcp": "./dist/index.js"

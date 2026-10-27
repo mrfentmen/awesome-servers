@@ -10,4 +10,4 @@ Query the AssemblyAI API (free tier key; set ASSEMBLYAI_API_KEY, sent raw as Aut
 
 ## Source
 
-[assemblyai-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/assemblyai-mcp)
+[assemblyai-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/assemblyai-mcp)

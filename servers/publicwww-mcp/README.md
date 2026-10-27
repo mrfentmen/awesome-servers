@@ -8,4 +8,4 @@ Search PublicWWW (paid API key; set PUBLICWWW_API_KEY): sites containing a snipp
 
 ## Source
 
-[publicwww-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/publicwww-mcp)
+[publicwww-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/publicwww-mcp)

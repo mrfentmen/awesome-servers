@@ -45,4 +45,4 @@ Developer Tools
 security, passwords, breach, dns, spf, mcp
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/cyberark-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/cyberark-mcp

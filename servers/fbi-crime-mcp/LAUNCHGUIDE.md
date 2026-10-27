@@ -29,4 +29,4 @@ Business Tools
 fbi, crime, statistics, government
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/fbi-crime-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/fbi-crime-mcp

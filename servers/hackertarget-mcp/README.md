@@ -13,4 +13,4 @@ Query HackerTarget's free recon APIs (keyless): DNS lookup, reverse DNS, whois, 
 
 ## Source
 
-[hackertarget-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/hackertarget-mcp)
+[hackertarget-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/hackertarget-mcp)

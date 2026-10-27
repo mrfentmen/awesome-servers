@@ -30,4 +30,4 @@ Developer Tools
 kong, gateway, api, microservices, self-hosted
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/kong-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/kong-mcp

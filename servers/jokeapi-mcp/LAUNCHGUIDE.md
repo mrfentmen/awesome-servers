@@ -41,4 +41,4 @@ Other
 jokes, humour, fun, content, mcp
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/jokeapi-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/jokeapi-mcp

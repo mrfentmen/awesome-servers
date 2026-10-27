@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/clerk-mcp",
   "description": "Query the Clerk Backend API (secret key; set CLERK_SECRET_KEY, Bearer): users, user details.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

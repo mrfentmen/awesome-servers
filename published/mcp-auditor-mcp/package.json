@@ -1,12 +1,12 @@
 {
   "name": "mcp-auditor-mcp",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Audit MCP servers and the APIs behind them - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/mcp-auditor-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "mcp-auditor-mcp": "./dist/index.js"

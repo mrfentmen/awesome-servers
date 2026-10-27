@@ -1,12 +1,12 @@
 {
   "name": "cartesia-mcp",
-  "version": "1.0.4",
+  "version": "1.0.7",
   "description": "Query the Cartesia API (free tier key; set CARTESIA_API_KEY, Bearer): voice list, localized voices, and speech synthesis (paid usage \u2014 synthesizing spends credits).",
   "type": "module",
   "mcpName": "io.github.mrfentmen/cartesia-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "cartesia-mcp": "./dist/index.js"

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/paypal-mcp",
   "description": "Query PayPal sandbox: orders, captures, billing plans. Sandbox only.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.1.0",

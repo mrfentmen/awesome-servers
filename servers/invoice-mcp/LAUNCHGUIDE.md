@@ -29,4 +29,4 @@ Business Tools
 invoices, billing, pdf, freelancers
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/invoice-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/invoice-mcp

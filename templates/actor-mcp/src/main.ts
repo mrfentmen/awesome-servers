@@ -12,7 +12,7 @@ import { getMcpProxyClient } from './mcp.js';
 import { startServer } from './server.js';
 
 // The stdio MCP server this Actor proxies. Vendored under vendor/jobicy-mcp (built
-// from the premium-mcps repo), so no npm package is needed to start it at runtime.
+// from the awesome-servers repo), so no npm package is needed to start it at runtime.
 const MCP_COMMAND = ['node', 'vendor/jobicy-mcp/index.js'];
 
 const STANDBY_MODE = process.env.APIFY_META_ORIGIN === 'STANDBY';

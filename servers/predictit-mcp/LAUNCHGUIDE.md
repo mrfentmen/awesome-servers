@@ -43,4 +43,4 @@ Other
 predictit, mcp, shopping, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/predictit-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/predictit-mcp

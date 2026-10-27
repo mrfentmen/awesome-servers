@@ -10,4 +10,4 @@ Query the OneSignal API (free tier; use a current v2 Organization API key for ON
 
 ## Source
 
-[onesignal-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/onesignal-mcp)
+[onesignal-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/onesignal-mcp)

@@ -9,4 +9,4 @@ Search EPO Open Patent Services (free registration; set EPO_CONSUMER_KEY + EPO_C
 
 ## Source
 
-[epo-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/epo-mcp)
+[epo-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/epo-mcp)

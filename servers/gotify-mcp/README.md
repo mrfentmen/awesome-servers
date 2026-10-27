@@ -10,4 +10,4 @@ Query any Gotify server (self-hosted; set GOTIFY_BASE_URL + GOTIFY_TOKEN, sent a
 
 ## Source
 
-[gotify-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/gotify-mcp)
+[gotify-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/gotify-mcp)

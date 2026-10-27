@@ -37,4 +37,4 @@ Developer Tools
 ci, builds, pipelines, gitlab, github, mcp
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/appveyor-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/appveyor-mcp

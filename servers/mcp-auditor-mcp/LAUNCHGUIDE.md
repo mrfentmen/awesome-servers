@@ -47,4 +47,4 @@ Developer Tools
 mcp, audit, linter, schema, review, developer tools
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/mcp-auditor-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/mcp-auditor-mcp

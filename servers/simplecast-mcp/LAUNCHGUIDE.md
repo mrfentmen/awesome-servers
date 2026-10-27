@@ -37,4 +37,4 @@ AI
 podcast, rss, audio, apple, content, mcp
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/simplecast-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/simplecast-mcp

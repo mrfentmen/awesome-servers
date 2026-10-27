@@ -18,6 +18,6 @@ Query Cloudflare v4 (API token; set CLOUDFLARE_API_TOKEN, Bearer): zones, accoun
 
 ## Source
 
-[cloudflare-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/cloudflare-mcp)
+[cloudflare-mcp](https://github.com/mrfentmen/awesome-servers)
 
 

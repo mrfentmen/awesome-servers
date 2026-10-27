@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/lemonsqueezy-mcp",
   "description": "Query the Lemon Squeezy API: stores, products, product details.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

@@ -30,4 +30,4 @@ Business Tools
 postmark, email, transactional, smtp
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/postmark-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/postmark-mcp

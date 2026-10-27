@@ -29,4 +29,4 @@ Finance
 fmp, mcp, data, api
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/fmp-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/fmp-mcp

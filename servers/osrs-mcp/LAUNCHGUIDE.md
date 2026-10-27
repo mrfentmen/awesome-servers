@@ -43,4 +43,4 @@ Games
 runescape, osrs, gaming, prices, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/osrs-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/osrs-mcp

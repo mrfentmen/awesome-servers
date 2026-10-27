@@ -18,4 +18,4 @@ Query Apollo.io (free key; set APOLLO_API_KEY, X-Api-Key header): account health
 
 ## Source
 
-[apollo-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/apollo-mcp)
+[apollo-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/apollo-mcp)

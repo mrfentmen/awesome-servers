@@ -32,4 +32,4 @@ Marketing
 vapi, voice, agents, calls, phone
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/vapi-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/vapi-mcp

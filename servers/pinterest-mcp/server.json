@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/pinterest-mcp",
   "description": "MCP server for Pinterest: account, boards, pins. Needs a free Pinterest access token.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

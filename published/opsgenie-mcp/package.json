@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/opsgenie-mcp",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "description": "Query the Opsgenie API (free tier key; set OPSGENIE_API_KEY, sent as GenieKey): alerts, alert details, on-calls.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/opsgenie-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "opsgenie-mcp": "./dist/index.js"

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/telegram-mcp",
   "description": "Use the Telegram Bot API (free bot; set TELEGRAM_BOT_TOKEN): bot info, send messages, read updates.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.1.0",

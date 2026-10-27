@@ -1,12 +1,12 @@
 {
   "name": "openpanel-mcp",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "description": "OpenPanel analytics: metrics, live visitors, top pages, referrers. Needs client credentials.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/openpanel-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "openpanel-mcp": "./dist/index.js"

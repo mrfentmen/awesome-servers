@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/openlibrary-mcp",
   "description": "Query the Open Library: full-text book search, work details.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

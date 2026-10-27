@@ -41,4 +41,4 @@ Developer Tools
 breach, hibp, passwords, security, leaks, mcp
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/hibp-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/hibp-mcp

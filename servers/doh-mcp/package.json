@@ -6,7 +6,7 @@
   "mcpName": "io.github.mrfentmen/doh-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "doh-mcp": "./dist/index.js"

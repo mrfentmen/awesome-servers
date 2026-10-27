@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/etherscan-mcp",
   "description": "Query the Etherscan v2 API: ETH balance, transactions, ERC-20 transfers.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.1.0",

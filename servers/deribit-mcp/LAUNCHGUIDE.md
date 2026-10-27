@@ -45,4 +45,4 @@ Other
 deribit, mcp, shopping, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/deribit-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/deribit-mcp

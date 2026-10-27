@@ -13,4 +13,4 @@ Query the Beis catalog (beistravel.com): search luggage and bags, newest arrival
 
 ## Source
 
-[beis-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/beis-mcp)
+[beis-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/beis-mcp)

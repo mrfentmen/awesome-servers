@@ -27,4 +27,4 @@ Content & Media
 movies, omdb, film, tv
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/omdb-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/omdb-mcp

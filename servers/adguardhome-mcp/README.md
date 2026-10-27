@@ -10,4 +10,4 @@ Query your AdGuard Home (self-hosted; set ADGUARD_URL; optional ADGUARD_USER + A
 
 ## Source
 
-[adguardhome-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/adguardhome-mcp)
+[adguardhome-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/adguardhome-mcp)

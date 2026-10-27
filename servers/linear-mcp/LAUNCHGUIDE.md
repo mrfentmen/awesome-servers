@@ -37,4 +37,4 @@ Developer Tools
 linear, issues, project
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/linear-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/linear-mcp

@@ -10,4 +10,4 @@ Query the Nylas v3 API (free tier key; set NYLAS_API_KEY, Bearer): grant info, c
 
 ## Source
 
-[nylas-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/nylas-mcp)
+[nylas-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/nylas-mcp)

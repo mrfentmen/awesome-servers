@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/assemblyai-mcp",
   "description": "Query the AssemblyAI API: transcript list, details, and paragraphs.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

@@ -27,4 +27,4 @@ Developer Tools
 k6, load-testing, performance, metrics
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/k6-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/k6-mcp

@@ -1,12 +1,12 @@
 {
   "name": "spacedevs-mcp",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "Rocket launches, satellites and space weather - no API key.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/spacedevs-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "spacedevs-mcp": "./dist/index.js"

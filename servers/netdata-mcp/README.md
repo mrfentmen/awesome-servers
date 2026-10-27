@@ -10,4 +10,4 @@ Query your Netdata agent (self-hosted; set NETDATA_URL; optional NETDATA_TOKEN):
 
 ## Source
 
-[netdata-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/netdata-mcp)
+[netdata-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/netdata-mcp)

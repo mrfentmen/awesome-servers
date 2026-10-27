@@ -36,4 +36,4 @@ Entertainment
 f1, formula-1, racing, sports, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/jolpica-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/jolpica-mcp

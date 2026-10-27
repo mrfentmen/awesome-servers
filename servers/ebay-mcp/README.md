@@ -18,4 +18,4 @@ Query the eBay Browse API (OAuth user token; set EBAY_OAUTH_TOKEN, Bearer): item
 
 ## Source
 
-[ebay-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/ebay-mcp)
+[ebay-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/ebay-mcp)

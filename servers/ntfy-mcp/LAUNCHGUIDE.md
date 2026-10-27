@@ -35,4 +35,4 @@ Developer Tools
 ntfy, push, notifications, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/ntfy-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/ntfy-mcp

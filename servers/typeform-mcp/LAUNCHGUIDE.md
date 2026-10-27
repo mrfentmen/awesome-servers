@@ -36,4 +36,4 @@ Business Tools
 typeform, forms, surveys
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/typeform-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/typeform-mcp

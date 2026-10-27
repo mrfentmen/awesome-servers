@@ -25,4 +25,4 @@ Finance
 twelvedata, mcp, data, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/twelvedata-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/twelvedata-mcp

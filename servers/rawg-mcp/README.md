@@ -9,4 +9,4 @@ Query the RAWG video games database (free key from rawg.io/apidocs; set RAWG_API
 
 ## Source
 
-[rawg-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/rawg-mcp)
+[rawg-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/rawg-mcp)

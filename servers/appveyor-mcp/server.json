@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/appveyor-mcp",
   "description": "CI pipeline monitoring for GitLab and GitHub - no API key.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

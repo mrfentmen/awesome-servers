@@ -1,12 +1,12 @@
 {
   "name": "@mrfentmen/cloudflare-mcp",
-  "version": "1.1.2",
+  "version": "1.1.4",
   "description": "Query Cloudflare v4 (API token; set CLOUDFLARE_API_TOKEN, Bearer): zones, accounts, DNS records.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/cloudflare-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "cloudflare-mcp": "./dist/index.js"

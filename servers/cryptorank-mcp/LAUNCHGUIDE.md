@@ -27,4 +27,4 @@ Finance
 cryptorank, mcp, data, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/cryptorank-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/cryptorank-mcp

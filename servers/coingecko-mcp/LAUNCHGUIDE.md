@@ -43,4 +43,4 @@ Other
 coingecko, mcp, shopping, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/coingecko-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/coingecko-mcp

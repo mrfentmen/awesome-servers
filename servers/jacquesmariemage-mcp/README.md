@@ -13,4 +13,4 @@ Query the Jacques Marie Mage catalog (jacquesmariemage.com): search eyewear, new
 
 ## Source
 
-[jacquesmariemage-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/jacquesmariemage-mcp)
+[jacquesmariemage-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/jacquesmariemage-mcp)

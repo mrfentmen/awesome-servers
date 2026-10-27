@@ -3,15 +3,15 @@
   "name": "io.github.mrfentmen/geckoterminal-mcp",
   "description": "Token data from the public GeckoTerminal API. No key required.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
-  "version": "1.0.1",
+  "version": "1.0.8",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "geckoterminal-mcp",
-      "version": "1.0.1",
+      "version": "1.0.8",
       "transport": {
         "type": "stdio"
       }

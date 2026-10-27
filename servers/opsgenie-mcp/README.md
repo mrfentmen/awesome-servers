@@ -10,4 +10,4 @@ Query the Opsgenie API (free tier key; set OPSGENIE_API_KEY, sent as GenieKey): 
 
 ## Source
 
-[opsgenie-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/opsgenie-mcp)
+[opsgenie-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/opsgenie-mcp)

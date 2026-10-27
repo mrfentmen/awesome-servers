@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ntfy-mcp",
   "description": "Use ntfy.sh: publish notifications, poll a topic as JSON. Publishing is real.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.1.0",

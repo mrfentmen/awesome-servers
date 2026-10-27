@@ -43,4 +43,4 @@ Developer Tools
 dns, doh, email, spf, dmarc, mcp
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/doh-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/doh-mcp

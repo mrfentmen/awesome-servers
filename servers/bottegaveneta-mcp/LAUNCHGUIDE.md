@@ -37,4 +37,4 @@ Business Tools
 bottegaveneta, mcp, shopping, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/bottegaveneta-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/bottegaveneta-mcp

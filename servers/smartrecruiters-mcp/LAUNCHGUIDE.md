@@ -41,4 +41,4 @@ Jobs
 smartrecruiters, mcp, data, keyless
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/smartrecruiters-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/smartrecruiters-mcp

@@ -36,4 +36,4 @@ Business Tools
 telegram, bot, messaging
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/telegram-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/telegram-mcp

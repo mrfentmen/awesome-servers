@@ -16,4 +16,4 @@ Query Listen Notes (free key; set LISTENNOTES_API_KEY, X-ListenAPI-Key): podcast
 
 ## Source
 
-[listennotes-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/listennotes-mcp)
+[listennotes-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/listennotes-mcp)

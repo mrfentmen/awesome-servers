@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/opsgenie-mcp",
   "description": "Query the Opsgenie API: alerts, alert details, on-calls.",
   "repository": {
-    "url": "https://github.com/mrfentmen/premium-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

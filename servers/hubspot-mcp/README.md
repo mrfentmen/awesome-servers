@@ -18,4 +18,4 @@ Query HubSpot (private-app token; set HUBSPOT_ACCESS_TOKEN, Bearer): contacts, c
 
 ## Source
 
-[hubspot-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/hubspot-mcp)
+[hubspot-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/hubspot-mcp)

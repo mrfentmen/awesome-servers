@@ -19,6 +19,6 @@ Query GitLab (token; set GITLAB_PRIVATE_TOKEN, PRIVATE-TOKEN header; optional GI
 
 ## Source
 
-[gitlab-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/gitlab-mcp)
+[gitlab-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/gitlab-mcp)
 
 - `search_public` — Public projects by query (no token needed).

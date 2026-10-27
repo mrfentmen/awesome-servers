@@ -37,4 +37,4 @@ Business Tools
 apollo, sales, leads, enrichment
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/apollo-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/apollo-mcp

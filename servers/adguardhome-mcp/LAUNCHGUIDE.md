@@ -30,4 +30,4 @@ Developer Tools
 adguard, dns, adblock, privacy, self-hosted
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/adguardhome-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/adguardhome-mcp

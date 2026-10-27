@@ -1,12 +1,12 @@
 {
   "name": "pusher-mcp",
-  "version": "1.1.1",
+  "version": "1.1.4",
   "description": "Query the Pusher HTTP API (free tier; set PUSHER_APP_ID, PUSHER_KEY, PUSHER_SECRET, PUSHER_CLUSTER; requests HMAC-signed with node:crypto, stdlib only): channels, channel details, channel users.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/pusher-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/premium-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "pusher-mcp": "./dist/index.js"

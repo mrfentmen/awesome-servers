@@ -30,4 +30,4 @@ Developer Tools
 netdata, metrics, monitoring, self-hosted, observability
 
 ## Documentation URL
-https://github.com/mrfentmen/premium-mcps/tree/main/servers/netdata-mcp
+https://github.com/mrfentmen/awesome-servers/tree/main/servers/netdata-mcp

@@ -10,4 +10,4 @@ Query the Last.fm API (free key; set LASTFM_API_KEY, query param): top artists, 
 
 ## Source
 
-[lastfm-mcp](https://github.com/mrfentmen/premium-mcps/tree/main/servers/lastfm-mcp)
+[lastfm-mcp](https://github.com/mrfentmen/awesome-servers/tree/main/servers/lastfm-mcp)
