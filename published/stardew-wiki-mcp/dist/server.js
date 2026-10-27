@@ -1,0 +1,157 @@
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
+import { formatArticle, getPage, randomPage, searchWiki, StardewError } from "./api.js";
+const text = (t) => ({ content: [{ type: "text", text: t }] });
+const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
+const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
+export function createServer() {
+    const server = new McpServer({
+        name: "stardew-wiki-mcp",
+        version: "1.0.0",
+    });
+    server.registerTool("search_wiki", {
+        title: "Search Stardew Wiki",
+        description: "Search the Stardew Valley Wiki: crops, villagers, fish, quests, items, festivals, bundles.",
+        inputSchema: z.object({
+            query: z.string().describe("Search text, e.g. 'parsnip', 'Sebastian gifts', 'greenhouse'"),
+            limit: z.number().int().min(1).max(20).default(5),
+        }),
+        annotations: READ_ONLY,
+    }, async ({ query, limit }) => {
+        try {
+            const results = await searchWiki(query, limit);
+            if (results.length === 0)
+                return text(`No Stardew Wiki pages match "${query}".`);
+            return text(`Stardew Wiki results for "${query}":\n\n${results.map((h, i) => `${i + 1}. ${h.title}${h.snippet ? ` — ${h.snippet.slice(0, 140)}` : ""}`).join("\n")}`);
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("get_page", {
+        title: "Get wiki page",
+        description: "Get a Stardew Valley Wiki page: guide text, wiki link, thumbnail.",
+        inputSchema: z.object({
+            title: z.string().describe("Exact page title, e.g. 'Parsnip' (use search_wiki to find it)"),
+        }),
+        annotations: READ_ONLY,
+    }, async ({ title }) => {
+        try {
+            const a = await getPage(title);
+            if (!a)
+                return text(`No Stardew Wiki page titled "${title}".`);
+            return text(formatArticle(a));
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("random_page", {
+        title: "Random wiki page",
+        description: "Open a random Stardew Valley Wiki page. Great for discovering crops, villagers, and secrets.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        try {
+            const { title } = await randomPage();
+            const a = await getPage(title);
+            if (!a)
+                return text(`Random pick: ${title}`);
+            return text(formatArticle(a));
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("category_members", {
+        title: "Category members",
+        description: "List the pages in a Stardew Wiki category, so you can enumerate things like crops, villagers, fish or items.",
+        inputSchema: z.object({
+            category: z.string().describe("Category name, e.g. 'Crops', 'Spring crops' or 'Villagers'."),
+            limit: z.number().int().min(1).max(200).default(40),
+        }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        // TODO: implement members locally (paywall removed)
+        try {
+            return textError("Not yet implemented: members");
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("page_links", {
+        title: "Page links",
+        description: "List the wiki pages a Stardew Wiki article links to, which is how you walk from one topic to the related ones.",
+        inputSchema: z.object({
+            title: z.string().describe("Page title, e.g. 'Parsnip' or 'Spring crops'."),
+            limit: z.number().int().min(1).max(200).default(40),
+        }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        // TODO: implement links locally (paywall removed)
+        try {
+            return textError("Not yet implemented: links");
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("page_sections", {
+        title: "Page sections",
+        description: "List the section headings of a Stardew Wiki article, giving you its table of contents before you fetch the full text.",
+        inputSchema: z.object({
+            title: z.string().describe("Page title, e.g. 'Greenhouse'."),
+        }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        // TODO: implement sections locally (paywall removed)
+        try {
+            return textError("Not yet implemented: sections");
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    const serverName = "stardew-wiki-mcp";
+    server.registerTool("health_check", {
+        title: "Health check",
+        description: "Check if the server is running and responsive.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        return text("OK - server is running");
+    });
+    server.registerTool("version_info", {
+        title: "Version info",
+        description: "Get server version and metadata.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
+    });
+    server.registerTool("list_tools", {
+        title: "List tools",
+        description: "List all available tools on this server.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        return text("See the tools/list response for the full tool list.");
+    });
+    server.registerTool("echo", {
+        title: "Echo",
+        description: "Echo back the provided text.",
+        inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        return text(String(args?.text ?? ""));
+    });
+    return server;
+}
+function errorMessage(e) {
+    if (e instanceof StardewError)
+        return `Error: ${e.message}`;
+    if (e instanceof Error)
+        return `Error: ${e.message}`;
+    return `Error: ${String(e)}`;
+}

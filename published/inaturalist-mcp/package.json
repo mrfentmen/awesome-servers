@@ -1,0 +1,48 @@
+{
+  "version": "1.0.4",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/inaturalist-mcp.git"
+  },
+  "bin": {
+    "inaturalist-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8",
+    "jose": "^5.9.0",
+    "iban": "^0.0.14",
+    "sql-formatter": "^15.4.0",
+    "docx": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "name": "@mrfentmen/inaturalist-mcp",
+  "description": "Search species and recent observations from iNaturalist. No key required.",
+  "mcpName": "io.github.mrfentmen/inaturalist-mcp",
+  "keywords": [
+    "mcp",
+    "nature",
+    "species",
+    "observations",
+    "biodiversity"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "version": "1.0.5",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/bluesky-mcp.git"
+  },
+  "bin": {
+    "bluesky-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "name": "@mrfentmen/bluesky-mcp",
+  "description": "Bluesky actor search from the public AT Protocol API. No key required.",
+  "mcpName": "io.github.mrfentmen/bluesky-mcp",
+  "keywords": [
+    "mcp",
+    "bluesky",
+    "atproto",
+    "social",
+    "search"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

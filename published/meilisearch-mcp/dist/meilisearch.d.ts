@@ -1,0 +1,16 @@
+export declare function checkHealth(): Promise<any>;
+export declare function listIndexes(): Promise<any>;
+export declare function getIndex(uid: string): Promise<any>;
+export declare function searchIndex(indexUid: string, query: string, limit?: number, offset?: number, filters?: string): Promise<any>;
+export declare function getDocuments(indexUid: string, limit?: number, offset?: number): Promise<any>;
+export declare function getDocument(indexUid: string, id: string): Promise<any>;
+export declare function addDocuments(indexUid: string, documents: any[]): Promise<any>;
+export declare function deleteDocument(indexUid: string, id: string): Promise<any>;
+export declare function updateSettings(indexUid: string, settings: any): Promise<any>;
+export declare function getStats(): Promise<any>;
+export declare function getTask(taskUid: string): Promise<any>;
+export declare function listKeys(): Promise<any>;
+export declare function createIndex(uid: string, primaryKey?: string): Promise<any>;
+export declare function deleteIndex(indexUid: string): Promise<any>;
+export declare function getIndexStats(indexUid: string): Promise<any>;
+export declare function formatBytes(bytes: number): string;

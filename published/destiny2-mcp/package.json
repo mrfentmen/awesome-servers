@@ -1,0 +1,43 @@
+{
+  "name": "destiny2-mcp",
+  "version": "1.0.3",
+  "description": "Bungie Destiny 2 API: search players, read profiles and characters, milestones and manifest.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/destiny2-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/awesome-mcps.git"
+  },
+  "bin": {
+    "destiny2-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "destiny",
+    "bungie",
+    "gaming",
+    "fps"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

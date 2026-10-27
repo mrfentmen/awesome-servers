@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/mac-lookup-mcp",
+  "description": "Look up the vendor of a MAC address from the MAC Vendors database. No key required.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/mac-lookup-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "mac-lookup-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

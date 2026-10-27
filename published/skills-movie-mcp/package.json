@@ -1,0 +1,34 @@
+{
+  "name": "skills-movie-mcp",
+  "version": "1.0.0",
+  "description": "MCP server exposing the skills-2 filmmaker personas + a screenplay toolkit for AI-written long-form scripts",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "skills-movie-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "inspect": "npx @modelcontextprotocol/inspector tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.3.1",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "mcpName": "io.github.mrfentmen/skills-movie-mcp",
+  "license": "MIT"
+}

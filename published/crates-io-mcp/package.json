@@ -1,0 +1,41 @@
+{
+  "name": "crates-io-mcp",
+  "version": "1.0.7",
+  "description": "Rust crates on crates.io: search, download trends, versions, owners, reverse dependencies.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/crates-io-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "crates-io-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "rust",
+    "crates",
+    "cargo",
+    "packages"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

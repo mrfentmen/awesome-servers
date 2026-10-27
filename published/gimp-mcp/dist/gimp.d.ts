@@ -1,0 +1,10 @@
+declare function findGimp(): string;
+export declare function openImage(filepath: string): Promise<any>;
+export declare function saveImage(filepath: string, output?: string): Promise<any>;
+export declare function exportImage(filepath: string, output: string, format?: string): Promise<any>;
+export declare function resizeImage(filepath: string, width: number, height: number, output?: string): Promise<any>;
+export declare function getImageInfo(filepath: string): Promise<any>;
+export declare function listLayers(filepath: string): Promise<any>;
+export declare function applyFilter(filepath: string, filter: string, params: Record<string, unknown>, output?: string): Promise<any>;
+export declare function batchProcess(pattern: string, script: string): Promise<any>;
+export { findGimp };

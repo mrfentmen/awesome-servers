@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/marine-forecast-mcp",
+  "description": "Wave height, wave period, and sea temperature forecasts from Open Meteo marine.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/marine-forecast-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "marine-forecast-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

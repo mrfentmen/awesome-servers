@@ -1,0 +1,17 @@
+const URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json";
+export class KevError extends Error {
+}
+let cache = null;
+async function all() { if (cache)
+    return cache; const r = await fetch(URL, { headers: { "User-Agent": "mrfentmen-cisa-kev-mcp/1.0" }, signal: AbortSignal.timeout(20000) }); if (!r.ok)
+    throw new KevError(`CISA KEV error ${r.status}`); cache = await r.json(); return cache; }
+export async function search(query) { const q = query.toLowerCase(); return (await all()).vulnerabilities?.filter((x) => `${x.cveID} ${x.vendorProject} ${x.product} ${x.vulnerabilityName} ${x.shortDescription}`.toLowerCase().includes(q)).slice(0, 30) ?? []; }
+export async function recent(limit) { return (await all()).vulnerabilities?.slice(-limit).reverse() ?? []; }
+export async function info() { const x = await all(); return { catalogVersion: x.catalogVersion, dateReleased: x.dateReleased, count: x.vulnerabilities?.length ?? 0 }; }
+export function format(x) { return JSON.stringify(x, null, 2).slice(0, 14000); }
+export async function byCve(cve) { return (await all()).vulnerabilities?.filter((x) => (x.cveID ?? "").toUpperCase() === cve.trim().toUpperCase()).slice(0, 5) ?? []; }
+export async function byVendor(vendor) { const q = vendor.toLowerCase(); return (await all()).vulnerabilities?.filter((x) => (x.vendorProject ?? "").toLowerCase().includes(q)).slice(0, 30) ?? []; }
+export async function byProduct(product) { const q = product.toLowerCase(); return (await all()).vulnerabilities?.filter((x) => (x.product ?? "").toLowerCase().includes(q)).slice(0, 30) ?? []; }
+export async function ransomware() { return (await all()).vulnerabilities?.filter((x) => (x.knownRansomwareCampaignUse ?? "").toLowerCase() === "known").slice(0, 30) ?? []; }
+export async function vendors() { const s = new Set((await all()).vulnerabilities?.map((x) => x.vendorProject ?? "").filter(Boolean) ?? []); return [...s].sort().slice(0, 100); }
+export async function yearly(year) { return (await all()).vulnerabilities?.filter((x) => (x.dateAdded ?? "").startsWith(year.trim())).slice(0, 50) ?? []; }

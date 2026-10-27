@@ -1,0 +1,39 @@
+{
+  "name": "adobe-premiere-mcp",
+  "version": "1.0.1",
+  "description": "MCP server for Adobe Premiere Pro video editing via ExtendScript.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/adobe-premiere-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/adobe-premiere-mcp.git"
+  },
+  "bin": {
+    "adobe-premiere-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "/opt/homebrew/bin/tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && /opt/homebrew/bin/tsc -p tsconfig.json && node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "adobe",
+    "premiere",
+    "video-editing",
+    "extendscript"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

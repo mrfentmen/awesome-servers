@@ -1,0 +1,44 @@
+{
+  "version": "1.0.2",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/password-generator-mcp.git"
+  },
+  "bin": {
+    "password-generator-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "name": "password-generator-mcp",
+  "description": "Generate strong random passwords locally. No network and no key.",
+  "mcpName": "io.github.mrfentmen/password-generator-mcp",
+  "keywords": [
+    "mcp",
+    "password",
+    "security",
+    "generator",
+    "random"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

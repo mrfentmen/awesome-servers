@@ -1,0 +1,42 @@
+{
+  "name": "@mrfentmen/cleveland-art-mcp",
+  "version": "1.0.0",
+  "description": "Cleveland Museum of Art open access: 60,000+ works, CC0 images, department and artist filtering \u2014 keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/cleveland-art-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "cleveland-art-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "art",
+    "museum",
+    "images",
+    "culture",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

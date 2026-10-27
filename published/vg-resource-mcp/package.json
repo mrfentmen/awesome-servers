@@ -1,0 +1,43 @@
+{
+  "name": "vg-resource-mcp",
+  "version": "1.0.2",
+  "description": "MCP server for The VG Resource network (Sprites, Models, Textures, Sounds)",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/vg-resource-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/vg-resource-mcp.git"
+  },
+  "bin": {
+    "vg-resource-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "/opt/homebrew/bin/tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && /opt/homebrew/bin/tsc -p tsconfig.json && node dist/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "vg-resource",
+    "sprites",
+    "models",
+    "textures",
+    "sounds",
+    "gaming"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "cheerio": "^1.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,0 +1,66 @@
+const BASE = 'https://www.githubstatus.com/api/v2';
+const UA = 'mrfentmen-github-status-mcp/1.0';
+export async function status(_args) {
+    const res = await fetch(`${BASE}/status.json`, {
+        headers: { 'User-Agent': UA, Accept: 'application/json' },
+        signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok)
+        throw new Error(`GitHub Status returned ${res.status}`);
+    const d = (await res.json());
+    const components = d.components ?? [];
+    return [
+        `GitHub Status (${d.page?.name ?? '?'}):`,
+        `Overall: ${d.status?.indicator ?? '?'} - ${d.status?.description ?? '?'}`,
+        `Updated: ${d.page?.updated_at ?? '?'}`,
+        components.length ? `Components:\n${components.slice(0, 20).map((c, i) => `  ${i + 1}. ${c.name ?? '?'}: ${c.status ?? '?'}`).join('\n')}` : null,
+    ].filter(Boolean).join('\n');
+}
+export async function incidents(args) {
+    const limit = Math.min(Math.max(Number(args?.limit ?? 5) || 5, 1), 10);
+    const res = await fetch(`${BASE}/incidents/unresolved.json`, {
+        headers: { 'User-Agent': UA, Accept: 'application/json' },
+        signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok)
+        throw new Error(`GitHub Status returned ${res.status}`);
+    const d = (await res.json());
+    const incidents = d.incidents ?? [];
+    if (!incidents.length)
+        return 'No unresolved GitHub incidents.';
+    return `GitHub unresolved incidents (${incidents.length}):\n` +
+        incidents.slice(0, limit).map((i, n) => `${n + 1}. ${i.name ?? '?'} [${i.status ?? '?'}] impact ${i.impact ?? '?'}`).join('\n');
+}
+async function getJson(url) {
+    const res = await fetch(url, {
+        headers: { 'User-Agent': UA, Accept: 'application/json' },
+        signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok)
+        throw new Error(`GitHub Status returned ${res.status}`);
+    return res.json();
+}
+export async function components() {
+    const d = await getJson(`${BASE}/components.json`);
+    const rows = (d?.components ?? []);
+    if (!rows.length)
+        return 'No components returned.';
+    return rows.map((c, i) => `${i + 1}. ${c.name ?? '?'}: ${c.status ?? '?'}`).join('\n');
+}
+export async function maintenances(args) {
+    const limit = Math.min(Math.max(Number(args?.limit ?? 5) || 5, 1), 10);
+    const d = await getJson(`${BASE}/scheduled-maintenances.json`);
+    const rows = (d?.scheduled_maintenances ?? []);
+    if (!rows.length)
+        return 'No scheduled maintenance.';
+    return rows.slice(0, limit).map((m, i) => `${i + 1}. ${m.name ?? '?'} [${m.status ?? '?'}] ${m.scheduled_for ?? ''}`).join('\n');
+}
+export async function incidentDetails(args) {
+    const id = (args.id ?? '').trim();
+    if (!id)
+        throw new Error('Provide an incident id.');
+    const d = await getJson(`${BASE}/incidents/${encodeURIComponent(id)}.json`);
+    const inc = d?.incident ?? {};
+    const updates = (inc.incident_updates ?? []);
+    return `${inc.name ?? id} [${inc.status ?? '?'}]\n` + updates.slice(0, 5).map((u) => `- ${String(u.created_at ?? '').slice(0, 16)}: ${(u.body ?? '').slice(0, 200)}`).join('\n');
+}

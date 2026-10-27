@@ -1,0 +1,39 @@
+{
+  "name": "meilisearch-mcp",
+  "version": "1.0.1",
+  "description": "MCP server for MeiliSearch. Search indexes, manage documents, check health and stats.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/meilisearch-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/meilisearch-mcp.git"
+  },
+  "bin": {
+    "meilisearch-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "/opt/homebrew/bin/tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && /opt/homebrew/bin/tsc -p tsconfig.json && node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "meilisearch",
+    "search",
+    "vector-search",
+    "database"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

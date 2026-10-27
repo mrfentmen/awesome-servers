@@ -1,0 +1,42 @@
+{
+  "name": "rom-mcp",
+  "version": "1.2.0",
+  "description": "MCP server for searching, verifying, and managing game ROM collections. Search Internet Archive, ROMsgames, CoolROM, Arcade Punks, ROMsFun, Reddit r/Roms, verify checksums, parse save files.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/rom-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/rom-mcp.git"
+  },
+  "bin": {
+    "rom-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "/opt/homebrew/bin/tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && /opt/homebrew/bin/tsc -p tsconfig.json && node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "rom",
+    "emulator",
+    "retro-gaming",
+    "game",
+    "checksum",
+    "no-intro",
+    "redump"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

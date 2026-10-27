@@ -1,0 +1,154 @@
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
+import { formatPodcast, GpodderError, listTags, podcastsByTag, searchPodcasts, topPodcasts, searchOverlap } from "./api.js";
+const text = (t) => ({ content: [{ type: "text", text: t }] });
+const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
+const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
+export function createServer() {
+    const server = new McpServer({
+        name: "gpodder-mcp",
+        version: "1.0.0",
+    });
+    server.registerTool("search_podcasts", {
+        title: "Search podcasts",
+        description: "Search the gPodder podcast directory: titles, authors, feeds, descriptions, subscriber counts.",
+        inputSchema: z.object({
+            query: z.string().describe("Search text, e.g. 'linux', 'true crime', 'history'"),
+            limit: z.number().int().min(1).max(20).default(5),
+        }),
+        annotations: READ_ONLY,
+    }, async ({ query, limit }) => {
+        try {
+            const results = await searchPodcasts(query, limit);
+            if (results.length === 0)
+                return text(`No podcasts match "${query}".`);
+            return text(`Podcasts for "${query}":\n\n${results.map((p, i) => formatPodcast(p, i)).join("\n\n")}`);
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("top_podcasts", {
+        title: "Top podcasts",
+        description: "Top podcasts on gPodder by subscriber count.",
+        inputSchema: z.object({
+            limit: z.number().int().min(1).max(50).default(10),
+        }),
+        annotations: READ_ONLY,
+    }, async ({ limit }) => {
+        try {
+            const results = await topPodcasts(limit);
+            if (results.length === 0)
+                return text("No top podcasts right now.");
+            return text(`Top podcasts:\n\n${results.map((p, i) => formatPodcast(p, i)).join("\n\n")}`);
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("podcasts_by_tag", {
+        title: "Podcasts by tag",
+        description: "Browse podcasts by tag, e.g. 'history', 'comedy', 'technology'. Use list_tags to discover tags.",
+        inputSchema: z.object({
+            tag: z.string().describe("Tag slug, e.g. 'history'"),
+            limit: z.number().int().min(1).max(50).default(10),
+        }),
+        annotations: READ_ONLY,
+    }, async ({ tag, limit }) => {
+        try {
+            const results = await podcastsByTag(tag, limit);
+            if (results.length === 0)
+                return text(`No podcasts tagged "${tag}".`);
+            return text(`Podcasts tagged "${tag}":\n\n${results.map((p, i) => formatPodcast(p, i)).join("\n\n")}`);
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("list_tags", {
+        title: "List podcast tags",
+        description: "Most-used podcast tags on gPodder with usage counts.",
+        inputSchema: z.object({
+            limit: z.number().int().min(1).max(100).default(20),
+        }),
+        annotations: READ_ONLY,
+    }, async ({ limit }) => {
+        try {
+            const tags = await listTags(limit);
+            if (tags.length === 0)
+                return text("No tags right now.");
+            return text(`Top podcast tags:\n\n${tags.map((t, i) => `${i + 1}. ${t.tag}${t.usage !== undefined ? ` (${t.usage})` : ""}`).join("\n")}`);
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("search_hosts", {
+        title: "Search podcast hosts",
+        description: "Aggregate a gPodder search by feed host: which publishers and networks the results come from, with result counts and subscriber totals.",
+        inputSchema: z.object({ query: z.string().describe("Search text, e.g. 'linux', 'true crime'"), limit: z.number().int().min(1).max(20).default(15) }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        // TODO: implement hosts locally (paywall removed)
+        try {
+            return textError("Not yet implemented: hosts");
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("search_overlap", {
+        title: "Compare searches",
+        description: "Run several gPodder searches at once and report the feeds that appear in more than one result set, so overlapping topics can be spotted.",
+        inputSchema: z.object({ queries: z.array(z.string()).min(2).max(5).describe("Two to five search terms."), limit: z.number().int().min(1).max(20).default(10) }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        try {
+            return text(await searchOverlap(args));
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    const serverName = "gpodder-mcp";
+    server.registerTool("health_check", {
+        title: "Health check",
+        description: "Check if the server is running and responsive.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        return text("OK - server is running");
+    });
+    server.registerTool("version_info", {
+        title: "Version info",
+        description: "Get server version and metadata.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
+    });
+    server.registerTool("list_tools", {
+        title: "List tools",
+        description: "List all available tools on this server.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        return text("See the tools/list response for the full tool list.");
+    });
+    server.registerTool("echo", {
+        title: "Echo",
+        description: "Echo back the provided text.",
+        inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        return text(String(args?.text ?? ""));
+    });
+    return server;
+}
+function errorMessage(e) {
+    if (e instanceof GpodderError)
+        return `Error: ${e.message}`;
+    if (e instanceof Error)
+        return `Error: ${e.message}`;
+    return `Error: ${String(e)}`;
+}

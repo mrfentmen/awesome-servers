@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/blockcypher-mcp",
+  "description": "Blockchain explorer for BTC, ETH, LTC, DOGE: block info, address balance, transaction details.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/blockcypher-mcp",
+    "source": "github"
+  },
+  "version": "1.0.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "blockcypher-mcp",
+      "version": "1.0.1",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

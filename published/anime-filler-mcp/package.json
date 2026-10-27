@@ -1,0 +1,45 @@
+{
+  "name": "anime-filler-mcp",
+  "version": "1.0.5",
+  "description": "Use this MCP server to tells you which anime episodes are filler vs canon. Powered by animefillerlist.com",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/anime-filler-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/anime-filler-mcp.git"
+  },
+  "bin": {
+    "anime-filler-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "anime",
+    "filler",
+    "canon",
+    "episodes",
+    "weeb"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "cheerio": "^1.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

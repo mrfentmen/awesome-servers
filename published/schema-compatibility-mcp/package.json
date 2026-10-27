@@ -1,0 +1,42 @@
+{
+  "name": "schema-compatibility-mcp",
+  "version": "1.0.2",
+  "description": "Compare local JSON schema shape fingerprints without returning property names, values, paths, or schema text.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/schema-compatibility-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/schema-compatibility-mcp.git"
+  },
+  "bin": {
+    "schema-compatibility-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "npm run build && node test.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "local-first",
+    "read-only"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

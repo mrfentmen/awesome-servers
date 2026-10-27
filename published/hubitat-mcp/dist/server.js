@@ -1,0 +1,143 @@
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
+import { deviceStatus, formatDevice, HubitatError, listDevices, sendCommand, communitySearch } from "./api.js";
+const text = (t) => ({ content: [{ type: "text", text: t }] });
+const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
+const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
+const WRITE = { readOnlyHint: false, openWorldHint: true };
+export function createServer() {
+    const server = new McpServer({
+        name: "hubitat-mcp",
+        version: "1.0.0",
+    });
+    server.registerTool("list_devices", {
+        title: "List devices",
+        description: "Hubitat devices via Maker API: ids, labels, types.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        try {
+            const rows = await listDevices();
+            if (rows.length === 0)
+                return text("No devices.");
+            return text(rows.map((d, i) => formatDevice(d, i)).join("\n"));
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("device_status", {
+        title: "Device status",
+        description: "One device with current attribute values (switch, level, temperature...).",
+        inputSchema: z.object({
+            id: z.string().describe("Numeric device id (use list_devices)"),
+        }),
+        annotations: READ_ONLY,
+    }, async ({ id }) => {
+        try {
+            return text(await deviceStatus(id));
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("send_command", {
+        title: "Send command",
+        description: "Send a command to a device, e.g. on/off with optional value.",
+        inputSchema: z.object({
+            id: z.string().describe("Numeric device id"),
+            command: z.string().describe("Command, e.g. 'on', 'off', 'setLevel'"),
+            value: z.string().default("").describe("Optional value, e.g. '75' for setLevel"),
+        }),
+        annotations: WRITE,
+    }, async ({ id, command, value }) => {
+        try {
+            return text(await sendCommand(id, command, value));
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("community_search", {
+        title: "Community search",
+        description: "Search the Hubitat Community for a device, driver or capability: each match shows the matching post with its excerpt and author, then the thread with its category, tags, size, activity and a link. Optionally restricted to one category id.",
+        inputSchema: z.object({ query: z.string().describe("What to look for, e.g. 'driver code', a device model, or a capability like 'pushButton'."), category: z.number().describe("Restrict to one category id, e.g. 72 for Custom Apps and Drivers.").optional(), results: z.number().describe("How many results to show, 1-20.").optional() }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        try {
+            return text(await communitySearch(args));
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("thread_digest", {
+        title: "Thread digest",
+        description: "Read one Hubitat Community thread the way you would before installing somebody's driver: size, views, likes, tags, closed or accepted-answer flags, then every post with its author, date and text, page by page.",
+        inputSchema: z.object({ topicId: z.number().describe("Topic id, from community_search or category_roadmap."), postNumber: z.number().describe("First post to show, for paging through a long thread.").optional() }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        // TODO: implement digest locally (paywall removed)
+        try {
+            return textError("Not yet implemented: digest");
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("category_roadmap", {
+        title: "Category roadmap",
+        description: "Map the Hubitat Community: every top-level category with its topic and post counts, subcategories and description, or pick one category by name, slug or id to see its latest threads with links.",
+        inputSchema: z.object({ category: z.union([z.string(), z.number()]).describe("Category name, slug or id, e.g. 'Custom Apps and Drivers' or 72. Omit for the whole map.").optional(), topics: z.number().describe("How many latest topics to list, 1-30.").optional() }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        // TODO: implement roadmap locally (paywall removed)
+        try {
+            return textError("Not yet implemented: roadmap");
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    const serverName = "hubitat-mcp";
+    server.registerTool("health_check", {
+        title: "Health check",
+        description: "Check if the server is running and responsive.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        return text("OK - server is running");
+    });
+    server.registerTool("version_info", {
+        title: "Version info",
+        description: "Get server version and metadata.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
+    });
+    server.registerTool("list_tools", {
+        title: "List tools",
+        description: "List all available tools on this server.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        return text("See the tools/list response for the full tool list.");
+    });
+    server.registerTool("echo", {
+        title: "Echo",
+        description: "Echo back the provided text.",
+        inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        return text(String(args?.text ?? ""));
+    });
+    return server;
+}
+function errorMessage(e) {
+    if (e instanceof HubitatError)
+        return `Error: ${e.message}`;
+    if (e instanceof Error)
+        return `Error: ${e.message}`;
+    return `Error: ${String(e)}`;
+}

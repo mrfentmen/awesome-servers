@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/ssl-cert-mcp",
+  "description": "Inspect TLS certificates of a host: issuer, expiry, and SAN. No key required.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/ssl-cert-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "ssl-cert-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

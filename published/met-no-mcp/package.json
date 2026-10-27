@@ -1,0 +1,42 @@
+{
+  "name": "met-no-mcp",
+  "version": "1.0.0",
+  "description": "MET Norway (yr.no) forecast: current conditions, hourly and daily outlook, rain-only view \u2014 keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/met-no-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "met-no-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "weather",
+    "forecast",
+    "yr",
+    "met-no",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

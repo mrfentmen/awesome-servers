@@ -1,0 +1,44 @@
+{
+  "version": "1.0.5",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/civitai-mcp.git"
+  },
+  "bin": {
+    "civitai-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "name": "civitai-mcp",
+  "description": "Civitai model and image metadata. No key required.",
+  "mcpName": "io.github.mrfentmen/civitai-mcp",
+  "keywords": [
+    "mcp",
+    "civitai",
+    "models",
+    "ai",
+    "art"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

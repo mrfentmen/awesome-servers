@@ -1,0 +1,39 @@
+{
+  "name": "gimp-mcp",
+  "version": "1.0.1",
+  "description": "MCP server for GIMP image editing via Python-Fu scripting.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/gimp-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/gimp-mcp.git"
+  },
+  "bin": {
+    "gimp-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "/opt/homebrew/bin/tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && /opt/homebrew/bin/tsc -p tsconfig.json && node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "gimp",
+    "image-editing",
+    "graphics",
+    "scripting"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

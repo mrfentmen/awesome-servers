@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/jpl-sbdb-mcp",
+  "description": "Asteroid and comet data from the NASA JPL Small Body Database. No key required.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/jpl-sbdb-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "jpl-sbdb-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

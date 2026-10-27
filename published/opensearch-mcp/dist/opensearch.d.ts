@@ -1,0 +1,18 @@
+export declare function checkHealth(): Promise<any>;
+export declare function listIndices(): Promise<any>;
+export declare function createIndex(index: string, settings?: any): Promise<any>;
+export declare function deleteIndex(index: string): Promise<any>;
+export declare function getIndex(index: string): Promise<any>;
+export declare function indexDocument(index: string, doc: any, id?: string): Promise<any>;
+export declare function getDocument(index: string, id: string): Promise<any>;
+export declare function deleteDocument(index: string, id: string): Promise<any>;
+export declare function searchIndex(index: string, query: string, limit?: number, from?: number): Promise<any>;
+export declare function searchIndexRaw(index: string, searchBody: any): Promise<any>;
+export declare function getStats(): Promise<any>;
+export declare function getClusterStats(): Promise<any>;
+export declare function getTasks(): Promise<any>;
+export declare function getMappings(index: string): Promise<any>;
+export declare function updateMapping(index: string, mapping: any): Promise<any>;
+export declare function listShards(): Promise<any>;
+export declare function listNodes(): Promise<any>;
+export declare function formatBytes(bytes: number): string;

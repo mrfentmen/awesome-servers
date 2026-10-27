@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/deck-of-cards-mcp",
+  "description": "Shuffle decks and draw cards from Deck of Cards. No key required.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/deck-of-cards-mcp",
+    "source": "github"
+  },
+  "version": "1.0.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "deck-of-cards-mcp",
+      "version": "1.0.1",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

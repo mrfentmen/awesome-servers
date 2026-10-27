@@ -1,0 +1,72 @@
+export class LiteralError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = "LiteralError";
+    }
+}
+export function errorMessage(e) {
+    return e instanceof Error ? e.message : String(e);
+}
+const UA = { "User-Agent": "awesome-mcps/1.0" };
+function envStrict(name) {
+    const v = process.env[name];
+    if (!v)
+        throw new LiteralError(`Set the ${name} environment variable.`);
+    return v;
+}
+let cachedToken = "";
+async function authHeaders() {
+    if (!cachedToken) {
+        const res = await fetch("https://literal.club/graphql/", {
+            method: "POST",
+            headers: { ...UA, "Content-Type": "application/json" },
+            body: JSON.stringify({ query: "mutation($email: String!, $password: String!) { login(email: $email, password: $password) { token } }", variables: { email: envStrict("LITERAL_EMAIL"), password: envStrict("LITERAL_PASSWORD") } }),
+        });
+        if (!res.ok)
+            throw new LiteralError(`Literal login failed: HTTP ${res.status}`);
+        const data = (await res.json());
+        if (!data.data?.login?.token)
+            throw new LiteralError("Literal login returned no token");
+        cachedToken = data.data.login.token;
+    }
+    return { Authorization: "Bearer " + cachedToken };
+}
+async function gql(query, variables) {
+    const data = await req("https://literal.club/graphql/", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(variables === undefined ? { query } : { query, variables }) });
+    const body = data;
+    if (body.errors && body.errors.length > 0)
+        throw new LiteralError(body.errors.map((e) => e.message ?? "GraphQL error").join("; "));
+    return body.data;
+}
+function pretty(data) {
+    const t = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+    return t.length > 12000 ? t.slice(0, 12000) + "\n…(truncated)" : t;
+}
+async function req(url, init = {}) {
+    const res = await fetch(url, { headers: { ...UA, ...(await authHeaders()), ...(init.headers ?? {}) }, ...init });
+    const ct = res.headers.get("content-type") ?? "";
+    const data = ct.includes("json") ? await res.json() : await res.text();
+    if (!res.ok) {
+        const detail = typeof data === "string" ? data.slice(0, 300) : JSON.stringify(data).slice(0, 300);
+        throw new LiteralError(`HTTP ${res.status}: ${detail}`);
+    }
+    return data;
+}
+export async function getBooks(limit, search) {
+    let url = ``;
+    const q = `query($limit: Int, $search: String) { myBooks(limit: $limit, offset: 0, sortBy: recency, sortDirection: desc, search: $search) { id title slug cover authors { name } } }`;
+    const data = await gql(q, { limit: limit ?? 20, search: search ?? null });
+    return pretty(data);
+}
+export async function getBooksByState(state, limit) {
+    let url = ``;
+    const q = `query($state: ReadingState!, $limit: Int) { myBooksByReadingState(limit: $limit, offset: 0, readingStatus: $state) { id title slug cover authors { name } } }`;
+    const data = await gql(q, { state, limit: limit ?? 20 });
+    return pretty(data);
+}
+export async function getBook(slug) {
+    let url = ``;
+    const q = `query($slug: String!) { bookBySlug(slug: $slug) { id title slug cover description authors { name } } }`;
+    const data = await gql(q, { slug });
+    return pretty(data);
+}

@@ -1,0 +1,44 @@
+{
+  "version": "1.0.2",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/peertube-mcp.git"
+  },
+  "bin": {
+    "peertube-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "name": "peertube-mcp",
+  "description": "Search PeerTube.tv federated videos and read instance info. No key required.",
+  "mcpName": "io.github.mrfentmen/peertube-mcp",
+  "keywords": [
+    "mcp",
+    "peertube",
+    "video",
+    "federated",
+    "search"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

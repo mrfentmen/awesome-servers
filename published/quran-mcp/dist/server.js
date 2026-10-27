@@ -1,0 +1,143 @@
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { z } from 'zod';
+import { verse, surahInfo, chapters, chapter, page_verses } from "./api.js";
+const text = (value) => ({ content: [{ type: 'text', text: value }] });
+const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
+const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
+const error = (e) => `Error: ${e instanceof Error ? e.message : String(e)}`;
+export function createServer() {
+    const server = new McpServer({ name: 'quran-mcp', version: '1.0.0' });
+    server.registerTool('verse', {
+        title: "Verse",
+        description: 'Quran verse in Arabic and English from alQuran.cloud.',
+        inputSchema: z.object({ chapter: z.number().describe('Surah number 1 to 114.').optional(), verse: z.number().describe('Verse number.').optional() }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        try {
+            return text(await verse(args));
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool('surahInfo', {
+        title: "Surah Info",
+        description: 'Surah overview from alQuran.cloud.',
+        inputSchema: z.object({ chapter: z.number().describe('Surah number 1 to 114.').optional() }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        try {
+            return text(await surahInfo(args));
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool('chapters', {
+        title: "Chapters",
+        description: 'List all 114 chapters from Quran.com.',
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        try {
+            return text(await chapters());
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool('chapter', {
+        title: "Chapter",
+        description: 'Chapter details from Quran.com.',
+        inputSchema: z.object({ id: z.number().describe('Chapter id.').optional() }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        try {
+            return text(await chapter(args));
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("verse_position", {
+        title: "Verse position",
+        description: "Show where a verse sits in the traditional reading structure: its juz of 30, hizb of 60, rub el hizb, ruku within the surah, manzil of 7, whether it carries a prostration, and the mushaf page, alongside the Arabic and a translation. The existing verse tool returns only the text of a verse, so none of this is reachable through it.",
+        inputSchema: z.object({
+            chapter: z.number().int().min(1).max(114).describe("Surah number 1 to 114."),
+            verse: z.number().int().min(1).max(286).describe("Verse number within the surah."),
+        }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        // TODO: implement position locally (paywall removed)
+        try {
+            return textError("Not yet implemented: position");
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("surah_order", {
+        title: "Revelation order",
+        description: "List the surahs in the order tradition holds they were revealed rather than the order they are printed, with revelation place, verse count and page range, and a total verse count for the selection. The existing chapters tool prints the printed order only and never mentions revelation order at all.",
+        inputSchema: z.object({
+            place: z.string().optional().describe("Restrict to makkah or madinah. meccan and medinan also work. Default is all 114."),
+        }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        // TODO: implement order locally (paywall removed)
+        try {
+            return textError("Not yet implemented: order");
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("page_verses", {
+        title: "Page verses",
+        description: "Read one page of a standard 604 page mushaf and report which surahs fall on it, the verses grouped by surah, and roughly how many words the page carries. This is the view someone reading from a printed mushaf needs, and no existing tool can address a page at all.",
+        inputSchema: z.object({
+            page: z.number().int().min(1).max(604).describe("Mushaf page number 1 to 604."),
+            limit: z.number().int().min(1).max(20).optional().describe("Verses to print per surah on the page. Default 10."),
+        }),
+        annotations: READ_ONLY,
+    }, async ({ page, limit }) => {
+        try {
+            return text(await page_verses({ page, limit }));
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("recitation_audio", {
+        title: "Recitation audio",
+        description: "MP3 recitation URLs from Quran.com for a chapter or single verse, with the reciter's name and style. Reciter ids run 1 to 12.",
+        inputSchema: z.object({ reciter: z.number().describe("Reciter id, 1 to 12."), chapter: z.number().describe("Chapter number, 1 to 114."), verse: z.number().describe("One verse to get audio for, instead of the whole chapter.").optional(), limit: z.number().describe("How many verse recordings to list.").optional() }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        // TODO: implement audio locally (paywall removed)
+        try {
+            return textError("Not yet implemented: audio");
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    const serverName = "quran-mcp";
+    server.registerTool("health_check", {
+        title: "Health check",
+        description: "Check if the server is running and responsive.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        return text("OK - server is running");
+    });
+    server.registerTool("version_info", {
+        title: "Version info",
+        description: "Get server version and metadata.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
+    });
+    return server;
+}

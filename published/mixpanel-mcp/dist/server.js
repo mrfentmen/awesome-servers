@@ -1,7 +1,6 @@
 // @ts-nocheck
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
 const MIXPANEL_API = "https://mixpanel.com/api/2.0";
 const MIXPANEL_EXPORT = "https://data.mixpanel.com/api/2.0";
 function getCredentials() {
@@ -23,7 +22,6 @@ async function mixpanelFetch(path, params = {}, useExport = false) {
     }
     const auth = Buffer.from(`${creds.serviceAccount}:${creds.serviceSecret}`).toString("base64");
     const res = await fetch(url.toString(), {
-        signal: AbortSignal.timeout(30000),
         headers: {
             Authorization: `Basic ${auth}`,
             Accept: "application/json",
@@ -93,7 +91,6 @@ async function mixpanelExportRequest(columns, filter, limit) {
     };
     const auth = Buffer.from(`${creds.serviceAccount}:${creds.serviceSecret}`).toString("base64");
     const res = await fetch(url.toString(), {
-        signal: AbortSignal.timeout(30000),
         method: "POST",
         headers: {
             Authorization: `Basic ${auth}`,
@@ -112,7 +109,6 @@ async function handleJQL(script) {
     const url = new URL(`${MIXPANEL_API}/jql`);
     const auth = Buffer.from(`${creds.serviceAccount}:${creds.serviceSecret}`).toString("base64");
     const res = await fetch(url.toString(), {
-        signal: AbortSignal.timeout(30000),
         method: "POST",
         headers: {
             Authorization: `Basic ${auth}`,
@@ -128,123 +124,88 @@ async function handleJQL(script) {
 }
 export function createServer() {
     const server = new McpServer({ name: "mixpanel-mcp", version: "1.0.0" });
-    server.registerTool("query_events", {
-        title: "Query events",
-        description: "Query raw event data from Mixpanel. Segment events by time range and properties.",
-        inputSchema: z.object({
-            event: z.string().optional().describe("Specific event name to query. Omit for all events."),
-            from_date: z.string().describe("Start date in YYYY-MM-DD format"),
-            to_date: z.string().describe("End date in YYYY-MM-DD format"),
-            unit: z.enum(["hour", "day", "week", "month"]).optional().describe("Time granularity"),
-            interval: z.number().min(1).max(365).optional().describe("Number of time units to return"),
-            limit: z.number().min(1).max(1000).optional().describe("Max results to return, 1-1000"),
-        }),
-        annotations: READ_ONLY,
+    server.tool("query_events", "Query raw event data from Mixpanel. Segment events by time range and properties.", {
+        event: z.string().optional().describe("Specific event name to query. Omit for all events."),
+        from_date: z.string().describe("Start date in YYYY-MM-DD format"),
+        to_date: z.string().describe("End date in YYYY-MM-DD format"),
+        unit: z.enum(["hour", "day", "week", "month"]).optional().describe("Time granularity"),
+        interval: z.number().min(1).max(365).optional().describe("Number of time units to return"),
+        limit: z.number().min(1).max(1000).optional().describe("Max results"),
     }, async (args) => {
         try {
             const text = await handleEvents(args.event, args.from_date, args.to_date, args.unit ?? "day", args.interval ?? 30, args.limit ?? 100);
             return { content: [{ type: "text", text }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
         }
     });
-    server.registerTool("get_top_events", {
-        title: "Get top events",
-        description: "Get the most frequently tracked events in a time window.",
-        inputSchema: z.object({
-            from_date: z.string().describe("Start date YYYY-MM-DD"),
-            to_date: z.string().describe("End date YYYY-MM-DD"),
-            limit: z.number().min(1).max(100).optional().describe("Number of top events to return"),
-        }),
-        annotations: READ_ONLY,
+    server.tool("get_top_events", "Get the most frequently tracked events in a time window.", {
+        from_date: z.string().describe("Start date YYYY-MM-DD"),
+        to_date: z.string().describe("End date YYYY-MM-DD"),
+        limit: z.number().min(1).max(100).optional().describe("Number of top events to return"),
     }, async (args) => {
         try {
             const text = await handleTopEvents(args.from_date, args.to_date, args.limit ?? 20);
             return { content: [{ type: "text", text }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
         }
     });
-    server.registerTool("get_funnel", {
-        title: "Get funnel",
-        description: "Get funnel conversion data. Requires a funnel ID from your Mixpanel project.",
-        inputSchema: z.object({
-            funnel_id: z.string().describe("The funnel ID from Mixpanel"),
-            from_date: z.string().describe("Start date YYYY-MM-DD"),
-            to_date: z.string().describe("End date YYYY-MM-DD"),
-        }),
-        annotations: READ_ONLY,
+    server.tool("get_funnel", "Get funnel conversion data. Requires a funnel ID from your Mixpanel project.", {
+        funnel_id: z.string().describe("The funnel ID from Mixpanel"),
+        from_date: z.string().describe("Start date YYYY-MM-DD"),
+        to_date: z.string().describe("End date YYYY-MM-DD"),
     }, async (args) => {
         try {
             const text = await handleFunnel(args.funnel_id, args.from_date, args.to_date);
             return { content: [{ type: "text", text }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
         }
     });
-    server.registerTool("get_retention", {
-        title: "Get retention",
-        description: "Get cohort retention data. See how many users come back over time.",
-        inputSchema: z.object({
-            from_date: z.string().describe("Start date YYYY-MM-DD"),
-            to_date: z.string().describe("End date YYYY-MM-DD"),
-            born_event: z.string().optional().describe("Event that defines the cohort (e.g. 'Sign Up')"),
-            limit: z.number().min(1).max(100).optional().describe("Number of cohorts to return"),
-        }),
-        annotations: READ_ONLY,
+    server.tool("get_retention", "Get cohort retention data. See how many users come back over time.", {
+        from_date: z.string().describe("Start date YYYY-MM-DD"),
+        to_date: z.string().describe("End date YYYY-MM-DD"),
+        born_event: z.string().optional().describe("Event that defines the cohort (e.g. 'Sign Up')"),
+        limit: z.number().min(1).max(100).optional().describe("Number of cohorts to return"),
     }, async (args) => {
         try {
             const text = await handleRetention(args.from_date, args.to_date, args.born_event ?? "", args.limit ?? 10);
             return { content: [{ type: "text", text }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
         }
     });
-    server.registerTool("query_profiles", {
-        title: "Query profiles",
-        description: "Search and query user profiles in Mixpanel.",
-        inputSchema: z.object({
-            search: z.string().describe("Search term for user profiles (email, name, or property value)"),
-            limit: z.number().min(1).max(1000).optional().describe("Max profiles to return"),
-        }),
-        annotations: READ_ONLY,
+    server.tool("query_profiles", "Search and query user profiles in Mixpanel.", {
+        search: z.string().describe("Search term for user profiles (email, name, or property value)"),
+        limit: z.number().min(1).max(1000).optional().describe("Max profiles to return"),
     }, async (args) => {
         try {
             const text = await handleProfiles(args.search, args.limit ?? 20);
             return { content: [{ type: "text", text }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
         }
     });
-    server.registerTool("run_jql", {
-        title: "Run jql",
-        description: "Execute a raw JavaScript Query Language (JQL) script against Mixpanel. For advanced custom queries.",
-        inputSchema: z.object({
-            script: z.string().describe("JQL JavaScript code to execute"),
-        }),
-        annotations: READ_ONLY,
+    server.tool("run_jql", "Execute a raw JavaScript Query Language (JQL) script against Mixpanel. For advanced custom queries.", {
+        script: z.string().describe("JQL JavaScript code to execute"),
     }, async (args) => {
         try {
             const text = await handleJQL(args.script);
             return { content: [{ type: "text", text }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
         }
     });
-    server.registerTool("list_events", {
-        title: "List events",
-        description: "List all tracked event names in your Mixpanel project.",
-        inputSchema: z.object({
-            from_date: z.string().describe("Start date YYYY-MM-DD"),
-            to_date: z.string().describe("End date YYYY-MM-DD"),
-        }),
-        annotations: READ_ONLY,
+    server.tool("list_events", "List all tracked event names in your Mixpanel project.", {
+        from_date: z.string().describe("Start date YYYY-MM-DD"),
+        to_date: z.string().describe("End date YYYY-MM-DD"),
     }, async (args) => {
         try {
             const data = await mixpanelFetch("/events/names", {
@@ -254,34 +215,8 @@ export function createServer() {
             return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
         }
-    });
-    const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
-    const serverName = "mixpanel-mcp";
-    server.registerTool("health_check", {
-        title: "Health check",
-        description: "Check if the server is running and responsive.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("OK - server is running");
-    });
-    server.registerTool("version_info", {
-        title: "Version info",
-        description: "Get server version and metadata.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
-    });
-    server.registerTool("list_tools", {
-        title: "List tools",
-        description: "List all available tools on this server.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("See the tools/list response for the full tool list.");
     });
     return server;
 }

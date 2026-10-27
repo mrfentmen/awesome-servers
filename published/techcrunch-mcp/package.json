@@ -1,0 +1,44 @@
+{
+  "version": "1.0.2",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/techcrunch-mcp.git"
+  },
+  "bin": {
+    "techcrunch-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "name": "techcrunch-mcp",
+  "description": "Latest startup and tech news from TechCrunch. No key required.",
+  "mcpName": "io.github.mrfentmen/techcrunch-mcp",
+  "keywords": [
+    "mcp",
+    "techcrunch",
+    "news",
+    "startups",
+    "tech"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

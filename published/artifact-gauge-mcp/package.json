@@ -1,0 +1,44 @@
+{
+  "name": "artifact-gauge-mcp",
+  "version": "1.0.6",
+  "description": "Local build artifact size and dependency weight inspection without file content output. Tools include inspect artifacts, inspect manifest",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/artifact-gauge-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/artifact-gauge-mcp.git"
+  },
+  "bin": {
+    "artifact-gauge-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "artifacts",
+    "bundle-size",
+    "dependencies",
+    "local-first"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/itunes-search-mcp",
+  "version": "1.0.0",
+  "description": "iTunes Search API: music, albums, tracks, podcasts, apps and ebooks \u2014 all keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/itunes-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "itunes-search-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "itunes",
+    "music",
+    "podcasts",
+    "apps",
+    "apple",
+    "search"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

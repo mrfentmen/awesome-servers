@@ -1,0 +1,46 @@
+{
+  "version": "1.0.2",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/password-strength-mcp.git"
+  },
+  "bin": {
+    "password-strength-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8",
+    "zxcvbn": "^4.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/zxcvbn": "^4.4.5",
+    "typescript": "^5.6.0"
+  },
+  "name": "password-strength-mcp",
+  "description": "Score password strength locally with the zxcvbn algorithm. No network and no key.",
+  "mcpName": "io.github.mrfentmen/password-strength-mcp",
+  "keywords": [
+    "mcp",
+    "password",
+    "strength",
+    "security",
+    "zxcvbn"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

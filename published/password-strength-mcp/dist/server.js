@@ -1,0 +1,112 @@
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
+import { checkPassword, commonListRank, keyboardWalk, variantAudit } from "./api.js";
+const text = (value) => ({ content: [{ type: "text", text: value }] });
+const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
+const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
+const error = (e) => `Error: ${e instanceof Error ? e.message : String(e)}`;
+export function createServer() {
+    const server = new McpServer({ name: "password-strength-mcp", version: "1.0.0" });
+    server.registerTool("check_password", {
+        title: "Check password",
+        description: "Score a password and suggest improvements.",
+        inputSchema: z.object({ password: z.string().describe("The password to check.") }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        try {
+            return text(await checkPassword(args));
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("common_list_rank", {
+        title: "Common list rank",
+        description: "Look a password up in the real word lists zxcvbn ships (30k passwords, 30k Wikipedia words, surnames, given names, TV and film words) and report where it and its components rank. Local only.",
+        inputSchema: z.object({ password: z.string().describe("The candidate password.") }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        try {
+            return text(await commonListRank(args));
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("keyboard_walk", {
+        title: "Keyboard walk",
+        description: "Read a string as a walk across the qwerty, dvorak, keypad and mac keypad layouts zxcvbn ships graphs for: how much of it lands on a layout, how many direction changes, and the longest straight run. Local only.",
+        inputSchema: z.object({ password: z.string().describe("The candidate password.") }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        try {
+            return text(await keyboardWalk(args));
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    server.registerTool("variant_audit", {
+        title: "Variant audit",
+        description: "Score the case, symbol, digit, l33t and reversal mutations an attacker would try first, to show how little a tweak to a password buys. Local only.",
+        inputSchema: z.object({ password: z.string().describe("The candidate password.") }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        try {
+            return text(await variantAudit(args));
+        }
+        catch (e) {
+            return textError(String(e));
+        }
+    });
+    const serverName = "password-strength-mcp";
+    server.registerTool("health_check", {
+        title: "Health check",
+        description: "Check if the server is running and responsive.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        return text("OK - server is running");
+    });
+    server.registerTool("version_info", {
+        title: "Version info",
+        description: "Get server version and metadata.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
+    });
+    server.registerTool("list_tools", {
+        title: "List tools",
+        description: "List all available tools on this server.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        return text("See the tools/list response for the full tool list.");
+    });
+    server.registerTool("echo", {
+        title: "Echo",
+        description: "Echo back the provided text.",
+        inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        return text(String(args?.text ?? ""));
+    });
+    server.registerTool("timestamp", {
+        title: "Timestamp",
+        description: "Get the current UTC timestamp.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        return text(new Date().toISOString());
+    });
+    server.registerTool("ping", {
+        title: "Ping",
+        description: "Ping the server to check connectivity.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        return text("pong");
+    });
+    return server;
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/crypto-tools-mcp",
+  "description": "Hash, sign, and encrypt text locally with standard algorithms. No network and no key.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/crypto-tools-mcp",
+    "source": "github"
+  },
+  "version": "1.0.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "crypto-tools-mcp",
+      "version": "1.0.1",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

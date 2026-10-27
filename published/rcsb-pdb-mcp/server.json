@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/rcsb-pdb-mcp",
+  "description": "Look up protein structures and search the RCSB Protein Data Bank. No key required.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/rcsb-pdb-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "rcsb-pdb-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

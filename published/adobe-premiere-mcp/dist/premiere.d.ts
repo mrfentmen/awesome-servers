@@ -1,0 +1,16 @@
+declare function buildExtendScript(code: string): string;
+declare function runExtendScript(code: string): Promise<any>;
+export declare function isPremiereRunning(): Promise<boolean>;
+export declare function importMedia(filepath: string): Promise<any>;
+export declare function getProjectInfo(): Promise<any>;
+export declare function listSequences(): Promise<any>;
+export declare function createSequence(name: string, width: number, height: number, frameRate: number): Promise<any>;
+export declare function getSelectedSequenceInfo(): Promise<any>;
+export declare function addToTimeline(mediaPath: string, startTime: string, sequenceName?: string): Promise<any>;
+export declare function exportMedia(output: string, format: string, preset?: string): Promise<any>;
+export declare function applyEffect(effectName: string, properties: Record<string, unknown>): Promise<any>;
+export declare function setInoutPoints(inPoint: string, outPoint: string): Promise<any>;
+export declare function getMediaInfo(filepath: string): Promise<any>;
+export declare function runCustomScript(script: string): Promise<any>;
+export declare function listClips(sequenceName?: string): Promise<any>;
+export { runExtendScript, buildExtendScript };
