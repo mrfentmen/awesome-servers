@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { info, releaseHistory } from "./api.js";
+import { info, releaseHistory, versionDetail } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -39,9 +39,8 @@ export function createServer() {
         inputSchema: z.object({ system: z.string().describe("Ecosystem like npm, pypi, maven, go or cargo."), name: z.string().describe("Package name."), version: z.string().describe("The exact version to look up.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement detail locally (paywall removed)
         try {
-            return textError("Not yet implemented: detail");
+            return text(await versionDetail(args));
         }
         catch (e) {
             return textError(String(e));

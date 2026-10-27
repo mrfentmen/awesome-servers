@@ -181,3 +181,45 @@ export async function priceTrend(args) {
         lines.push(`... and ${blocks.length - 12} more location/quality series.`);
     return lines.join("\n");
 }
+
+const ALBION = 'https://west.albion-online-data.com/api/v2/stats/prices';
+const CITIES = ['Caerleon', 'Bridgewatch', 'Martlock', 'Thetford', 'Fort Sterling', 'Lymhurst', 'Brecilien', 'Black Market'];
+export async function marketSummary(args = {}) {
+    const item = String(args?.item ?? '').trim().toUpperCase();
+    if (!/^T[1-8]_[A-Z0-9_]+$/.test(item))
+        throw new Error('Item id looks like T4_BAG or T6_MAIN_SWORD.');
+    const quality = Number(args?.quality);
+    if (args?.quality !== undefined && (!Number.isInteger(quality) || quality < 1 || quality > 5))
+        throw new Error('Quality must be a whole number from 1 to 5.');
+    const qs = new URLSearchParams({ locations: CITIES.join(',') });
+    if (args?.quality !== undefined)
+        qs.set('qualities', String(quality));
+    const res = await fetch(`${ALBION}/${encodeURIComponent(item)}.json?${qs}`, {
+        headers: { 'User-Agent': 'mrfentmen-albiononline-mcp/1.0', Accept: 'application/json' },
+        signal: AbortSignal.timeout(25000),
+    });
+    if (!res.ok)
+        throw new Error(`Albion data API returned ${res.status}`);
+    const rows = (await res.json());
+    if (!Array.isArray(rows) || !rows.length)
+        throw new Error(`No market rows for ${item}`);
+    const sells = rows.filter((r) => Number(r.sell_price_min) > 0)
+        .sort((a, b) => a.sell_price_min - b.sell_price_min);
+    const buys = rows.filter((r) => Number(r.buy_price_max) > 0)
+        .sort((a, b) => b.buy_price_max - a.buy_price_max);
+    if (!sells.length && !buys.length)
+        return `${item}: every queried city reports no sell or buy orders right now.`;
+    const cheapest = sells[0];
+    const best = buys[0];
+    const spread = cheapest && best ? best.buy_price_max - cheapest.sell_price_min : null;
+    return [
+        `${item}${args?.quality ? ` quality ${args.quality}` : ''} — ${rows.length} city row(s)`,
+        cheapest ? `Cheapest sell order: ${cheapest.sell_price_min} in ${cheapest.city} (${String(cheapest.sell_price_min_date).slice(0, 16)})` : 'Cheapest sell order: none listed',
+        best ? `Best buy order: ${best.buy_price_max} in ${best.city} (${String(best.buy_price_max_date).slice(0, 16)})` : 'Best buy order: none listed',
+        spread === null ? '' : `Gross spread between the two extremes: ${spread}`,
+        '',
+        ...rows.map((r) => `${r.city}${args?.quality ? '' : ` q${r.quality}`}: sells from ${r.sell_price_min || '—'} · buys up to ${r.buy_price_max || '—'}`),
+        '',
+        'Prices come from the community Albion data feed and lag the live market.',
+    ].filter((l) => l !== '').join('\n');
+}

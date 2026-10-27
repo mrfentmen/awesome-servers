@@ -1,6 +1,6 @@
 {
   "name": "albiononline-mcp",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Keyless Albion Online data: live market prices, price history, gold prices, killboard events.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/albiononline-mcp",

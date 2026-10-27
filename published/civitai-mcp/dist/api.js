@@ -127,3 +127,44 @@ export async function creatorModels(args) {
     }
     return lines.join('\n');
 }
+
+const CIVITAI = 'https://civitai.com/api/v1';
+export async function modelVersion(args = {}) {
+    const id = Number(args?.version_id);
+    if (!Number.isInteger(id) || id < 1)
+        throw new Error('Provide a model version id, like 290640.');
+    const res = await fetch(`${CIVITAI}/model-versions/${id}`, {
+        headers: { 'User-Agent': 'mrfentmen-civitai-mcp/1.0', Accept: 'application/json' },
+        signal: AbortSignal.timeout(30000),
+    });
+    if (res.status === 404)
+        throw new Error(`Civitai has no model version ${id}`);
+    if (!res.ok)
+        throw new Error(`Civitai returned ${res.status}`);
+    const v = (await res.json());
+    const files = Array.isArray(v.files) ? v.files : [];
+    const images = Array.isArray(v.images) ? v.images : [];
+    const words = (v.trainedWords ?? []).filter(Boolean);
+    const stats = v.stats ?? {};
+    const settings = images
+        .map((i) => i.meta)
+        .filter((m) => m && m.seed !== undefined)
+        .slice(0, 5);
+    return [
+        `${v.model?.name ?? 'model'} — version ${v.name ?? id} (id ${v.id})`,
+        `Base model: ${v.baseModel ?? '?'} · published ${String(v.publishedAt ?? '').slice(0, 10) || '?'} · status ${v.status ?? '?'}`,
+        `Downloads: ${stats.downloadCount ?? '?'} · thumbs up ${stats.thumbsUpCount ?? '?'} · rating ${stats.rating ?? '—'}`,
+        words.length ? `Trigger words: ${words.join(', ')}` : 'Trigger words: none',
+        '',
+        `${files.length} file(s):`,
+        ...files.slice(0, 6).map((f) => {
+            const sha = f.hashes?.SHA256 ? `sha256 ${String(f.hashes.SHA256).slice(0, 16)}…` : 'no sha256';
+            const scan = [f.scanResult, f.virusScanResult, f.pickleScanResult].filter(Boolean).join('/') || 'unscanned';
+            return `- ${f.name ?? '(unnamed)'} ${f.sizeKB ? Math.round(f.sizeKB / 1024) + ' MB' : '?'} · ${sha} · ${scan}\n  ${f.downloadUrl ?? ''}`;
+        }),
+        '',
+        settings.length ? 'Example generation settings:' : 'No example settings recorded.',
+        ...settings.map((m) => `- seed ${m.seed} · steps ${m.steps ?? '?'} · cfg ${m.cfgScale ?? '?'} · sampler ${m.sampler ?? '?'}`),
+        `Page: https://civitai.com/models/${v.modelId ?? ''}?modelVersionId=${v.id}`,
+    ].filter(Boolean).join('\n');
+}

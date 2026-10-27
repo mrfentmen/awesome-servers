@@ -82,3 +82,36 @@ export async function releaseHistory(args) {
     lines.push('  the list is every version the registry holds, prerelease and canary builds included.');
     return lines.join('\n');
 }
+
+const DEPS = 'https://api.deps.dev/v3/systems';
+export async function versionDetail(args = {}) {
+    const system = String(args?.system ?? '').trim().toLowerCase();
+    const name = String(args?.name ?? '').trim();
+    const version = String(args?.version ?? '').trim();
+    if (!/^[a-z]+$/.test(system))
+        throw new Error('System looks like npm, pypi, maven, go or cargo.');
+    if (!name || !version)
+        throw new Error('Give both a package name and an exact version.');
+    const url = `${DEPS}/${encodeURIComponent(system)}/packages/${encodeURIComponent(name)}/versions/${encodeURIComponent(version)}`;
+    const res = await fetch(url, {
+        headers: { 'User-Agent': 'mrfentmen-deps-dev-mcp/1.0', Accept: 'application/json' },
+        signal: AbortSignal.timeout(25000),
+    });
+    if (res.status === 404)
+        throw new Error(`deps.dev has no ${system} ${name} ${version}`);
+    if (!res.ok)
+        throw new Error(`deps.dev returned ${res.status}`);
+    const d = (await res.json());
+    const advisories = (d.advisoryKeys ?? []).map((a) => a.id);
+    const registries = (d.registries ?? []).map((r) => `${r.url ?? r.name ?? '?'}`);
+    const projects = (d.relatedProjects ?? []).map((p) => `${p.projectKey?.id ?? '?'}${p.relationType ? ` (${p.relationType})` : ''}`);
+    return [
+        `${name} ${version} — ${String(d.versionKey?.system ?? system).toLowerCase()}`,
+        `Licences: ${(d.licenses ?? []).join(', ') || 'none published'}`,
+        `Published: ${String(d.publishedAt ?? '').slice(0, 10) || '?'}${d.isDefault ? ' · the default version' : ''}${d.isDeprecated ? ` · deprecated: ${d.deprecatedReason || 'no reason given'}` : ''}`,
+        advisories.length ? `Advisories (${advisories.length}): ${advisories.slice(0, 10).join(', ')}` : 'Advisories: none on record',
+        registries.length ? `Registries: ${registries.slice(0, 5).join(', ')}` : 'Registries: none',
+        projects.length ? `Related projects: ${projects.slice(0, 5).join(', ')}` : 'Related projects: none',
+        `https://deps.dev/${encodeURIComponent(system)}/${encodeURIComponent(name)}/${encodeURIComponent(version)}`,
+    ].filter(Boolean).join('\n');
+}

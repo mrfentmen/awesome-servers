@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { lookup, egressProfile } from "./api.js";
+import { lookup, egressProfile, rdapRegistration } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -26,9 +26,8 @@ export function createServer() {
         inputSchema: z.object({ ip: z.string().describe("IP address, for example 8.8.8.8. IPv4 and IPv6 both work.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement registration locally (paywall removed)
         try {
-            return textError("Not yet implemented: registration");
+            return text(await rdapRegistration(args));
         }
         catch (e) {
             return textError(String(e));

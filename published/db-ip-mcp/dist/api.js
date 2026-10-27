@@ -99,3 +99,39 @@ export async function egressProfile(_args = {}) {
     lines.push('  the DB-IP free tier returns no coordinates and no time zone at all, which is why the provider above supplies them.');
     return lines.join('\n');
 }
+
+export async function rdapRegistration(args = {}) {
+    const ip = String(args?.ip ?? '').trim();
+    const v4 = /^(\d{1,3}\.){3}\d{1,3}$/;
+    const v6 = /^[0-9a-fA-F:]+$/;
+    if (!v4.test(ip) && !(ip.includes(':') && v6.test(ip)))
+        throw new Error('Give a valid IPv4 or IPv6 address, like 8.8.8.8.');
+    if (v4.test(ip) && ip.split('.').some((o) => Number(o) > 255))
+        throw new Error('Every IPv4 octet must be 0-255.');
+    const res = await fetch(`https://rdap.org/ip/${encodeURIComponent(ip)}`, {
+        headers: { 'User-Agent': 'mrfentmen-db-ip-mcp/1.0', Accept: 'application/rdap+json, application/json' },
+        redirect: 'follow',
+        signal: AbortSignal.timeout(30000),
+    });
+    if (res.status === 404)
+        throw new Error(`No RDAP record covers ${ip}`);
+    if (!res.ok)
+        throw new Error(`RDAP returned ${res.status}`);
+    const d = (await res.json());
+    const cidrs = (d.cidr0_cidrs ?? []).map((c) => `${c.v4prefix ?? c.v6prefix ?? '?'}/${c.length ?? '?'}`);
+    const events = (d.events ?? []).map((e) => `${e.eventAction}: ${String(e.eventDate ?? '').slice(0, 10)}`);
+    const entities = (d.entities ?? []).map((e) => {
+        const vcard = e.vcardArray?.[1] ?? [];
+        const fn = vcard.find((row) => row[0] === 'fn');
+        return `${fn?.[3] ?? e.handle ?? 'unknown'}${e.roles ? ` [${e.roles.join(', ')}]` : ''}`;
+    });
+    return [
+        `${ip} — ${d.name ?? d.handle ?? 'unnamed network'}`,
+        `Handle: ${d.handle ?? '?'} · type ${d.type ?? '?'} · country ${d.country ?? '?'}`,
+        `Range: ${d.startAddress ?? '?'} to ${d.endAddress ?? '?'}`,
+        cidrs.length ? `Announced CIDRs: ${cidrs.join(', ')}` : 'Announced CIDRs: none listed',
+        `Status: ${(d.status ?? []).join(', ') || 'not stated'}`,
+        events.length ? `Events: ${events.slice(0, 6).join(' · ')}` : '',
+        entities.length ? `Entities: ${entities.slice(0, 6).join(' · ')}` : 'Entities: none listed',
+    ].filter(Boolean).join('\n');
+}

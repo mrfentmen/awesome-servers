@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { model, models, creatorModels } from "./api.js";
+import { model, models, creatorModels, modelVersion } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -39,9 +39,8 @@ export function createServer() {
         inputSchema: z.object({ version_id: z.number().describe("Model version ID, like 290640. The models tool's rows carry these under versions.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement version locally (paywall removed)
         try {
-            return textError("Not yet implemented: version");
+            return text(await modelVersion(args));
         }
         catch (e) {
             return textError(String(e));

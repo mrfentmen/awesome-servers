@@ -14,7 +14,7 @@ overwrites `dist/` from the registry tarballs.
 - scoped under `@mrfentmen`: **195**
 - total size: **15.7 MB**
 - carrying a licence gate (`MCP_LICENSE_KEY`): **1**
-- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **513**
+- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **509**
 - whose `src/` still holds the pre-fix source (not shipped, cannot rebuild `dist/`): **36**
 
 | package | version | src? | gate | stubs |
@@ -32,7 +32,7 @@ overwrites `dist/` from the registry tarballs.
 | `aimeleondore-mcp` | 1.0.8 | no |  |  |
 | `air-quality-mcp` | 1.0.6 | no |  | 2 |
 | `@mrfentmen/airtable-mcp` | 1.1.3 | no |  |  |
-| `albiononline-mcp` | 1.0.4 | no |  | 1 |
+| `albiononline-mcp` | 1.0.5 | no |  |  |
 | `@mrfentmen/algorand-mcp` | 1.0.5 | no |  | 2 |
 | `@mrfentmen/alpaca-mcp` | 1.1.3 | no |  |  |
 | `alphafold-mcp` | 1.0.5 | no |  |  |
@@ -151,7 +151,7 @@ overwrites `dist/` from the registry tarballs.
 | `cisa-kev-mcp` | 1.1.0 | no |  |  |
 | `citi-bike-mcp` | 1.0.5 | no |  | 2 |
 | `citybikes-mcp` | 1.0.5 | no |  | 2 |
-| `civitai-mcp` | 1.0.5 | no |  | 1 |
+| `civitai-mcp` | 1.0.6 | no |  |  |
 | `clerk-mcp` | 1.0.7 | no |  |  |
 | `@mrfentmen/cleveland-art-mcp` | 1.0.0 | no |  |  |
 | `clevelandart-mcp` | 1.0.5 | no |  | 2 |
@@ -209,7 +209,7 @@ overwrites `dist/` from the registry tarballs.
 | `datacite-mcp` | 1.0.5 | no |  | 2 |
 | `datahub-countries-mcp` | 1.0.5 | no |  | 2 |
 | `@mrfentmen/datamuse-mcp` | 1.0.5 | no |  | 2 |
-| `db-ip-mcp` | 1.0.5 | no |  | 1 |
+| `db-ip-mcp` | 1.0.6 | no |  |  |
 | `dblp-mcp` | 1.0.4 | no |  |  |
 | `deck-of-cards-mcp` | 1.0.6 | no |  |  |
 | `deepgram-mcp` | 1.0.7 | no |  |  |
@@ -219,7 +219,7 @@ overwrites `dist/` from the registry tarballs.
 | `demozoo-mcp` | 1.0.5 | no |  | 2 |
 | `dependency-drift-mcp` | 1.0.6 | no |  | 2 |
 | `dependency-license-change-mcp` | 1.0.5 | no |  | 1 |
-| `deps-dev-mcp` | 1.0.5 | no |  | 1 |
+| `deps-dev-mcp` | 1.0.6 | no |  |  |
 | `deribit-mcp` | 1.1.1 | no |  |  |
 | `destiny2-mcp` | 1.0.3 | no |  |  |
 | `deviantart-mcp` | 1.0.3 | no |  |  |

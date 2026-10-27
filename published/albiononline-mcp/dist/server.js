@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getPrices, getPriceHistory, getPriceCharts, getGoldPrices, getRecentKills, getKillDetails, priceTrend } from "./api.js";
+import { getPrices, getPriceHistory, getPriceCharts, getGoldPrices, getRecentKills, getKillDetails, priceTrend, marketSummary } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -116,9 +116,8 @@ export function createServer() {
         inputSchema: z.object({ item: z.string().describe("Item id, e.g. 'T4_BAG'"), quality: z.number().int().min(1).max(5).describe("Restrict to one quality 1-5.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement summary locally (paywall removed)
         try {
-            return textError("Not yet implemented: summary");
+            return text(await marketSummary(args));
         }
         catch (e) {
             return textError(String(e));

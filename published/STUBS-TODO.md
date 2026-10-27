@@ -1,13 +1,12 @@
 # Tools still answering "Not yet implemented"
 
-1021 tool(s) across 513 package(s) still ship a stub body.
+1017 tool(s) across 509 package(s) still ship a stub body.
 Each was a gateway-only tool whose implementation never existed in the package,
 so the body has to be written against the live service and checked with a real
-call before publishing. 14 package(s) are already fixed.
+call before publishing. 18 package(s) are already fixed.
 
 | package | tools | has src |
 | --- | --- | --- |
-| `albiononline-mcp` | summary | no |
 | `archive-org-mcp` | timeline | yes |
 | `artifact-gauge-mcp` | stats | no |
 | `bandcamp-mcp` | details | no |
@@ -16,13 +15,10 @@ call before publishing. 14 package(s) are already fixed.
 | `census-geo-mcp` | geographies | no |
 | `cern-mcp` | files | no |
 | `checksum-mcp` | integrity | no |
-| `civitai-mcp` | version | no |
 | `codepet-mcp` | quests | no |
 | `countriesnow-mcp` | profile | yes |
 | `cricapi-mcp` | scorecard | no |
-| `db-ip-mcp` | registration | no |
 | `dependency-license-change-mcp` | matrix | no |
-| `deps-dev-mcp` | detail | no |
 | `dictionary-mcp` | relations | yes |
 | `digimon-mcp` | browse | no |
 | `discogs-mcp` | profile | no |
