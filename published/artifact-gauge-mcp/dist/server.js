@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { artifactHints, directoryWeights, format, inspect, manifest, sizeBudget } from "./gauge.js";
+import { artifactHints, directoryWeights, format, inspect, manifest, sizeBudget, githubRepoStats } from "./gauge.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -75,9 +75,8 @@ export function createServer() {
         inputSchema: z.object({ owner: z.string().describe("GitHub owner; defaults to modelcontextprotocol.").optional(), repo: z.string().describe("GitHub repository; defaults to servers.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement stats locally (paywall removed)
         try {
-            return textError("Not yet implemented: stats");
+            return text(await githubRepoStats(args));
         }
         catch (e) {
             return textError(String(e));

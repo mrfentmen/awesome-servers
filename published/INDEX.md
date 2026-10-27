@@ -14,7 +14,7 @@ overwrites `dist/` from the registry tarballs.
 - scoped under `@mrfentmen`: **195**
 - total size: **15.7 MB**
 - carrying a licence gate (`MCP_LICENSE_KEY`): **1**
-- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **509**
+- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **506**
 - whose `src/` still holds the pre-fix source (not shipped, cannot rebuild `dist/`): **36**
 
 | package | version | src? | gate | stubs |
@@ -53,7 +53,7 @@ overwrites `dist/` from the registry tarballs.
 | `archive-org-mcp` | 1.0.5 | yes |  | 1 |
 | `archlinux-mcp` | 1.0.5 | no |  | 2 |
 | `art-institute-mcp` | 1.0.6 | yes |  |  |
-| `artifact-gauge-mcp` | 1.0.6 | no |  | 1 |
+| `artifact-gauge-mcp` | 1.0.7 | no |  |  |
 | `@mrfentmen/artifact-hub-mcp` | 1.0.6 | no |  |  |
 | `arweave-mcp` | 1.1.2 | no |  |  |
 | `arxiv-mcp` | 1.1.0 | no |  |  |
@@ -140,7 +140,7 @@ overwrites `dist/` from the registry tarballs.
 | `chanel-mcp` | 1.1.1 | no |  |  |
 | `cheapshark-mcp` | 1.1.1 | no |  |  |
 | `checkly-mcp` | 1.0.5 | no |  |  |
-| `checksum-mcp` | 1.0.6 | no |  | 1 |
+| `checksum-mcp` | 1.0.7 | no |  |  |
 | `chembl-mcp` | 1.0.5 | no |  | 2 |
 | `@mrfentmen/chess-mcp` | 1.0.5 | no |  | 2 |
 | `@mrfentmen/chesscom-mcp` | 1.0.5 | no |  | 2 |
@@ -163,7 +163,7 @@ overwrites `dist/` from the registry tarballs.
 | `cocktails-mcp` | 1.0.5 | no |  | 2 |
 | `codeberg-mcp` | 1.0.5 | no |  | 3 |
 | `codeforces-mcp` | 1.0.5 | no |  | 2 |
-| `codepet-mcp` | 1.0.6 | no |  | 1 |
+| `codepet-mcp` | 1.0.7 | no |  |  |
 | `codewars-mcp` | 1.0.4 | no |  | 2 |
 | `coffee-mcp` | 1.0.5 | no |  | 2 |
 | `@mrfentmen/coinbase-mcp` | 1.1.1 | no |  |  |

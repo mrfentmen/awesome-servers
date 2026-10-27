@@ -140,3 +140,31 @@ export async function petExport(args) {
         payload.history = `omitted, ${state.history.length} event(s) in the state file`;
     return `CodePet export (${include ? "with" : "without"} history):\n${JSON.stringify(payload, null, 2)}`;
 }
+
+export async function findCodingQuests(args = {}) {
+    const language = String(args?.language ?? '').trim();
+    if (language.length > 40)
+        throw new Error('Keep the language under 40 characters.');
+    const limit = Math.min(Math.max(Number(args?.limit ?? 5) || 5, 1), 15);
+    const q = ['is:issue', 'is:open', 'label:"good first issue"'];
+    if (language)
+        q.push(`language:${language}`);
+    const url = `https://api.github.com/search/issues?q=${encodeURIComponent(q.join(' '))}&sort=updated&order=desc&per_page=${limit}`;
+    const res = await fetch(url, {
+        headers: { 'User-Agent': 'mrfentmen-codepet-mcp/1.0', Accept: 'application/vnd.github+json' },
+        signal: AbortSignal.timeout(30000),
+    });
+    if (res.status === 403)
+        throw new Error('GitHub rate-limited this search; try again in a minute.');
+    if (!res.ok)
+        throw new Error(`GitHub search returned ${res.status}`);
+    const body = (await res.json());
+    const items = Array.isArray(body.items) ? body.items : [];
+    if (!items.length)
+        return `No open good-first-issue reports${language ? ` for ${language}` : ''} right now.`;
+    return [
+        `${body.total_count ?? items.length} open good-first-issue(s)${language ? ` in ${language}` : ''}, newest ${items.length}:`,
+        '',
+        ...items.map((it, i) => `${i + 1}. ${it.title}\n   ${it.html_url}\n   ${it.comments ?? 0} comment(s) · updated ${String(it.updated_at ?? '').slice(0, 10)}`),
+    ].join('\n');
+}

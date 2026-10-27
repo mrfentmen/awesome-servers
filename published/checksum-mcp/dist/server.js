@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { hashFile, hashText, verifyChecksum, directoryManifest, hmacDigest } from "./api.js";
+import { hashFile, hashText, verifyChecksum, directoryManifest, hmacDigest, npmIntegrity } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -78,9 +78,8 @@ export function createServer() {
         inputSchema: z.object({ package: z.string().describe("npm package name; defaults to typescript.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement integrity locally (paywall removed)
         try {
-            return textError("Not yet implemented: integrity");
+            return text(await npmIntegrity(args));
         }
         catch (e) {
             return textError(String(e));

@@ -1,7 +1,7 @@
 const error = (e) => `Error: ${e instanceof Error ? e.message : String(e)}`;
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { eventText, languageBreakdown, load, petExport, petProgressReport, safeEvent, save, statePath } from "./state.js";
+import { eventText, languageBreakdown, load, petExport, petProgressReport, safeEvent, save, statePath, findCodingQuests } from "./state.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -80,9 +80,8 @@ export function createServer() {
         inputSchema: z.object({ language: z.string().max(40).optional(), limit: z.number().int().min(1).max(15).optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement quests locally (paywall removed)
         try {
-            return textError("Not yet implemented: quests");
+            return text(await findCodingQuests(args));
         }
         catch (e) {
             return textError(String(e));

@@ -6,12 +6,12 @@
     "url": "https://github.com/mrfentmen/checksum-mcp",
     "source": "github"
   },
-  "version": "1.0.1",
+  "version": "1.0.7",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "checksum-mcp",
-      "version": "1.0.1",
+      "version": "1.0.7",
       "transport": {
         "type": "stdio"
       }
