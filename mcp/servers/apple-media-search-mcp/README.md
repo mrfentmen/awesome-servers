@@ -15,7 +15,7 @@ Or add it to your MCP client:
 ```json
 {
   "mcpServers": {
-    "itunes-search-mcp": {
+    "apple-media-search-mcp": {
       "command": "npx",
       "args": ["-y", "@mrfentmen/itunes-mcp"]
     }

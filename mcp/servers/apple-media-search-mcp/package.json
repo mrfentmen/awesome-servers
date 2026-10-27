@@ -1,5 +1,5 @@
 {
-  "name": "@mrfentmen/itunes-search-mcp",
+  "name": "apple-media-search-mcp",
   "version": "1.0.0",
   "description": "iTunes Search API: music, albums, tracks, podcasts, apps and ebooks \u2014 all keyless.",
   "type": "module",
@@ -9,7 +9,7 @@
     "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
-    "itunes-search-mcp": "./dist/index.js"
+    "apple-media-search-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [

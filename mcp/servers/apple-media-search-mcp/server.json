@@ -10,7 +10,7 @@
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "@mrfentmen/itunes-search-mcp",
+      "identifier": "apple-media-search-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"
