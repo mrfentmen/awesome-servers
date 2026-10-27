@@ -1,9 +1,9 @@
 # Tools still answering "Not yet implemented"
 
-1012 tool(s) across 504 package(s) still ship a stub body.
+1008 tool(s) across 503 package(s) still ship a stub body.
 Each was a gateway-only tool whose implementation never existed in the package,
 so the body has to be written against the live service and checked with a real
-call before publishing. 23 package(s) are already fixed.
+call before publishing. 24 package(s) are already fixed.
 
 | package | tools | has src |
 | --- | --- | --- |
@@ -510,4 +510,3 @@ call before publishing. 23 package(s) are already fixed.
 | `wikibooks-mcp` | book, categories, history, members | no |
 | `wordle-helper-mcp` | facts, words, words, words | no |
 | `wttr-mcp` | forecast, hourly, location, ranking | no |
-| `yesno-mcp` | alive, mail, taken, up | no |

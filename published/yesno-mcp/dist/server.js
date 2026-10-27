@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { answer, wikipediaPageExists } from "./api.js";
+import { answer, wikipediaPageExists, siteUp, domainTaken, personAlive, domainMail } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -26,9 +26,8 @@ export function createServer() {
         inputSchema: z.object({ url: z.string().describe("URL or hostname, for example example.com.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement up locally (paywall removed)
         try {
-            return textError("Not yet implemented: up");
+            return text(await siteUp(args));
         }
         catch (e) {
             return textError(String(e));
@@ -40,9 +39,8 @@ export function createServer() {
         inputSchema: z.object({ domain: z.string().describe("Domain to check, for example example.com.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement taken locally (paywall removed)
         try {
-            return textError("Not yet implemented: taken");
+            return text(await domainTaken(args));
         }
         catch (e) {
             return textError(String(e));
@@ -54,9 +52,8 @@ export function createServer() {
         inputSchema: z.object({ name: z.string().describe("Person name, for example 'Ada Lovelace'.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement alive locally (paywall removed)
         try {
-            return textError("Not yet implemented: alive");
+            return text(await personAlive(args));
         }
         catch (e) {
             return textError(String(e));
@@ -68,9 +65,8 @@ export function createServer() {
         inputSchema: z.object({ domain: z.string().describe("Domain to check.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement mail locally (paywall removed)
         try {
-            return textError("Not yet implemented: mail");
+            return text(await domainMail(args));
         }
         catch (e) {
             return textError(String(e));

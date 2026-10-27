@@ -14,7 +14,7 @@ overwrites `dist/` from the registry tarballs.
 - scoped under `@mrfentmen`: **195**
 - total size: **15.7 MB**
 - carrying a licence gate (`MCP_LICENSE_KEY`): **1**
-- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **504**
+- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **503**
 - whose `src/` still holds the pre-fix source (not shipped, cannot rebuild `dist/`): **36**
 
 | package | version | src? | gate | stubs |
@@ -969,7 +969,7 @@ overwrites `dist/` from the registry tarballs.
 | `wynncraft-mcp` | 1.0.4 | no |  | 2 |
 | `xkcd-mcp` | 1.0.3 | no |  | 3 |
 | `yaml-mcp` | 1.0.2 | no |  |  |
-| `yesno-mcp` | 1.0.3 | no |  | 4 |
+| `yesno-mcp` | 1.0.4 | no |  |  |
 | `@mrfentmen/yfinance-mcp` | 1.0.6 | yes |  |  |
 | `@mrfentmen/youtrack-mcp` | 1.0.5 | no |  |  |
 | `@mrfentmen/youtube-mcp` | 1.1.7 | no |  |  |

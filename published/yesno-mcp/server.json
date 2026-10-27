@@ -6,12 +6,12 @@
     "url": "https://github.com/mrfentmen/yesno-mcp",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.4",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "yesno-mcp",
-      "version": "1.0.0",
+      "version": "1.0.4",
       "transport": {
         "type": "stdio"
       }
