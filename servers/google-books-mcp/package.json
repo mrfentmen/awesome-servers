@@ -1,0 +1,43 @@
+{
+  "name": "google-books-mcp",
+  "version": "1.0.0",
+  "description": "Query Google Books (keyless quota is shared and may 429; set GOOGLE_BOOKS_API_KEY from Google Cloud Console for your own quota): volume search and details with covers, pages, categories.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/google-books-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "google-books-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "books",
+    "google-books",
+    "reading",
+    "library"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

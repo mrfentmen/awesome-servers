@@ -1,0 +1,196 @@
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
+import { countries, countryInfo, errorMessage, formatCountryInfo, formatHoliday, formatHolidays, formatLongWeekends, holidays, isTodayHoliday, longWeekends, nextHolidays, worldwideHolidays, regionalHolidays, holidayOnDate, compareCountries, workingDayCalendar, holidayObservanceAudit } from "./api.js";
+const text = (t) => ({ content: [{ type: "text", text: t }] });
+const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
+const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
+const COUNTRY = z.string().describe("Two-letter country code, e.g. 'US', 'DE', 'JP'");
+const YEAR = z.string().describe("Four-digit year, e.g. '2026'");
+export function createServer() {
+    const server = new McpServer({
+        name: "nager-mcp",
+        version: "1.0.0",
+    });
+    server.registerTool("list_countries", {
+        title: "List countries",
+        description: "Every country the public holiday API covers, with its two-letter code.",
+        inputSchema: z.object({}),
+        annotations: READ_ONLY,
+    }, async () => {
+        try {
+            const list = await countries();
+            const lines = list.map((c) => `  ${c.countryCode}  ${c.name}`);
+            return text(`${list.length} countries:\n\n${lines.join("\n")}`);
+        }
+        catch (e) {
+            return textError(errorMessage(e));
+        }
+    });
+    server.registerTool("country_info", {
+        title: "Country info",
+        description: "Official name, region and land borders for a country.",
+        inputSchema: z.object({ country: COUNTRY }),
+        annotations: READ_ONLY,
+    }, async ({ country }) => {
+        try {
+            return text(formatCountryInfo(await countryInfo(country)));
+        }
+        catch (e) {
+            return textError(errorMessage(e));
+        }
+    });
+    server.registerTool("get_holidays", {
+        title: "Public holidays",
+        description: "All public holidays for a country and year, with local and English names.",
+        inputSchema: z.object({ year: YEAR, country: COUNTRY }),
+        annotations: READ_ONLY,
+    }, async ({ year, country }) => {
+        try {
+            const list = await holidays(year, country);
+            return text(formatHolidays(list, `${country.toUpperCase()} public holidays in ${year}`));
+        }
+        catch (e) {
+            return textError(errorMessage(e));
+        }
+    });
+    server.registerTool("next_holidays", {
+        title: "Upcoming holidays",
+        description: "The next public holidays for a country, starting from today.",
+        inputSchema: z.object({ country: COUNTRY }),
+        annotations: READ_ONLY,
+    }, async ({ country }) => {
+        try {
+            const list = await nextHolidays(country);
+            return text(formatHolidays(list, `Upcoming holidays in ${country.toUpperCase()}`));
+        }
+        catch (e) {
+            return textError(errorMessage(e));
+        }
+    });
+    server.registerTool("worldwide_holidays", {
+        title: "Holidays worldwide",
+        description: "The next public holidays around the world - useful for planning around other countries' closures.",
+        inputSchema: z.object({
+            limit: z.number().int().min(1).max(100).default(25).describe("How many holidays to show"),
+        }),
+        annotations: READ_ONLY,
+    }, async ({ limit }) => {
+        try {
+            const list = (await worldwideHolidays()).sort((a, b) => a.date.localeCompare(b.date));
+            const shown = list.slice(0, limit);
+            const lines = shown.map((h) => `${formatHoliday(h)}  [${h.countryCode}]`);
+            return text(`Next holidays worldwide (${shown.length} of ${list.length}):\n\n${lines.join("\n")}`);
+        }
+        catch (e) {
+            return textError(errorMessage(e));
+        }
+    });
+    server.registerTool("long_weekends", {
+        title: "Long weekends",
+        description: "Long weekends in a country and year, and whether a bridge day off is needed to get them.",
+        inputSchema: z.object({ year: YEAR, country: COUNTRY }),
+        annotations: READ_ONLY,
+    }, async ({ year, country }) => {
+        try {
+            const list = await longWeekends(year, country);
+            return text(formatLongWeekends(list, `Long weekends in ${country.toUpperCase()} ${year}`));
+        }
+        catch (e) {
+            return textError(errorMessage(e));
+        }
+    });
+    server.registerTool("is_today_holiday", {
+        title: "Is today a holiday",
+        description: "Whether today is a public holiday in a country.",
+        inputSchema: z.object({ country: COUNTRY }),
+        annotations: READ_ONLY,
+    }, async ({ country }) => {
+        try {
+            const result = await isTodayHoliday(country);
+            if (!result.isHoliday) {
+                return text(`Today is not a public holiday in ${country.toUpperCase()}.`);
+            }
+            return text(`Today is a public holiday in ${country.toUpperCase()}:\n\n${formatHoliday(result.holiday).trim()}`);
+        }
+        catch (e) {
+            return textError(errorMessage(e));
+        }
+    });
+    server.registerTool("regional_holidays", {
+        title: "Regional holidays",
+        description: "Holidays that actually apply in one subdivision (US-CA, DE-BE, CA-ON): national days plus local ones.",
+        inputSchema: z.object({
+            year: z.string().describe("Four-digit year, e.g. 2026."),
+            country: z.string().describe("Two-letter country code, e.g. US."),
+            county: z.string().describe("ISO 3166-2 subdivision code, e.g. US-CA.")
+        }),
+        annotations: READ_ONLY,
+    }, async ({ year, country, county }) => {
+        try {
+            return text(await regionalHolidays(year, country, county));
+        }
+        catch (e) {
+            return textError(errorMessage(e));
+        }
+    });
+    server.registerTool("holiday_on_date", {
+        title: "Holiday on a date",
+        description: "Is one specific date a public holiday? Answers yes or no, with the previous and next holiday.",
+        inputSchema: z.object({
+            date: z.string().describe("Date to check, YYYY-MM-DD."),
+            country: z.string().describe("Two-letter country code, e.g. US.")
+        }),
+        annotations: READ_ONLY,
+    }, async ({ date, country }) => {
+        try {
+            return text(await holidayOnDate(date, country));
+        }
+        catch (e) {
+            return textError(errorMessage(e));
+        }
+    });
+    server.registerTool("compare_countries", {
+        title: "Compare countries",
+        description: "Shared, and country-specific, public holidays for two countries in one year.",
+        inputSchema: z.object({
+            year: z.string().describe("Four-digit year, e.g. 2026."),
+            country_a: z.string().describe("First country code, e.g. US."),
+            country_b: z.string().describe("Second country code, e.g. GB.")
+        }),
+        annotations: READ_ONLY,
+    }, async ({ year, country_a: countryA, country_b: countryB }) => {
+        try {
+            return text(await compareCountries(year, countryA, countryB));
+        }
+        catch (e) {
+            return textError(errorMessage(e));
+        }
+    });
+    server.registerTool("working_day_calendar", {
+        title: "Working day calendar",
+        description: "Month-by-month working-day arithmetic for a country and year, computed from the holiday list: weekdays, weekend days, how many of those weekdays are holidays, the working-day count, and the longest unbroken run of working days in the year.",
+        inputSchema: z.object({ country: z.string().describe("Two-letter country code, e.g. AT."), year: z.string().describe("Four-digit year, e.g. 2026.") }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        try {
+            return text(await workingDayCalendar(args));
+        }
+        catch (e) {
+            return textError(errorMessage(e));
+        }
+    });
+    server.registerTool("holiday_observance_audit", {
+        title: "Holiday observance audit",
+        description: "Where every holiday in a country and year actually lands: the weekday it falls on, whether it costs a working day, how many free working days follow it, which holidays are regional, which fall on a weekend and which run back to back.",
+        inputSchema: z.object({ country: z.string().describe("Two-letter country code, e.g. DE."), year: z.string().describe("Four-digit year, e.g. 2026.") }),
+        annotations: READ_ONLY,
+    }, async (args) => {
+        try {
+            return text(await holidayObservanceAudit(args));
+        }
+        catch (e) {
+            return textError(errorMessage(e));
+        }
+    });
+    return server;
+}

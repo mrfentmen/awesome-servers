@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/jolpica-mcp",
+  "description": "Formula 1 data (Jolpica, the Ergast replacement).",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-servers",
+    "source": "github"
+  },
+  "version": "1.1.3",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "jolpica-mcp",
+      "version": "1.1.3",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

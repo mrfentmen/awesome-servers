@@ -1,0 +1,43 @@
+{
+  "name": "uptime-kuma-mcp",
+  "version": "1.0.0",
+  "description": "Query your Uptime Kuma instance (self-hosted; set UPTIME_KUMA_URL; optional UPTIME_KUMA_TOKEN): public status, Prometheus metrics. Endpoints per official docs.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/uptime-kuma-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "uptime-kuma-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "uptime-kuma",
+    "uptime",
+    "monitoring",
+    "self-hosted"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

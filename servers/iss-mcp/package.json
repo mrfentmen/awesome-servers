@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/iss-mcp",
+  "version": "1.0.1",
+  "description": "Live ISS position, passes and crew - no API key.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/iss-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "iss-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "keywords": [
+    "iss",
+    "space",
+    "satellite",
+    "tracking",
+    "science",
+    "mcp"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -5,14 +5,14 @@ can still be built, run and published on its own.
 
 | Subtree | What it holds | Run one |
 |---|---|---|
-| [`mcp/`](mcp) | 869 TypeScript MCP servers (one npm package each) | `cd mcp/servers/<slug> && npm install && npm run build` |
+| [`mcp/`](mcp) | 6 TypeScript MCP servers, plus 230 published packages in [`published/`](published) | `cd mcp/servers/<slug> && npm install && npm run build` |
 | [`acp/`](acp) | 79 Python ACP agents | `python3 acp/agents/<name>/agent.py` |
 | [`a2a/`](a2a) | 37 Python A2A servers plus the shared `a2a_kit` | `python3 a2a/servers/<name>/server.py` |
 | [`watchd/`](watchd) | a threshold watcher that runs the feeds between editor sessions | `python3 watchd/watchd.py --config conditions.json --loop` |
 | [`site/`](site) | the published site: registry with search, the public-feed atlas, watchd plans | <https://mrfentmen.github.io/awesome-servers/> |
 
 Most servers read public data with no key of their own; the ones wrapping a vendor API take
-that vendor's key. **There is no paywall anywhere in this repo any more.** On 2026-10-17 the
+that vendor's key. **Nothing in this repo asks a caller to pay.** On 2026-10-17 the
 licence machinery was removed for good: the per-tool `src/license.ts` gates are gone from the
 MCP servers, and the A2A and ACP trees no longer carry the hosted licence-gateway half — the
 skills that used it now answer with an explicit not-implemented stub. Nothing here asks a
@@ -32,7 +32,8 @@ domain, and the research logs record what was found and why it still counted as 
 [`mcp/MISSING.md`](mcp/MISSING.md), [`acp/MISSING.md`](acp/MISSING.md) and
 [`a2a/docs/`](a2a/docs). Highlights:
 
-* The MCP side holds 869 TypeScript servers, one npm package each, and mcp/MISSING.md
+* The MCP side holds TypeScript servers, one npm package each, and 230 published packages under
+  `published/`; mcp/MISSING.md
   documents the check that preceded every build: what was searched, what was skipped and why
   the domain still counted as uncovered.
 * On the ACP side there were **zero domain agents** before this repo — every agent on the
@@ -98,3 +99,18 @@ claim-check in `MISSING.md`):
 
 Point the polymath at a checkout of this repo with `AWESOME_SERVERS_HOME=$PWD/awesome-servers`
 and it federates across the two repos live.
+
+## Published snapshot (`published/`)
+
+`published/` holds one directory per npm package, byte-for-byte what the registry
+serves: 230 packages, every version matching npm `latest`.
+
+- `published/INDEX.md` is generated from the tree by `python3 scripts/index-published.py`.
+- `scripts/sync-published-snapshot.py` re-downloads every package from npm; run it only
+  when every local fix has been published, because it overwrites `dist/` from the tarballs.
+- No package carries a licence gate: 0 reference `MCP_LICENSE_KEY` and 0 shipped tools
+  answer `Not yet implemented`.
+- Every package links to this repo (`mrfentmen/awesome-servers`) as its source.
+
+`servers/` holds the older per-server source that predates the snapshot. Where the two
+disagree, `published/` is what users actually install.

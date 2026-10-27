@@ -1,0 +1,43 @@
+{
+  "name": "fbi-crime-mcp",
+  "version": "1.0.0",
+  "description": "Query the FBI Crime Data API (free key; set FBI_API_KEY from api.data.gov): arrests, offenses, victims by state.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/fbi-crime-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "fbi-crime-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "fbi",
+    "crime",
+    "statistics",
+    "government"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

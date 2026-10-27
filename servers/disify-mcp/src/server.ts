@@ -1,0 +1,136 @@
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
+import { z } from "zod"
+import { check, checkBulk, checkDomain, dnsLookup, dnssecCheck, domainSummary, emailAuth, lookalikeDomains, mxRecords } from "./api.js"
+
+const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
+const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
+const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
+const error = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
+
+export function createServer(): McpServer {
+  const server = new McpServer({ name: "disify-mcp", version: "1.0.0" })
+  server.registerTool(
+    "check",
+    {
+      title: "Check",
+      description: "Validate an email address: format, disposable domain, DNS records.",
+      inputSchema: z.object( { email: z.string().describe("Email address.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await check(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "check_domain",
+    {
+      title: "Check domain",
+      description: "Validate an email domain: disposable, free provider, whitelist and DNS status.",
+      inputSchema: z.object( { domain: z.string().describe("Domain like example.com.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await checkDomain(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "check_bulk",
+    {
+      title: "Check bulk",
+      description: "Validate up to 10 email addresses in one call and count how many are disposable.",
+      inputSchema: z.object( { emails: z.array(z.string()).describe("Email addresses to check, maximum 10.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await checkBulk(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "mx_records",
+    {
+      title: "MX records",
+      description: "List the MX mail hosts for a domain, useful for checking whether a mailbox can receive mail.",
+      inputSchema: z.object( { domain: z.string().describe("Domain like example.com.") }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await mxRecords(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "dns_lookup",
+    {
+      title: "DNS lookup",
+      description: "Resolve live DNS records for a domain — A, AAAA, MX, NS, TXT, CNAME, SOA, CAA, PTR or SRV — via public DNS-over-HTTPS.",
+      inputSchema: z.object( {
+        domain: z.string().describe("Domain to resolve, for example example.com."),
+        type: z.string().describe("Record type: A, AAAA, MX, NS, TXT, CNAME, SOA, CAA, PTR or SRV. Defaults to A.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await dnsLookup(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "domain_summary",
+    {
+      title: "Domain summary",
+      description: "One report on a domain: disposable verdict plus live A, NS and MX records, so you can tell whether signups from it are trustworthy.",
+      inputSchema: z.object( {
+        domain: z.string().describe("Domain to summarise, for example gmail.com.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await domainSummary(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+  server.registerTool(
+    "dnssec_check",
+    {
+      title: "DNSSEC check",
+      description: "Check whether a domain is DNSSEC signed: validating-resolver AD flag, DNSKEY records and the parent DS.",
+      inputSchema: z.object( {
+        domain: z.string().describe("Domain to check, for example cloudflare.com.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await dnssecCheck(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "email_auth",
+    {
+      title: "Email authentication",
+      description: "SPF, DMARC, DKIM and MX for a domain, so you can tell whether its mail can be spoofed.",
+      inputSchema: z.object( {
+        domain: z.string().describe("Domain to check, for example stripe.com.")
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await emailAuth(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  server.registerTool(
+    "lookalike_domains",
+    {
+      title: "Lookalike domains",
+      description: "Test typo, homoglyph and alternative-TLD variants of a domain and report which ones resolve.",
+      inputSchema: z.object( {
+        domain: z.string().describe("Domain to screen, for example yourbrand.com."),
+        limit: z.number().describe("How many live lookalikes to show, 1-25, e.g. 10.").optional()
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => {
+    try { return text(await lookalikeDomains(args)) } catch (e) { return textError(error(e)) }
+  }
+  )
+
+  return server
+}

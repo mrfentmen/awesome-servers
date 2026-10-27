@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/iss-mcp",
+  "description": "ISS live position and passes.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-servers",
+    "source": "github"
+  },
+  "version": "1.1.3",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@mrfentmen/iss-mcp",
+      "version": "1.1.3",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

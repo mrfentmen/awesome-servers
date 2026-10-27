@@ -1,10 +1,40 @@
+# Dependencies and generated caches
+node_modules/
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+coverage/
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+*.pem
+*.key
+*.p12
+*.pfx
+# OS/editor files
 .DS_Store
+Thumbs.db
+.idea/
+.vscode/
+# Temporary files
+*.log
+*.tmp
+# Build output and install artifacts (never commit)
+dist/
+package-lock.json
+# ...except the published snapshot, where dist/ is the only copy that exists.
+# The registry tarball is all that survived for most packages, so these files
+# are the record, not a build artifact.
+!published/*/dist/
+!published/*/dist/**
 *.db
 *.db-journal
-__pycache__/
-
-# Scratch file the paywall batches leave behind
+# Scratch files left by batch runs
 _probe.mjs
-
-# Built TypeScript output (npm packages build before publishing; dist is never committed)
-dist/

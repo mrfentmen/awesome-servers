@@ -1,0 +1,495 @@
+/**
+ * Steam client — keyless store endpoints.
+ *  - Store search:   /api/storesearch
+ *  - App details:    /api/appdetails   (filtered to keep payloads small)
+ *  - News:           ISteamNews/GetNewsForApp (Steamworks Web API, no key
+ *                    required for this endpoint)
+ */
+const STORE = "https://store.steampowered.com/api";
+const NEWS = "https://api.steampowered.com/ISteamNews/GetNewsForApp/v2";
+export class SteamError extends Error {
+}
+async function getJson(url) {
+    const res = await fetch(url, {
+        signal: AbortSignal.timeout(30000),
+        headers: { Accept: "application/json", "User-Agent": "steam-mcp/1.0" },
+    });
+    if (!res.ok)
+        throw new SteamError(`Steam API error ${res.status}: ${res.statusText}`);
+    return (await res.json());
+}
+// ---------------------------------------------------------------------------
+// Endpoints
+// ---------------------------------------------------------------------------
+export async function searchStore(query) {
+    const data = await getJson(`${STORE}/storesearch/?term=${encodeURIComponent(query)}&cc=US&l=en`);
+    return (data.items ?? [])
+        .filter((i) => i.type === "app")
+        .slice(0, 12)
+        .map((i) => ({ ...i, appid: i.id }));
+}
+/**
+ * Steam keys an appdetails response by an id of its own choosing, which is not
+ * always the appid that was asked for: requesting 620 comes back under the key
+ * 323180, with the real appid inside data.steam_appid. So the entry is matched
+ * on steam_appid first, then on the requested key, then taken as the only entry.
+ */
+function pickApp(payload, appid) {
+    const direct = payload?.[String(appid)];
+    if (direct?.success && direct.data)
+        return direct.data;
+    const entries = Object.values(payload ?? {}).filter((entry) => entry?.success && entry.data);
+    const matched = entries.find((entry) => Number(entry.data?.steam_appid) === appid);
+    if (matched)
+        return matched.data;
+    return entries.length === 1 ? entries[0].data : null;
+}
+export async function getAppDetail(appid) {
+    const filters = [
+        "basic",
+        "price_overview",
+        "release_date",
+        "developers",
+        "genres",
+        "metacritic",
+        "short_description",
+        "header_image",
+    ].join(",");
+    const payload = await getJson(`${STORE}/appdetails?appids=${appid}&cc=US&l=en&filters=${filters}`);
+    const d = pickApp(payload, appid);
+    if (!d)
+        return null;
+    const price = d.price_overview;
+    return {
+        appid,
+        name: d.name ?? "?",
+        type: d.type,
+        isFree: d.is_free,
+        price: price
+            ? {
+                currency: price.currency ?? "USD",
+                initial: price.initial ?? 0,
+                final: price.final ?? 0,
+                discountPercent: price.discount_percent ?? 0,
+            }
+            : null,
+        releaseDate: d.release_date?.date,
+        developers: d.developers ?? [],
+        genres: (d.genres ?? []).map((g) => g.description),
+        metacritic: d.metacritic?.score,
+        description: d.short_description,
+        headerImage: d.header_image,
+        url: `https://store.steampowered.com/app/${appid}`,
+    };
+}
+export async function getNews(appid, count) {
+    const data = await getJson(`${NEWS}/?appid=${appid}&count=${count}&maxlength=600`);
+    return (data.appnews?.newsitems ?? []).map((n) => ({
+        title: n.title ?? "?",
+        url: n.url ?? "",
+        author: n.author,
+        date: n.date ? new Date(n.date * 1000).toISOString().slice(0, 10) : undefined,
+        contents: n.contents ? stripHtml(n.contents).slice(0, 300) : undefined,
+    }));
+}
+// ---------------------------------------------------------------------------
+// Formatting
+// ---------------------------------------------------------------------------
+export function fmtPrice(cents, currency = "USD") {
+    const symbol = currency === "USD" ? "$" : `${currency} `;
+    return `${symbol}${(cents / 100).toFixed(2)}`;
+}
+export function formatStoreItem(i) {
+    const price = i.price
+        ? i.price.discount_percent > 0
+            ? `~~${fmtPrice(i.price.initial, i.price.currency)}~~ → **${fmtPrice(i.price.final, i.price.currency)}** (-${i.price.discount_percent}%)`
+            : fmtPrice(i.price.final, i.price.currency)
+        : "no price data";
+    return `[${i.appid}] ${i.name}\n   ${price}\n   https://store.steampowered.com/app/${i.appid}`;
+}
+export function formatAppDetail(a) {
+    const lines = [
+        `[${a.appid}] ${a.name}${a.type ? ` (${a.type})` : ""}`,
+        a.price
+            ? a.price.discountPercent > 0
+                ? `Price: ~~${fmtPrice(a.price.initial)}~~ → ${fmtPrice(a.price.final)} (-${a.price.discountPercent}%)`
+                : `Price: ${fmtPrice(a.price.final)}`
+            : a.isFree
+                ? "Free to play"
+                : "Price unavailable",
+        a.releaseDate ? `Released: ${a.releaseDate}` : "",
+        a.developers.length ? `Developers: ${a.developers.join(", ")}` : "",
+        a.genres.length ? `Genres: ${a.genres.join(", ")}` : "",
+        a.metacritic ? `Metacritic: ${a.metacritic}` : "",
+    ].filter(Boolean);
+    if (a.description)
+        lines.push(`\n${a.description}`);
+    lines.push(`\n${a.url}`);
+    return lines.join("\n");
+}
+function stripHtml(s) {
+    return s
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\[\[([^\]]*)\]\]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+export async function getReviewSummary(appid) {
+    const d = await getJson(`https://store.steampowered.com/appreviews/${appid}?json=1&language=all&purchase_type=all&num_per_page=0`);
+    const q = d.query_summary ?? {};
+    return {
+        total: q.total_reviews ?? 0,
+        positive: q.total_positive ?? 0,
+        negative: q.total_negative ?? 0,
+        score_desc: q.review_score_desc ?? 'unknown',
+    };
+}
+export async function getPlayerCount(appid) {
+    const d = await getJson(`https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?appid=${appid}`);
+    if (d.response?.result !== 1 || d.response?.player_count == null) {
+        throw new SteamError(`No player count for app ${appid}.`);
+    }
+    return d.response.player_count;
+}
+export async function getTopSellers(count) {
+    const d = await getJson(`https://store.steampowered.com/api/featuredcategories/?cc=US&l=en`);
+    return (d.top_sellers?.items ?? []).slice(0, count).map((i) => ({
+        id: i.id, name: i.name, final_price: i.final_price,
+        currency: i.currency, discount_percent: i.discount_percent,
+    }));
+}
+const usd = (cents) => (typeof cents === "number" ? `$${(cents / 100).toFixed(2)}` : "n/a");
+/**
+ * The front page of the Store: what is discounted right now, what released
+ * this week and what is coming. top_sellers is a separate tool; these three
+ * slices were never read.
+ */
+export async function storeHighlights(args) {
+    const limit = Math.min(Math.max(Math.trunc(args.limit ?? 6), 1), 20);
+    const d = await getJson(`${STORE}/featuredcategories/?cc=US&l=en`);
+    const section = (title, items) => {
+        const rows = (items ?? []).slice(0, limit);
+        if (!rows.length)
+            return "";
+        return [
+            `${title} (${rows.length} of ${(items ?? []).length})`,
+            ...rows.map((item, i) => {
+                const cut = item.discount_percent ? `-${item.discount_percent}%` : "";
+                const was = item.original_price && item.final_price ? ` (was ${usd(item.original_price)})` : "";
+                return `  ${i + 1}. ${item.name ?? "?"} — ${usd(item.final_price)}${cut ? ` ${cut}` : ""}${was}${item.id ? ` [${item.id}]` : ""}`;
+            }),
+            "",
+        ].filter((line) => line !== "");
+    };
+    const blocks = [
+        section("On sale now", d.specials?.items),
+        section("New releases", d.new_releases?.items),
+        section("Coming soon", d.coming_soon?.items),
+    ].filter((block) => block.length);
+    if (!blocks.length)
+        throw new Error("Steam returned no featured categories. It is a public endpoint; try again shortly.");
+    return [`Steam store highlights (US store, USD)`, "", ...blocks.flat()].join("\n");
+}
+/**
+ * Checks a list of app ids for a discount, one request each, which is how a
+ * wishlist is reviewed before a sale ends. Steam rejects a multi-id request.
+ */
+export async function salesCheck(args) {
+    const ids = [...new Set((args.appids ?? []).map((id) => Math.trunc(Number(id))).filter((id) => Number.isFinite(id) && id > 0))];
+    if (!ids.length)
+        throw new Error("Give at least one Steam app id, e.g. [620, 440].");
+    if (ids.length > 15)
+        throw new Error("Check at most 15 app ids per call; each one is a request to Steam.");
+    const rows = [];
+    const failed = [];
+    for (const appid of ids) {
+        const d = await getJson(`${STORE}/appdetails?appids=${appid}&cc=US&l=en&filters=price_overview,basic`);
+        const entry = pickApp(d, appid);
+        if (!entry?.name) {
+            failed.push(appid);
+            continue;
+        }
+        rows.push({
+            appid,
+            name: entry.name,
+            // Steam omits price_overview for free-to-play titles, so is_free is the
+            // only signal that a 0 is real and not missing data.
+            price: entry.price_overview?.final ?? (entry.is_free ? 0 : undefined),
+            original: entry.price_overview?.initial,
+            discount: entry.price_overview?.discount_percent,
+        });
+    }
+    const discounted = rows.filter((row) => (row.discount ?? 0) > 0);
+    const free = rows.filter((row) => row.price === 0);
+    const best = [...discounted].sort((a, b) => (b.discount ?? 0) - (a.discount ?? 0))[0];
+    return [
+        `Steam sale check: ${ids.length} app id(s)`,
+        `  ${discounted.length} discounted, ${free.length} free to play, ${rows.length - discounted.length - free.length} at full price`,
+        "",
+        ...rows.map((row) => {
+            const cut = row.discount ? `-${row.discount}%` : "no discount";
+            const price = row.price === 0 ? "free" : usd(row.price);
+            return `  ${row.name} [${row.appid}] — ${price} (${cut})${row.original && row.original !== row.price ? ` | full price ${usd(row.original)}` : ""}`;
+        }),
+        best ? `\nBiggest discount: ${best.name} at -${best.discount}%.` : "\nNothing in this list is on sale.",
+        failed.length ? `\nSteam returned no price data for: ${failed.join(", ")} — the id may be a package, a delisted app or region-locked.` : "",
+    ].filter((line) => line !== "").join("\n");
+}
+/**
+ * Live player counts for several games at once, ranked, which is the honest
+ * measure of what is actually being played right now.
+ */
+export async function playerCountRank(args) {
+    const ids = [...new Set((args.appids ?? []).map((id) => Math.trunc(Number(id))).filter((id) => Number.isFinite(id) && id > 0))];
+    if (!ids.length)
+        throw new Error("Give at least one Steam app id, e.g. [730, 570].");
+    if (ids.length > 15)
+        throw new Error("Rank at most 15 app ids per call; each one is a request to Steam.");
+    const rows = [];
+    const failed = [];
+    for (const appid of ids) {
+        try {
+            const players = await getPlayerCount(appid);
+            rows.push({ appid, players });
+        }
+        catch {
+            failed.push(appid);
+        }
+    }
+    if (!rows.length)
+        throw new Error("Steam returned no live player counts for those app ids.");
+    const ranked = [...rows].sort((a, b) => b.players - a.players);
+    const total = ranked.reduce((sum, row) => sum + row.players, 0);
+    return [
+        `Live player counts (ranked, ${ranked.length} game(s), ${total.toLocaleString()} players together)`,
+        "",
+        ...ranked.map((row, i) => `  ${i + 1}. app ${row.appid} — ${row.players.toLocaleString()} playing now${total ? ` (${Math.round((row.players / total) * 100)}% of the sample)` : ""}`),
+        "",
+        "Counts are concurrent players, not owners, and they move hour to hour.",
+        failed.length ? `No count returned for: ${failed.join(", ")} (the id may not be a game with a public player counter).` : "",
+    ].filter((line) => line !== "").join("\n");
+}
+// ---- muxE tools:
+// Nine existing tools cover discovery and popularity: store search, app
+// details, news, review summaries, player counts, top sellers, store
+// highlights, wishlist sale checks and a player-count ranking. Between them
+// they answer what a game is, what people think of it, and how popular it is.
+//
+// They do not answer the three questions a buyer has immediately before
+// paying: can my machine run it, what does owning all of it actually cost, and
+// how much content is in it. Steam's appdetails response carries all three,
+// and the three new tools read them.
+//
+// Two shapes had to be handled from the live API rather than from the docs. The
+// requirements fields are HTML fragments, so they are stripped to text. And
+// appdetails serves one appid per request: a comma separated list returns HTTP
+// 400, which is why the DLC pricing tool below fetches each id on its own.
+const APP = "https://store.steampowered.com/api/appdetails";
+const H = { "User-Agent": "awesome-mcps/1.0", Accept: "application/json" };
+async function appDetails(appid) {
+    const res = await fetch(`${APP}?appids=${encodeURIComponent(String(appid))}&l=english&cc=us`, {
+        headers: H,
+        signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok)
+        throw new Error(`Steam store error ${res.status} for appid ${appid}`);
+    const body = (await res.json());
+    const entry = body[String(appid)];
+    if (!entry || entry.success !== true || !entry.data)
+        return null;
+    return entry.data;
+}
+function checkAppid(raw) {
+    const n = Math.floor(Number(raw));
+    if (!Number.isFinite(n) || n < 1) {
+        throw new Error(`Give a Steam appid as a positive number. You gave ${typeof raw === "string" ? `"${raw.slice(0, 20)}"` : String(raw)}.`);
+    }
+    return n;
+}
+// The requirements arrive as markup like
+//   <strong>Minimum:</strong><br><ul class="bb_ul"><li>Requires a 64-bit ...
+// so the tags become line breaks before the tags are dropped, or the whole
+// thing collapses into one run of text.
+const str = (v) => (typeof v === "string" ? v : "");
+function cents(data) {
+    const po = data.price_overview;
+    if (!po)
+        return null;
+    const f = po.final_formatted;
+    if (typeof f === "string" && /\$|€|£/.test(f)) {
+        const m = /([\d.,]+)/.exec(f.replace(/[^\d.,]/g, ""));
+        if (m) {
+            const n = Number(m[1].replace(/,/g, ""));
+            if (Number.isFinite(n))
+                return Math.round(n * 100);
+        }
+    }
+    return null;
+}
+export function game_achievements(args) {
+    const appid = checkAppid(args?.appid);
+    return appDetails(appid).then((data) => {
+        if (!data)
+            return `Steam has no store entry for appid ${appid}, so it lists no achievements.`;
+        const name = str(data.name) || `appid ${appid}`;
+        const ach = data.achievements ?? null;
+        if (!ach) {
+            return [
+                `"${name}" (appid ${appid}) has no Steam achievements at all.`,
+                "",
+                "  On the store record that means either the title ships without the achievement system, or it is not a game that uses it.",
+            ].join("\n");
+        }
+        const total = Number(ach.total ?? 0);
+        const shown = Number(ach.shown ?? 0);
+        const highlighted = Array.isArray(ach.highlighted) ? ach.highlighted : [];
+        // hidden is 0 or 1 per achievement, and a hidden one is a secret the store
+        // will not name in advance.
+        const hidden = highlighted.filter((h) => Number(h.hidden ?? 0) === 1).length;
+        const visible = highlighted.length - hidden;
+        const lines = [`Steam achievements for "${name}" (appid ${appid}):`];
+        if (total > 0) {
+            lines.push(`  ${total} achievement${total === 1 ? "" : "s"} in total.`);
+        }
+        else {
+            lines.push("  the store reports an achievement object with a total of zero, which is a known Steam state for titles that removed or never wired up the system.");
+        }
+        if (shown > 0)
+            lines.push(`  ${shown} currently visible on the store page.`);
+        if (highlighted.length) {
+            lines.push(`  ${highlighted.length} are listed with a name, of which ${hidden} are hidden secret${hidden === 1 ? "" : "s"} and ${visible} ${visible === 1 ? "is" : "are"} named.`);
+            lines.push("  the ones Steam will name up front:");
+            for (const h of highlighted.filter((x) => Number(x.hidden ?? 0) !== 1).slice(0, 8)) {
+                lines.push(`    ${(str(h.localized_name) || str(h.name) || "unnamed").slice(0, 60)}`);
+            }
+            if (hidden)
+                lines.push(`  the other ${hidden} are hidden, so their names are not on the store page until they are earned.`);
+        }
+        const cat = data.categories ?? [];
+        const hasMult = cat.some((c) => str(c.description) === "Steam Achievements");
+        if (!hasMult && total > 0)
+            lines.push("  the categories do not include Steam Achievements even though the record lists some, so the store page may not surface them.");
+        lines.push("");
+        lines.push("  The existing game details tool does not report achievements, and the review summary tool reports sentiment rather than the achievement list.");
+        return lines.join("\n");
+    });
+}
+const STEAM_DETAIL = "https://store.steampowered.com/api/appdetails";
+const stripMarkup = (html) => String(html ?? "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(li|p|div)>/gi, "\n")
+    .replace(/<li[^>]*>/gi, "  - ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n\s*\n+/g, "\n")
+    .trim();
+async function steamRecord(appid, filters) {
+    const id = String(appid ?? "").trim();
+    if (!/^\d{1,10}$/.test(id))
+        throw new SteamError(`"${appid}" is not a Steam appid; those are the digits in store.steampowered.com/app/<id>/.`);
+    const url = `${STEAM_DETAIL}?appids=${id}&cc=US&l=en${filters ? `&filters=${filters}` : ""}`;
+    const payload = await getJson(url);
+    const entry = payload?.[id];
+    if (!entry?.success || !entry.data)
+        throw new SteamError(`Steam has no store entry for app ${id}; it may be region-locked, delisted, or a package rather than an app.`);
+    return entry.data;
+}
+/** Requirements and platform facts, with the store's HTML reduced to text. */
+export async function gameRequirements(args) {
+    const data = await steamRecord(args?.appid);
+    const platforms = data.platforms ?? {};
+    const onPlatforms = [platforms.windows && "Windows", platforms.mac && "macOS", platforms.linux && "Linux"].filter(Boolean);
+    const block = (label, value) => {
+        const text = stripMarkup(value?.minimum ? `${value.minimum}` : "");
+        const rec = stripMarkup(value?.recommended ? `${value.recommended}` : "");
+        const lines = [`  ${label} minimum:`];
+        lines.push(...(text ? text.split("\n").slice(0, 14).map((l) => `    ${l}`) : ["    not published"]));
+        lines.push(`  ${label} recommended:`);
+        lines.push(...(rec ? rec.split("\n").slice(0, 14).map((l) => `    ${l}`) : ["    not published"]));
+        return lines;
+    };
+    const languages = stripMarkup(data.supported_languages);
+    const rows = [
+        `${data.name ?? `app ${args?.appid}`} — requirements (app ${args?.appid})`,
+        `  platforms        ${onPlatforms.length ? onPlatforms.join(", ") : "none declared"}`,
+        `  required age     ${data.required_age ? `${data.required_age}+` : "not restricted"}`,
+        `  type             ${data.type ?? "not reported"}`,
+        "",
+        ...(platforms.windows ? block("Windows", data.pc_requirements) : ["  Windows: not sold for this platform"]),
+        "",
+        ...(platforms.mac ? block("macOS", data.mac_requirements) : ["  macOS: not sold for this platform"]),
+        "",
+        ...(platforms.linux ? block("Linux", data.linux_requirements) : ["  Linux: not sold for this platform"]),
+        "",
+        `  languages        ${languages ? languages.replace(/\n/g, "; ").slice(0, 400) : "not published"}`,
+        "",
+        "note: these are the developer's own published requirements, which are often the minimum to launch rather than to play well, and Steam does not verify them. A title that lists no requirement block has simply not filled the field in.",
+    ];
+    return rows.join("\n");
+}
+/** Base game plus every individually priced downloadable item, against the editions. */
+export async function dlcCost(args) {
+    const data = await steamRecord(args?.appid);
+    const currency = data.price_overview?.currency ?? "USD";
+    const money = (cents) => (Number.isFinite(Number(cents)) ? `${(Number(cents) / 100).toFixed(2)} ${currency}` : "no price in this region");
+    const base = data.price_overview?.final;
+    const baseLine = data.is_free ? "free to play" : data.price_overview ? money(base) : "no price published";
+    const ids = Array.isArray(data.dlc) ? data.dlc : [];
+    const priced = [];
+    for (const id of ids.slice(0, 25)) {
+        try {
+            const dlc = await steamRecord(id, "basic,price_overview");
+            priced.push({ id, name: dlc.name ?? `app ${id}`, cents: dlc.price_overview?.final ?? null, free: dlc.is_free === true });
+        }
+        catch {
+            priced.push({ id, name: `app ${id}`, cents: null, free: false });
+        }
+    }
+    const editions = [];
+    for (const group of data.package_groups ?? []) {
+        for (const sub of group.subs ?? []) {
+            if (!sub?.option_text)
+                continue;
+            editions.push({ text: stripMarkup(sub.option_text), cents: Number(sub.price_in_cents_with_discount) || null });
+        }
+    }
+    const pricedDlc = priced.filter((d) => Number.isFinite(d.cents));
+    const dlcTotal = pricedDlc.reduce((sum, d) => sum + d.cents, 0);
+    const unpriced = priced.filter((d) => !Number.isFinite(d.cents));
+    const allIn = Number.isFinite(Number(base)) ? Number(base) + dlcTotal : null;
+    const rows = [
+        `${data.name ?? `app ${args?.appid}`} — what the whole thing costs`,
+        `  base game        ${baseLine}`,
+        `  separate DLC     ${priced.length} item(s), ${pricedDlc.length} priced${unpriced.length ? `, ${unpriced.length} with no individual price` : ""}`,
+        `  DLC total        ${money(dlcTotal)}`,
+        allIn === null ? "  base + all DLC   cannot total without a base price" : `  base + all DLC   ${money(allIn)}`,
+    ];
+    if (editions.length) {
+        rows.push("", "Editions Steam sells as one purchase:");
+        for (const e of editions)
+            rows.push(`  ${money(e.cents).padEnd(14)} ${e.text.slice(0, 90)}`);
+        if (allIn !== null) {
+            const fullest = editions.filter((e) => Number.isFinite(e.cents)).sort((a, b) => b.cents - a.cents)[0];
+            if (fullest)
+                rows.push("", allIn > fullest.cents
+                    ? `Buying the base plus every DLC separately costs ${money(allIn - fullest.cents)} more than the fullest edition at ${money(fullest.cents)}.`
+                    : `Buying the base plus every DLC separately is ${money(fullest.cents - allIn)} cheaper than the fullest edition at ${money(fullest.cents)}.`);
+        }
+    }
+    else {
+        rows.push("", "Steam publishes no packaged edition for this title in this region.");
+    }
+    if (priced.length) {
+        rows.push("", "Individually priced DLC:");
+        for (const d of priced.slice(0, 25))
+            rows.push(`  ${money(d.cents).padEnd(14)} ${d.name.slice(0, 80)}`);
+        if (ids.length > 25)
+            rows.push(`  ... ${ids.length - 25} further DLC item(s) not priced here`);
+    }
+    rows.push("", "note: prices are the US storefront's and ignore sales, bundles and regional pricing. A DLC with no individual price is usually only sold inside a package, so the base + DLC total understates what a completionist would pay — the editions above are the accurate ceiling.");
+    return rows.join("\n");
+}

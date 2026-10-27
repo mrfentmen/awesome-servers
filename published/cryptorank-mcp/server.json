@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/cryptorank-mcp",
+  "description": "Crypto rankings from the public CryptoRank API. No key required.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-servers",
+    "source": "github"
+  },
+  "version": "1.0.9",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "cryptorank-mcp",
+      "version": "1.0.9",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

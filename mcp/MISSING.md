@@ -1,4 +1,4 @@
-# Missing MCP servers — research log (public; 68 monetizable servers moved to private premium-mcps 2026-09-24)
+# Missing MCP servers — research log (public; 68 monetizable servers live in the published snapshot since 2026-09-24)
 
 Living list of MCP servers that do **not** exist yet (verified against the MCP
 registry, npm, GitHub and the web), plus what was checked and skipped and why.
@@ -47,8 +47,7 @@ the key as username, test mode default). Checked clean the same day: no
 first-party MCP servers from ipdata (org ships client libraries only),
 NeverBounce, or DocRaptor, and no npm MCP packages under those plain names.
 
-Skipped in the same sweep — covered: USPS (our own `usps-mcp` already in
-premium-mcps), Ticketmaster Discovery (@delorenj/mcp-server-ticketmaster +
+Skipped in the same sweep — covered: USPS (our own `usps-mcp` already in published snapshot), Ticketmaster Discovery (@delorenj/mcp-server-ticketmaster +
 @pipeworx/mcp-ticketmaster), 17TRACK (mcp-server-17track), Geocodio
 (@pipeworx/mcp-geocodio), Ecwid (usefulapi hosted MCP), Clover + Braintree
 (multiple community servers each).
@@ -63,7 +62,7 @@ key; 12 tools over Pelias geocoding/search/autocomplete/reverse/structured,
 Valhalla directions/isochrones/route-matrix/elevation, timezone lookup).
 Degraded-fork angle checked and skipped honestly: the near-candidates all
 turn out covered — OpenLigaDB (@pipeworx + our own openligadb-soccer-mcp),
-Visual Crossing (@pipeworx), SeatGeek (our own seatgeek-mcp in premium-mcps),
+Visual Crossing (@pipeworx), SeatGeek (our own seatgeek-mcp in the published snapshot),
 Fastly (@fastly/mcp official), Regulations.gov (pipeworx + @blen + cyanheads).
 OpenUV is genuinely uncovered on npm but ships only two real endpoints —
 logged as a thin target rather than padded to 10 tools.
@@ -214,7 +213,7 @@ Auth = free key unless noted keyless. Verify registry+npm+web before building.
 - EDA: OSH Park (API access by support request only, skip), Aisler (Part API key on request via form, no public docs, skip), SnapEDA/SnapMagic (API on request via form, no public docs, skip), Ultra Librarian (enterprise CAD-vendor integrations only, no public API, skip), SamacSys/CSE (subscription API + community pcbparts-mcp, skip)
 - Self-hosted docs: Docspell (built), Teedy (built), FileRun (built), ownCloud (built), Seafile (built), Pydio (built), Resilio (Connect API enterprise-licensed, Sync no API, skip), Kopia (built)
 - NYC/monetization research (2026-09-24): Socrata TAKEN (cyanheads 6-tool + pipeworx cityofnewyork pack + our nyc311-mcp) — skip; NYT contested (jeffmm, pipeworx, cooking — all ~1 star) — low priority; KITH/Stadium/Glossier/ALD WIDE OPEN (no npm/registry/GitHub hits, Shopify JSON live) — BUILD; MoMA open but API key-gated/unclear (/collection errors, home page exists) — secondary; B&H no self-serve API (affiliate-gated; scraper actors exist) — skip; Adorama/TodayTix/Warby no public API found — skip.
-- Marketplace validity fix (2026-09-24): all 70 premium pkgs republished locally w/ repository.url=premium-mcps.git (npm metadata fixed; 68 OK 0 FAIL). Remaining: listing GitHub URLs must be premium-mcps tree paths + EXACT npm names (scoped where scoped: @mrfentmen/ashby, beehiiv, coinbase, etsy, greenhouse, helius, job-search, loops, mixpanel, pinterest, steam, wise, yfinance, youtrack, alphavantage + twilio-mcp-server) then rescan. CI on premium-mcps is scheduler-blocked (even hello-world fails; billing/quota?) — publishing done locally via ~/.npmrc. Mapping: /tmp/listing-map.csv (regenerate if needed).
+- Marketplace validity fix (2026-09-24): all 70 published packages republished locally w/ repository.url=awesome-servers.git (npm metadata fixed; 68 OK 0 FAIL). Remaining: listing GitHub URLs must be published snapshot tree paths + EXACT npm names (scoped where scoped: @mrfentmen/ashby, beehiiv, coinbase, etsy, greenhouse, helius, job-search, loops, mixpanel, pinterest, steam, wise, yfinance, youtrack, alphavantage + twilio-mcp-server) then rescan. CI on published snapshot is scheduler-blocked (even hello-world fails; billing/quota?) — publishing done locally via ~/.npmrc. Mapping: /tmp/listing-map.csv (regenerate if needed).
 - Research: Mendeley (taken), SciFlow (enterprise, skip), Curvenote (CLI only, skip), PubPub (SDK only, skip)
 - Scheduling: Amie (OFFICIAL MCP, skip), Ellie (first-party MCP beta, skip), Sunsama (no official API, unofficial wrappers only, skip), SavvyCal (built)
 - Design/social: Penpot (paths uncertain, skip), Canva (official, skip), VK (taken 2x, skip), Minds (no official public API — session/XSRF only, skip), Framer (dead host, skip)
@@ -244,4 +243,4 @@ Auth = free key unless noted keyless. Verify registry+npm+web before building.
 - A2A: no central marketplace found (agent cards + awesome lists only) — sell via same direct channels.
 - ACP = two protocols: Zed Agent Client Protocol (registry via GitHub PR, free, curated, auth required) vs IBM BeeAI ACP (self-hosted /agents + BeeAI Platform). Confirm which before listing.
 - NEXT BUILDS (demand cats): jobs wave (Greenhouse/Lever/Ashby/SmartRecruiters public keyless ATS APIs), sports odds (The Odds API free NBA+MLB / BetStack free-forever), MoMA (gated, secondary), more Shopify streetwear (Supreme/Flight Club/Ben Baller unchecked).
-- Wave-2 money move (2026-09-24): 34 more to premium-mcps (crypto/data, dev SaaS, monitoring, analytics, validation, books, business SaaS, security, podcast hosting). Public 727 -> 693, premium 70 -> 104. All republished w/ premium repo URLs (34 OK 0 FAIL).
+- Wave-2 money move (2026-09-24): 34 more to published snapshot (crypto/data, dev SaaS, monitoring, analytics, validation, books, business SaaS, security, podcast hosting). Public 727 -> 693, premium 70 -> 104. All republished w/ premium repo URLs (34 OK 0 FAIL).

@@ -1,0 +1,40 @@
+{
+  "name": "usps-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for USPS shipping, tracking, and address validation.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/usps-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "usps-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "/opt/homebrew/bin/tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && /opt/homebrew/bin/tsc -p tsconfig.json && node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "usps",
+    "shipping",
+    "tracking",
+    "address",
+    "mail"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,0 +1,15 @@
+# publicwww-mcp
+
+Search PublicWWW (paid API key; set PUBLICWWW_API_KEY): sites containing a snippet, URL export.
+
+## Tools
+
+- `search_snippets` — URLs of sites containing a code snippet.
+
+## Source
+
+[publicwww-mcp](https://github.com/mrfentmen/awesome-servers)
+
+## Licence
+
+Every tool in this package is free: no licence key, no paid tier, no hosted gateway. Everything runs locally.
