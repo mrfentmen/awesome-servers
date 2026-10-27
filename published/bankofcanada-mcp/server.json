@@ -6,12 +6,12 @@
     "url": "https://github.com/mrfentmen/bankofcanada-mcp",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.5",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@mrfentmen/bankofcanada-mcp",
-      "version": "1.0.0",
+      "version": "1.0.5",
       "transport": {
         "type": "stdio"
       }

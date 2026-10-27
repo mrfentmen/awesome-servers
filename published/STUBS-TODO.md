@@ -1,18 +1,16 @@
 # Tools still answering "Not yet implemented"
 
-1023 tool(s) across 515 package(s) still ship a stub body.
+1021 tool(s) across 513 package(s) still ship a stub body.
 Each was a gateway-only tool whose implementation never existed in the package,
 so the body has to be written against the live service and checked with a real
-call before publishing. 12 package(s) are already fixed.
+call before publishing. 14 package(s) are already fixed.
 
 | package | tools | has src |
 | --- | --- | --- |
 | `albiononline-mcp` | summary | no |
 | `archive-org-mcp` | timeline | yes |
 | `artifact-gauge-mcp` | stats | no |
-| `artifact-hub-mcp` | detail | no |
 | `bandcamp-mcp` | details | no |
-| `bankofcanada-mcp` | range | no |
 | `blizzard-mcp` | weights | no |
 | `browser-mcp` | records | no |
 | `census-geo-mcp` | geographies | no |

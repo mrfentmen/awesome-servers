@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { list, rate } from "./api.js";
+import { list, rate, rateRange } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -39,9 +39,8 @@ export function createServer() {
         inputSchema: z.object({ series: z.string().describe("Series code, e.g. FXUSDCAD."), start: z.string().describe("Start date YYYY-MM-DD."), end: z.string().describe("End date YYYY-MM-DD."), limit: z.number().describe("Max observations.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement range locally (paywall removed)
         try {
-            return textError("Not yet implemented: range");
+            return text(await rateRange(args));
         }
         catch (e) {
             return textError(String(e));

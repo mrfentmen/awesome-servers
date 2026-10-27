@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { search, hubStats } from "./api.js";
+import { search, hubStats, packageDetail } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -26,9 +26,8 @@ export function createServer() {
         inputSchema: z.object({ kind: z.string().describe("Package kind like helm, olm, operatorhub or container."), repository: z.string().describe("Repository name, like prometheus-community."), name: z.string().describe("Package name, like prometheus.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement detail locally (paywall removed)
         try {
-            return textError("Not yet implemented: detail");
+            return text(await packageDetail(args));
         }
         catch (e) {
             return textError(String(e));

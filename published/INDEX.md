@@ -14,7 +14,7 @@ overwrites `dist/` from the registry tarballs.
 - scoped under `@mrfentmen`: **195**
 - total size: **15.7 MB**
 - carrying a licence gate (`MCP_LICENSE_KEY`): **1**
-- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **515**
+- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **513**
 - whose `src/` still holds the pre-fix source (not shipped, cannot rebuild `dist/`): **36**
 
 | package | version | src? | gate | stubs |
@@ -54,7 +54,7 @@ overwrites `dist/` from the registry tarballs.
 | `archlinux-mcp` | 1.0.5 | no |  | 2 |
 | `art-institute-mcp` | 1.0.6 | yes |  |  |
 | `artifact-gauge-mcp` | 1.0.6 | no |  | 1 |
-| `@mrfentmen/artifact-hub-mcp` | 1.0.5 | no |  | 1 |
+| `@mrfentmen/artifact-hub-mcp` | 1.0.6 | no |  |  |
 | `arweave-mcp` | 1.1.2 | no |  |  |
 | `arxiv-mcp` | 1.1.0 | no |  |  |
 | `@mrfentmen/ashby-mcp` | 1.1.1 | no |  |  |
@@ -67,7 +67,7 @@ overwrites `dist/` from the registry tarballs.
 | `baconipsum-mcp` | 1.0.6 | no |  |  |
 | `balenciaga-mcp` | 1.1.1 | no |  |  |
 | `@mrfentmen/bandcamp-mcp` | 1.0.5 | no |  | 1 |
-| `@mrfentmen/bankofcanada-mcp` | 1.0.4 | no |  | 1 |
+| `@mrfentmen/bankofcanada-mcp` | 1.0.5 | no |  |  |
 | `barcode-mcp` | 1.0.5 | no |  |  |
 | `bart-mcp` | 1.0.5 | no |  | 2 |
 | `baserow-mcp` | 1.0.6 | no |  |  |

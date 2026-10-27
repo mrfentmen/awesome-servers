@@ -66,3 +66,39 @@ export async function hubStats(_args = {}) {
     }
     return lines.join('\n');
 }
+
+const HUB = 'https://artifacthub.io/api/v1';
+export async function packageDetail(args = {}) {
+    const kind = String(args?.kind ?? '').trim().toLowerCase();
+    const repository = String(args?.repository ?? '').trim().toLowerCase();
+    const name = String(args?.name ?? '').trim().toLowerCase();
+    if (!/^[a-z0-9-]+$/.test(kind))
+        throw new Error('Kind looks like helm, olm, operatorhub or container.');
+    if (!/^[a-z0-9._-]+$/.test(repository) || !/^[a-z0-9._-]+$/.test(name))
+        throw new Error('Repository and name look like prometheus-community and prometheus.');
+    const url = `${HUB}/packages/${kind}/${repository}/${name}`;
+    const res = await fetch(url, {
+        headers: { 'User-Agent': 'mrfentmen-artifact-hub-mcp/1.0', Accept: 'application/json' },
+        signal: AbortSignal.timeout(30000),
+    });
+    if (res.status === 404)
+        throw new Error(`Artifact Hub has no ${kind} package ${repository}/${name}`);
+    if (!res.ok)
+        throw new Error(`Artifact Hub returned ${res.status}`);
+    const p = (await res.json());
+    const maintainers = (p.maintainers ?? []).map((m) => m.name ?? m.email).filter(Boolean);
+    const versions = (p.available_versions ?? []).slice(0, 6);
+    const repo = p.repository ?? {};
+    return [
+        `${p.name} ${p.version ?? ''} — ${kind} package in ${repo.name ?? repository}`,
+        p.description ? String(p.description).trim().slice(0, 300) : '',
+        `Licence: ${p.license ?? 'not stated'} · signed ${p.signed ? 'yes' : 'no'} · deprecated ${p.deprecated ? 'yes' : 'no'}`,
+        `Subscriptions: ${p.stats?.subscriptions ?? '?'} · webhooks ${p.stats?.webhooks ?? '?'}`,
+        maintainers.length ? `Maintainers: ${maintainers.slice(0, 8).join(', ')}` : 'Maintainers: none listed',
+        `Repository: ${repo.url ?? '?'}${repo.organization_name ? ` (${repo.organization_name})` : ''}`,
+        versions.length ? `Newest versions: ${versions.map((v) => v.version).join(', ')}` : '',
+        p.home_url ? `Home: ${p.home_url}` : '',
+        p.source_url ? `Source: ${p.source_url}` : '',
+        `Page: https://artifacthub.io/packages/${kind}/${repository}/${name}`,
+    ].filter(Boolean).join('\n');
+}
