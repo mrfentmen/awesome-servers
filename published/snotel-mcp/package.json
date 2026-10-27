@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/snotel-mcp",
+  "version": "1.0.1",
+  "description": "USDA SNOTEL and SCAN stations: snow water equivalent, snow depth and temperature readings - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/snotel-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "snotel-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "snotel",
+    "snow",
+    "snowpack",
+    "usda",
+    "water",
+    "drought",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -279,3 +279,42 @@ checked against Python's `tomllib` on 33 documents - 11 parse cases, 4 emitter r
 Overlap worth knowing: `aviation-weather-mcp` already sat in the snapshot with two stub
 tools; `metar-mcp` implements the same NOAA Aviation Weather data for real. The stub
 package was left untouched.
+
+## Wave 188 - 50 keyless servers built 2026-10-27
+
+Each server wraps a live public source or a small local computation. Every tool was
+smoke-run before publication: the upstream answered a live keyless request during the run
+(or the local input was exercised end to end), and both the official MCP registry and this
+repo's own `published/` tree were searched for the same domain first.
+
+- research and life sciences: `chembl-mcp` (bioactivity), `clinvar-mcp` (variant
+  interpretations), `dailymed-mcp` (FDA drug labels), `ensembl-mcp` (genomes),
+  `interpro-mcp` (protein families), `mygene-mcp` (gene annotations), `ncbi-gene-mcp`
+  (NCBI Gene), `pubchem-compound-mcp` (compounds), `string-db-mcp` (interaction
+  networks), `npi-registry-mcp` (CMS providers), `haveibeenpwned-mcp` (breach catalogue)
+- money and state: `bls-mcp` (US labor statistics), `sec-edgar-mcp` (filings and XBRL),
+  `eurostat-mcp` (EU statistics), `fdic-mcp` (US banks), `uk-parliament-mcp` (members and
+  bills), `unhcr-mcp` (displacement statistics)
+- earth, weather and space: `carbon-intensity-mcp` (UK grid), `drought-mcp` (US Drought
+  Monitor), `nasa-power-mcp` (climate series), `nasa-neo-mcp` (near-Earth asteroids),
+  `ndbc-mcp` (ocean buoys), `snotel-mcp` (snowpack), `volcano-mcp` (Smithsonian GVP),
+  `nominatim-mcp` (OSM geocoding), `zippopotam-mcp` (postal codes)
+- fun and culture: `bible-api-mcp`, `dadjoke-mcp`, `jokeapi-mcp`, `lorcana-mcp`,
+  `open5e-mcp` (D&D 5e SRD), `openbeautyfacts-mcp`, `openligadb-mcp` (German football),
+  `poetrydb-mcp`, `quran-mcp`, `randomuser-mcp`, `rickandmorty-mcp`, `scryfall-mcp` (MTG),
+  `fruityvice-mcp`, `lichess-stats-mcp`, `blockchain-info-mcp`, `dictionary-mcp`
+- local compute, no network: `cron-schedule-mcp`, `csv-tools-mcp`, `hash-mcp`, `jwt-mcp`,
+  `numbers-mcp`, `semver-mcp`, `text-diff-mcp`, `uri-mcp`
+
+`semver-mcp` re-implements range semantics for the wave; its parser was checked against a
+corpus of `^`, `~`, hyphen and `||` ranges and the two edge cases it got wrong were fixed
+before publication.
+
+Overlap worth knowing: 23 of these slugs share their domain with an older, higher-versioned
+package already in the snapshot (`bls-mcp`, `blockchain-info-mcp`, `carbon-intensity-mcp`,
+`chembl-mcp`, `clinvar-mcp`, `dadjoke-mcp`, `dailymed-mcp`, `dictionary-mcp`, `ensembl-mcp`,
+`eurostat-mcp`, `fdic-mcp`, `fruityvice-mcp`, `interpro-mcp`, `jokeapi-mcp`, `mygene-mcp`,
+`nasa-power-mcp`, `nominatim-mcp`, `open5e-mcp`, `quran-mcp`, `randomuser-mcp`, `scryfall-mcp`,
+`semver-mcp`, `string-db-mcp`). Sixteen of those older packages still answer a tool with
+`Not yet implemented`; the campaign to implement them in place is separate, so those
+packages were left untouched here.

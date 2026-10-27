@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/semver-mcp",
+  "version": "1.0.1",
+  "description": "Semantic version toolkit: parse, compare, sort and range-check versions (npm-style ^ ~ and hyphen ranges) - fully local.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/semver-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "semver-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "semver",
+    "version",
+    "release",
+    "npm",
+    "packaging",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

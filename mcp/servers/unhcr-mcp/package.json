@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/unhcr-mcp",
+  "version": "1.0.1",
+  "description": "UNHCR forced displacement statistics: refugees, asylum seekers and stateless people by origin or country of asylum - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/unhcr-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "unhcr-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "unhcr",
+    "refugees",
+    "displacement",
+    "humanitarian",
+    "migration",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

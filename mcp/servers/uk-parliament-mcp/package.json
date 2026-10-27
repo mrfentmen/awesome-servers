@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/uk-parliament-mcp",
+  "version": "1.0.1",
+  "description": "UK Parliament open data: find MPs and Lords, read member profiles, and search bills with their stages - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/uk-parliament-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "uk-parliament-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "parliament",
+    "uk",
+    "politics",
+    "members",
+    "bills",
+    "government",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

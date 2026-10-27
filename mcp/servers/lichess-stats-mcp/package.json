@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/lichess-stats-mcp",
+  "version": "1.0.0",
+  "description": "Lichess accounts and puzzles: player ratings, recent activity, online status and the puzzle of the day - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/lichess-stats-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "lichess-stats-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "chess",
+    "lichess",
+    "puzzles",
+    "ratings",
+    "games",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

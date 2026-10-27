@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/csv-tools-mcp",
+  "version": "1.0.0",
+  "description": "CSV work offline: column summary with detected types, rows as JSON, and simple filtering by column value - fully local.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/csv-tools-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "csv-tools-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "csv",
+    "data",
+    "spreadsheet",
+    "parse",
+    "table",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

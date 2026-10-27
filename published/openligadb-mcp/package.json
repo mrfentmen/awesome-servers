@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/openligadb-mcp",
+  "version": "1.0.1",
+  "description": "German football results from OpenLigaDB: available leagues, fixtures by matchday and the current season - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/openligadb-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "openligadb-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "football",
+    "bundesliga",
+    "sports",
+    "results",
+    "germany",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

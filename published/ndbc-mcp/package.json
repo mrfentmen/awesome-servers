@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/ndbc-mcp",
+  "version": "1.0.1",
+  "description": "NDBC ocean buoys and coastal stations: latest wind, wave and water temperatures, plus recent history - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/ndbc-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "ndbc-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "noaa",
+    "buoys",
+    "ocean",
+    "waves",
+    "marine",
+    "weather",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/poetrydb-mcp",
+  "version": "1.0.1",
+  "description": "Public-domain poetry from PoetryDB: find poems by author or title, read the lines, or pull a random one - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/poetrydb-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "poetrydb-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "poetry",
+    "poems",
+    "literature",
+    "shakespeare",
+    "books",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

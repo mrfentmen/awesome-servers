@@ -5,7 +5,7 @@ can still be built, run and published on its own.
 
 | Subtree | What it holds | Run one |
 |---|---|---|
-| [`mcp/`](mcp) | 219 TypeScript MCP servers, plus 1012 published packages in [`published/`](published) | `cd mcp/servers/<slug> && npm install && npm run build` |
+| [`mcp/`](mcp) | 269 TypeScript MCP servers, plus 1039 published packages in [`published/`](published) | `cd mcp/servers/<slug> && npm install && npm run build` |
 | [`acp/`](acp) | 79 Python ACP agents | `python3 acp/agents/<name>/agent.py` |
 | [`a2a/`](a2a) | 37 Python A2A servers plus the shared `a2a_kit` | `python3 a2a/servers/<name>/server.py` |
 | [`watchd/`](watchd) | a threshold watcher that runs the feeds between editor sessions | `python3 watchd/watchd.py --config conditions.json --loop` |
@@ -32,7 +32,7 @@ domain, and the research logs record what was found and why it still counted as 
 [`mcp/MISSING.md`](mcp/MISSING.md), [`acp/MISSING.md`](acp/MISSING.md) and
 [`a2a/docs/`](a2a/docs). Highlights:
 
-* The MCP side holds TypeScript servers, one npm package each, and 1012 published packages under
+* The MCP side holds TypeScript servers, one npm package each, and 1039 published packages under
   `published/`; mcp/MISSING.md
   documents the check that preceded every build: what was searched, what was skipped and why
   the domain still counted as uncovered.
@@ -103,7 +103,7 @@ and it federates across the two repos live.
 ## Published snapshot (`published/`)
 
 `published/` holds one directory per npm package, byte-for-byte what the registry
-serves: 1012 packages, every version matching npm `latest`.
+serves: 1039 packages, every version matching npm `latest`.
 
 - `published/INDEX.md` is generated from the tree by `python3 scripts/index-published.py`.
 - `scripts/sync-published-snapshot.py` re-downloads every package from npm; run it only
