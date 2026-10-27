@@ -1,0 +1,8 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/unicode-security-mcp",
+  "description": "Local checks for Unicode confusables, mixed scripts, invisible controls, and suspicious identifiers.",
+  "repository": { "url": "https://github.com/mrfentmen/unicode-security-mcp", "source": "github" },
+  "version": "1.0.0",
+  "packages": [{ "registryType": "npm", "identifier": "unicode-security-mcp", "version": "1.0.0", "transport": { "type": "stdio" } }]
+}

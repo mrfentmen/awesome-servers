@@ -1,0 +1,8 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/toolchain-lens-mcp",
+  "description": "Local explanation of reproducibility signals and toolchain contradictions without exact versions or secret values.",
+  "repository": { "url": "https://github.com/mrfentmen/toolchain-lens-mcp", "source": "github" },
+  "version": "1.0.0",
+  "packages": [{ "registryType": "npm", "identifier": "toolchain-lens-mcp", "version": "1.0.0", "transport": { "type": "stdio" } }]
+}

@@ -1,0 +1,8 @@
+const API = "https://www.wikidata.org/w/api.php"
+const SPARQL = "https://query.wikidata.org/sparql"
+const H = { "User-Agent": "mrfentmen-wikidata-mcp/1.0 (https://github.com/mrfentmen)" }
+export class WikidataError extends Error {}
+export async function search(query: string) { const u = new URL(API); Object.entries({ action: "wbsearchentities", search: query, language: "en", format: "json", limit: "10" }).forEach(([k, v]) => u.searchParams.set(k, v)); const r = await fetch(u, { headers: H, signal: AbortSignal.timeout(20000) }); if (!r.ok) throw new WikidataError(`Wikidata error ${r.status}`); return r.json() }
+export async function entity(id: string) { const u = new URL(API); Object.entries({ action: "wbgetentities", ids: id, languages: "en", format: "json", props: "labels|descriptions|claims|sitelinks" }).forEach(([k, v]) => u.searchParams.set(k, v)); const r = await fetch(u, { headers: H, signal: AbortSignal.timeout(20000) }); if (!r.ok) throw new WikidataError(`Wikidata error ${r.status}`); return r.json() }
+export async function sparql(query: string) { if (query.length > 8000 || /SERVICE|LOAD|INSERT|DELETE|CLEAR|DROP|CREATE|WITH/i.test(query)) throw new WikidataError("Only bounded read-only SPARQL is allowed; query is too large or contains a prohibited operation."); const u = new URL(SPARQL); u.searchParams.set("query", query); u.searchParams.set("format", "json"); const r = await fetch(u, { headers: { ...H, Accept: "application/sparql-results+json" }, signal: AbortSignal.timeout(60000) }); if (!r.ok) throw new WikidataError(`Wikidata SPARQL error ${r.status}`); return r.json() }
+export function format(x: unknown) { return JSON.stringify(x, null, 2).slice(0, 16000) }
