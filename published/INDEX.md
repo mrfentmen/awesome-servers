@@ -12,9 +12,9 @@ overwrites `dist/` from the registry tarballs.
 
 - packages: **960**
 - scoped under `@mrfentmen`: **195**
-- total size: **15.6 MB**
-- carrying a licence gate (`MCP_LICENSE_KEY`): **2**
-- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **526**
+- total size: **15.7 MB**
+- carrying a licence gate (`MCP_LICENSE_KEY`): **1**
+- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **518**
 - whose `src/` still holds the pre-fix source (not shipped, cannot rebuild `dist/`): **36**
 
 | package | version | src? | gate | stubs |
@@ -52,7 +52,7 @@ overwrites `dist/` from the registry tarballs.
 | `arbeitnow-mcp` | 1.1.1 | no |  |  |
 | `archive-org-mcp` | 1.0.5 | yes |  | 1 |
 | `archlinux-mcp` | 1.0.5 | no |  | 2 |
-| `art-institute-mcp` | 1.0.5 | yes |  | 1 |
+| `art-institute-mcp` | 1.0.6 | yes |  |  |
 | `artifact-gauge-mcp` | 1.0.6 | no |  | 1 |
 | `@mrfentmen/artifact-hub-mcp` | 1.0.5 | no |  | 1 |
 | `arweave-mcp` | 1.1.2 | no |  |  |
@@ -64,7 +64,7 @@ overwrites `dist/` from the registry tarballs.
 | `avatar-mcp` | 1.0.5 | no |  | 2 |
 | `avianne-mcp` | 1.1.2 | no |  |  |
 | `@mrfentmen/aviation-weather-mcp` | 1.0.6 | no |  | 2 |
-| `baconipsum-mcp` | 1.0.5 | no |  | 1 |
+| `baconipsum-mcp` | 1.0.6 | no |  |  |
 | `balenciaga-mcp` | 1.1.1 | no |  |  |
 | `@mrfentmen/bandcamp-mcp` | 1.0.5 | no |  | 1 |
 | `@mrfentmen/bankofcanada-mcp` | 1.0.4 | no |  | 1 |
@@ -184,7 +184,7 @@ overwrites `dist/` from the registry tarballs.
 | `convertkit-mcp` | 1.0.8 | no |  |  |
 | `@mrfentmen/core-mcp` | 1.0.4 | no |  | 2 |
 | `countriesnow-mcp` | 1.0.5 | yes |  | 1 |
-| `countryflags-mcp` | 1.0.5 | no |  | 1 |
+| `countryflags-mcp` | 1.0.6 | no |  |  |
 | `@mrfentmen/court-records-mcp` | 1.1.0 | no |  |  |
 | `courtlistener-mcp` | 1.1.0 | no |  |  |
 | `coverartarchive-mcp` | 1.0.5 | no |  | 2 |
@@ -205,13 +205,13 @@ overwrites `dist/` from the registry tarballs.
 | `dailymed-mcp` | 1.0.5 | no |  | 2 |
 | `dailymotion-mcp` | 1.0.5 | no |  | 2 |
 | `data-gouv-mcp` | 1.0.5 | no |  | 2 |
-| `data-gov-uk-mcp` | 1.0.5 | no |  | 1 |
+| `data-gov-uk-mcp` | 1.0.6 | no |  |  |
 | `datacite-mcp` | 1.0.5 | no |  | 2 |
 | `datahub-countries-mcp` | 1.0.5 | no |  | 2 |
 | `@mrfentmen/datamuse-mcp` | 1.0.5 | no |  | 2 |
 | `db-ip-mcp` | 1.0.5 | no |  | 1 |
 | `dblp-mcp` | 1.0.4 | no |  |  |
-| `deck-of-cards-mcp` | 1.0.5 | no |  | 1 |
+| `deck-of-cards-mcp` | 1.0.6 | no |  |  |
 | `deepgram-mcp` | 1.0.7 | no |  |  |
 | `deezer-mcp` | 1.0.5 | no |  | 2 |
 | `@mrfentmen/defillama-mcp` | 1.1.2 | yes |  |  |
@@ -223,7 +223,7 @@ overwrites `dist/` from the registry tarballs.
 | `deribit-mcp` | 1.1.1 | no |  |  |
 | `destiny2-mcp` | 1.0.3 | no |  |  |
 | `deviantart-mcp` | 1.0.3 | no |  |  |
-| `devrant-mcp` | 1.0.5 | no |  | 1 |
+| `devrant-mcp` | 1.0.6 | no |  |  |
 | `@mrfentmen/devto-mcp` | 1.1.0 | no |  |  |
 | `@mrfentmen/dexscreener-mcp` | 1.1.0 | no |  |  |
 | `dictionary-mcp` | 1.0.5 | yes |  | 1 |
@@ -252,7 +252,7 @@ overwrites `dist/` from the registry tarballs.
 | `doomwiki-mcp` | 1.0.5 | no |  | 2 |
 | `doppler-mcp` | 1.0.7 | no |  |  |
 | `dpla-mcp` | 1.1.0 | no |  |  |
-| `dragonball-mcp` | 1.0.5 | no |  | 1 |
+| `dragonball-mcp` | 1.0.6 | no |  |  |
 | `duck-mcp` | 1.0.4 | no |  | 2 |
 | `@mrfentmen/duckduckgo-mcp` | 1.0.4 | no |  | 2 |
 | `dummyjson-mcp` | 1.0.4 | no |  | 2 |
@@ -269,7 +269,7 @@ overwrites `dist/` from the registry tarballs.
 | `emoji-mcp` | 1.0.4 | no |  | 2 |
 | `@mrfentmen/endoflife-mcp` | 1.0.4 | no |  | 2 |
 | `energinet-mcp` | 1.0.4 | no |  | 2 |
-| `enrico-mcp` | 1.0.4 | no |  | 1 |
+| `enrico-mcp` | 1.0.5 | no |  |  |
 | `ensembl-mcp` | 1.0.4 | no |  | 2 |
 | `ensideas-mcp` | 1.0.4 | no |  | 1 |
 | `entur-mcp` | 1.0.3 | no |  | 3 |
@@ -864,7 +864,7 @@ overwrites `dist/` from the registry tarballs.
 | `theaudiodb-mcp` | 1.0.1 | yes |  |  |
 | `thecocktaildb-mcp` | 1.0.0 | no |  |  |
 | `thegraph-mcp` | 1.0.1 | no |  |  |
-| `themealdb-mcp` | 1.0.1 | yes | 3 |  |
+| `themealdb-mcp` | 1.0.2 | yes |  |  |
 | `themuse-mcp` | 1.0.5 | no |  |  |
 | `theoddsapi-mcp` | 1.1.2 | no |  |  |
 | `thesportsdb-mcp` | 1.0.2 | no |  | 2 |
