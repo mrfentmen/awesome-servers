@@ -121,7 +121,9 @@ export async function tagInfo(ref: string, tag: string): Promise<string> {
   const rows = [
     `Tag: ${namespace}/${name}:${d.name}`,
     `Digest: ${d.digest ?? "n/a"}`,
-    `Compressed: ${(((d.compressed_size ?? 0) as number) / 1048576).toFixed(1)} MB   Full: ${(((d.full_size ?? 0) as number) / 1048576).toFixed(1)} MB`,
+    ((d.compressed_size ?? 0) as number) > 0
+      ? `Compressed: ${(((d.compressed_size ?? 0) as number) / 1048576).toFixed(1)} MB   Full: ${(((d.full_size ?? 0) as number) / 1048576).toFixed(1)} MB`
+      : `Size: ${(((d.full_size ?? 0) as number) / 1048576).toFixed(1)} MB`,
     `Last updated: ${day(d.last_updated)}   Last pushed: ${day(d.tag_last_pushed)}`,
     `Architectures: ${imgs.length}`,
     ...perArch,

@@ -5,7 +5,7 @@ async function main(): Promise<void> {
   const server = createServer()
   const transport = new StdioServerTransport()
   await server.connect(transport)
-  console.error("dockerhub-mcp running on stdio")
+  console.error("container-registry-mcp running on stdio")
 }
 
 main().catch((err: unknown) => {
