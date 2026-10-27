@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { flag, list, resolveName } from "./api.js";
+import { flag, list, resolveName, flagUrls } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -39,9 +39,8 @@ export function createServer() {
         inputSchema: z.object({ code: z.string().describe("Country code like us, or a subdivision code like gb-eng."), sizes: z.string().describe("Comma separated sizes to show, like w320,256x192. Defaults to all 21 that exist.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement urls locally (paywall removed)
         try {
-            return textError("Not yet implemented: urls");
+            return text(await flagUrls(args));
         }
         catch (e) {
             return textError(String(e));

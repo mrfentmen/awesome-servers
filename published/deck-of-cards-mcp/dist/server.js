@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { draw, newDeck, reshuffle } from "./api.js";
+import { draw, newDeck, reshuffle, buildDeck } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -39,9 +39,8 @@ export function createServer() {
         inputSchema: z.object({ cards: z.string().describe("Cards separated by commas, like AS,KD,0H for the ace of spades, king of diamonds and ten of hearts."), shuffle: z.boolean().describe("Shuffle the partial deck. Defaults to false.").optional(), deckCount: z.number().describe("How many copies of those cards to include, 1-8. Defaults to 1.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement deck locally (paywall removed)
         try {
-            return textError("Not yet implemented: deck");
+            return text(await buildDeck(args));
         }
         catch (e) {
             return textError(String(e));

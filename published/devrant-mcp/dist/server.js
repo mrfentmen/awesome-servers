@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { rants, rantDigest } from "./api.js";
+import { rants, rantDigest, rantDetails } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -26,9 +26,8 @@ export function createServer() {
         inputSchema: z.object({ rant_id: z.number().describe("Rant id, like 194632."), app: z.number().describe("devRant app id, 3 is the public one.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement details locally (paywall removed)
         try {
-            return textError("Not yet implemented: details");
+            return text(await rantDetails(args));
         }
         catch (e) {
             return textError(String(e));

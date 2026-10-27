@@ -6,12 +6,12 @@
     "url": "https://github.com/mrfentmen/data-gov-uk-mcp",
     "source": "github"
   },
-  "version": "1.0.1",
+  "version": "1.0.6",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "data-gov-uk-mcp",
-      "version": "1.0.1",
+      "version": "1.0.6",
       "transport": {
         "type": "stdio"
       }

@@ -191,3 +191,58 @@ export async function exhibitionSearch(args) {
     lines.push(`  the Art Institute's exhibition index holds ${typeof apiTotal === 'number' ? apiTotal.toLocaleString('en-US') : 'an unstated number of'} exhibitions, though that count is the index size and not a match count for this query.`);
     return lines.join('\n');
 }
+
+const ARTIC = 'https://api.artic.edu/api/v1';
+const PROFILE_FIELDS = 'id,artist_title,medium_display,department_title,classification_titles,date_display,is_public_domain';
+export async function collectionProfile(args = {}) {
+    const query = String(args?.query ?? '').trim();
+    if (query.length < 2)
+        throw new Error('Provide at least two characters of search terms.');
+    const limit = Math.min(Math.max(Number(args?.limit ?? 50) || 50, 10), 100);
+    const url = `${ARTIC}/artworks/search?q=${encodeURIComponent(query)}&limit=${limit}&fields=${PROFILE_FIELDS}`;
+    const res = await fetch(url, {
+        headers: { 'User-Agent': 'mrfentmen-art-institute-mcp/1.0', Accept: 'application/json' },
+        signal: AbortSignal.timeout(30000),
+    });
+    if (!res.ok)
+        throw new Error(`Art Institute search returned ${res.status}`);
+    const body = (await res.json());
+    const rows = Array.isArray(body.data) ? body.data : [];
+    if (!rows.length)
+        throw new Error(`The Art Institute has nothing for "${query}"`);
+    const count = (key) => {
+        const m = new Map();
+        for (const row of rows) {
+            const value = row[key];
+            if (typeof value === 'string' && value.trim())
+                m.set(value, (m.get(value) ?? 0) + 1);
+        }
+        return [...m.entries()].sort((a, b) => b[1] - a[1]);
+    };
+    const flat = (key) => {
+        const m = new Map();
+        for (const row of rows) {
+            for (const value of row[key] ?? []) {
+                if (typeof value === 'string' && value.trim())
+                    m.set(value, (m.get(value) ?? 0) + 1);
+            }
+        }
+        return [...m.entries()].sort((a, b) => b[1] - a[1]);
+    };
+    const publicDomain = rows.filter((r) => r.is_public_domain).length;
+    const dates = rows.map((r) => String(r.date_display ?? '')).filter(Boolean).sort();
+    const top = (rows2) => rows2.slice(0, 5).map(([name, n]) => `${name} (${n})`).join(', ') || 'none';
+    return [
+        `Art Institute of Chicago — "${query}"`,
+        `${(body.pagination?.total ?? rows.length).toLocaleString('en-US')} matching works in the collection; profiled ${rows.length}.`,
+        '',
+        `Artists: ${count('artist_title').length} distinct · ${top(count('artist_title'))}`,
+        `Media: ${count('medium_display').length} distinct · ${top(count('medium_display'))}`,
+        `Departments: ${count('department_title').length} · ${top(count('department_title'))}`,
+        `Classifications: ${flat('classification_titles').length} · ${top(flat('classification_titles'))}`,
+        `Public domain: ${publicDomain}/${rows.length}`,
+        dates.length ? `Date range in this slice: ${dates[0]} to ${dates[dates.length - 1]}` : 'Date range: not recorded',
+        '',
+        `More: https://www.artic.edu/search?q=${encodeURIComponent(query)}`,
+    ].join('\n');
+}

@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { character, characters, planets } from "./api.js";
+import { character, characters, planets, characterDetail } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -39,9 +39,8 @@ export function createServer() {
         inputSchema: z.object({ id: z.number().describe("Character id, like 1 for Goku. The characters list prints ids.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement detail locally (paywall removed)
         try {
-            return textError("Not yet implemented: detail");
+            return text(await characterDetail(args));
         }
         catch (e) {
             return textError(String(e));

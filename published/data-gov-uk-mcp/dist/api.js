@@ -85,3 +85,36 @@ export async function publisherDatasets(args) {
     }
     return lines.join('\n');
 }
+
+const CKAN = 'https://ckan.publishing.service.gov.uk/api/3/action';
+export async function datasetDetail(args = {}) {
+    const name = String(args?.name ?? '').trim();
+    if (!/^[a-z0-9][a-z0-9._-]*$/i.test(name))
+        throw new Error('Provide a dataset slug, the part after data.gov.uk/dataset/.');
+    const res = await fetch(`${CKAN}/package_show?id=${encodeURIComponent(name)}`, {
+        headers: { 'User-Agent': 'mrfentmen-data-gov-uk-mcp/1.0', Accept: 'application/json' },
+        signal: AbortSignal.timeout(30000),
+    });
+    if (!res.ok)
+        throw new Error(`data.gov.uk returned ${res.status}`);
+    const body = (await res.json());
+    if (!body.success || !body.result)
+        throw new Error(`data.gov.uk has no dataset "${name}"`);
+    const d = body.result;
+    const resources = Array.isArray(d.resources) ? d.resources : [];
+    const tags = (d.tags ?? []).map((t) => t.name).filter(Boolean);
+    const vocab = Object.entries(d.extras ?? {}).filter(([k]) => /vocab|theme/i.test(k)).slice(0, 5);
+    return [
+        `${d.title ?? name} — ${d.name}`,
+        `Publisher: ${d.organization?.title ?? 'unknown'} · state ${d.state ?? '?'} · version ${d.version ?? '?'}`,
+        `Licence: ${d.license_title ?? d.license_id ?? 'not stated'}`,
+        `Created: ${String(d.metadata_created ?? '').slice(0, 10) || '?'} · updated: ${String(d.metadata_modified ?? '').slice(0, 10) || '?'}`,
+        tags.length ? `Tags: ${tags.slice(0, 12).join(', ')}` : 'Tags: none',
+        vocab.length ? `Vocabularies: ${vocab.map(([k, v]) => `${k}=${String(v).slice(0, 60)}`).join(' · ')}` : '',
+        '',
+        `${resources.length} resource(s):`,
+        ...resources.slice(0, 25).map((r, i) => `${i + 1}. ${r.name ?? '(unnamed)'} [${r.format ?? '?'}]${r.size ? ` ${Math.round(Number(r.size) / 1024)} KB` : ''} — ${r.url}`),
+        resources.length > 25 ? `… ${resources.length - 25} more resource(s) on the dataset page.` : '',
+        `Page: https://www.data.gov.uk/dataset/${d.name}`,
+    ].filter(Boolean).join('\n');
+}

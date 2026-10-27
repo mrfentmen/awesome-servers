@@ -64,3 +64,34 @@ export async function planets(args = {}) {
     }
     return lines.join('\n');
 }
+
+const DRAGONBALL = 'https://dragonball-api.com/api/characters';
+export async function characterDetail(args = {}) {
+    const id = Number(args?.id);
+    if (!Number.isInteger(id) || id < 1)
+        throw new Error('Provide a character id, like 1 for Goku.');
+    const res = await fetch(`${DRAGONBALL}/${id}`, {
+        headers: { 'User-Agent': 'mrfentmen-dragonball-mcp/1.0', Accept: 'application/json' },
+        signal: AbortSignal.timeout(20000),
+    });
+    if (res.status === 404)
+        throw new Error(`No Dragon Ball character has id ${id}`);
+    if (!res.ok)
+        throw new Error(`Dragon Ball API returned ${res.status}`);
+    const c = (await res.json());
+    if (!c?.name)
+        throw new Error('Dragon Ball API returned no character');
+    const planet = c.originPlanet;
+    const transforms = Array.isArray(c.transformations) ? c.transformations : [];
+    return [
+        `${c.name} (id ${c.id})`,
+        `Ki: ${c.ki ?? '?'}${c.maxKi ? ` · max ${c.maxKi}` : ''}`,
+        `Race: ${c.race ?? '?'} · gender ${c.gender ?? '?'} · ${c.affiliation ?? 'no affiliation'}`,
+        planet ? `Origin: ${planet.name ?? '?'}${planet.isDestroyed ? ' (destroyed)' : ''}` : 'Origin: unknown',
+        transforms.length
+            ? `Transformations (${transforms.length}): ${transforms.map((t) => `${t.name}${t.ki ? ` [${t.ki}]` : ''}`).join(', ')}`
+            : 'Transformations: none on record',
+        (c.description ?? '').trim().slice(0, 600),
+        'https://dragonball-api.com/api/characters/' + c.id,
+    ].filter(Boolean).join('\n');
+}

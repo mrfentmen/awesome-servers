@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { generate } from "./api.js";
+import { generate, paragraphs } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -26,9 +26,8 @@ export function createServer() {
         inputSchema: z.object({ paras: z.number().describe("How many paragraphs, 1-10. Defaults to 3.").optional(), type: z.string().describe("meat-and-filler or all-meat. Defaults to meat-and-filler.").optional(), startWithLorem: z.boolean().describe("Start with 'Bacon ipsum dolor amet' instead of random words.").optional(), format: z.string().describe("json, html or text. Defaults to json.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement paragraphs locally (paywall removed)
         try {
-            return textError("Not yet implemented: paragraphs");
+            return text(await paragraphs(args));
         }
         catch (e) {
             return textError(String(e));

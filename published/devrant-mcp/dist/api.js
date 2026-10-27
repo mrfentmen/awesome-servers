@@ -127,3 +127,34 @@ export async function rantDigest(args = {}) {
     lines.push('  every figure above is tallied from the rants on this one page, not from a stored summary.');
     return lines.join('\n');
 }
+
+const DEVRANT = 'https://devrant.com/api/devrant';
+export async function rantDetails(args = {}) {
+    const id = Number(args?.rant_id);
+    if (!Number.isInteger(id) || id < 1)
+        throw new Error('Provide a rant id, like 194632.');
+    const app = Number(args?.app ?? 3) || 3;
+    const res = await fetch(`${DEVRANT}/rants/${id}?app=${app}&sort=algo`, {
+        headers: { 'User-Agent': 'mrfentmen-devrant-mcp/1.0', Accept: 'application/json' },
+        signal: AbortSignal.timeout(25000),
+    });
+    if (!res.ok)
+        throw new Error(`devRant returned ${res.status}`);
+    const body = (await res.json());
+    if (body.error || !body.rant)
+        throw new Error(`devRant has no rant ${id}`);
+    const r = body.rant;
+    const comments = Array.isArray(body.comments) ? body.comments : [];
+    return [
+        `Rant ${r.id} by ${r.user_username ?? 'unknown'} (author score ${r.user_score ?? '?'})`,
+        `Score: ${r.score ?? '?'} · comments: ${r.num_comments ?? comments.length} · posted ${new Date(Number(r.created_time) * 1000).toISOString().slice(0, 10)}`,
+        `Tags: ${(r.tags ?? []).join(', ') || 'none'}${r.edited ? ' · edited' : ''}${r.attached_image ? ` · image ${r.attached_image}` : ''}`,
+        (r.links ?? []).length ? `Links: ${r.links.join(', ')}` : '',
+        '',
+        String(r.text ?? '').trim(),
+        '',
+        comments.length ? `${comments.length} comment(s):` : 'No comments loaded.',
+        ...comments.slice(0, 8).map((c) => `- ${c.user_username ?? 'anon'} (score ${c.score ?? '?'}): ${String(c.body ?? '').replace(/\s+/g, ' ').slice(0, 160)}`),
+        `https://devrant.com/rants/${r.id}`,
+    ].filter(Boolean).join('\n');
+}

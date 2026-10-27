@@ -115,3 +115,54 @@ export async function countryCoverage(_args = {}) {
     lines.push("  the countries tool prints only the code and the name and stops at 30 of them, so none of this is visible there.");
     return lines.join("\n");
 }
+
+const HOLIDAY_TYPES = ['public_holiday', 'observance', 'other_day', 'extra_working_day', 'school_holiday', 'postal_holiday'];
+const ENRICO_BASE = 'https://kayaposoft.com/enrico/json/v2.0';
+async function enrico(action, params) {
+    const qs = new URLSearchParams({ action, ...params });
+    const res = await fetch(`${ENRICO_BASE}/?${qs}`, {
+        headers: { 'User-Agent': 'mrfentmen-enrico-mcp/1.0', Accept: 'application/json' },
+        signal: AbortSignal.timeout(25000),
+    });
+    if (!res.ok)
+        throw new Error(`Enrico returned ${res.status}`);
+    const d = (await res.json());
+    if (d && !Array.isArray(d) && d.error)
+        throw new Error(`Enrico error: ${d.error}`);
+    return d;
+}
+export async function countryCalendar(args = {}) {
+    const country = String(args?.country ?? '').trim().toLowerCase();
+    if (!/^[a-z]{3}$/.test(country))
+        throw new Error('Use a three letter country code like USA or DEU.');
+    const year = Number(args?.year);
+    if (!Number.isInteger(year) || year < 1940 || year > 2100)
+        throw new Error('Year must be a whole number between 1940 and 2100.');
+    const countries = await enrico('getSupportedCountries', {});
+    const info = (Array.isArray(countries) ? countries : []).find((c) => String(c.countryCode).toLowerCase() === country);
+    if (!info)
+        throw new Error(`Enrico has no data for "${args?.country}".`);
+    const types = (info.holidayTypes ?? []).filter((t) => HOLIDAY_TYPES.includes(t));
+    const days = [];
+    for (const type of types) {
+        const rows = await enrico('getHolidaysForYear', { year: String(year), country: info.countryCode, holidayType: type });
+        for (const row of Array.isArray(rows) ? rows : []) {
+            const en = (row.name ?? []).find((n) => n.lang === 'en') ?? row.name?.[0];
+            days.push({
+                date: row.date,
+                text: en?.text ?? '(unnamed)',
+                type: row.holidayType ?? type,
+            });
+        }
+    }
+    const from = info.fromDate ? `${info.fromDate.year}` : '?';
+    const to = info.toDate && info.toDate.year < 9999 ? `${info.toDate.year}` : 'open ended';
+    const regions = (info.regions ?? []).length ? info.regions.join(', ') : 'whole country';
+    const header = `${info.fullName ?? country.toUpperCase()} — ${year}`;
+    const coverage = `Coverage: ${from} to ${to} · regions: ${regions} · types: ${types.join(', ') || 'none'}`;
+    if (!days.length)
+        return [header, coverage, '', `No holidays of the covered types are on record for ${year}.`].join('\n');
+    days.sort((a, b) => a.date.month - b.date.month || a.date.day - b.date.day);
+    const lines = days.map((d) => `- ${String(d.date.day).padStart(2, '0')}/${String(d.date.month).padStart(2, '0')} (weekday ${d.date.dayOfWeek}) ${d.text} [${d.type}]`);
+    return [header, coverage, `${days.length} day(s) across ${new Set(days.map((d) => d.type)).size} type(s):`, '', ...lines.slice(0, 200)].join('\n');
+}

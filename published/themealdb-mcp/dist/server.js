@@ -1,7 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { m0_categories, m0_filterByIngredient, m0_random, m0_search, m1_byIngredient, m1_recipeDetails, m1_searchRecipes, filterByCategory, filterByArea, listIngredients } from './api.js';
-import { premiumRequired } from "./license.js";
 const text = (value) => ({ content: [{ type: 'text', text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -107,10 +106,6 @@ export function createServer() {
         annotations: READ_ONLY,
     }, async (args) => {
         // ---- paywall: filter_by_category ----
-        const paywallMessage = await premiumRequired("filter_by_category");
-        if (paywallMessage)
-            return { content: [{ type: "text", text: paywallMessage }], isError: true };
-        // ---- paywall: end ----
         try {
             return text(await filterByCategory(args));
         }
@@ -125,10 +120,6 @@ export function createServer() {
         annotations: READ_ONLY,
     }, async (args) => {
         // ---- paywall: filter_by_area ----
-        const paywallMessage = await premiumRequired("filter_by_area");
-        if (paywallMessage)
-            return { content: [{ type: "text", text: paywallMessage }], isError: true };
-        // ---- paywall: end ----
         try {
             return text(await filterByArea(args));
         }

@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { search, publisherDatasets } from "./api.js";
+import { search, publisherDatasets, datasetDetail } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -26,9 +26,8 @@ export function createServer() {
         inputSchema: z.object({ name: z.string().describe("The dataset slug, the part after data.gov.uk/dataset/.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement detail locally (paywall removed)
         try {
-            return textError("Not yet implemented: detail");
+            return text(await datasetDetail(args));
         }
         catch (e) {
             return textError(String(e));

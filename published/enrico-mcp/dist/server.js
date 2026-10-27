@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { countries, holidays, countryCoverage } from "./api.js";
+import { countries, holidays, countryCoverage, countryCalendar } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -52,9 +52,8 @@ export function createServer() {
         inputSchema: z.object({ country: z.string().describe("Three letter country code like USA or DEU."), year: z.number().describe("Year, 1940 to 2100.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement calendar locally (paywall removed)
         try {
-            return textError("Not yet implemented: calendar");
+            return text(await countryCalendar(args));
         }
         catch (e) {
             return textError(String(e));
