@@ -1,0 +1,50 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/opensearch-mcp",
+  "description": "Search OpenSearch indices, manage documents, check health and stats.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/opensearch-mcp",
+    "source": "github"
+  },
+  "version": "1.0.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@mrfentmen/opensearch-mcp",
+      "version": "1.0.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "OPENSEARCH_URL",
+          "description": "OpenSearch server URL (default: http://localhost:9200)",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "OPENSEARCH_API_KEY",
+          "description": "OpenSearch API key for authentication",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "OPENSEARCH_USERNAME",
+          "description": "OpenSearch username for basic auth",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "OPENSEARCH_PASSWORD",
+          "description": "OpenSearch password for basic auth",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}

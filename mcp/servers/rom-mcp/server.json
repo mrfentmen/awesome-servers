@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/rom-mcp",
+  "description": "Search ROMs across Internet Archive, ROMsgames, CoolROM, and more. Verify checksums and parse saves.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/rom-mcp",
+    "source": "github"
+  },
+  "version": "1.2.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "rom-mcp",
+      "version": "1.2.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

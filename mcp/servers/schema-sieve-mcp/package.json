@@ -1,0 +1,41 @@
+{
+  "name": "schema-sieve-mcp",
+  "version": "1.0.0",
+  "description": "Local JSON Schema structure inspection and privacy-safe fixture planning.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/schema-sieve-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "schema-sieve-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "json-schema",
+    "fixtures",
+    "testing",
+    "local-first"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "name": "@mrfentmen/opensearch-mcp",
+  "version": "1.0.1",
+  "description": "MCP server for OpenSearch. Search indices, manage documents, check health and stats.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/opensearch-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "opensearch-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "/opt/homebrew/bin/tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && /opt/homebrew/bin/tsc -p tsconfig.json && node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "opensearch",
+    "search",
+    "elasticsearch",
+    "database",
+    "vector-search"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

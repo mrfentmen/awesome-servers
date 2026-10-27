@@ -1,0 +1,8 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/repo-forensics-mcp",
+  "description": "Local read-only Git repository archaeology, churn, hotspots, and hygiene checks.",
+  "repository": { "url": "https://github.com/mrfentmen/repo-forensics-mcp", "source": "github" },
+  "version": "1.0.0",
+  "packages": [{ "registryType": "npm", "identifier": "repo-forensics-mcp", "version": "1.0.0", "transport": { "type": "stdio" } }]
+}
