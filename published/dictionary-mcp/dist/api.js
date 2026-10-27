@@ -168,3 +168,61 @@ export async function wordPhonetics(args) {
     lines.push("  the existing tools print at most a comma joined list of the phonetic text, with no audio, no language and no recording licence.");
     return lines.join("\n");
 }
+
+const DICT_REL = 'https://api.dictionaryapi.dev/api/v2/entries/en';
+export async function wordRelations(args = {}) {
+    const word = String(args?.word ?? '').trim().toLowerCase();
+    if (!/^[a-z][a-z'’-]{0,49}$/.test(word))
+        throw new Error('Give a single English word, like cat.');
+    const res = await fetch(`${DICT_REL}/${encodeURIComponent(word)}`, {
+        headers: { 'User-Agent': 'mrfentmen-dictionary-mcp/1.0', Accept: 'application/json' },
+        signal: AbortSignal.timeout(20000),
+    });
+    if (res.status === 404)
+        throw new Error(`The dictionary has no entry for "${word}"`);
+    if (!res.ok)
+        throw new Error(`Dictionary API returned ${res.status}`);
+    const entries = (await res.json());
+    if (!Array.isArray(entries) || !entries.length)
+        throw new Error(`The dictionary has no entry for "${word}"`);
+    const syn = new Set();
+    const ant = new Set();
+    const perPos = new Map();
+    let definitions = 0;
+    let withExample = 0;
+    for (const entry of entries) {
+        for (const meaning of entry.meanings ?? []) {
+            const pos = meaning.partOfSpeech ?? 'unknown';
+            const bucket = perPos.get(pos) ?? { syn: new Set(), ant: new Set() };
+            for (const s of meaning.synonyms ?? [])
+                syn.add(s), bucket.syn.add(s);
+            for (const a of meaning.antonyms ?? [])
+                ant.add(a), bucket.ant.add(a);
+            for (const def of meaning.definitions ?? []) {
+                definitions += 1;
+                if (def.example)
+                    withExample += 1;
+                for (const s of def.synonyms ?? [])
+                    syn.add(s), bucket.syn.add(s);
+                for (const a of def.antonyms ?? [])
+                    ant.add(a), bucket.ant.add(a);
+            }
+            perPos.set(pos, bucket);
+        }
+    }
+    const entry = entries[0];
+    const licence = entry.license ?? {};
+    return [
+        `${word} — ${syn.size} synonym(s), ${ant.size} antonym(s) across ${definitions} definition(s)`,
+        `Definitions carrying an example: ${withExample}/${definitions}`,
+        '',
+        'Synonyms: ' + ([...syn].slice(0, 40).join(', ') || 'none recorded'),
+        'Antonyms: ' + ([...ant].slice(0, 40).join(', ') || 'none recorded'),
+        '',
+        'Per part of speech:',
+        ...[...perPos.entries()].map(([pos, b]) => `- ${pos}: ${b.syn.size} synonym(s), ${b.ant.size} antonym(s)`),
+        '',
+        licence.name ? `Licence: ${licence.name}${licence.url ? ` (${licence.url})` : ''}` : '',
+        (entry.sourceUrls ?? []).length ? `Sources: ${(entry.sourceUrls ?? []).slice(0, 3).join(', ')}` : '',
+    ].filter(Boolean).join('\n');
+}

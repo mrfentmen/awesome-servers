@@ -210,3 +210,48 @@ export async function currencyTally(_args = {}) {
     lines.push("  every count above is tallied from the live country table, not from a stored summary.");
     return lines.join("\n");
 }
+
+const CN = 'https://countriesnow.space/api/v0.1';
+async function cnEndpoint(path, country) {
+    const res = await fetch(`${CN}${path}${country ? `/q?country=${encodeURIComponent(country)}` : ''}`, {
+        headers: { 'User-Agent': 'mrfentmen-countriesnow-mcp/1.0', Accept: 'application/json' },
+        signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok)
+        throw new Error(`CountriesNow returned ${res.status} for ${path}`);
+    const body = (await res.json());
+    if (body.error)
+        return null;
+    return body.data;
+}
+export async function countryProfile(args = {}) {
+    const country = String(args?.country ?? '').trim();
+    if (country.length < 2)
+        throw new Error('Give a country name, like Brazil.');
+    const capital = await cnEndpoint('/countries/capital', country);
+    if (!capital)
+        throw new Error(`CountriesNow has no country called "${country}"`);
+    const [currency, flag, position, population, allCurrencies] = await Promise.all([
+        cnEndpoint('/countries/currency', country),
+        cnEndpoint('/countries/flag/images', country),
+        cnEndpoint('/countries/positions', country),
+        cnEndpoint('/countries/population', country),
+        cnEndpoint('/countries/currency', ''),
+    ]);
+    const shares = (allCurrencies ?? []).filter((c) => c.currency === currency?.currency).map((c) => c.name);
+    const counts = (population?.populationCounts ?? []).filter((p) => Number.isFinite(Number(p.value)));
+    const first = counts[0];
+    const last = counts[counts.length - 1];
+    const peak = counts.reduce((best, p) => (Number(p.value) > Number(best.value) ? p : best), counts[0] ?? { value: 0 });
+    return [
+        `${capital.name} — ${capital.iso2 ?? '?'} / ${capital.iso3 ?? '?'}`,
+        `Capital: ${capital.capital ?? 'not recorded'}`,
+        `Currency: ${currency?.currency ?? 'not recorded'}${shares.length > 1 ? ` — shared by ${shares.slice(0, 8).join(', ')}${shares.length > 8 ? ` and ${shares.length - 8} more` : ''}` : ''}`,
+        position ? `Stored coordinates: ${position.lat}, ${position.long}` : '',
+        flag?.flag ? `Flag: ${flag.flag}` : '',
+        counts.length
+            ? `Population: ${Number(first.value).toLocaleString('en-US')} in ${first.year} → ${Number(last.value).toLocaleString('en-US')} in ${last.year}; peak ${Number(peak.value).toLocaleString('en-US')} in ${peak.year}`
+            : 'Population: no series on record',
+        counts.length > 2 ? `Series shape: ${counts.length} yearly points from ${first.year} to ${last.year}` : '',
+    ].filter(Boolean).join('\n');
+}

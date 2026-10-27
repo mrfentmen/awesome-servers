@@ -14,7 +14,7 @@ overwrites `dist/` from the registry tarballs.
 - scoped under `@mrfentmen`: **195**
 - total size: **15.7 MB**
 - carrying a licence gate (`MCP_LICENSE_KEY`): **1**
-- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **503**
+- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **500**
 - whose `src/` still holds the pre-fix source (not shipped, cannot rebuild `dist/`): **36**
 
 | package | version | src? | gate | stubs |
@@ -183,7 +183,7 @@ overwrites `dist/` from the registry tarballs.
 | `contract-diff-mcp` | 1.0.6 | no |  | 2 |
 | `convertkit-mcp` | 1.0.8 | no |  |  |
 | `@mrfentmen/core-mcp` | 1.0.4 | no |  | 2 |
-| `countriesnow-mcp` | 1.0.5 | yes |  | 1 |
+| `countriesnow-mcp` | 1.0.6 | yes |  |  |
 | `countryflags-mcp` | 1.0.6 | no |  |  |
 | `@mrfentmen/court-records-mcp` | 1.1.0 | no |  |  |
 | `courtlistener-mcp` | 1.1.0 | no |  |  |
@@ -226,9 +226,9 @@ overwrites `dist/` from the registry tarballs.
 | `devrant-mcp` | 1.0.6 | no |  |  |
 | `@mrfentmen/devto-mcp` | 1.1.0 | no |  |  |
 | `@mrfentmen/dexscreener-mcp` | 1.1.0 | no |  |  |
-| `dictionary-mcp` | 1.0.5 | yes |  | 1 |
+| `dictionary-mcp` | 1.0.6 | yes |  |  |
 | `@mrfentmen/diff-mcp` | 1.0.5 | no |  |  |
-| `digimon-mcp` | 1.0.5 | no |  | 1 |
+| `digimon-mcp` | 1.0.6 | no |  |  |
 | `digitalnz-mcp` | 1.0.5 | no |  | 2 |
 | `dior-mcp` | 1.1.1 | no |  |  |
 | `directus-mcp` | 1.0.7 | no |  |  |

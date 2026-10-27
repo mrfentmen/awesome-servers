@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { m0_define, m0_wordOfDay, m1_randomWord, m1_wordOfTheDay, wordPhonetics } from "./api.js";
+import { m0_define, m0_wordOfDay, m1_randomWord, m1_wordOfTheDay, wordPhonetics, wordRelations } from "./api.js";
 const text = (value) => ({ content: [{ type: 'text', text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -66,9 +66,8 @@ export function createServer() {
         inputSchema: z.object({ word: z.string().describe("Word to look up, like cat.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement relations locally (paywall removed)
         try {
-            return textError("Not yet implemented: relations");
+            return text(await wordRelations(args));
         }
         catch (e) {
             return textError(String(e));

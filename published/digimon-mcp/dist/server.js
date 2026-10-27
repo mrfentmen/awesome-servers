@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { level, search, levelIndex } from "./api.js";
+import { level, search, levelIndex, browse } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -39,9 +39,8 @@ export function createServer() {
         inputSchema: z.object({ name: z.string().describe("Part of a name to filter by, e.g. mon. Omit for all.").optional(), level: z.string().describe("Exact level, e.g. Rookie, Champion, Ultimate, Mega, Armor, Fresh, Training or In Training. Omit for all.").optional(), offset: z.number().describe("How many matches to skip, for paging. Defaults to 0.").optional(), limit: z.number().describe("Matches per page, 1-50. Defaults to 20.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement browse locally (paywall removed)
         try {
-            return textError("Not yet implemented: browse");
+            return text(await browse(args));
         }
         catch (e) {
             return textError(String(e));
