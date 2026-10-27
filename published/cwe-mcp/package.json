@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/cwe-mcp",
+  "version": "1.0.0",
+  "description": "MITRE CWE weakness records: descriptions, mitigations, consequences and the weakness hierarchy - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/cwe-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "cwe-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "cwe",
+    "security",
+    "weakness",
+    "mitre",
+    "appsec",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

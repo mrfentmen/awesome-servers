@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/toml-mcp",
+  "version": "1.0.0",
+  "description": "Read, write and query TOML configuration files: parse TOML to JSON, emit TOML from JSON, and pull one value out by path. Runs locally, no network.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/toml-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "toml-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "toml",
+    "config",
+    "json",
+    "pyproject",
+    "cargo",
+    "convert",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/isbn-mcp",
+  "version": "1.0.0",
+  "description": "Validate and convert ISBN-10 and ISBN-13 numbers, with checksum maths - fully local.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/isbn-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "isbn-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "isbn",
+    "books",
+    "checksum",
+    "publishing",
+    "validation",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -10,9 +10,9 @@ Regenerate this summary with `python3 scripts/index-published.py`. Re-run
 `mirror-registry.py` only when every local fix has been published — it
 overwrites `dist/` from the registry tarballs.
 
-- packages: **960**
-- scoped under `@mrfentmen`: **195**
-- total size: **15.7 MB**
+- packages: **1012**
+- scoped under `@mrfentmen`: **247**
+- total size: **16.3 MB**
 - carrying a licence gate (`MCP_LICENSE_KEY`): **1**
 - carrying tools that answer `Not yet implemented` in the shipped `dist/`: **495**
 - whose `src/` still holds the pre-fix source (not shipped, cannot rebuild `dist/`): **36**
@@ -25,6 +25,8 @@ overwrites `dist/` from the registry tarballs.
 | `ackee-mcp` | 1.0.6 | no |  |  |
 | `adguardhome-mcp` | 1.0.9 | no |  |  |
 | `@mrfentmen/adobe-premiere-mcp` | 1.0.6 | no |  |  |
+| `@mrfentmen/adsb-mcp` | 1.0.0 | no |  |  |
+| `@mrfentmen/adsbdb-mcp` | 1.0.0 | no |  |  |
 | `advice-mcp` | 1.0.6 | no |  | 2 |
 | `affirmations-mcp` | 1.0.5 | no |  | 2 |
 | `agify-mcp` | 1.0.6 | no |  | 2 |
@@ -84,6 +86,7 @@ overwrites `dist/` from the registry tarballs.
 | `binance-market-mcp` | 1.1.1 | no |  |  |
 | `bing-wallpaper-mcp` | 1.0.6 | no |  |  |
 | `biorxiv-mcp` | 1.0.5 | no |  | 2 |
+| `@mrfentmen/biostudies-mcp` | 1.0.0 | no |  |  |
 | `@mrfentmen/bitbucket-mcp` | 1.0.5 | no |  | 3 |
 | `bitcoiner-mcp` | 1.0.5 | no |  | 2 |
 | `bitfinex-mcp` | 1.0.5 | no |  | 2 |
@@ -115,6 +118,7 @@ overwrites `dist/` from the registry tarballs.
 | `brewery-mcp` | 1.1.2 | no |  |  |
 | `brightsky-mcp` | 1.0.5 | no |  | 2 |
 | `@mrfentmen/browser-mcp` | 1.0.6 | no |  | 1 |
+| `@mrfentmen/brreg-mcp` | 1.0.0 | no |  |  |
 | `build-cache-mcp` | 1.0.6 | no |  | 2 |
 | `bulbapedia-mcp` | 1.0.5 | no |  | 2 |
 | `@mrfentmen/bundlephobia-mcp` | 1.0.5 | no |  | 2 |
@@ -136,6 +140,7 @@ overwrites `dist/` from the registry tarballs.
 | `certspotter-mcp` | 1.0.5 | no |  | 2 |
 | `cex-mcp` | 1.0.5 | no |  | 2 |
 | `cfpb-mcp` | 1.0.5 | no |  | 2 |
+| `@mrfentmen/cftc-mcp` | 1.0.0 | no |  |  |
 | `cgtrader-mcp` | 1.1.2 | no |  |  |
 | `chanel-mcp` | 1.1.1 | no |  |  |
 | `cheapshark-mcp` | 1.1.1 | no |  |  |
@@ -147,6 +152,7 @@ overwrites `dist/` from the registry tarballs.
 | `chmi-mcp` | 1.0.5 | no |  | 3 |
 | `chocolatey-mcp` | 1.0.5 | no |  | 2 |
 | `chord-mcp` | 1.0.5 | no |  | 2 |
+| `@mrfentmen/chronam-mcp` | 1.0.0 | no |  |  |
 | `@mrfentmen/chuck-norris-mcp` | 1.0.5 | no |  | 2 |
 | `cisa-kev-mcp` | 1.1.0 | no |  |  |
 | `citi-bike-mcp` | 1.0.5 | no |  | 2 |
@@ -173,7 +179,9 @@ overwrites `dist/` from the registry tarballs.
 | `@mrfentmen/coinpaprika-mcp` | 1.1.0 | no |  |  |
 | `college-scorecard-mcp` | 1.1.0 | no |  |  |
 | `collegefootballdata-mcp` | 1.0.0 | no |  |  |
+| `@mrfentmen/color-contrast-mcp` | 1.0.0 | no |  |  |
 | `color-mcp` | 1.0.5 | no |  | 2 |
+| `@mrfentmen/colorblind-mcp` | 1.0.0 | no |  |  |
 | `commafeed-mcp` | 1.0.3 | no |  |  |
 | `commoncrawl-mcp` | 1.0.5 | no |  | 2 |
 | `config-weather-mcp` | 1.0.5 | no |  |  |
@@ -200,6 +208,7 @@ overwrites `dist/` from the registry tarballs.
 | `@mrfentmen/csv-mcp` | 1.0.6 | no |  | 2 |
 | `ctan-mcp` | 1.0.5 | no |  | 2 |
 | `customerio-mcp` | 1.1.4 | no |  |  |
+| `@mrfentmen/cwe-mcp` | 1.0.0 | no |  |  |
 | `cyberark-mcp` | 1.1.1 | no |  |  |
 | `dadjoke-mcp` | 1.0.5 | no |  | 3 |
 | `dailymed-mcp` | 1.0.5 | no |  | 2 |
@@ -209,6 +218,7 @@ overwrites `dist/` from the registry tarballs.
 | `datacite-mcp` | 1.0.5 | no |  | 2 |
 | `datahub-countries-mcp` | 1.0.5 | no |  | 2 |
 | `@mrfentmen/datamuse-mcp` | 1.0.5 | no |  | 2 |
+| `@mrfentmen/date-math-mcp` | 1.0.0 | no |  |  |
 | `db-ip-mcp` | 1.0.6 | no |  |  |
 | `dblp-mcp` | 1.0.4 | no |  |  |
 | `deck-of-cards-mcp` | 1.0.6 | no |  |  |
@@ -260,6 +270,7 @@ overwrites `dist/` from the registry tarballs.
 | `dwarffortress-mcp` | 1.0.4 | no |  | 2 |
 | `@mrfentmen/ebay-mcp` | 1.1.4 | no |  |  |
 | `ebi-search-mcp` | 1.0.4 | no |  | 1 |
+| `@mrfentmen/ecb-mcp` | 1.0.0 | no |  |  |
 | `eccc-mcp` | 1.0.4 | no |  | 3 |
 | `ecobee-mcp` | 1.0.4 | no |  | 2 |
 | `@mrfentmen/edgar-mcp` | 1.0.3 | no |  | 2 |
@@ -276,10 +287,12 @@ overwrites `dist/` from the registry tarballs.
 | `env-contract-mcp` | 1.0.5 | no |  | 2 |
 | `envirocar-mcp` | 1.0.4 | no |  | 2 |
 | `eol-mcp` | 1.0.4 | no |  | 2 |
+| `@mrfentmen/epa-echo-mcp` | 1.0.0 | no |  |  |
 | `epa-frs-mcp` | 1.0.4 | no |  | 1 |
 | `epic-free-games-mcp` | 1.0.5 | no |  |  |
 | `episodate-mcp` | 1.0.4 | no |  | 2 |
 | `epo-mcp` | 1.0.6 | no |  |  |
+| `@mrfentmen/epss-mcp` | 1.0.0 | no |  |  |
 | `er-api-mcp` | 1.0.5 | yes |  |  |
 | `ericemanuel-mcp` | 1.1.3 | no |  |  |
 | `esm-mcp` | 1.0.4 | no |  | 2 |
@@ -313,10 +326,12 @@ overwrites `dist/` from the registry tarballs.
 | `figshare-mcp` | 1.0.2 | no |  | 1 |
 | `filerun-mcp` | 1.0.1 | no |  |  |
 | `finalspace-mcp` | 1.0.2 | no |  | 2 |
+| `@mrfentmen/finance-calc-mcp` | 1.0.0 | no |  |  |
 | `financial-data-mcp` | 1.0.3 | no |  | 3 |
 | `fingrid-mcp` | 1.0.3 | no |  | 1 |
 | `@mrfentmen/finnhub-mcp` | 1.0.1 | no |  |  |
 | `firefox-addons-mcp` | 1.0.2 | no |  | 2 |
+| `@mrfentmen/fiscaldata-mcp` | 1.0.0 | no |  |  |
 | `flaky-history-mcp` | 1.0.3 | no |  | 2 |
 | `flathub-mcp` | 1.0.2 | no |  | 2 |
 | `@mrfentmen/flickr-mcp` | 1.0.2 | no |  | 1 |
@@ -341,6 +356,7 @@ overwrites `dist/` from the registry tarballs.
 | `fuel-economy-mcp` | 1.0.2 | no |  | 2 |
 | `@mrfentmen/fueleconomy-mcp` | 1.0.5 | no |  |  |
 | `futurama-mcp` | 1.0.2 | no |  | 1 |
+| `@mrfentmen/game-of-life-mcp` | 1.0.0 | no |  |  |
 | `gamebanana-mcp` | 1.0.3 | no |  | 3 |
 | `gateio-mcp` | 1.0.2 | no |  | 2 |
 | `gatus-mcp` | 1.0.6 | no |  |  |
@@ -352,6 +368,7 @@ overwrites `dist/` from the registry tarballs.
 | `genderize-mcp` | 1.0.2 | no |  | 1 |
 | `genius-mcp` | 1.1.0 | no |  |  |
 | `genrenator-mcp` | 1.0.2 | no |  | 2 |
+| `@mrfentmen/geo-mcp` | 1.0.0 | no |  |  |
 | `geojs-mcp` | 1.0.2 | no |  | 1 |
 | `geolocation-db-mcp` | 1.0.2 | no |  | 1 |
 | `ghibli-mcp` | 1.0.2 | no |  | 2 |
@@ -381,6 +398,7 @@ overwrites `dist/` from the registry tarballs.
 | `govinfo-mcp` | 1.0.3 | no |  | 2 |
 | `govtrack-mcp` | 1.0.2 | no |  | 2 |
 | `gpodder-mcp` | 1.0.2 | no |  | 1 |
+| `@mrfentmen/graph-algorithms-mcp` | 1.0.0 | no |  |  |
 | `@mrfentmen/greenhouse-mcp` | 1.0.6 | no |  |  |
 | `greynoise-mcp` | 1.1.0 | no |  |  |
 | `@mrfentmen/groq-mcp` | 1.0.5 | no |  |  |
@@ -407,6 +425,7 @@ overwrites `dist/` from the registry tarballs.
 | `hn-reddit-mcp` | 1.0.2 | no |  | 2 |
 | `holidays-mcp` | 1.0.3 | yes |  | 1 |
 | `homebrew-mcp` | 1.0.2 | no |  | 2 |
+| `@mrfentmen/hpo-mcp` | 1.0.0 | no |  |  |
 | `html-meta-mcp` | 1.0.2 | no |  | 2 |
 | `@mrfentmen/html-to-markdown-mcp` | 1.0.3 | no |  |  |
 | `http-inspector-mcp` | 1.0.2 | no |  | 3 |
@@ -418,6 +437,7 @@ overwrites `dist/` from the registry tarballs.
 | `@mrfentmen/huggingface-mcp` | 1.0.3 | no |  | 3 |
 | `iana-tld-mcp` | 1.0.2 | no |  | 1 |
 | `iban-validator-mcp` | 1.0.2 | no |  |  |
+| `@mrfentmen/icd10-mcp` | 1.0.0 | no |  |  |
 | `icebox-mcp` | 1.0.6 | no |  |  |
 | `ics-generator-mcp` | 1.0.3 | no |  | 2 |
 | `ietf-mcp` | 1.0.2 | no |  | 2 |
@@ -430,10 +450,12 @@ overwrites `dist/` from the registry tarballs.
 | `independent-reserve-mcp` | 1.0.2 | no |  | 3 |
 | `infisical-mcp` | 1.0.3 | no |  | 2 |
 | `inngest-mcp` | 1.0.3 | no |  | 2 |
+| `@mrfentmen/inspire-hep-mcp` | 1.0.0 | no |  |  |
 | `inspirobot-mcp` | 1.0.2 | no |  | 2 |
 | `interpro-mcp` | 1.0.2 | no |  | 2 |
 | `invoice-mcp` | 1.1.2 | no |  |  |
 | `ip-geo-mcp` | 1.0.3 | no |  | 3 |
+| `@mrfentmen/ip-subnet-mcp` | 1.0.0 | no |  |  |
 | `ipapi-mcp` | 1.0.2 | no |  | 2 |
 | `ipdata-mcp` | 1.0.0 | no |  |  |
 | `ipify-mcp` | 1.0.2 | no |  | 1 |
@@ -441,6 +463,7 @@ overwrites `dist/` from the registry tarballs.
 | `ipma-mcp` | 1.0.2 | no |  | 2 |
 | `ipwhois-mcp` | 1.0.2 | no |  | 1 |
 | `irail-mcp` | 1.0.2 | no |  | 2 |
+| `@mrfentmen/isbn-mcp` | 1.0.0 | no |  |  |
 | `isbndb-mcp` | 1.1.2 | no |  |  |
 | `@mrfentmen/iss-mcp` | 1.1.3 | yes |  |  |
 | `iss-tracker-mcp` | 1.0.0 | no |  |  |
@@ -463,10 +486,12 @@ overwrites `dist/` from the registry tarballs.
 | `@mrfentmen/jsdelivr-mcp` | 1.0.2 | no |  | 3 |
 | `json-schema-store-mcp` | 1.0.3 | no |  | 4 |
 | `json-tools-mcp` | 1.0.2 | no |  | 1 |
+| `@mrfentmen/jsonpath-mcp` | 1.0.0 | no |  |  |
 | `jsonplaceholder-mcp` | 1.0.2 | no |  | 2 |
 | `jwt-tools-mcp` | 1.0.2 | no |  | 2 |
 | `k6-mcp` | 1.0.5 | no |  |  |
 | `@mrfentmen/kanye-mcp` | 1.0.3 | no |  | 2 |
+| `@mrfentmen/kegg-mcp` | 1.0.0 | no |  |  |
 | `kith-mcp` | 1.0.5 | no |  |  |
 | `kitsu-mcp` | 1.0.2 | no |  | 2 |
 | `kiwi-mcp` | 1.0.5 | no |  |  |
@@ -498,6 +523,7 @@ overwrites `dist/` from the registry tarballs.
 | `literal-mcp` | 1.0.1 | no |  |  |
 | `lobsters-mcp` | 1.0.2 | no |  | 1 |
 | `loc-mcp` | 1.1.0 | no |  |  |
+| `@mrfentmen/locale-format-mcp` | 1.0.0 | no |  |  |
 | `@mrfentmen/lockstep-mcp` | 1.0.1 | no |  |  |
 | `@mrfentmen/logseq-mcp` | 1.0.1 | no |  |  |
 | `logto-mcp` | 1.0.2 | no |  |  |
@@ -523,8 +549,10 @@ overwrites `dist/` from the registry tarballs.
 | `@mrfentmen/mast-mcp` | 1.0.5 | no |  | 1 |
 | `@mrfentmen/mastodon-mcp` | 1.1.2 | no |  |  |
 | `math-tools-mcp` | 1.0.2 | no |  | 2 |
+| `@mrfentmen/matrix-mcp` | 1.0.0 | no |  |  |
 | `@mrfentmen/maven-central-mcp` | 1.0.0 | no |  |  |
 | `maven-info-mcp` | 1.0.2 | no |  | 2 |
+| `@mrfentmen/maze-mcp` | 1.0.0 | no |  |  |
 | `mbta-mcp` | 1.0.2 | no |  | 2 |
 | `mcp-auditor-mcp` | 1.0.5 | no |  |  |
 | `mcstatus-mcp` | 1.0.2 | no |  | 1 |
@@ -539,10 +567,12 @@ overwrites `dist/` from the registry tarballs.
 | `mercury-mcp` | 1.0.5 | no |  |  |
 | `merge-conflict-forecaster-mcp` | 1.0.2 | no |  |  |
 | `met-no-mcp` | 1.0.0 | no |  |  |
+| `@mrfentmen/metar-mcp` | 1.0.0 | no |  |  |
 | `@mrfentmen/metmuseum-mcp` | 1.0.2 | yes |  | 2 |
 | `metoffice-mcp` | 1.0.1 | no |  |  |
 | `metronome-mcp` | 1.0.2 | no |  | 2 |
 | `mexc-mcp` | 1.0.2 | no |  | 2 |
+| `@mrfentmen/mfapi-mcp` | 1.0.0 | no |  |  |
 | `mgm-mcp` | 1.0.3 | no |  | 2 |
 | `microlink-mcp` | 1.0.2 | no |  | 1 |
 | `midi-tools-mcp` | 1.0.2 | no |  | 1 |
@@ -558,6 +588,7 @@ overwrites `dist/` from the registry tarballs.
 | `mobygames-mcp` | 1.1.3 | no |  |  |
 | `@mrfentmen/modrinth-mcp` | 1.0.3 | no |  | 2 |
 | `moon-phase-mcp` | 1.0.2 | no |  | 2 |
+| `@mrfentmen/morse-mcp` | 1.0.0 | no |  |  |
 | `mtg-mcp` | 1.0.2 | no |  | 3 |
 | `muffinlabs-mcp` | 1.0.2 | no |  | 2 |
 | `@mrfentmen/musicbrainz-mcp` | 1.0.2 | no |  | 2 |
@@ -576,6 +607,7 @@ overwrites `dist/` from the registry tarballs.
 | `nationalize-mcp` | 1.0.2 | no |  | 2 |
 | `@mrfentmen/navidrome-mcp` | 1.0.1 | no |  |  |
 | `nbp-mcp` | 1.0.3 | no |  | 2 |
+| `@mrfentmen/ncbi-taxonomy-mcp` | 1.0.0 | no |  |  |
 | `ndbc-buoy-mcp` | 1.0.2 | no |  | 2 |
 | `netatmo-mcp` | 1.0.1 | no |  |  |
 | `netdata-mcp` | 1.0.5 | no |  |  |
@@ -589,6 +621,7 @@ overwrites `dist/` from the registry tarballs.
 | `nobel-mcp` | 1.0.3 | no |  | 2 |
 | `nodered-mcp` | 1.0.3 | no |  |  |
 | `nominatim-mcp` | 1.0.2 | yes |  | 1 |
+| `@mrfentmen/nonogram-mcp` | 1.0.0 | no |  |  |
 | `nonprofit-mcp` | 1.0.5 | no |  |  |
 | `@mrfentmen/notion-mcp` | 1.1.6 | no |  |  |
 | `novu-mcp` | 1.1.6 | no |  |  |
@@ -605,6 +638,7 @@ overwrites `dist/` from the registry tarballs.
 | `nyc-arrests-mcp` | 1.0.5 | no |  |  |
 | `nyc311-mcp` | 1.0.2 | no |  | 2 |
 | `nylas-mcp` | 1.0.5 | no |  |  |
+| `@mrfentmen/obis-mcp` | 1.0.0 | no |  |  |
 | `ocrspace-mcp` | 1.0.5 | no |  |  |
 | `odysee-mcp` | 1.0.3 | no |  | 4 |
 | `@mrfentmen/oecd-mcp` | 1.1.0 | no |  |  |
@@ -613,6 +647,7 @@ overwrites `dist/` from the registry tarballs.
 | `ogs-mcp` | 1.0.3 | no |  | 2 |
 | `ohdear-mcp` | 1.1.2 | no |  |  |
 | `@mrfentmen/okx-mcp` | 1.0.3 | no |  | 3 |
+| `@mrfentmen/ols-mcp` | 1.0.0 | no |  |  |
 | `omdb-mcp` | 1.1.4 | no |  |  |
 | `on-this-day-mcp` | 1.0.2 | no |  | 2 |
 | `onesignal-mcp` | 1.1.3 | no |  |  |
@@ -622,6 +657,7 @@ overwrites `dist/` from the registry tarballs.
 | `open-notify-mcp` | 1.0.2 | no |  | 1 |
 | `open-vsx-mcp` | 1.0.2 | no |  | 2 |
 | `open5e-mcp` | 1.0.2 | no |  | 3 |
+| `@mrfentmen/openaire-mcp` | 1.0.0 | no |  |  |
 | `@mrfentmen/openalex-mcp` | 1.1.0 | no |  |  |
 | `openapi-scout-mcp` | 1.0.3 | no |  |  |
 | `openbrewery-mcp` | 1.0.2 | yes |  | 2 |
@@ -647,6 +683,7 @@ overwrites `dist/` from the registry tarballs.
 | `openwhyd-mcp` | 1.0.2 | no |  | 2 |
 | `opnsense-mcp` | 1.0.5 | no |  |  |
 | `@mrfentmen/opsgenie-mcp` | 1.0.5 | no |  |  |
+| `@mrfentmen/orcid-mcp` | 1.0.0 | no |  |  |
 | `osf-mcp` | 1.0.3 | no |  | 3 |
 | `osm-notes-mcp` | 1.0.0 | no |  |  |
 | `osrm-mcp` | 1.0.2 | no |  | 3 |
@@ -654,6 +691,7 @@ overwrites `dist/` from the registry tarballs.
 | `osv-mcp` | 1.0.2 | no |  | 2 |
 | `otp-mcp` | 1.0.2 | no |  | 2 |
 | `otx-mcp` | 1.0.1 | no |  |  |
+| `@mrfentmen/ourairports-mcp` | 1.0.0 | no |  |  |
 | `overpass-mcp` | 1.0.3 | no |  | 4 |
 | `owncloud-mcp` | 1.0.3 | no |  |  |
 | `oyez-mcp` | 1.0.3 | no |  | 3 |
@@ -691,6 +729,7 @@ overwrites `dist/` from the registry tarballs.
 | `poetry-mcp` | 1.0.2 | no |  | 2 |
 | `pokeapi-mcp` | 1.0.3 | no |  | 2 |
 | `pokemon-tcg-mcp` | 1.0.3 | no |  | 1 |
+| `@mrfentmen/poker-mcp` | 1.0.0 | no |  |  |
 | `police-transparency-mcp` | 1.0.2 | no |  | 2 |
 | `poloniex-mcp` | 1.0.2 | no |  | 2 |
 | `@mrfentmen/polygon-mcp` | 1.1.6 | no |  |  |
@@ -702,7 +741,9 @@ overwrites `dist/` from the registry tarballs.
 | `prada-mcp` | 1.0.6 | no |  |  |
 | `prayer-times-mcp` | 1.0.2 | no |  | 2 |
 | `predictit-mcp` | 1.0.6 | no |  |  |
+| `@mrfentmen/pride-mcp` | 1.0.0 | no |  |  |
 | `producthunt-mcp` | 1.1.3 | no |  |  |
+| `@mrfentmen/proteins-mcp` | 1.0.0 | no |  |  |
 | `protondb-mcp` | 1.0.2 | no |  | 2 |
 | `prx-mcp` | 1.0.3 | no |  | 2 |
 | `@mrfentmen/pubchem-mcp` | 1.1.0 | no |  |  |
@@ -710,6 +751,7 @@ overwrites `dist/` from the registry tarballs.
 | `public-holidays-mcp` | 1.0.0 | no |  |  |
 | `publicwww-mcp` | 1.0.5 | no |  |  |
 | `@mrfentmen/pubmed-mcp` | 1.1.0 | no |  |  |
+| `@mrfentmen/punycode-mcp` | 1.0.0 | no |  |  |
 | `pusher-mcp` | 1.1.4 | no |  |  |
 | `pvgis-mcp` | 1.0.5 | no |  |  |
 | `pydio-mcp` | 1.0.1 | no |  |  |
@@ -717,12 +759,14 @@ overwrites `dist/` from the registry tarballs.
 | `pypi-stats-mcp` | 1.0.0 | no |  |  |
 | `qbittorrent-mcp` | 1.0.5 | no |  |  |
 | `qr-code-mcp` | 1.0.3 | no |  | 2 |
+| `@mrfentmen/quickgo-mcp` | 1.0.0 | no |  |  |
 | `quip-mcp` | 1.1.2 | no |  |  |
 | `quotes-mcp` | 1.0.2 | yes |  | 1 |
 | `quran-mcp` | 1.0.3 | no |  | 3 |
 | `radarr-mcp` | 1.0.5 | no |  |  |
 | `radio-browser-mcp` | 1.0.3 | no |  | 3 |
 | `radio-garden-mcp` | 1.0.2 | no |  | 2 |
+| `@mrfentmen/raiderio-mcp` | 1.0.0 | no |  |  |
 | `@mrfentmen/raindrop-mcp` | 1.0.5 | no |  |  |
 | `rainviewer-mcp` | 1.0.3 | yes |  | 1 |
 | `random-animals-mcp` | 1.0.3 | no |  | 2 |
@@ -820,6 +864,7 @@ overwrites `dist/` from the registry tarballs.
 | `stapi-mcp` | 1.0.4 | no |  | 4 |
 | `star-wars-mcp` | 1.0.2 | no |  | 2 |
 | `stardew-wiki-mcp` | 1.0.3 | no |  | 3 |
+| `@mrfentmen/statistics-mcp` | 1.0.0 | no |  |  |
 | `statping-mcp` | 1.1.2 | no |  |  |
 | `statuscake-mcp` | 1.1.2 | no |  |  |
 | `statuspage-mcp` | 1.1.2 | no |  |  |
@@ -873,6 +918,7 @@ overwrites `dist/` from the registry tarballs.
 | `time-tools-mcp` | 1.0.2 | no |  | 2 |
 | `timeapi-mcp` | 1.0.2 | yes |  | 1 |
 | `@mrfentmen/tmdb-mcp` | 1.1.0 | no |  |  |
+| `@mrfentmen/toml-mcp` | 1.0.0 | no |  |  |
 | `toolchain-lens-mcp` | 1.0.2 | no |  |  |
 | `torah-mcp` | 1.0.5 | no |  | 2 |
 | `trakt-mcp` | 1.0.2 | no |  |  |
@@ -881,6 +927,7 @@ overwrites `dist/` from the registry tarballs.
 | `treasury-rates-mcp` | 1.1.0 | no |  |  |
 | `trivia-mcp` | 1.0.3 | yes |  | 2 |
 | `@mrfentmen/trove-mcp` | 1.0.3 | no |  |  |
+| `@mrfentmen/truth-table-mcp` | 1.0.0 | no |  |  |
 | `tunein-mcp` | 1.0.2 | no |  | 2 |
 | `turbosquid-mcp` | 1.1.2 | no |  |  |
 | `@mrfentmen/tvdb-mcp` | 1.0.1 | no |  |  |
@@ -892,6 +939,7 @@ overwrites `dist/` from the registry tarballs.
 | `ui-avatars-mcp` | 1.0.3 | no |  | 1 |
 | `@mrfentmen/ukparliament-mcp` | 1.0.4 | no |  | 1 |
 | `@mrfentmen/ukpolice-mcp` | 1.0.3 | no |  | 2 |
+| `@mrfentmen/ulid-mcp` | 1.0.0 | no |  |  |
 | `un-sdg-mcp` | 1.0.2 | no |  | 2 |
 | `uncomtrade-mcp` | 1.0.2 | no |  | 2 |
 | `unicode-mcp` | 1.0.3 | no |  | 3 |
@@ -900,6 +948,7 @@ overwrites `dist/` from the registry tarballs.
 | `@mrfentmen/unit-converter-mcp` | 1.0.3 | no |  | 1 |
 | `@mrfentmen/unpaywall-mcp` | 1.0.2 | no |  | 2 |
 | `unpkg-mcp` | 1.0.2 | no |  | 2 |
+| `@mrfentmen/unstats-mcp` | 1.0.0 | no |  |  |
 | `upbit-mcp` | 1.0.2 | no |  | 2 |
 | `upcitemdb-mcp` | 1.0.2 | no |  | 2 |
 | `uptime-kuma-mcp` | 1.0.6 | no |  |  |
@@ -912,9 +961,11 @@ overwrites `dist/` from the registry tarballs.
 | `@mrfentmen/usaspending-mcp` | 1.1.0 | yes |  |  |
 | `usda-food-mcp` | 1.0.3 | yes |  | 1 |
 | `uselessfacts-mcp` | 1.0.2 | yes |  |  |
+| `@mrfentmen/useragent-mcp` | 1.0.0 | no |  |  |
 | `usgs-earthquakes-mcp` | 1.0.2 | yes |  | 2 |
 | `usgs-mcp` | 1.0.0 | no |  |  |
 | `usgs-water-mcp` | 1.0.2 | no |  | 1 |
+| `@mrfentmen/usno-mcp` | 1.0.0 | no |  |  |
 | `usps-mcp` | 1.0.4 | no |  |  |
 | `@mrfentmen/uuid-mcp` | 1.0.5 | no |  | 2 |
 | `@mrfentmen/valorant-mcp` | 1.0.2 | no |  | 1 |
@@ -964,6 +1015,7 @@ overwrites `dist/` from the registry tarballs.
 | `workable-mcp` | 1.0.5 | no |  |  |
 | `worktree-orbit-mcp` | 1.0.2 | no |  |  |
 | `@mrfentmen/worldbank-mcp` | 1.0.4 | no |  |  |
+| `@mrfentmen/worms-mcp` | 1.0.0 | no |  |  |
 | `wpengine-mcp` | 1.0.2 | no |  |  |
 | `wttr-mcp` | 1.0.3 | no |  | 4 |
 | `wynncraft-mcp` | 1.0.4 | no |  | 2 |

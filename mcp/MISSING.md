@@ -3,7 +3,7 @@
 Living list of MCP servers that do **not** exist yet (verified against the MCP
 registry, npm, GitHub and the web), plus what was checked and skipped and why.
 
-Updated: 2026-09-22. Repo count at time of writing: 706.
+Updated: 2026-10-27. Repo count at time of writing: 1012 published packages, 219 with source.
 
 ## Verified missing — build next
 
@@ -244,3 +244,38 @@ Auth = free key unless noted keyless. Verify registry+npm+web before building.
 - ACP = two protocols: Zed Agent Client Protocol (registry via GitHub PR, free, curated, auth required) vs IBM BeeAI ACP (self-hosted /agents + BeeAI Platform). Confirm which before listing.
 - NEXT BUILDS (demand cats): jobs wave (Greenhouse/Lever/Ashby/SmartRecruiters public keyless ATS APIs), sports odds (The Odds API free NBA+MLB / BetStack free-forever), MoMA (gated, secondary), more Shopify streetwear (Supreme/Flight Club/Ben Baller unchecked).
 - Wave-2 money move (2026-09-24): 34 more to published snapshot (crypto/data, dev SaaS, monitoring, analytics, validation, books, business SaaS, security, podcast hosting). Public 727 -> 693, premium 70 -> 104. All republished w/ premium repo URLs (34 OK 0 FAIL).
+
+## Wave 187 - 52 keyless servers built 2026-10-27
+
+Each server below was checked before the build: its npm name (plain and `@mrfentmen/`) was
+free on the registry, the upstream source answered a live keyless request during the smoke
+run, and both the official MCP registry and this repo's own `published/` tree were searched
+for the same domain first.
+
+- research and life sciences: `orcid-mcp`, `openaire-mcp`, `kegg-mcp`, `ncbi-taxonomy-mcp`,
+  `geo-mcp` (NCBI GEO), `proteins-mcp` (EBI Proteins), `pride-mcp`, `biostudies-mcp`,
+  `obis-mcp` (OBIS marine), `worms-mcp`, `hpo-mcp`, `ols-mcp`, `quickgo-mcp`, `icd10-mcp`,
+  `cwe-mcp`, `epss-mcp`, `inspire-hep-mcp`
+- money and state: `fiscaldata-mcp` (US Treasury), `cftc-mcp`, `ecb-mcp`, `unstats-mcp`,
+  `brreg-mcp` (Norway), `mfapi-mcp` (AMFI NAVs), `ourairports-mcp`, `usno-mcp`
+- live feeds: `adsb-mcp` (adsb.lol), `adsbdb-mcp`, `metar-mcp` (NOAA Aviation Weather),
+  `chronam-mcp` (Library of Congress), `epa-echo-mcp` (EPA ECHO plus Envirofacts),
+  `raiderio-mcp`
+- local compute, no network: `ip-subnet-mcp`, `ulid-mcp`, `isbn-mcp`, `morse-mcp`,
+  `truth-table-mcp`, `graph-algorithms-mcp`, `matrix-mcp`, `statistics-mcp`,
+  `finance-calc-mcp`, `date-math-mcp`, `toml-mcp`, `jsonpath-mcp`, `useragent-mcp`,
+  `maze-mcp`, `poker-mcp`, `nonogram-mcp`, `game-of-life-mcp`, `colorblind-mcp`,
+  `locale-format-mcp`
+
+Also completed in the same session: `punycode-mcp` (ACE/Unicode conversion, checked by
+round-tripping real internationalised domains) and `color-contrast-mcp` (contrast
+suggestions search for the smallest change that reaches the target ratio). Both were
+smoke-run before publication and are in the snapshot with the wave.
+
+`toml-mcp` carries the only hand-written parser in the wave. Its reader and writer were
+checked against Python's `tomllib` on 33 documents - 11 parse cases, 4 emitter round-trips,
+10 edge cases and 8 rejection cases - and agree on every one.
+
+Overlap worth knowing: `aviation-weather-mcp` already sat in the snapshot with two stub
+tools; `metar-mcp` implements the same NOAA Aviation Weather data for real. The stub
+package was left untouched.

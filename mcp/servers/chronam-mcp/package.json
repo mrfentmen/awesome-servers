@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/chronam-mcp",
+  "version": "1.0.0",
+  "description": "Chronicling America historical US newspapers at the Library of Congress: search scanned pages 1690-1963 by keyword, state or date, and read one page's details - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/chronam-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "chronam-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "newspapers",
+    "history",
+    "loc",
+    "archives",
+    "ocr",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

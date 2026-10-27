@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/metar-mcp",
+  "version": "1.0.0",
+  "description": "Live aviation weather from NOAA: current METAR observations, TAF forecasts and station records for airports worldwide - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/metar-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "metar-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "aviation",
+    "weather",
+    "metar",
+    "taf",
+    "noaa",
+    "airport",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/geo-mcp",
+  "version": "1.0.0",
+  "description": "NCBI GEO datasets from E-utilities: search transcriptomics and methylation studies, count hits, and read one dataset's details - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/geo-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "geo-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "ncbi",
+    "geo",
+    "gene-expression",
+    "datasets",
+    "bioinformatics",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
