@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { collection, collections, collectionReleaseHistory } from "./api.js";
+import { collection, collections, collectionReleaseHistory, collectionContents } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -52,9 +52,8 @@ export function createServer() {
         inputSchema: z.object({ namespace: z.string().describe("Namespace, like community."), name: z.string().describe("Collection name, like general."), version: z.string().describe("The exact version to inspect, like 13.4.0.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement contents locally (paywall removed)
         try {
-            return textError("Not yet implemented: contents");
+            return text(await collectionContents(args));
         }
         catch (e) {
             return textError(String(e));

@@ -84,3 +84,49 @@ export const m0_convert = m0.convert;
 export const m1_latest = m1.latest;
 export const m1_history = m1.history;
 // ---- muxC tools:
+
+const ERAPI = 'https://open.er-api.com/v6/latest/USD';
+export async function currencyList(args = {}) {
+    const search = String(args?.search ?? '').trim().toLowerCase();
+    const limit = Math.min(Math.max(Number(args?.limit ?? 50) || 50, 1), 200);
+    const res = await fetch(ERAPI, {
+        headers: { 'User-Agent': 'mrfentmen-er-api-mcp/1.0', Accept: 'application/json' },
+        signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok)
+        throw new Error(`ExchangeRate API returned ${res.status}`);
+    const body = (await res.json());
+    if (body.result !== 'success' || !body.rates)
+        throw new Error(`ExchangeRate API said: ${body['error-type'] ?? 'no rates'}`);
+    let names = {};
+    try {
+        const nres = await fetch('https://api.frankfurter.app/currencies', {
+            headers: { Accept: 'application/json', 'User-Agent': 'mrfentmen-er-api-mcp/1.0' },
+            signal: AbortSignal.timeout(10000),
+        });
+        if (nres.ok)
+            names = (await nres.json());
+    }
+    catch {
+        names = {};
+    }
+    let rows = Object.entries(body.rates).map(([code, rate]) => ({
+        code,
+        name: String(names[code] ?? ''),
+        rate: Number(rate),
+    }));
+    if (search)
+        rows = rows.filter((r) => r.code.toLowerCase().includes(search) || r.name.toLowerCase().includes(search));
+    if (!rows.length)
+        throw new Error(`No currency matches "${args?.search}"`);
+    rows.sort((a, b) => a.code.localeCompare(b.code));
+    const shown = rows.slice(0, limit);
+    return [
+        `Currencies per USD — ${rows.length} match(es), showing ${shown.length}`,
+        `Rates updated ${body.time_last_update_utc ?? 'unknown'}`,
+        '',
+        ...shown.map((r) => `${r.code}${r.name ? ` (${r.name})` : ''}: ${r.rate}`),
+        names && Object.keys(names).length ? '' : undefined,
+        names && Object.keys(names).length ? 'Names come from the ECB list; other codes show the code only.' : undefined,
+    ].filter((l) => l !== undefined && l !== null).join('\n');
+}

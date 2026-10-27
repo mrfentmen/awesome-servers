@@ -92,3 +92,35 @@ export async function markets(args = {}) {
     lines.push(`Days represented: ${distinct.size} of ${list.length} markets asked.`);
     return lines.join('\n');
 }
+
+const BING = 'https://www.bing.com/HPImageArchive.aspx';
+export async function wallpaperArchive(args = {}) {
+    const idx = Math.min(Math.max(Number(args?.idx ?? 0) || 0, 0), 16);
+    const count = Math.min(Math.max(Number(args?.count ?? 4) || 4, 1), 16);
+    const market = String(args?.market ?? 'en-US').trim();
+    if (!/^[a-z]{2}-[A-Z]{2}$/.test(market))
+        throw new Error('Market looks like en-US or de-DE.');
+    const qs = new URLSearchParams({ format: 'js', idx: String(idx), n: String(count), mkt: market });
+    const res = await fetch(`${BING}?${qs}`, {
+        headers: { 'User-Agent': 'mrfentmen-bing-wallpaper-mcp/1.0', Accept: 'application/json' },
+        signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok)
+        throw new Error(`Bing returned ${res.status}`);
+    const body = (await res.json());
+    const images = Array.isArray(body.images) ? body.images : [];
+    if (!images.length)
+        throw new Error(`Bing's archive has nothing at offset ${idx} for ${market}`);
+    const lines = images.map((img, i) => {
+        const date = String(img.startdate ?? '');
+        const day = date.length === 8 ? `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6)}` : date;
+        return `${i + 1}. ${day} — ${img.title ?? '(untitled)'}
+   ${String(img.copyright ?? '').trim()}
+   https://www.bing.com${img.url ?? ''}`;
+    });
+    return [
+      `Bing wallpapers, ${market}, offset ${idx}, ${images.length} day(s):`,
+      '',
+      ...lines,
+    ].join('\n');
+}

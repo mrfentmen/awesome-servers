@@ -14,7 +14,7 @@ overwrites `dist/` from the registry tarballs.
 - scoped under `@mrfentmen`: **195**
 - total size: **15.7 MB**
 - carrying a licence gate (`MCP_LICENSE_KEY`): **1**
-- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **518**
+- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **515**
 - whose `src/` still holds the pre-fix source (not shipped, cannot rebuild `dist/`): **36**
 
 | package | version | src? | gate | stubs |
@@ -41,7 +41,7 @@ overwrites `dist/` from the registry tarballs.
 | `anagram-mcp` | 1.0.5 | no |  | 2 |
 | `@mrfentmen/anilist-mcp` | 1.1.0 | no |  |  |
 | `anime-filler-mcp` | 1.0.5 | no |  |  |
-| `ansible-galaxy-mcp` | 1.0.5 | no |  | 1 |
+| `ansible-galaxy-mcp` | 1.0.6 | no |  |  |
 | `apexlegends-mcp` | 1.0.3 | no |  |  |
 | `api-deprecation-radar-mcp` | 1.0.7 | no |  | 2 |
 | `apis-guru-mcp` | 1.0.5 | no |  | 2 |
@@ -82,7 +82,7 @@ overwrites `dist/` from the registry tarballs.
 | `bigdatacloud-mcp` | 1.0.5 | no |  | 2 |
 | `bikeindex-mcp` | 1.0.5 | no |  | 2 |
 | `binance-market-mcp` | 1.1.1 | no |  |  |
-| `bing-wallpaper-mcp` | 1.0.5 | no |  | 1 |
+| `bing-wallpaper-mcp` | 1.0.6 | no |  |  |
 | `biorxiv-mcp` | 1.0.5 | no |  | 2 |
 | `@mrfentmen/bitbucket-mcp` | 1.0.5 | no |  | 3 |
 | `bitcoiner-mcp` | 1.0.5 | no |  | 2 |
@@ -280,7 +280,7 @@ overwrites `dist/` from the registry tarballs.
 | `epic-free-games-mcp` | 1.0.4 | no |  | 1 |
 | `episodate-mcp` | 1.0.4 | no |  | 2 |
 | `epo-mcp` | 1.0.6 | no |  |  |
-| `er-api-mcp` | 1.0.4 | yes |  | 1 |
+| `er-api-mcp` | 1.0.5 | yes |  |  |
 | `ericemanuel-mcp` | 1.1.3 | no |  |  |
 | `esm-mcp` | 1.0.4 | no |  | 2 |
 | `esplora-mcp` | 1.0.4 | no |  | 1 |

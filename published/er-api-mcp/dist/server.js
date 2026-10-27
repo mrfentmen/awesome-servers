@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { m0_convert, m0_latest, m1_history } from "./api.js";
+import { m0_convert, m0_latest, m1_history, currencyList } from "./api.js";
 const text = (value) => ({ content: [{ type: 'text', text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -53,9 +53,8 @@ export function createServer() {
         inputSchema: z.object({ search: z.string().describe("Filter by code or name, e.g. yen or JPY.").optional(), limit: z.number().describe("Max currencies.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement list locally (paywall removed)
         try {
-            return textError("Not yet implemented: list");
+            return text(await currencyList(args));
         }
         catch (e) {
             return textError(String(e));

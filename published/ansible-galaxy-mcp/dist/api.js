@@ -116,3 +116,43 @@ export async function collectionReleaseHistory(args) {
     }
     return lines.join("\n");
 }
+
+const GALAXY = 'https://galaxy.ansible.com/api/v3/plugin/ansible/content/published/collections/index';
+export async function collectionContents(args = {}) {
+    const ns = String(args?.namespace ?? '').trim().toLowerCase();
+    const name = String(args?.name ?? '').trim().toLowerCase();
+    const version = String(args?.version ?? '').trim();
+    if (!/^[a-z0-9_]+$/.test(ns) || !/^[a-z0-9_]+$/.test(name))
+        throw new Error('Namespace and name look like community and general.');
+    if (!/^[0-9][0-9a-z.+-]*$/i.test(version))
+        throw new Error('Give the exact released version, like 13.4.0.');
+    const url = `${GALAXY}/${ns}/${name}/versions/${encodeURIComponent(version)}/`;
+    const res = await fetch(url, {
+        headers: { 'User-Agent': 'mrfentmen-ansible-galaxy-mcp/1.0', Accept: 'application/json' },
+        signal: AbortSignal.timeout(30000),
+    });
+    if (res.status === 404)
+        throw new Error(`Galaxy has no ${ns}.${name} ${version}`);
+    if (!res.ok)
+        throw new Error(`Galaxy returned ${res.status}`);
+    const d = (await res.json());
+    const m = d.metadata ?? {};
+    const artifact = d.artifact ?? {};
+    const deps = Object.entries(m.dependencies ?? {});
+    const files = Array.isArray(d.files) ? d.files : [];
+    const size = Number(artifact.size ?? 0);
+    return [
+        `${ns}.${name} ${d.version}`,
+        `Requires ansible-core ${d.requires_ansible ?? 'unspecified'} · licence ${m.license ?? 'not stated'}`,
+        `Tarball: ${artifact.filename ?? '?'} · ${size ? (size / 1048576).toFixed(2) + ' MB' : '?'}`,
+        artifact.sha256 ? `sha256: ${artifact.sha256}` : 'sha256: not published',
+        d.git_commit_sha ? `Source commit: ${d.git_commit_sha}${d.git_url ? ` (${d.git_url})` : ''}` : 'Source commit: not recorded',
+        `Published: ${String(d.created_at ?? '').slice(0, 10) || '?'}`,
+        (m.authors ?? []).length ? `Authors: ${(m.authors ?? []).join(', ')}` : '',
+        (m.tags ?? []).length ? `Tags: ${(m.tags ?? []).join(', ')}` : '',
+        deps.length ? `Dependencies (${deps.length}): ${deps.slice(0, 10).map(([k, v]) => `${k} ${v}`).join(', ')}${deps.length > 10 ? ' …' : ''}` : 'Dependencies: none',
+        files.length ? `Files in the tarball: ${files.length}` : '',
+        `Download: ${d.download_url ?? url}`,
+        m.homepage ? `Home: ${m.homepage}` : '',
+    ].filter(Boolean).join('\n');
+}

@@ -1,20 +1,18 @@
 # Tools still answering "Not yet implemented"
 
-1026 tool(s) across 518 package(s) still ship a stub body.
+1023 tool(s) across 515 package(s) still ship a stub body.
 Each was a gateway-only tool whose implementation never existed in the package,
 so the body has to be written against the live service and checked with a real
-call before publishing. 9 package(s) are already fixed.
+call before publishing. 12 package(s) are already fixed.
 
 | package | tools | has src |
 | --- | --- | --- |
 | `albiononline-mcp` | summary | no |
-| `ansible-galaxy-mcp` | contents | no |
 | `archive-org-mcp` | timeline | yes |
 | `artifact-gauge-mcp` | stats | no |
 | `artifact-hub-mcp` | detail | no |
 | `bandcamp-mcp` | details | no |
 | `bankofcanada-mcp` | range | no |
-| `bing-wallpaper-mcp` | archive | no |
 | `blizzard-mcp` | weights | no |
 | `browser-mcp` | records | no |
 | `census-geo-mcp` | geographies | no |
@@ -37,7 +35,6 @@ call before publishing. 9 package(s) are already fixed.
 | `ensideas-mcp` | profile | no |
 | `epa-frs-mcp` | facilities | no |
 | `epic-free-games-mcp` | games | no |
-| `er-api-mcp` | list | yes |
 | `esplora-mcp` | adjustment | no |
 | `f-droid-mcp` | versions | no |
 | `fauna-mcp` | lint | no |

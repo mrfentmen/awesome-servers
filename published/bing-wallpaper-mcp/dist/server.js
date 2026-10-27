@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { recent, today, markets } from "./api.js";
+import { recent, today, markets, wallpaperArchive } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -39,9 +39,8 @@ export function createServer() {
         inputSchema: z.object({ idx: z.number().describe("How many days back to start, 0 is today. Defaults to 0.").optional(), count: z.number().describe("How many days from there, 1-16. Defaults to 4.").optional(), market: z.string().describe("Market code like en-US, en-GB or de-DE. Defaults to en-US.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement archive locally (paywall removed)
         try {
-            return textError("Not yet implemented: archive");
+            return text(await wallpaperArchive(args));
         }
         catch (e) {
             return textError(String(e));
