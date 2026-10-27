@@ -1,0 +1,39 @@
+{
+  "name": "ai-tomogotchi-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for AI Tomogotchi virtual pet. Feed, play, and care for your AI pet.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/ai-tomogotchi-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "ai-tomogotchi-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "/opt/homebrew/bin/tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && /opt/homebrew/bin/tsc -p tsconfig.json && node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "tomogotchi",
+    "virtual-pet",
+    "ai",
+    "game"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

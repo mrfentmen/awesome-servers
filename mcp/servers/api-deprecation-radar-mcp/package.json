@@ -1,0 +1,39 @@
+{
+  "name": "api-deprecation-radar-mcp",
+  "version": "1.0.0",
+  "description": "Count local API deprecation markers by broad severity without returning endpoint names, paths, values, or source.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/api-deprecation-radar-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "api-deprecation-radar-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "npm run build && node test.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "local-first",
+    "read-only"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

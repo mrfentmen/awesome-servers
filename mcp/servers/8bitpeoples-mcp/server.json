@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/8bitpeoples-mcp",
+  "description": "MCP server for 8bitpeoples, the free chiptune record label. Browse the full release catalog.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/8bitpeoples-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "8bitpeoples-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

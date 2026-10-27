@@ -1,0 +1,8 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/artifact-gauge-mcp",
+  "description": "Local build artifact size and dependency weight inspection without file content output.",
+  "repository": { "url": "https://github.com/mrfentmen/artifact-gauge-mcp", "source": "github" },
+  "version": "1.0.0",
+  "packages": [{ "registryType": "npm", "identifier": "artifact-gauge-mcp", "version": "1.0.0", "transport": { "type": "stdio" } }]
+}

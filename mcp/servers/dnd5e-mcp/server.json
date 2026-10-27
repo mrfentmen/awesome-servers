@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/dnd5e-mcp",
+  "description": "MCP server for the D&D 5e SRD, monsters, spells, classes, and equipment.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/dnd5e-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "dnd5e-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

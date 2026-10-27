@@ -1,0 +1,29 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/adobe-premiere-mcp",
+  "description": "Control Adobe Premiere Pro video editing via ExtendScript.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/adobe-premiere-mcp",
+    "source": "github"
+  },
+  "version": "1.0.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "adobe-premiere-mcp",
+      "version": "1.0.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "PREMIERE_PATH",
+          "description": "Path to Adobe Premiere Pro application",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}

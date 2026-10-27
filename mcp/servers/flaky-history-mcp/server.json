@@ -1,0 +1,8 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/flaky-history-mcp",
+  "description": "Local aggregate test-history stability analysis without test names or raw result contents.",
+  "repository": { "url": "https://github.com/mrfentmen/flaky-history-mcp", "source": "github" },
+  "version": "1.0.0",
+  "packages": [{ "registryType": "npm", "identifier": "flaky-history-mcp", "version": "1.0.0", "transport": { "type": "stdio" } }]
+}

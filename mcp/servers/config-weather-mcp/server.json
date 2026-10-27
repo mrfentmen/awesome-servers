@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/config-weather-mcp",
+  "description": "Measure local configuration complexity and environment contract pressure without returning values, keys, paths, or source.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/config-weather-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "config-weather-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

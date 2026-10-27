@@ -1,0 +1,8 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/env-contract-mcp",
+  "description": "Local value-free environment contract and configuration drift inspection.",
+  "repository": { "url": "https://github.com/mrfentmen/env-contract-mcp", "source": "github" },
+  "version": "1.0.0",
+  "packages": [{ "registryType": "npm", "identifier": "env-contract-mcp", "version": "1.0.0", "transport": { "type": "stdio" } }]
+}

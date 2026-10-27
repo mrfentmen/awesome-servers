@@ -1,0 +1,19 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/ai-tomogotchi-mcp",
+  "description": "AI Tomogotchi virtual pet. Feed, play, and care for your AI pet.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/ai-tomogotchi-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "ai-tomogotchi-mcp",
+      "version": "1.0.0",
+      "transport": { "type": "stdio" },
+      "environmentVariables": []
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
+import { z } from "zod"
+import { eventText, load, safeEvent, save, statePath, type PetState } from "./state.js"
+const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
+const eventSchema = { language: z.string().optional(), lines: z.number().int().min(0).max(500).default(0), status: z.string().optional(), tests: z.number().int().min(0).max(100).default(0), files: z.number().int().min(0).max(100).default(0) }
+function status(state: PetState): string { return [`${state.name} | level ${state.level} | XP ${state.xp}`, `Food ${Math.round(state.hunger)} | happiness ${Math.round(state.happiness)} | energy ${Math.round(state.energy)}`, `Streak: ${state.streak} days | lines eaten: ${state.fedLines} | feedings: ${state.fedCount}`, `Languages: ${state.languages.join(", ") || "none"} | favorite: ${state.favoriteLang || "none"}`, `Achievements: ${state.achievements.length} | IDE events: ${state.ideEvents}`, `State file: ${statePath}`].join("\n") }
+export function createServer(): McpServer {
+  const server = new McpServer({ name: "codepet-mcp", version: "1.0.0" })
+  server.tool("get_pet_status", "Read CodePet's local status. No source code is read.", {}, async () => text(status(await load())))
+  server.tool("record_coding_event", "Record source free coding metadata for CodePet. Never pass source code to this tool.", eventSchema, async (input) => { const state = await load(); const event = safeEvent(input); state.ideEvents += 1; state.history = [...state.history.slice(-19), { at: new Date().toISOString(), kind: "ide", language: event.language, lines: event.lines, status: event.status }]; if (!state.languages.includes(event.language)) state.languages.push(event.language); state.happiness = Math.min(100, state.happiness + 1); state.energy = Math.min(100, state.energy + 1); await save(state); return text(eventText(state, event)) })
+  server.tool("list_quests", "List the current CodePet quest ideas and progress based on local metadata.", {}, async () => { const state = await load(); const quests = [{ title: "First Bite", progress: state.fedCount, goal: 1 }, { title: "Polyglot Snack", progress: state.languages.length, goal: 3 }, { title: "Century Club", progress: state.fedLines, goal: 100 }, { title: "Three Day Build", progress: state.streak, goal: 3 }, { title: "Editor Buddy", progress: state.ideEvents, goal: 1 }]; return text(quests.map((q) => `${q.title}: ${Math.min(q.progress, q.goal)}/${q.goal}${q.progress >= q.goal ? " complete" : ""}`).join("\n")) })
+  server.tool("clear_pet_history", "Clear CodePet's local metadata event history. This does not affect level or achievements.", {}, async () => { const state = await load(); state.history = []; await save(state); return text("CodePet metadata history cleared.") })
+  return server
+}
