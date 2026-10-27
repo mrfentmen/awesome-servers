@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { freeGames, promoSummary } from "./api.js";
+import { freeGames, promoSummary, upcomingGames } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -26,9 +26,8 @@ export function createServer() {
         inputSchema: z.object({ limit: z.number().describe("How many scheduled titles to show, 1-20. Defaults to 10.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement games locally (paywall removed)
         try {
-            return textError("Not yet implemented: games");
+            return text(await upcomingGames(args));
         }
         catch (e) {
             return textError(String(e));

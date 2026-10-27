@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { EsploraError, feeEstimates, getAddress, getBlock, getTx, mempoolFees, tipHeight, recentBlocks, recentMempool } from "./local-api.js";
+import { EsploraError, feeEstimates, getAddress, getBlock, getTx, mempoolFees, tipHeight, recentBlocks, recentMempool, difficultyAdjustment } from "./local-api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -117,9 +117,8 @@ export function createServer() {
         inputSchema: z.object({}),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement adjustment locally (paywall removed)
         try {
-            return textError("Not yet implemented: adjustment");
+            return text(await difficultyAdjustment());
         }
         catch (e) {
             return textError(String(e));

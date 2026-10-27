@@ -14,7 +14,7 @@ overwrites `dist/` from the registry tarballs.
 - scoped under `@mrfentmen`: **195**
 - total size: **15.7 MB**
 - carrying a licence gate (`MCP_LICENSE_KEY`): **1**
-- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **500**
+- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **497**
 - whose `src/` still holds the pre-fix source (not shipped, cannot rebuild `dist/`): **36**
 
 | package | version | src? | gate | stubs |
@@ -263,7 +263,7 @@ overwrites `dist/` from the registry tarballs.
 | `eccc-mcp` | 1.0.4 | no |  | 3 |
 | `ecobee-mcp` | 1.0.4 | no |  | 2 |
 | `@mrfentmen/edgar-mcp` | 1.0.3 | no |  | 2 |
-| `electricitymap-mcp` | 1.0.4 | no |  | 1 |
+| `electricitymap-mcp` | 1.0.5 | no |  |  |
 | `email-validator-mcp` | 1.2.1 | no |  |  |
 | `emby-mcp` | 1.0.2 | no |  |  |
 | `emoji-mcp` | 1.0.4 | no |  | 2 |
@@ -277,13 +277,13 @@ overwrites `dist/` from the registry tarballs.
 | `envirocar-mcp` | 1.0.4 | no |  | 2 |
 | `eol-mcp` | 1.0.4 | no |  | 2 |
 | `epa-frs-mcp` | 1.0.4 | no |  | 1 |
-| `epic-free-games-mcp` | 1.0.4 | no |  | 1 |
+| `epic-free-games-mcp` | 1.0.5 | no |  |  |
 | `episodate-mcp` | 1.0.4 | no |  | 2 |
 | `epo-mcp` | 1.0.6 | no |  |  |
 | `er-api-mcp` | 1.0.5 | yes |  |  |
 | `ericemanuel-mcp` | 1.1.3 | no |  |  |
 | `esm-mcp` | 1.0.4 | no |  | 2 |
-| `esplora-mcp` | 1.0.4 | no |  | 1 |
+| `esplora-mcp` | 1.0.5 | no |  |  |
 | `espn-core-mcp` | 1.1.0 | no |  |  |
 | `@mrfentmen/etherscan-mcp` | 1.1.4 | no |  |  |
 | `ethplorer-mcp` | 1.1.1 | no |  |  |

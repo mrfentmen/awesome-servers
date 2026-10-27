@@ -77,3 +77,40 @@ export async function promoSummary() {
         `  next offer ends: ${day(earliestEnd)}`,
     ].join('\n');
 }
+
+const EPIC = 'https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions';
+export async function upcomingGames(args = {}) {
+    const limit = Math.min(Math.max(Number(args?.limit ?? 10) || 10, 1), 20);
+    const res = await fetch(EPIC, {
+        headers: { 'User-Agent': 'mrfentmen-epic-free-games-mcp/1.0', Accept: 'application/json' },
+        signal: AbortSignal.timeout(30000),
+    });
+    if (!res.ok)
+        throw new Error(`Epic store backend returned ${res.status}`);
+    const body = (await res.json());
+    const elements = body?.data?.Catalog?.searchStore?.elements ?? [];
+    const rows = [];
+    for (const el of elements) {
+        const upcoming = el.promotions?.upcomingPromotions ?? [];
+        for (const promo of upcoming) {
+            for (const offer of promo.promotionalOffers ?? []) {
+                rows.push({
+                    title: el.title ?? '(untitled)',
+                    start: offer.startDate ?? '',
+                    end: offer.endDate ?? '',
+                    discount: offer.discountSetting?.discountPercentage ?? null,
+                    price: el.price?.totalPrice?.fmtPrice?.originalPrice ?? '?',
+                    url: el.productSlug ? `https://store.epicgames.com/en-US/p/${el.productSlug}` : 'https://store.epicgames.com/en-US/free-games',
+                });
+            }
+        }
+    }
+    rows.sort((a, b) => String(a.start).localeCompare(String(b.start)));
+    if (!rows.length)
+        return 'Epic currently lists no scheduled giveaway; the free_games tool shows what is live now.';
+    return [
+        `Epic giveaways scheduled from now (${Math.min(rows.length, limit)} of ${rows.length}):`,
+        '',
+        ...rows.slice(0, limit).map((r, i) => `${i + 1}. ${r.title} — normally ${r.price}\n   ${String(r.start).slice(0, 10)} to ${String(r.end).slice(0, 10)}${r.discount !== null ? ` · ${r.discount}% off` : ''}\n   ${r.url}`),
+    ].join('\n');
+}

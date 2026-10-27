@@ -98,3 +98,45 @@ export async function zoneCatalogue(_args = {}) {
     lines.push('  every count here is tallied from the live zone table, which is the only Electricity Map route this server can reach without an auth token.');
     return lines.join('\n');
 }
+
+const EMAP = 'https://api.electricitymap.org/v3/zones';
+async function loadZones() {
+    const res = await fetch(EMAP, {
+        headers: { 'User-Agent': 'mrfentmen-electricitymap-mcp/1.0', Accept: 'application/json' },
+        signal: AbortSignal.timeout(25000),
+    });
+    if (!res.ok)
+        throw new Error(`Electricity Map returned ${res.status}`);
+    const d = (await res.json());
+    if (!d || typeof d !== 'object')
+        throw new Error('Electricity Map returned no zone catalogue');
+    return d;
+}
+export async function zoneHierarchy(args = {}) {
+    const catalogue = await loadZones();
+    const key = String(args?.zone ?? '').trim().toUpperCase();
+    if (!key) {
+        const parents = Object.values(catalogue).filter((z) => (z.subZoneKeys ?? []).length);
+        if (!parents.length)
+            return 'The catalogue reports no parent zones right now.';
+        return [
+            `${parents.length} zone(s) have sub-zones:`,
+            '',
+            ...parents.map((z) => `${z.zoneKey} (${z.zoneName}) → ${(z.subZoneKeys ?? []).join(', ')}`),
+        ].join('\n');
+    }
+    const zone = catalogue[key];
+    if (!zone)
+        throw new Error(`Electricity Map has no zone "${args?.zone}"`);
+    const subs = (zone.subZoneKeys ?? []).map((k) => catalogue[k]).filter(Boolean);
+    const areParents = subs.filter((z) => (z.subZoneKeys ?? []).length).map((z) => z.zoneKey);
+    return [
+        `${zone.zoneKey} — ${zone.zoneName} (country ${zone.countryCode ?? '?'})`,
+        zone.zoneParentKey ? `Parent zone: ${zone.zoneParentKey} (${catalogue[zone.zoneParentKey]?.zoneName ?? 'unknown'})` : 'Parent zone: none, this is a top-level zone',
+        subs.length
+            ? `Sub-zones (${subs.length}): ${subs.map((z) => `${z.zoneKey} (${z.zoneName})`).join(', ')}`
+            : 'Sub-zones: none',
+        areParents.length ? `Sub-zones that are parents themselves: ${areParents.join(', ')}` : '',
+        `Commercially available: ${zone.isCommerciallyAvailable ? 'yes' : 'no'} · tier ${zone.tier ?? 'unknown'}`,
+    ].filter(Boolean).join('\n');
+}

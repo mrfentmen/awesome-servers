@@ -1,9 +1,9 @@
 # Tools still answering "Not yet implemented"
 
-1005 tool(s) across 500 package(s) still ship a stub body.
+1002 tool(s) across 497 package(s) still ship a stub body.
 Each was a gateway-only tool whose implementation never existed in the package,
 so the body has to be written against the live service and checked with a real
-call before publishing. 27 package(s) are already fixed.
+call before publishing. 30 package(s) are already fixed.
 
 | package | tools | has src |
 | --- | --- | --- |
@@ -17,11 +17,8 @@ call before publishing. 27 package(s) are already fixed.
 | `documenso-mcp` | plan | no |
 | `document-generator-mcp` | citation | no |
 | `ebi-search-mcp` | info | no |
-| `electricitymap-mcp` | hierarchy | no |
 | `ensideas-mcp` | profile | no |
 | `epa-frs-mcp` | facilities | no |
-| `epic-free-games-mcp` | games | no |
-| `esplora-mcp` | adjustment | no |
 | `f-droid-mcp` | versions | no |
 | `fauna-mcp` | lint | no |
 | `fbi-wanted-mcp` | office | no |
