@@ -1,0 +1,11 @@
+# check batch 24 — 2026-10-17T07:13:33Z
+mixpanel-mcp PASS {"ok":true,"tools":10,"names":["query_events","get_top_events","get_funnel","get_retention","query_profiles","run_jql","list_events","health_check","version_info","list_tools"]}
+mlb-mcp PASS {"ok":true,"tools":10,"names":["teams","schedule","standings","player_search","team_roster","health_check","version_info","list_tools","echo","timestamp"]}
+mobygames-mcp PASS {"ok":true,"tools":10,"names":["search_games","get_game","steam_game_profile","steam_specials_census","health_check","version_info","list_tools","echo","timestamp","ping"]}
+modrinth-mcp PASS {"ok":true,"tools":10,"names":["search_mods","get_mod","get_mod_versions","filter_index","search_sorted","version_files","health_check","version_info","list_tools","echo"]}
+moon-phase-mcp PASS {"ok":true,"tools":10,"names":["moon_phase","moon_on_date","predicted_phases","moon_times","health_check","version_info","list_tools","echo","timestamp","ping"]}
+mtg-mcp PASS {"ok":true,"tools":10,"names":["cards","sets","card_profile","card_rulings","keyword_list","health_check","version_info","list_tools","echo","timestamp"]}
+muffinlabs-mcp PASS {"ok":true,"tools":10,"names":["day","most_read_articles","lookup_wikidata_item","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+musicbrainz-mcp PASS {"ok":true,"tools":10,"names":["search_artists","search_releases","search_recordings","get_artist","search_release_groups","search_labels","health_check","version_info","list_tools","echo"]}
+mygene-mcp PASS {"ok":true,"tools":10,"names":["query","get","gene_pathways","gene_location","health_check","version_info","list_tools","echo","timestamp","ping"]}
+myvariant-mcp PASS {"ok":true,"tools":10,"names":["query","get","variant_fields","health_check","version_info","list_tools","echo","timestamp","ping","help"]}

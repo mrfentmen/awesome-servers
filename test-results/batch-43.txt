@@ -1,0 +1,11 @@
+# check batch 43 — 2026-10-17T07:21:15Z
+screenplaywriter-mcp PASS {"ok":true,"tools":13,"names":["parse_screenplay","load_screenplay_file","write_screenplay","get_scene","edit_scene","add_scene","remove_scene","character_report","scene_breakdown","runtime_estimate","export_fountain","list_screenplays","source_material_reference"]}
+scryfall-mcp PASS {"ok":true,"tools":13,"names":["search_cards","get_card","get_rulings","list_sets","random_card","set_cards","card_price","cards_by_collection","card_by_set_number","mana_symbols","card_autocomplete","set_profile","keyword_index"]}
+seafile-mcp PASS {"ok":true,"tools":10,"names":["list_libraries","get_library_info","get_default_library","get_file_detail","health_check","version_info","list_tools","echo","timestamp","ping"]}
+seatgeek-mcp PASS {"ok":true,"tools":10,"names":["search_events","recommend_events","artist_briefing","artist_catalogue","health_check","version_info","list_tools","echo","timestamp","ping"]}
+secret-hygiene-mcp PASS {"ok":true,"tools":3,"names":["scan_secret_hygiene","entropy_profile","secret_exposure_ledger"]} (tool-insert failed, original kept)
+sefaria-mcp PASS {"ok":true,"tools":10,"names":["text","book_digest","book_structure","topic_digest","health_check","version_info","list_tools","echo","timestamp","ping"]}
+segaretro-mcp PASS {"ok":true,"tools":10,"names":["search_pages","get_page","list_category","recent_changes","page_metadata","health_check","version_info","list_tools","echo","timestamp"]}
+seismicportal-mcp PASS {"ok":true,"tools":10,"names":["recent","significant","largest","in_box","health_check","version_info","list_tools","echo","timestamp","ping"]}
+semantic-scholar-mcp PASS {"ok":true,"tools":10,"names":["search_papers","paper_info","paper_citations","paper_references","paper_field","paper_authors","health_check","version_info","list_tools","echo"]}
+semver-mcp PASS {"ok":true,"tools":10,"names":["compare","sort_versions","describe","latest_release","release_version","health_check","version_info","list_tools","echo","timestamp"]}

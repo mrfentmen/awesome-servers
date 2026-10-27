@@ -1,0 +1,11 @@
+# check batch 20 — 2026-10-17T07:10:44Z
+mac-lookup-mcp PASS {"ok":true,"tools":10,"names":["vendor_lookup","oui_lookup","health_check","version_info","list_tools","echo","timestamp","ping","help","status"]}
+madhappy-mcp PASS {"ok":true,"tools":10,"names":["search_products","list_newest","get_product","price_overview","find_deals","list_categories","colorway_census","size_run_availability","health_check","version_info"]}
+mail-tm-mcp PASS {"ok":true,"tools":10,"names":["domains","inbox","read_message","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+mailchimp-mcp PASS {"ok":true,"tools":12,"names":["ping","list_lists","list_members","list_campaigns","list_details","member_details","campaign_details","automations","segments","campaign_report","audience_hygiene_audit","email_compliance_scan"]}
+mailgun-mcp PASS {"ok":true,"tools":10,"names":["list_domains","domain_stats","list_bounces","dkim_selector_scan","mailgun_status_audit","health_check","version_info","list_tools","echo","timestamp"]}
+mailjet-mcp PASS {"ok":true,"tools":10,"names":["list_contacts","recent_messages","message_header_lint","send_time_planner","health_check","version_info","list_tools","echo","timestamp","ping"]}
+maltiverse-mcp PASS {"ok":true,"tools":10,"names":["ip","ip_registration","domain_certificates","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+mangadex-mcp PASS {"ok":true,"tools":10,"names":["search_manga","get_manga","list_chapters","search_author","list_tags","manga_statistics","manga_by_tag","health_check","version_info","list_tools"]}
+marine-forecast-mcp PASS {"ok":true,"tools":10,"names":["forecast","daily_summary","wave_partition","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+markdown-mcp PASS {"ok":true,"tools":10,"names":["to_html","headings","table_to_markdown","check_document","repository_readme","emoji_shortcodes","health_check","version_info","list_tools","echo"]}

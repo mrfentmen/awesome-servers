@@ -1,0 +1,11 @@
+# check batch 12 — 2026-10-17T07:06:25Z
+ifandco-mcp PASS {"ok":true,"tools":11,"names":["search_products","list_newest","get_product","price_overview","find_deals","list_categories","list_collections","collection_products","restock_check","material_census","personalisation_census"]}
+image-tools-mcp PASS {"ok":true,"tools":10,"names":["resize_image","inspect_image","probe_url","convert_url_image","health_check","version_info","list_tools","echo","timestamp","ping"]}
+inaturalist-mcp PASS {"ok":true,"tools":10,"names":["search_species","recent_observations","places","species_observations","observation_stats","health_check","version_info","list_tools","echo","timestamp"]}
+incident-timeline-mcp PASS {"ok":true,"tools":10,"names":["summarize_incident_timeline","profile_incident_samples","classify_log_line","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+independent-reserve-mcp PASS {"ok":true,"tools":10,"names":["ticker","order_book","recent_trades","supported_currencies","health_check","version_info","list_tools","echo","timestamp","ping"]}
+infisical-mcp PASS {"ok":true,"tools":10,"names":["list_secrets","get_secret","create_secret","update_secret","delete_secret","secret_entropy_audit","secret_name_hygiene","secret_set_diff","health_check","version_info"]}
+inngest-mcp PASS {"ok":true,"tools":10,"names":["send_event","list_apps","sdk_matrix","release_feed","incident_history","health_check","version_info","list_tools","echo","timestamp"]}
+inspirobot-mcp PASS {"ok":true,"tools":10,"names":["generate","generate_styled","font_matrix","inscription_metrics","health_check","version_info","list_tools","echo","timestamp","ping"]}
+interpro-mcp PASS {"ok":true,"tools":10,"names":["entry","search","protein_entry_matches","entry_protein_matches","health_check","version_info","list_tools","echo","timestamp","ping"]}
+invoice-mcp SMOKE_FAIL {"ok":false,"stage":"entry","error":"no built entry found"}

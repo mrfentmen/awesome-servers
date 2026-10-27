@@ -1,0 +1,11 @@
+# check batch 25 — 2026-10-17T07:13:58Z
+nager-mcp PASS {"ok":true,"tools":12,"names":["list_countries","country_info","get_holidays","next_holidays","worldwide_holidays","long_weekends","is_today_holiday","regional_holidays","holiday_on_date","compare_countries","working_day_calendar","holiday_observance_audit"]}
+name-age-mcp PASS {"ok":true,"tools":10,"names":["estimate_age","estimate_gender","famous_namesakes","namesake_lifespan","health_check","version_info","list_tools","echo","timestamp","ping"]}
+name-generator-mcp PASS {"ok":true,"tools":10,"names":["random_name","username","codename","domain_status","suggest_words","health_check","version_info","list_tools","echo","timestamp"]}
+nanoleaf-mcp PASS {"ok":true,"tools":10,"names":["get_info","get_state","set_power","get_effects","health_check","version_info","list_tools","echo","timestamp","ping"]}
+nasa-epic-mcp PASS {"ok":true,"tools":10,"names":["latest","date","enhanced_latest","enhanced_date","health_check","version_info","list_tools","echo","timestamp","ping"]}
+nasa-images-mcp PASS {"ok":true,"tools":10,"names":["search","asset_manifest","media_details","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+nasa-power-mcp PASS {"ok":true,"tools":10,"names":["daily","hourly","climatology","regional","health_check","version_info","list_tools","echo","timestamp","ping"]}
+nasa-tle-mcp PASS {"ok":true,"tools":10,"names":["satellite","search","browse_catalog","orbital_elements","fleet_tles","health_check","version_info","list_tools","echo","timestamp"]}
+nationalize-mcp PASS {"ok":true,"tools":10,"names":["nationality","nationality_countries","country_indicators","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+navidrome-mcp PASS {"ok":true,"tools":10,"names":["ping","list_artists","search_library","stream_url","health_check","version_info","list_tools","echo","timestamp","help"]}

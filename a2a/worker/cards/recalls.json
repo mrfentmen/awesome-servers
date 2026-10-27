@@ -1,0 +1,117 @@
+{
+  "protocolVersion": "0.3.0",
+  "name": "openFDA Recalls Agent",
+  "description": "Read-only agent over openFDA enforcement reports: recent drug, food and medical device recalls, keyword/firm/state/class search, counts by classification, lookup by recall number, and a watch skill that POSTs when a new recall matches your filters. Every answer is read live from openFDA and carries openFDA's own unvalidated-data disclaimer. This hosted endpoint answers recalls-recent, recall-search, recall-lookup; the local server additionally implements recalls-summary, recalls-watch.",
+  "url": "https://mrfentmen-a2a.contactae2000.workers.dev/agents/recalls/",
+  "preferredTransport": "JSONRPC",
+  "additionalInterfaces": [
+    {
+      "url": "https://mrfentmen-a2a.contactae2000.workers.dev/agents/recalls/",
+      "transport": "JSONRPC"
+    }
+  ],
+  "version": "1.0.0",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/plain"
+  ],
+  "provider": {
+    "organization": "mrfentmen",
+    "url": "https://github.com/mrfentmen/a2a"
+  },
+  "skills": [
+    {
+      "id": "recalls-recent",
+      "name": "Recent recalls",
+      "description": "The newest recall records from openFDA enforcement reports, across drugs, food and medical devices, newest report date first. Filter by scope, classification, state or date window.",
+      "tags": [
+        "recalls",
+        "openfda",
+        "fda",
+        "food-safety",
+        "drugs",
+        "devices"
+      ],
+      "examples": [
+        "what was recalled in the last 7 days?",
+        "any Class I food recalls this month?",
+        "{\"skill\": \"recalls-recent\", \"scope\": \"device\", \"classification\": \"Class I\"}"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/plain"
+      ]
+    },
+    {
+      "id": "recall-search",
+      "name": "Search recalls",
+      "description": "Search the recall registers for a product, a firm, a reason or a state — for example romaine, a company name, or 'undeclared milk'. Counts and dates are openFDA's.",
+      "tags": [
+        "recalls",
+        "openfda",
+        "search",
+        "product",
+        "firm"
+      ],
+      "examples": [
+        "search recalls for romaine",
+        "any recalls by firm Crown Farms?",
+        "recalls mentioning undeclared milk in CA",
+        "{\"skill\": \"recall-search\", \"scope\": \"food\", \"product\": \"romaine\", \"days\": 365}"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/plain"
+      ]
+    },
+    {
+      "id": "recall-lookup",
+      "name": "Look up a recall",
+      "description": "One recall record by its recall number, for example H-1331-2026 or D-0835-2026. Returns the firm, product, reason, classification, status and distribution.",
+      "tags": [
+        "recalls",
+        "openfda",
+        "lookup",
+        "recall-number"
+      ],
+      "examples": [
+        "what is recall H-1331-2026?",
+        "look up D-0835-2026",
+        "{\"skill\": \"recall-lookup\", \"recall_number\": \"H-1331-2026\"}"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/plain"
+      ]
+    }
+  ],
+  "metadata": {
+    "registryIdentityProvider": "github",
+    "registryIdentity": "mrfentmen",
+    "registryPackageName": "github.mrfentmen.recalls",
+    "sourceRepository": "https://github.com/mrfentmen/a2a",
+    "localServer": "servers/recalls/server.py",
+    "hostedBy": "cloudflare-worker",
+    "note": "The local Python server implements every skill on its own card, including watch loops and push notifications. This hosted card lists only the skills the hosted endpoint answers."
+  }
+}

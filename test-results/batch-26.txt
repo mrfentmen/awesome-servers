@@ -1,0 +1,11 @@
+# check batch 26 — 2026-10-17T07:14:22Z
+nbp-mcp PASS {"ok":true,"tools":10,"names":["table","rates","gold","currency_rate","rate_history","health_check","version_info","list_tools","echo","timestamp"]}
+ndbc-buoy-mcp PASS {"ok":true,"tools":10,"names":["station","nearby_stations","wave_spectrum","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+netatmo-mcp PASS {"ok":true,"tools":10,"names":["get_weather_stations","get_home_data","get_home_status","get_events","health_check","version_info","list_tools","echo","timestamp","ping"]}
+netdata-mcp PASS {"ok":true,"tools":10,"names":["get_info","list_charts","get_data","netdata_release_census","netdata_platform_audit","health_check","version_info","list_tools","echo","timestamp"]}
+nextbus-mcp PASS {"ok":true,"tools":10,"names":["agencies","routes","predictions","route_timetable","route_frequency","health_check","version_info","list_tools","echo","timestamp"]}
+nhl-mcp PASS {"ok":true,"tools":10,"names":["get_team_stats","get_standings","get_schedule","player_profile","team_roster","health_check","version_info","list_tools","echo","timestamp"]}
+nix-packages-mcp PASS {"ok":true,"tools":10,"names":["search","list_releases","list_attributes","attribute_groups","health_check","version_info","list_tools","echo","timestamp","ping"]}
+noaa-ncei-mcp PASS {"ok":true,"tools":10,"names":["summary","station_info","monthly_climate","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+noahny-mcp PASS {"ok":true,"tools":10,"names":["search_products","list_newest","get_product","price_overview","find_deals","list_categories","season_calendar_census","colour_size_matrix","health_check","version_info"]}
+nobel-mcp PASS {"ok":true,"tools":10,"names":["laureates","prizes","laureate_detail","prize_detail","health_check","version_info","list_tools","echo","timestamp","ping"]}

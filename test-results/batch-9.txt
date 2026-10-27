@@ -1,0 +1,11 @@
+# check batch 9 — 2026-10-17T07:05:07Z
+hacker-news-mcp PASS {"ok":true,"tools":10,"names":["top","jobs","ask","item","search","frontPage","health_check","version_info","list_tools","echo"]}
+hackertarget-mcp PASS {"ok":true,"tools":10,"names":["dns_lookup","reverse_dns","whois_lookup","geoip_lookup","http_headers","reverse_ip","host_search","as_lookup","health_check","version_info"]}
+harry-potter-mcp PASS {"ok":true,"tools":10,"names":["character","house","spells","character_profile","search_spells","health_check","version_info","list_tools","echo","timestamp"]}
+hashnode-mcp PASS {"ok":true,"tools":12,"names":["me","publication_posts","get_user","publication_info","post_details","series_list","tag_info","user_stats","user_publications","publication_members","user_profile","author_engagement"]}
+hasura-mcp PASS {"ok":true,"tools":10,"names":["export_metadata","run_sql","metadata_census","sql_audit","graphql_builder","health_check","version_info","list_tools","echo","timestamp"]}
+hebcal-mcp PASS {"ok":true,"tools":10,"names":["convert","month_holidays","week_liturgy","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+helius-mcp PASS {"ok":true,"tools":10,"names":["get_balances","get_transactions","get_nfts","get_token_metadata","parse_transactions","wallet_holdings","token_market","health_check","version_info","list_tools"]}
+hermes-mcp PASS {"ok":true,"tools":12,"names":["search_listings","list_newest","get_listing","price_overview","compare_prices","find_deals","brand_overview","list_collections","browse_collection","find_by_attribute","condition_matrix","price_distribution"]}
+hex-mcp PASS {"ok":true,"tools":10,"names":["get_package","get_release","search_packages","package_owners","maintainer_packages","dependency_changes","health_check","version_info","list_tools","echo"]}
+hibp-mcp PASS {"ok":true,"tools":11,"names":["breach_catalog","breach_detail","recent_breaches","breach_stats","data_classes","password_exposure","password_audit","latest_breach","password_strength","package_vulnerabilities","cve_search"]}

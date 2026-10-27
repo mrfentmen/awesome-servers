@@ -1,0 +1,11 @@
+# check batch 54 — 2026-10-17T07:29:46Z
+tvdb-mcp PASS {"ok":true,"tools":10,"names":["search_series","get_series","health_check","version_info","list_tools","echo","timestamp","ping","help","status"],"stderr":"MCP server running on stdio\n"}
+tvmaze-mcp PASS {"ok":true,"tools":10,"names":["search","schedule","search_shows","show_episodes","today_schedule","show_lookup","health_check","version_info","list_tools","echo"],"stderr":""}
+twelvedata-mcp PASS {"ok":true,"tools":10,"names":["quote","fx_board","fx_history","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":""}
+twilio-mcp PASS {"ok":true,"tools":11,"names":["send_sms","send_mms","send_whatsapp","get_message_status","list_messages","make_call","list_calls","list_numbers","search_numbers","incident_history","component_reliability"],"stderr":"Twilio MCP server running on stdio\n"}
+twitch-mcp PASS {"ok":true,"tools":10,"names":["top_games","top_streams","get_user","service_status","game_demand","health_check","version_info","list_tools","echo","timestamp"],"stderr":"MCP server running on stdio\n"}
+typeform-mcp PASS {"ok":true,"tools":12,"names":["list_forms","get_form","list_responses","find_response","account_images","account_image","themes","theme_details","workspaces","create_form","service_status","schema_lint"],"stderr":"MCP server running on stdio\n"}
+ui-avatars-mcp PASS {"ok":true,"tools":10,"names":["avatar","gravatar","gravatar_profile","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":""}
+ukparliament-mcp PASS {"ok":true,"tools":10,"names":["search_members","get_member","member_career","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":"MCP server running on stdio\n"}
+ukpolice-mcp PASS {"ok":true,"tools":10,"names":["street","police_forces","force_crime_summary","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":""}
+un-sdg-mcp PASS {"ok":true,"tools":10,"names":["indicators","goals","series","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":""}

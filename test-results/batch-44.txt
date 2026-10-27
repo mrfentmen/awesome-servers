@@ -1,0 +1,11 @@
+# check batch 44 — 2026-10-17T07:24:33Z
+secret-hygiene-mcp PASS {"ok":true,"tools":10,"names":["health_check","version_info","list_tools","echo","timestamp","ping","help","scan_secret_hygiene","entropy_profile","secret_exposure_ledger"]}
+sentry-mcp PASS {"ok":true,"tools":12,"names":["list_orgs","org_projects","org_issues","issue_details","issue_events","project_details","teams","members","releases","event_details","release_feed","dependency_drift"]}
+seoul-mcp PASS {"ok":true,"tools":10,"names":["get_air_quality","get_station_air","health_check","version_info","list_tools","echo","timestamp","ping","help","status"]}
+septa-mcp PASS {"ok":true,"tools":10,"names":["next","stops","get_next_arrivals","get_transit_view","list_routes","health_check","version_info","list_tools","echo","timestamp"]}
+setlist-mcp PASS {"ok":true,"tools":10,"names":["search_artist","get_artist_setlists","get_setlist_detail","count_song_plays","analyze_setlist","compare_setlists","tour_summary","health_check","version_info","list_tools"]}
+shebang-sherpa-mcp PASS {"ok":true,"tools":10,"names":["health_check","version_info","list_tools","echo","timestamp","ping","help","status","info","inspect_script_portability"]}
+shields-mcp PASS {"ok":true,"tools":10,"names":["badge","package_version","repo_badge","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+shootproof-mcp PASS {"ok":true,"tools":10,"names":["get_service_description","get_me","list_brands","list_brand_events","list_brand_orders","daylight_profile","daylight_comparison","health_check","version_info","list_tools"]}
+shynet-mcp PASS {"ok":true,"tools":10,"names":["get_dashboard","get_service_stats","health_check","version_info","list_tools","echo","timestamp","ping","help","status"]}
+simbad-mcp PASS {"ok":true,"tools":10,"names":["lookup_object","cone_search","object_photometry","object_references","object_identifiers","object_kinematics","health_check","version_info","list_tools","echo"]}

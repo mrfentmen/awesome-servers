@@ -1,0 +1,11 @@
+# check batch 51 — 2026-10-17T07:28:34Z
+techcrunch-mcp PASS {"ok":true,"tools":10,"names":["latest","search","list_categories","posts_by_category","health_check","version_info","list_tools","echo","timestamp","ping"],"stderr":""}
+teedy-mcp PASS {"ok":true,"tools":10,"names":["login","list_documents","get_document","list_document_files","health_check","version_info","list_tools","echo","timestamp","ping"],"stderr":"MCP server running on stdio\n"}
+telegram-mcp PASS {"ok":true,"tools":13,"names":["get_me","send_message","get_updates","chat_info","member_count","file_info","send_photo","my_commands","delete_message","edit_message","message_limit_audit","inline_keyboard_audit","deep_link_builder"],"stderr":"MCP server running on stdio\n"}
+telnetbbs-mcp PASS {"ok":true,"tools":10,"names":["list_bbses","get_bbs","random_bbs","software_census","bbs_stats","ssh_bbses","health_check","version_info","list_tools","echo"],"stderr":"MCP server running on stdio\n"}
+terraform-registry-mcp PASS {"ok":true,"tools":10,"names":["provider","module","provider_versions","module_versions","health_check","version_info","list_tools","echo","timestamp","ping"],"stderr":""}
+test-shape-mcp PASS {"ok":true,"tools":10,"names":["inspect_test_shape","analyze_test_source","check_test_conventions","ci_workflows","ci_run_history","commit_checks","health_check","version_info","list_tools","echo"],"stderr":"MCP server running on stdio\n"}
+tetriswiki-mcp PASS {"ok":true,"tools":10,"names":["search_pages","get_page","page_history","browse_category","recent_changes","page_outlinks","health_check","version_info","list_tools","echo"],"stderr":"MCP server running on stdio\n"}
+text-tools-mcp PASS {"ok":true,"tools":10,"names":["slugify","to_case","base64","text_metrics","diff_text","dictionary_lookup","health_check","version_info","list_tools","echo"],"stderr":""}
+textfiles-mcp PASS {"ok":true,"tools":10,"names":["list_topics","list_files","read_file","archive_stats","topic_profile","find_files","grep_files","health_check","version_info","list_tools"],"stderr":"MCP server running on stdio\n"}
+tfl-status-mcp PASS {"ok":true,"tools":10,"names":["status","mode_status","line_detail","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":""}

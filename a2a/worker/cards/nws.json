@@ -1,0 +1,90 @@
+{
+  "protocolVersion": "0.3.0",
+  "name": "NWS Weather Alerts Agent",
+  "description": "Read-only agent over the National Weather Service alerts feed (api.weather.gov): active watches, warnings and advisories by state, NWS zone or latitude/longitude point, live national and per-state counts, and a watch skill that POSTs to your webhook when a new alert is issued for a place. Every answer is read live from the NWS API, and says so. This hosted endpoint answers alerts-active, alerts-summary; the local server additionally implements alerts-watch.",
+  "url": "https://mrfentmen-a2a.contactae2000.workers.dev/agents/nws/",
+  "preferredTransport": "JSONRPC",
+  "additionalInterfaces": [
+    {
+      "url": "https://mrfentmen-a2a.contactae2000.workers.dev/agents/nws/",
+      "transport": "JSONRPC"
+    }
+  ],
+  "version": "1.0.0",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/plain"
+  ],
+  "provider": {
+    "organization": "mrfentmen",
+    "url": "https://github.com/mrfentmen/a2a"
+  },
+  "skills": [
+    {
+      "id": "alerts-active",
+      "name": "Active weather alerts",
+      "description": "Active National Weather Service watches, warnings and advisories for a state, an NWS zone, or a latitude/longitude point, most severe first. Includes headline, timing, area description and the safety instruction.",
+      "tags": [
+        "weather",
+        "nws",
+        "alerts",
+        "warnings",
+        "safety"
+      ],
+      "examples": [
+        "Any weather alerts in NY right now?",
+        "{\"skill\": \"alerts-active\", \"state\": \"NY\", \"severity\": \"Severe\"}",
+        "{\"skill\": \"alerts-active\", \"point\": \"40.71,-74.01\"}"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/plain"
+      ]
+    },
+    {
+      "id": "alerts-summary",
+      "name": "Active alert counts",
+      "description": "Live National Weather Service counts: how many alerts are active across the country (split into land and marine) and how many are active in a given state.",
+      "tags": [
+        "weather",
+        "nws",
+        "alerts",
+        "counts",
+        "summary"
+      ],
+      "examples": [
+        "How many weather alerts are active nationwide?",
+        "{\"skill\": \"alerts-summary\", \"state\": \"TX\"}"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/plain"
+      ]
+    }
+  ],
+  "metadata": {
+    "registryIdentityProvider": "github",
+    "registryIdentity": "mrfentmen",
+    "registryPackageName": "github.mrfentmen.nws",
+    "sourceRepository": "https://github.com/mrfentmen/a2a",
+    "localServer": "servers/nws/server.py",
+    "hostedBy": "cloudflare-worker",
+    "note": "The local Python server implements every skill on its own card, including watch loops and push notifications. This hosted card lists only the skills the hosted endpoint answers."
+  }
+}

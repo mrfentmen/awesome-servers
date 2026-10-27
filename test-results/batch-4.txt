@@ -1,0 +1,11 @@
+# check batch 4 — 2026-10-17T07:03:06Z
+freetogame-mcp PASS {"ok":true,"tools":10,"names":["games","game","genre_platform_matrix","studio_ranking","health_check","version_info","list_tools","echo","timestamp","ping"]}
+freshdesk-mcp PASS {"ok":true,"tools":12,"names":["list_tickets","get_ticket","list_contacts","contact_details","agents","companies","groups","conversations","satisfaction","canned","service_status","domain_certificates"]}
+frigate-mcp PASS {"ok":true,"tools":10,"names":["status","recent_events","analyze_events","event_timeline","threshold_advice","health_check","version_info","list_tools","echo","timestamp"]}
+fruityvice-mcp PASS {"ok":true,"tools":10,"names":["fruit","all","grocery_product","product_search","health_check","version_info","list_tools","echo","timestamp","ping"]}
+fuel-economy-mcp PASS {"ok":true,"tools":10,"names":["vehicle_mpg","makes_for_year","models_for_make","vehicle_data","health_check","version_info","list_tools","echo","timestamp","ping"]}
+fueleconomy-mcp PASS {"ok":true,"tools":11,"names":["list_years","list_makes","list_models","list_options","vehicle_details","compare_vehicles","fuel_prices","running_cost","compare_costs","model_recalls","model_complaints"]}
+futurama-mcp PASS {"ok":true,"tools":10,"names":["characters","character","episodes","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+gamebanana-mcp PASS {"ok":true,"tools":10,"names":["search_mods","get_mod","search_games","get_game_mods","mod_files","mod_stats","mod_previews","health_check","version_info","list_tools"]}
+gateio-mcp PASS {"ok":true,"tools":10,"names":["ticker","order_book","recent_trades","candlesticks","health_check","version_info","list_tools","echo","timestamp","ping"]}
+gatus-mcp PASS {"ok":true,"tools":11,"names":["check_endpoint","health_rollup","endpoint_latency","tls_expiry","dns_records","security_headers","payload_report","allowed_methods","health_path_probe","resolver_agreement","port_check"]}

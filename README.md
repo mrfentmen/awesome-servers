@@ -1,293 +1,116 @@
-# Awesome Servers
+# awesome-servers
 
-> 230 package directories, all published by us and installable today with
-> `npx <package>`. Every one is free: no licence key, no hosted gate and no
-> per-call billing.
+One repo for three families of servers, each subtree keeping its own layout and tooling so it
+can still be built, run and published on its own.
 
-MCP servers from the `mrfentmen` account: shopping/affiliate, jobs, betting,
-finance data, developer tools and public-API servers. Public monorepo.
+| Subtree | What it holds | Run one |
+|---|---|---|
+| [`mcp/`](mcp) | 6 TypeScript MCP servers, plus 230 published packages in [`published/`](published) | `cd mcp/servers/<slug> && npm install && npm run build` |
+| [`acp/`](acp) | 79 Python ACP agents | `python3 acp/agents/<name>/agent.py` |
+| [`a2a/`](a2a) | 37 Python A2A servers plus the shared `a2a_kit` | `python3 a2a/servers/<name>/server.py` |
+| [`watchd/`](watchd) | a threshold watcher that runs the feeds between editor sessions | `python3 watchd/watchd.py --config conditions.json --loop` |
+| [`site/`](site) | the published site: registry with search, the public-feed atlas, watchd plans | <https://mrfentmen.github.io/awesome-servers/> |
 
-## State of the repo
+Most servers read public data with no key of their own; the ones wrapping a vendor API take
+that vendor's key. **Nothing in this repo asks a caller to pay.** On 2026-10-17 the
+licence machinery was removed for good: the per-tool `src/license.ts` gates are gone from the
+MCP servers, and the A2A and ACP trees no longer carry the hosted licence-gateway half — the
+skills that used it now answer with an explicit not-implemented stub. Nothing here asks a
+caller to pay, and nothing they run is refused with a buy link.
 
-This is a snapshot of what users install, not a build tree.
+Nothing here is generated: each subtree's README says what its servers read, and every server
+has its own unit tests (`mcp/servers/<slug>/tests`, `acp/agents/<name>/tests`,
+`a2a/servers/<name>/tests`) plus a live smoke check (`tools/smoke*.py`,
+`a2a/tools/smoke_all.py`).
 
-- `published/` holds one directory per package, byte-for-byte what npm serves —
-  version, `dist/`, README and `server.json`.
-- `servers/` holds the older source that is still in git. Where the two disagree,
-  `published/` is correct.
-- Every package in `published/` matches its npm `latest` version. `published/INDEX.md`
-  is generated from the tree by `python3 scripts/index-published.py`.
-- There are no licence gates and no stub tools left: **0** packages reference
-  `MCP_LICENSE_KEY` and **0** shipped tools answer `Not yet implemented`.
-- Our own Twilio server publishes as `twilio-mcp-server`; the bare `twilio-mcp`
-  name on npm belongs to another publisher and is not mirrored here.
+## Novel and original
 
-### Every tool runs locally
+Nearly all of this is first-of-its-kind work, not a port of an existing catalogue. Before each
+server or agent was built, it was checked against the official tool lists (the MCP registries,
+`agentclientprotocol.com`'s agent list and registry) and a live GitHub search for the same
+domain, and the research logs record what was found and why it still counted as missing — see
+[`mcp/MISSING.md`](mcp/MISSING.md), [`acp/MISSING.md`](acp/MISSING.md) and
+[`a2a/docs/`](a2a/docs). Highlights:
 
-Some packages once proxied a handful of tools to a hosted gateway. That host no
-longer exists, so those tools now run inside their own package against the same
-public API. Nothing is proxied, nothing needs a key, and the `gateway.js` /
-`license.js` modules have been deleted from every package that had one. The last
-packages shipped the fix on 2026-10-26.
+* The MCP side holds TypeScript servers, one npm package each, and 230 published packages under
+  `published/`; mcp/MISSING.md
+  documents the check that preceded every build: what was searched, what was skipped and why
+  the domain still counted as uncovered.
+* On the ACP side there were **zero domain agents** before this repo — every agent on the
+  official list was a coding agent. These 79 Python agents are the first non-coding ACP
+  agents, and several use protocol surfaces no other agent uses in production
+  (`session/request_permission` for dataset reads, `fs/write_text_file` for a briefing file,
+  `session/cancel` for a conditional watch, image content blocks, a live SSE push feed), each
+  proved-unused in the wild by search at build time. Two more firsts carry their own proof:
+  the [`orchestrator`](acp/agents/orchestrator) is an agent whose feeds are *agents* — it
+  spawns sibling repo agents as real ACP child processes and merges their answers — and the
+  [`nyc`](acp/agents/nyc) pack is the first multi-agency city surface.
+* [`acp/MISSING.md`](acp/MISSING.md) doubles as the **public-feed atlas**: every keyless
+  feed probed live, with its date, what it answered and whether it still works. The
+  published site renders that table at <https://mrfentmen.github.io/awesome-servers/atlas.html>.
+* The pattern across all three subtrees is the same thesis: wrap one real, keyless public
+  dataset, answer honestly about what the feed did and did not say, and keep the whole thing
+  small, tested and self-contained.
 
-Every package links to this repo (mrfentmen/awesome-servers) as its source.
+## Publishing
 
-### Known gaps
+* MCP servers publish from `mcp/servers/<slug>` (its own `package.json`, version and README).
+* ACP and A2A servers are repo-run today (Python, no packaging step).
 
-- **`servers/` is history, not source.** It predates the gate removal and was never
-  brought forward. Do not build from it.
+## Built on top of it
 
-### Every package now builds from source
+Creatures that use this corpus as their world live in the sibling repo
+[`mrfentmen/superagents`](https://github.com/mrfentmen/superagents) (public, with its own
+claim-check in `MISSING.md`):
 
-`coingecko-mcp`, `defillama-mcp`, `iss-mcp`, `jolpica-mcp` and `yfinance-mcp` were
-the last five whose `src/` tree disagreed with what ships: four still held their
-paywall stub bodies and one still imported the deleted `src/gateway.ts`. All five
-were ported back, and `tsconfig.json` now ships in the tarball, so a clean
-`npm install && npm run build` reproduces the published `dist/` — verified from the
-registry tarballs, not just from the working tree.
+* **polymath** — routes your question to the most fitting agents of this repo, spawns each
+  as a real ACP child process, and merges the answers into one brief with per-row citations;
+  a sibling that fails appears as a named row, never silence. Its registry is a data file
+  and its ranking is deterministic word-scoring, not a model opinion.
+* **sentry** — one plain sentence ("watch air quality in Denver over 150") becomes a tracked
+  watch: a permission-asked protocol write produces the conditions file this repo's
+  `watchd/` obeys unchanged, plus the activation lines. Checks it can author today:
+  air thresholds, quake magnitudes within a radius, river gauges at flood stage.
+* **fedora hat guy** — the persona agent in his own repo
+  [`mrfentmen/fedora-hat`](https://github.com/mrfentmen/fedora-hat): says "never miss" and
+  means it — one sentence installs the full crown of watches (air + quakes, gauge-named
+  flood) in one permissioned write, and your other questions are forwarded to the siblings
+  above with every row cited.
+* **instink** — the instinct agent in his own repo
+  [`mrfentmen/instink`](https://github.com/mrfentmen/instink): compiles a skill into a
+  reflex — a matcher plus the answer it fires, with hit/miss counters and honest
+  promotion/demotion. The skill doc stays one step away, never deleted.
+* **contextink** — the context agent in his own repo
+  [`mrfentmen/contextink`](https://github.com/mrfentmen/contextink): you say "do this" and
+  it acquires the context from the repo, git, and recent files so you don't have to explain
+  it; asks only the minimal high-information-gain questions when acquisition fails.
+* **rewind** — the replay agent in his own repo
+  [`mrfentmen/rewind`](https://github.com/mrfentmen/rewind): replays agent runs and mutates
+  one variable to see what would have happened. Replay + mutate + diff for agent traces.
+* **scopink** — the scope agent in his own repo
+  [`mrfentmen/scopink`](https://github.com/mrfentmen/scopink): checks if an action is within
+  the scope of what was asked. Detects scope creep in agent plans.
+* **curious** — the curiosity agent in his own repo
+  [`mrfentmen/curious`](https://github.com/mrfentmen/curious): proactively seeks information
+  it doesn't have. Scans for knowledge gaps, seeks answers, learns facts.
+* **bored** — the idle agent in his own repo
+  [`mrfentmen/bored`](https://github.com/mrfentmen/bored): uses idle time productively.
+  Consolidates memories, explores areas, prepares for tasks.
 
-### Working on this tree
+Point the polymath at a checkout of this repo with `AWESOME_SERVERS_HOME=$PWD/awesome-servers`
+and it federates across the two repos live.
 
-```bash
-python3 scripts/index-published.py        # regenerate published/INDEX.md from disk
-node scripts/verify-ungated.mjs <slug>    # start a package over stdio and call its tools
-```
+## Published snapshot (`published/`)
 
-`scripts/sync-published-snapshot.py` re-downloads every package from npm. That is the
-right tool when npm is ahead of the repo, and the wrong one while a fix is still
-local — it overwrites `dist/` from the registry tarballs.
+`published/` holds one directory per npm package, byte-for-byte what the registry
+serves: 230 packages, every version matching npm `latest`.
 
-## Contents
+- `published/INDEX.md` is generated from the tree by `python3 scripts/index-published.py`.
+- `scripts/sync-published-snapshot.py` re-downloads every package from npm; run it only
+  when every local fix has been published, because it overwrites `dist/` from the tarballs.
+- No package carries a licence gate: 0 reference `MCP_LICENSE_KEY` and 0 shipped tools
+  answer `Not yet implemented`.
+- Every package links to this repo (`mrfentmen/awesome-servers`) as its source.
 
-- **230 MCP servers** in [`servers/`](./servers)
-
-## MCP servers
-- [`adguardhome-mcp`](./servers/adguardhome-mcp)
-- [`aimeleondore-mcp`](./servers/aimeleondore-mcp)
-- [`airtable-mcp`](./servers/airtable-mcp)
-- [`alpaca-mcp`](./servers/alpaca-mcp)
-- [`alphavantage-mcp`](./servers/alphavantage-mcp)
-- [`amadeus-mcp`](./servers/amadeus-mcp)
-- [`apollo-mcp`](./servers/apollo-mcp)
-- [`appveyor-mcp`](./servers/appveyor-mcp)
-- [`appwrite-mcp`](./servers/appwrite-mcp)
-- [`arbeitnow-mcp`](./servers/arbeitnow-mcp)
-- [`arweave-mcp`](./servers/arweave-mcp)
-- [`ashby-mcp`](./servers/ashby-mcp)
-- [`assemblyai-mcp`](./servers/assemblyai-mcp)
-- [`avianne-mcp`](./servers/avianne-mcp)
-- [`balenciaga-mcp`](./servers/balenciaga-mcp)
-- [`baserow-mcp`](./servers/baserow-mcp)
-- [`beehiiv-mcp`](./servers/beehiiv-mcp)
-- [`beis-mcp`](./servers/beis-mcp)
-- [`betterstack-mcp`](./servers/betterstack-mcp)
-- [`bigcommerce-mcp`](./servers/bigcommerce-mcp)
-- [`binance-market-mcp`](./servers/binance-market-mcp)
-- [`bitwarden-mcp`](./servers/bitwarden-mcp)
-- [`blockchain-info-mcp`](./servers/blockchain-info-mcp)
-- [`blubrry-mcp`](./servers/blubrry-mcp)
-- [`bottegaveneta-mcp`](./servers/bottegaveneta-mcp)
-- [`brave-mcp`](./servers/brave-mcp)
-- [`brevo-mcp`](./servers/brevo-mcp)
-- [`brewery-mcp`](./servers/brewery-mcp)
-- [`burberry-mcp`](./servers/burberry-mcp)
-- [`calcom-mcp`](./servers/calcom-mcp)
-- [`cartesia-mcp`](./servers/cartesia-mcp)
-- [`cartier-mcp`](./servers/cartier-mcp)
-- [`censys-mcp`](./servers/censys-mcp)
-- [`cgtrader-mcp`](./servers/cgtrader-mcp)
-- [`chanel-mcp`](./servers/chanel-mcp)
-- [`cheapshark-mcp`](./servers/cheapshark-mcp)
-- [`checkly-mcp`](./servers/checkly-mcp)
-- [`clerk-mcp`](./servers/clerk-mcp)
-- [`cloudflare-mcp`](./servers/cloudflare-mcp)
-- [`cocktaildb-mcp`](./servers/cocktaildb-mcp)
-- [`coinbase-mcp`](./servers/coinbase-mcp)
-- [`coingecko-mcp`](./servers/coingecko-mcp)
-- [`coinlore-mcp`](./servers/coinlore-mcp)
-- [`confluent-mcp`](./servers/confluent-mcp)
-- [`convertkit-mcp`](./servers/convertkit-mcp)
-- [`crisp-mcp`](./servers/crisp-mcp)
-- [`cryptorank-mcp`](./servers/cryptorank-mcp)
-- [`customerio-mcp`](./servers/customerio-mcp)
-- [`cyberark-mcp`](./servers/cyberark-mcp)
-- [`deepgram-mcp`](./servers/deepgram-mcp)
-- [`defillama-mcp`](./servers/defillama-mcp)
-- [`deribit-mcp`](./servers/deribit-mcp)
-- [`dior-mcp`](./servers/dior-mcp)
-- [`directus-mcp`](./servers/directus-mcp)
-- [`disify-mcp`](./servers/disify-mcp)
-- [`doh-mcp`](./servers/doh-mcp)
-- [`doppler-mcp`](./servers/doppler-mcp)
-- [`ebay-mcp`](./servers/ebay-mcp)
-- [`email-validator-mcp`](./servers/email-validator-mcp)
-- [`epo-mcp`](./servers/epo-mcp)
-- [`ericemanuel-mcp`](./servers/ericemanuel-mcp)
-- [`etherscan-mcp`](./servers/etherscan-mcp)
-- [`ethplorer-mcp`](./servers/ethplorer-mcp)
-- [`etsy-mcp`](./servers/etsy-mcp)
-- [`fbi-crime-mcp`](./servers/fbi-crime-mcp)
-- [`feedly-mcp`](./servers/feedly-mcp)
-- [`fendi-mcp`](./servers/fendi-mcp)
-- [`figma-mcp`](./servers/figma-mcp)
-- [`flipside-mcp`](./servers/flipside-mcp)
-- [`fmp-mcp`](./servers/fmp-mcp)
-- [`folk-mcp`](./servers/folk-mcp)
-- [`freshdesk-mcp`](./servers/freshdesk-mcp)
-- [`fueleconomy-mcp`](./servers/fueleconomy-mcp)
-- [`gatus-mcp`](./servers/gatus-mcp)
-- [`geckoterminal-mcp`](./servers/geckoterminal-mcp)
-- [`github-mcp`](./servers/github-mcp)
-- [`gitlab-mcp`](./servers/gitlab-mcp)
-- [`glossier-mcp`](./servers/glossier-mcp)
-- [`gog-mcp`](./servers/gog-mcp)
-- [`gold-prices-mcp`](./servers/gold-prices-mcp)
-- [`google-books-mcp`](./servers/google-books-mcp)
-- [`google-fonts-mcp`](./servers/google-fonts-mcp)
-- [`gorjana-mcp`](./servers/gorjana-mcp)
-- [`gotify-mcp`](./servers/gotify-mcp)
-- [`greenhouse-mcp`](./servers/greenhouse-mcp)
-- [`groq-mcp`](./servers/groq-mcp)
-- [`gucci-mcp`](./servers/gucci-mcp)
-- [`hackertarget-mcp`](./servers/hackertarget-mcp)
-- [`hashnode-mcp`](./servers/hashnode-mcp)
-- [`helius-mcp`](./servers/helius-mcp)
-- [`hermes-mcp`](./servers/hermes-mcp)
-- [`hibp-mcp`](./servers/hibp-mcp)
-- [`hubspot-mcp`](./servers/hubspot-mcp)
-- [`icebox-mcp`](./servers/icebox-mcp)
-- [`ifandco-mcp`](./servers/ifandco-mcp)
-- [`invoice-mcp`](./servers/invoice-mcp)
-- [`isbndb-mcp`](./servers/isbndb-mcp)
-- [`iss-mcp`](./servers/iss-mcp)
-- [`jacquesmariemage-mcp`](./servers/jacquesmariemage-mcp)
-- [`jetbrains-mcp`](./servers/jetbrains-mcp)
-- [`job-search-mcp`](./servers/job-search-mcp)
-- [`jobicy-mcp`](./servers/jobicy-mcp)
-- [`jokeapi-mcp`](./servers/jokeapi-mcp)
-- [`jolpica-mcp`](./servers/jolpica-mcp)
-- [`k6-mcp`](./servers/k6-mcp)
-- [`kith-mcp`](./servers/kith-mcp)
-- [`kiwi-mcp`](./servers/kiwi-mcp)
-- [`klaviyo-mcp`](./servers/klaviyo-mcp)
-- [`kong-mcp`](./servers/kong-mcp)
-- [`kraken-mcp`](./servers/kraken-mcp)
-- [`lago-mcp`](./servers/lago-mcp)
-- [`lastfm-mcp`](./servers/lastfm-mcp)
-- [`lemonsqueezy-mcp`](./servers/lemonsqueezy-mcp)
-- [`lever-mcp`](./servers/lever-mcp)
-- [`linear-mcp`](./servers/linear-mcp)
-- [`listennotes-mcp`](./servers/listennotes-mcp)
-- [`loops-mcp`](./servers/loops-mcp)
-- [`louisvuitton-mcp`](./servers/louisvuitton-mcp)
-- [`madhappy-mcp`](./servers/madhappy-mcp)
-- [`mailchimp-mcp`](./servers/mailchimp-mcp)
-- [`mailgun-mcp`](./servers/mailgun-mcp)
-- [`mailjet-mcp`](./servers/mailjet-mcp)
-- [`marketstack-mcp`](./servers/marketstack-mcp)
-- [`mastodon-mcp`](./servers/mastodon-mcp)
-- [`mercury-mcp`](./servers/mercury-mcp)
-- [`missoma-mcp`](./servers/missoma-mcp)
-- [`mixpanel-mcp`](./servers/mixpanel-mcp)
-- [`mobygames-mcp`](./servers/mobygames-mcp)
-- [`nager-mcp`](./servers/nager-mcp)
-- [`netdata-mcp`](./servers/netdata-mcp)
-- [`noahny-mcp`](./servers/noahny-mcp)
-- [`nonprofit-mcp`](./servers/nonprofit-mcp)
-- [`notion-mcp`](./servers/notion-mcp)
-- [`novu-mcp`](./servers/novu-mcp)
-- [`ntfy-mcp`](./servers/ntfy-mcp)
-- [`nyc-arrests-mcp`](./servers/nyc-arrests-mcp)
-- [`nylas-mcp`](./servers/nylas-mcp)
-- [`ocrspace-mcp`](./servers/ocrspace-mcp)
-- [`ohdear-mcp`](./servers/ohdear-mcp)
-- [`omdb-mcp`](./servers/omdb-mcp)
-- [`onesignal-mcp`](./servers/onesignal-mcp)
-- [`openchargemap-mcp`](./servers/openchargemap-mcp)
-- [`openlibrary-mcp`](./servers/openlibrary-mcp)
-- [`openmoji-mcp`](./servers/openmoji-mcp)
-- [`openpanel-mcp`](./servers/openpanel-mcp)
-- [`openrouter-mcp`](./servers/openrouter-mcp)
-- [`openrouteservice-mcp`](./servers/openrouteservice-mcp)
-- [`opentdb-mcp`](./servers/opentdb-mcp)
-- [`opnsense-mcp`](./servers/opnsense-mcp)
-- [`opsgenie-mcp`](./servers/opsgenie-mcp)
-- [`osrs-mcp`](./servers/osrs-mcp)
-- [`paddle-mcp`](./servers/paddle-mcp)
-- [`paypal-mcp`](./servers/paypal-mcp)
-- [`peakdesign-mcp`](./servers/peakdesign-mcp)
-- [`pinata-mcp`](./servers/pinata-mcp)
-- [`pingdom-mcp`](./servers/pingdom-mcp)
-- [`pinterest-mcp`](./servers/pinterest-mcp)
-- [`plaid-mcp`](./servers/plaid-mcp)
-- [`plain-mcp`](./servers/plain-mcp)
-- [`playcanvas-mcp`](./servers/playcanvas-mcp)
-- [`polygon-mcp`](./servers/polygon-mcp)
-- [`posthog-mcp`](./servers/posthog-mcp)
-- [`postmark-mcp`](./servers/postmark-mcp)
-- [`prada-mcp`](./servers/prada-mcp)
-- [`predictit-mcp`](./servers/predictit-mcp)
-- [`producthunt-mcp`](./servers/producthunt-mcp)
-- [`publicwww-mcp`](./servers/publicwww-mcp)
-- [`pusher-mcp`](./servers/pusher-mcp)
-- [`pvgis-mcp`](./servers/pvgis-mcp)
-- [`qbittorrent-mcp`](./servers/qbittorrent-mcp)
-- [`quip-mcp`](./servers/quip-mcp)
-- [`radarr-mcp`](./servers/radarr-mcp)
-- [`raindrop-mcp`](./servers/raindrop-mcp)
-- [`rawg-mcp`](./servers/rawg-mcp)
-- [`readwise-mcp`](./servers/readwise-mcp)
-- [`remoteok-mcp`](./servers/remoteok-mcp)
-- [`resend-mcp`](./servers/resend-mcp)
-- [`rolex-mcp`](./servers/rolex-mcp)
-- [`rollbar-mcp`](./servers/rollbar-mcp)
-- [`rybbit-mcp`](./servers/rybbit-mcp)
-- [`saintlaurent-mcp`](./servers/saintlaurent-mcp)
-- [`savvycal-mcp`](./servers/savvycal-mcp)
-- [`scryfall-mcp`](./servers/scryfall-mcp)
-- [`seatgeek-mcp`](./servers/seatgeek-mcp)
-- [`sentry-mcp`](./servers/sentry-mcp)
-- [`shootproof-mcp`](./servers/shootproof-mcp)
-- [`simplecast-mcp`](./servers/simplecast-mcp)
-- [`slack-mcp`](./servers/slack-mcp)
-- [`smartrecruiters-mcp`](./servers/smartrecruiters-mcp)
-- [`spacedevs-mcp`](./servers/spacedevs-mcp)
-- [`sportyandrich-mcp`](./servers/sportyandrich-mcp)
-- [`spotify-mcp`](./servers/spotify-mcp)
-- [`spreaker-mcp`](./servers/spreaker-mcp)
-- [`squarespace-mcp`](./servers/squarespace-mcp)
-- [`stadiumgoods-mcp`](./servers/stadiumgoods-mcp)
-- [`statping-mcp`](./servers/statping-mcp)
-- [`statuscake-mcp`](./servers/statuscake-mcp)
-- [`statuspage-mcp`](./servers/statuspage-mcp)
-- [`steam-mcp`](./servers/steam-mcp)
-- [`storyblok-mcp`](./servers/storyblok-mcp)
-- [`stripe-mcp`](./servers/stripe-mcp)
-- [`supabase-mcp`](./servers/supabase-mcp)
-- [`swetrix-mcp`](./servers/swetrix-mcp)
-- [`tally-mcp`](./servers/tally-mcp)
-- [`telegram-mcp`](./servers/telegram-mcp)
-- [`themuse-mcp`](./servers/themuse-mcp)
-- [`theoddsapi-mcp`](./servers/theoddsapi-mcp)
-- [`tiingo-mcp`](./servers/tiingo-mcp)
-- [`traxnyc-mcp`](./servers/traxnyc-mcp)
-- [`turbosquid-mcp`](./servers/turbosquid-mcp)
-- [`twelvedata-mcp`](./servers/twelvedata-mcp)
-- [`twilio-mcp-server`](./servers/twilio-mcp-server)
-- [`twitch-mcp`](./servers/twitch-mcp)
-- [`typeform-mcp`](./servers/typeform-mcp)
-- [`uptime-kuma-mcp`](./servers/uptime-kuma-mcp)
-- [`uptimerobot-mcp`](./servers/uptimerobot-mcp)
-- [`urlhaus-mcp`](./servers/urlhaus-mcp)
-- [`usajobs-mcp`](./servers/usajobs-mcp)
-- [`usps-mcp`](./servers/usps-mcp)
-- [`vapi-mcp`](./servers/vapi-mcp)
-- [`vercel-mcp`](./servers/vercel-mcp)
-- [`wayback-mcp`](./servers/wayback-mcp)
-- [`weightsbiases-mcp`](./servers/weightsbiases-mcp)
-- [`whiskyhunter-mcp`](./servers/whiskyhunter-mcp)
-- [`wise-mcp`](./servers/wise-mcp)
-- [`workable-mcp`](./servers/workable-mcp)
-- [`yfinance-mcp`](./servers/yfinance-mcp)
-- [`youtrack-mcp`](./servers/youtrack-mcp)
-- [`youtube-mcp`](./servers/youtube-mcp)
+`servers/` holds the older per-server source that predates the snapshot. Where the two
+disagree, `published/` is what users actually install.

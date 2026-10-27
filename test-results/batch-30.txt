@@ -1,0 +1,11 @@
+# check batch 30 — 2026-10-17T07:15:58Z
+openapi-scout-mcp PASS {"ok":true,"tools":10,"names":["inspect_spec","find_operation","list_schemas","operation_matrix","schema_shape_report","redaction_audit","health_check","version_info","list_tools","echo"]}
+openbrewery-mcp PASS {"ok":true,"tools":10,"names":["search","by_city","by_state","brewery_detail","by_type","health_check","version_info","list_tools","echo","timestamp"]}
+openchargemap-mcp PASS {"ok":true,"tools":10,"names":["nearby","get_poi","osm_chargers_nearby","charger_coverage_gap","charge_time_estimate","health_check","version_info","list_tools","echo","timestamp"]}
+opendota-mcp PASS {"ok":true,"tools":10,"names":["heroes","hero_stats","match","player","player_breakdown","top_teams","health_check","version_info","list_tools","echo"]}
+openf1-mcp PASS {"ok":true,"tools":10,"names":["races","drivers","session_list","tyre_stints","fastest_laps","health_check","version_info","list_tools","echo","timestamp"]}
+openlibrary-mcp PASS {"ok":true,"tools":13,"names":["search_books","search_by_author","search_by_subject","get_work","get_edition","get_author","author_works","edition_by_isbn","work_editions","subject_overview","read_availability","scanned_copy_report","search_facets"]}
+openligadb-soccer-mcp PASS {"ok":true,"tools":10,"names":["matches","top_scorers","leagues","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+openmoji-mcp PASS {"ok":true,"tools":13,"names":["search_emoji","get_emoji","list_groups","list_subgroups","emojis_in_group","random_emoji","emoji_stats","svg_links","skin_tone_variants","compare_emoji","unicode_reference","unicode_version_census","emoji_lint"]}
+openpanel-mcp PASS {"ok":true,"tools":10,"names":["get_metrics","get_live","get_pages","get_referrer","tracker_sdk_matrix","project_health","referrer_taxonomy","health_check","version_info","list_tools"]}
+openplaques-mcp PASS {"ok":true,"tools":10,"names":["recent","search","plaque","plaque_photos","health_check","version_info","list_tools","echo","timestamp","ping"]}

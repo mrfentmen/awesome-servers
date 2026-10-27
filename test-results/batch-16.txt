@@ -1,0 +1,11 @@
+# check batch 16 — 2026-10-17T07:08:59Z
+kith-mcp PASS {"ok":true,"tools":11,"names":["search_products","list_newest","get_product","price_overview","find_deals","list_categories","list_collections","browse_collection","find_by_size","size_run_matrix","collaboration_census"]}
+kitsu-mcp PASS {"ok":true,"tools":10,"names":["search","trending","anime_details","manga_search","health_check","version_info","list_tools","echo","timestamp","ping"]}
+kiwi-mcp PASS {"ok":true,"tools":10,"names":["find_locations","search_flights","airport_lookup","route_network","health_check","version_info","list_tools","echo","timestamp","ping"]}
+klaviyo-mcp PASS {"ok":true,"tools":12,"names":["list_profiles","list_lists","list_campaigns","profile_details","list_details","campaign_details","metrics","events","flows","segments","disposable_check","sending_readiness"]}
+kma-mcp PASS {"ok":true,"tools":10,"names":["get_forecast","get_ultrashort","get_observations","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+knmi-mcp PASS {"ok":true,"tools":10,"names":["list_datasets","list_versions","list_files","get_file","health_check","version_info","list_tools","echo","timestamp","ping"]}
+kong-mcp PASS {"ok":true,"tools":10,"names":["get_status","list_services","list_routes","cors_preflight","edge_headers","health_check","version_info","list_tools","echo","timestamp"]}
+kopia-mcp PASS {"ok":true,"tools":10,"names":["list_sources","list_snapshots","get_repo_status","get_current_user","get_tasks_summary","health_check","version_info","list_tools","echo","timestamp"]}
+kraken-mcp PASS {"ok":true,"tools":12,"names":["ticker","assets","pairs","ohlc","depth","time","status","recent_trades","spread_history","pair_details","cross_exchange_price","liquidity_map"]}
+kucoin-mcp PASS {"ok":true,"tools":10,"names":["get_server_time","list_symbols","get_24h_stats","get_orderbook","get_klines","get_fiat_prices","health_check","version_info","list_tools","echo"]}

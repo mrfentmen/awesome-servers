@@ -1,0 +1,11 @@
+# check batch 39 — 2026-10-17T07:19:38Z
+rainviewer-mcp PASS {"ok":true,"tools":10,"names":["radar","timeline","radar_tiles","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+random-animals-mcp PASS {"ok":true,"tools":10,"names":["animal","species_facts","species_observations","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+random-word-mcp PASS {"ok":true,"tools":10,"names":["word","word_details","health_check","version_info","list_tools","echo","timestamp","ping","help","status"]}
+randomuser-mcp PASS {"ok":true,"tools":10,"names":["users","generate","seed","field_subset","health_check","version_info","list_tools","echo","timestamp","ping"]}
+rawg-mcp PASS {"ok":true,"tools":10,"names":["search_games","get_game","steam_store_info","steam_reach","health_check","version_info","list_tools","echo","timestamp","ping"]}
+rcsb-pdb-mcp PASS {"ok":true,"tools":10,"names":["entry","search","polymer_entity","ligands","publications","health_check","version_info","list_tools","echo","timestamp"]}
+reactome-mcp PASS {"ok":true,"tools":10,"names":["search_pathways","get_pathway","pathway_structure","pathway_participants","pathway_tree","identifier_pathways","health_check","version_info","list_tools","echo"]}
+readwise-mcp PASS {"ok":true,"tools":10,"names":["auth","list_books","list_highlights","paper_search","paper_references","health_check","version_info","list_tools","echo","timestamp"]}
+rebrickable-mcp PASS {"ok":true,"tools":10,"names":["search_sets","get_set","set_parts","era_census","theme_tree","color_roster","health_check","version_info","list_tools","echo"]}
+regex-mcp PASS {"ok":true,"tools":10,"names":["test","matches","replace_preview","extract_groups","health_check","version_info","list_tools","echo","timestamp","ping"]}

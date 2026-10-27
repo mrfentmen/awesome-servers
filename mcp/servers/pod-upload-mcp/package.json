@@ -1,0 +1,23 @@
+{
+  "name": "@mrfentmen/pod-upload-mcp",
+  "version": "0.1.0",
+  "description": "MCP server that drives browser uploads of artwork to print-on-demand marketplaces (Redbubble, TeePublic). No API keys, no credentials handled - the human logs in, the agent drives the form.",
+  "type": "module",
+  "private": false,
+  "bin": { "pod-upload-mcp": "dist/index.js" },
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test tests/"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "playwright": "^1.52.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "typescript": "^5.8.0"
+  },
+  "engines": { "node": ">=20" },
+  "license": "MIT"
+}

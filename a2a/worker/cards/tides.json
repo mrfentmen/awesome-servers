@@ -1,0 +1,114 @@
+{
+  "protocolVersion": "0.3.0",
+  "name": "NOAA Tides Agent",
+  "description": "Read-only agent over NOAA CO-OPS tide data: high/low tide predictions, the next high and low, the latest observed water level placed against published flood stages, tide-station lookup by name/state/point, and a watch skill that POSTs to your webhook when the water crosses a height or flood stage. Every answer is read live from NOAA and names the datum. This hosted endpoint answers tide-next, tide-predictions, stations; the local server additionally implements water-level, tide-watch.",
+  "url": "https://mrfentmen-a2a.contactae2000.workers.dev/agents/tides/",
+  "preferredTransport": "JSONRPC",
+  "additionalInterfaces": [
+    {
+      "url": "https://mrfentmen-a2a.contactae2000.workers.dev/agents/tides/",
+      "transport": "JSONRPC"
+    }
+  ],
+  "version": "1.0.0",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/plain"
+  ],
+  "provider": {
+    "organization": "mrfentmen",
+    "url": "https://github.com/mrfentmen/a2a"
+  },
+  "skills": [
+    {
+      "id": "tide-next",
+      "name": "Next high and low tide",
+      "description": "The next high tide and the next low tide for a NOAA tide station, with heights.",
+      "tags": [
+        "tides",
+        "noaa",
+        "ocean",
+        "next"
+      ],
+      "examples": [
+        "when is the next high tide at 8518750?",
+        "next low tide near 40.7006,-74.0142",
+        "{\"skill\": \"tide-next\", \"station\": \"8518750\"}"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/plain"
+      ]
+    },
+    {
+      "id": "tide-predictions",
+      "name": "Tide predictions",
+      "description": "Upcoming high and low tides for a NOAA tide station, in station local time, from the current observation forward. Give a seven-digit station id, 'lat,lon' for the nearest station, or a station name.",
+      "tags": [
+        "tides",
+        "noaa",
+        "ocean",
+        "predictions",
+        "tide-table"
+      ],
+      "examples": [
+        "what are the tides at station 8518750 today?",
+        "tide table for the next 3 days near 40.7006,-74.0142",
+        "{\"skill\": \"tide-predictions\", \"station_name\": \"The Battery\", \"days\": 2}"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/plain"
+      ]
+    },
+    {
+      "id": "stations",
+      "name": "Find tide stations",
+      "description": "Search the NOAA tide-station catalogue by name, by two-letter state code, or by distance from a latitude/longitude point. 3499 tide-prediction stations worldwide (US coasts and territories).",
+      "tags": [
+        "tides",
+        "noaa",
+        "stations",
+        "search"
+      ],
+      "examples": [
+        "which tide stations are near 40.7,-74.0?",
+        "find tide stations named Battery",
+        "{\"skill\": \"stations\", \"state\": \"NY\", \"limit\": 10}"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/plain"
+      ]
+    }
+  ],
+  "metadata": {
+    "registryIdentityProvider": "github",
+    "registryIdentity": "mrfentmen",
+    "registryPackageName": "github.mrfentmen.tides",
+    "sourceRepository": "https://github.com/mrfentmen/a2a",
+    "localServer": "servers/tides/server.py",
+    "hostedBy": "cloudflare-worker",
+    "note": "The local Python server implements every skill on its own card, including watch loops and push notifications. This hosted card lists only the skills the hosted endpoint answers."
+  }
+}

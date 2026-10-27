@@ -1,0 +1,11 @@
+# check batch 13 — 2026-10-17T07:07:42Z
+invoice-mcp PASS {"ok":true,"tools":17,"names":["generate_invoice","convert_to_pdf","send_invoice","validate_address","create_label","track_shipment","list_carriers","vat_number_check","iban_check","currency_reference","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+ip-geo-mcp PASS {"ok":true,"tools":10,"names":["lookup","my_ip","batch_lookup","reverse_lookup","compare_locations","network_profile","health_check","version_info","list_tools","echo"]}
+ipapi-mcp PASS {"ok":true,"tools":10,"names":["lookup","network_profile","ip_registration","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+ipify-mcp PASS {"ok":true,"tools":10,"names":["myip","my_ipv6","dual_stack","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+ipinfo-mcp PASS {"ok":true,"tools":10,"names":["lookup","network_profile","health_check","version_info","list_tools","echo","timestamp","ping","help","status"]}
+ipma-mcp PASS {"ok":true,"tools":10,"names":["cities","forecast","weather_warnings","station_observations","health_check","version_info","list_tools","echo","timestamp","ping"]}
+ipwhois-mcp PASS {"ok":true,"tools":10,"names":["lookup","rdap_lookup","health_check","version_info","list_tools","echo","timestamp","ping","help","status"]}
+irail-mcp PASS {"ok":true,"tools":10,"names":["stations","connections","live_board","network_disruptions","train_stops","health_check","version_info","list_tools","echo","timestamp"]}
+isbndb-mcp PASS {"ok":true,"tools":10,"names":["get_book","search_books","get_books_batch","loc_catalog","book_background","health_check","version_info","list_tools","echo","timestamp"]}
+iss-mcp PASS {"ok":true,"tools":10,"names":["iss_now","iss_passes","position","iss_ground_track","resolve_place","health_check","version_info","list_tools","echo","timestamp"]}

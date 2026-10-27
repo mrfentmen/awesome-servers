@@ -1,0 +1,11 @@
+# check batch 61 — 2026-10-17T07:32:38Z
+wordle-helper-mcp PASS {"ok":true,"tools":10,"names":["suggest","filter","pattern_words","rhyming_words","word_facts","related_words","health_check","version_info","list_tools","echo"],"stderr":""}
+wordpress-mcp PASS {"ok":true,"tools":10,"names":["plugin_info","search_plugins","search","theme_info","theme_list","core_releases","health_check","version_info","list_tools","echo"],"stderr":""}
+workable-mcp PASS {"ok":true,"tools":12,"names":["search_jobs","job_detail","company_jobs","companies","market_summary","remote_jobs","recent_jobs","compare_queries","company_openings","workplace_split","remote_market","remote_salary"],"stderr":""}
+worktree-orbit-mcp PASS {"ok":true,"tools":10,"names":["health_check","version_info","list_tools","echo","timestamp","ping","help","inspect_worktree_topology","worktree_divergence_profile","worktree_age_profile"],"stderr":"MCP server running on stdio\n"}
+worldbank-mcp PASS {"ok":true,"tools":10,"names":["indicator","countries","get_worldbank_indicator","get_eia_series","country_profile","indicator_catalog","health_check","version_info","list_tools","echo"],"stderr":""}
+wpengine-mcp PASS {"ok":true,"tools":10,"names":["list_installs","get_install","list_sites","platform_status","current_incidents","upcoming_maintenance","health_check","version_info","list_tools","echo"],"stderr":"MCP server running on stdio\n"}
+wttr-mcp PASS {"ok":true,"tools":10,"names":["current","forecast","hourly","sun_moon","resolve_location","forecast_ranking","health_check","version_info","list_tools","echo"],"stderr":""}
+wynncraft-mcp PASS {"ok":true,"tools":10,"names":["get_player","get_guild","search_items","item_build","map_locations","territory_owners","health_check","version_info","list_tools","echo"],"stderr":"MCP server running on stdio\n"}
+xkcd-mcp PASS {"ok":true,"tools":10,"names":["latest_comic","get_comic","comic_range","comic_find","comic_census","comic_transcript","health_check","version_info","list_tools","echo"],"stderr":"MCP server running on stdio\n"}
+yaml-mcp PASS {"ok":true,"tools":10,"names":["parse_yaml","to_json","openapi_operations","repo_file_listing","health_check","version_info","list_tools","echo","timestamp","ping"],"stderr":""}

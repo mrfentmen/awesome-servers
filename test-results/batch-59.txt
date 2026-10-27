@@ -1,0 +1,11 @@
+# check batch 59 — 2026-10-17T07:31:49Z
+weaviate-mcp PASS {"ok":true,"tools":10,"names":["list_classes","list_objects","graphql_query","schema_health","schema_diff","health_check","version_info","list_tools","echo","timestamp"],"stderr":"MCP server running on stdio\n"}
+weightsbiases-mcp PASS {"ok":true,"tools":10,"names":["my_profile","list_projects","list_runs","model_card_audit","dataset_catalogue","health_check","version_info","list_tools","echo","timestamp"],"stderr":"MCP server running on stdio\n"}
+wellcome-mcp PASS {"ok":true,"tools":10,"names":["search","search_images","search_by_format","work_detail","work_items","catalogue_facets","health_check","version_info","list_tools","echo"],"stderr":""}
+wger-mcp PASS {"ok":true,"tools":10,"names":["exercises","exercise","muscles","equipment_list","exercise_detail","exercise_categories","health_check","version_info","list_tools","echo"],"stderr":""}
+whiskyhunter-mcp PASS {"ok":true,"tools":12,"names":["auctions","auction_by_date","auction_summary","top_auctions","market_trend","seasonality","auction_compare","market_momentum","auction_leaderboard","slug_head_to_head","liquidity_profile","market_structure"],"stderr":""}
+whitebit-mcp PASS {"ok":true,"tools":10,"names":["ticker","order_book","recent_trades","market_rules","asset_networks","transfer_fees","health_check","version_info","list_tools","echo"],"stderr":""}
+who-mcp PASS {"ok":true,"tools":10,"names":["indicator","search","indicator_dimensions","indicator_series","indicator_places","place_lookup","health_check","version_info","list_tools","echo"],"stderr":""}
+whois-mcp PASS {"ok":true,"tools":10,"names":["domain","ip","domain_info","asn_info","asn_networks","domain_contacts","health_check","version_info","list_tools","echo"],"stderr":""}
+wikibooks-mcp PASS {"ok":true,"tools":10,"names":["search","book","browse_categories","page_history","page_sections","category_members","health_check","version_info","list_tools","echo"],"stderr":""}
+wikidata-mcp PASS {"ok":true,"tools":10,"names":["search_entities","get_entity","query_knowledge","search","entity_sitelinks","entity_history","health_check","version_info","list_tools","echo"],"stderr":"MCP server running on stdio\n"}

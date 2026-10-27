@@ -1,0 +1,11 @@
+# check batch 48 — 2026-10-17T07:27:19Z
+sqlite-mcp PASS {"ok":true,"tools":10,"names":["query","execute","list_tables","describe_table","health_check","version_info","list_tools","echo","timestamp","ping"],"stderr":"MCP server running on stdio\n"}
+statping-mcp PASS {"ok":true,"tools":10,"names":["status_summary","check_services","service_status","port_check","dns_propagation","ssl_chain","header_audit","dns_records","cert_forecast","health_check"],"stderr":"MCP server running on stdio\n"}
+statuscake-mcp PASS {"ok":true,"tools":10,"names":["check_url","port_check","ssl_chain","dns_propagation","uptime_report","check_hosts","header_audit","dns_records","http_timing","health_check"],"stderr":"MCP server running on stdio\n"}
+statuspage-mcp PASS {"ok":true,"tools":10,"names":["list_pages","get_page","list_incidents","incident_details","incident_updates","components","component_details","subscribers","upcoming_maintenance","maintenance_details"],"stderr":"MCP server running on stdio\n"}
+steam-mcp PASS {"ok":true,"tools":12,"names":["search_games","get_game_details","get_game_news","reviews","players","topsellers","store_highlights","sales_check","player_count_rank","game_requirements","game_dlc_cost","game_achievements"],"stderr":"Steam MCP server running on stdio\n"}
+steamspy-mcp PASS {"ok":true,"tools":10,"names":["app","genre_apps","top_owned","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":""}
+stellar-mcp PASS {"ok":true,"tools":10,"names":["ledgers","stellar_assets","stellar_payments","horizon_root","transaction_detail","health_check","version_info","list_tools","echo","timestamp"],"stderr":""}
+storj-mcp PASS {"ok":true,"tools":10,"names":["list_buckets","list_objects","service_status","storage_key_audit","health_check","version_info","list_tools","echo","timestamp","ping"],"stderr":"MCP server running on stdio\n"}
+stormglass-mcp PASS {"ok":true,"tools":10,"names":["get_weather","get_elevation","get_tides","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":"MCP server running on stdio\n"}
+storyblok-mcp PASS {"ok":true,"tools":10,"names":["get_space","list_stories","get_story","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":"MCP server running on stdio\n"}

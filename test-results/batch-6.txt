@@ -1,0 +1,11 @@
+# check batch 6 — 2026-10-17T07:03:56Z
+gitea-mcp PASS {"ok":true,"tools":10,"names":["search_repos","repo_detail","search_users","org_profile","health_check","version_info","list_tools","echo","timestamp","ping"]}
+github-intel-mcp PASS {"ok":true,"tools":10,"names":["search_repos","get_repo","get_user_repos","repo_languages","repo_releases","repo_contributors","user_profile","health_check","version_info","list_tools"]}
+github-mcp PASS {"ok":true,"tools":13,"names":["me","list_repos","get_repo","search_repos","user_issues","repo_issues","repo_pulls","repo_commits","get_user","search_code","list_workflows","repo_releases","repo_contributors"]}
+gitignore-mcp PASS {"ok":true,"tools":10,"names":["template","list_templates","merged_template","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+gitlab-mcp PASS {"ok":true,"tools":10,"names":["search","project_detail","project_issues","project_branches","health_check","version_info","list_tools","echo","timestamp","ping"]}
+gleif-mcp PASS {"ok":true,"tools":10,"names":["search","lei","lei_identifiers","entities_by_country","health_check","version_info","list_tools","echo","timestamp","ping"]}
+glossier-mcp PASS {"ok":true,"tools":11,"names":["search_products","list_newest","get_product","price_overview","find_deals","list_categories","list_collections","collection_products","restock_check","catalog_sitemap","collection_detail"]}
+go-proxy-mcp PASS {"ok":true,"tools":10,"names":["latest","versions","version_info","module_manifest","health_check","list_tools","echo","timestamp","ping","help"]}
+goatcounter-mcp PASS {"ok":true,"tools":10,"names":["get_totals","get_hits","get_breakdown","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+godot-mcp PASS {"ok":true,"tools":10,"names":["search_assets","get_asset","get_configure","asset_categories","browse_assets","health_check","version_info","list_tools","echo","timestamp"]}

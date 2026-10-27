@@ -1,0 +1,11 @@
+# check batch 35 — 2026-10-17T07:18:00Z
+pinterest-mcp PASS {"ok":true,"tools":10,"names":["my_account","list_boards","get_board","get_pin","find_licensed_images","image_licence","image_sources","health_check","version_info","list_tools"]}
+pixelfed-mcp PASS {"ok":true,"tools":10,"names":["instance","public_timeline","trending_tags","server_rules","instance_activity","health_check","version_info","list_tools","echo","timestamp"]}
+placehold-mcp PASS {"ok":true,"tools":10,"names":["image","svg_source","health_check","version_info","list_tools","echo","timestamp","ping","help","status"]}
+placeholder-images-mcp PASS {"ok":true,"tools":10,"names":["image_url","list_images","list","image_info","page_images","health_check","version_info","list_tools","echo","timestamp"]}
+plaid-mcp PASS {"ok":true,"tools":13,"names":["list_institutions","list_categories","sandbox_token","get_institution","sandbox_balance","sandbox_transactions","sandbox_holdings","sandbox_liabilities","sandbox_auth","sandbox_identity","find_bank","bank_health","banks_by_state"]}
+plain-mcp PASS {"ok":true,"tools":10,"names":["list_customers","list_threads","get_thread","email_deliverability","response_time_report","health_check","version_info","list_tools","echo","timestamp"]}
+playcanvas-mcp PASS {"ok":true,"tools":10,"names":["list_project_assets","get_asset","get_rate_limits","engine_release_channels","engine_release_notes","health_check","version_info","list_tools","echo","timestamp"]}
+plos-mcp PASS {"ok":true,"tools":10,"names":["search","fulltext_search","paper_details","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+pocketbase-mcp PASS {"ok":true,"tools":10,"names":["health","list_collections","list_records","create_record","health_check","version_info","list_tools","echo","timestamp","ping"]}
+poetry-mcp PASS {"ok":true,"tools":10,"names":["search_titles","by_author","random_poem","author_poems","title_index","health_check","version_info","list_tools","echo","timestamp"]}

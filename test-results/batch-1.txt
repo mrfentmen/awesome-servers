@@ -1,0 +1,11 @@
+# check batch 1 — 2026-10-17T07:01:44Z
+fbi-crime-mcp PASS {"ok":true,"tools":10,"names":["arrests","offenses","victims","state_comparison","crime_trend","crime_snapshot","health_check","version_info","list_tools","echo"]}
+fbi-wanted-mcp PASS {"ok":true,"tools":10,"names":["wantedList","search","topRewards","wanted_by_office","office_summary","health_check","version_info","list_tools","echo","timestamp"]}
+fear-greed-mcp PASS {"ok":true,"tools":10,"names":["current","history","market_extremes","greed_trend","band_distribution","health_check","version_info","list_tools","echo","timestamp"]}
+feedly-mcp PASS {"ok":true,"tools":10,"names":["profile","subscriptions","stream_contents","discover_feeds","unread_counts","board_catalogue","health_check","version_info","list_tools","echo"]}
+fema-mcp PASS {"ok":true,"tools":10,"names":["declarations","declaration_lookup","declaration_totals","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+fendi-mcp PASS {"ok":true,"tools":13,"names":["search_listings","list_newest","get_listing","price_overview","compare_prices","find_deals","brand_overview","list_collections","browse_collection","find_by_attribute","cross_market_match","price_ladder","source_taxonomy"]}
+figma-mcp PASS {"ok":true,"tools":13,"names":["me","get_file","project_files","team_projects","file_comments","file_versions","file_components","file_styles","file_nodes","file_images","file_variables","component_sets","file_structure"]}
+figshare-mcp PASS {"ok":true,"tools":10,"names":["search","article","article_version_history","recent_articles","health_check","version_info","list_tools","echo","timestamp","ping"]}
+filerun-mcp PASS {"ok":true,"tools":10,"names":["browse_folder","search_files","create_folder","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+finalspace-mcp PASS {"ok":true,"tools":10,"names":["characters","character","roster_census","alias_index","origin_map","health_check","version_info","list_tools","echo","timestamp"]}

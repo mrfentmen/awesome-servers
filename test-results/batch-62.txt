@@ -1,0 +1,11 @@
+# check batch 62 — 2026-10-17T07:33:03Z
+yesno-mcp PASS {"ok":true,"tools":10,"names":["answer","is_site_up","is_domain_taken","is_person_alive","domain_accepts_mail","wikipedia_page_exists","health_check","version_info","list_tools","echo"],"stderr":""}
+yfinance-mcp PASS {"ok":true,"tools":12,"names":["quote","search","search_symbol","gainers","losers","actives","trending","dividend_history","volume_spike","benchmark_compare","filing_fundamentals","registrant_profile"],"stderr":""}
+youtrack-mcp PASS {"ok":true,"tools":10,"names":["search_projects","project_issues","issue_detail","merge_requests","group_issues","issue_stats","recent_issues","public_registry","platform_feed","health_check"],"stderr":"MCP server running on stdio\n"}
+youtube-mcp PASS {"ok":true,"tools":12,"names":["search","video_details","channel_details","playlist_items","channel_playlists","most_popular","video_comments","channel_videos","search_channels","live_streams","channel_feed","embed_card"],"stderr":"MCP server running on stdio\n"}
+yr-metno-mcp PASS {"ok":true,"tools":10,"names":["forecast","nowcast","sun_times","moon_events","ocean_conditions","weather_alerts","health_check","version_info","list_tools","echo"],"stderr":""}
+yugioh-mcp PASS {"ok":true,"tools":10,"names":["search_cards","search_by_archetype","get_card","get_banlist","highest_attack_cards","staple_cards","health_check","version_info","list_tools","echo"],"stderr":"MCP server running on stdio\n"}
+zenodo-mcp PASS {"ok":true,"tools":10,"names":["search","record","record_files","record_impact","record_versions","search_facets","health_check","version_info","list_tools","echo"],"stderr":""}
+zip-codes-mcp PASS {"ok":true,"tools":10,"names":["zip_lookup","city_lookup","reverse_geocode","address_search","nearby_postcodes","postcode_autocomplete","health_check","version_info","list_tools","echo"],"stderr":""}
+zitadel-mcp PASS {"ok":true,"tools":10,"names":["list_users","list_organizations","audit_users","credential_report","org_coverage","health_check","version_info","list_tools","echo","timestamp"],"stderr":"MCP server running on stdio\n"}
+zork-mcp PASS {"ok":true,"tools":10,"names":["list_games","start_game","act","hint","score","game_map","game_routes","health_check","version_info","list_tools"],"stderr":"Zork MCP server running on stdio\n"}

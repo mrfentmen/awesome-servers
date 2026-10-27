@@ -1,0 +1,11 @@
+# check batch 57 — 2026-10-17T07:31:01Z
+valorant-mcp PASS {"ok":true,"tools":10,"names":["agents","agent","maps","weapons","map_detail","game_modes","health_check","version_info","list_tools","echo"],"stderr":""}
+vam-mcp PASS {"ok":true,"tools":10,"names":["search","object_detail","health_check","version_info","list_tools","echo","timestamp","ping","help","status"],"stderr":""}
+vapi-mcp PASS {"ok":true,"tools":10,"names":["list_assistants","get_assistant","list_calls","get_call","voice_stack_status","stack_maintenance","health_check","version_info","list_tools","echo"],"stderr":"MCP server running on stdio\n"}
+vatcomply-mcp PASS {"ok":true,"tools":10,"names":["rates","country","validate_vat_number","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":""}
+vatsim-mcp PASS {"ok":true,"tools":10,"names":["pilots","controllers","atis","servers","pilot_detail","health_check","version_info","list_tools","echo","timestamp"],"stderr":""}
+vercel-mcp PASS {"ok":true,"tools":12,"names":["list_projects","get_project","list_deployments","deployment_details","list_aliases","list_domains","domain_info","list_teams","project_env","get_alias","edge_footprint","incident_timeline"],"stderr":"MCP server running on stdio\n"}
+vg-resource-mcp PASS {"ok":true,"tools":13,"names":["search_assets","browse_console","browse_game","get_asset_detail","get_latest","get_popular","random_asset","cross_reference","list_consoles","download_asset","batch_download","get_site_stats","search_tags"],"stderr":"VG Resource MCP server running on stdio\n"}
+vgmdb-mcp PASS {"ok":true,"tools":10,"names":["search_albums","get_album","search_artists","get_artist","album_census","composer_survey","track_search","storefront_availability","health_check","version_info"],"stderr":"VGMdb MCP server running on stdio\n"}
+vin-decoder-mcp PASS {"ok":true,"tools":10,"names":["decode_vin","decode_vin_full","vehicle_recalls","make_model_catalog","recall_campaign","models_in_year","health_check","version_info","list_tools","echo"],"stderr":""}
+virustotal-mcp PASS {"ok":true,"tools":10,"names":["file_report","url_report","domain_report","ip_report","health_check","version_info","list_tools","echo","timestamp","ping"],"stderr":"MCP server running on stdio\n"}

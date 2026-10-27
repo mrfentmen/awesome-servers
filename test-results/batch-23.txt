@@ -1,0 +1,11 @@
+# check batch 23 — 2026-10-17T07:13:07Z
+mexc-mcp PASS {"ok":true,"tools":10,"names":["ticker","stats_24h","candles","order_book","health_check","version_info","list_tools","echo","timestamp","ping"]}
+mgm-mcp PASS {"ok":true,"tools":10,"names":["list_provinces","list_districts","get_daily","get_hourly","current_conditions","province_board","health_check","version_info","list_tools","echo"]}
+microlink-mcp PASS {"ok":true,"tools":10,"names":["preview","page_metadata","page_screenshot","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+midi-tools-mcp PASS {"ok":true,"tools":10,"names":["note_name","note_frequency","note_from_name","build_chord","build_scale","interval","health_check","version_info","list_tools","echo"]}
+migration-map-mcp PASS {"ok":true,"tools":10,"names":["inspect_migration_map","migration_ordering","compare_projects","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+milvus-mcp PASS {"ok":true,"tools":10,"names":["list_collections","describe_collection","collection_stats","vector_footprint","search_cost","metric_probe","health_check","version_info","list_tools","echo"]}
+minecraft-mojang-mcp PASS {"ok":true,"tools":10,"names":["profile","server","latest_version","wiki_search","health_check","version_info","list_tools","echo","timestamp","ping"]}
+missoma-mcp PASS {"ok":true,"tools":10,"names":["search_products","list_newest","get_product","price_overview","find_deals","list_categories","tag_taxonomy_census","option_variant_matrix","health_check","version_info"]}
+mitre-attack-mcp PASS {"ok":true,"tools":10,"names":["search","technique","group_list","software_list","tactic_list","technique_mitigations","health_check","version_info","list_tools","echo"]}
+mixcloud-mcp PASS {"ok":true,"tools":10,"names":["search","user","user_cloudcasts","user_playlists","health_check","version_info","list_tools","echo","timestamp","ping"]}

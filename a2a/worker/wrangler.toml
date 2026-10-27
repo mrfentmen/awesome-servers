@@ -1,0 +1,11 @@
+name = "mrfentmen-a2a"
+main = "src/index.js"
+compatibility_date = "2026-09-24"
+workers_dev = true
+
+# Deploy:
+#   set -a; . ~/Desktop/fightporn/.dev.vars; set +a   # supplies CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID
+#   npx wrangler deploy
+#
+# The worker is stateless: it holds no keys and no data of its own. Every answer is read
+# from the public source named in the response.

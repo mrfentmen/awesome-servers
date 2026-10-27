@@ -1,0 +1,113 @@
+{
+  "protocolVersion": "0.3.0",
+  "name": "USGS Earthquake Agent",
+  "description": "Read-only agent over the live USGS earthquake catalog: recent earthquakes worldwide by magnitude and time window, quakes inside a radius of a point or known metro area, live catalog counts, and a watch skill that POSTs to your webhook when a new qualifying earthquake is recorded. Every answer is read live from the USGS FDSN event service. This hosted endpoint answers quakes-recent, quakes-near, quakes-summary; the local server additionally implements quakes-watch.",
+  "url": "https://mrfentmen-a2a.contactae2000.workers.dev/agents/quakes/",
+  "preferredTransport": "JSONRPC",
+  "additionalInterfaces": [
+    {
+      "url": "https://mrfentmen-a2a.contactae2000.workers.dev/agents/quakes/",
+      "transport": "JSONRPC"
+    }
+  ],
+  "version": "1.0.0",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json",
+    "text/plain"
+  ],
+  "provider": {
+    "organization": "mrfentmen",
+    "url": "https://github.com/mrfentmen/a2a"
+  },
+  "skills": [
+    {
+      "id": "quakes-recent",
+      "name": "Recent earthquakes",
+      "description": "Earthquakes recorded by the USGS in a time window, worldwide, filtered by minimum magnitude and sorted newest first. Each event carries magnitude, place, depth, tsunami flag, felt reports and the USGS event page URL.",
+      "tags": [
+        "earthquake",
+        "usgs",
+        "seismic",
+        "hazard",
+        "realtime"
+      ],
+      "examples": [
+        "Any earthquakes above magnitude 4.5 in the last 24 hours?",
+        "{\"skill\": \"quakes-recent\", \"min_magnitude\": 5, \"hours\": 168, \"limit\": 20}"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/plain"
+      ]
+    },
+    {
+      "id": "quakes-near",
+      "name": "Earthquakes near a place",
+      "description": "Earthquakes within a radius of a latitude/longitude point, or of a known metro area such as Tokyo, Lima, Istanbul or San Francisco. Answers 'has anything shaken near me'.",
+      "tags": [
+        "earthquake",
+        "usgs",
+        "location",
+        "radius",
+        "hazard"
+      ],
+      "examples": [
+        "any quakes near Tokyo this month?",
+        "{\"skill\": \"quakes-near\", \"point\": \"35.68,139.69\", \"radius_km\": 300, \"days\": 30}"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/plain"
+      ]
+    },
+    {
+      "id": "quakes-summary",
+      "name": "Live earthquake counts",
+      "description": "How much the ground has moved lately: how many quakes the USGS catalogued worldwide in the last 24 hours at magnitude 2.5+ and 4.5+, and in the last 7 days at 6.0+, plus the largest recent event.",
+      "tags": [
+        "earthquake",
+        "usgs",
+        "counts",
+        "summary",
+        "seismic"
+      ],
+      "examples": [
+        "How many earthquakes today?",
+        "{\"skill\": \"quakes-summary\"}"
+      ],
+      "inputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json",
+        "text/plain"
+      ]
+    }
+  ],
+  "metadata": {
+    "registryIdentityProvider": "github",
+    "registryIdentity": "mrfentmen",
+    "registryPackageName": "github.mrfentmen.quakes",
+    "sourceRepository": "https://github.com/mrfentmen/a2a",
+    "localServer": "servers/quakes/server.py",
+    "hostedBy": "cloudflare-worker",
+    "note": "The local Python server implements every skill on its own card, including watch loops and push notifications. This hosted card lists only the skills the hosted endpoint answers."
+  }
+}

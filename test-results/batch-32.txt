@@ -1,0 +1,11 @@
+# check batch 32 — 2026-10-17T07:16:46Z
+opsgenie-mcp PASS {"ok":true,"tools":10,"names":["list_alerts","get_alert","list_oncalls","escalation_timeline","platform_reliability","incident_response_stats","health_check","version_info","list_tools","echo"]}
+osf-mcp PASS {"ok":true,"tools":10,"names":["nodes","node","preprint_search","preprint_record","preprint_landscape","preprint_contributors","health_check","version_info","list_tools","echo"]}
+osrm-mcp PASS {"ok":true,"tools":10,"names":["route","nearest","route_table","match_trace","round_trip","health_check","version_info","list_tools","echo","timestamp"]}
+osrs-mcp PASS {"ok":true,"tools":12,"names":["get_player_stats","get_item_price","search_items","get_hot_items","get_price_history","get_flip_margins","item_volume","price_windows","alch_profit","player_compare","wiki_search","item_lore"]}
+osv-mcp PASS {"ok":true,"tools":10,"names":["check_package","scan_packages","get_vulnerability","advisory_database","package_releases","health_check","version_info","list_tools","echo","timestamp"]}
+otp-mcp PASS {"ok":true,"tools":10,"names":["generate_totp","generate_hotp","verify_totp","provisioning_uri","secret_entropy","health_check","version_info","list_tools","echo","timestamp"]}
+otx-mcp PASS {"ok":true,"tools":10,"names":["search_pulses","pulse_indicators","ip_reputation","indicator_report","indicator_pulses","indicator_urls","health_check","version_info","list_tools","echo"]}
+overpass-mcp PASS {"ok":true,"tools":10,"names":["nodes_in_box","map_features","named_places","tag_census","element_lookup","nearby_features","health_check","version_info","list_tools","echo"]}
+owncloud-mcp PASS {"ok":true,"tools":10,"names":["get_capabilities","list_shares","get_share","create_share","server_status","health_check","version_info","list_tools","echo","timestamp"]}
+oyez-mcp PASS {"ok":true,"tools":10,"names":["search_cases","get_case","case_citations","case_questions","citation_lookup","case_timeline","health_check","version_info","list_tools","echo"]}

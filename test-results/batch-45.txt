@@ -1,0 +1,11 @@
+# check batch 45 — 2026-10-17T07:25:00Z
+simplecast-mcp PASS {"ok":true,"tools":10,"names":["search_podcasts","search_episodes","podcast_charts","podcast_details","latest_episodes","podcast_stats","compare_podcasts","feed_audit","audio_profile","health_check"]}
+slack-mcp PASS {"ok":true,"tools":12,"names":["list_channels","get_history","post_message","list_users","user_info","channel_info","thread_replies","emoji_list","pin_message","set_topic","service_incident_history","incident_service_ranking"]}
+smartrecruiters-mcp PASS {"ok":true,"tools":11,"names":["jobs","posting","search_postings","departments","search_all_jobs","hiring_companies","postings_page","postings_by_country","board_overview","posting_age","location_spread"]}
+smithsonian-mcp PASS {"ok":true,"tools":10,"names":["search_objects","openaccess_corpus","openaccess_digest","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+smogon-mcp PASS {"ok":true,"tools":10,"names":["search_pokemon","get_pokemon","get_usage_stats","list_months","pokemon_by_type","pokemon_by_ability","health_check","version_info","list_tools","echo"]}
+solana-mcp PASS {"ok":true,"tools":10,"names":["slot","solana_supply","solana_epoch","solana_versions","health_check","version_info","list_tools","echo","timestamp","ping"]}
+somafm-mcp PASS {"ok":true,"tools":10,"names":["channels","channel","now_playing","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+sourceforge-mcp PASS {"ok":true,"tools":10,"names":["get_project","list_project_news","list_project_activity","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+sourcegraph-mcp PASS {"ok":true,"tools":10,"names":["search","search_repos","search_paths","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+space-launches-mcp PASS {"ok":true,"tools":10,"names":["upcoming_launches","next_launch","list","upcoming","previous","launch_by_id","launcher_configs","health_check","version_info","list_tools"]}

@@ -1,0 +1,11 @@
+# check batch 14 — 2026-10-17T07:08:09Z
+itis-mcp PASS {"ok":true,"tools":10,"names":["search_scientific","common_names","hierarchy","taxon_profile","lineage_path","synonym_report","taxon_range","health_check","version_info","list_tools"]}
+itunes-mcp PASS {"ok":true,"tools":10,"names":["search","top_free","top_paid","app_lookup","search_podcasts","top_podcasts","podcast_episodes","audiobooks","health_check","version_info"]}
+jacquesmariemage-mcp PASS {"ok":true,"tools":10,"names":["search_products","list_newest","get_product","price_overview","find_deals","list_categories","lens_matrix","model_families","health_check","version_info"]}
+jellyfin-mcp PASS {"ok":true,"tools":10,"names":["server_info","list_users","list_libraries","audit_users","access_audit","library_summary","health_check","version_info","list_tools","echo"]}
+jetbrains-mcp PASS {"ok":true,"tools":10,"names":["search_plugins","get_plugin","top_plugins","plugin_versions","plugin_reviews","plugin_ratings","search_by_build","list_tags","product_release","plugin_compatibility"]}
+jisho-mcp PASS {"ok":true,"tools":10,"names":["search_words","search_by_tag","all_senses","words_by_reading","word_network","kanji_profile","health_check","version_info","list_tools","echo"]}
+job-search-mcp PASS {"ok":true,"tools":11,"names":["search_jobs","latest_jobs","jobs_by_board","company_jobs","job_categories","salary_insights","board_coverage","jobs_last_hours","skill_demand","hiring_thread","role_taxonomy"]}
+jobicy-mcp PASS {"ok":true,"tools":11,"names":["jobs","job_details","industries","top_salaries","companies","job_levels","geographies","company_jobs","salary_bands","feed_status","posting_freshness"]}
+jokeapi-mcp PASS {"ok":true,"tools":11,"names":["get_joke","search_jokes","joke_by_id","list_categories","joke_info","list_languages","random_programming_joke","jokes_by_type","joke_range","joke_length_profile","joke_type_coverage"]}
+jokes-mcp PASS {"ok":true,"tools":10,"names":["dadJoke","searchDadJokes","joke","categories","two_part_joke","joke_api_info","health_check","version_info","list_tools","echo"]}

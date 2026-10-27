@@ -1,0 +1,11 @@
+# check batch 19 — 2026-10-17T07:10:15Z
+logseq-mcp PASS {"ok":true,"tools":10,"names":["list_pages","get_page","health_check","version_info","list_tools","echo","timestamp","ping","help","status"]}
+logto-mcp PASS {"ok":true,"tools":10,"names":["list_users","list_applications","tenant_discovery","signing_keys","token_inspect","health_check","version_info","list_tools","echo","timestamp"]}
+lol-datadragon-mcp PASS {"ok":true,"tools":10,"names":["champions","champion","items","runes","health_check","version_info","list_tools","echo","timestamp","ping"]}
+loops-mcp PASS {"ok":true,"tools":10,"names":["find_contact","create_contact","send_event","sending_domain_dns","campaign_link_audit","health_check","version_info","list_tools","echo","timestamp"]}
+lorem-mcp PASS {"ok":true,"tools":10,"names":["generate","html_text","json_filler","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+lostmedia-mcp PASS {"ok":true,"tools":10,"names":["search_lost_media","get_article","random_article","recent_changes","browse_categories","category_articles","health_check","version_info","list_tools","echo"]}
+lotr-mcp PASS {"ok":true,"tools":10,"names":["books","chapters","gateway_page","gateway_categories","health_check","version_info","list_tools","echo","timestamp","ping"]}
+louisvuitton-mcp PASS {"ok":true,"tools":10,"names":["search_listings","list_newest","get_listing","price_overview","compare_prices","find_deals","brand_overview","monogram_matrix","listing_age_lookback","health_check"]}
+luchtmeetnet-mcp PASS {"ok":true,"tools":10,"names":["stations","current_readings","health_check","version_info","list_tools","echo","timestamp","ping","help","status"]}
+lyrics-mcp PASS {"ok":true,"tools":10,"names":["get_lyrics","search_artist_metadata","search_store_songs","health_check","version_info","list_tools","echo","timestamp","ping","help"]}

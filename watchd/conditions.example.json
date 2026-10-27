@@ -1,0 +1,16 @@
+{
+  "every_s": 300,
+  "refire_s": 10800,
+  "notifiers": {
+    "console": true
+  },
+  "checks": [
+    { "name": "denver-air-bad",
+      "kind": "air", "place": "Denver", "threshold": 150, "when": "above" },
+    { "name": "bay-quakes",
+      "kind": "quakes", "place": "37.77,-122.42", "radius_km": 120,
+      "magnitude": 4.5, "when": "above" },
+    { "name": "stlouis-river",
+      "kind": "flood", "gauge": "EADM7", "when": "above" }
+  ]
+}

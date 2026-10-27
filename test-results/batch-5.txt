@@ -1,0 +1,11 @@
+# check batch 5 — 2026-10-17T07:03:29Z
+gdelt-mcp PASS {"ok":true,"tools":10,"names":["search_news","news_by_country","source_country_breakdown","domain_ranking","coverage_stats","syndication_clusters","health_check","version_info","list_tools","echo"]}
+geckoterminal-mcp PASS {"ok":true,"tools":11,"names":["token","trending","networks","pool","newPools","search","token_pools","token_prices","dexes","pool_ohlc","pool_trades"]}
+gemini-mcp PASS {"ok":true,"tools":10,"names":["ticker","pricefeed","list_symbols","symbol_details","health_check","version_info","list_tools","echo","timestamp","ping"]}
+genderize-mcp PASS {"ok":true,"tools":10,"names":["gender","gender_batch","health_check","version_info","list_tools","echo","timestamp","ping","help","status"]}
+genrenator-mcp PASS {"ok":true,"tools":10,"names":["genre","genres","genre_story","catalog_size","health_check","version_info","list_tools","echo","timestamp","ping"]}
+geojs-mcp PASS {"ok":true,"tools":10,"names":["lookup","self","geo_by_ip","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+geolocation-db-mcp PASS {"ok":true,"tools":10,"names":["locate","locate_many","distance_between","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+ghibli-mcp PASS {"ok":true,"tools":10,"names":["films","film","search_films","film_people","health_check","version_info","list_tools","echo","timestamp","ping"]}
+gimp-mcp PASS {"ok":true,"tools":10,"names":["open_image","save_image","export_image","resize_image","get_image_info","list_layers","apply_filter","batch_process","health_check","version_info"]}
+git-reflog-archaeologist-mcp PASS {"ok":true,"tools":10,"names":["reflog_signals","recovery_signals","stash_signals","reflog_activity_profile","recoverable_object_window","public_commit_provenance","health_check","version_info","list_tools","echo"]}

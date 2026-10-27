@@ -1,0 +1,11 @@
+# check batch 42 — 2026-10-17T07:20:51Z
+runescape-mcp PASS {"ok":true,"tools":10,"names":["hiscore","get_player_stats","get_item_price","get_hot_items","wiki_article","wiki_outline","health_check","version_info","list_tools","echo"]}
+runtime-support-mcp PASS {"ok":true,"tools":10,"names":["inspect_runtime_support","runtime_support_matrix","runtime_constraint_spread","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+rxnav-mcp PASS {"ok":true,"tools":10,"names":["search","properties","drug_products","related_concepts","concept_history","health_check","version_info","list_tools","echo","timestamp"]}
+rybbit-mcp PASS {"ok":true,"tools":10,"names":["get_overview","list_users","get_journeys","domain_profile","tracking_audit","health_check","version_info","list_tools","echo","timestamp"]}
+saintlaurent-mcp PASS {"ok":true,"tools":12,"names":["search_listings","list_newest","get_listing","price_overview","compare_prices","find_deals","brand_overview","list_collections","browse_collection","find_by_attribute","line_matrix","material_census"]}
+satnogs-mcp PASS {"ok":true,"tools":10,"names":["transmitters","by_mode","satellite_transmitters","frequency_search","band_survey","satellite_status","health_check","version_info","list_tools","echo"]}
+savvycal-mcp PASS {"ok":true,"tools":10,"names":["convert_time","timezone_info","business_days","add_business_days","meeting_slots","world_clock","team_overlap","calendar_arithmetic","duration_report","health_check"]}
+schema-compatibility-mcp PASS {"ok":true,"tools":10,"names":["compare_schema_shapes","schema_profile","nesting_profile","key_vocabulary","health_check","version_info","list_tools","echo","timestamp","ping"]}
+schema-sieve-mcp PASS {"ok":true,"tools":10,"names":["inspect_schema","plan_fixture","validate_instance","compare_schemas","health_check","version_info","list_tools","echo","timestamp","ping"]}
+scrabble-mcp PASS {"ok":true,"tools":10,"names":["word_score","score_with_blanks","tile_check","health_check","version_info","list_tools","echo","timestamp","ping","help"]}

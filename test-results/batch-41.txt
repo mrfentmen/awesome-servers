@@ -1,0 +1,11 @@
+# check batch 41 — 2026-10-17T07:20:28Z
+riotgames-mcp PASS {"ok":true,"tools":10,"names":["get_account_by_riot_id","get_lol_summoner","get_lol_match_ids","get_lol_match","get_lol_champion_mastery","get_ddragon_versions","health_check","version_info","list_tools","echo"]}
+rng-mcp PASS {"ok":true,"tools":10,"names":["roll_dice","coin_flip","random_number","random_fact","random_advice","random_words","health_check","version_info","list_tools","echo"]}
+roblox-mcp PASS {"ok":true,"tools":10,"names":["user","user_by_name","user_games","group_info","health_check","version_info","list_tools","echo","timestamp","ping"]}
+robohash-mcp PASS {"ok":true,"tools":10,"names":["avatar","robohash_variants","robohash_compare","health_check","version_info","list_tools","echo","timestamp","ping","help"]}
+rolex-mcp PASS {"ok":true,"tools":12,"names":["search_listings","list_newest","get_listing","price_overview","compare_prices","find_deals","brand_overview","list_collections","browse_collection","find_by_attribute","watch_spec_matrix","reference_lookup"]}
+rollbar-mcp PASS {"ok":true,"tools":10,"names":["list_projects","list_items","get_item","dependency_audit","advisory_detail","health_check","version_info","list_tools","echo","timestamp"]}
+rom-mcp PASS {"ok":true,"tools":15,"names":["search_rom","verify_rom","match_by_checksum","parse_save_file","scan_collection","get_download_link","download_rom","search_all_sources","search_romsgames","search_coolrom","search_arcadepunks","search_romsfun","search_reddit_roms","detect_console","archive_item_files"]}
+ron-swanson-mcp PASS {"ok":true,"tools":10,"names":["random","batch","search","catalogue","longest","rate_limit","health_check","version_info","list_tools","echo"]}
+rss-mcp PASS {"ok":true,"tools":10,"names":["readFeed","feedJson","search_feed","feed_info","health_check","version_info","list_tools","echo","timestamp","ping"]}
+rubygems-mcp PASS {"ok":true,"tools":10,"names":["gem_info","search_gems","gem_versions","recent_gems","gem_dependencies","health_check","version_info","list_tools","echo","timestamp"]}

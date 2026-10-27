@@ -1,0 +1,11 @@
+# check batch 50 — 2026-10-17T07:28:09Z
+swaggerhub-mcp PASS {"ok":true,"tools":10,"names":["search","byOwner","sort_registry","api_versions","spec_summary","health_check","version_info","list_tools","echo","timestamp"],"stderr":""}
+swetrix-mcp PASS {"ok":true,"tools":10,"names":["list_projects","get_project","campaign_parameters","sdk_release_feed","ecosystem_audit","health_check","version_info","list_tools","echo","timestamp"],"stderr":"MCP server running on stdio\n"}
+swift-bic-mcp PASS {"ok":true,"tools":10,"names":["search","validate","analyse_bic","country_directory","health_check","version_info","list_tools","echo","timestamp","ping"],"stderr":""}
+swiss-sbb-mcp PASS {"ok":true,"tools":10,"names":["connections","stationboard","find_station","geocode_address","health_check","version_info","list_tools","echo","timestamp","ping"],"stderr":""}
+switchbot-mcp PASS {"ok":true,"tools":10,"names":["list_devices","get_device_status","send_command","health_check","version_info","list_tools","echo","timestamp","ping","help"],"stderr":"MCP server running on stdio\n"}
+synoptic-mcp PASS {"ok":true,"tools":10,"names":["find_stations","get_timeseries","nws_station_timeseries","nws_gridpoint_hourly","health_check","version_info","list_tools","echo","timestamp","ping"],"stderr":"MCP server running on stdio\n"}
+tally-mcp PASS {"ok":true,"tools":10,"names":["list_forms","get_form","list_submissions","list_webhooks","get_webhook","question_quality_audit","form_logic_audit","completion_estimate","health_check","version_info"],"stderr":"MCP server running on stdio\n"}
+tarot-mcp PASS {"ok":true,"tools":10,"names":["random_cards","card_info","suit_cards","major_arcana","health_check","version_info","list_tools","echo","timestamp","ping"],"stderr":""}
+tasmota-mcp PASS {"ok":true,"tools":10,"names":["status","set_power","read_sensor","mqtt_topics","cmnd_payload","health_check","version_info","list_tools","echo","timestamp"],"stderr":"MCP server running on stdio\n"}
+tdx-mcp PASS {"ok":true,"tools":10,"names":["list_tra_stations","get_tra_liveboard","list_thsr_stations","get_tra_timetable","ods_station_search","ods_train_departures","ods_train_route","health_check","version_info","list_tools"],"stderr":"MCP server running on stdio\n"}
