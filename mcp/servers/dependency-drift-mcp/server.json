@@ -1,0 +1,8 @@
+{
+  "$schema":"https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name":"io.github.mrfentmen/dependency-drift-mcp",
+  "description":"Summarize local dependency manifest and lockfile drift without returning package names, versions, paths, or contents.",
+  "repository":{"url":"https://github.com/mrfentmen/dependency-drift-mcp","source":"github"},
+  "version":"1.0.0",
+  "packages":[{"registryType":"npm","identifier":"dependency-drift-mcp","version":"1.0.0","transport":{"type":"stdio"}}]
+}

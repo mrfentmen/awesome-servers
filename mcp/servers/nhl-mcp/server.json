@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/nhl-mcp",
+  "description": "Use this MCP server to the NHL. Team and player stats, standings, schedules, and game results. Tools include get team stats, get standings, get schedule",
+  "repository": {
+    "url": "https://github.com/mrfentmen/nhl-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "nhl-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

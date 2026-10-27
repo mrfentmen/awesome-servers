@@ -1,0 +1,44 @@
+{
+  "version": "1.0.1",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "html-meta-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "name": "html-meta-mcp",
+  "description": "Fetch title, description, and open graph tags from a web page. No key required.",
+  "mcpName": "io.github.mrfentmen/html-meta-mcp",
+  "keywords": [
+    "mcp",
+    "metadata",
+    "opengraph",
+    "preview",
+    "web"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

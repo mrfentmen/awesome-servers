@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/merge-conflict-forecaster-mcp",
+  "description": "Predict local Git merge-conflict pressure from branch topology and changed-file overlap without returning source content.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/merge-conflict-forecaster-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "merge-conflict-forecaster-mcp",
+      "version": "1.0.0",
+      "transport": { "type": "stdio" }
+    }
+  ]
+}

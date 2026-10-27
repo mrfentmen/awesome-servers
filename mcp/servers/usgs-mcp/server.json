@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/usgs-mcp",
+  "description": "Use this MCP server to live earthquake data from the USGS. Latest quakes, magnitudes, locations, and depth",
+  "repository": {
+    "url": "https://github.com/mrfentmen/usgs-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "usgs-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

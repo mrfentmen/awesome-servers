@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/datamuse-mcp",
+  "description": "Use this MCP server to wordplay. Rhymes, related words, spell checks, and word suggestions for any phrase",
+  "repository": {
+    "url": "https://github.com/mrfentmen/datamuse-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "datamuse-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
