@@ -1,4 +1,4 @@
-# dockerhub-mcp
+# container-registry-mcp
 
 Docker Hub images: search, details, tags with sizes and digests, official image ranking, tag manifests.
 
@@ -18,7 +18,7 @@ Data source: https://hub.docker.com (public API, no key). No API key needed. Run
 ## Install
 
 ```bash
-npx -y @mrfentmen/dockerhub-mcp
+npx -y container-registry-mcp
 ```
 
 Claude Desktop / Cursor config:
@@ -26,7 +26,7 @@ Claude Desktop / Cursor config:
 ```json
 {
   "mcpServers": {
-    "dockerhub-mcp": { "command": "npx", "args": ["-y", "@mrfentmen/dockerhub-mcp"] }
+    "container-registry-mcp": { "command": "npx", "args": ["-y", "container-registry-mcp"] }
   }
 }
 ```
