@@ -14,7 +14,7 @@ overwrites `dist/` from the registry tarballs.
 - scoped under `@mrfentmen`: **195**
 - total size: **15.7 MB**
 - carrying a licence gate (`MCP_LICENSE_KEY`): **1**
-- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **506**
+- carrying tools that answer `Not yet implemented` in the shipped `dist/`: **504**
 - whose `src/` still holds the pre-fix source (not shipped, cannot rebuild `dist/`): **36**
 
 | package | version | src? | gate | stubs |
@@ -50,7 +50,7 @@ overwrites `dist/` from the registry tarballs.
 | `appveyor-mcp` | 1.0.8 | no |  |  |
 | `appwrite-mcp` | 1.0.6 | no |  |  |
 | `arbeitnow-mcp` | 1.1.1 | no |  |  |
-| `archive-org-mcp` | 1.0.5 | yes |  | 1 |
+| `archive-org-mcp` | 1.0.6 | yes |  |  |
 | `archlinux-mcp` | 1.0.5 | no |  | 2 |
 | `art-institute-mcp` | 1.0.6 | yes |  |  |
 | `artifact-gauge-mcp` | 1.0.7 | no |  |  |
@@ -129,7 +129,7 @@ overwrites `dist/` from the registry tarballs.
 | `cdc-data-mcp` | 1.0.5 | no |  | 2 |
 | `cdnjs-mcp` | 1.0.5 | no |  | 2 |
 | `celestrak-mcp` | 1.0.5 | no |  | 2 |
-| `census-geo-mcp` | 1.0.4 | no |  | 1 |
+| `census-geo-mcp` | 1.0.5 | no |  |  |
 | `census-mcp` | 1.1.0 | no |  |  |
 | `censys-mcp` | 1.0.7 | no |  |  |
 | `cern-mcp` | 1.0.5 | no |  | 1 |

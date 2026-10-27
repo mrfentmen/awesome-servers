@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { coordinates, geocode, coordinateGeographies } from "./api.js";
+import { coordinates, geocode, coordinateGeographies, addressGeographies } from "./api.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -39,9 +39,8 @@ export function createServer() {
         inputSchema: z.object({ address: z.string().describe("Street address, e.g. '1600 Pennsylvania Ave NW Washington DC'.") }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement geographies locally (paywall removed)
         try {
-            return textError("Not yet implemented: geographies");
+            return text(await addressGeographies(args));
         }
         catch (e) {
             return textError(String(e));

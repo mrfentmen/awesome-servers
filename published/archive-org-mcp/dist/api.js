@@ -289,3 +289,57 @@ export async function searchProfile(args) {
     lines.push("  every figure above is tallied from the rows the search returned, and the sample size is stated rather than implied.");
     return lines.join("\n");
 }
+
+const CDX = 'http://web.archive.org/cdx/search/cdx';
+export async function snapshotTimeline(args = {}) {
+    const raw = String(args?.url ?? '').trim();
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw))
+        throw new Error('Give a full URL including the scheme, like https://example.com/page.html');
+    const limit = Math.min(Math.max(Number(args?.limit ?? 500) || 500, 1), 3000);
+    const qs = new URLSearchParams({
+        url: raw,
+        output: 'json',
+        limit: String(limit),
+        fl: 'timestamp,original,mimetype,statuscode,digest,length',
+    });
+    if (args?.from)
+        qs.set('from', `${args.from}0101`);
+    if (args?.to)
+        qs.set('to', `${args.to}1231`);
+    const res = await fetch(`${CDX}?${qs}`, {
+        headers: { 'User-Agent': 'mrfentmen-archive-org-mcp/1.0', Accept: 'application/json' },
+        signal: AbortSignal.timeout(40000),
+    });
+    if (!res.ok)
+        throw new Error(`Wayback CDX returned ${res.status}`);
+    const body = (await res.json());
+    if (!Array.isArray(body) || body.length < 2)
+        throw new Error(`The Wayback Machine has no captures for ${raw} in that window`);
+    const [head, ...rows] = body;
+    const idx = (name) => head.indexOf(name);
+    const ts = idx('timestamp'), mime = idx('mimetype'), code = idx('statuscode'), digest = idx('digest'), len = idx('length');
+    const ok = rows.filter((r) => String(r[code]) === '200');
+    const digests = new Set(ok.map((r) => r[digest]).filter(Boolean));
+    const mimes = new Map();
+    let bytes = 0;
+    const perYear = new Map();
+    for (const r of rows) {
+        mimes.set(r[mime], (mimes.get(r[mime]) ?? 0) + 1);
+        bytes += Number(r[len] ?? 0);
+        const year = String(r[ts]).slice(0, 4);
+        perYear.set(year, (perYear.get(year) ?? 0) + 1);
+    }
+    const topMimes = [...mimes.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+    return [
+        `${raw} — ${rows.length} capture(s) read`,
+        `Successful (200): ${ok.length} · distinct content digests: ${digests.size} · repeats of an archived page: ${ok.length - digests.size}`,
+        `Window: ${String(rows[0]?.[ts]).slice(0, 4)} to ${String(rows[rows.length - 1]?.[ts]).slice(0, 4)}`,
+        `Payload recorded: ${(bytes / 1048576).toFixed(2)} MB across the captures`,
+        `Media types: ${topMimes.map(([m, n]) => `${m} (${n})`).join(', ') || 'none reported'}`,
+        '',
+        'Captures per year:',
+        ...[...perYear.entries()].sort().map(([y, n]) => `${y}: ${n}`),
+        '',
+        `Oldest: http://web.archive.org/web/${rows[0]?.[ts]}/${raw}`,
+    ].join('\n');
+}

@@ -80,3 +80,42 @@ export async function coordinateGeographies(args) {
         throw new Error(`No census geographies for ${x},${y}.`);
     return [`Census geographies for ${x},${y}`, ...lines].join('\n');
 }
+
+const CENSUS = 'https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress';
+export async function addressGeographies(args = {}) {
+    const address = String(args?.address ?? '').trim();
+    if (address.length < 5)
+        throw new Error('Give a street address, like 1600 Pennsylvania Ave NW Washington DC.');
+    const qs = new URLSearchParams({
+        address,
+        benchmark: 'Public_AR_Current',
+        vintage: 'Current_Current',
+        format: 'json',
+    });
+    const res = await fetch(`${CENSUS}?${qs}`, {
+        headers: { 'User-Agent': 'mrfentmen-census-geo-mcp/1.0', Accept: 'application/json' },
+        signal: AbortSignal.timeout(30000),
+    });
+    if (!res.ok)
+        throw new Error(`Census geocoder returned ${res.status}`);
+    if (!(res.headers.get('content-type') ?? '').includes('json'))
+        throw new Error('The Census geocoder answered with a page instead of data; try again shortly.');
+    const body = (await res.json());
+    const match = body.result?.addressMatches?.[0];
+    if (!match)
+        throw new Error(`The Census geocoder could not match "${address}"`);
+    const layers = Object.entries(match.geographies ?? {});
+    const lines = layers.map(([layer, rows]) => {
+        const names = (rows ?? []).map((r) => r.NAME ?? r.BASENAME ?? '?').filter(Boolean);
+        return `${layer}: ${names.join(', ') || 'no name reported'}`;
+    });
+    const c = match.coordinates ?? {};
+    return [
+        `Matched: ${match.matchedAddress ?? address}`,
+        `Coordinates: ${c.y ?? '?'}, ${c.x ?? '?'}`,
+        `Benchmark ${body.result?.benchmark?.benchmarkName ?? '?'} · vintage ${body.result?.vintage?.vintageName ?? '?'}`,
+        '',
+        `${layers.length} geographies:`,
+        ...lines,
+    ].join('\n');
+}
