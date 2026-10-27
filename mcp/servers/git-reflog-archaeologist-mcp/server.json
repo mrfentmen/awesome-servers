@@ -1,0 +1,8 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/git-reflog-archaeologist-mcp",
+  "description": "Aggregate local Git reflog and recovery signals without exposing repository content.",
+  "repository": { "url": "https://github.com/mrfentmen/git-reflog-archaeologist-mcp", "source": "github" },
+  "version": "1.0.0",
+  "packages": [{ "registryType": "npm", "identifier": "git-reflog-archaeologist-mcp", "version": "1.0.0", "transport": { "type": "stdio" } }]
+}

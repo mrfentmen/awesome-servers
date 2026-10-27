@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/gamebanana-mcp",
+  "description": "GameBanana mods database: search mods by game, browse mod feeds, read mod pages.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/gamebanana-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "gamebanana-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

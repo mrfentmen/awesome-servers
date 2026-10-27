@@ -1,0 +1,36 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/meilisearch-mcp",
+  "description": "Search indexes, manage documents, check health and stats.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/meilisearch-mcp",
+    "source": "github"
+  },
+  "version": "1.0.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "meilisearch-mcp",
+      "version": "1.0.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "MEILISEARCH_URL",
+          "description": "MeiliSearch server URL (default: http://localhost:7575)",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "MEILISEARCH_API_KEY",
+          "description": "MeiliSearch API key for authentication",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}

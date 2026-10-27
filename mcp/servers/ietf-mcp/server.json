@@ -1,0 +1,8 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/ietf-mcp",
+  "description": "IETF documents, RFCs, Internet-Drafts, and working groups.",
+  "repository": { "url": "https://github.com/mrfentmen/ietf-mcp", "source": "github" },
+  "version": "1.0.0",
+  "packages": [{ "registryType": "npm", "identifier": "ietf-mcp", "version": "1.0.0", "transport": { "type": "stdio" } }]
+}

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/musicbrainz-mcp",
+  "description": "MCP server for MusicBrainz artists, releases, recordings, and open music metadata.",
+  "repository": { "url": "https://github.com/mrfentmen/musicbrainz-mcp", "source": "github" },
+  "version": "1.0.0",
+  "packages": [{ "registryType": "npm", "identifier": "musicbrainz-mcp", "version": "1.0.0", "transport": { "type": "stdio" } }]
+}
