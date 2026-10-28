@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/crc-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CRC-32, CRC-32C, CRC-16 variants and Adler-32 offline, with checksum check values verified, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/crc-mcp",

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/jsondiff-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Compare two JSON documents and apply RFC 6902 JSON Patch offline, with canonical re-serialisation, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/jsondiff-mcp",

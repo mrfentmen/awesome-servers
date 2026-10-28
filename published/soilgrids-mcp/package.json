@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/soilgrids-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SoilGrids global soil properties: clay, sand, carbon and pH by depth for any coordinate, plus WRB soil class - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/soilgrids-mcp",

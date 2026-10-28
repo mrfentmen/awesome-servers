@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/combinatorics-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Exact combinatorics offline with BigInt - factorials, nCr, nPr, Fibonacci, permutations and combinations, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/combinatorics-mcp",

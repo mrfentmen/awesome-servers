@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/unit-convert-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Convert between 100+ units offline across length, mass, temperature, volume, area, speed, data, energy, pressure, time and angle, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/unit-convert-mcp",

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/timezone-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "IANA time zone maths offline - the time right now in any zone, wall-clock conversion between zones, and the zone list, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/timezone-mcp",

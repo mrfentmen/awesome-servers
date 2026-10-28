@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/jsonschema-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Validate JSON against a JSON Schema offline: structural validation with a clear error list, schema outlines and example instances - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/jsonschema-mcp",

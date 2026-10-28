@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/spaceweather-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NOAA space weather: planetary Kp index, aurora probability for a place and active alerts from SWPC - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/spaceweather-mcp",

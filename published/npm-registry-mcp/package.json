@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/npm-registry-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Live npm registry data - package details with weekly downloads, package search and version history, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/npm-registry-mcp",

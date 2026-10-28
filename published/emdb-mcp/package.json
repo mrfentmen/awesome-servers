@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/emdb-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "EBI Electron Microscopy Data Bank: search cryo-EM maps and read entries with resolution, method and citations - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/emdb-mcp",

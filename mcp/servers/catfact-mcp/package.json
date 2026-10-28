@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/catfact-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Cat facts and breed data from catfact.ninja - a random fact, fact browsing by page, and the cat breed list, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/catfact-mcp",

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/brewery-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Brewery data from Open Brewery DB - name search, filter by city, state or type, and full brewery detail, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/brewery-mcp",

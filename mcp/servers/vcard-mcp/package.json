@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/vcard-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Read and build vCard contacts offline - parse .vcf cards or JSON, and generate vCard 4.0 text, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/vcard-mcp",

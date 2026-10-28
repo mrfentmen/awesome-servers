@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/sql-format-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Format, minify and split SQL statements offline - strings, quotes and comments are respected, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/sql-format-mcp",

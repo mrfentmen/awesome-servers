@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/btc-address-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Validate Bitcoin addresses offline with real base58check and bech32/bech32m checksums, and decode BIP-32 derivation paths, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/btc-address-mcp",

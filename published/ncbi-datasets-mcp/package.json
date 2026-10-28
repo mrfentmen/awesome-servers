@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ncbi-datasets-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NCBI Datasets: genome assemblies for any taxon, gene records by symbol and taxonomy lookups - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ncbi-datasets-mcp",

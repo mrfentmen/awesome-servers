@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/smk-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SMK open collection: search 200k+ artworks by keyword or artist and read object details with images - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/smk-mcp",

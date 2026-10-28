@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/dogceo-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Dog photos from dog.ceo - a random image, the full breed list with sub-breeds, and every image for a breed, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/dogceo-mcp",

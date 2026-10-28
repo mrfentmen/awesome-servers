@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ghcn-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NOAA GHCN station weather: daily and monthly summaries plus extremes for any GHCN station id - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ghcn-mcp",

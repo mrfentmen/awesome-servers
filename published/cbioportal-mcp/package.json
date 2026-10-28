@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/cbioportal-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "cBioPortal cancer genomics: browse cancer types, find genes and list the public cancer studies behind them - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/cbioportal-mcp",

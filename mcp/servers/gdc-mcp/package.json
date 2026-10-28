@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/gdc-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NCI Genomic Data Commons: browse TCGA and other cancer projects, read one project in full and look genes up - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/gdc-mcp",

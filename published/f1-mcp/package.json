@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/f1-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Formula 1 history from the Ergast/Jolpica archive: seasons, race schedules, results and driver standings - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/f1-mcp",

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/tcgdex-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Pokemon trading card data from TCGdex - search cards by name, full card details with attacks, and set browsing, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/tcgdex-mcp",

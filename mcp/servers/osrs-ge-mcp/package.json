@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/osrs-ge-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Old School RuneScape Grand Exchange prices from the official wiki API - item search, live buy/sell prices and price history, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/osrs-ge-mcp",

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/patch-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Create, check and apply unified diffs offline - a real patch tool with no shell and no repo, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/patch-mcp",

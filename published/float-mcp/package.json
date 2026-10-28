@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/float-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "See exactly how a number is stored as a float offline - bit layout, f32 rounding, neighbours and bit round-trips, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/float-mcp",

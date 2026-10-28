@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/metabolights-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "EBI MetaboLights metabolomics studies: search public studies and read study detail with organisms - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/metabolights-mcp",

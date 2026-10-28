@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/nasdaq-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Nasdaq stock data: live quotes, recent trade history and the most active listed stocks - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nasdaq-mcp",

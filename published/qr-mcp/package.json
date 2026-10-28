@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/qr-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Generate QR codes offline - the module matrix, an ASCII rendering or a ready SVG, versions 1 to 9 with all error levels, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/qr-mcp",

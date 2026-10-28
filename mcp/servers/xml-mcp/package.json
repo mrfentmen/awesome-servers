@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/xml-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Parse, validate and convert XML offline with a real parser - entities, CDATA, attributes and comments, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/xml-mcp",

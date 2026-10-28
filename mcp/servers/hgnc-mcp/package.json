@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/hgnc-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "HGNC gene nomenclature: search genes by symbol, alias or identifier and read the full approved record - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/hgnc-mcp",

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/primes-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Prime testing, factorisation and searches offline with BigInt - Miller-Rabin, Pollard rho and a segmented sieve, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/primes-mcp",

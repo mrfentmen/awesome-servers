@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/password-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Generate strong passwords and passphrases and estimate password strength, all offline with a crypto RNG, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/password-mcp",

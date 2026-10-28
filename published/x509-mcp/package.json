@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/x509-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Decode PEM certificates, check expiry dates and inspect a live TLS certificate - offline parsing plus an optional TLS fetch, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/x509-mcp",

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ini-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Parse, validate, convert and generate INI configuration offline - sections, comments and quoted values, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ini-mcp",

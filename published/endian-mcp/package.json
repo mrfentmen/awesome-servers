@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/endian-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Byte order and integer tools offline - swap endianness, interpret raw bytes and inspect two's complement, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/endian-mcp",

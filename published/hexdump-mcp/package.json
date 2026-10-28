@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/hexdump-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Classic hex dumps and byte stats offline - dump text, hex or base64 input and convert between byte encodings, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/hexdump-mcp",

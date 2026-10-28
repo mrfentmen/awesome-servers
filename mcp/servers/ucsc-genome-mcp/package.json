@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ucsc-genome-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "UCSC Genome Browser API: list genomes and chromosomes, fetch DNA sequence ranges and search genes - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ucsc-genome-mcp",

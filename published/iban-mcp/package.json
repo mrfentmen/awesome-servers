@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/iban-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Validate IBANs offline with the official country length table and mod-97 checksum, and browse every country's format, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/iban-mcp",

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/pathway-commons-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Pathway Commons integrated graph search: find pathways, proteins and other entities by name across many databases - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/pathway-commons-mcp",

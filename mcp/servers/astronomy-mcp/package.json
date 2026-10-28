@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/astronomy-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Solar and lunar almanac offline: sunrise, sunset and twilight times, sun position and moon phase for any place and date - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/astronomy-mcp",

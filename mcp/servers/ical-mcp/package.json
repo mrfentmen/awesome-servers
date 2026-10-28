@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ical-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Read, create and validate iCalendar (.ics) data offline - parse events, build RFC 5545 calendars and check them, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ical-mcp",

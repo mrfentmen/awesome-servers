@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/potterdb-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Harry Potter world data from Potter DB - character search, full character profiles, spell search and the book list, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/potterdb-mcp",

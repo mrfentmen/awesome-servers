@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/http-check-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Check a URL live - status, timing, redirect chains and security headers, with private addresses refused, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/http-check-mcp",

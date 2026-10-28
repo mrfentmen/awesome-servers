@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/totp-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Generate and verify TOTP two-factor codes offline - RFC 6238 with SHA-1/256/512, plus fresh base32 secrets and otpauth URIs, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/totp-mcp",

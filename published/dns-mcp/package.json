@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/dns-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Live DNS lookups - A, AAAA, MX, TXT, NS, CNAME, SOA, CAA and SRV records, PTR reverse lookups and email set-up checks, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/dns-mcp",
