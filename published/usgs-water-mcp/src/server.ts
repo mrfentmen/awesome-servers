@@ -11,7 +11,7 @@ function errorMessage(e: unknown): string {
 }
 
 export function createServer() {
-  const server = new McpServer({ name: "usgs-water-mcp", version: "1.0.3" })
+  const server = new McpServer({ name: "usgs-water-mcp", version: "1.0.5" })
 
   server.tool(
     "get_streamflow",

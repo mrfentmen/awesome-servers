@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/library-of-congress-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Search the Library of Congress catalogue, collections and digitised items - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/library-of-congress-mcp",

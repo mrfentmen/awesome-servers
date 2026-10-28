@@ -9,7 +9,7 @@ function errorMessage(e) {
     return `Error: ${String(e)}`;
 }
 export function createServer() {
-    const server = new McpServer({ name: "usgs-water-mcp", version: "1.0.2" });
+    const server = new McpServer({ name: "usgs-water-mcp", version: "1.0.5" });
     server.tool("get_streamflow", "Get USGS instantaneous water observations for one gauge.", {
         site: z.string().min(1).describe("USGS site number, e.g. 06752260"),
         parameter: z.string().default("00060").describe("USGS parameter code, 00060 is discharge"),

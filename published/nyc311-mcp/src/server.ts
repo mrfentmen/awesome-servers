@@ -7,7 +7,7 @@ const errorText = (error: unknown) => text(`Error: ${error instanceof Error ? er
 const date = z.string().regex(/^\\d{4}-\\d{2}-\\d{2}/).optional()
 
 export function createServer() {
-  const server = new McpServer({ name: "nyc311-mcp", version: "1.0.4" })
+  const server = new McpServer({ name: "nyc311-mcp", version: "1.0.6" })
   const filters = {
     complaintType: z.string().max(120).optional(),
     borough: z.enum(["MANHATTAN", "BRONX", "BROOKLYN", "QUEENS", "STATEN ISLAND"]).optional(),

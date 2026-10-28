@@ -11,7 +11,7 @@ function errorMessage(e: unknown): string {
 }
 
 export function createServer(): McpServer {
-  const server = new McpServer({ name: "library-of-congress-mcp", version: "1.0.1" })
+  const server = new McpServer({ name: "library-of-congress-mcp", version: "1.0.2" })
 
   server.tool(
     "search",

@@ -11,7 +11,7 @@ function errorMessage(e: unknown): string {
 }
 
 export function createServer() {
-  const server = new McpServer({ name: "tides-mcp", version: "1.0.4" })
+  const server = new McpServer({ name: "tides-mcp", version: "1.0.6" })
 
   server.tool(
     "get_tide_predictions",

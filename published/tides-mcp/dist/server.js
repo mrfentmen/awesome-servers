@@ -9,7 +9,7 @@ function errorMessage(e) {
     return `Error: ${String(e)}`;
 }
 export function createServer() {
-    const server = new McpServer({ name: "tides-mcp", version: "1.0.2" });
+    const server = new McpServer({ name: "tides-mcp", version: "1.0.6" });
     server.tool("get_tide_predictions", "Get NOAA high low or hourly tide predictions for a station and date range.", {
         station: z.string().min(3).describe("NOAA station id, e.g. 8443970"),
         begin: z.string().describe("YYYY-MM-DD"),

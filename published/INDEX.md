@@ -557,7 +557,7 @@ overwrites `dist/` from the registry tarballs.
 | `lemmy-mcp` | 1.0.4 | no |  | 4 |
 | `lemonsqueezy-mcp` | 1.1.3 | no |  |  |
 | `lever-mcp` | 1.0.6 | no |  |  |
-| `@mrfentmen/library-of-congress-mcp` | 1.0.1 | yes |  |  |
+| `@mrfentmen/library-of-congress-mcp` | 1.0.2 | yes |  |  |
 | `librivox-mcp` | 1.0.6 | yes |  |  |
 | `license-boundary-mcp` | 1.0.1 | yes |  |  |
 | `lichess-mcp` | 1.0.1 | yes |  |  |
@@ -696,7 +696,7 @@ overwrites `dist/` from the registry tarballs.
 | `nvd-cve-mcp` | 1.1.0 | no |  |  |
 | `nws-mcp` | 1.0.1 | yes |  |  |
 | `nyc-arrests-mcp` | 1.0.5 | no |  |  |
-| `nyc311-mcp` | 1.0.4 | yes |  |  |
+| `nyc311-mcp` | 1.0.6 | yes |  |  |
 | `nylas-mcp` | 1.0.5 | no |  |  |
 | `@mrfentmen/obis-mcp` | 1.0.1 | yes |  |  |
 | `ocrspace-mcp` | 1.0.5 | no |  |  |
@@ -1001,7 +1001,7 @@ overwrites `dist/` from the registry tarballs.
 | `themuse-mcp` | 1.0.5 | no |  |  |
 | `theoddsapi-mcp` | 1.1.2 | no |  |  |
 | `thesportsdb-mcp` | 1.0.2 | no |  | 2 |
-| `tides-mcp` | 1.0.4 | yes |  |  |
+| `tides-mcp` | 1.0.6 | yes |  |  |
 | `tiingo-mcp` | 1.0.5 | no |  |  |
 | `time-tools-mcp` | 1.0.2 | no |  | 2 |
 | `timeapi-mcp` | 1.0.2 | yes |  | 1 |
@@ -1060,7 +1060,7 @@ overwrites `dist/` from the registry tarballs.
 | `@mrfentmen/useragent-mcp` | 1.0.1 | yes |  |  |
 | `usgs-earthquakes-mcp` | 1.0.2 | yes |  | 2 |
 | `usgs-mcp` | 1.0.1 | yes |  |  |
-| `usgs-water-mcp` | 1.0.3 | yes |  |  |
+| `usgs-water-mcp` | 1.0.5 | yes |  |  |
 | `@mrfentmen/usno-mcp` | 1.0.1 | yes |  |  |
 | `usps-mcp` | 1.0.4 | no |  |  |
 | `@mrfentmen/uuid-mcp` | 1.0.5 | no |  | 2 |
