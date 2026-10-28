@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/jsonc-mcp",
-  "description": "Work with JSONC offline: strip comments and trailing commas, parse to clean JSON and point at syntax errors - fully local.",
+  "description": "Work with JSONC offline: strip comments and trailing commas, parse to JSON and locate errors",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"

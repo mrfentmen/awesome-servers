@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/x509-mcp",
-  "description": "Decode PEM certificates, check expiry dates and inspect a live TLS certificate - offline parsing plus an optional TLS fetch, keyless.",
+  "description": "Decode PEM certificates, check expiry and inspect a live TLS certificate, all offline",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"

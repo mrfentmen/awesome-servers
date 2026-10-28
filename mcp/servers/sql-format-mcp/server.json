@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/sql-format-mcp",
-  "description": "Format, minify and split SQL statements offline - strings, quotes and comments are respected, keyless.",
+  "description": "Format, minify and split SQL offline, respecting strings, quotes and comments",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"

@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/iban-mcp",
-  "description": "Validate IBANs offline with the official country length table and mod-97 checksum, and browse every country's format, keyless.",
+  "description": "Validate IBANs offline with the official length table and mod-97 checksum, country by country",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"

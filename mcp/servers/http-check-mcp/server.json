@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/http-check-mcp",
-  "description": "Check a URL live - status, timing, redirect chains and security headers, with private addresses refused, keyless.",
+  "description": "Check a URL live: status, timing, redirect chains and security headers; private hosts blocked",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"

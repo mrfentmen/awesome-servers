@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/ghcn-mcp",
-  "description": "NOAA GHCN station weather: daily and monthly summaries plus extremes for any GHCN station id - keyless.",
+  "description": "NOAA GHCN station weather: daily and monthly summaries plus extremes for a station id",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"

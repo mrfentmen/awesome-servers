@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/vcard-mcp",
-  "description": "Read and build vCard contacts offline - parse .vcf cards or JSON, and generate vCard 4.0 text, keyless.",
+  "description": "Read and build vCard contacts offline: parse .vcf cards or JSON and generate vCard 4.0",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"

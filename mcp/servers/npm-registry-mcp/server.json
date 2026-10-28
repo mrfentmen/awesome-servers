@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/npm-registry-mcp",
-  "description": "Live npm registry data - package details with weekly downloads, package search and version history, keyless.",
+  "description": "Live npm registry data: package detail with weekly downloads, search and version history",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"

@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/hexdump-mcp",
-  "description": "Classic hex dumps and byte stats offline - dump text, hex or base64 input and convert between byte encodings, keyless.",
+  "description": "Classic hex dumps and byte stats offline: dump text, hex or base64 and convert between them",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"

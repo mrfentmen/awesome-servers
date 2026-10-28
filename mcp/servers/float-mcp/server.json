@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/float-mcp",
-  "description": "See exactly how a number is stored as a float offline - bit layout, f32 rounding, neighbours and bit round-trips, keyless.",
+  "description": "See exactly how a number is stored as a float offline: bit layout, f32 rounding and neighbours",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"

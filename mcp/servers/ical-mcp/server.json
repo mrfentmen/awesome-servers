@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/ical-mcp",
-  "description": "Read, create and validate iCalendar (.ics) data offline - parse events, build RFC 5545 calendars and check them, keyless.",
+  "description": "Read, create and validate iCalendar (.ics) data offline: parse events, build RFC 5545 files",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"

@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/timezone-mcp",
-  "description": "IANA time zone maths offline - the time right now in any zone, wall-clock conversion between zones, and the zone list, keyless.",
+  "description": "IANA time zone maths offline: the time right now anywhere, wall-clock conversion and DST",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"

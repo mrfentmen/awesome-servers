@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/totp-mcp",
-  "description": "Generate and verify TOTP two-factor codes offline - RFC 6238 with SHA-1/256/512, plus fresh base32 secrets and otpauth URIs, keyless.",
+  "description": "Generate and verify TOTP codes offline: RFC 6238 with SHA-1/256/512 and fresh base32 secrets",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"

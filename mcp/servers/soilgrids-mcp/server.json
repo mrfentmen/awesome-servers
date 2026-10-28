@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/soilgrids-mcp",
-  "description": "SoilGrids global soil properties: clay, sand, carbon and pH by depth for any coordinate, plus WRB soil class - keyless.",
+  "description": "SoilGrids soil properties by depth for any coordinate: clay, sand, carbon, pH and WRB",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"

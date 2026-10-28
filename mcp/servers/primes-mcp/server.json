@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/primes-mcp",
-  "description": "Prime testing, factorisation and searches offline with BigInt - Miller-Rabin, Pollard rho and a segmented sieve, keyless.",
+  "description": "Prime testing, factorisation and searches offline with BigInt: Miller-Rabin and Pollard rho",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
