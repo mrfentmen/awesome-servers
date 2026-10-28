@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/ini-mcp",
+  "version": "1.0.0",
+  "description": "Parse, validate, convert and generate INI configuration offline - sections, comments and quoted values, keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/ini-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "ini-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "ini",
+    "config",
+    "parser",
+    "settings",
+    "offline",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

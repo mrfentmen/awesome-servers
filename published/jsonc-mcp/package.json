@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/jsonc-mcp",
+  "version": "1.0.0",
+  "description": "Work with JSONC offline: strip comments and trailing commas, parse to clean JSON and point at syntax errors - fully local.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/jsonc-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "jsonc-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "json",
+    "jsonc",
+    "config",
+    "comments",
+    "developer",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

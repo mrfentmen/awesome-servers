@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/iban-mcp",
+  "version": "1.0.0",
+  "description": "Validate IBANs offline with the official country length table and mod-97 checksum, and browse every country's format, keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/iban-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "iban-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "iban",
+    "banking",
+    "validation",
+    "checksum",
+    "offline",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

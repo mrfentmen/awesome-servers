@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/crc-mcp",
+  "version": "1.0.0",
+  "description": "CRC-32, CRC-32C, CRC-16 variants and Adler-32 offline, with checksum check values verified, keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/crc-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "crc-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "crc",
+    "checksum",
+    "adler32",
+    "hash",
+    "offline",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

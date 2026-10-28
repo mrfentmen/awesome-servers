@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/vcard-mcp",
+  "version": "1.0.0",
+  "description": "Read and build vCard contacts offline - parse .vcf cards or JSON, and generate vCard 4.0 text, keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/vcard-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "vcard-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "vcard",
+    "contacts",
+    "vcf",
+    "rfc6350",
+    "offline",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

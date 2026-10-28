@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/ghcn-mcp",
+  "version": "1.0.0",
+  "description": "NOAA GHCN station weather: daily and monthly summaries plus extremes for any GHCN station id - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/ghcn-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "ghcn-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "weather",
+    "noaa",
+    "climate",
+    "temperature",
+    "stations",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

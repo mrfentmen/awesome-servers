@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/sql-format-mcp",
+  "version": "1.0.0",
+  "description": "Format, minify and split SQL statements offline - strings, quotes and comments are respected, keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/sql-format-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "sql-format-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "sql",
+    "format",
+    "beautify",
+    "minify",
+    "offline",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

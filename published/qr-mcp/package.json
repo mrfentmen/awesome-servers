@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/qr-mcp",
+  "version": "1.0.0",
+  "description": "Generate QR codes offline - the module matrix, an ASCII rendering or a ready SVG, versions 1 to 9 with all error levels, keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/qr-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "qr-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "qr",
+    "qrcode",
+    "svg",
+    "barcode",
+    "offline",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

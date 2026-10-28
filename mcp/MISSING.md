@@ -3,7 +3,10 @@
 Living list of MCP servers that do **not** exist yet (verified against the MCP
 registry, npm, GitHub and the web), plus what was checked and skipped and why.
 
-Updated: 2026-10-27. Repo count at time of writing: 1012 published packages, 219 with source.
+Updated: 2026-10-27. Repo count at time of writing: 1088 published packages, 319 with source.
+
+Plus built 2026-10-27, a 50-server keyless wave (all on npm and in `published/`, no gate, no key):
+`hgnc-mcp`, `cbioportal-mcp`, `gdc-mcp`, `ncbi-datasets-mcp`, `metabolights-mcp`, `emdb-mcp`, `jsonschema-mcp`, `ucsc-genome-mcp`, `pathway-commons-mcp`, `astronomy-mcp`, `ghcn-mcp`, `soilgrids-mcp`, `hashid-mcp`, `spaceweather-mcp`, `smk-mcp`, `tfl-mcp`, `f1-mcp`, `nasdaq-mcp`, `jsonc-mcp`, `osrs-ge-mcp`, `tcgdex-mcp`, `potterdb-mcp`, `dogceo-mcp`, `catfact-mcp`, `brewery-mcp`, `patch-mcp`, `ical-mcp`, `vcard-mcp`, `x509-mcp`, `iban-mcp`, `totp-mcp`, `unit-convert-mcp`, `timezone-mcp`, `jsondiff-mcp`, `sql-format-mcp`, `password-mcp`, `btc-address-mcp`, `ini-mcp`, `xml-mcp`, `hexdump-mcp`, `endian-mcp`, `base58-mcp`, `float-mcp`, `combinatorics-mcp`, `primes-mcp`, `dns-mcp`, `npm-registry-mcp`, `http-check-mcp`, `crc-mcp`, `qr-mcp`.
 
 ## Verified missing — build next
 

@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/f1-mcp",
+  "version": "1.0.0",
+  "description": "Formula 1 history from the Ergast/Jolpica archive: seasons, race schedules, results and driver standings - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/f1-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "f1-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "formula1",
+    "f1",
+    "motorsport",
+    "results",
+    "races",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

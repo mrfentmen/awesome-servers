@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/endian-mcp",
+  "version": "1.0.0",
+  "description": "Byte order and integer tools offline - swap endianness, interpret raw bytes and inspect two's complement, keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/endian-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "endian-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "endian",
+    "binary",
+    "integer",
+    "bytes",
+    "offline",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
