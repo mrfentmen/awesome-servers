@@ -17,3 +17,13 @@ export declare function searchMarkets(a: {
     query: string;
     limit: number;
 }): Promise<string>;
+export declare function positioningExtremes(a: {
+    limit: number;
+}): Promise<string>;
+export declare function openInterestLeaders(a: {
+    limit: number;
+}): Promise<string>;
+export declare function cotAverages(a: {
+    market: string;
+    weeks: number;
+}): Promise<string>;

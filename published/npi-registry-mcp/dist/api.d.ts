@@ -16,3 +16,19 @@ export declare function searchProviders(a: {
     taxonomies?: string;
     limit?: number;
 }): Promise<string>;
+export declare function searchOrganizations(a: {
+    name: string;
+    state?: string;
+    city?: string;
+    limit: number;
+}): Promise<string>;
+export declare function providersByTaxonomy(a: {
+    taxonomy: string;
+    state?: string;
+    limit: number;
+}): Promise<string>;
+export declare function providersByCity(a: {
+    city: string;
+    state: string;
+    limit: number;
+}): Promise<string>;

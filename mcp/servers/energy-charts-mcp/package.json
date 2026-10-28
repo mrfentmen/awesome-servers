@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/energy-charts-mcp",
+  "version": "1.0.0",
+  "description": "European electricity data: live generation mix, day-ahead prices, installed capacity and renewable share - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/energy-charts-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "energy-charts-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "energy",
+    "electricity",
+    "grid",
+    "prices",
+    "renewables",
+    "infrastructure",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

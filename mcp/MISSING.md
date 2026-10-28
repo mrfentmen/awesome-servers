@@ -17,6 +17,28 @@ wrappers for: `ripestat-mcp` (routing), `peeringdb-mcp` (interconnect),
 `nasa-sbdb-mcp` (asteroids), `bart-mcp` (transit), `grid-carbon-mcp` (power grid),
 `tvmaze-mcp` (TV), `itunes-mcp` (media catalogue), `usaspending-mcp` (procurement).
 
+Plus built 2026-10-28, a 28-server keyless infrastructure wave (17 new, 11
+existing servers expanded past five tools), all on npm and mirrored into
+`published/`:
+new — `amtrak-mcp` (rail stations), `drinking-water-mcp` (EPA SDWIS),
+`hts-tariff-mcp` (US tariff lines), `ofac-sanctions-mcp` (sanctions screening),
+`usace-water-mcp` (reservoir levels), `drug-shortages-mcp` (FDA shortages),
+`fda-510k-mcp` (device clearances), `clinical-codes-mcp` (LOINC + ICD-10-CM),
+`census-geocode-mcp` (address and geography lookup), `submarine-cables-mcp`
+(telecom cable routes), `energy-charts-mcp` (EU generation mix and prices),
+`opensky-mcp` (live aircraft and tracks), `gbfs-mcp` (bike-share feeds),
+`library-of-congress-mcp`, `rail-infrastructure-mcp` (crossings and railroad
+bridges), `port-throughput-mcp` (BTS cargo volumes), `bridges-mcp` (NY and NYC
+bridge conditions);
+expanded — `cftc-mcp`, `fdic-mcp`, `npi-registry-mcp`, `snotel-mcp`,
+`drought-mcp`, `usgs-water-mcp`, `tides-mcp`, `tfl-mcp`, `nyc311-mcp`,
+`ourairports-mcp`, `epa-echo-mcp`.
+
+Checked and rejected for this wave: National Inventory of Dams API (a single
+state CSV is 69 MB), FCC broadband map (403), CalFire incident feed (403),
+OpenSky flight history for anonymous callers (403 — live state and tracks work),
+USDM current-statistics endpoint (404 — state and county statistics work).
+
 
 ## Verified missing — build next
 

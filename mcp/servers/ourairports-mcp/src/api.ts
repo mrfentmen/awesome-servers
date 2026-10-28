@@ -164,3 +164,51 @@ export async function airportsNear(a: { latitude: number; longitude: number; rad
   if (!near.length) return `No airports within ${a.radiusKm} km.`
   return [`${near.length} airports within ${a.radiusKm} km (showing ${Math.min(a.limit, near.length)}):`, ...near.slice(0, a.limit).map((r) => `${r.d.toFixed(1)} km - ${describe(r.x, countries)}`)].join("\n")
 }
+
+async function csvObjects(path: string): Promise<Airport[]> {
+  const res = await request(path, "text/csv", 90000)
+  const rows = parseCsv(await res.text())
+  if (!rows.length) return []
+  const head = rows[0].map((h) => h.replace(/^\uFEFF/, "").trim())
+  return rows.slice(1).filter((r) => r.length === head.length).map((r) => {
+    const o: Airport = {}
+    head.forEach((h, i) => { o[h] = r[i] })
+    return o
+  })
+}
+
+async function findAirport(code: string): Promise<{ airport: Airport; countries: Map<string, string> }> {
+  const wanted = code.trim().toUpperCase()
+  if (wanted.length < 3) throw new Error("airport code must be at least 3 characters")
+  const { airports, countries } = await load()
+  const airport = airports.find((a) => [a.ident, a.iata_code, a.icao_code].some((c) => c && c.toUpperCase() === wanted))
+  if (!airport) throw new Error(`No airport with code ${wanted}`)
+  return { airport, countries }
+}
+
+export async function airportRunways(a: { code: string; limit: number }): Promise<string> {
+  const { airport } = await findAirport(a.code)
+  const rows = (await csvObjects("/runways.csv")).filter((r) => r.airport_ident === airport.ident).slice(0, a.limit)
+  if (!rows.length) return `OurAirports lists no runways for ${airport.ident}.`
+  return section(`${airport.name} · ${rows.length} runway(s)`, rows.map((r, i) =>
+    `${i + 1}. ${r.le_ident} / ${r.he_ident} · ${r.length_ft} ft x ${r.width_ft} ft · ${r.surface} · lit ${r.lighted === "1" ? "yes" : "no"}`))
+}
+
+export async function airportFrequencies(a: { code: string; limit: number }): Promise<string> {
+  const { airport } = await findAirport(a.code)
+  const rows = (await csvObjects("/airport-frequencies.csv")).filter((r) => r.airport_ident === airport.ident).slice(0, a.limit)
+  if (!rows.length) return `OurAirports lists no radio frequencies for ${airport.ident}.`
+  return section(`${airport.name} · ${rows.length} frequency record(s)`, rows.map((r, i) =>
+    `${i + 1}. ${r.description || r.type} · ${r.frequency_mhz} MHz${r.type ? ` · ${r.type}` : ""}`))
+}
+
+export async function airportStats(a: { country?: string }): Promise<string> {
+  const { airports, countries } = await load()
+  const wanted = a.country ? a.country.trim().toUpperCase() : ""
+  const rows = wanted ? airports.filter((x) => x.iso_country === wanted) : airports
+  if (!rows.length) return `OurAirports has no airports for ${wanted}.`
+  const counts = new Map<string, number>()
+  for (const x of rows) counts.set(x.type || "unknown", (counts.get(x.type || "unknown") ?? 0) + 1)
+  const label = wanted ? countries.get(wanted) ?? wanted : "the world"
+  return section(`${rows.length} airport(s) in ${label}`, [...counts.entries()].sort((x, y) => y[1] - x[1]).map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}`))
+}

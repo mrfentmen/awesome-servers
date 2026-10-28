@@ -109,3 +109,46 @@ export async function stationArrivals(a: { stopId: string; limit?: number }): Pr
     }),
   ].join("\n")
 }
+
+export async function roadDisruptions(): Promise<string> {
+  const data = await getJson("/Road/all/Disruption", "application/json", 30000)
+  const rows: any[] = Array.isArray(data) ? data : []
+  if (!rows.length) return "TfL reports no road disruptions right now."
+  return [
+    `${rows.length} road disruption(s):`,
+    "",
+    ...rows.slice(0, 20).map((d: any, i: number) => `${i + 1}. ${clean(d?.severity)} · ${clean(d?.location)} · ${clean(d?.comments).slice(0, 160)}`),
+  ].join("\n")
+}
+
+export async function stopDetail(a: { stopId: string }): Promise<string> {
+  const id = clean(a.stopId)
+  if (!/^[A-Za-z0-9]{3,24}$/.test(id)) throw new SourceError(`"${id}" is not a valid TfL stop id`)
+  const s = await getJson(`/StopPoint/${encodeURIComponent(id)}`, "application/json", 30000)
+  if (!s?.id) throw new SourceError(`No TfL stop ${id}`)
+  const lines = Array.isArray(s?.lines) ? s.lines : []
+  return [
+    `${clean(s.commonName) || clean(s.name)} (${clean(s.id)})`,
+    "",
+    `Modes: ${Array.isArray(s.modes) ? s.modes.join(", ") : clean(s.modeName)}`,
+    `Zone: ${clean(s.zone)}`,
+    `Coordinates: ${s.lat}, ${s.lon}`,
+    `Lines: ${lines.slice(0, 10).map((l: any) => clean(l.name)).join(", ")}`,
+    `Towards: ${Array.isArray(s.children) ? s.children.slice(0, 6).map((c: any) => clean(c.towards)).filter(Boolean).join(" · ") : ""}`,
+  ].filter(Boolean).join("\n")
+}
+
+export async function lineRoute(a: { lineId: string; direction: "inbound" | "outbound" }): Promise<string> {
+  const id = clean(a.lineId).toLowerCase()
+  if (!/^[a-z0-9-]{2,30}$/.test(id)) throw new SourceError(`"${id}" is not a valid TfL line id`)
+  const data = await getJson(`/Line/${encodeURIComponent(id)}/Route/Sequence/${a.direction}`, "application/json", 30000)
+  const stops: any[] = Array.isArray(data?.stopPointSequences)
+    ? data.stopPointSequences.flatMap((s: any) => Array.isArray(s?.stopPoint) ? s.stopPoint : [])
+    : []
+  if (!stops.length) return `TfL has no ${a.direction} route stops for line ${id}.`
+  return [
+    `${clean(data?.lineName) || id} ${a.direction} · ${stops.length} stops`,
+    "",
+    ...stops.slice(0, 40).map((s: any, i: number) => `${String(i + 1).padStart(3)}. ${clean(s.name)} · ${clean(s.id)}`),
+  ].join("\n")
+}

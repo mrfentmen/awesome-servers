@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/tfl-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "TfL live data: line status across tube, DLR and rail, stop search and real-time arrivals - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/tfl-mcp",

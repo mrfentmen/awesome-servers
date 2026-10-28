@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/hts-tariff-mcp",
+  "version": "1.0.0",
+  "description": "US Harmonized Tariff Schedule from the USITC: look up a tariff code, search descriptions, walk a heading or pull a whole chapter with duty rates.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/hts-tariff-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "hts-tariff-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "tariff",
+    "hts",
+    "customs",
+    "trade",
+    "import",
+    "duty",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

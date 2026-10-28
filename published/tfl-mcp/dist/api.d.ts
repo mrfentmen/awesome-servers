@@ -14,3 +14,11 @@ export declare function stationArrivals(a: {
     stopId: string;
     limit?: number;
 }): Promise<string>;
+export declare function roadDisruptions(): Promise<string>;
+export declare function stopDetail(a: {
+    stopId: string;
+}): Promise<string>;
+export declare function lineRoute(a: {
+    lineId: string;
+    direction: "inbound" | "outbound";
+}): Promise<string>;

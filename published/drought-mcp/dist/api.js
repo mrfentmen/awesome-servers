@@ -88,7 +88,7 @@ export async function stateDrought(a) {
     const start = checkDate(a.start, "start");
     const end = checkDate(a.end, "end");
     const statisticsType = a.weekly ? 2 : 1;
-    const params = new URLSearchParams({ aoi: String(fips), startdate: start, enddate: end, statisticsType: String(statisticsType) });
+    const params = new URLSearchParams({ aoi: String(fips).padStart(2, "0"), startdate: start, enddate: end, statisticsType: String(statisticsType) });
     const rows = await getJson(`/StateStatistics/GetDroughtSeverityStatisticsByAreaPercent?${params.toString()}`);
     const list = Array.isArray(rows) ? rows : [];
     if (!list.length)
@@ -111,7 +111,7 @@ export async function compareStates(a) {
     const date = checkDate(a.date, "date");
     const out = [];
     for (const fips of codes) {
-        const params = new URLSearchParams({ aoi: String(fips), startdate: date, enddate: date, statisticsType: "1" });
+        const params = new URLSearchParams({ aoi: String(fips).padStart(2, "0"), startdate: date, enddate: date, statisticsType: "1" });
         const rows = await getJson(`/StateStatistics/GetDroughtSeverityStatisticsByAreaPercent?${params.toString()}`);
         const row = Array.isArray(rows) && rows.length ? rows[rows.length - 1] : undefined;
         if (!row) {
@@ -121,4 +121,56 @@ export async function compareStates(a) {
         out.push(`${name(fips).padEnd(20)} none ${Number(row.none ?? 0).toFixed(1).padStart(5)}%  D0 ${Number(row.d0 ?? 0).toFixed(1).padStart(5)}%  D1 ${Number(row.d1 ?? 0).toFixed(1).padStart(5)}%  D2 ${Number(row.d2 ?? 0).toFixed(1).padStart(5)}%  D3 ${Number(row.d3 ?? 0).toFixed(1).padStart(5)}%  D4 ${Number(row.d4 ?? 0).toFixed(1).padStart(5)}%`);
     }
     return [`US Drought Monitor shares for ${date}:`, "", ...out].join("\n");
+}
+export async function countyDrought(a) {
+    const fips = clean(a.countyFips);
+    if (!/^\d{5}$/.test(fips))
+        throw new SourceError("countyFips must be a five-digit county FIPS code");
+    const date = checkDate(a.date, "date");
+    const params = new URLSearchParams({ aoi: fips, startdate: date, enddate: date, statisticsType: "1" });
+    const rows = await getJson(`/CountyStatistics/GetDroughtSeverityStatisticsByAreaPercent?${params.toString()}`);
+    const row = Array.isArray(rows) && rows.length ? rows[rows.length - 1] : undefined;
+    if (!row)
+        return `The Drought Monitor has no data for county ${fips} on ${date}.`;
+    return section(`${clean(row.county) || fips}, ${clean(row.state)} · week of ${clean(row.validStart)}`, [
+        bullet("No drought", `${Number(row.none ?? 0).toFixed(1)}%`),
+        bullet("D0 abnormally dry", `${Number(row.d0 ?? 0).toFixed(1)}%`),
+        bullet("D1 moderate", `${Number(row.d1 ?? 0).toFixed(1)}%`),
+        bullet("D2 severe", `${Number(row.d2 ?? 0).toFixed(1)}%`),
+        bullet("D3 extreme", `${Number(row.d3 ?? 0).toFixed(1)}%`),
+        bullet("D4 exceptional", `${Number(row.d4 ?? 0).toFixed(1)}%`),
+    ]);
+}
+export async function nationalSummary(a) {
+    const date = checkDate(a.date, "date");
+    const params = new URLSearchParams({ aoi: "us", startdate: date, enddate: date, statisticsType: "1" });
+    const rows = await getJson(`/USStatistics/GetDroughtSeverityStatisticsByAreaPercent?${params.toString()}`);
+    const row = Array.isArray(rows) && rows.length ? rows[rows.length - 1] : undefined;
+    if (!row)
+        return `The Drought Monitor has no national data for ${date}.`;
+    return section(`US drought summary · week of ${clean(row.validStart)}`, [
+        bullet("No drought", `${Number(row.none ?? 0).toFixed(1)}%`),
+        bullet("D0 abnormally dry", `${Number(row.d0 ?? 0).toFixed(1)}%`),
+        bullet("D1 moderate", `${Number(row.d1 ?? 0).toFixed(1)}%`),
+        bullet("D2 severe", `${Number(row.d2 ?? 0).toFixed(1)}%`),
+        bullet("D3 extreme", `${Number(row.d3 ?? 0).toFixed(1)}%`),
+        bullet("D4 exceptional", `${Number(row.d4 ?? 0).toFixed(1)}%`),
+    ]);
+}
+export async function droughtTrend(a) {
+    const fips = checkFips(a.stateFips);
+    const weeks = a.weeks;
+    const end = new Date();
+    const start = new Date(end.getTime() - weeks * 7 * 86400000);
+    const fmt = (d) => `${d.getUTCMonth() + 1}/${d.getUTCDate()}/${d.getUTCFullYear()}`;
+    const params = new URLSearchParams({ aoi: String(fips).padStart(2, "0"), startdate: fmt(start), enddate: fmt(end), statisticsType: "1" });
+    const rows = await getJson(`/StateStatistics/GetDroughtSeverityStatisticsByAreaPercent?${params.toString()}`);
+    const list = Array.isArray(rows) ? rows : [];
+    if (!list.length)
+        return `The Drought Monitor has no trend data for ${name(fips)}.`;
+    return section(`${name(fips)} drought trend · last ${list.length} week(s)`, list.map((r) => {
+        const d0 = Number(r.d0 ?? 0);
+        const d4 = Number(r.d4 ?? 0);
+        return `${clean(r.mapDate).slice(0, 10)} · D0+ ${d0.toFixed(1)}% · D4 ${d4.toFixed(1)}%`;
+    }));
 }

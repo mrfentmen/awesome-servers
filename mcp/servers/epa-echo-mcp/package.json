@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/epa-echo-mcp",
-  "version": "1.0.1",
-  "description": "EPA ECHO enforcement and compliance: search regulated facilities by state or city, read enforcement totals, and pull a facility site record from Envirofacts - keyless.",
+  "version": "1.0.2",
+  "description": "EPA ECHO enforcement and compliance: find regulated facilities by state, city, ZIP or name and read their permit, inspection and violation record.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/epa-echo-mcp",
   "repository": {
@@ -23,10 +23,10 @@
     "mcp",
     "epa",
     "echo",
-    "enforcement",
-    "compliance",
     "environment",
-    "facilities",
+    "compliance",
+    "wastewater",
+    "npdes",
     "keyless"
   ],
   "license": "MIT",

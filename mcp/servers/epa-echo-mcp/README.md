@@ -1,6 +1,6 @@
-# EPA ECHO
+# epa-echo-mcp
 
-EPA ECHO enforcement and compliance: search regulated facilities by state or city, read enforcement totals, and pull a facility site record from Envirofacts - keyless.
+EPA ECHO enforcement and compliance: find regulated facilities by state, city, ZIP or name and read their permit, inspection and violation record.
 
 Keyless — no signup, no API key, no environment variables.
 
@@ -24,10 +24,12 @@ Or add it to your MCP client:
 
 | Tool | What it does |
 |---|---|
-| `search_facilities` | Find EPA-regulated facilities in a state, optionally filtered to one city. |
-| `enforcement_totals` | Enforcement and compliance row counts and total penalties for a state's facilities. |
-| `facility_site` | FRS facility site record (address, county, federal agency) by EPA registry ID. |
+| `facilities_in_state` | Regulated facilities in a US state, with compliance status |
+| `facilities_by_zip` | Regulated facilities in one US ZIP code |
+| `facilities_by_city` | Regulated facilities in one city |
+| `facilities_by_name` | Search facilities by name fragment |
+| `facility_detail` | Full ECHO record for one facility by registry id |
 
 ## Data source
 
-EPA ECHO REST services and the EPA Envirofacts FRS facility registry
+EPA ECHO

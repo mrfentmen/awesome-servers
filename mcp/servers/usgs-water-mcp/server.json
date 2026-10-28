@@ -6,12 +6,12 @@
     "url": "https://github.com/mrfentmen/usgs-water-mcp",
     "source": "github"
   },
-  "version": "1.0.1",
+  "version": "1.0.4",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "usgs-water-mcp",
-      "version": "1.0.1",
+      "version": "1.0.4",
       "transport": {
         "type": "stdio"
       }

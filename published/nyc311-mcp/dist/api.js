@@ -62,3 +62,38 @@ export function countRequests(complaintType, borough, agency, start, end, limit 
     });
 }
 export function format(value) { return JSON.stringify(value, null, 2).slice(0, 16000); }
+export async function requestDetail(a) {
+    const key = String(a.uniqueKey ?? "").trim();
+    if (!/^\d{5,12}$/.test(key))
+        throw new Nyc311Error("uniqueKey must be a numeric 311 request key");
+    return format(await query({
+        $select: "unique_key,created_date,closed_date,agency,complaint_type,descriptor,status,resolution_description,borough,community_board",
+        $where: `unique_key = ${quote(key)}`,
+        $limit: "1",
+    }));
+}
+export async function agencyBreakdown(a) {
+    const start = a.start ?? new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+    const where = filters(undefined, undefined, undefined, start, a.end);
+    return format(await query({
+        $select: "agency,count(*) as total",
+        $group: "agency",
+        $order: "total DESC",
+        $limit: String(a.limit ?? 20),
+        ...(where.length ? { $where: where.join(" AND ") } : {}),
+    }));
+}
+export async function dailyTrend(a) {
+    const days = a.days ?? 14;
+    if (!Number.isInteger(days) || days < 1 || days > 90)
+        throw new Nyc311Error("days must be between 1 and 90");
+    const start = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+    const where = filters(a.complaintType, a.borough, undefined, start, undefined);
+    return format(await query({
+        $select: "date_trunc_ymd(created_date) as day,count(*) as total",
+        $group: "day",
+        $order: "day DESC",
+        $limit: "90",
+        ...(where.length ? { $where: where.join(" AND ") } : {}),
+    }));
+}

@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/amtrak-mcp",
+  "version": "1.0.0",
+  "description": "Amtrak realtime: every train on the map with delay, speed and next stop, plus route and station reference data.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/amtrak-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "amtrak-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "amtrak",
+    "rail",
+    "train",
+    "transit",
+    "realtime",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

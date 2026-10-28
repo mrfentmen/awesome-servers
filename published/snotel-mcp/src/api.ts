@@ -135,3 +135,79 @@ export async function stationReadings(a: { stationTriplet: string; elements: str
     `Station page: https://wcc.sc.egov.usda.gov/nwcc/site?sitenum=${triplet.split(":")[0]}`,
   ].join("\n")
 }
+
+export async function stationMetadata(a: { stationTriplet: string }): Promise<string> {
+  const triplet = clean(a.stationTriplet)
+  if (!/^[A-Za-z0-9]+:[A-Za-z]{2}:[A-Z]{3,6}$/.test(triplet)) throw new SourceError("stationTriplet must look like 1344:CO:SNTL")
+  const rows: any[] = await getJson(`/stations?stationTriplets=${encodeURIComponent(triplet)}`)
+  const s = Array.isArray(rows) ? rows[0] : undefined
+  if (!s) throw new SourceError(`No AWDB station ${triplet}`)
+  return section(`${clean(s.name) || triplet} (${triplet})`, [
+    bullet("Network", s.networkCode),
+    bullet("State", s.stateCode),
+    bullet("County", s.countyName),
+    bullet("Elevation", s.elevation !== undefined ? `${s.elevation} ft` : ""),
+    bullet("HUC", s.huc),
+    bullet("Latitude", s.latitude),
+    bullet("Longitude", s.longitude),
+    bullet("Operator", s.operator),
+    bullet("Station page", `https://wcc.sc.egov.usda.gov/nwcc/site?sitenum=${triplet.split(":")[0]}`),
+  ])
+}
+
+export async function peakSnowWaterEquivalent(a: { stationTriplet: string; year: number }): Promise<string> {
+  const triplet = clean(a.stationTriplet)
+  if (!/^[A-Za-z0-9]+:[A-Za-z]{2}:[A-Z]{3,6}$/.test(triplet)) throw new SourceError("stationTriplet must look like 1344:CO:SNTL")
+  const begin = new Date(`${a.year - 1}-10-01`)
+  const end = new Date(`${a.year}-09-30`)
+  const params = new URLSearchParams({
+    stationTriplets: triplet,
+    elements: "WTEQ",
+    duration: "DAILY",
+    beginDate: isoDate(begin),
+    endDate: isoDate(end),
+    returnFlags: "false",
+  })
+  const rows: any[] = await getJson(`/data?${params.toString()}`)
+  const station = Array.isArray(rows) ? rows[0] : undefined
+  const block = station?.data?.find((b: any) => clean(b?.stationElement?.elementCode) === "WTEQ")
+  const values: any[] = Array.isArray(block?.values) ? block.values : []
+  const numeric = values.map((v) => ({ date: clean(v.date), value: Number(v.value) })).filter((v) => Number.isFinite(v.value))
+  if (!numeric.length) return `No snow water equivalent readings for ${triplet} in water year ${a.year}.`
+  const peak = numeric.reduce((best, v) => (v.value > best.value ? v : best), numeric[0])
+  const latest = numeric[numeric.length - 1]
+  return section(`${clean(station.name) || triplet} · water year ${a.year}`, [
+    bullet("Peak SWE", `${peak.value} in on ${peak.date}`),
+    bullet("Latest SWE", `${latest.value} in on ${latest.date}`),
+    bullet("Readings", numeric.length),
+    bullet("Season start", numeric[0].date),
+  ])
+}
+
+export async function snowSummary(a: { state: string; network: string; limit: number }): Promise<string> {
+  const state = clean(a.state).toUpperCase()
+  if (!/^[A-Z]{2}$/.test(state)) throw new SourceError("state must be a two-letter code")
+  const network = clean(a.network || "SNTL").toUpperCase()
+  const end = new Date()
+  const begin = new Date(end.getTime() - 7 * 86400000)
+  const params = new URLSearchParams({
+    stationTriplets: `*:${state}:${network}`,
+    elements: "WTEQ",
+    duration: "DAILY",
+    beginDate: isoDate(begin),
+    endDate: isoDate(end),
+    returnFlags: "false",
+  })
+  const rows: any[] = await getJson(`/data?${params.toString()}`)
+  const list = Array.isArray(rows) ? rows : []
+  const readings = list.map((station: any) => {
+    const block = station?.data?.find((b: any) => clean(b?.stationElement?.elementCode) === "WTEQ")
+    const values: any[] = Array.isArray(block?.values) ? block.values : []
+    const last = values[values.length - 1]
+    return { name: clean(station.name) || clean(station.stationTriplet), triplet: clean(station.stationTriplet), value: Number(last?.value) }
+  }).filter((r) => Number.isFinite(r.value)).sort((x, y) => y.value - x.value)
+  if (!readings.length) return `No snow water equivalent readings for ${network} stations in ${state}.`
+  const shown = readings.slice(0, a.limit)
+  const avg = readings.reduce((n, r) => n + r.value, 0) / readings.length
+  return section(`${network} snowpack in ${state}: ${readings.length} station(s), mean SWE ${avg.toFixed(1)} in`, shown.map((r, i) => `${i + 1}. ${r.name} (${r.triplet}) · ${r.value} in`))
+}

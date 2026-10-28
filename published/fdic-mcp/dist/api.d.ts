@@ -18,3 +18,19 @@ export declare function banksInState(a: {
     state: string;
     limit?: number;
 }): Promise<string>;
+export declare function bankFinancials(a: {
+    cert: number;
+}): Promise<string>;
+export declare function banksByCity(a: {
+    city: string;
+    state?: string;
+    limit: number;
+}): Promise<string>;
+export declare function bankLocations(a: {
+    cert: number;
+    limit: number;
+}): Promise<string>;
+export declare function failedBanks(a: {
+    since?: string;
+    limit: number;
+}): Promise<string>;

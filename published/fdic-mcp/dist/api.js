@@ -147,3 +147,56 @@ export async function banksInState(a) {
         ...rows.map((r) => `- ${clean(r.NAME)} (cert ${r.CERT}) · ${clean(r.CITY)} · assets ${millions(r.ASSET)} · deposits ${millions(r.DEPOSITS)}`),
     ].join("\n");
 }
+const FIN_FIELDS = "CERT,REPDTE,ASSET,DEP,DEPDOM,NETINC,ROA,ROE,LNLSNET,EQ,LNLSDEP";
+function financialsOf(d) {
+    const rows = Array.isArray(d?.data) ? d.data : [];
+    return rows.map((r) => r?.data ?? r).filter((r) => r && r.CERT);
+}
+export async function bankFinancials(a) {
+    const d = await getJson(`/financials?filters=CERT:${a.cert}&fields=${FIN_FIELDS}&sort_by=REPDTE&sort_order=DESC&limit=8`);
+    const rows = financialsOf(d).sort((x, y) => String(y.REPDTE).localeCompare(String(x.REPDTE)));
+    if (!rows.length)
+        throw new SourceError(`No financial reports for FDIC cert ${a.cert}`);
+    const r = rows[0];
+    const date = String(r.REPDTE);
+    return section(`FDIC cert ${a.cert} · quarter ending ${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`, [
+        bullet("Total assets", millions(r.ASSET)),
+        bullet("Total deposits", millions(r.DEP)),
+        bullet("Domestic deposits", millions(r.DEPDOM)),
+        bullet("Net loans and leases", millions(r.LNLSNET)),
+        bullet("Total equity", millions(r.EQ)),
+        bullet("Net income", millions(r.NETINC)),
+        bullet("Return on assets", r.ROA !== undefined ? `${Number(r.ROA).toFixed(2)}%` : ""),
+        bullet("Return on equity", r.ROE !== undefined ? `${Number(r.ROE).toFixed(2)}%` : ""),
+        bullet("Prior quarters", rows.slice(1, 5).map((x) => `${String(x.REPDTE).slice(0, 4)}Q${Math.ceil(Number(String(x.REPDTE).slice(4, 6)) / 3)}`).join(", ")),
+    ]);
+}
+export async function banksByCity(a) {
+    const city = clean(a.city);
+    if (city.length < 2)
+        throw new SourceError("city must be at least 2 characters");
+    const parts = [`CITY:${city}`];
+    if (a.state)
+        parts.push(`STALP:${clean(a.state).toUpperCase()}`);
+    const d = await getJson(`/institutions?filters=${encodeURIComponent(parts.join(" AND "))}&fields=${FIELDS}&limit=${a.limit}`);
+    const rows = rowsOf(d);
+    if (!rows.length)
+        return `No banks found in ${city}${a.state ? `, ${a.state}` : ""}.`;
+    return section(`${rows.length} bank(s) in ${city}${a.state ? `, ${a.state}` : ""}`, rows.map(detailLine));
+}
+export async function bankLocations(a) {
+    const d = await getJson(`/locations?filters=CERT:${a.cert}&limit=${a.limit}`);
+    const rows = Array.isArray(d?.data) ? d.data.map((r) => r?.data ?? r).filter((r) => r && r.ADDRESS) : [];
+    if (!rows.length)
+        return `No branch records for FDIC cert ${a.cert}.`;
+    return section(`${rows.length} branch office(s) for cert ${a.cert}`, rows.map((r, i) => `${i + 1}. ${clean(r.ADDRESS)} · ${clean(r.CITY)}, ${clean(r.STALP)} ${clean(r.ZIP)} · ${clean(r.CBSA_METRO_NAME) || clean(r.COUNTY) || ""}`));
+}
+export async function failedBanks(a) {
+    const since = a.since ? clean(a.since) : "";
+    const filters = since ? `ACTIVE:0 AND ENDEFYMD:[${since} TO 29991231]` : "ACTIVE:0";
+    const d = await getJson(`/institutions?filters=${encodeURIComponent(filters)}&fields=${FIELDS},ENDEFYMD&limit=${a.limit}`);
+    const rows = rowsOf(d).filter((r) => r.ENDEFYMD);
+    if (!rows.length)
+        return "No closed banks match that filter.";
+    return section(`${rows.length} closed bank(s)`, rows.map((r, i) => `${i + 1}. ${clean(r.NAME)} (cert ${r.CERT}) · ${clean(r.CITY)}, ${clean(r.STALP)} · closed ${clean(r.ENDEFYMD)}`));
+}

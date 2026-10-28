@@ -1,131 +1,73 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
-import { m0_area, m1_flightsInBox, m1_flightsNear, airspaceSummary } from "./api.js";
-const text = (value) => ({ content: [{ type: 'text', text: value }] });
-const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
-const error = (e) => `Error: ${e instanceof Error ? e.message : String(e)}`;
-const errorMessage = error;
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
+import { aircraft_in_area, aircraft_state, flight_track, aircraft_near, airport_arrivals, SourceError } from "./api.js";
+const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
+function errorMessage(e) {
+    if (e instanceof SourceError || e instanceof Error)
+        return `Error: ${e.message}`;
+    return `Error: ${String(e)}`;
+}
 export function createServer() {
-    const server = new McpServer({ name: 'opensky-mcp', version: '1.0.0' });
-    server.registerTool("area", {
-        title: "Area",
-        description: "Flights in a bounding box.",
-        inputSchema: z.object({ minLat: z.number().describe("Min latitude."), minLon: z.number().describe("Min longitude."), maxLat: z.number().describe("Max latitude."), maxLon: z.number().describe("Max longitude."), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    const server = new McpServer({ name: "opensky-mcp", version: "1.0.0" });
+    server.tool("aircraft_in_area", "Live aircraft inside a bounding box", {
+        lamin: z.number().min(-90).max(90).describe("South latitude"),
+        lomin: z.number().min(-180).max(180).describe("West longitude"),
+        lamax: z.number().min(-90).max(90).describe("North latitude"),
+        lomax: z.number().min(-180).max(180).describe("East longitude"),
+        limit: z.number().int().min(1).max(50).default(15).describe("Aircraft to return")
+    }, async (a) => {
         try {
-            return text(await m0_area(args));
+            return text(await aircraft_in_area(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("flights_near", {
-        title: "Flights near",
-        description: "Find aircraft within a radius of a location.",
-        inputSchema: z.object({ lat: z.number().describe("Latitude."), lon: z.number().describe("Longitude."), radius_km: z.number().describe("Radius in kilometers.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("aircraft_state", "Latest state vector for one aircraft by ICAO24", {
+        icao24: z.string().min(6).max(6).describe("Six-hex ICAO24 address, e.g. 3c4a0d")
+    }, async (a) => {
         try {
-            return text(await m1_flightsNear(args));
+            return text(await aircraft_state(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("flights_in_box", {
-        title: "Flights in box",
-        description: "Find aircraft inside a latitude longitude box.",
-        inputSchema: z.object({ min_lat: z.number().describe("Minimum latitude."), min_lon: z.number().describe("Minimum longitude."), max_lat: z.number().describe("Maximum latitude."), max_lon: z.number().describe("Maximum longitude."), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("flight_track", "Recent flight track (breadcrumb path) for an aircraft", {
+        icao24: z.string().min(6).max(6).describe("Six-hex ICAO24 address"),
+        limit: z.number().int().min(5).max(60).default(20).describe("Path points to show")
+    }, async (a) => {
         try {
-            return text(await m1_flightsInBox(args));
+            return text(await flight_track(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("callsign_lookup", {
-        title: "Callsign lookup",
-        description: "Find live aircraft by callsign prefix anywhere in the world, no API key needed.",
-        inputSchema: z.object({
-            prefix: z.string().describe("Callsign prefix to match, e.g. AFR, UAL, SWR."),
-            limit: z.number().int().min(1).max(25).optional().describe("How many aircraft to list, 1-25. Default 10."),
-        }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement lookup locally (paywall removed)
+    server.tool("aircraft_near", "Aircraft within a radius of a point", {
+        lat: z.number().min(-90).max(90).describe("Latitude"),
+        lon: z.number().min(-180).max(180).describe("Longitude"),
+        radiusKm: z.number().min(1).max(500).default(100).describe("Radius in kilometres"),
+        limit: z.number().int().min(1).max(50).default(15).describe("Aircraft to return")
+    }, async (a) => {
         try {
-            return textError("Not yet implemented: lookup");
+            return text(await aircraft_near(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("country_flights", {
-        title: "Country flights",
-        description: "Live aircraft registered to one country, with position, altitude, speed and squawk.",
-        inputSchema: z.object({
-            country: z.string().describe("Country name to match, e.g. Germany, France, United States."),
-            limit: z.number().int().min(1).max(25).optional().describe("How many aircraft to list, 1-25. Default 10."),
-        }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement flights locally (paywall removed)
+    server.tool("airport_arrivals", "Arrivals at an airport in a short time window", {
+        airport: z.string().min(4).max(4).describe("ICAO airport code, e.g. EDDF"),
+        hours: z.number().int().min(1).max(2).default(1).describe("Look-back window in hours (max 2)")
+    }, async (a) => {
         try {
-            return textError("Not yet implemented: flights");
+            return text(await airport_arrivals(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
-    });
-    server.registerTool("airspace_summary", {
-        title: "Airspace summary",
-        description: "Global traffic summary right now: totals, altitude distribution and top countries of registration.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await airspaceSummary(args));
-        }
-        catch (e) {
-            return textError(String(e));
-        }
-    });
-    const serverName = "opensky-mcp";
-    server.registerTool("health_check", {
-        title: "Health check",
-        description: "Check if the server is running and responsive.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("OK - server is running");
-    });
-    server.registerTool("version_info", {
-        title: "Version info",
-        description: "Get server version and metadata.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
-    });
-    server.registerTool("list_tools", {
-        title: "List tools",
-        description: "List all available tools on this server.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("See the tools/list response for the full tool list.");
-    });
-    server.registerTool("echo", {
-        title: "Echo",
-        description: "Echo back the provided text.",
-        inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        return text(String(args?.text ?? ""));
     });
     return server;
 }

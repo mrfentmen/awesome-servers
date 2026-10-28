@@ -1,152 +1,149 @@
-const m0 = (() => {
-    const BASE = 'https://opensky-network.org/api/states/all';
-    async function area(args) {
-        const minLat = Number(args.minLat);
-        const minLon = Number(args.minLon);
-        const maxLat = Number(args.maxLat);
-        const maxLon = Number(args.maxLon);
-        if ([minLat, minLon, maxLat, maxLon].some((n) => !Number.isFinite(n)))
-            return 'Provide a valid bounding box.';
-        const limit = Math.max(1, Math.min(args.limit ?? 10, 50));
-        const params = new URLSearchParams({
-            lamin: String(Math.min(minLat, maxLat)),
-            lomin: String(Math.min(minLon, maxLon)),
-            lamax: String(Math.max(minLat, maxLat)),
-            lomax: String(Math.max(minLon, maxLon)),
-        });
-        const res = await fetch(`${BASE}?${params.toString()}`, {
-            headers: { 'User-Agent': 'mrfentmen-opensky-mcp/1.0', Accept: 'application/json' },
-            signal: AbortSignal.timeout(20000),
-        });
-        if (!res.ok)
-            throw new Error(`OpenSky returned ${res.status}`);
-        const d = (await res.json());
-        const states = d.states ?? [];
-        if (!states.length)
-            return 'No flights in that area.';
-        const rows = states.slice(0, limit).map((st) => {
-            const callsign = String(st[1] ?? '').trim() || 'unknown';
-            const alt = Number(st[7] ?? 0);
-            const vel = Number(st[9] ?? 0);
-            const country = String(st[2] ?? '');
-            return `${callsign} | ${country} | ${alt ? (alt * 0.3048).toFixed(0) + ' m' : 'ground'} | ${vel ? Math.round(vel * 1.852) + ' km/h' : ''}`;
-        });
-        return `Flights in area (${rows.length} shown of ${states.length}):\n` + rows.join('\n');
-    }
-    return { area };
-})();
-const m1 = (() => {
-    const BASE = "https://opensky-network.org/api";
-    const UA = "mrfentmen-flights-mcp/1.0 (https://github.com/mrfentmen)";
-    class FlightsError extends Error {
-    }
-    function fmtState(s) {
-        const [icao, callsign, origin, , , lon, lat, alt, onGround, vel, heading] = s;
-        return `${callsign?.trim() || icao} | ${origin ?? "?"} | ${lat?.toFixed(2) ?? "?"}, ${lon?.toFixed(2) ?? "?"} | alt ${Math.round(alt ?? 0)} m | ${onGround ? "on ground" : `airborne ${Math.round(vel ?? 0)} m/s`}${heading ? ` | heading ${Math.round(heading)}` : ""}`;
-    }
-    async function flightsNear(args) {
-        const lat = args.lat ?? 0;
-        const lon = args.lon ?? 0;
-        if (!lat && !lon)
-            throw new FlightsError("Provide lat and lon");
-        const km = args.radius_km ?? 100;
-        const dLat = km / 111;
-        const dLon = km / (111 * Math.max(0.2, Math.cos((lat * Math.PI) / 180)));
-        const res = await fetch(`${BASE}/states/all?lamin=${lat - dLat}&lomin=${lon - dLon}&lamax=${lat + dLat}&lomax=${lon + dLon}`, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(30000) });
-        if (res.status === 429)
-            throw new FlightsError("OpenSky rate limit hit, wait a few seconds");
-        if (!res.ok)
-            throw new FlightsError(`OpenSky error ${res.status}`);
-        const d = await res.json();
-        const states = (d.states ?? []).slice(0, 30);
-        return `${states.length} aircraft near ${lat}, ${lon}\n${states.map(fmtState).join("\n") || "None found"}`;
-    }
-    async function flightsInBox(args) {
-        const res = await fetch(`${BASE}/states/all?lamin=${args.min_lat ?? 0}&lomin=${args.min_lon ?? 0}&lamax=${args.max_lat ?? 0}&lomax=${args.max_lon ?? 0}`, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(30000) });
-        if (res.status === 429)
-            throw new FlightsError("OpenSky rate limit hit, wait a few seconds");
-        if (!res.ok)
-            throw new FlightsError(`OpenSky error ${res.status}`);
-        const d = await res.json();
-        const limit = Math.min(args.limit ?? 25, 50);
-        const states = (d.states ?? []).slice(0, limit);
-        return `${states.length} aircraft in the box\n${states.map(fmtState).join("\n") || "None found"}`;
-    }
-    return { FlightsError, flightsInBox, flightsNear };
-})();
-export const FlightsError = m1.FlightsError;
-export const area = m0.area;
-export const flightsInBox = m1.flightsInBox;
-export const flightsNear = m1.flightsNear;
-export const m0_area = m0.area;
-export const m1_flightsInBox = m1.flightsInBox;
-export const m1_FlightsError = m1.FlightsError;
-export const m1_flightsNear = m1.flightsNear;
-// ---- muxQ tools:
-// The three tools this server shipped with all use a bounding box on
-// /api/states/all. For an anonymous caller OpenSky answers that with
-// states: null - the box filter is not available without an API key. The
-// unfiltered global snapshot is served anyway, several thousand aircraft at a
-// time, and it carries every field a state vector has. These tools work off
-// that snapshot, so they work with no credentials.
-const OSKY_ALL = 'https://opensky-network.org/api/states/all';
-const OSKY_UA = 'mrfentmen-opensky-mcp/1.1';
-async function snapshot() {
-    const res = await fetch(OSKY_ALL, {
-        headers: { 'User-Agent': OSKY_UA, Accept: 'application/json' },
-        signal: AbortSignal.timeout(30000),
-    });
-    if (!res.ok)
-        throw new Error(`OpenSky returned ${res.status}`);
-    const data = (await res.json());
-    if (!data || typeof data !== 'object')
-        throw new Error('OpenSky returned an unexpected body.');
-    if (!Array.isArray(data.states) || !data.states.length) {
-        throw new Error('OpenSky returned an empty state vector snapshot.');
-    }
-    return data;
+/**
+ * OpenSky Network — keyless public API client.
+ */
+const BASE = "https://opensky-network.org/api";
+const SOURCE = "OpenSky Network";
+const UA = "opensky-mcp";
+export class SourceError extends Error {
 }
-/** What the whole sky looks like right now, in one pass. */
-export async function airspaceSummary(_args = {}) {
-    const snap = await snapshot();
-    const all = snap.states ?? [];
-    const airborne = all.filter((v) => v[8] !== true);
-    const ground = all.length - airborne.length;
-    const byCountry = new Map();
-    for (const v of all) {
-        const name = typeof v[2] === 'string' && v[2].trim() ? v[2].trim() : 'not reported';
-        byCountry.set(name, (byCountry.get(name) ?? 0) + 1);
+async function request(path, init, timeoutMs = 25000) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+        const res = await fetch(path.startsWith("http") ? path : BASE + path, {
+            ...init,
+            signal: ctrl.signal,
+            headers: {
+                "user-agent": UA,
+                accept: "application/json",
+                ...init?.headers,
+            },
+        });
+        if (!res.ok)
+            throw new SourceError(`${SOURCE} responded ${res.status}`);
+        return res;
     }
-    const top = [...byCountry.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
-    const bands = [
-        ['below 3000 m', 0, 3000],
-        ['3000-10000 m', 3000, 10000],
-        ['10000-12000 m', 10000, 12000],
-        ['above 12000 m', 12000, Number.POSITIVE_INFINITY],
-    ];
-    const bandLines = [];
-    for (const [label, low, high] of bands) {
-        let count = 0;
-        for (const v of airborne) {
-            const alt = typeof v[13] === 'number' ? v[13] : typeof v[7] === 'number' ? v[7] : null;
-            if (alt === null)
-                continue;
-            if (alt >= low && alt < high)
-                count += 1;
-        }
-        bandLines.push(`${label}: ${count}`);
+    catch (e) {
+        if (e instanceof SourceError)
+            throw e;
+        if (e.name === "AbortError")
+            throw new SourceError(`${SOURCE} request timed out`);
+        throw new SourceError(`${SOURCE} request failed: ${e.message}`);
     }
-    const snapshotAt = typeof snap.time === 'number' ? new Date(snap.time * 1000).toISOString() : 'not reported';
-    return [
-        `Global air traffic snapshot at ${snapshotAt}`,
-        `Aircraft tracked: ${all.length}`,
-        `Airborne: ${airborne.length}`,
-        `On ground: ${ground}`,
-        '',
-        'Altitude distribution (airborne):',
-        ...bandLines.map((line) => `* ${line}`),
-        '',
-        `Top 10 countries of registration (of ${byCountry.size} reported):`,
-        ...top.map(([name, count]) => `* ${name}: ${count}`),
-    ].join('\n');
+    finally {
+        clearTimeout(timer);
+    }
+}
+export async function getJson(path, init) {
+    const res = await request(path, init);
+    const body = await res.text();
+    try {
+        return JSON.parse(body);
+    }
+    catch {
+        throw new SourceError(`${SOURCE} returned malformed JSON`);
+    }
+}
+export async function getText(path, init) {
+    const res = await request(path, init);
+    return await res.text();
+}
+export function clampLimit(n, fallback, max) {
+    const v = n ?? fallback;
+    if (!Number.isInteger(v) || v < 1 || v > max)
+        throw new SourceError(`limit must be between 1 and ${max}`);
+    return v;
+}
+export function clean(s) {
+    return String(s ?? "").replace(/\s+/g, " ").trim();
+}
+export function bullet(label, value) {
+    const v = value === undefined || value === null || value === "" ? "" : String(value);
+    return v ? `${label}: ${v}` : "";
+}
+export function section(title, rows) {
+    return [title, ...rows.filter(Boolean)].join("\n");
+}
+async function optionalJson(path) {
+    try {
+        return await getJson(path);
+    }
+    catch (e) {
+        if (e instanceof SourceError && /responded 404/.test(e.message))
+            return [];
+        throw e;
+    }
+}
+function stateLine(s) {
+    const [icao, callsign, country, , , lon, lat, baro, onGround, velocity, heading] = s;
+    const alt = baro === null || baro === undefined ? "alt ?" : `${Math.round(Number(baro))} m`;
+    return `${clean(icao)} · ${clean(callsign) || "no callsign"} · ${clean(country)} · ${alt} · ${velocity ? `${Math.round(Number(velocity))} m/s` : "speed ?"} · ${heading !== null ? `${Math.round(Number(heading))}°` : "hdg ?"} · ${onGround ? "on ground" : `${Number(lat).toFixed(3)}, ${Number(lon).toFixed(3)}`}`;
+}
+export async function aircraft_in_area(a) {
+    if (a.lamax <= a.lamin)
+        throw new SourceError("lamax must be greater than lamin");
+    if (a.lomax <= a.lomin)
+        throw new SourceError("lomax must be greater than lomin");
+    const limit = clampLimit(a.limit, 15, 50);
+    const d = await getJson(`/states/all?lamin=${a.lamin}&lomin=${a.lomin}&lamax=${a.lamax}&lomax=${a.lomax}`);
+    const states = Array.isArray(d?.states) ? d.states : [];
+    if (!states.length)
+        return `No aircraft in that box right now.`;
+    return section(`${states.length} aircraft in box, showing ${Math.min(limit, states.length)}`, states.slice(0, limit).map((s, i) => `${i + 1}. ${stateLine(s)}`));
+}
+export async function aircraft_state(a) {
+    const icao = clean(a.icao24).toLowerCase();
+    if (!/^[0-9a-f]{6}$/.test(icao))
+        throw new SourceError("icao24 must be six hex characters");
+    const d = await getJson(`/states/all?icao24=${icao}`);
+    const s = Array.isArray(d?.states) ? d.states[0] : null;
+    if (!s)
+        return `Aircraft ${icao} is not transmitting right now.`;
+    return section(`Aircraft ${icao}`, [
+        bullet("Callsign", clean(s[1])),
+        bullet("Country", s[2]),
+        bullet("Position", s[5] !== null && s[6] !== null ? `${s[6]}, ${s[5]}` : "unknown"),
+        bullet("Altitude", s[7] !== null ? `${Math.round(Number(s[7]))} m` : "unknown"),
+        bullet("Velocity", s[9] !== null ? `${Math.round(Number(s[9]))} m/s` : "unknown"),
+        bullet("Heading", s[10] !== null ? `${Math.round(Number(s[10]))}°` : "unknown"),
+        bullet("Vertical rate", s[11] !== null ? `${Number(s[11]).toFixed(1)} m/s` : "unknown"),
+        bullet("Squawk", s[14]),
+        bullet("On ground", s[8] ? "yes" : "no"),
+    ]);
+}
+export async function flight_track(a) {
+    const icao = clean(a.icao24).toLowerCase();
+    const limit = clampLimit(a.limit, 20, 60);
+    const d = await getJson(`/tracks/all?icao24=${icao}&time=0`);
+    const path = Array.isArray(d?.path) ? d.path : [];
+    if (!path.length)
+        return `No recent track for ${icao}.`;
+    const step = Math.max(1, Math.floor(path.length / limit));
+    const picked = path.filter((_, i) => i % step === 0).slice(-limit);
+    return section(`${clean(d.callsign) || icao} · ${path.length} points · ${new Date(Number(d.startTime) * 1000).toISOString()} to ${new Date(Number(d.endTime) * 1000).toISOString()}`, picked.map((p, i) => `${i + 1}. ${new Date(Number(p[0]) * 1000).toISOString().slice(11, 19)}Z · ${Number(p[2]).toFixed(3)}, ${Number(p[1]).toFixed(3)} · ${p[3] !== null ? `${Math.round(Number(p[3]))} m` : "alt ?"}`));
+}
+export async function aircraft_near(a) {
+    const limit = clampLimit(a.limit, 15, 50);
+    const radiusKm = a.radiusKm ?? 100;
+    const dLat = radiusKm / 111;
+    const dLon = radiusKm / (111 * Math.max(0.2, Math.cos((a.lat * Math.PI) / 180)));
+    const d = await getJson(`/states/all?lamin=${a.lat - dLat}&lomin=${a.lon - dLon}&lamax=${a.lat + dLat}&lomax=${a.lon + dLon}`);
+    const states = Array.isArray(d?.states) ? d.states : [];
+    const near = states.filter((s) => s[5] !== null && s[6] !== null);
+    if (!near.length)
+        return `No aircraft within ${radiusKm} km of ${a.lat}, ${a.lon}.`;
+    return section(`${near.length} aircraft within ${radiusKm} km, showing ${Math.min(limit, near.length)}`, near.slice(0, limit).map((s, i) => `${i + 1}. ${stateLine(s)}`));
+}
+export async function airport_arrivals(a) {
+    const airport = clean(a.airport).toUpperCase();
+    if (!/^[A-Z]{4}$/.test(airport))
+        throw new SourceError("airport must be a four-letter ICAO code");
+    const hours = clampLimit(a.hours, 1, 2);
+    const end = Math.floor(Date.now() / 1000);
+    const begin = end - hours * 3600;
+    const d = await optionalJson(`/flights/arrival?airport=${airport}&begin=${begin}&end=${end}`);
+    const rows = Array.isArray(d) ? d : [];
+    if (!rows.length)
+        return `No arrivals recorded at ${airport} in the last ${hours}h.`;
+    return section(`${rows.length} arrival(s) at ${airport} in the last ${hours}h`, rows.slice(0, 20).map((f, i) => `${i + 1}. ${clean(f.callsign) || "?"} from ${clean(f.estDepartureAirport) || "?"} · landed ${new Date(Number(f.lastSeen) * 1000).toISOString().slice(11, 16)}Z`));
 }

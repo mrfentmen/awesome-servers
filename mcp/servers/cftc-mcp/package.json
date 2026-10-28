@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/cftc-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Commitments of Traders reports: positioning by commercials, funds and small traders for futures markets - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/cftc-mcp",

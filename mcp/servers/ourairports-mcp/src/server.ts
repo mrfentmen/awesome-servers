@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { airportsNear, lookupAirport, searchAirports, SourceError } from "./api.js"
+import { airportsNear, lookupAirport, searchAirports, SourceError, airportRunways, airportFrequencies, airportStats } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
@@ -11,7 +11,7 @@ function errorMessage(e: unknown): string {
 }
 
 export function createServer(): McpServer {
-  const server = new McpServer({ name: "ourairports-mcp", version: "1.0.0" })
+  const server = new McpServer({ name: "ourairports-mcp", version: "1.0.2" })
 
   server.tool(
     "lookup_airport",
@@ -57,6 +57,53 @@ export function createServer(): McpServer {
     async (a) => {
       try {
         return text(await airportsNear(a))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
+    }
+  )
+
+server.tool(
+    "airport_runways",
+    "Runways for an airport.",
+    {
+      code: z.string().min(3).describe("IATA, ICAO or ident code"),
+      limit: z.number().int().min(1).max(20).default(6).describe("Runways to return")
+    },
+    async (a) => {
+      try {
+        return text(await airportRunways(a))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
+    }
+  )
+
+  server.tool(
+    "airport_frequencies",
+    "Radio frequencies for an airport.",
+    {
+      code: z.string().min(3).describe("IATA, ICAO or ident code"),
+      limit: z.number().int().min(1).max(30).default(10).describe("Frequencies to return")
+    },
+    async (a) => {
+      try {
+        return text(await airportFrequencies(a))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
+    }
+  )
+
+  server.tool(
+    "airport_stats",
+    "Airport counts by type for a country or the world.",
+    {
+      country: z.string().length(2).optional().describe("Two-letter ISO country code, e.g. US")
+    },
+    async (a) => {
+      try {
+        return text(await airportStats(a))
       } catch (e) {
         return fail(errorMessage(e))
       }

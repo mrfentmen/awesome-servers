@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/ofac-sanctions-mcp",
+  "version": "1.0.1",
+  "description": "OFAC sanctions screening: search the SDN and consolidated lists by name, program or entity type and pull one entry by its OFAC number.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/ofac-sanctions-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "ofac-sanctions-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "sanctions",
+    "ofac",
+    "compliance",
+    "kyc",
+    "treasury",
+    "sdn",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

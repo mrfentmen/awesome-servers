@@ -1,24 +1,44 @@
 {
-  "name": "opensky-mcp",
-  "version": "1.0.2",
-  "description": "OpenSky live aircraft positions.",
+  "name": "@mrfentmen/opensky-mcp",
+  "version": "1.0.1",
+  "description": "Live aircraft positions, flight tracks and airport arrivals from the OpenSky Network - keyless.",
   "type": "module",
-  "main": "dist/index.js",
+  "mcpName": "io.github.mrfentmen/opensky-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "opensky-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "aviation",
+    "flights",
+    "aircraft",
+    "tracking",
+    "transport",
+    "adsb",
+    "keyless"
+  ],
+  "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "zod": "^3.23.0"
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5.5.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
   },
-  "license": "MIT",
   "engines": {
     "node": ">=20"
-  },
-  "mcpName": "io.github.mrfentmen/opensky-mcp"
+  }
 }

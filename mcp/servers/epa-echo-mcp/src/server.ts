@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { enforcementTotals, facilitySite, searchFacilities, SourceError } from "./api.js"
+import { facilities_in_state, facilities_by_zip, facilities_by_city, facilities_by_name, facility_detail, SourceError } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
 const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
@@ -11,19 +11,19 @@ function errorMessage(e: unknown): string {
 }
 
 export function createServer(): McpServer {
-  const server = new McpServer({ name: "epa-echo-mcp", version: "1.0.0" })
+  const server = new McpServer({ name: "epa-echo-mcp", version: "1.0.2" })
 
   server.tool(
-    "search_facilities",
-    "Find EPA-regulated facilities in a state, optionally filtered to one city.",
+    "facilities_in_state",
+    "Regulated facilities in a US state, with compliance status",
     {
-      state: z.string().length(2).describe('Two-letter state code, e.g. "RI"'),
-      city: z.string().min(2).optional().describe('City name, e.g. "Providence"'),
-      limit: z.number().int().min(1).max(50).default(15).describe("Facilities to return")
+      state: z.string().length(2).describe("Two letter state code, e.g. RI"),
+      activeOnly: z.boolean().default(true).describe("Only currently active facilities"),
+      limit: z.number().int().min(1).max(100).default(25).describe("Maximum facilities")
     },
     async (a) => {
       try {
-        return text(await searchFacilities(a))
+        return text(await facilities_in_state(a))
       } catch (e) {
         return fail(errorMessage(e))
       }
@@ -31,14 +31,15 @@ export function createServer(): McpServer {
   )
 
   server.tool(
-    "enforcement_totals",
-    "Enforcement and compliance row counts and total penalties for a state's facilities.",
+    "facilities_by_zip",
+    "Regulated facilities in one US ZIP code",
     {
-      state: z.string().length(2).describe('Two-letter state code, e.g. "RI"')
+      zip: z.string().regex(/^\d{5}$/).describe("Five digit ZIP code"),
+      limit: z.number().int().min(1).max(100).default(25).describe("Maximum facilities")
     },
     async (a) => {
       try {
-        return text(await enforcementTotals(a))
+        return text(await facilities_by_zip(a))
       } catch (e) {
         return fail(errorMessage(e))
       }
@@ -46,14 +47,48 @@ export function createServer(): McpServer {
   )
 
   server.tool(
-    "facility_site",
-    "FRS facility site record (address, county, federal agency) by EPA registry ID.",
+    "facilities_by_city",
+    "Regulated facilities in one city",
     {
-      registryId: z.string().min(9).describe('EPA FRS registry ID, e.g. "110064359199"')
+      city: z.string().min(2).describe("City name, e.g. Warwick"),
+      state: z.string().length(2).describe("Two letter state code"),
+      limit: z.number().int().min(1).max(100).default(25).describe("Maximum facilities")
     },
     async (a) => {
       try {
-        return text(await facilitySite(a))
+        return text(await facilities_by_city(a))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
+    }
+  )
+
+  server.tool(
+    "facilities_by_name",
+    "Search facilities by name fragment",
+    {
+      name: z.string().min(2).describe("Facility name fragment"),
+      state: z.string().length(2).optional().describe("Optional two letter state code"),
+      limit: z.number().int().min(1).max(100).default(25).describe("Maximum facilities")
+    },
+    async (a) => {
+      try {
+        return text(await facilities_by_name(a))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
+    }
+  )
+
+  server.tool(
+    "facility_detail",
+    "Full ECHO record for one facility by registry id",
+    {
+      registryId: z.string().min(6).describe("ECHO registry id, e.g. 110058931018")
+    },
+    async (a) => {
+      try {
+        return text(await facility_detail(a))
       } catch (e) {
         return fail(errorMessage(e))
       }

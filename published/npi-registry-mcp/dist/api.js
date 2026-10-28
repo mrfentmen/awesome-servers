@@ -132,3 +132,46 @@ export async function searchProviders(a) {
         ...rows.map(describeProvider),
     ].join("\n\n");
 }
+export async function searchOrganizations(a) {
+    const name = clean(a.name);
+    if (name.length < 2)
+        throw new SourceError("name must be at least 2 characters");
+    const d = await getJson(npiQuery({
+        enumeration_type: "NPI-2",
+        organization_name: name,
+        state: a.state ? clean(a.state).toUpperCase() : undefined,
+        city: a.city ? clean(a.city) : undefined,
+        limit: a.limit,
+    }));
+    const rows = d?.results ?? [];
+    if (!rows.length)
+        return `The NPI Registry returned no organisation for "${name}".`;
+    return [`${d?.result_count ?? rows.length} organisation(s) match, showing ${rows.length}:`, "", ...rows.map(describeProvider)].join("\n\n");
+}
+export async function providersByTaxonomy(a) {
+    const tax = clean(a.taxonomy);
+    if (tax.length < 3)
+        throw new SourceError("taxonomy must be at least 3 characters");
+    const d = await getJson(npiQuery({
+        taxonomy_description: tax,
+        state: a.state ? clean(a.state).toUpperCase() : undefined,
+        limit: a.limit,
+    }));
+    const rows = d?.results ?? [];
+    if (!rows.length)
+        return `The NPI Registry returned no providers for taxonomy "${tax}".`;
+    return [`${d?.result_count ?? rows.length} provider(s) with taxonomy "${tax}", showing ${rows.length}:`, "", ...rows.map(describeProvider)].join("\n\n");
+}
+export async function providersByCity(a) {
+    const city = clean(a.city);
+    const state = clean(a.state).toUpperCase();
+    if (city.length < 2)
+        throw new SourceError("city must be at least 2 characters");
+    if (!/^[A-Z]{2}$/.test(state))
+        throw new SourceError("state must be two letters");
+    const d = await getJson(npiQuery({ city, state, limit: a.limit }));
+    const rows = d?.results ?? [];
+    if (!rows.length)
+        return `The NPI Registry returned no providers in ${city}, ${state}.`;
+    return [`${d?.result_count ?? rows.length} provider(s) in ${city}, ${state}, showing ${rows.length}:`, "", ...rows.map(describeProvider)].join("\n\n");
+}

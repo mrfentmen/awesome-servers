@@ -16,3 +16,14 @@ export declare function compareStates(a: {
     stateFips: number[];
     date: string;
 }): Promise<string>;
+export declare function countyDrought(a: {
+    countyFips: string;
+    date: string;
+}): Promise<string>;
+export declare function nationalSummary(a: {
+    date: string;
+}): Promise<string>;
+export declare function droughtTrend(a: {
+    stateFips: number;
+    weeks: number;
+}): Promise<string>;

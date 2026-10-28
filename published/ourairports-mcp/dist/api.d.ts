@@ -20,3 +20,14 @@ export declare function airportsNear(a: {
     radiusKm: number;
     limit: number;
 }): Promise<string>;
+export declare function airportRunways(a: {
+    code: string;
+    limit: number;
+}): Promise<string>;
+export declare function airportFrequencies(a: {
+    code: string;
+    limit: number;
+}): Promise<string>;
+export declare function airportStats(a: {
+    country?: string;
+}): Promise<string>;

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/drought-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "US Drought Monitor statistics: drought severity shares by state, weekly, straight from the USDM API - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/drought-mcp",

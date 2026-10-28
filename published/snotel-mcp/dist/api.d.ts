@@ -16,3 +16,15 @@ export declare function stationReadings(a: {
     elements: string;
     days?: number;
 }): Promise<string>;
+export declare function stationMetadata(a: {
+    stationTriplet: string;
+}): Promise<string>;
+export declare function peakSnowWaterEquivalent(a: {
+    stationTriplet: string;
+    year: number;
+}): Promise<string>;
+export declare function snowSummary(a: {
+    state: string;
+    network: string;
+    limit: number;
+}): Promise<string>;

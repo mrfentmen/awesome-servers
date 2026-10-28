@@ -114,3 +114,66 @@ export async function searchMarkets(a: { query: string; limit: number }): Promis
   if (!rows.length) return `No CFTC market matches "${q}".`
   return [`${rows.length} markets matching "${q}":`, ...rows.map((r, i) => `${i + 1}. ${r.market_and_exchange_names}`)].join("\n")
 }
+
+async function latestReportDate(): Promise<string> {
+  const d = await getJson("?$select=max(report_date_as_yyyy_mm_dd)")
+  const raw = Array.isArray(d) ? d[0]?.max_report_date_as_yyyy_mm_dd : ""
+  if (!raw) throw new SourceError("CFTC returned no report date")
+  return String(raw)
+}
+
+async function rowsForDate(date: string): Promise<Cot[]> {
+  const where = encodeURIComponent(`report_date_as_yyyy_mm_dd='${date}'`)
+  const d = await getJson(`?$where=${where}&$limit=5000`)
+  const rows: Cot[] = Array.isArray(d) ? d : []
+  if (!rows.length) throw new SourceError(`CFTC has no rows for ${date.slice(0, 10)}`)
+  return rows
+}
+
+export async function positioningExtremes(a: { limit: number }): Promise<string> {
+  const date = await latestReportDate()
+  const rows = await rowsForDate(date)
+  const ranked = rows
+    .map((r) => ({ market: clean(r.market_and_exchange_names), net: num(r.noncomm_positions_long_all) - num(r.noncomm_positions_short_all), oi: num(r.open_interest_all) }))
+    .filter((r) => r.oi > 0 && r.market)
+    .sort((x, y) => y.net - x.net)
+  if (!ranked.length) throw new SourceError("CFTC returned no usable rows")
+  const top = ranked.slice(0, a.limit)
+  const bottom = ranked.slice(-a.limit).reverse()
+  return [
+    `Most net-long non-commercial positioning · report ${date.slice(0, 10)}`,
+    ...top.map((r, i) => `${i + 1}. ${r.market} · net ${fmt(r.net)} · open interest ${fmt(r.oi)}`),
+    "",
+    `Most net-short non-commercial positioning`,
+    ...bottom.map((r, i) => `${i + 1}. ${r.market} · net ${fmt(r.net)} · open interest ${fmt(r.oi)}`),
+  ].join("\n")
+}
+
+export async function openInterestLeaders(a: { limit: number }): Promise<string> {
+  const date = await latestReportDate()
+  const rows = await rowsForDate(date)
+  const ranked = rows
+    .map((r) => ({ market: clean(r.market_and_exchange_names), oi: num(r.open_interest_all) }))
+    .filter((r) => r.oi > 0 && r.market)
+    .sort((x, y) => y.oi - x.oi)
+    .slice(0, a.limit)
+  if (!ranked.length) throw new SourceError("CFTC returned no usable rows")
+  return [`Largest open interest · report ${date.slice(0, 10)}`, ...ranked.map((r, i) => `${i + 1}. ${r.market} · ${fmt(r.oi)} contracts`)].join("\n")
+}
+
+export async function cotAverages(a: { market: string; weeks: number }): Promise<string> {
+  const rows = await fetchRows(a.market, a.weeks)
+  if (!rows.length) return `CFTC has no market matching "${a.market}".`
+  const avg = (pick: (r: Cot) => number) => rows.reduce((n, r) => n + pick(r), 0) / rows.length
+  const longAvg = avg((r) => num(r.noncomm_positions_long_all))
+  const shortAvg = avg((r) => num(r.noncomm_positions_short_all))
+  const oiAvg = avg((r) => num(r.open_interest_all))
+  return [
+    `Average positioning over ${rows.length} week(s) for "${a.market}"`,
+    `Non-commercial long: ${fmt(Math.round(longAvg))}`,
+    `Non-commercial short: ${fmt(Math.round(shortAvg))}`,
+    `Net non-commercial: ${fmt(Math.round(longAvg - shortAvg))}`,
+    `Open interest: ${fmt(Math.round(oiAvg))}`,
+    `Window: ${String(rows[rows.length - 1].report_date_as_yyyy_mm_dd).slice(0, 10)} to ${String(rows[0].report_date_as_yyyy_mm_dd).slice(0, 10)}`,
+  ].join("\n")
+}
