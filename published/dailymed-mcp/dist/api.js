@@ -1,71 +1,108 @@
+/**
+ * DailyMed — keyless public API client.
+ */
 const BASE = "https://dailymed.nlm.nih.gov/dailymed/services/v2";
-const UA = "mrfentmen-dailymed-mcp/1.0 (https://github.com/mrfentmen)";
-export class DailymedError extends Error {
+const SOURCE = "DailyMed";
+export class SourceError extends Error {
 }
-async function get(url) {
-    const res = await fetch(url, {
-        headers: { "User-Agent": UA, Accept: "application/json" },
-        signal: AbortSignal.timeout(30000),
-    });
-    if (!res.ok)
-        throw new DailymedError(`DailyMed returned HTTP ${res.status}`);
-    return (await res.json());
-}
-export async function search(args) {
-    const name = (args.drugName ?? "").trim();
-    if (!name)
-        throw new DailymedError("Provide a drug name");
-    const limit = Math.min(args.limit ?? 10, 20);
-    const d = await get(`${BASE}/spls.json?drug_name=${encodeURIComponent(name)}&pagesize=${limit}`);
-    const list = (d?.data ?? []);
-    const total = d?.metadata?.total ?? list.length;
-    if (!list.length)
-        return `No labels found for \"${name}\"`;
-    return `DailyMed labels for \"${name}\" (${total} total):\n` + list.map((s, i) => {
-        const date = s?.published_date ? s.published_date.slice(0, 10) : "";
-        return `${i + 1}. ${s?.title ?? "untitled"} | ${date} | set ${s?.setid ?? ""}`;
-    }).join("\n");
-}
-export async function spl(args) {
-    const setId = (args.setId ?? "").trim();
-    if (!setId)
-        throw new DailymedError("Provide a DailyMed set ID");
-    const d = await get(`${BASE}/spls/${encodeURIComponent(setId)}.json`);
-    const s = d?.data?.[0] ?? d;
-    if (!s?.setid && !s?.title)
-        throw new DailymedError(`Label not found: ${setId}`);
-    const lines = [
-        `Title: ${s?.title ?? "n/a"}`,
-        `Set ID: ${s?.setid ?? setId}`,
-        `Published: ${s?.published_date?.slice(0, 10) ?? "n/a"}`,
-        `Version: ${s?.spl_version ?? "n/a"}`,
-    ];
-    const active = s?.active_ingredients;
-    if (Array.isArray(active) && active.length) {
-        lines.push(`Active ingredients: ${active.map((a) => `${a?.name ?? ""} ${a?.strength ?? ""}`.trim()).filter(Boolean).join("; ")}`);
+async function request(path, accept = "application/json", timeoutMs = 25000) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+        const res = await fetch(path.startsWith("http") ? path : BASE + path, {
+            signal: ctrl.signal,
+            headers: { "user-agent": "dailymed-mcp", accept },
+        });
+        if (!res.ok)
+            throw new SourceError(`${SOURCE} responded ${res.status}`);
+        return res;
     }
-    const indication = s?.indications_and_usage;
-    if (typeof indication === "object" && indication && indication.indications_and_usage) {
-        lines.push(`\nIndications: ${String(indication.indications_and_usage).slice(0, 500)}`);
+    catch (e) {
+        if (e instanceof SourceError)
+            throw e;
+        if (e.name === "AbortError")
+            throw new SourceError(`${SOURCE} request timed out`);
+        throw new SourceError(`${SOURCE} request failed: ${e.message}`);
     }
-    return lines.join("\n");
+    finally {
+        clearTimeout(timer);
+    }
 }
-export async function drugNames(args) {
-    const q = (args.query ?? "").trim();
-    if (!q)
-        throw new DailymedError("Provide part of a drug name");
-    const limit = Math.max(1, Math.min(Math.trunc(args.limit ?? 10) || 10, 25));
-    const d = await get(`${BASE}/drugnames.json?drug_name=${encodeURIComponent(q)}&pagesize=${limit}`);
-    const list = d?.data ?? [];
-    if (!list.length)
-        return `DailyMed has no drug names matching "${q}".`;
-    // DailyMed marks G for generic and B for brand; anything else is reported as
-    // unclassified rather than guessed at.
-    const kind = (t) => t === "G" ? "generic" : t === "B" ? "brand" : "unclassified";
+export async function getJson(path) {
+    const res = await request(path);
+    const body = await res.text();
+    try {
+        return JSON.parse(body);
+    }
+    catch {
+        throw new SourceError(`${SOURCE} returned malformed JSON`);
+    }
+}
+export async function getText(path, accept = "text/plain") {
+    const res = await request(path, accept);
+    return (await res.text()).trim();
+}
+export function clampLimit(n, fallback, max) {
+    const v = n ?? fallback;
+    if (!Number.isInteger(v) || v < 1 || v > max)
+        throw new SourceError(`limit must be between 1 and ${max}`);
+    return v;
+}
+export function clean(s) {
+    return String(s ?? "").replace(/\s+/g, " ").trim();
+}
+export function bullet(label, value) {
+    const v = value === undefined || value === null || value === "" ? "" : String(value);
+    return v ? `${label}: ${v}` : "";
+}
+export function section(title, rows) {
+    return [title, ...rows.filter(Boolean)].join("\n");
+}
+export async function searchLabels(a) {
+    const name = clean(a.drugName);
+    if (name.length < 2)
+        throw new SourceError("drugName must be at least 2 characters");
+    const limit = a.limit ?? 10;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 25)
+        throw new SourceError("limit must be between 1 and 25");
+    const d = await getJson(`/spls.json?drug_name=${encodeURIComponent(name)}&pagesize=${limit}`);
+    const rows = d?.data ?? [];
+    if (!rows.length)
+        return `DailyMed has no label for "${name}".`;
     return [
-        `DailyMed drug names matching "${q}" (${d?.metadata?.total ?? list.length} total, showing ${list.length}):`,
-        ...list
-            .slice(0, limit)
-            .map((n, i) => `      ${String(i + 1).padStart(2)}. [${kind(n.name_type)}] ${n.drug_name ?? "not reported"}`),
+        `DailyMed labels for "${name}" (${d?.metadata?.total_elements ?? rows.length} total, showing ${rows.length}):`,
+        "",
+        ...rows.map((r) => [
+            clean(r.title) || "untitled label",
+            `  set id ${clean(r.setid)}${r.spl_version ? ` · version ${r.spl_version}` : ""}${r.published_date ? ` · published ${clean(r.published_date)}` : ""}`,
+            Array.isArray(r.ingredients) && r.ingredients.length ? `  ingredients: ${r.ingredients.slice(0, 4).map((i) => clean(i.name)).filter(Boolean).join(", ")}` : "",
+        ].filter(Boolean).join("\n")),
     ].join("\n");
+}
+export async function labelPackages(a) {
+    const id = clean(a.setId);
+    if (!/^[0-9a-f-]{8,}$/i.test(id))
+        throw new SourceError("setId must be an SPL set id from search_labels");
+    const limit = a.limit ?? 20;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 40)
+        throw new SourceError("limit must be between 1 and 40");
+    const packaged = await getJson(`/spls/${encodeURIComponent(id)}/packaging.json`);
+    const data = packaged?.data;
+    if (!data)
+        throw new SourceError(`DailyMed has no label with set id ${id}`);
+    const products = data.products ?? [];
+    const allPackaging = products.flatMap((p) => (Array.isArray(p.packaging) ? p.packaging : []));
+    const ndcs = allPackaging.map((p) => clean(p.ndc)).filter(Boolean);
+    const descriptions = allPackaging
+        .flatMap((p) => (Array.isArray(p.package_descriptions) ? p.package_descriptions : []))
+        .map((x) => clean(x))
+        .filter(Boolean);
+    return [
+        clean(data.title) || `Label ${id}`,
+        data.published_date ? `Published: ${clean(data.published_date)}${data.spl_version ? ` · version ${data.spl_version}` : ""}` : "",
+        ndcs.length ? `NDC codes (${ndcs.length}, showing ${Math.min(limit, ndcs.length)}): ${ndcs.slice(0, limit).join(", ")}` : "No NDC codes listed for this label.",
+        products.length ? `Products: ${products.length}` : "",
+        descriptions.length ? `Packages: ${[...new Set(descriptions)].slice(0, 6).join(" | ")}` : "",
+        `Label: https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=${id}`,
+    ].filter(Boolean).join("\n");
 }

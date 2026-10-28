@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/arxiv-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "arXiv: 2.4M+ preprints - search, fetch by id, browse authors, latest per category - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/arxiv-mcp",

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/toml-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Read, write and query TOML configuration files: parse TOML to JSON, emit TOML from JSON, and pull one value out by path. Runs locally, no network.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/toml-mcp",

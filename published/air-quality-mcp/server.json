@@ -1,16 +1,16 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/air-quality-mcp",
-  "description": "Live air quality index and pollutant levels for any location. No key required.",
+  "description": "Open-Meteo air quality: AQI, PM2.5, ozone, NO2 and pollen forecasts for any coordinate - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/air-quality-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "air-quality-mcp",
+      "identifier": "@mrfentmen/air-quality-mcp",
       "version": "1.0.1",
       "transport": {
         "type": "stdio"

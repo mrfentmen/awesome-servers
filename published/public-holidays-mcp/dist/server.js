@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { HolidayError, countryInfo, holidayOnDate, holidaysForYear, isToday, listCountries, longWeekends, upcoming, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof HolidayError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -16,7 +17,7 @@ export function createServer() {
             return text(await listCountries());
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("upcoming_holidays", "The next public holidays in a country, with day counts.", { country }, async ({ country: c }) => {
@@ -24,7 +25,7 @@ export function createServer() {
             return text(await upcoming(c));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("holidays_by_year", "Every public holiday in a country for one year.", { country, year }, async ({ country: c, year: y }) => {
@@ -32,7 +33,7 @@ export function createServer() {
             return text(await holidaysForYear(c, y));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("is_today_holiday", "Whether today is a public holiday in a country, and which one.", { country }, async ({ country: c }) => {
@@ -40,7 +41,7 @@ export function createServer() {
             return text(await isToday(c));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("holiday_on_date", "Whether one exact date is a public holiday in a country.", { country, date: z.string().describe("Date as YYYY-MM-DD") }, async ({ country: c, date }) => {
@@ -48,7 +49,7 @@ export function createServer() {
             return text(await holidayOnDate(c, date));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("long_weekends", "Long weekends in a country for a year, with bridge days.", { country, year }, async ({ country: c, year: y }) => {
@@ -56,7 +57,7 @@ export function createServer() {
             return text(await longWeekends(c, y));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("country_info", "Country name, official name, region and bordering countries.", { country }, async ({ country: c }) => {
@@ -64,7 +65,7 @@ export function createServer() {
             return text(await countryInfo(c));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

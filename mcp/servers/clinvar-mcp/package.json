@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/clinvar-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ClinVar variant interpretations from NCBI: search variants by gene or condition and read classifications - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/clinvar-mcp",

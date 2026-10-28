@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { proteinFeatures, proteinRecord, proteinsByTaxon, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -16,7 +17,7 @@ export function createServer() {
             return text(await proteinRecord(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("proteins_by_taxon", "Proteins recorded for a species by NCBI taxon ID.", {
@@ -27,7 +28,7 @@ export function createServer() {
             return text(await proteinsByTaxon(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("protein_features", "Annotated sequence features such as domains and active sites.", {
@@ -38,7 +39,7 @@ export function createServer() {
             return text(await proteinFeatures(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

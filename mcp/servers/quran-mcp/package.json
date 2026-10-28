@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/quran-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Quran text and translations: read a surah, one ayah by reference, the chapter list and available editions - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/quran-mcp",

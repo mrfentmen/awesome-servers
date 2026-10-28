@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { airportsNear, lookupAirport, searchAirports, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -16,7 +17,7 @@ export function createServer() {
             return text(await lookupAirport(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("search_airports", "Search airports by name, city or code fragment.", {
@@ -28,7 +29,7 @@ export function createServer() {
             return text(await searchAirports(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("airports_near", "Airports within a radius of a latitude and longitude.", {
@@ -41,7 +42,7 @@ export function createServer() {
             return text(await airportsNear(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

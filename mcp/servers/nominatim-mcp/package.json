@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/nominatim-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Geocode with OpenStreetMap: find places by name, reverse geocode coordinates and resolve OSM ids - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nominatim-mcp",

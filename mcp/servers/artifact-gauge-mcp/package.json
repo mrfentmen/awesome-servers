@@ -1,6 +1,6 @@
 {
   "name": "artifact-gauge-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Local build artifact size and dependency weight inspection without file content output.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/artifact-gauge-mcp",

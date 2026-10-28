@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/license-boundary-mcp",
-  "description": "Summarize local license evidence and uncertainty without returning package names, license text,...",
+  "description": "Summarize local license evidence and uncertainty without returning package names, license text, paths, or source.",
   "repository": {
     "url": "https://github.com/mrfentmen/license-boundary-mcp",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "license-boundary-mcp",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       }

@@ -20,5 +20,9 @@
   "engines": {
     "node": ">=20"
   },
-  "mcpName": "io.github.mrfentmen/placeholder-images-mcp"
+  "mcpName": "io.github.mrfentmen/placeholder-images-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  }
 }

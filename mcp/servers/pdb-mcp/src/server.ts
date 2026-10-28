@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof PdbError || e instanceof Error) return `Error: ${e.message}`
@@ -32,7 +33,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchStructures(query, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -45,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await structureSummary(pdbId))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -58,7 +59,7 @@ export function createServer(): McpServer {
       try {
         return text(await structureChains(pdbId))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -71,7 +72,7 @@ export function createServer(): McpServer {
       try {
         return text(await structureLigands(pdbId))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -84,7 +85,7 @@ export function createServer(): McpServer {
       try {
         return text(await ligandInfo(compId))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -97,7 +98,7 @@ export function createServer(): McpServer {
       try {
         return text(await structureCitation(pdbId))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

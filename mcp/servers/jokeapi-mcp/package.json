@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/jokeapi-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Jokes from JokeAPI across categories, with safe mode, one-liners and two-part setups - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/jokeapi-mcp",

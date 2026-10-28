@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { daily, describeSite, instantaneous, PARAMETERS, seriesLines, siteInfo, sitesInState, WaterError, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof WaterError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -17,7 +18,7 @@ export function createServer() {
             return text(rows.slice(0, 10).map(describeSite).join("\n"));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("latest_reading", "The most recent instantaneous reading at a USGS gauge.", {
@@ -29,7 +30,7 @@ export function createServer() {
             return text(seriesLines(series, 3));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("readings_over_time", "Instantaneous readings for a gauge over the last N days.", {
@@ -41,7 +42,7 @@ export function createServer() {
             return text(seriesLines(await instantaneous(site, parameter, days), 40));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("daily_values", "Daily mean values for a gauge over the last N days.", {
@@ -53,7 +54,7 @@ export function createServer() {
             return text(seriesLines(await daily(site, parameter, days), 60));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("find_sites_in_state", "Find stream gauges with live data in a US state.", {
@@ -67,7 +68,7 @@ export function createServer() {
             return text(rows.map(describeSite).join("\n"));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("parameter_lookup", "Explain a USGS parameter code, or list the common ones.", { code: z.string().optional().describe("Parameter code, e.g. 00065; omit to list all") }, async ({ code }) => {

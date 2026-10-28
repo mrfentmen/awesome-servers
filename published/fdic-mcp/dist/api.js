@@ -1,99 +1,149 @@
-const UA = "mrfentmen-fdic-mcp/1.0 (https://github.com/mrfentmen)";
-export class FdicError extends Error {
+/**
+ * FDIC Bank Data — keyless public API client.
+ */
+const BASE = "https://api.fdic.gov/banks";
+const SOURCE = "FDIC Bank Data";
+export class SourceError extends Error {
 }
-async function request(path) {
-    const res = await fetch(`https://api.fdic.gov${path}`, {
-        headers: { "User-Agent": UA },
-        signal: AbortSignal.timeout(25000),
-    });
-    if (!res.ok)
-        throw new FdicError(`FDIC error ${res.status}`);
-    return (await res.json());
+async function request(path, accept = "application/json", timeoutMs = 25000) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+        const res = await fetch(path.startsWith("http") ? path : BASE + path, {
+            signal: ctrl.signal,
+            headers: { "user-agent": "fdic-mcp", accept },
+        });
+        if (!res.ok)
+            throw new SourceError(`${SOURCE} responded ${res.status}`);
+        return res;
+    }
+    catch (e) {
+        if (e instanceof SourceError)
+            throw e;
+        if (e.name === "AbortError")
+            throw new SourceError(`${SOURCE} request timed out`);
+        throw new SourceError(`${SOURCE} request failed: ${e.message}`);
+    }
+    finally {
+        clearTimeout(timer);
+    }
 }
-function money(v) {
-    const n = Number(v);
-    if (!Number.isFinite(n) || n <= 0)
-        return "n/a";
-    return `$${(n * 1000).toLocaleString()}`; // FDIC reports assets and deposits in thousands of dollars
+export async function getJson(path) {
+    const res = await request(path);
+    const body = await res.text();
+    try {
+        return JSON.parse(body);
+    }
+    catch {
+        throw new SourceError(`${SOURCE} returned malformed JSON`);
+    }
 }
-function fmt(rows) {
-    return rows
-        .map((r) => {
-        const d = r.data ?? r;
-        return `${d.NAME ?? ""} | ${d.CITY ?? ""}, ${d.STNAME ?? ""}\n  Assets ${money(d.ASSET)} | Deposits ${money(d.DEP)}`;
-    })
-        .join("\n\n");
+export async function getText(path, accept = "text/plain") {
+    const res = await request(path, accept);
+    return (await res.text()).trim();
 }
-export async function institutions(args) {
-    const limit = Math.min(args.limit ?? 10, 50);
-    const name = args.name?.trim() ?? "";
-    const filter = name ? `&filters=NAME:(${encodeURIComponent(name)}*)` : "";
-    const d = await request(`/banks/institutions?limit=${limit}&fields=NAME,CITY,STNAME,ASSET,DEP${filter}&sort_by=ASSET&sort_order=DESC`);
-    const rows = d.data ?? [];
-    return `FDIC insured institutions (${d.meta?.total ?? rows.length} matched)\n${fmt(rows) || "None found"}`;
+export function clampLimit(n, fallback, max) {
+    const v = n ?? fallback;
+    if (!Number.isInteger(v) || v < 1 || v > max)
+        throw new SourceError(`limit must be between 1 and ${max}`);
+    return v;
 }
-export async function largestBanks(args) {
-    const limit = Math.min(args.limit ?? 10, 50);
-    const d = await request(`/banks/institutions?limit=${limit}&fields=NAME,CITY,STNAME,ASSET,DEP&sort_by=ASSET&sort_order=DESC`);
-    const rows = d.data ?? [];
-    return `Largest FDIC insured institutions\n${fmt(rows)}`;
+export function clean(s) {
+    return String(s ?? "").replace(/\s+/g, " ").trim();
 }
-export async function failures(args) {
-    const limit = Math.min(args.limit ?? 10, 50);
-    const d = await request(`/banks/failures?limit=${limit}&sort_by=FAILDATE&sort_order=DESC`);
-    const rows = d.data ?? [];
+export function bullet(label, value) {
+    const v = value === undefined || value === null || value === "" ? "" : String(value);
+    return v ? `${label}: ${v}` : "";
+}
+export function section(title, rows) {
+    return [title, ...rows.filter(Boolean)].join("\n");
+}
+const FIELDS = "NAME,CERT,CITY,STALP,ASSET,DEPOSITS,ACTIVE,ESTYMD,WEBADDR,BKCLASS,OFFICES,NETINC,INSDATE";
+function rowsOf(d) {
+    const rows = Array.isArray(d?.data) ? d.data : [];
+    return rows.map((r) => r?.data ?? r).filter((r) => r && r.NAME);
+}
+function millions(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n))
+        return "?";
+    if (n >= 1_000_000)
+        return `$${(n / 1_000_000).toFixed(2)}B`;
+    if (n >= 1000)
+        return `$${(n / 1000).toFixed(1)}M`;
+    return `$${n}K`;
+}
+function detailLine(r) {
+    const status = Number(r.ACTIVE) === 1 ? "active" : "inactive";
+    return [
+        `${clean(r.NAME)} (FDIC cert ${r.CERT})`,
+        `  ${clean(r.CITY)}, ${clean(r.STALP)} · ${status}${r.ESTYMD ? ` · established ${clean(r.ESTYMD)}` : ""}${r.INSDATE ? ` · insured since ${clean(r.INSDATE)}` : ""}`,
+        `  assets ${millions(r.ASSET)} · deposits ${millions(r.DEPOSITS)}${r.OFFICES ? ` · ${r.OFFICES} office(s)` : ""}${Number(r.NETINC) ? ` · net income ${millions(r.NETINC)}` : ""}`,
+        r.WEBADDR ? `  ${clean(r.WEBADDR)}` : "",
+    ].filter(Boolean).join("\n");
+}
+function filtersFor(parts) {
+    if (!parts.length)
+        throw new SourceError("give at least one filter");
+    return encodeURIComponent(parts.join(" AND "));
+}
+export async function searchInstitutions(a) {
+    const limit = a.limit ?? 5;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 20)
+        throw new SourceError("limit must be between 1 and 20");
+    const parts = [];
+    if (a.name) {
+        const name = clean(a.name);
+        if (name.length < 2)
+            throw new SourceError("name must be at least 2 characters");
+        if (/[:,()]/.test(name))
+            throw new SourceError("name must not contain filter punctuation");
+        parts.push(`NAME:*${name}*`);
+    }
+    if (a.state) {
+        const state = clean(a.state).toUpperCase();
+        if (!/^[A-Z]{2}$/.test(state))
+            throw new SourceError("state must be a two-letter code");
+        parts.push(`STALP:${state}`);
+    }
+    const d = await getJson(`/institutions?filters=${filtersFor(parts)}&fields=${FIELDS}&limit=${limit}&format=json`);
+    const rows = rowsOf(d);
     if (!rows.length)
-        return "No bank failures found.";
-    return rows.map((r) => {
-        const f = r.data ?? r;
-        return `${f.NAME ?? ""} | ${f.CITY ?? ""}, ${f.STNAME ?? ""} | Failed ${f.FAILDATE ?? "?"} | Acquirer: ${f.ACQINSTITUTION ?? "none"}`;
-    }).join("\n\n");
+        return `The FDIC has no institution matching those filters.`;
+    return [
+        `${d?.meta?.total ?? rows.length} institution(s) match, showing ${rows.length} (asset figures are in thousands of dollars):`,
+        "",
+        ...rows.map(detailLine),
+    ].join("\n");
 }
-export async function history(args) {
-    const limit = Math.min(args.limit ?? 10, 50);
-    const name = args.name?.trim().toUpperCase() ?? "";
-    const filter = name ? `&filters=INSTNAME:(${encodeURIComponent(name)}*)` : "";
-    const d = await request(`/banks/history?limit=${limit}${filter}`);
-    const rows = d.data ?? [];
+export async function institutionDetail(a) {
+    if (!Number.isInteger(a.cert) || a.cert < 1)
+        throw new SourceError("cert must be a positive FDIC certificate number");
+    const d = await getJson(`/institutions?filters=${filtersFor([`CERT:${a.cert}`])}&fields=${FIELDS}&limit=1&format=json`);
+    const rows = rowsOf(d);
+    const r = rows[0];
+    if (!r)
+        return `The FDIC has no institution with certificate ${a.cert}.`;
+    return [
+        detailLine(r),
+        "",
+        `BankFind profile: https://banks.data.fdic.gov/bankfind-suite/bankfind/details/${r.CERT}`,
+    ].join("\n");
+}
+export async function banksInState(a) {
+    const state = clean(a.state).toUpperCase();
+    if (!/^[A-Z]{2}$/.test(state))
+        throw new SourceError("state must be a two-letter code");
+    const limit = a.limit ?? 10;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 25)
+        throw new SourceError("limit must be between 1 and 25");
+    const d = await getJson(`/institutions?filters=${filtersFor([`STALP:${state}`, "ACTIVE:1"])}&fields=${FIELDS}&sort_by=ASSET&sort_order=DESC&limit=${limit}&format=json`);
+    const rows = rowsOf(d);
     if (!rows.length)
-        return "No history events found.";
-    return rows.map((r) => {
-        const h = r.data ?? r;
-        return `${h.INSTNAME ?? ""} | ${h.CHANGECODE_DESC ?? h.CHANGECODE ?? ""} | ${h.PROCDATE ?? ""}`.trim();
-    }).join("\n");
-}
-export async function locations(args) {
-    const limit = Math.min(args.limit ?? 10, 50);
-    const filters = [];
-    if ((args.city ?? "").trim())
-        filters.push(`CITY:(${encodeURIComponent(args.city.trim())}*)`);
-    if ((args.state ?? "").trim())
-        filters.push(`STNAME:(${encodeURIComponent(args.state.trim())}*)`);
-    const filter = filters.length ? `&filters=${filters.join(" AND ")}` : "";
-    const d = await request(`/banks/locations?limit=${limit}${filter}`);
-    const rows = d.data ?? [];
-    if (!rows.length)
-        return "No branches found.";
-    return rows.map((r) => {
-        const l = r.data ?? r;
-        return `${l.NAME ?? ""} | ${l.ADDRESS ?? ""}, ${l.CITY ?? ""} ${l.STALP ?? ""} ${l.ZIP ?? ""}`;
-    }).join("\n");
-}
-export async function financials(args) {
-    const limit = Math.min(args.limit ?? 10, 50);
-    const name = args.name?.trim().toUpperCase() ?? "";
-    const filter = name ? `&filters=NAME:(${encodeURIComponent(name)}*)` : "";
-    const d = await request(`/banks/financials?limit=${limit}&sort_by=ASSET&sort_order=DESC${filter}`);
-    const rows = d.data ?? [];
-    if (!rows.length)
-        return "No financials found.";
-    return rows.map((r) => {
-        const f = r.data ?? r;
-        return `${f.NAME ?? f.NAMEHCR ?? f.CERT ?? ""} (${f.CERT ?? ""})\n  Assets ${money(f.ASSET)} | Deposits ${money(f.DEP)} | Equity ${money(f.EQ)} | Net income ${money(f.NIMY)}`;
-    }).join("\n\n");
-}
-export async function summary() {
-    const d = await request(`/banks/summary`);
-    const txt = JSON.stringify(d.totals ?? d, null, 2).slice(0, 1500);
-    return `FDIC summary:\n${txt}`;
+        return `The FDIC lists no active bank headquartered in ${state}.`;
+    return [
+        `${d?.meta?.total ?? rows.length} active bank(s) headquartered in ${state}, largest first (showing ${rows.length}):`,
+        "",
+        ...rows.map((r) => `- ${clean(r.NAME)} (cert ${r.CERT}) · ${clean(r.CITY)} · assets ${millions(r.ASSET)} · deposits ${millions(r.DEPOSITS)}`),
+    ].join("\n");
 }

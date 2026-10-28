@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/setlist-mcp",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "MCP server for Setlist.fm, concert setlists, songs played live, tour history",
   "type": "module",
   "mcpName": "io.github.mrfentmen/setlist-mcp",

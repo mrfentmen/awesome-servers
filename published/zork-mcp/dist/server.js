@@ -1,11 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { gameMap } from "./api.js";
 import { Adventure } from "./engine.js";
 import { describeGames, GAMES } from "./games.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
-const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
 // A stdio MCP server talks to a single client, so a single in-memory
 // game session is the right shape.
 let current = null;
@@ -20,24 +17,14 @@ export function createServer() {
         name: "zork-mcp",
         version: "1.0.0",
     });
-    server.registerTool("list_games", {
-        title: "List games",
-        description: "List the text-adventure games available to play.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => text(`Available games:\n${describeGames()}`));
-    server.registerTool("start_game", {
-        title: "Start game",
-        description: "Start (or restart) a text-adventure game. The AI is the player — " +
-            "explore with 'look', move with 'go north' etc., take items, and " +
-            "collect treasures to win.",
-        inputSchema: z.object({
-            gameId: z
-                .string()
-                .default("colossal-dungeon")
-                .describe("Game id from list_games (default: colossal-dungeon)"),
-        }),
-        annotations: READ_ONLY,
+    server.tool("list_games", "List the text-adventure games available to play.", {}, async () => text(`Available games:\n${describeGames()}`));
+    server.tool("start_game", "Start (or restart) a text-adventure game. The AI is the player — " +
+        "explore with 'look', move with 'go north' etc., take items, and " +
+        "collect treasures to win.", {
+        gameId: z
+            .string()
+            .default("colossal-dungeon")
+            .describe("Game id from list_games (default: colossal-dungeon)"),
     }, async ({ gameId }) => {
         const game = GAMES[gameId];
         if (!game) {
@@ -46,112 +33,36 @@ export function createServer() {
         current = new Adventure(game);
         return text(current.start());
     });
-    server.registerTool("act", {
-        title: "Act",
-        description: "Send a command to the current game: move, look, take, use, examine... " +
-            "Returns the game's response.",
-        inputSchema: z.object({
-            command: z.string().describe("Natural-language command, e.g. 'go north', 'take the lantern', " +
-                "'use lantern', 'look', 'inventory'"),
-        }),
-        annotations: READ_ONLY,
+    server.tool("act", "Send a command to the current game: move, look, take, use, examine... " +
+        "Returns the game's response.", {
+        command: z.string().describe("Natural-language command, e.g. 'go north', 'take the lantern', " +
+            "'use lantern', 'look', 'inventory'"),
     }, async ({ command }) => {
         try {
             const game = requireGame();
             return text(game.act(command));
         }
         catch (e) {
-            return textError(`Error: ${e.message}`);
+            return text(`Error: ${e.message}`);
         }
     });
-    server.registerTool("hint", {
-        title: "Hint",
-        description: "Get a hint for the current room.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
+    server.tool("hint", "Get a hint for the current room.", {}, async () => {
         try {
             const game = requireGame();
             return text(game.hint());
         }
         catch (e) {
-            return textError(`Error: ${e.message}`);
+            return text(`Error: ${e.message}`);
         }
     });
-    server.registerTool("score", {
-        title: "Score",
-        description: "Show your current score, treasures collected, and move count.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
+    server.tool("score", "Show your current score, treasures collected, and move count.", {}, async () => {
         try {
             const game = requireGame();
             return text(game.doScore());
         }
         catch (e) {
-            return textError(`Error: ${e.message}`);
+            return text(`Error: ${e.message}`);
         }
-    });
-    server.registerTool("game_map", {
-        title: "Game map",
-        description: "Show every room of a bundled game with its objects and its exits, including which exits are locked, unlit or one way. Read straight from the engine's own map, no network.",
-        inputSchema: z.object({ gameId: z.string().describe("Game id from list_games, default colossal-dungeon.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await gameMap(args));
-        }
-        catch (e) {
-            return textError(`Error: ${e.message}`);
-        }
-    });
-    server.registerTool("game_routes", {
-        title: "Game routes",
-        description: "Shortest route from a room to every other room in a game, worked out with a breadth-first walk of the declared exits, with dark rooms and guarded exits flagged.",
-        inputSchema: z.object({
-            gameId: z.string().describe("Game id from list_games, default colossal-dungeon.").optional(),
-            from: z.string().describe("Room id to start from, default the game's start room.").optional(),
-            maxRooms: z.number().int().min(1).max(200).describe("Max rooms listed, 1-200, default 30.").optional(),
-        }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            // TODO: implement routes locally (paywall removed)
-            try {
-                return textError("Not yet implemented: routes");
-            }
-            catch (e) {
-                return textError(String(e));
-            }
-        }
-        catch (e) {
-            return textError(`Error: ${e.message}`);
-        }
-    });
-    const serverName = "zork-mcp";
-    server.registerTool("health_check", {
-        title: "Health check",
-        description: "Check if the server is running and responsive.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("OK - server is running");
-    });
-    server.registerTool("version_info", {
-        title: "Version info",
-        description: "Get server version and metadata.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
-    });
-    server.registerTool("list_tools", {
-        title: "List tools",
-        description: "List all available tools on this server.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("See the tools/list response for the full tool list.");
     });
     return server;
 }

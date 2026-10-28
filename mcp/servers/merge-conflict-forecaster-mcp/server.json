@@ -6,13 +6,15 @@
     "url": "https://github.com/mrfentmen/merge-conflict-forecaster-mcp",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "merge-conflict-forecaster-mcp",
-      "version": "1.0.0",
-      "transport": { "type": "stdio" }
+      "version": "1.0.1",
+      "transport": {
+        "type": "stdio"
+      }
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/mygene-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Gene annotations from mygene.info: search genes by symbol or keyword and read full records - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/mygene-mcp",

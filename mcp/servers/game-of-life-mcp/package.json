@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/game-of-life-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Run Conway's Game of Life, detect cycles and measure populations on ASCII grids - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/game-of-life-mcp",

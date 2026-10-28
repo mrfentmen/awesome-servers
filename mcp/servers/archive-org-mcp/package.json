@@ -1,6 +1,6 @@
 {
   "name": "archive-org-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for the Internet Archive, search old software, bootleg concerts, 78rpm records, and dead web pages.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/archive-org-mcp",

@@ -1,12 +1,12 @@
 {
-  "name": "@mrfentmen/brainrot-mcp",
-  "version": "1.0.6",
-  "description": "Use this MCP server to decodes internet slang, brainrot terms, and niche subculture vocabulary. Tools include decode term, search terms, decode text",
+  "name": "brainrot-mcp",
+  "version": "1.0.1",
+  "description": "MCP server that decodes internet slang, brainrot terms, and niche subculture vocabulary.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/brainrot-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/brainrot-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "brainrot-mcp": "./dist/index.js"
@@ -37,8 +37,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

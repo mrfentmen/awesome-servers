@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { compareCountries, countryInfo, indicatorInfo, indicatorSeries, latestValue, searchIndicators, WorldBankError, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof WorldBankError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -19,7 +20,7 @@ export function createServer() {
             return text(await searchIndicators(query, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("indicator_info", "Name, unit, source and description for one indicator code.", { indicator: indicatorArg }, async ({ indicator }) => {
@@ -27,7 +28,7 @@ export function createServer() {
             return text(await indicatorInfo(indicator));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("country_info", "Region, income level and capital for a country code.", { country: countryArg }, async ({ country }) => {
@@ -35,7 +36,7 @@ export function createServer() {
             return text(await countryInfo(country));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("indicator_series", "Year-by-year values for one indicator in one country.", {
@@ -48,7 +49,7 @@ export function createServer() {
             return text(await indicatorSeries(country, indicator, from_year, to_year));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("compare_countries", "One indicator for several countries in the same year, ranked highest first.", {
@@ -60,7 +61,7 @@ export function createServer() {
             return text(await compareCountries(countries, indicator, year));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("latest_value", "The most recent reported value for an indicator in one country.", { country: countryArg, indicator: indicatorArg }, async ({ country, indicator }) => {
@@ -68,7 +69,7 @@ export function createServer() {
             return text(await latestValue(country, indicator));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

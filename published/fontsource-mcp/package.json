@@ -3,7 +3,7 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/fontsource-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "fontsource-mcp": "./dist/index.js"

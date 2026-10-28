@@ -1,12 +1,12 @@
 {
   "name": "telnetbbs-mcp",
-  "version": "1.0.3",
-  "description": "Use this MCP server to Telnet BBS Guide, the directory of live retro BBSes you can still dial into. Tools include list bbses, get bbs, random bbs",
+  "version": "1.0.1",
+  "description": "MCP server for Telnet BBS Guide, the directory of live retro BBSes you can still dial into.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/telnetbbs-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/telnetbbs-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "telnetbbs-mcp": "./dist/index.js"
@@ -36,8 +36,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

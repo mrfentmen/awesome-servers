@@ -1,24 +1,43 @@
 {
-  "name": "dictionary-mcp",
-  "version": "1.0.6",
-  "description": "Dictionary definitions and word of the day (DictionaryAPI).",
+  "name": "@mrfentmen/dictionary-mcp",
+  "version": "1.0.1",
+  "description": "English dictionary lookups: definitions by part of speech, examples, synonyms and antonyms for any word - keyless.",
   "type": "module",
-  "main": "dist/index.js",
+  "mcpName": "io.github.mrfentmen/dictionary-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "dictionary-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "dictionary",
+    "definitions",
+    "english",
+    "words",
+    "thesaurus",
+    "keyless"
+  ],
+  "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "zod": "^3.23.0"
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5.5.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
   },
-  "license": "MIT",
   "engines": {
     "node": ">=20"
-  },
-  "mcpName": "io.github.mrfentmen/dictionary-mcp"
+  }
 }

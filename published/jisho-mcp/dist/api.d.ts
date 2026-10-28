@@ -28,19 +28,3 @@ export declare function searchWords(keyword: string, limit?: number): Promise<Wo
  */
 export declare function searchByTag(keyword: string, limit?: number): Promise<WordResult[]>;
 export declare function formatWord(w: WordResult, index?: number): string;
-export interface AllSensesArgs {
-    keyword: string;
-    limit?: number;
-}
-export interface WordsByReadingArgs {
-    reading: string;
-    limit?: number;
-}
-export interface NetworkArgs {
-    keyword: string;
-    limit?: number;
-}
-export interface KanjiArgs {
-    keyword: string;
-    limit?: number;
-}

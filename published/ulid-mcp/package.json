@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ulid-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Generate, parse and sort ULIDs: lexicographically sortable unique IDs with embedded timestamps - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ulid-mcp",

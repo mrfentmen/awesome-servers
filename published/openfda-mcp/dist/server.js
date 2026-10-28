@@ -1,141 +1,87 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
-import { deviceEvents, deviceRecalls, foodRecalls, labelSearch, m0_adverseEvents, m0_approvedDrugs, m0_drugRecalls, m1_events, ndcLookup, topReactions } from './api.js';
-const text = (value) => ({ content: [{ type: 'text', text: value }] });
-const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
-const error = (e) => `Error: ${e instanceof Error ? e.message : String(e)}`;
-const errorMessage = error;
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
+import { adverseEvents, drugLabels, labelSections, ndcLookup, OpenFdaError, recalls } from "./api.js";
+const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
+function errorMessage(e) {
+    if (e instanceof OpenFdaError || e instanceof Error)
+        return `Error: ${e.message}`;
+    return `Error: ${String(e)}`;
+}
 export function createServer() {
-    const server = new McpServer({ name: 'openfda-mcp', version: '1.0.0' });
-    server.registerTool("get_drug_recalls", {
-        title: "Get drug recalls",
-        description: "Get recent FDA drug recalls, optionally filtered by product or reason.",
-        inputSchema: z.object({ search: z.string().describe("Optional search terms like salmonella.").optional(), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    const server = new McpServer({ name: "openfda-mcp", version: "1.1.1" });
+    server.tool("drug_labels", "FDA-approved labels for a brand name, with route and approved use.", {
+        name: z.string().min(2).describe("Brand name, e.g. Advil"),
+        limit: z.number().int().min(1).max(20).default(5).describe("Labels to return"),
+    }, async ({ name, limit }) => {
         try {
-            return text(await m0_drugRecalls(args));
+            return text(await drugLabels(name, limit));
         }
         catch (e) {
-            return textError(error(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("search_adverse_events", {
-        title: "Search adverse events",
-        description: "Search FDA adverse event reports by drug name.",
-        inputSchema: z.object({ drug: z.string().describe("Drug name."), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("label_sections", "Plain-language sections of the label: use, dosage, warnings, interactions.", { name: z.string().min(2).describe("Brand name, e.g. Lipitor") }, async ({ name }) => {
         try {
-            return text(await m0_adverseEvents(args));
+            return text(await labelSections(name));
         }
         catch (e) {
-            return textError(error(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("search_approved_drugs", {
-        title: "Search approved drugs",
-        description: "Search approved drug applications.",
-        inputSchema: z.object({ query: z.string().describe("Search terms."), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("adverse_events", "Adverse-event reports naming a drug, with reaction terms and seriousness.", {
+        drug: z.string().min(2).describe("Drug name as reported, e.g. ASPIRIN"),
+        limit: z.number().int().min(1).max(50).default(10).describe("Reports to return"),
+    }, async ({ drug, limit }) => {
         try {
-            return text(await m0_approvedDrugs(args));
+            return text(await adverseEvents(drug, limit));
         }
         catch (e) {
-            return textError(error(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("events", {
-        title: "Events",
-        description: "Drug adverse event reports for a drug.",
-        inputSchema: z.object({ drug: z.string().describe("Brand name."), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("drug_recalls", "Drug enforcement reports (recalls) matching a term.", {
+        term: z.string().min(2).describe("Product or brand text"),
+        limit: z.number().int().min(1).max(50).default(10).describe("Recalls to return"),
+    }, async ({ term, limit }) => {
         try {
-            return text(await m1_events(args));
+            return text(await recalls("drug", term, limit));
         }
         catch (e) {
-            return textError(error(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("device_recalls", {
-        title: "Device recalls",
-        description: "FDA medical device recalls.",
-        inputSchema: z.object({ search: z.string().describe("Optional search terms.").optional(), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("device_recalls", "Medical device recalls matching a term.", {
+        term: z.string().min(2).describe("Device description text"),
+        limit: z.number().int().min(1).max(50).default(10).describe("Recalls to return"),
+    }, async ({ term, limit }) => {
         try {
-            return text(await deviceRecalls(args));
+            return text(await recalls("device", term, limit));
         }
         catch (e) {
-            return textError(error(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("device_events", {
-        title: "Device events",
-        description: "Adverse events for a device.",
-        inputSchema: z.object({ device: z.string().describe("Device generic name."), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("food_recalls", "Food and cosmetic recalls matching a term.", {
+        term: z.string().min(2).describe("Product description text, e.g. peanut butter"),
+        limit: z.number().int().min(1).max(50).default(10).describe("Recalls to return"),
+    }, async ({ term, limit }) => {
         try {
-            return text(await deviceEvents(args));
+            return text(await recalls("food", term, limit));
         }
         catch (e) {
-            return textError(error(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("food_recalls", {
-        title: "Food recalls",
-        description: "FDA food recalls and alerts.",
-        inputSchema: z.object({ search: z.string().describe("Optional search terms.").optional(), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("ndc_lookup", "National Drug Code entries for a brand: dosage form, product type, packaging.", {
+        name: z.string().min(2).describe("Brand name"),
+        limit: z.number().int().min(1).max(25).default(5).describe("Entries to return"),
+    }, async ({ name, limit }) => {
         try {
-            return text(await foodRecalls(args));
+            return text(await ndcLookup(name, limit));
         }
         catch (e) {
-            return textError(error(e));
-        }
-    });
-    server.registerTool("label_search", {
-        title: "Label search",
-        description: "Drug label purpose and use.",
-        inputSchema: z.object({ query: z.string().describe("Brand or generic name."), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await labelSearch(args));
-        }
-        catch (e) {
-            return textError(error(e));
-        }
-    });
-    server.registerTool("top_reactions", {
-        title: "Top reactions",
-        description: "Most reported reactions for a drug.",
-        inputSchema: z.object({ drug: z.string().describe("Drug name.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await topReactions(args));
-        }
-        catch (e) {
-            return textError(error(e));
-        }
-    });
-    server.registerTool("ndc_lookup", {
-        title: "NDC lookup",
-        description: "Drug product by NDC code.",
-        inputSchema: z.object({ code: z.string().describe("NDC code.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await ndcLookup(args));
-        }
-        catch (e) {
-            return textError(error(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -28,7 +29,7 @@ export function createServer(): McpServer {
         if (!p) return text("No daily puzzle available right now.")
         return text(formatPuzzle(p))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -43,7 +44,7 @@ export function createServer(): McpServer {
         if (!p) return text(`No puzzle "${id}".`)
         return text(formatPuzzle(p))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -58,7 +59,7 @@ export function createServer(): McpServer {
         if (!u) return text(`No Lichess user "${username}".`)
         return text(formatPlayer(u))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -84,7 +85,7 @@ export function createServer(): McpServer {
               .join("\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

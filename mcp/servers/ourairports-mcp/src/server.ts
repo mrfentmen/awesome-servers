@@ -3,6 +3,7 @@ import { z } from "zod"
 import { airportsNear, lookupAirport, searchAirports, SourceError } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof SourceError || e instanceof Error) return `Error: ${e.message}`
@@ -22,7 +23,7 @@ export function createServer(): McpServer {
       try {
         return text(await lookupAirport(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -39,7 +40,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchAirports(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -57,7 +58,7 @@ export function createServer(): McpServer {
       try {
         return text(await airportsNear(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

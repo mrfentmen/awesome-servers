@@ -3,6 +3,7 @@ import { z } from "zod"
 import { RESOURCES, SwapiError, detail, filmChronicle, listAll, personFilms, search } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof SwapiError || e instanceof Error) return `Error: ${e.message}`
@@ -26,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await search(r, query, n))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -42,7 +43,7 @@ export function createServer(): McpServer {
       try {
         return text(await detail(r, id))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -55,7 +56,7 @@ export function createServer(): McpServer {
       try {
         return text(await listAll(r, n))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -64,7 +65,7 @@ export function createServer(): McpServer {
     try {
       return text(await filmChronicle())
     } catch (e) {
-      return text(errorMessage(e))
+      return fail(errorMessage(e))
     }
   })
 
@@ -76,7 +77,7 @@ export function createServer(): McpServer {
       try {
         return text(await personFilms(id))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

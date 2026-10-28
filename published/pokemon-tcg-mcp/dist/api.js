@@ -102,10 +102,3 @@ export function formatSet(s) {
         (s.releaseDate ? ` — ${s.releaseDate}` : "") +
         (s.cardCount ? ` (${s.cardCount} cards)` : ""));
 }
-export async function cardRarities(_args) {
-    const res = await getJson("/rarities");
-    const list = (Array.isArray(res) ? res : []).map(String);
-    if (!list.length)
-        return "TCGdex returned no rarities.";
-    return `TCGdex rarity names (${list.length}):\n` + list.map((r, i) => `${i + 1}. ${r}`).join("\n");
-}

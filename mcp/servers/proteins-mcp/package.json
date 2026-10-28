@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/proteins-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "UniProt protein records via the EBI Proteins API: sequences, names, organisms, features and taxon listings - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/proteins-mcp",

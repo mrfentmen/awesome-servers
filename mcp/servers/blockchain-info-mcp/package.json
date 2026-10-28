@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/blockchain-info-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Bitcoin chain data from blockchain.info: latest block, BTC price ticker and address balances and transactions - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/blockchain-info-mcp",

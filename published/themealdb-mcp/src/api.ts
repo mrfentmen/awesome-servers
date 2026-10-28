@@ -1,212 +1,141 @@
-
-interface m0_Meal {
-  idMeal?: string;
-  strMeal?: string;
-  strCategory?: string;
-  strArea?: string;
-  strInstructions?: string;
-  strMealThumb?: string;
-  strYoutube?: string;
-  strIngredient1?: string;
-  strIngredient2?: string;
-  strIngredient3?: string;
-  strIngredient4?: string;
-  strIngredient5?: string;
-  strMeasure1?: string;
-  strMeasure2?: string;
-  strMeasure3?: string;
-}
-
-export interface m0_QueryArg {
-  query: string;
-}
-export interface m0_IngredientArg {
-  ingredient: string;
-}
-
-const m0 = (() => {
-const UA = 'mrfentmen-themealdb-mcp/1.0';
-const BASE = 'https://www.themealdb.com/api/json/v1/1';
-
-
-function describeMeal(m: m0_Meal): string {
-  const ings: string[] = [];
-  for (let i = 1; i <= 5; i++) {
-    const name = m[`strIngredient${i}` as keyof m0_Meal] as string | undefined;
-    const measure = m[`strMeasure${i}` as keyof m0_Meal] as string | undefined;
-    if (name && name.trim()) ings.push(`${measure?.trim() ?? ''} ${name.trim()}`.trim());
-  }
-  return `* ${m.strMeal ?? '?'} (${m.strArea ?? '?'} | ${m.strCategory ?? '?'})\n  Ingredients: ${ings.join(', ') || '?'}\n  ${(m.strInstructions ?? '').slice(0, 180)}${(m.strInstructions ?? '').length > 180 ? '...' : ''}`;
-}
-
-
-
-async function search(args: m0_QueryArg): Promise<string> {
-  const res = await fetch(`${BASE}/search.php?s=${encodeURIComponent(args.query)}`, {
-    headers: { 'User-Agent': UA, Accept: 'application/json' },
-    signal: AbortSignal.timeout(25000),
-  });
-  if (!res.ok) throw new Error(`TheMealDB returned ${res.status}`);
-  const d = (await res.json()) as { meals?: m0_Meal[] | null };
-  const meals = d.meals ?? [];
-  if (!meals.length) return `No meals found for "${args.query}".`;
-  return `Meals matching "${args.query}" (${meals.length}):\n` + meals.slice(0, 8).map(describeMeal).join('\n');
-}
-
-async function random(_args?: Record<string, never>): Promise<string> {
-  const res = await fetch(`${BASE}/random.php`, {
-    headers: { 'User-Agent': UA, Accept: 'application/json' },
-    signal: AbortSignal.timeout(25000),
-  });
-  if (!res.ok) throw new Error(`TheMealDB returned ${res.status}`);
-  const d = (await res.json()) as { meals?: m0_Meal[] | null };
-  const meal = d.meals?.[0];
-  if (!meal) return 'No random meal returned.';
-  return `Random meal:\n${describeMeal(meal)}`;
-}
-
-async function categories(_args?: Record<string, never>): Promise<string> {
-  const res = await fetch(`${BASE}/categories.php`, {
-    headers: { 'User-Agent': UA, Accept: 'application/json' },
-    signal: AbortSignal.timeout(25000),
-  });
-  if (!res.ok) throw new Error(`TheMealDB returned ${res.status}`);
-  const d = (await res.json()) as { categories?: Array<{ strCategory?: string; strCategoryDescription?: string }> | null };
-  const cats = d.categories ?? [];
-  if (!cats.length) return 'No categories returned.';
-  return `m0_Meal categories (${cats.length}):\n` + cats.map((c) => `* ${c.strCategory ?? '?'} - ${(c.strCategoryDescription ?? '').slice(0, 90)}`).join('\n');
-}
-
-async function filterByIngredient(args: m0_IngredientArg): Promise<string> {
-  const res = await fetch(`${BASE}/filter.php?i=${encodeURIComponent(args.ingredient)}`, {
-    headers: { 'User-Agent': UA, Accept: 'application/json' },
-    signal: AbortSignal.timeout(25000),
-  });
-  if (!res.ok) throw new Error(`TheMealDB returned ${res.status}`);
-  const d = (await res.json()) as { meals?: m0_Meal[] | null };
-  const meals = d.meals ?? [];
-  if (!meals.length) return `No meals with "${args.ingredient}".`;
-  return `Meals with ${args.ingredient} (${meals.length}):\n` + meals.slice(0, 15).map((m, i) => `${i + 1}. ${m.strMeal ?? '?'}`).join('\n');
-}
-
-return { categories, filterByIngredient, random, search };
-})();
-
-const m1 = (() => {
+/**
+ * TheMealDB v1 test key ("1") is free and documented.
+ * Endpoints: search.php, lookup.php, random.php, randomselection.php, filter.php, list.php.
+ */
 const BASE = "https://www.themealdb.com/api/json/v1/1"
-const UA = "mrfentmen-recipes-mcp/1.0 (https://github.com/mrfentmen)"
-class RecipesError extends Error {}
 
-async function get<T>(url: string): Promise<T> {
-  const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "application/json" }, signal: AbortSignal.timeout(25000) })
-  if (res.status === 429) throw new RecipesError("TheMealDB rate limit hit, wait and retry")
-  if (!res.ok) throw new RecipesError(`TheMealDB error ${res.status}`)
-  return (await res.json()) as T
+export class MealError extends Error {}
+
+async function getJson(path: string, timeoutMs = 20000): Promise<any> {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs)
+  try {
+    const res = await fetch(`${BASE}${path}`, {
+      signal: ctrl.signal,
+      headers: { "user-agent": "themealdb-mcp", accept: "application/json" },
+    })
+    if (res.status === 404) throw new MealError("Not found in TheMealDB")
+    if (!res.ok) throw new MealError(`TheMealDB responded ${res.status}`)
+    return await res.json()
+  } catch (e) {
+    if (e instanceof MealError) throw e
+    if ((e as Error).name === "AbortError") throw new MealError("TheMealDB request timed out")
+    if (e instanceof SyntaxError) throw new MealError("TheMealDB returned a non-JSON response")
+    throw new MealError(`TheMealDB request failed: ${(e as Error).message}`)
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
-function ingredients(m: any): string[] {
+interface Meal {
+  idMeal: string
+  strMeal: string
+  strCategory?: string
+  strArea?: string
+  strTags?: string
+  strInstructions?: string
+  strMealThumb?: string
+  strSource?: string
+  strYoutube?: string
+  [key: string]: unknown
+}
+
+function ingredients(m: Meal): string[] {
   const out: string[] = []
   for (let i = 1; i <= 20; i++) {
-    const ing = m?.[`strIngredient${i}`]
-    const meas = m?.[`strMeasure${i}`]
-    if (ing && ing.trim()) out.push(`${meas ? meas.trim() + " " : ""}${ing.trim()}`)
+    const name = m[`strIngredient${i}`] as string | null
+    const measure = m[`strMeasure${i}`] as string | null
+    if (name && String(name).trim()) out.push(`${String(measure ?? "").trim()} ${String(name).trim()}`.trim())
   }
   return out
 }
 
-async function searchRecipes(args: { query?: string }): Promise<string> {
-  const q = (args.query ?? "").trim()
-  if (!q) throw new RecipesError("Provide a recipe name")
-  const d = await get<any>(`${BASE}/search.php?s=${encodeURIComponent(q)}`)
-  const meals = d?.meals ?? []
-  if (!meals.length) return "No recipes found"
-  return meals.map((m: any) => `${m.strMeal} (id ${m.idMeal})\n   ${m.strArea ?? ""} ${m.strCategory ?? ""} | ${m.strTags ?? ""}`).join("\n\n")
+function line(m: Meal, i?: number): string {
+  const prefix = typeof i === "number" ? `${i + 1}. ` : "• "
+  // filter.php returns names only, so category and area are often absent.
+  const meta = [m.strCategory, m.strArea].filter(Boolean).join(" · ")
+  return `${prefix}${m.strMeal} (${m.idMeal})${meta ? ` — ${meta}` : ""}`
 }
 
-async function byIngredient(args: { ingredient?: string }): Promise<string> {
-  const ing = (args.ingredient ?? "").trim()
-  if (!ing) throw new RecipesError("Provide an ingredient")
-  const d = await get<any>(`${BASE}/filter.php?i=${encodeURIComponent(ing)}`)
-  const meals = d?.meals ?? []
-  if (!meals.length) return `No recipes with ${ing}`
-  return meals.slice(0, 15).map((m: any, i: number) => `${i + 1}. ${m.strMeal} (id ${m.idMeal})`).join("\n")
-}
-
-async function recipeDetails(args: { mealId?: string }): Promise<string> {
-  const id = (args.mealId ?? "").trim()
-  if (!id) throw new RecipesError("Provide a meal ID")
-  const d = await get<any>(`${BASE}/lookup.php?i=${encodeURIComponent(id)}`)
-  const m = d?.meals?.[0]
-  if (!m) return "No recipe found"
+function detail(m: Meal): string {
   const ings = ingredients(m)
-  return `# ${m.strMeal}\n${m.strArea ?? ""} ${m.strCategory ?? ""}\n\nIngredients:\n${ings.map((i) => `- ${i}`).join("\n")}\n\nInstructions:\n${m.strInstructions ?? ""}${m.strYoutube ? `\n\nVideo: ${m.strYoutube}` : ""}`
+  const steps = String(m.strInstructions ?? "")
+    .split(/\r?\n+/)
+    .map((s) => s.replace(/^STEP\s*\d+\s*/i, "").trim())
+    .filter((s) => s.length > 2)
+  return [
+    `${m.strMeal} (${m.idMeal})`,
+    `${m.strCategory ?? "uncategorised"} · ${m.strArea ?? "unknown origin"}${m.strTags ? ` · ${m.strTags}` : ""}`,
+    "",
+    `Ingredients (${ings.length}):`,
+    ...ings.map((x) => `   • ${x}`),
+    "",
+    "Steps:",
+    ...steps.map((s, i) => `   ${i + 1}. ${s}`),
+    "",
+    m.strSource ? `Source: ${m.strSource}` : "",
+    m.strYoutube ? `Video: ${m.strYoutube}` : "",
+    m.strMealThumb ? `Image: ${m.strMealThumb}` : "",
+  ]
+    .filter((l) => l !== "")
+    .join("\n")
 }
 
-return { RecipesError, byIngredient, recipeDetails, searchRecipes };
-})();
+const meals = (d: any): Meal[] => (Array.isArray(d?.meals) ? d.meals : [])
 
-export const RecipesError = m1.RecipesError;
-export const byIngredient = m1.byIngredient;
-export const categories = m0.categories;
-export const filterByIngredient = m0.filterByIngredient;
-export const random = m0.random;
-export const recipeDetails = m1.recipeDetails;
-export const search = m0.search;
-export const searchRecipes = m1.searchRecipes;
-export const m0_random = m0.random;
-export const m0_search = m0.search;
-export const m0_categories = m0.categories;
-export const m0_filterByIngredient = m0.filterByIngredient;
-export const m1_recipeDetails = m1.recipeDetails;
-export const m1_byIngredient = m1.byIngredient;
-export const m1_RecipesError = m1.RecipesError;
-export const m1_searchRecipes = m1.searchRecipes;
-
-// ---- muxC tools:
-
-const MEALDB_BASE = "https://www.themealdb.com/api/json/v1/1"
-const MEALDB_UA = { "User-Agent": "mrfentmen-themealdb-mcp/1.0", Accept: "application/json" }
-
-async function mealdbGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${MEALDB_BASE}${path}`, {
-    headers: MEALDB_UA,
-    signal: AbortSignal.timeout(25000),
-  })
-  if (!res.ok) throw new Error(`TheMealDB returned ${res.status}`)
-  return (await res.json()) as T
+export async function searchMeals(name: string, limit: number): Promise<string> {
+  const rows = meals(await getJson(`/search.php?s=${encodeURIComponent(name.trim())}`))
+  if (rows.length === 0) return `No meals match "${name}".`
+  return [`Meals matching "${name}" (${rows.length}):`, "", ...rows.slice(0, limit).map(line)].join("\n")
 }
 
-export async function filterByCategory(args: { category?: string; limit?: number }): Promise<string> {
-  const category = (args.category ?? "").trim()
-  if (!category) throw new RecipesError("Provide a category, e.g. Seafood or Dessert")
-  const limit = Math.max(1, Math.min(args.limit ?? 15, 30))
-  const d = await mealdbGet<{ meals?: Array<{ strMeal?: string; idMeal?: string; strArea?: string | null }> | null }>(
-    `/filter.php?c=${encodeURIComponent(category)}`,
-  )
-  const meals = d.meals ?? []
-  if (!meals.length) return `No meals in category "${category}".`
-  return `Meals in category "${category}" (${meals.length}):\n` +
-    meals.slice(0, limit).map((m, i) => `${i + 1}. ${m.strMeal ?? "?"} (id ${m.idMeal ?? "?"})${m.strArea ? ` - ${m.strArea}` : ""}`).join("\n")
+export async function mealDetail(id: string): Promise<string> {
+  const clean = id.trim()
+  if (!/^\d{4,6}$/.test(clean)) throw new MealError(`"${id}" is not a numeric meal id`)
+  const rows = meals(await getJson(`/lookup.php?i=${clean}`))
+  if (rows.length === 0) throw new MealError(`No meal with id ${clean}`)
+  return detail(rows[0])
 }
 
-export async function filterByArea(args: { area?: string; limit?: number }): Promise<string> {
-  const area = (args.area ?? "").trim()
-  if (!area) throw new RecipesError("Provide an area, e.g. Canadian or Italian")
-  const limit = Math.max(1, Math.min(args.limit ?? 15, 30))
-  const d = await mealdbGet<{ meals?: Array<{ strMeal?: string; idMeal?: string; strCountry?: string | null }> | null }>(
-    `/filter.php?a=${encodeURIComponent(area)}`,
-  )
-  const meals = d.meals ?? []
-  if (!meals.length) return `No meals from area "${area}".`
-  return `Meals from area "${area}" (${meals.length}):\n` +
-    meals.slice(0, limit).map((m, i) => `${i + 1}. ${m.strMeal ?? "?"} (id ${m.idMeal ?? "?"})${m.strCountry ? ` - ${m.strCountry}` : ""}`).join("\n")
+export async function randomMeal(): Promise<string> {
+  const rows = meals(await getJson("/random.php"))
+  if (rows.length === 0) throw new MealError("TheMealDB returned no random meal")
+  return detail(rows[0])
 }
 
-export async function listIngredients(args: { limit?: number }): Promise<string> {
-  const limit = Math.max(1, Math.min(args.limit ?? 40, 100))
-  const d = await mealdbGet<{ meals?: Array<{ strIngredient?: string }> | null }>("/list.php?i=list")
-  const names = (d.meals ?? []).map((m) => m.strIngredient ?? "?").filter(Boolean)
-  if (!names.length) return "No ingredients returned."
-  return `TheMealDB ingredients (${names.length} total), first ${Math.min(limit, names.length)}:\n` +
-    names.slice(0, limit).map((n, i) => `${i + 1}. ${n}`).join("\n")
+export async function byCategory(category: string, limit: number): Promise<string> {
+  const rows = meals(await getJson(`/filter.php?c=${encodeURIComponent(category.trim())}`))
+  if (rows.length === 0) return `No meals in category "${category}".`
+  return [`Meals in "${category}" (${rows.length}):`, "", ...rows.slice(0, limit).map(line)].join("\n")
+}
+
+export async function byArea(area: string, limit: number): Promise<string> {
+  const rows = meals(await getJson(`/filter.php?a=${encodeURIComponent(area.trim())}`))
+  if (rows.length === 0) return `No meals from "${area}".`
+  return [`Meals from ${area} (${rows.length}):`, "", ...rows.slice(0, limit).map(line)].join("\n")
+}
+
+export async function byMainIngredient(ingredient: string, limit: number): Promise<string> {
+  const rows = meals(await getJson(`/filter.php?i=${encodeURIComponent(ingredient.trim())}`))
+  if (rows.length === 0) return `No meals use "${ingredient}".`
+  return [`Meals using "${ingredient}" (${rows.length}):`, "", ...rows.slice(0, limit).map(line)].join("\n")
+}
+
+export async function listOptions(): Promise<string> {
+  const [cats, areaRows, ings] = await Promise.all([
+    getJson("/list.php?c=list"),
+    getJson("/list.php?a=list"),
+    getJson("/list.php?i=list"),
+  ])
+  const col = (d: any, key: string) => (Array.isArray(d?.meals) ? d.meals.map((x: any) => x[key]).filter(Boolean) : [])
+  const categories = col(cats, "strCategory")
+  const areaNames = col(areaRows, "strArea")
+  const ingredients = col(ings, "strIngredient")
+  return [
+    `Categories (${categories.length}): ${categories.join(", ")}`,
+    "",
+    `Areas (${areaNames.length}): ${areaNames.join(", ")}`,
+    "",
+    `Ingredients (${ingredients.length}, first 60): ${ingredients.slice(0, 60).join(", ")}`,
+  ].join("\n")
 }

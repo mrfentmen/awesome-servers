@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/dictionary-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "English dictionary lookups: definitions by part of speech, examples, synonyms and antonyms for any word - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/dictionary-mcp",

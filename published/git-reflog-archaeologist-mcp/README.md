@@ -27,30 +27,3 @@ node dist/index.js
 ```
 
 The server uses stdio and works with Claude Desktop, Cursor, VS Code, MCP Inspector, and compatible CLI harnesses.
-
-## Quick start
-
-```bash
-npm install
-npm run build
-node dist/index.js
-```
-
-The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code, MCP Inspector, or another compatible MCP client.
-
-## Tools at a glance
-
-- `reflog_signals`: Summarize local reflog activity by count and age bucket without returning ref names, hashes, subjects, paths, or remotes.
-- `recovery_signals`: Count unreachable Git object types and recovery hints without returning object IDs, messages, paths, or contents.
-- `stash_signals`: Summarize local stash age buckets and count without returning stash messages, refs, hashes, or paths.
-
-## Try it
-
-After building, connect the server through your MCP client. The repository root also contains `smoke-test.mjs` for projects covered by the shared harness. A typical tool call starts with `reflog_signals`.
-
-## Licence — no paywall
-
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.

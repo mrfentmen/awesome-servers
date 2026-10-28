@@ -1,6 +1,6 @@
 {
   "name": "jobicy-jobs-mcp",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "description": "Apify Actor that serves the Jobicy remote-job MCP server over streamable HTTP.",
   "engines": {

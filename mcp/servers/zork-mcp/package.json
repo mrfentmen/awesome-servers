@@ -1,6 +1,6 @@
 {
   "name": "zork-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server that plays classic text adventure games. The LLM is the player, explore, solve puzzles, collect treasure.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/zork-mcp",

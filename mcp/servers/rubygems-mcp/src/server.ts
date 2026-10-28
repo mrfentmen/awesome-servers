@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof RubyGemsError || e instanceof Error) return `Error: ${e.message}`
@@ -33,7 +34,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchGems(query, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -46,7 +47,7 @@ export function createServer(): McpServer {
       try {
         return text(await gemInfo(name))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -59,7 +60,7 @@ export function createServer(): McpServer {
       try {
         return text(await gemVersions(name))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -72,7 +73,7 @@ export function createServer(): McpServer {
       try {
         return text(await latestReleases(limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -88,7 +89,7 @@ export function createServer(): McpServer {
       try {
         return text(await reverseDependencies(name, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -101,7 +102,7 @@ export function createServer(): McpServer {
       try {
         return text(await gemOwners(name))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

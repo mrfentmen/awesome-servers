@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { closeApproaches, objectDetail, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -18,7 +19,7 @@ export function createServer() {
             return text(await closeApproaches(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("object_detail", "One asteroid by its NASA id: orbit class, size range and all close approaches.", {
@@ -28,7 +29,7 @@ export function createServer() {
             return text(await objectDetail(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

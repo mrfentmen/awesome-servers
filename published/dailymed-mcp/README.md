@@ -1,28 +1,32 @@
-# DailyMed MCP
+# DailyMed
 
-FDA drug label information from the public DailyMed API. No key required.
+DailyMed drug labels from the FDA: find labels by drug name and read one label's sections - keyless.
 
-This file is self contained. It reads public data only and never writes to the machine. All output is bounded and honest about what could not be fetched.
+Keyless — no signup, no API key, no environment variables.
+
+## Install
+
+```bash
+npx -y @mrfentmen/dailymed-mcp
+```
+
+Or add it to your MCP client:
+
+```json
+{
+  "mcpServers": {
+    "dailymed-mcp": { "command": "npx", "args": ["-y", "@mrfentmen/dailymed-mcp"] }
+  }
+}
+```
 
 ## Tools
 
+| Tool | What it does |
+|---|---|
+| `search_labels` | Find drug labels by drug name. |
+| `label_packages` | NDC codes and package details for one DailyMed label, by set id. |
 
-* `search`  Search drug labels.
-* `spl`  One label by set ID.
+## Data source
 
-## Usage
-
-```bash
-npm install
-npm run build
-node dist/index.js
-```
-
-Data comes from the public DailyMed API, the official FDA label source.
-
-## Licence — no paywall
-
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.
+DailyMed SPL services (NLM)

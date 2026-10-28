@@ -71,8 +71,3 @@ export declare function getSet(id: string): Promise<SetSummary & {
 export declare function formatCardSummary(c: CardSummary): string;
 export declare function formatCardDetail(c: CardDetail): string;
 export declare function formatSet(s: SetSummary): string;
-export interface CardsByRarityArgs {
-    rarity: string;
-    limit?: number;
-}
-export declare function cardRarities(_args?: unknown): Promise<string>;

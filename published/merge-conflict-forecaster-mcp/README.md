@@ -48,10 +48,3 @@ npm test
 ```
 
 The tests create a temporary Git repository, make two branches edit the same file, verify the real overlap forecast, check malformed and out-of-root paths, and assert that private content, paths, branch names, commit messages, and authors do not appear in the returned result.
-
-## Licence — no paywall
-
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.

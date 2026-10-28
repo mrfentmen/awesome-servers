@@ -80,25 +80,3 @@ export function formatBbs(b, index) {
     ].filter(Boolean);
     return lines.join("\n");
 }
-// ---- muxB tools:
-// the guide is a big WordPress page that occasionally takes longer than the
-// 12s bound fetchText uses, so retry once before giving up
-async function listing() {
-    try {
-        return await listAll();
-    }
-    catch {
-        return await listAll();
-    }
-}
-const softwareLeader = (all) => {
-    const counts = new Map();
-    for (const b of all) {
-        const key = (b.software ?? "").trim();
-        if (key)
-            counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-    const best = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
-    return best ? `${best[0]} with ${best[1]} system${best[1] === 1 ? "" : "s"}` : "not reported";
-};
-// ---- gap4a3 tools:

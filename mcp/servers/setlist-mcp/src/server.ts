@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -37,7 +38,7 @@ export function createServer(): McpServer {
         )
         return text(`Artists matching "${name}":\n${lines.join("\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -66,7 +67,7 @@ export function createServer(): McpServer {
           .join("\n")
         return text(head + body)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -80,7 +81,7 @@ export function createServer(): McpServer {
         const s = await getSetlist(setlistId)
         return text(formatSetlist(s))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -117,7 +118,7 @@ export function createServer(): McpServer {
           : "No live plays found in the scanned pages."
         return text(head + tail)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/locale-format-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Format numbers, currencies, dates and relative times for any locale using ICU data - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/locale-format-mcp",

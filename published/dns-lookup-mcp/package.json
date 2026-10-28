@@ -1,9 +1,9 @@
 {
-  "version": "1.0.5",
+  "version": "1.0.3",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/dns-lookup-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "dns-lookup-mcp": "./dist/index.js"

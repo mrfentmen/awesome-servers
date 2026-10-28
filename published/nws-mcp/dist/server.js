@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { alerts, alertText, forecast, hourly, NwsError, observation, periodText, points, stations, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof NwsError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -18,7 +19,7 @@ export function createServer() {
             return text((await forecast(lat, lon)).map(periodText).join("\n\n"));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("hourly_forecast", "Hourly US forecast for a coordinate, next N hours.", { ...coords, hours: z.number().int().min(1).max(72).default(12).describe("Hours to return") }, async ({ lat, lon, hours }) => {
@@ -26,7 +27,7 @@ export function createServer() {
             return text((await hourly(lat, lon)).slice(0, hours).map(periodText).join("\n"));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("active_alerts", "Active NWS alerts for a US state or marine area code.", { area: z.string().max(4).default("").describe("Two-letter state code, e.g. DC; empty for nationwide") }, async ({ area }) => {
@@ -37,7 +38,7 @@ export function createServer() {
             return text(`${rows.length} active alert(s)\n\n${rows.slice(0, 15).map(alertText).join("\n\n")}`);
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("latest_observation", "Latest observation from a NWS station, e.g. KDCA.", { station: z.string().min(2).describe("Station id, e.g. KDCA") }, async ({ station }) => {
@@ -45,7 +46,7 @@ export function createServer() {
             return text(await observation(station));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("nearby_stations", "Observation stations nearest a coordinate, with distance.", { ...coords, limit: z.number().int().min(1).max(20).default(5).describe("Stations") }, async ({ lat, lon, limit }) => {
@@ -58,7 +59,7 @@ export function createServer() {
                 .join("\n"));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("point_metadata", "NWS forecast office, time zone and relative location for a coordinate.", coords, async ({ lat, lon }) => {
@@ -72,7 +73,7 @@ export function createServer() {
             ].join("\n"));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

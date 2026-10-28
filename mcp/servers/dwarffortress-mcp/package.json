@@ -1,6 +1,6 @@
 {
   "name": "dwarffortress-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for the Dwarf Fortress wiki, !!FUN!! knowledge about the most complex game ever made.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/dwarffortress-mcp",

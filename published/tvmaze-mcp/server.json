@@ -1,16 +1,16 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/tvmaze-mcp",
-  "description": "TVMaze show search and schedules.",
+  "description": "TV show data: search shows, episode lists and daily airing schedules.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "tvmaze-mcp",
+      "identifier": "@mrfentmen/tvmaze-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"

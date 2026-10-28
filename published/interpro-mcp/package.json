@@ -1,24 +1,33 @@
 {
+  "name": "@mrfentmen/interpro-mcp",
   "version": "1.0.2",
+  "description": "InterPro protein families and domains: search entries and find the domains in one protein - keyless.",
   "type": "module",
+  "mcpName": "io.github.mrfentmen/interpro-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/interpro-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "interpro-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
-    "dist",
-    "server.json",
-    "README.md"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "dev": "npm run build && node dist/index.js"
+    "start": "node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "interpro",
+    "protein-domains",
+    "families",
+    "pfam",
+    "bioinformatics",
+    "keyless"
+  ],
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -28,16 +37,6 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
   },
-  "name": "interpro-mcp",
-  "description": "Protein domains from InterPro. No key required.",
-  "mcpName": "io.github.mrfentmen/interpro-mcp",
-  "keywords": [
-    "mcp",
-    "interpro",
-    "protein",
-    "domains",
-    "bioinformatics"
-  ],
   "engines": {
     "node": ">=20"
   }

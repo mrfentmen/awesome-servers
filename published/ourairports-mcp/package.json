@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ourairports-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Global airport database: lookup by IATA or ICAO code, search by name or city, and find airports near a point - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ourairports-mcp",

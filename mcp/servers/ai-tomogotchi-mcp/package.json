@@ -1,6 +1,6 @@
 {
   "name": "ai-tomogotchi-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for AI Tomogotchi virtual pet. Feed, play, and care for your AI pet.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ai-tomogotchi-mcp",

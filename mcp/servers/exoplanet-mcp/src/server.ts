@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof ExoplanetError || e instanceof Error) return `Error: ${e.message}`
@@ -31,7 +32,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchPlanets(query, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -44,7 +45,7 @@ export function createServer(): McpServer {
       try {
         return text(await planetDetail(name))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -57,7 +58,7 @@ export function createServer(): McpServer {
       try {
         return text(await systemPlanets(hostname))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -73,7 +74,7 @@ export function createServer(): McpServer {
       try {
         return text(await recentDiscoveries(from_year, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -86,7 +87,7 @@ export function createServer(): McpServer {
       try {
         return text(await habitableCandidates(limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -99,7 +100,7 @@ export function createServer(): McpServer {
       try {
         return text(await discoveryStats(from_year))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

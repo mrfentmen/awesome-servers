@@ -1,12 +1,12 @@
 {
   "name": "tetriswiki-mcp",
-  "version": "1.0.3",
-  "description": "Use this MCP server to the Tetris wiki, covering every game, piece, and technique in the tetromino universe",
+  "version": "1.0.1",
+  "description": "MCP server for the Tetris wiki, covering every game, piece, and technique in the tetromino universe.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/tetriswiki-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/tetriswiki-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "tetriswiki-mcp": "./dist/index.js"
@@ -36,8 +36,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

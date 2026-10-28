@@ -1,127 +1,113 @@
-
-export interface m0_SearchArgs {
-  query: string;
-  limit?: number;
-}
-
-export interface m0_ScheduleArgs {
-  country?: string;
-  date?: string;
-  limit?: number;
-}
-
-const m0 = (() => {
-const UA = 'mrfentmen-tvmaze-mcp/1.0';
-
-async function search(args: m0_SearchArgs): Promise<string> {
-  const query = (args.query ?? '').trim();
-  if (!query) return 'Provide a show name.';
-  const limit = Math.min(Math.max(Number(args.limit ?? 5) || 5, 1), 20);
-  const res = await fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(query)}`, {
-    headers: { 'User-Agent': UA, Accept: 'application/json' },
-    signal: AbortSignal.timeout(20000),
-  });
-  if (!res.ok) throw new Error(`TVMaze returned ${res.status}`);
-  const d = (await res.json()) as Array<{ show?: { id?: number; name?: string; premiered?: string; status?: string; genres?: string[]; rating?: { average?: number | null } } }>;
-  if (!d.length) return `No shows for "${query}".`;
-  return `TVMaze shows for "${query}":\n` +
-    d.slice(0, limit).map((x, i) => {
-      const s = x.show ?? {};
-      return `${i + 1}. ${s.name ?? '?'} (${s.premiered?.slice(0, 4) ?? '?'}) | status: ${s.status ?? '?'} | genres: ${(s.genres ?? []).join(', ') || '?'} | rating: ${s.rating?.average ?? '?'}`;
-    }).join('\n');
-}
-
-async function schedule(args: m0_ScheduleArgs): Promise<string> {
-  const country = (args?.country ?? 'US').trim();
-  const date = (args?.date ?? '').trim();
-  const limit = Math.min(Math.max(Number(args?.limit ?? 5) || 5, 1), 20);
-  const url = date
-    ? `https://api.tvmaze.com/schedule?country=${encodeURIComponent(country)}&date=${encodeURIComponent(date)}`
-    : `https://api.tvmaze.com/schedule?country=${encodeURIComponent(country)}`;
-  const res = await fetch(url, {
-    headers: { 'User-Agent': UA, Accept: 'application/json' },
-    signal: AbortSignal.timeout(20000),
-  });
-  if (!res.ok) throw new Error(`TVMaze returned ${res.status}`);
-  const d = (await res.json()) as Array<{ id?: number; name?: string; airdate?: string; airtime?: string; show?: { name?: string } }>;
-  if (!d.length) return 'No schedule entries found.';
-  return `TVMaze schedule for ${country}${date ? ` on ${date}` : ''}: (${d.length} entries, showing ${Math.min(limit, d.length)})\n` +
-    d.slice(0, limit).map((x, i) => `${i + 1}. ${x.show?.name ?? '?'} - ${x.name ?? '?'} (${x.airdate ?? '?'} ${x.airtime ?? '?'})`).join('\n');
-}
-
-return { schedule, search };
-})();
-
-const m1 = (() => {
+/**
+ * TVmaze — keyless public API client.
+ */
 const BASE = "https://api.tvmaze.com"
-const UA = "mrfentmen-tv-maze-mcp/1.0 (https://github.com/mrfentmen)"
-class TvError extends Error {}
+const SOURCE = "TVmaze"
+const UA = "tvmaze-mcp"
 
-async function get<T>(url: string): Promise<T> {
-  const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "application/json" }, signal: AbortSignal.timeout(25000) })
-  if (res.status === 429) throw new TvError("TVMaze rate limit hit, wait and retry")
-  if (!res.ok) throw new TvError(`TVMaze error ${res.status}`)
-  return (await res.json()) as T
+export class SourceError extends Error {}
+
+async function request(path: string, init?: RequestInit, timeoutMs = 25000): Promise<Response> {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs)
+  try {
+    const res = await fetch(path.startsWith("http") ? path : BASE + path, {
+      ...init,
+      signal: ctrl.signal,
+      headers: {
+        "user-agent": UA,
+        accept: "application/json",
+        ...(init?.headers as Record<string, string> | undefined),
+      },
+    })
+    if (!res.ok) throw new SourceError(`${SOURCE} responded ${res.status}`)
+    return res
+  } catch (e) {
+    if (e instanceof SourceError) throw e
+    if ((e as Error).name === "AbortError") throw new SourceError(`${SOURCE} request timed out`)
+    throw new SourceError(`${SOURCE} request failed: ${(e as Error).message}`)
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
-async function searchShows(args: { query?: string; limit?: number }): Promise<string> {
-  const q = (args.query ?? "").trim()
-  if (!q) throw new TvError("Provide a show name")
-  const limit = Math.min(args.limit ?? 5, 15)
-  const d = await get<any[]>(`${BASE}/search/shows?q=${encodeURIComponent(q)}`)
-  if (!d.length) return "No shows found"
-  return d.slice(0, limit).map((r: any, i: number) => {
-    const s = r?.show ?? {}
-    return `${i + 1}. ${s.name ?? "Untitled"} (${s.premiered ? s.premiered.slice(0, 4) : "year n/a"}) | rating ${s.rating?.average ?? "n/a"}\n   ${s.genres?.length ? s.genres.join(", ") : ""} | id ${s.id}\n   ${s.summary ? s.summary.replace(/<[^>]+>/g, "").slice(0, 160) : "no summary"}`
-  }).join("\n\n")
+export async function getJson(path: string, init?: RequestInit): Promise<any> {
+  const res = await request(path, init)
+  const body = await res.text()
+  try {
+    return JSON.parse(body)
+  } catch {
+    throw new SourceError(`${SOURCE} returned malformed JSON`)
+  }
 }
 
-async function showEpisodes(args: { showId?: number }): Promise<string> {
-  const id = args.showId
-  if (id === undefined || id <= 0) throw new TvError("Provide a TVMaze show ID")
-  const d = await get<any[]>(`${BASE}/shows/${id}/episodes`)
-  if (!d.length) return "No episodes found"
-  return d.map((e: any) => `S${String(e.season).padStart(2, "0")}E${String(e.number).padStart(2, "0")} ${e.name} (${e.airdate ?? ""})`).join("\n")
+export function clampLimit(n: number | undefined, fallback: number, max: number): number {
+  const v = n ?? fallback
+  if (!Number.isInteger(v) || v < 1 || v > max) throw new SourceError(`limit must be between 1 and ${max}`)
+  return v
 }
 
-async function todaySchedule(args: { country?: string }): Promise<string> {
-  const country = (args.country ?? "US").toUpperCase()
-  const d = await get<any[]>(`${BASE}/schedule?country=${encodeURIComponent(country)}`)
-  if (!d.length) return "No schedule for today"
-  return d.slice(0, 20).map((e: any, i: number) => `${i + 1}. ${e.show?.name ?? "Untitled"} | ${e.name ?? ""} | ${e.airtime ?? ""}`).join("\n")
+export function clean(s: unknown): string {
+  return String(s ?? "").replace(/\s+/g, " ").trim()
 }
 
-return { TvError, searchShows, showEpisodes, todaySchedule };
-})();
-
-export const TvError = m1.TvError;
-export const schedule = m0.schedule;
-export const search = m0.search;
-export const searchShows = m1.searchShows;
-export const showEpisodes = m1.showEpisodes;
-export const todaySchedule = m1.todaySchedule;
-export const m0_schedule = m0.schedule;
-export const m0_search = m0.search;
-export const m1_todaySchedule = m1.todaySchedule;
-export const m1_TvError = m1.TvError;
-export const m1_showEpisodes = m1.showEpisodes;
-export const m1_searchShows = m1.searchShows;
-
-// ---- muxC tools:
-
-interface TvMazeShow {
-  id?: number
-  name?: string
-  type?: string
-  language?: string
-  genres?: string[]
-  status?: string
-  premiered?: string
-  ended?: string
-  network?: { name?: string } | null
-  webChannel?: { name?: string } | null
-  schedule?: { time?: string; days?: string[] }
-  averageRuntime?: number | null
-  url?: string
+export function bullet(label: string, value: unknown): string {
+  const v = value === undefined || value === null || value === "" ? "" : String(value)
+  return v ? `${label}: ${v}` : ""
 }
 
+export function section(title: string, rows: string[]): string {
+  return [title, ...rows.filter(Boolean)].join("\n")
+}
+
+export async function search_shows(a: { query: string, limit?: number }): Promise<string> {
+  const query = clean(a.query)
+  if (query.length < 2) throw new SourceError("query must be at least 2 characters")
+  const limit = clampLimit(a.limit, 10, 20)
+  const d = await getJson(`/search/shows?q=${encodeURIComponent(query)}`)
+  const list: any[] = Array.isArray(d) ? d : []
+  if (!list.length) return `TVmaze has no show matching "${query}".`
+  return section(`${list.length} show(s) match "${query}"`, list.slice(0, limit).map((r, i) => `${i + 1}. ${clean(r.show?.name)} · ${clean(r.show?.premiered) || "no premiere"} · ${clean(r.show?.rating?.average) || "unrated"} · id ${clean(r.show?.id)}`))
+}
+
+export async function show(a: { showId: number }): Promise<string> {
+  if (!Number.isInteger(a.showId) || a.showId < 1) throw new SourceError("showId must be a positive integer")
+  const d = await getJson(`/shows/${a.showId}?embed=episodes`)
+  if (!d?.id) throw new SourceError(`TVmaze has no show ${a.showId}`)
+  const eps: any[] = Array.isArray(d?._embedded?.episodes) ? d._embedded.episodes : []
+  const summary = String(d.summary ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
+  return section(clean(d.name), [
+    bullet("Premiered", d.premiered),
+    bullet("Genres", Array.isArray(d.genres) ? d.genres.join(", ") : ""),
+    bullet("Rating", d.rating?.average),
+    bullet("Episodes", eps.length),
+    bullet("Summary", summary.slice(0, 500)),
+    ...eps.slice(0, 8).map((e, i) => `${i + 1}. S${clean(e.season)}E${clean(e.number)} ${clean(e.name)}`),
+  ])
+}
+
+export async function schedule(a: { country?: string, date?: string }): Promise<string> {
+  const country = clean(a.country || "US").toUpperCase()
+  if (!/^[A-Z]{2}$/.test(country)) throw new SourceError("country must be a two-letter code")
+  const q = a.date ? `&date=${clean(a.date)}` : ""
+  const d = await getJson(`/schedule?country=${country}${q}`)
+  const list: any[] = Array.isArray(d) ? d : []
+  if (!list.length) return `No shows scheduled for ${country}${a.date ? " on " + clean(a.date) : ""}.`
+  return section(`${list.length} episode(s) scheduled`, list.slice(0, 25).map((e, i) => `${i + 1}. ${clean(e.show?.name)} S${clean(e.season)}E${clean(e.number)} · ${clean(e.airdate)} ${clean(e.airtime)}`))
+}
+
+export async function cast(a: { showId: number }): Promise<string> {
+  if (!Number.isInteger(a.showId) || a.showId < 1) throw new SourceError("showId must be a positive integer")
+  const d = await getJson(`/shows/${a.showId}/cast`)
+  const list: any[] = Array.isArray(d) ? d : []
+  if (!list.length) return `No cast listed for show ${a.showId}.`
+  return section(`${list.length} cast member(s)`, list.slice(0, 25).map((c, i) => `${i + 1}. ${clean(c.person?.name)} as ${clean(c.character?.name)}`))
+}
+
+export async function episode_by_number(a: { showId: number, season: number, number: number }): Promise<string> {
+  if (!Number.isInteger(a.showId) || a.showId < 1) throw new SourceError("showId must be a positive integer")
+  const d = await getJson(`/shows/${a.showId}/episodebynumber?season=${a.season}&number=${a.number}`)
+  if (!d?.id) throw new SourceError(`No episode S${a.season}E${a.number} for show ${a.showId}`)
+  const summary = String(d.summary ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
+  return section(`S${clean(d.season)}E${clean(d.number)} — ${clean(d.name)}`, [bullet("Aired", d.airdate), bullet("Runtime", clean(d.runtime) + " min"), bullet("Rating", d.rating?.average), bullet("Summary", summary.slice(0, 600))])
+}

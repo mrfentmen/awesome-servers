@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/date-math-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Business-day counting, date shifting and calendar differences with holiday support - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/date-math-mcp",

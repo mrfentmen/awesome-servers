@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { ClevelandError, artworkDetail, byCreator, byDepartment, highlights, searchArtworks } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof ClevelandError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -19,7 +20,7 @@ export function createServer() {
             return text(await searchArtworks(query, n, onlyWithImages));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("artwork_detail", "One work with technique, accession number and a CC0 image link.", { id: z.number().int().positive().describe("Artwork id from any list tool") }, async ({ id }) => {
@@ -27,7 +28,7 @@ export function createServer() {
             return text(await artworkDetail(id));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("works_by_department", "Works in one department, by its exact name, e.g. 'Chinese Art' or 'Photography'.", { department: z.string().min(3).describe("Exact department name"), limit }, async ({ department, limit: n }) => {
@@ -35,7 +36,7 @@ export function createServer() {
             return text(await byDepartment(department, n));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("works_by_artist", "Works attributed to one artist.", { artist: z.string().min(3).describe("Artist name, e.g. 'Claude Monet'"), limit }, async ({ artist, limit: n }) => {
@@ -43,7 +44,7 @@ export function createServer() {
             return text(await byCreator(artist, n));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("open_access_highlights", "A random slice of CC0 works that have images, for browsing.", { limit }, async ({ limit: n }) => {
@@ -51,7 +52,7 @@ export function createServer() {
             return text(await highlights(n));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

@@ -1,89 +1,186 @@
+/**
+ * Crossref REST API — keyless metadata for 160M+ scholarly works:
+ * papers, DOIs, journals, authors, funders. Polite pool via a plain UA.
+ */
 const BASE = "https://api.crossref.org";
-const UA = "mrfentmen-crossref-mcp/1.0 (https://github.com/mrfentmen)";
+const UA = "crossref-mcp/1.0 (https://github.com/mrfentmen/awesome-servers)";
 export class CrossrefError extends Error {
 }
-async function get(url) {
-    const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "application/json" }, signal: AbortSignal.timeout(25000) });
-    if (res.status === 429)
-        throw new CrossrefError("Crossref rate limit hit, wait and retry");
-    if (!res.ok)
-        throw new CrossrefError(`Crossref error ${res.status}`);
-    return (await res.json());
+async function getJson(path, timeoutMs = 30000) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+        let res = await fetch(`${BASE}${path}`, {
+            signal: ctrl.signal,
+            headers: { "user-agent": UA, accept: "application/json" },
+        });
+        // Crossref rate-limits bursts; one polite retry covers normal tool use.
+        if (res.status === 429) {
+            await new Promise((r) => setTimeout(r, 1500));
+            res = await fetch(`${BASE}${path}`, {
+                signal: ctrl.signal,
+                headers: { "user-agent": UA, accept: "application/json" },
+            });
+        }
+        if (res.status === 404)
+            throw new CrossrefError("Crossref has no record for that DOI, ISSN or funder id");
+        if (res.status === 429)
+            throw new CrossrefError("Crossref is rate-limiting right now — try again in a few seconds");
+        if (!res.ok)
+            throw new CrossrefError(`Crossref responded ${res.status}`);
+        const d = await res.json();
+        return d?.message;
+    }
+    catch (e) {
+        if (e instanceof CrossrefError)
+            throw e;
+        if (e.name === "AbortError")
+            throw new CrossrefError("Crossref request timed out");
+        if (e instanceof SyntaxError)
+            throw new CrossrefError("Crossref returned malformed JSON");
+        throw new CrossrefError(`Crossref request failed: ${e.message}`);
+    }
+    finally {
+        clearTimeout(timer);
+    }
 }
-function fmtWork(w, i) {
-    const authors = (w?.author ?? []).slice(0, 3).map((a) => `${a.given ?? ""} ${a.family ?? ""}`.trim()).join(", ");
-    const year = w?.issued?.["date-parts"]?.[0]?.[0] ?? "year n/a";
-    return `${i + 1}. ${w?.title?.[0] ?? "Untitled"} (${year})\n   ${authors || "n/a"} | ${w?.type ?? ""}${w?.DOI ? ` | doi ${w.DOI}` : ""}`;
+const doiArg = (doi) => {
+    const v = doi.trim().replace(/^https?:\/\/(dx\.)?doi\.org\//i, "");
+    if (!/^10\.\d{4,9}\/\S+$/.test(v))
+        throw new CrossrefError(`"${doi}" is not a DOI, e.g. 10.1038/nature12373`);
+    return v;
+};
+const wrap = (q) => encodeURIComponent(q.trim());
+function date(d) {
+    const parts = d?.["date-parts"]?.[0];
+    if (!Array.isArray(parts) || typeof parts[0] !== "number")
+        return "date unknown";
+    const [y, m, day] = parts;
+    return [y, m ? String(m).padStart(2, "0") : undefined, day ? String(day).padStart(2, "0") : undefined].filter(Boolean).join("-");
 }
-export async function searchWorks(args) {
-    const q = (args.query ?? "").trim();
-    if (!q)
-        throw new CrossrefError("Provide search terms");
-    const limit = Math.min(args.limit ?? 5, 15);
-    const d = await get(`${BASE}/works?query=${encodeURIComponent(q)}&rows=${limit}`);
-    const items = d?.message?.items ?? [];
-    if (!items.length)
-        return "No works found";
-    return items.map(fmtWork).join("\n\n");
+function authors(d, max = 4) {
+    const list = d?.author ?? [];
+    if (list.length === 0)
+        return "no authors listed";
+    const names = list.slice(0, max).map((a) => [a.given, a.family].filter(Boolean).join(" ") || a.name || "?");
+    return `${names.join(", ")}${list.length > max ? ` +${list.length - max} more` : ""}`;
 }
-export async function doiLookup(args) {
-    const doi = (args.doi ?? "").trim();
-    if (!doi)
-        throw new CrossrefError("Provide a DOI");
-    const d = await get(`${BASE}/works/${encodeURIComponent(doi)}`);
-    const w = d?.message ?? {};
-    return `Title: ${w?.title?.[0] ?? "n/a"}\nType: ${w?.type ?? "n/a"}\nPublisher: ${w?.publisher ?? "n/a"}\nYear: ${w?.issued?.["date-parts"]?.[0]?.[0] ?? "n/a"}\nAuthors: ${(w?.author ?? []).slice(0, 5).map((a) => `${a.given ?? ""} ${a.family ?? ""}`.trim()).join(", ") || "n/a"}\nDOI: ${w?.DOI ?? doi}\nURL: https://doi.org/${w?.DOI ?? doi}`;
+const title = (d) => (Array.isArray(d?.title) ? d.title[0] : d?.title) ?? "untitled";
+function workLine(w, i) {
+    const kind = w.type ? ` [${w.type}]` : "";
+    const cited = typeof w["is-referenced-by-count"] === "number" ? ` · cited ${w["is-referenced-by-count"]}x` : "";
+    return `${i !== undefined ? `${i + 1}. ` : ""}${title(w)}${kind}\n   ${authors(w)} · ${String(w["container-title"]?.[0] ?? w.publisher ?? "no venue")} · ${date(w.issued)}${cited}${w.DOI ? ` · doi:${w.DOI}` : ""}`;
 }
-async function listEndpoint(args, path, label) {
-    const q = (args.query ?? "").trim();
-    const limit = Math.min(args.limit ?? 5, 20);
-    const url = q ? `${BASE}/${path}?query=${encodeURIComponent(q)}&rows=${limit}` : `${BASE}/${path}?rows=${limit}`;
-    const d = await get(url);
-    const items = d?.message?.items ?? [];
-    if (!items.length)
-        return `No ${label} found`;
-    return items.map((m, i) => `${i + 1}. ${m?.title ?? m?.name ?? "Untitled"}${m?.publisher ? ` | ${m.publisher}` : ""}${m?.counts?.["total-dois"] ? ` | DOIs ${m.counts["total-dois"]}` : ""}`).join("\n\n");
+export async function searchWorks(query, rows = 8) {
+    const q = query.trim();
+    if (q.length < 3)
+        throw new CrossrefError("Search query must be at least 3 characters");
+    if (!Number.isInteger(rows) || rows < 1 || rows > 25)
+        throw new CrossrefError("rows must be between 1 and 25");
+    const d = await getJson(`/works?query.bibliographic=${wrap(q)}&rows=${rows}&select=DOI,title,author,issued,container-title,type,is-referenced-by-count,publisher`);
+    const items = d?.items ?? [];
+    if (items.length === 0)
+        return `No Crossref works match "${query}".`;
+    return [
+        `Crossref works matching "${query}" (${items.length} of ${Number(d["total-results"] ?? items.length).toLocaleString("en-US")}):`,
+        "",
+        ...items.map((w, i) => workLine(w, i)),
+    ].join("\n");
 }
-export async function journals(args) {
-    return listEndpoint(args, "journals", "journals");
+export async function workByDoi(doi) {
+    const w = await getJson(`/works/${doiArg(doi)}`);
+    const refs = w.reference ?? [];
+    const lic = (w.license ?? []).map((l) => l.URL).filter(Boolean);
+    return [
+        `${title(w)} [${w.type ?? "unknown type"}]`,
+        `Authors: ${authors(w, 10)}`,
+        `Venue: ${String(w["container-title"]?.[0] ?? w.publisher ?? "unknown")}${w.volume ? ` · vol ${w.volume}` : ""}${w.issue ? ` · issue ${w.issue}` : ""}${w.page ? ` · p${w.page}` : ""}`,
+        `Published: ${date(w.issued)} · publisher ${w.publisher ?? "unknown"}`,
+        `DOI: ${w.DOI}`,
+        typeof w["is-referenced-by-count"] === "number" ? `Cited by ${w["is-referenced-by-count"]} works` : "",
+        refs.length ? `References: ${refs.length}` : "",
+        w.ISSN?.length ? `ISSN: ${w.ISSN.join(", ")}` : "",
+        lic.length ? `License: ${lic[0]}` : "",
+        w.URL ? `URL: ${w.URL}` : "",
+    ]
+        .filter(Boolean)
+        .join("\n");
 }
-export async function journalLookup(args) {
-    const issn = (args.issn ?? "").trim();
-    if (!issn)
-        throw new CrossrefError("Provide an ISSN like 0028-0836");
-    const d = await get(`${BASE}/journals/${encodeURIComponent(issn)}`);
-    const m = d?.message ?? {};
-    return `Title: ${m?.title ?? "n/a"}\nPublisher: ${m?.publisher ?? "n/a"}\nSubjects: ${(m?.subjects ?? []).slice(0, 5).join(", ") || "n/a"}`;
+export async function journalInfo(issn) {
+    const clean = issn.trim().replace(/[^0-9Xx-]/g, "");
+    if (!/^\d{4}-?\d{3}[\dXx]$/.test(clean))
+        throw new CrossrefError(`"${issn}" is not an ISSN, e.g. 0028-0836`);
+    const j = await getJson(`/journals/${clean}`);
+    return [
+        `${title(j)}${j["publisher"] ? ` — ${j.publisher}` : ""}`,
+        `ISSNs: ${(j.ISSN ?? [clean]).join(", ")}`,
+        `Works indexed: ${Number(j.counts?.["total-dois"] ?? 0).toLocaleString("en-US")}`,
+        j["breakdown-dois-by-type"]?.journal_article !== undefined
+            ? `Journal articles: ${Number(j["breakdown-dois-by-type"].journal_article).toLocaleString("en-US")}`
+            : "",
+        j.ISSN?.[0] ? `Journal page: https://api.crossref.org/journals/${j.ISSN[0]}` : "",
+    ]
+        .filter(Boolean)
+        .join("\n");
 }
-export async function funders(args) {
-    return listEndpoint(args, "funders", "funders");
+export async function recentWorks(query, days = 7, rows = 8) {
+    if (!Number.isInteger(days) || days < 1 || days > 365)
+        throw new CrossrefError("days must be between 1 and 365");
+    if (!Number.isInteger(rows) || rows < 1 || rows > 25)
+        throw new CrossrefError("rows must be between 1 and 25");
+    const since = new Date(Date.now() - days * 86400_000).toISOString().slice(0, 10);
+    let path = `/works?filter=from-pub-date:${since},type:journal-article&rows=${rows}&sort=published&order=desc&select=DOI,title,author,issued,container-title,type,is-referenced-by-count,publisher`;
+    const q = (query ?? "").trim();
+    if (q) {
+        if (q.length < 3)
+            throw new CrossrefError("Optional query must be at least 3 characters");
+        path += `&query.bibliographic=${wrap(q)}`;
+    }
+    const d = await getJson(path);
+    // A few Crossref records carry nonsense issue dates; drop them for a clean list.
+    const maxYear = new Date().getUTCFullYear() + 1;
+    const items = (d?.items ?? []).filter((w) => {
+        const y = w?.issued?.["date-parts"]?.[0]?.[0];
+        return typeof y === "number" && y >= 1900 && y <= maxYear;
+    });
+    if (items.length === 0)
+        return `No journal articles published since ${since}${q ? ` matching "${q}"` : ""}.`;
+    return [
+        `Journal articles published since ${since}${q ? ` matching "${q}"` : ""} (${items.length} of ${Number(d["total-results"] ?? items.length).toLocaleString("en-US")}):`,
+        "",
+        ...items.map((w, i) => workLine(w, i)),
+    ].join("\n");
 }
-export async function funderLookup(args) {
-    const id = (args.id ?? "").trim();
-    if (!id)
-        throw new CrossrefError("Provide a funder id like 100000001");
-    const d = await get(`${BASE}/funders/${encodeURIComponent(id)}`);
-    const m = d?.message ?? {};
-    return `Name: ${m?.name ?? "n/a"}\nLocation: ${m?.location ?? "n/a"}\nAwards: ${m?.["award-count"] ?? "n/a"} | Descendants: ${m?.["descendant-count"] ?? "n/a"}`;
+export async function worksByAuthor(author, rows = 8) {
+    const q = author.trim();
+    if (q.length < 3)
+        throw new CrossrefError("Author name must be at least 3 characters");
+    if (!Number.isInteger(rows) || rows < 1 || rows > 25)
+        throw new CrossrefError("rows must be between 1 and 25");
+    const d = await getJson(`/works?query.author=${wrap(q)}&rows=${rows}&sort=is-referenced-by-count&order=desc&select=DOI,title,author,issued,container-title,type,is-referenced-by-count,publisher`);
+    const items = d?.items ?? [];
+    if (items.length === 0)
+        return `No Crossref works found for author "${author}".`;
+    return [
+        `Most-cited Crossref works attributed to "${author}" (${items.length} of ${Number(d["total-results"] ?? items.length).toLocaleString("en-US")}):`,
+        "",
+        ...items.map((w, i) => workLine(w, i)),
+    ].join("\n");
 }
-export async function members(args) {
-    return listEndpoint(args, "members", "members");
-}
-export async function memberLookup(args) {
-    const id = (args.id ?? "").trim();
-    if (!id)
-        throw new CrossrefError("Provide a member id");
-    const d = await get(`${BASE}/members/${encodeURIComponent(id)}`);
-    const m = d?.message ?? {};
-    return `Name: ${m?.["primary-name"] ?? "n/a"}\nLocation: ${m?.location ?? "n/a"}\nTotal DOIs: ${m?.counts?.["total-dois"] ?? "n/a"} | Current year: ${m?.counts?.["current-dois"] ?? "n/a"}`;
-}
-export async function workTypes() {
-    const d = await get(`${BASE}/types?rows=30`);
-    const items = d?.message?.items ?? [];
-    return items.map((t) => `${t?.id ?? "?"} — ${t?.label ?? ""}`).join("\n");
-}
-export async function licenses() {
-    const d = await get(`${BASE}/licenses?rows=30`);
-    const items = d?.message?.items ?? [];
-    return items.map((l) => `${l?.URL ?? "?"} (DOIs ${l?.["total-dois"] ?? "?"})`).join("\n");
+export async function funderSearch(query, rows = 8) {
+    const q = query.trim();
+    if (q.length < 2)
+        throw new CrossrefError("Funder query must be at least 2 characters");
+    if (!Number.isInteger(rows) || rows < 1 || rows > 25)
+        throw new CrossrefError("rows must be between 1 and 25");
+    const d = await getJson(`/funders?query=${wrap(q)}&rows=${rows}`);
+    const items = d?.items ?? [];
+    if (items.length === 0)
+        return `No Crossref funders match "${query}".`;
+    const lines = items.map((f, i) => {
+        const where = [f.location ?? f["location"]].filter(Boolean);
+        const region = f["country"] ?? f.location ?? "";
+        return `${i + 1}. ${f.name}${f["alt-names"]?.length ? ` (aka ${f["alt-names"].slice(0, 3).join(", ")})` : ""}\n   id ${f.id ?? f.URI ?? "?"}${region ? ` · ${region}` : ""}${where.length ? "" : ""}`;
+    });
+    return [`Crossref funders matching "${query}" (${items.length} of ${Number(d["total-results"] ?? items.length).toLocaleString("en-US")}):`, "", ...lines].join("\n");
 }

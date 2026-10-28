@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/cheapshark-mcp",
-  "description": "Find game deals and price history from CheapShark. No key required.",
+  "description": "Game price data: current deals, store list and price history by game.",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
-  "version": "1.1.1",
+  "version": "1.0.0",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "cheapshark-mcp",
-      "version": "1.1.1",
+      "identifier": "@mrfentmen/cheapshark-mcp",
+      "version": "1.0.0",
       "transport": {
         "type": "stdio"
       }

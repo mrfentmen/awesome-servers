@@ -1,28 +1,25 @@
-# BART MCP
+# BART
 
-Bay Area Rapid Transit departures from the public BART API. No key required.
+Bay Area Rapid Transit: real-time departures, stations and route info.
 
-This file is self contained. It reads public data only and never writes to the machine. All output is bounded and honest about what could not be fetched.
+Keyless — no signup, no API key, no environment variables.
+
+## Install
+
+```bash
+npx -y @mrfentmen/bart-mcp
+```
 
 ## Tools
 
+| Tool | What it does |
+|---|---|
+| `departures` | Real-time departures from a BART station |
+| `stations` | All BART stations with coordinates |
+| `routes` | BART routes and their colours |
+| `advisories` | Current BART service advisories |
+| `station_info` | Details for one station: address, platforms and transit links |
 
-* `etd`  Departures for a station.
-* `stations`  List stations.
+## Data source
 
-## Usage
-
-```bash
-npm install
-npm run build
-node dist/index.js
-```
-
-Data comes from the public BART API.
-
-## Licence — no paywall
-
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.
+BART API

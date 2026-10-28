@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { enforcementTotals, facilitySite, searchFacilities, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -18,7 +19,7 @@ export function createServer() {
             return text(await searchFacilities(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("enforcement_totals", "Enforcement and compliance row counts and total penalties for a state's facilities.", {
@@ -28,7 +29,7 @@ export function createServer() {
             return text(await enforcementTotals(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("facility_site", "FRS facility site record (address, county, federal agency) by EPA registry ID.", {
@@ -38,7 +39,7 @@ export function createServer() {
             return text(await facilitySite(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

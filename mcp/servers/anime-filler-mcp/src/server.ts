@@ -3,6 +3,7 @@ import { z } from "zod"
 import { ScrapeError, getShow, searchAnime, verdict } from "./scraper.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -26,7 +27,7 @@ export function createServer(): McpServer {
             results.map((r, i) => `${i + 1}. ${r.title}\n   ${r.url} (slug: ${r.slug})`).join("\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -58,7 +59,7 @@ export function createServer(): McpServer {
             : ""
         return text(head + "\n" + body + sample)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -75,7 +76,7 @@ export function createServer(): McpServer {
         const info = await getShow(slug)
         return text(verdict(info, episode))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

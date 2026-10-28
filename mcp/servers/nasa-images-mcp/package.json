@@ -1,6 +1,6 @@
 {
   "name": "nasa-images-mcp",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "NASA image and video library: media search, asset files with originals, center filters, keyword summaries.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nasa-images-mcp",

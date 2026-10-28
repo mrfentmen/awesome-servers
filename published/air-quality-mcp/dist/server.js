@@ -1,109 +1,67 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { airQuality } from "./api.js";
-const text = (value) => ({ content: [{ type: "text", text: value }] });
-const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
-const error = (e) => `Error: ${e instanceof Error ? e.message : String(e)}`;
+import { AirQualityError, airQualityForecast, compareLocations, currentAirQuality, pollenForecast, pollutantDetail, } from "./api.js";
+const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
+function errorMessage(e) {
+    if (e instanceof AirQualityError || e instanceof Error)
+        return `Error: ${e.message}`;
+    return `Error: ${String(e)}`;
+}
+const latArg = z.number().min(-90).max(90).describe("Latitude, e.g. 52.52");
+const lonArg = z.number().min(-180).max(180).describe("Longitude, e.g. 13.41");
+const hoursArg = z.number().int().min(3).max(120).default(24).describe("Forecast horizon in hours");
 export function createServer() {
     const server = new McpServer({ name: "air-quality-mcp", version: "1.0.0" });
-    server.registerTool("air_quality", {
-        title: "Air quality",
-        description: "Get the current air quality index for a location.",
-        inputSchema: z.object({ lat: z.number().describe("Latitude."), lon: z.number().describe("Longitude.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("current_air_quality", "Current AQI plus PM2.5, PM10, ozone, NO2, SO2 and CO for a coordinate.", { latitude: latArg, longitude: lonArg }, async ({ latitude, longitude }) => {
         try {
-            return text(await airQuality(args));
+            return text(await currentAirQuality(latitude, longitude));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("air_forecast", {
-        title: "Air quality forecast",
-        description: "Day by day PM2.5 forecast for a location, with the cleanest and dirtiest hours.",
-        inputSchema: z.object({ lat: z.number().describe("Latitude."), lon: z.number().describe("Longitude."), days: z.number().describe("Forecast days, 1 to 3.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement forecast locally (paywall removed)
+    server.tool("air_quality_forecast", "Hourly AQI and PM2.5 forecast with the peak hour flagged.", { latitude: latArg, longitude: lonArg, hours: hoursArg }, async ({ latitude, longitude, hours }) => {
         try {
-            return textError("Not yet implemented: forecast");
+            return text(await airQualityForecast(latitude, longitude, hours));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("pollen_report", {
-        title: "Pollen report",
-        description: "Current pollen counts for the six main allergens at a location, with the European AQI.",
-        inputSchema: z.object({ lat: z.number().describe("Latitude."), lon: z.number().describe("Longitude.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement report locally (paywall removed)
+    server.tool("pollutant_detail", "Every pollutant Open-Meteo reports for a point, with units.", { latitude: latArg, longitude: lonArg }, async ({ latitude, longitude }) => {
         try {
-            return textError("Not yet implemented: report");
+            return text(await pollutantDetail(latitude, longitude));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    const serverName = "air-quality-mcp";
-    server.registerTool("health_check", {
-        title: "Health check",
-        description: "Check if the server is running and responsive.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("OK - server is running");
+    server.tool("pollen_forecast", "Pollen forecast (alder, birch, grass, mugwort, olive, ragweed) — Europe mostly.", { latitude: latArg, longitude: lonArg, hours: hoursArg }, async ({ latitude, longitude, hours }) => {
+        try {
+            return text(await pollenForecast(latitude, longitude, hours));
+        }
+        catch (e) {
+            return fail(errorMessage(e));
+        }
     });
-    server.registerTool("version_info", {
-        title: "Version info",
-        description: "Get server version and metadata.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
-    });
-    server.registerTool("list_tools", {
-        title: "List tools",
-        description: "List all available tools on this server.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("See the tools/list response for the full tool list.");
-    });
-    server.registerTool("echo", {
-        title: "Echo",
-        description: "Echo back the provided text.",
-        inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        return text(String(args?.text ?? ""));
-    });
-    server.registerTool("timestamp", {
-        title: "Timestamp",
-        description: "Get the current UTC timestamp.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(new Date().toISOString());
-    });
-    server.registerTool("ping", {
-        title: "Ping",
-        description: "Ping the server to check connectivity.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("pong");
-    });
-    server.registerTool("help", {
-        title: "Help",
-        description: "Get help and usage information.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("This MCP server provides several tools. See tools/list for details.");
+    server.tool("compare_locations", "Current air quality side by side for 2 to 5 places.", {
+        locations: z
+            .array(z.object({
+            name: z.string().optional().describe("Label for the place"),
+            latitude: z.number().min(-90).max(90),
+            longitude: z.number().min(-180).max(180),
+        }))
+            .min(2)
+            .max(5)
+            .describe("Places to compare"),
+    }, async ({ locations }) => {
+        try {
+            return text(await compareLocations(locations));
+        }
+        catch (e) {
+            return fail(errorMessage(e));
+        }
     });
     return server;
 }

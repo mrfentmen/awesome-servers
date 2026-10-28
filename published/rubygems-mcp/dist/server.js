@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { gemInfo, gemOwners, gemVersions, latestReleases, reverseDependencies, RubyGemsError, searchGems, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof RubyGemsError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -18,7 +19,7 @@ export function createServer() {
             return text(await searchGems(query, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("gem_info", "Downloads, authors, license and links for one gem.", { name: gemArg }, async ({ name }) => {
@@ -26,7 +27,7 @@ export function createServer() {
             return text(await gemInfo(name));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("gem_versions", "Release history for a gem, newest first.", { name: gemArg }, async ({ name }) => {
@@ -34,7 +35,7 @@ export function createServer() {
             return text(await gemVersions(name));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("latest_releases", "Gems published most recently on rubygems.org.", { limit: z.number().int().min(1).max(50).default(15).describe("Gems to return") }, async ({ limit }) => {
@@ -42,7 +43,7 @@ export function createServer() {
             return text(await latestReleases(limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("reverse_dependencies", "Gems that depend on the given gem.", {
@@ -53,7 +54,7 @@ export function createServer() {
             return text(await reverseDependencies(name, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("gem_owners", "Current owners of a gem.", { name: gemArg }, async ({ name }) => {
@@ -61,7 +62,7 @@ export function createServer() {
             return text(await gemOwners(name));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

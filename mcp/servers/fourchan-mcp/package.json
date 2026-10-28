@@ -1,6 +1,6 @@
 {
   "name": "fourchan-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for 4chan, board catalogs, threads, and posts from the raw internet culture archive.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/fourchan-mcp",

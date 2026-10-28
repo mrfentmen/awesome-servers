@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { links, nearby, overview, random, randomWithOverviews, search, sections, WikivoyageError, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof WikivoyageError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -17,7 +18,7 @@ export function createServer() {
             return text(await search(query, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("destination_overview", "The opening section of a Wikivoyage destination guide.", { title: z.string().min(1).describe("Exact article title, e.g. Kyoto") }, async ({ title }) => {
@@ -25,7 +26,7 @@ export function createServer() {
             return text(await overview(title));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("destination_sections", "The table of contents for a destination guide: see, do, eat, sleep and the rest.", { title: z.string().min(1).describe("Exact article title") }, async ({ title }) => {
@@ -33,7 +34,7 @@ export function createServer() {
             return text(await sections(title));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("nearby_destinations", "Wikivoyage articles near a coordinate.", {
@@ -46,7 +47,7 @@ export function createServer() {
             return text(await nearby(lat, lon, radius_m, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("destination_links", "Articles a destination guide links to — useful for building a route.", {
@@ -57,7 +58,7 @@ export function createServer() {
             return text(await links(title, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("random_destination", "A random destination, optionally with a two-sentence overview.", {
@@ -68,7 +69,7 @@ export function createServer() {
             return text(with_overview ? await randomWithOverviews(limit) : await random(limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

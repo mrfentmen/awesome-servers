@@ -1,106 +1,119 @@
-const BASE = 'https://rest.ensembl.org';
-export async function lookup(args) {
-    const symbol = (args.symbol ?? '').trim();
-    const species = (args.species ?? 'human').trim();
+/**
+ * Ensembl — keyless public API client.
+ */
+const BASE = "https://rest.ensembl.org";
+const SOURCE = "Ensembl";
+export class SourceError extends Error {
+}
+async function request(path, accept = "application/json", timeoutMs = 25000) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+        const res = await fetch(path.startsWith("http") ? path : BASE + path, {
+            signal: ctrl.signal,
+            headers: { "user-agent": "ensembl-mcp", accept },
+        });
+        if (!res.ok)
+            throw new SourceError(`${SOURCE} responded ${res.status}`);
+        return res;
+    }
+    catch (e) {
+        if (e instanceof SourceError)
+            throw e;
+        if (e.name === "AbortError")
+            throw new SourceError(`${SOURCE} request timed out`);
+        throw new SourceError(`${SOURCE} request failed: ${e.message}`);
+    }
+    finally {
+        clearTimeout(timer);
+    }
+}
+export async function getJson(path) {
+    const res = await request(path);
+    const body = await res.text();
+    try {
+        return JSON.parse(body);
+    }
+    catch {
+        throw new SourceError(`${SOURCE} returned malformed JSON`);
+    }
+}
+export async function getText(path, accept = "text/plain") {
+    const res = await request(path, accept);
+    return (await res.text()).trim();
+}
+export function clampLimit(n, fallback, max) {
+    const v = n ?? fallback;
+    if (!Number.isInteger(v) || v < 1 || v > max)
+        throw new SourceError(`limit must be between 1 and ${max}`);
+    return v;
+}
+export function clean(s) {
+    return String(s ?? "").replace(/\s+/g, " ").trim();
+}
+export function bullet(label, value) {
+    const v = value === undefined || value === null || value === "" ? "" : String(value);
+    return v ? `${label}: ${v}` : "";
+}
+export function section(title, rows) {
+    return [title, ...rows.filter(Boolean)].join("\n");
+}
+function checkId(id) {
+    const v = clean(id);
+    if (!/^ENS[A-Z]*[GTP]\d+$/.test(v) && !/^\d+$/.test(v))
+        throw new SourceError("geneId must be an Ensembl id like ENSG00000139618 or an NCBI gene id");
+    return v;
+}
+export async function lookupGene(a) {
+    const symbol = clean(a.symbol);
     if (!symbol)
-        return 'Provide a gene symbol.';
-    const res = await fetch(`${BASE}/lookup/symbol/${encodeURIComponent(species)}/${encodeURIComponent(symbol)}?content-type=application/json`, {
-        headers: { 'User-Agent': 'mrfentmen-ensembl-mcp/1.0', Accept: 'application/json' },
-        signal: AbortSignal.timeout(20000),
-    });
-    if (!res.ok)
-        throw new Error(`Ensembl returned ${res.status}`);
-    const d = (await res.json());
-    const s = (k) => (d[k] != null ? String(d[k]) : '');
+        throw new SourceError("symbol is required");
+    const species = clean(a.species || "homo_sapiens").toLowerCase().replace(/\s+/g, "_");
+    const d = await getJson(`/lookup/symbol/${encodeURIComponent(species)}/${encodeURIComponent(symbol)}?expand=0;content-type=application/json`);
+    if (!d || !d.id)
+        return `Ensembl has no gene called ${symbol} in ${species}.`;
     return [
-        `${s('display_name')} (${s('id')})`,
-        s('description') ? `Description: ${s('description')}` : '',
-        `Type: ${s('biotype')} | ${s('start')}-${s('end')} on ${s('seq_region_name')} (${s('strand') === '1' ? '+' : '-'})`,
-        s('assembly_name') ? `Assembly: ${s('assembly_name')}` : '',
-    ].filter(Boolean).join('\n');
+        `${d.display_name ?? symbol} (${d.id})`,
+        `Species: ${d.species ?? species}`,
+        `Location: ${d.seq_region_name}:${Number(d.start).toLocaleString("en-US")}-${Number(d.end).toLocaleString("en-US")} (${d.strand === 1 ? "+" : "-"} strand)`,
+        `Biotype: ${d.biotype ?? "unknown"}`,
+        d.description ? `Description: ${clean(d.description)}` : "",
+        `Ensembl: https://www.ensembl.org/${species}/Gene/Summary?g=${d.id}`,
+    ].filter(Boolean).join("\n");
 }
-export async function sequence(args) {
-    const id = (args.id ?? '').trim();
-    if (!id)
-        return 'Provide a stable id.';
-    const res = await fetch(`${BASE}/sequence/id/${encodeURIComponent(id)}?content-type=application/json`, {
-        headers: { 'User-Agent': 'mrfentmen-ensembl-mcp/1.0', Accept: 'application/json' },
-        signal: AbortSignal.timeout(20000),
-    });
-    if (!res.ok)
-        throw new Error(`Ensembl returned ${res.status}`);
-    const d = (await res.json());
-    const seq = String(d.seq ?? '');
+export async function geneSequence(a) {
+    const id = checkId(a.geneId);
+    const max = a.maxBases ?? 200;
+    if (!Number.isInteger(max) || max < 30 || max > 2000)
+        throw new SourceError("maxBases must be between 30 and 2000");
+    const d = await getJson(`/sequence/id/${encodeURIComponent(id)}?content-type=application/json`);
+    if (!d || !d.seq)
+        throw new SourceError(`Ensembl returned no sequence for ${id}`);
+    const seq = String(d.seq);
+    const shown = seq.length > max ? `${seq.slice(0, max)}...` : seq;
     return [
-        `Sequence for ${id} (${seq.length} bases):`,
-        seq.slice(0, 200) + (seq.length > 200 ? '...' : ''),
-    ].filter(Boolean).join('\n');
+        `${id} - ${d.desc ?? "sequence"}${d.molecule ? ` (${d.molecule})` : ""}`,
+        `Length: ${seq.length} bases`,
+        d.seq ? `Sequence: ${shown}` : "",
+    ].filter(Boolean).join("\n");
 }
-// ---- muxA tools:
-// Ensembl's public REST node answers slowly and throttles hard, so these calls
-// get a longer budget than the 20s the original tools use.
-const SLOW_TIMEOUT = 30000;
-const FEATURES = new Set([
-    'gene', 'transcript', 'exon', 'cds', 'repeat', 'simple', 'misc', 'variation',
-    'regulatory', 'motif', 'peak', 'other_regulatory', 'rnats', 'cdna',
-    'five_prime_utr', 'three_prime_utr', 'intron', 'constrained',
-]);
-async function restJson(path) {
-    const res = await fetch(`${BASE}${path}`, {
-        headers: { 'User-Agent': 'mrfentmen-ensembl-mcp/1.0', Accept: 'application/json' },
-        signal: AbortSignal.timeout(SLOW_TIMEOUT),
-    });
-    if (res.status === 400)
-        throw new Error(`Ensembl rejected the request: ${path}`);
-    if (res.status === 404)
-        throw new Error(`Ensembl has nothing at ${path}`);
-    if (!res.ok)
-        throw new Error(`Ensembl returned ${res.status} for ${path}`);
-    return (await res.json());
-}
-function bound(value, fallback, max) {
-    return Math.max(1, Math.min(Math.round(value ?? fallback), max));
-}
-export async function genesInRegion(args) {
-    const species = (args.species ?? 'human').trim();
-    const chrom = (args.chrom ?? '').trim();
-    if (!chrom)
-        return 'Provide chrom, e.g. chrom: "7".';
-    if (!Number.isInteger(args.start) || !Number.isInteger(args.end)) {
-        return 'Provide whole-number start and end coordinates.';
+export async function geneXrefs(a) {
+    const id = checkId(a.geneId);
+    const limit = a.limit ?? 15;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 50)
+        throw new SourceError("limit must be between 1 and 50");
+    const d = await getJson(`/xrefs/id/${encodeURIComponent(id)}?content-type=application/json`);
+    const rows = Array.isArray(d) ? d : [];
+    if (!rows.length)
+        return `Ensembl lists no cross-references for ${id}.`;
+    const bySource = new Map();
+    for (const r of rows) {
+        const key = clean(r.dbname) || "other";
+        const list = bySource.get(key) ?? [];
+        if (list.length < 3)
+            list.push(clean(r.primary_id) || clean(r.display_id));
+        bySource.set(key, list);
     }
-    const start = Number(args.start);
-    const end = Number(args.end);
-    if (start < 1 || end < start)
-        return 'Start must be 1 or more and end must not be before start.';
-    // Ensembl's overlap/region refuses spans over 5 Mb
-    if (end - start > 5000000)
-        return 'Region is wider than 5 Mb, which Ensembl will not return in one call. Narrow it down.';
-    const wanted = (args.feature ?? 'gene').trim().toLowerCase();
-    if (!FEATURES.has(wanted)) {
-        return `Unknown feature type ${wanted}. Use one of: ${[...FEATURES].join(', ')}.`;
-    }
-    const limit = bound(args.limit, 25, 100);
-    const region = `${encodeURIComponent(chrom)}:${start}-${end}`;
-    const d = await restJson(`/overlap/region/${encodeURIComponent(species)}/${region}?feature=${encodeURIComponent(wanted)}&content-type=application/json`);
-    if (!Array.isArray(d) || !d.length)
-        return `Ensembl found no ${wanted} features in ${chrom}:${start}-${end} (${species}).`;
-    const shown = d.slice(0, limit);
-    return [
-        `${d.length} ${wanted} feature(s) in ${chrom}:${start}-${end} (${species}), showing ${shown.length}.`,
-        ...shown.map((f, i) => {
-            const bits = [
-                `${i + 1}. ${String(f.external_name ?? f.id ?? '?')}`,
-                String(f.biotype ?? f.feature_type ?? 'not reported'),
-                `${f.start}-${f.end}`,
-                Number(f.strand) === 1 ? '+' : '-',
-            ];
-            if (f.description)
-                bits.push(String(f.description).slice(0, 90));
-            return bits.join(' | ');
-        }),
-        d.length > shown.length ? `...and ${d.length - shown.length} more.` : '',
-    ]
-        .filter(Boolean)
-        .join('\n');
+    const lines = [...bySource.entries()].slice(0, limit).map(([db, ids]) => `- ${db}: ${ids.join(", ")}`);
+    return [`${rows.length} cross-references for ${id} across ${bySource.size} databases:`, "", ...lines].join("\n");
 }

@@ -1,24 +1,33 @@
 {
+  "name": "@mrfentmen/fruityvice-mcp",
   "version": "1.0.2",
+  "description": "Fruit nutrition data: calories, sugar, fat and carbs per fruit, with lookup by name and nutrient ranges - keyless.",
   "type": "module",
+  "mcpName": "io.github.mrfentmen/fruityvice-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/fruityvice-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "fruityvice-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
-    "dist",
-    "server.json",
-    "README.md"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "dev": "npm run build && node dist/index.js"
+    "start": "node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "fruit",
+    "nutrition",
+    "calories",
+    "food",
+    "health",
+    "keyless"
+  ],
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -28,16 +37,6 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
   },
-  "name": "fruityvice-mcp",
-  "description": "Fruit nutrition data from Fruityvice. No key required.",
-  "mcpName": "io.github.mrfentmen/fruityvice-mcp",
-  "keywords": [
-    "mcp",
-    "fruityvice",
-    "fruit",
-    "nutrition",
-    "food"
-  ],
   "engines": {
     "node": ">=20"
   }

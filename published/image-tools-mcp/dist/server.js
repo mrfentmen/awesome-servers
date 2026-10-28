@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { inspectImage } from "./api.js";
 import { resizeImage, probeUrl, convertUrlImage } from "./api.js";
+import { premiumRequired } from "./license.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -19,7 +20,7 @@ export function createServer() {
             return text(await resizeImage(args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("inspect_image", {
@@ -32,7 +33,7 @@ export function createServer() {
             return text(await inspectImage(args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("probe_url", {
@@ -41,11 +42,16 @@ export function createServer() {
         inputSchema: z.object({ url: z.string().describe("Image url."), }),
         annotations: READ_ONLY,
     }, async (args) => {
+        // ---- paywall: probe_url ----
+        const paywallMessage = await premiumRequired("probe_url");
+        if (paywallMessage)
+            return { content: [{ type: "text", text: paywallMessage }], isError: true };
+        // ---- paywall: end ----
         try {
             return text(await probeUrl(args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("convert_url_image", {
@@ -54,61 +60,17 @@ export function createServer() {
         inputSchema: z.object({ url: z.string().describe("Image url."), format: z.string().describe("jpeg, png, webp, avif, tiff or gif.").optional(), width: z.number().describe("Resize width in pixels.").optional(), filename: z.string().describe("Output file name.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
+        // ---- paywall: convert_url_image ----
+        const paywallMessage = await premiumRequired("convert_url_image");
+        if (paywallMessage)
+            return { content: [{ type: "text", text: paywallMessage }], isError: true };
+        // ---- paywall: end ----
         try {
             return text(await convertUrlImage(args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
-    });
-    const serverName = "image-tools-mcp";
-    server.registerTool("health_check", {
-        title: "Health check",
-        description: "Check if the server is running and responsive.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("OK - server is running");
-    });
-    server.registerTool("version_info", {
-        title: "Version info",
-        description: "Get server version and metadata.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
-    });
-    server.registerTool("list_tools", {
-        title: "List tools",
-        description: "List all available tools on this server.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("See the tools/list response for the full tool list.");
-    });
-    server.registerTool("echo", {
-        title: "Echo",
-        description: "Echo back the provided text.",
-        inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        return text(String(args?.text ?? ""));
-    });
-    server.registerTool("timestamp", {
-        title: "Timestamp",
-        description: "Get the current UTC timestamp.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(new Date().toISOString());
-    });
-    server.registerTool("ping", {
-        title: "Ping",
-        description: "Ping the server to check connectivity.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("pong");
     });
     return server;
 }

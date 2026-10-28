@@ -1,12 +1,12 @@
 {
   "name": "yugioh-mcp",
-  "version": "1.0.3",
-  "description": "Use this MCP server to YGOPRODeck, Yu Gi Oh! cards, archetypes, and banlists. Tools include search cards, search by archetype, get card",
+  "version": "1.0.1",
+  "description": "MCP server for YGOPRODeck, Yu Gi Oh! cards, archetypes, and banlists.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/yugioh-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/yugioh-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "yugioh-mcp": "./dist/index.js"
@@ -36,8 +36,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

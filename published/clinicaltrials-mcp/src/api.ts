@@ -1,190 +1,178 @@
+const BASE = "https://clinicaltrials.gov/api/v2"
+const FIELDS = [
+  "NCTId",
+  "BriefTitle",
+  "OverallStatus",
+  "Phase",
+  "Condition",
+  "InterventionName",
+  "LeadSponsorName",
+  "EnrollmentCount",
+  "StartDate",
+  "CompletionDate",
+  "StudyType",
+]
 
-export interface m0_SearchArgs {
-  query: string;
-  limit?: number;
+export class TrialsError extends Error {}
+
+async function getJson(url: string, timeoutMs = 30000): Promise<any> {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs)
+  try {
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      headers: { "user-agent": "clinicaltrials-mcp", accept: "application/json" },
+    })
+    if (res.status === 404) throw new TrialsError("No such study on ClinicalTrials.gov")
+    if (!res.ok) throw new TrialsError(`ClinicalTrials.gov responded ${res.status}`)
+    return await res.json()
+  } catch (e) {
+    if (e instanceof TrialsError) throw e
+    if ((e as Error).name === "AbortError") throw new TrialsError("ClinicalTrials.gov request timed out")
+    throw new TrialsError(`ClinicalTrials.gov request failed: ${(e as Error).message}`)
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
-const m0 = (() => {
-const BASE = 'https://clinicaltrials.gov/api/v2/studies';
+const text = (v: unknown): string => (typeof v === "string" ? v : "")
 
-
-async function search(args: m0_SearchArgs): Promise<string> {
-  const q = (args.query ?? '').trim();
-  if (!q) return 'Provide a search query.';
-  const limit = Math.max(1, Math.min(args.limit ?? 10, 30));
-  const url = `${BASE}?query.term=${encodeURIComponent(q)}&pageSize=${limit}&fields=NCTId,BriefTitle,OverallStatus,LeadSponsorName,StartDate`;
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'mrfentmen-clinicaltrials-mcp/1.0', Accept: 'application/json' },
-    signal: AbortSignal.timeout(25000),
-  });
-  if (!res.ok) throw new Error(`ClinicalTrials.gov returned ${res.status}`);
-  const data = (await res.json()) as {
-    totalCount?: number;
-    studies?: Array<Record<string, unknown>>;
-  };
-  const rows = data.studies ?? [];
-  if (!rows.length) return `No clinical trials found for "${q}".`;
-  return `Clinical trials for "${q}" (${data.totalCount ?? rows.length} total, ${rows.length} shown):\n` +
-    rows
-      .map((s, i) => {
-        const protocol = (s.protocolSection ?? {}) as Record<string, unknown>;
-        const idModule = (protocol.identificationModule ?? {}) as Record<string, unknown>;
-        const statusModule = (protocol.statusModule ?? {}) as Record<string, unknown>;
-        const sponsor = (protocol.sponsorCollaboratorsModule ?? {}) as Record<string, unknown>;
-        const leadOrg = (sponsor.leadSponsor ?? {}) as Record<string, unknown> | undefined;
-        return `${i + 1}. ${idModule.briefTitle ?? 'untitled'} | ${statusModule.overallStatus ?? ''} | ${leadOrg?.name ?? ''} | ${idModule.nctId ?? ''}`;
-      })
-      .join('\n');
+function studyLine(s: any, i?: number): string {
+  const p = s.protocolSection ?? {}
+  const id = p.identificationModule?.nctId ?? "?"
+  const title = p.identificationModule?.briefTitle ?? "(untitled)"
+  const status = p.statusModule?.overallStatus ?? "UNKNOWN"
+  const phase = (p.designModule?.phases ?? []).join("/") || "n/a"
+  const cond = (p.conditionsModule?.conditions ?? []).slice(0, 2).join(", ")
+  const sponsor = p.sponsorCollaboratorsModule?.leadSponsor?.name ?? "unknown sponsor"
+  const prefix = typeof i === "number" ? `${i + 1}. ` : "• "
+  return `${prefix}${id} — ${title}\n   ${status} · phase ${phase} · ${cond || "no condition listed"} · ${sponsor}`
 }
 
-return { search };
-})();
-
-const m1 = (() => {
-const UA = "mrfentmen-clinical-trials-mcp/1.0 (https://github.com/mrfentmen)"
-class TrialsError extends Error {}
-
-async function get<T>(url: string, headers: Record<string, string> = {}): Promise<T> {
-  const res = await fetch(url, { headers: { "User-Agent": UA, ...headers }, signal: AbortSignal.timeout(25000) })
-  if (!res.ok) throw new TrialsError(`API error ${res.status}`)
-  return (await res.json()) as T
+function normalizeStatus(input: string): string {
+  const s = input.trim().toUpperCase().replace(/[\s-]+/g, "_")
+  const allowed = [
+    "RECRUITING",
+    "ACTIVE_NOT_RECRUITING",
+    "COMPLETED",
+    "ENROLLING_BY_INVITATION",
+    "NOT_YET_RECRUITING",
+    "SUSPENDED",
+    "TERMINATED",
+    "WITHDRAWN",
+    "UNKNOWN",
+  ]
+  if (!allowed.includes(s)) {
+    throw new TrialsError(`Unknown status "${input}" — use one of ${allowed.join(", ")}`)
+  }
+  return s
 }
 
-async function clinicalTrials(args: { query?: string; limit?: number }): Promise<string> {
-  const q = encodeURIComponent(args.query ?? "")
-  const limit = Math.min(args.limit ?? 10, 25)
-  const d = await get<any>(`https://clinicaltrials.gov/api/v2/studies?query.term=${q}&pageSize=${limit}`)
-  const rows = d.studies ?? []
-  return rows.map((s: any) => {
-    const p = s.protocolSection
-    const id = p?.identificationModule?.nctId ?? ""
-    const title = p?.identificationModule?.briefTitle ?? ""
-    const status = p?.statusModule?.overallStatus ?? ""
-    const conds = (p?.conditionsModule?.conditions ?? []).join(", ")
-    return `${id} | ${status}\n  ${title}\n  ${conds}`
-  }).join("\n\n") || "No trials found"
-}
-
-async function trial(args: { nct_id?: string }): Promise<string> {
-  const id = args.nct_id ?? ""
-  if (!id) throw new TrialsError("Provide an NCT id")
-  const d = await get<any>(`https://clinicaltrials.gov/api/v2/studies/${id}`)
-  const p = d.protocolSection
+export async function searchStudies(term: string, status: string | undefined, limit: number): Promise<string> {
+  const params = new URLSearchParams({
+    "query.term": term.trim(),
+    pageSize: String(limit),
+    fields: FIELDS.join(","),
+  })
+  if (status) params.set("filter.overallStatus", normalizeStatus(status))
+  const d = await getJson(`${BASE}/studies?${params.toString()}`)
+  const studies: any[] = d.studies ?? []
+  if (studies.length === 0) return `No trials matched "${term}"${status ? ` with status ${status}` : ""}.`
   return [
-    `${p?.identificationModule?.nctId} | ${p?.statusModule?.overallStatus}`,
-    p?.identificationModule?.briefTitle ?? "",
-    p?.descriptionModule?.briefSummary ?? "",
-    `Conditions: ${(p?.conditionsModule?.conditions ?? []).join(", ")}`,
-    `Sponsor: ${p?.sponsorCollaboratorsModule?.leadSponsor?.name ?? ""}`,
-    `Phase: ${(p?.designModule?.phases ?? []).join(", ")}`,
-  ].filter(Boolean).join("\n")
+    `Trials matching "${term}"${status ? ` (${status})` : ""}:`,
+    "",
+    ...studies.map(studyLine),
+    "",
+    d.nextPageToken ? "More results exist — narrow the term to see them." : "",
+  ]
+    .filter(Boolean)
+    .join("\n")
 }
 
-async function pubmed(args: { query?: string; limit?: number }): Promise<string> {
-  const q = encodeURIComponent(args.query ?? "")
-  const limit = Math.min(args.limit ?? 10, 25)
-  const esearch = await get<any>(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${q}&retmax=${limit}&retmode=json`)
-  const ids = esearch.esearchresult?.idlist ?? []
-  if (!ids.length) return "No PubMed articles found"
-  const esummary = await get<any>(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${ids.join(",")}&retmode=json`)
-  const docs = esummary.result ?? {}
-  return ids.map((id: string) => {
-    const doc = docs[id] ?? {}
-    const authors = (doc.authors ?? []).slice(0, 3).map((a: any) => a.name).join(", ")
-    return `${doc.title ?? ""}\n  ${authors} | ${doc.fulljournalname ?? ""} (${doc.pubdate ?? ""}) | PMID ${id}`
-  }).join("\n\n")
+export async function studyDetail(nctId: string): Promise<string> {
+  const id = nctId.trim().toUpperCase()
+  if (!/^NCT\d{8}$/.test(id)) throw new TrialsError(`"${nctId}" is not an NCT id (expected NCT followed by 8 digits)`)
+  const d = await getJson(`${BASE}/studies/${id}`)
+  const p = d.protocolSection ?? {}
+  const idm = p.identificationModule ?? {}
+  const st = p.statusModule ?? {}
+  const des = p.designModule ?? {}
+  const sp = p.sponsorCollaboratorsModule ?? {}
+  const out = p.outcomesModule ?? {}
+  const elig = p.eligibilityModule ?? {}
+  const rows = [
+    `${idm.nctId ?? id} — ${idm.briefTitle ?? idm.officialTitle ?? "(untitled)"}`,
+    `Status: ${st.overallStatus ?? "unknown"}${st.startDateStruct?.date ? ` · started ${st.startDateStruct.date}` : ""}${st.completionDateStruct?.date ? ` · completes ${st.completionDateStruct.date}` : ""}`,
+    `Phase: ${(des.phases ?? []).join(", ") || "n/a"} · type: ${des.studyType ?? "n/a"} · enrollment: ${des.enrollmentInfo?.count ?? "n/a"}`,
+    `Condition(s): ${(p.conditionsModule?.conditions ?? []).join(", ") || "n/a"}`,
+    `Lead sponsor: ${sp.leadSponsor?.name ?? "unknown"}`,
+    `Eligibility: ages ${elig.minimumAge ?? "?"} to ${elig.maximumAge ?? "?"}, sex ${elig.sex ?? "ALL"}`,
+  ]
+  const outcomes: any[] = out.primaryOutcomes ?? []
+  if (outcomes.length) {
+    rows.push("", "Primary outcomes:")
+    for (const o of outcomes.slice(0, 5)) rows.push(`   • ${text(o.measure)}`)
+  }
+  return rows.join("\n")
 }
 
-return { TrialsError, clinicalTrials, pubmed, trial };
-})();
-
-export const TrialsError = m1.TrialsError;
-export const clinicalTrials = m1.clinicalTrials;
-export const pubmed = m1.pubmed;
-export const search = m0.search;
-export const trial = m1.trial;
-export const m0_search = m0.search;
-export const m1_clinicalTrials = m1.clinicalTrials;
-export const m1_TrialsError = m1.TrialsError;
-export const m1_pubmed = m1.pubmed;
-export const m1_trial = m1.trial;
-
-const m2 = (() => {
-const BASE2 = 'https://clinicaltrials.gov/api/v2/studies';
-const UA2 = 'mrfentmen-clinicaltrials-mcp/1.0';
-
-async function query(q: string, limit: number, fields: string): Promise<string> {
-  const url = `${BASE2}?${q}&pageSize=${limit}&fields=${fields}`;
-  const res = await fetch(url, {
-    headers: { 'User-Agent': UA2, Accept: 'application/json' },
-    signal: AbortSignal.timeout(25000),
-  });
-  if (!res.ok) throw new Error(`ClinicalTrials.gov returned ${res.status}`);
-  const data = (await res.json()) as { totalCount?: number; studies?: Array<Record<string, unknown>> };
-  const rows = data.studies ?? [];
-  if (!rows.length) return 'No trials found.';
-  return `Clinical trials (${data.totalCount ?? rows.length} total, ${rows.length} shown):\n` +
-    rows.map((s, i) => {
-      const p = (s.protocolSection ?? {}) as Record<string, unknown>;
-      const id = (p.identificationModule ?? {}) as Record<string, unknown>;
-      const st = (p.statusModule ?? {}) as Record<string, unknown>;
-      return `${i + 1}. ${id.briefTitle ?? 'untitled'} | ${st.overallStatus ?? ''} | ${id.nctId ?? ''}`;
-    }).join('\n');
+export async function recruitingByCondition(condition: string, limit: number): Promise<string> {
+  const params = new URLSearchParams({
+    "query.cond": condition.trim(),
+    "filter.overallStatus": "RECRUITING",
+    pageSize: String(limit),
+    fields: FIELDS.join(","),
+  })
+  const d = await getJson(`${BASE}/studies?${params.toString()}`)
+  const studies: any[] = d.studies ?? []
+  if (studies.length === 0) return `No recruiting trials for "${condition}".`
+  return [`Recruiting trials for "${condition}":`, "", ...studies.map(studyLine)].join("\n")
 }
 
-const F = 'NCTId,BriefTitle,OverallStatus,LeadSponsorName,StartDate';
-
-async function recruiting(args: { query?: string; limit?: number }): Promise<string> {
-  const q = (args.query ?? '').trim();
-  const limit = Math.max(1, Math.min(args.limit ?? 10, 30));
-  const term = q ? `query.term=${encodeURIComponent(q)}&` : '';
-  return query(`${term}filter.advanced=AREA%5BOverallStatus%5DRECRUITING`, limit, F);
+export async function bySponsor(sponsor: string, limit: number): Promise<string> {
+  const params = new URLSearchParams({
+    "query.spons": sponsor.trim(),
+    pageSize: String(limit),
+    fields: FIELDS.join(","),
+  })
+  const d = await getJson(`${BASE}/studies?${params.toString()}`)
+  const studies: any[] = d.studies ?? []
+  if (studies.length === 0) return `No trials sponsored by "${sponsor}".`
+  return [`Trials sponsored by "${sponsor}":`, "", ...studies.map(studyLine)].join("\n")
 }
 
-async function byPhase(args: { phase?: string; limit?: number }): Promise<string> {
-  const phase = (args.phase ?? 'PHASE2').trim().toUpperCase().replace(/^PHASE/, '');
-  const limit = Math.max(1, Math.min(args.limit ?? 10, 30));
-  return query(`filter.advanced=AREA%5BPhase%5DPHASE${phase}`, limit, F);
+export async function interventionSearch(intervention: string, status: string | undefined, limit: number): Promise<string> {
+  const params = new URLSearchParams({
+    "query.intr": intervention.trim(),
+    pageSize: String(limit),
+    fields: FIELDS.join(","),
+  })
+  if (status) params.set("filter.overallStatus", normalizeStatus(status))
+  const d = await getJson(`${BASE}/studies?${params.toString()}`)
+  const studies: any[] = d.studies ?? []
+  if (studies.length === 0) return `No trials testing "${intervention}".`
+  return [`Trials testing "${intervention}":`, "", ...studies.map(studyLine)].join("\n")
 }
 
-async function bySponsor(args: { sponsor?: string; limit?: number }): Promise<string> {
-  const sponsor = (args.sponsor ?? '').trim();
-  if (!sponsor) return 'Provide a sponsor name.';
-  const limit = Math.max(1, Math.min(args.limit ?? 10, 30));
-  return query(`query.spons=${encodeURIComponent(sponsor)}`, limit, F);
+export async function studyLocations(nctId: string): Promise<string> {
+  const id = nctId.trim().toUpperCase()
+  if (!/^NCT\d{8}$/.test(id)) throw new TrialsError(`"${nctId}" is not an NCT id`)
+  const d = await getJson(`${BASE}/studies/${id}?fields=protocolSection.identificationModule,NCTId,protocolSection.contactsLocationsModule`)
+  const p = d.protocolSection ?? {}
+  const sites: any[] = p.contactsLocationsModule?.locations ?? []
+  if (sites.length === 0) return `${id} lists no study locations.`
+  const byCountry = new Map<string, string[]>()
+  for (const s of sites) {
+    const country = String(s.country ?? "unknown")
+    const label = [s.facility, s.city, s.state].filter(Boolean).join(", ")
+    if (!byCountry.has(country)) byCountry.set(country, [])
+    byCountry.get(country)!.push(label || "unnamed site")
+  }
+  const rows: string[] = []
+  for (const [country, list] of [...byCountry.entries()].sort((a, b) => b[1].length - a[1].length)) {
+    rows.push(`${country} (${list.length}):`)
+    for (const site of list.slice(0, 6)) rows.push(`   • ${site}`)
+    if (list.length > 6) rows.push(`   … ${list.length - 6} more`)
+  }
+  return [`${id} — ${p.identificationModule?.briefTitle ?? ""}`, `Sites: ${sites.length}`, "", ...rows].join("\n")
 }
-
-async function byIntervention(args: { intervention?: string; limit?: number }): Promise<string> {
-  const intr = (args.intervention ?? '').trim();
-  if (!intr) return 'Provide a drug or intervention name.';
-  const limit = Math.max(1, Math.min(args.limit ?? 10, 30));
-  return query(`query.intr=${encodeURIComponent(intr)}`, limit, F);
-}
-
-async function trialLocations(args: { nct_id?: string }): Promise<string> {
-  const id = (args.nct_id ?? '').trim().toUpperCase();
-  if (!id) throw new Error('Provide an NCT id.');
-  const res = await fetch(`${BASE2}/${encodeURIComponent(id)}`, {
-    headers: { 'User-Agent': UA2, Accept: 'application/json' },
-    signal: AbortSignal.timeout(25000),
-  });
-  if (!res.ok) throw new Error(`ClinicalTrials.gov returned ${res.status}`);
-  const d = (await res.json()) as any;
-  const locs = d?.protocolSection?.contactsLocationsModule?.locations ?? [];
-  if (!locs.length) return `No locations listed for ${id}.`;
-  return locs.slice(0, 20).map((l: any, i: number) => `${i + 1}. ${l.facility ?? '?'} | ${l.city ?? ''}, ${l.state ?? ''} ${l.country ?? ''} (${l.status ?? ''})`).join('\n');
-}
-
-return { byIntervention, byPhase, bySponsor, recruiting, trialLocations };
-})();
-
-export const byIntervention = m2.byIntervention;
-export const byPhase = m2.byPhase;
-export const bySponsor = m2.bySponsor;
-export const recruiting = m2.recruiting;
-export const trialLocations = m2.trialLocations;
-export const m2_byIntervention = m2.byIntervention;
-export const m2_byPhase = m2.byPhase;
-export const m2_bySponsor = m2.bySponsor;
-export const m2_recruiting = m2.recruiting;
-export const m2_trialLocations = m2.trialLocations;

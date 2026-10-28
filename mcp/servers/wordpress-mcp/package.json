@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/wordpress-mcp",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "WordPress plugin and theme search from wordpress.org.",
   "type": "module",
   "main": "dist/index.js",

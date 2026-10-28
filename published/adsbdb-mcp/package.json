@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/adsbdb-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Aircraft and route metadata: map a callsign to its flight route, or a hex code to the airframe - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/adsbdb-mcp",

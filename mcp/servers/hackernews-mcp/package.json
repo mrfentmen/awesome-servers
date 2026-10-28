@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/hackernews-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Hacker News: front page, new and best feeds, item detail, user profiles, full-text search.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/hackernews-mcp",

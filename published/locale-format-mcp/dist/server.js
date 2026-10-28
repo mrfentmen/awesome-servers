@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { formatDate, formatNumber, formatRelative, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -21,7 +22,7 @@ export function createServer() {
             return text(await formatNumber(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("format_date", "Format an ISO date or timestamp for a locale and style.", {
@@ -34,7 +35,7 @@ export function createServer() {
             return text(await formatDate(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("format_relative", "Describe a timestamp relative to now, such as 3 days ago.", {
@@ -46,7 +47,7 @@ export function createServer() {
             return text(await formatRelative(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

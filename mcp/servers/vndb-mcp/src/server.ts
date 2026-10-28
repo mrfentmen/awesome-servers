@@ -12,6 +12,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -38,7 +39,7 @@ export function createServer(): McpServer {
         const header = `Visual novels matching "${query}" (sorted by ${sort}):\n`
         return text(header + vns.map((v, i) => `${i + 1}. ${formatVn(v)}`).join("\n\n"))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -53,7 +54,7 @@ export function createServer(): McpServer {
         if (!vn) return text(`No visual novel with id "${id}".`)
         return text(formatVn(vn))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -74,7 +75,7 @@ export function createServer(): McpServer {
             chars.map((c, i) => `${i + 1}. ${formatCharacter(c)}`).join("\n\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -92,7 +93,7 @@ export function createServer(): McpServer {
             releases.map((r, i) => `${i + 1}. ${formatRelease(r)}`).join("\n\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

@@ -1,6 +1,6 @@
 {
-  "name": "@mrfentmen/dockerhub-mcp",
-  "version": "1.0.0",
+  "name": "container-registry-mcp",
+  "version": "1.0.2",
   "description": "Docker Hub images: search, details, tags with sizes and digests, official image ranking, tag manifests.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/dockerhub-mcp",
@@ -9,7 +9,7 @@
     "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
-    "dockerhub-mcp": "./dist/index.js"
+    "container-registry-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [

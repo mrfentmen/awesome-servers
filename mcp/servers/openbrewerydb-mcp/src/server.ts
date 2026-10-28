@@ -13,6 +13,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof BreweryError || e instanceof Error) return `Error: ${e.message}`
@@ -31,7 +32,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchBreweries(query, n))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -44,7 +45,7 @@ export function createServer(): McpServer {
       try {
         return text(await byState(state, n))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -57,7 +58,7 @@ export function createServer(): McpServer {
       try {
         return text(await byCity(city, n))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -70,7 +71,7 @@ export function createServer(): McpServer {
       try {
         return text(await byType(type, n))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -83,7 +84,7 @@ export function createServer(): McpServer {
       try {
         return text(await byCountry(country, n))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -96,7 +97,7 @@ export function createServer(): McpServer {
       try {
         return text(await breweryDetail(id))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -109,7 +110,7 @@ export function createServer(): McpServer {
       try {
         return text(await randomBreweries(size))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

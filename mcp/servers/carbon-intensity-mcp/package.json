@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/carbon-intensity-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "UK grid carbon intensity: live gCO2/kWh, half-hourly forecast and the current generation mix - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/carbon-intensity-mcp",

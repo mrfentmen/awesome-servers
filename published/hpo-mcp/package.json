@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/hpo-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Search HPO phenotype terms, read definitions and explore the phenotype hierarchy - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/hpo-mcp",

@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof TrialsError || e instanceof Error) return `Error: ${e.message}`
@@ -37,7 +38,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchStudies(term, status, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -50,7 +51,7 @@ export function createServer(): McpServer {
       try {
         return text(await studyDetail(nct_id))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -66,7 +67,7 @@ export function createServer(): McpServer {
       try {
         return text(await recruitingByCondition(condition, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -82,7 +83,7 @@ export function createServer(): McpServer {
       try {
         return text(await bySponsor(sponsor, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -99,7 +100,7 @@ export function createServer(): McpServer {
       try {
         return text(await interventionSearch(intervention, status, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -112,7 +113,7 @@ export function createServer(): McpServer {
       try {
         return text(await studyLocations(nct_id))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/frankfurter-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Frankfurter: ECB exchange rates, conversion, per-date rates, history and multi-currency comparison \u2014 keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/frankfurter-mcp",

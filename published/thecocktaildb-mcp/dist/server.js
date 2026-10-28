@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { CocktailError, browseByLetter, cocktailDetail, listFilters, listIngredients, randomCocktail, searchCocktails, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof CocktailError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -15,7 +16,7 @@ export function createServer() {
             return text(await searchCocktails(name, n));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("cocktail_detail", "Full recipe: ingredients with measures, instructions, glass and image.", { id: z.string().min(3).describe("Numeric id from any list tool, e.g. 11007") }, async ({ id }) => {
@@ -23,7 +24,7 @@ export function createServer() {
             return text(await cocktailDetail(id));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("random_cocktail", "One random cocktail recipe.", {}, async () => {
@@ -31,7 +32,7 @@ export function createServer() {
             return text(await randomCocktail());
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("browse_by_letter", "List cocktails whose name starts with one letter.", { letter: z.string().length(1).describe("A single letter a-z"), limit }, async ({ letter, limit: n }) => {
@@ -39,7 +40,7 @@ export function createServer() {
             return text(await browseByLetter(letter, n));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("list_ingredients", "Ingredient names the free tier exposes, useful for guessing a search term.", { limit: z.number().int().min(10).max(100).default(100).describe("How many names (10-100)") }, async ({ limit: n }) => {
@@ -47,7 +48,7 @@ export function createServer() {
             return text(await listIngredients(n));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("list_filters", "Every category, glass and strength label used by TheCocktailDB.", {}, async () => {
@@ -55,7 +56,7 @@ export function createServer() {
             return text(await listFilters());
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

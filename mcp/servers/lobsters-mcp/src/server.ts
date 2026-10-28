@@ -3,6 +3,7 @@ import { z } from "zod"
 import { byTag, domainBreakdown, hottest, LobstersError, newest, storyDetail, userInfo } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof LobstersError || e instanceof Error) return `Error: ${e.message}`
@@ -20,7 +21,7 @@ export function createServer(): McpServer {
       try {
         return text(await hottest(limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -33,7 +34,7 @@ export function createServer(): McpServer {
       try {
         return text(await newest(limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -49,7 +50,7 @@ export function createServer(): McpServer {
       try {
         return text(await byTag(tag, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -62,7 +63,7 @@ export function createServer(): McpServer {
       try {
         return text(await storyDetail(short_id))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -75,7 +76,7 @@ export function createServer(): McpServer {
       try {
         return text(await userInfo(username))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -88,7 +89,7 @@ export function createServer(): McpServer {
       try {
         return text(await domainBreakdown(limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

@@ -12,6 +12,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof OsmNotesError || e instanceof Error) return `Error: ${e.message}`
@@ -40,7 +41,7 @@ export function createServer(): McpServer {
       try {
         return text(list(await notesInBbox(min_lon, min_lat, max_lon, max_lat, limit)))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -59,7 +60,7 @@ export function createServer(): McpServer {
         const [w, s, e, n] = radiusBbox(lat, lon, radius_km)
         return text(list(await notesInBbox(w, s, e, n, limit)))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -75,7 +76,7 @@ export function createServer(): McpServer {
       try {
         return text(list(await searchNotes(query, limit)))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -88,7 +89,7 @@ export function createServer(): McpServer {
       try {
         return text(noteDetailText(await noteDetail(id)))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -105,7 +106,7 @@ export function createServer(): McpServer {
         )
         return text(rows.length ? rows.join("\n") : "No comments.")
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -129,7 +130,7 @@ export function createServer(): McpServer {
           `notes sampled: ${notes.length}\nopen: ${open}\nclosed: ${closed}\ncomments: ${comments}`
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

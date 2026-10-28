@@ -38,10 +38,3 @@ export interface ShowInfo {
 export declare function searchAnime(query: string): Promise<AnimeResult[]>;
 export declare function getShow(slug: string): Promise<ShowInfo>;
 export declare function verdict(info: ShowInfo, episode: number): string;
-export declare function fillerRunAnalysis(args: {
-    slug?: string;
-}): Promise<string>;
-export declare function fillerEpisodeList(args: {
-    slug?: string;
-    limit?: number;
-}): Promise<string>;

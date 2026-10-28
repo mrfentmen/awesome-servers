@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { occurrences, taxonChildren, taxonInfo, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -16,7 +17,7 @@ export function createServer() {
             return text(await taxonInfo(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("taxon_children", "Immediate children of a taxon in the OBIS backbone.", {
@@ -26,7 +27,7 @@ export function createServer() {
             return text(await taxonChildren(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("occurrences", "Occurrence records for a taxon, with dataset, depth and coordinates.", {
@@ -38,7 +39,7 @@ export function createServer() {
             return text(await occurrences(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

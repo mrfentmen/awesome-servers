@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { GutenbergError, bookDetail, byLanguage, popular, searchBooks } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof GutenbergError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -15,7 +16,7 @@ export function createServer() {
             return text(await searchBooks(query, n));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("book_detail", "One book with summary and every download format.", { id: z.number().int().positive().describe("Gutendex book id, e.g. 1342") }, async ({ id }) => {
@@ -23,7 +24,7 @@ export function createServer() {
             return text(await bookDetail(id));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("books_by_language", "Most downloaded books in one language.", { language: z.string().min(2).max(3).describe("Language code, e.g. en, fr, de, es"), limit }, async ({ language, limit: n }) => {
@@ -31,7 +32,7 @@ export function createServer() {
             return text(await byLanguage(language, n));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("popular_books", "The most downloaded books on Project Gutenberg.", { limit }, async ({ limit: n }) => {
@@ -39,7 +40,7 @@ export function createServer() {
             return text(await popular(n));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

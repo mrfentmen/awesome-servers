@@ -3,6 +3,7 @@ import { z } from "zod"
 import { ArxivError, latestInCategory, paperById, papersByAuthor, searchInCategory, searchPapers } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof ArxivError || e instanceof Error) return `Error: ${e.message}`
@@ -26,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchPapers(query, max_results, newest_first))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -39,7 +40,7 @@ export function createServer(): McpServer {
       try {
         return text(await paperById(arxiv_id))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -56,7 +57,7 @@ export function createServer(): McpServer {
       try {
         return text(await papersByAuthor(author, max_results, newest_first))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -72,7 +73,7 @@ export function createServer(): McpServer {
       try {
         return text(await latestInCategory(category, max_results))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -89,7 +90,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchInCategory(query, category, max_results))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

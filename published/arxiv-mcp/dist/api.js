@@ -1,119 +1,145 @@
+/**
+ * arXiv API — keyless access to 2.4M+ preprints. The API answers in Atom XML;
+ * entries are parsed with a small, format-specific extractor.
+ */
 const BASE = "https://export.arxiv.org/api/query";
-const UA = "mrfentmen-arxiv-mcp/1.0 (https://github.com/mrfentmen)";
 export class ArxivError extends Error {
 }
-function decodeXml(s) {
-    return s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
+async function getXml(url, timeoutMs = 30000) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+        const res = await fetch(url, {
+            signal: ctrl.signal,
+            headers: { "user-agent": "arxiv-mcp", accept: "application/atom+xml" },
+        });
+        if (res.status === 400)
+            throw new ArxivError("arXiv rejected that query — check the syntax");
+        if (!res.ok)
+            throw new ArxivError(`arXiv responded ${res.status}`);
+        return await res.text();
+    }
+    catch (e) {
+        if (e instanceof ArxivError)
+            throw e;
+        if (e.name === "AbortError")
+            throw new ArxivError("arXiv request timed out");
+        throw new ArxivError(`arXiv request failed: ${e.message}`);
+    }
+    finally {
+        clearTimeout(timer);
+    }
 }
-function extract(xml, tag) {
-    const re = new RegExp(`<${tag}[^>]*>(.*?)</${tag}>`, "gs");
-    const out = [];
-    let m;
-    while ((m = re.exec(xml)) !== null)
-        out.push(decodeXml(m[1]));
-    return out;
-}
-async function queryXml(q, max) {
-    const res = await fetch(`${BASE}?search_query=${encodeURIComponent(q)}&max_results=${max}&sortBy=relevance`, {
-        headers: { "User-Agent": UA, Accept: "application/atom+xml" },
-        redirect: "follow",
-        signal: AbortSignal.timeout(30000),
+const unwrap = (xml, tag) => {
+    const m = xml.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`));
+    return m ? m[1].replace(/\s+/g, " ").trim() : "";
+};
+function parseEntries(xml) {
+    const raw = xml.match(/<entry>[\s\S]*?<\/entry>/g) ?? [];
+    return raw.map((e) => {
+        const idUrl = unwrap(e, "id");
+        const id = idUrl.replace(/^https?:\/\/arxiv\.org\/abs\//, "").replace(/v\d+$/, "");
+        const authors = [...e.matchAll(/<author>[\s\S]*?<name>([\s\S]*?)<\/name>/g)].map((m) => m[1].replace(/\s+/g, " ").trim());
+        const categories = [...e.matchAll(/<category[^>]*term="([^"]+)"/g)].map((m) => m[1]);
+        const pdfMatch = e.match(/<link[^>]*title="pdf"[^>]*href="([^"]+)"/) ?? e.match(/<link[^>]*href="([^"]+)"[^>]*title="pdf"/);
+        return {
+            id,
+            title: unwrap(e, "title"),
+            summary: unwrap(e, "summary"),
+            published: unwrap(e, "published"),
+            authors,
+            categories: [...new Set(categories)],
+            pdf: pdfMatch ? pdfMatch[1] : `https://arxiv.org/pdf/${id}`,
+        };
     });
-    if (!res.ok)
-        throw new ArxivError(`arXiv error ${res.status}`);
-    return res.text();
 }
-export async function searchPapers(args) {
-    const q = (args.query ?? "").trim();
-    if (!q)
-        throw new ArxivError("Provide a search query");
-    const limit = Math.min(args.limit ?? 5, 20);
-    const xml = await queryXml(`all:${q}`, limit);
-    const titles = extract(xml, "title").slice(1);
-    const summaries = extract(xml, "summary");
-    const ids = extract(xml, "id").slice(1);
-    const dates = extract(xml, "published");
-    if (titles.length === 0)
-        return "No results";
-    return titles.map((t, i) => {
-        const id = (ids[i] ?? "").split("/abs/").pop() ?? "";
-        const date = (dates[i] ?? "").slice(0, 10);
-        return `${i + 1}. ${t}\n   ${id} (${date})\n   ${summaries[i] ? summaries[i].slice(0, 200) + (summaries[i].length > 200 ? "..." : "") : ""}`;
-    }).join("\n\n");
+const sizeArg = (n) => {
+    if (!Number.isInteger(n) || n < 1 || n > 25)
+        throw new ArxivError("max_results must be between 1 and 25");
+    return n;
+};
+const idArg = (id) => {
+    const v = id.trim().replace(/^https?:\/\/arxiv\.org\/(abs|pdf)\//, "").replace(/\.pdf$/, "").replace(/v\d+$/, "");
+    if (!/^\d{4}\.\d{4,5}$|^[a-z-]+(\.[A-Z]{2})?\/\d{7}$/i.test(v))
+        throw new ArxivError(`"${id}" does not look like an arXiv id, e.g. 1706.03762`);
+    return v;
+};
+function paperBlock(p, i) {
+    const authors = p.authors.length > 4 ? `${p.authors.slice(0, 4).join(", ")} +${p.authors.length - 4} more` : p.authors.join(", ");
+    const date = p.published ? p.published.slice(0, 10) : "date unknown";
+    return [
+        `${i !== undefined ? `${i + 1}. ` : ""}${p.title}`,
+        `   ${authors || "no authors"} · ${date} · ${p.categories.join(", ") || "no categories"}`,
+        `   arXiv:${p.id} · ${p.pdf}`,
+        `   ${p.summary.slice(0, 280)}${p.summary.length > 280 ? "…" : ""}`,
+    ].join("\n");
 }
-export async function paperInfo(args) {
-    const id = (args.paperId ?? "").trim();
-    if (!id)
-        throw new ArxivError("Provide an arXiv paper ID");
-    const xml = await queryXml(`id:${id}`, 1);
-    const titles = extract(xml, "title").slice(1);
-    const summaries = extract(xml, "summary");
-    const authors = extract(xml, "name");
-    const dates = extract(xml, "published");
-    if (titles.length === 0)
-        return "No paper found";
-    return `Title: ${titles[0]}\nID: ${id}\nPublished: ${(dates[0] ?? "").slice(0, 10)}\nAuthors: ${authors.join(", ") || "n/a"}\n\n${summaries[0] ?? ""}`;
+function query(term) {
+    const t = term.trim();
+    if (t.length < 2)
+        throw new ArxivError("Search term must be at least 2 characters");
+    // Field-prefixed queries (au:, ti:, cat:, abs:) pass through; free text goes to `all:`.
+    return /^[a-z_]+:/i.test(t) ? t : `all:"${t}"`;
 }
-function formatResults(xml, limit) {
-    const titles = extract(xml, "title").slice(1);
-    const summaries = extract(xml, "summary");
-    const ids = extract(xml, "id").slice(1);
-    const dates = extract(xml, "published");
-    if (titles.length === 0)
-        return "No results";
-    return titles.slice(0, limit).map((t, i) => {
-        const id = (ids[i] ?? "").split("/abs/").pop() ?? "";
-        const date = (dates[i] ?? "").slice(0, 10);
-        return `${i + 1}. ${t}\n   ${id} (${date})\n   ${summaries[i] ? summaries[i].slice(0, 200) + (summaries[i].length > 200 ? "..." : "") : ""}`;
-    }).join("\n\n");
+export async function searchPapers(term, maxResults = 8, newestFirst = false) {
+    const q = query(term);
+    const n = sizeArg(maxResults);
+    const sort = newestFirst ? "&sortBy=submittedDate&sortOrder=descending" : "";
+    const xml = await getXml(`${BASE}?search_query=${encodeURIComponent(q)}&max_results=${n}${sort}`);
+    const papers = parseEntries(xml);
+    if (papers.length === 0)
+        return `arXiv returned no papers for "${term}".`;
+    return [`arXiv results for ${q} (${papers.length}):`, ...papers.map((p, i) => paperBlock(p, i))].join("\n\n");
 }
-async function querySorted(q, max, field) {
-    const sortField = field === "newest" ? "submittedDate" : "relevance";
-    const res = await fetch(`${BASE}?search_query=${encodeURIComponent(q)}&max_results=${max}&sortBy=${sortField}&sortOrder=descending`, {
-        headers: { "User-Agent": UA, Accept: "application/atom+xml" },
-        redirect: "follow",
-        signal: AbortSignal.timeout(30000),
-    });
-    if (!res.ok)
-        throw new ArxivError(`arXiv error ${res.status}`);
-    return res.text();
+export async function paperById(id) {
+    const clean = idArg(id);
+    const xml = await getXml(`${BASE}?id_list=${encodeURIComponent(clean)}`);
+    const [p] = parseEntries(xml);
+    if (!p)
+        throw new ArxivError(`arXiv has no paper with id ${clean}`);
+    return [
+        p.title,
+        "",
+        `Authors: ${p.authors.join(", ") || "none listed"}`,
+        `Published: ${p.published ? p.published.slice(0, 10) : "unknown"}`,
+        `Categories: ${p.categories.join(", ") || "none"}`,
+        `PDF: ${p.pdf}`,
+        "",
+        p.summary,
+    ].join("\n");
 }
-export async function searchTitle(args) {
-    const q = (args.query ?? "").trim();
-    if (!q)
-        throw new ArxivError("Provide a search query");
-    const limit = Math.min(args.limit ?? 5, 20);
-    return formatResults(await queryXml(`ti:${q}`, limit), limit);
+export async function papersByAuthor(author, maxResults = 8, newestFirst = true) {
+    const a = author.trim();
+    if (a.length < 2)
+        throw new ArxivError("Author name must be at least 2 characters");
+    const n = sizeArg(maxResults);
+    const sort = newestFirst ? "&sortBy=submittedDate&sortOrder=descending" : "";
+    const xml = await getXml(`${BASE}?search_query=${encodeURIComponent(`au:"${a}"`)}&max_results=${n}${sort}`);
+    const papers = parseEntries(xml);
+    if (papers.length === 0)
+        return `arXiv has no papers for author "${author}".`;
+    return [`arXiv papers by "${author}" (${papers.length}):`, ...papers.map((p, i) => paperBlock(p, i))].join("\n\n");
 }
-export async function searchAuthor(args) {
-    const q = (args.query ?? "").trim();
-    if (!q)
-        throw new ArxivError("Provide an author name");
-    const limit = Math.min(args.limit ?? 5, 20);
-    return formatResults(await queryXml(`au:${q}`, limit), limit);
+export async function latestInCategory(category, maxResults = 8) {
+    const c = category.trim();
+    if (!/^[a-z-]+(\.[A-Za-z-]+)?$/.test(c))
+        throw new ArxivError(`"${category}" is not an arXiv category, e.g. cs.AI, math.NT, hep-th`);
+    const n = sizeArg(maxResults);
+    const xml = await getXml(`${BASE}?search_query=${encodeURIComponent(`cat:${c}`)}&max_results=${n}&sortBy=submittedDate&sortOrder=descending`);
+    const papers = parseEntries(xml);
+    if (papers.length === 0)
+        return `arXiv has no recent papers in category "${category}".`;
+    return [`Newest arXiv papers in ${c} (${papers.length}):`, ...papers.map((p, i) => paperBlock(p, i))].join("\n\n");
 }
-export async function searchCategory(args) {
-    const c = (args.category ?? "").trim();
-    if (!c)
-        throw new ArxivError("Provide a category like cs.LG or quant-ph");
-    const limit = Math.min(args.limit ?? 5, 20);
-    return formatResults(await queryXml(`cat:${c}`, limit), limit);
-}
-export async function newestPapers(args) {
-    const q = (args.query ?? "").trim() || "all:electron";
-    const limit = Math.min(args.limit ?? 5, 20);
-    return formatResults(await querySorted(q.startsWith("all:") || q.includes(":") ? q : `all:${q}`, limit, "newest"), limit);
-}
-export async function papersById(args) {
-    const list = (args.ids ?? "").split(",").map((s) => s.trim()).filter(Boolean).slice(0, 10);
-    if (!list.length)
-        throw new ArxivError("Provide comma-separated arXiv IDs");
-    const res = await fetch(`${BASE}?id_list=${encodeURIComponent(list.join(","))}&max_results=${list.length}`, {
-        headers: { "User-Agent": UA, Accept: "application/atom+xml" },
-        redirect: "follow",
-        signal: AbortSignal.timeout(30000),
-    });
-    if (!res.ok)
-        throw new ArxivError(`arXiv error ${res.status}`);
-    return formatResults(await res.text(), list.length);
+export async function searchInCategory(term, category, maxResults = 8) {
+    const c = category.trim();
+    if (!/^[a-z-]+(\.[A-Za-z-]+)?$/.test(c))
+        throw new ArxivError(`"${category}" is not an arXiv category, e.g. cs.LG`);
+    const q = `${query(term)} AND cat:${c}`;
+    const n = sizeArg(maxResults);
+    const xml = await getXml(`${BASE}?search_query=${encodeURIComponent(q)}&max_results=${n}&sortBy=relevance&sortOrder=descending`);
+    const papers = parseEntries(xml);
+    if (papers.length === 0)
+        return `arXiv returned no papers for "${term}" in ${c}.`;
+    return [`arXiv results for ${q} (${papers.length}):`, ...papers.map((p, i) => paperBlock(p, i))].join("\n\n");
 }

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/interpro-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "InterPro protein families and domains: search entries and find the domains in one protein - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/interpro-mcp",

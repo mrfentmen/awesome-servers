@@ -1,24 +1,32 @@
 {
-  "version": "1.0.2",
+  "name": "@mrfentmen/lobsters-mcp",
+  "version": "1.0.1",
+  "description": "Lobsters: hottest and newest stories, tags, story details, user profiles \u2014 keyless.",
   "type": "module",
+  "mcpName": "io.github.mrfentmen/lobsters-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/lobsters-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "lobsters-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
-    "dist",
-    "server.json",
-    "README.md"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "dev": "npm run build && node dist/index.js"
+    "start": "node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "lobsters",
+    "news",
+    "tech",
+    "hackernews",
+    "links"
+  ],
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -28,16 +36,6 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
   },
-  "name": "lobsters-mcp",
-  "description": "Newest and top stories from Lobsters, the developer news site. No key required.",
-  "mcpName": "io.github.mrfentmen/lobsters-mcp",
-  "keywords": [
-    "mcp",
-    "lobsters",
-    "news",
-    "developer",
-    "stories"
-  ],
   "engines": {
     "node": ">=20"
   }

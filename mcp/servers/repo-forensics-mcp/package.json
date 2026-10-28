@@ -1,6 +1,6 @@
 {
   "name": "repo-forensics-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Local read-only MCP tools for Git repository archaeology, churn, hotspots, and hygiene.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/repo-forensics-mcp",

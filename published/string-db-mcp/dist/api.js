@@ -1,65 +1,101 @@
-const BASE = 'https://string-db.org/api/tsv/network';
-export async function network(args) {
-    const proteins = (args.proteins ?? '').trim();
-    if (!proteins)
-        return 'Provide protein gene names separated by commas.';
-    const species = args.species ?? 9606;
-    const params = new URLSearchParams({ identifiers: proteins, species: String(species) });
-    const res = await fetch(`${BASE}?${params.toString()}`, {
-        headers: { 'User-Agent': 'mrfentmen-string-db-mcp/1.0', Accept: 'text/tab-separated-values' },
-        signal: AbortSignal.timeout(25000),
-    });
-    if (!res.ok)
-        throw new Error(`STRING DB returned ${res.status}`);
-    const text = await res.text();
-    const lines = text.split('\n').filter((l) => l.trim());
-    if (lines.length <= 1)
-        return `No interactions found for ${proteins}.`;
-    const header = lines[0].split('\t');
-    const rows = lines.slice(1, 11).map((l) => l.split('\t'));
-    const get = (r, k) => r[header.indexOf(k)] ?? '';
-    return `Interactions for ${proteins} (${rows.length} shown):\n` +
-        rows
-            .map((r, i) => `${i + 1}. ${get(r, 'preferredName_A')} <-> ${get(r, 'preferredName_B')} | score ${Number(get(r, 'score')).toFixed(2)}`)
-            .join('\n');
+/**
+ * STRING Interactions — keyless public API client.
+ */
+const BASE = "https://string-db.org/api";
+const SOURCE = "STRING Interactions";
+export class SourceError extends Error {
 }
-// ---- muxB tools:
-const ROOT = 'https://string-db.org/api/tsv';
-async function tsv(path, params) {
-    const res = await fetch(`${ROOT}/${path}?${params.toString()}`, {
-        headers: { 'User-Agent': 'mrfentmen-string-db-mcp/1.0', Accept: 'text/tab-separated-values' },
-        signal: AbortSignal.timeout(25000),
-    });
-    if (!res.ok)
-        throw new Error(`STRING DB returned ${res.status}`);
-    return res.text();
+async function request(path, accept = "application/json", timeoutMs = 25000) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+        const res = await fetch(path.startsWith("http") ? path : BASE + path, {
+            signal: ctrl.signal,
+            headers: { "user-agent": "string-db-mcp", accept },
+        });
+        if (!res.ok)
+            throw new SourceError(`${SOURCE} responded ${res.status}`);
+        return res;
+    }
+    catch (e) {
+        if (e instanceof SourceError)
+            throw e;
+        if (e.name === "AbortError")
+            throw new SourceError(`${SOURCE} request timed out`);
+        throw new SourceError(`${SOURCE} request failed: ${e.message}`);
+    }
+    finally {
+        clearTimeout(timer);
+    }
 }
-function identifiers(proteins) {
-    const list = proteins.split(/[\s,]+/).filter(Boolean);
-    return list.length ? list.join('\r') : null;
+export async function getJson(path) {
+    const res = await request(path);
+    const body = await res.text();
+    try {
+        return JSON.parse(body);
+    }
+    catch {
+        throw new SourceError(`${SOURCE} returned malformed JSON`);
+    }
 }
-export async function networkSummary(args) {
-    const proteins = (args.proteins ?? '').trim();
-    if (!proteins)
-        return 'Provide protein gene names separated by commas.';
-    const ids = identifiers(proteins);
-    if (!ids)
-        return 'Provide protein gene names separated by commas.';
-    const species = args.species ?? 9606;
-    const params = new URLSearchParams({ identifiers: ids, species: String(species) });
-    const lines = (await tsv('ppi_enrichment', params)).split('\n').filter((l) => l.trim());
-    if (lines.length < 2)
-        return `No network summary reported for ${proteins}.`;
-    const header = lines[0].split('\t');
-    const row = lines[1].split('\t');
-    const get = (key) => {
-        const value = row[header.indexOf(key)];
-        return value === undefined || value === '' ? 'not reported' : value;
-    };
+export async function getText(path, accept = "text/plain") {
+    const res = await request(path, accept);
+    return (await res.text()).trim();
+}
+export function clampLimit(n, fallback, max) {
+    const v = n ?? fallback;
+    if (!Number.isInteger(v) || v < 1 || v > max)
+        throw new SourceError(`limit must be between 1 and ${max}`);
+    return v;
+}
+export function clean(s) {
+    return String(s ?? "").replace(/\s+/g, " ").trim();
+}
+export function bullet(label, value) {
+    const v = value === undefined || value === null || value === "" ? "" : String(value);
+    return v ? `${label}: ${v}` : "";
+}
+export function section(title, rows) {
+    return [title, ...rows.filter(Boolean)].join("\n");
+}
+function checkTaxon(n) {
+    const v = n ?? 9606;
+    if (!Number.isInteger(v) || v < 1 || v > 100000000)
+        throw new SourceError("species must be a numeric NCBI taxon id");
+    return v;
+}
+export async function mapIdentifiers(a) {
+    const ids = clean(a.identifiers).split(",").map((s) => s.trim()).filter(Boolean).slice(0, 25);
+    if (!ids.length)
+        throw new SourceError("identifiers must list at least one name");
+    const species = checkTaxon(a.species);
+    const params = new URLSearchParams({ identifiers: ids.join("%0d"), species: String(species), limit: "1", caller_identity: "string-db-mcp" });
+    const rows = await getJson(`/json/get_string_ids?${params.toString()}`);
+    const list = Array.isArray(rows) ? rows : [];
+    if (!list.length)
+        return `STRING mapped none of: ${ids.join(", ")} (taxon ${species}).`;
     return [
-        `STRING network summary for ${proteins} (species ${species}):`,
-        `Nodes: ${get('number_of_nodes')} | edges: ${get('number_of_edges')} | expected edges: ${get('expected_number_of_edges')}`,
-        `Average node degree: ${get('average_node_degree')} | local clustering coefficient: ${get('local_clustering_coefficient')}`,
-        `Enrichment p-value: ${get('p_value')}`,
-    ].join('\n');
+        `STRING identifiers for taxon ${species}:`,
+        "",
+        ...list.map((r) => `- ${clean(r.queryItem)} -> ${clean(r.stringId)}${r.preferredName && r.preferredName !== r.queryItem ? ` (preferred ${clean(r.preferredName)})` : ""}${r.annotation ? ` · ${clean(r.annotation)}` : ""}`),
+    ].join("\n");
+}
+export async function interactionPartners(a) {
+    const ident = clean(a.identifier);
+    if (!ident)
+        throw new SourceError("identifier is required");
+    const species = checkTaxon(a.species);
+    const limit = a.limit ?? 15;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 50)
+        throw new SourceError("limit must be between 1 and 50");
+    const params = new URLSearchParams({ identifiers: ident, species: String(species), limit: String(limit), caller_identity: "string-db-mcp" });
+    const rows = await getJson(`/json/interaction_partners?${params.toString()}`);
+    const list = Array.isArray(rows) ? rows : [];
+    if (!list.length)
+        return `STRING has no interaction partners for ${ident} in taxon ${species}.`;
+    return [
+        `Interaction partners of ${ident} (taxon ${species}) - ${list.length} returned:`,
+        "",
+        ...list.map((r) => `- ${clean(r.preferredName_B) || clean(r.stringId_B)} · combined score ${Number(r.score).toFixed(3)}${r.nscore !== undefined ? ` · nscore ${Number(r.nscore).toFixed(3)}` : ""}${r.escore !== undefined ? ` · experimental ${Number(r.escore).toFixed(3)}` : ""}`),
+    ].join("\n");
 }

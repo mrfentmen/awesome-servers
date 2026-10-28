@@ -10,6 +10,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof RorError || e instanceof Error) return `Error: ${e.message}`
@@ -30,7 +31,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchOrganizations(query, country))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -43,7 +44,7 @@ export function createServer(): McpServer {
       try {
         return text(await organizationDetail(ror_id))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -59,7 +60,7 @@ export function createServer(): McpServer {
       try {
         return text(await organizationsByCountry(country, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -78,7 +79,7 @@ export function createServer(): McpServer {
       try {
         return text(await organizationsByType(type, country, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -93,7 +94,7 @@ export function createServer(): McpServer {
       try {
         return text(await organizationBatch(ror_ids))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

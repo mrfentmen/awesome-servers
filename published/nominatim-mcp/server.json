@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/nominatim-mcp",
-  "description": "OpenStreetMap Nominatim geocoding and reverse geocoding (merged).",
+  "description": "Geocode with OpenStreetMap: find places by name, reverse geocode coordinates and resolve OSM ids",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.2",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "nominatim-mcp",
-      "version": "1.0.0",
+      "identifier": "@mrfentmen/nominatim-mcp",
+      "version": "1.0.2",
       "transport": {
         "type": "stdio"
       }

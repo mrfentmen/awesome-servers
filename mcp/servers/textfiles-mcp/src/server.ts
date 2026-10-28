@@ -9,6 +9,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -29,7 +30,7 @@ export function createServer(): McpServer {
           `textfiles.com topics:\n` + topics.map((t, i) => formatEntry(t, i)).join("\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -44,7 +45,7 @@ export function createServer(): McpServer {
         if (files.length === 0) return text(`Nothing in textfiles.com/${dir}.`)
         return text(`textfiles.com/${dir}:\n\n${files.map((f, i) => formatEntry(f, i)).join("\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -62,7 +63,7 @@ export function createServer(): McpServer {
         if (!content.trim()) return text(`Empty file at textfiles.com/${path}.`)
         return text(content)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

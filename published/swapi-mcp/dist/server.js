@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { RESOURCES, SwapiError, detail, filmChronicle, listAll, personFilms, search } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SwapiError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -20,7 +21,7 @@ export function createServer() {
             return text(await search(r, query, n));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("star_wars_detail", "One record by id with its full field list.", {
@@ -31,7 +32,7 @@ export function createServer() {
             return text(await detail(r, id));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("list_resource", "First page of one resource, for browsing.", { resource, limit }, async ({ resource: r, limit: n }) => {
@@ -39,7 +40,7 @@ export function createServer() {
             return text(await listAll(r, n));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("film_chronicle", "All nine films in story order with director and year.", {}, async () => {
@@ -47,7 +48,7 @@ export function createServer() {
             return text(await filmChronicle());
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("character_films", "Which films a character appears in, with titles.", { id: z.number().int().min(1).max(100).describe("People id, e.g. 1 for Luke Skywalker") }, async ({ id }) => {
@@ -55,7 +56,7 @@ export function createServer() {
             return text(await personFilms(id));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ncbi-gene-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "NCBI Gene records: search by symbol, disease or chromosome and read names, location, aliases and summaries - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ncbi-gene-mcp",

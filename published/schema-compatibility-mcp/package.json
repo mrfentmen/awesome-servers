@@ -1,12 +1,12 @@
 {
   "name": "schema-compatibility-mcp",
-  "version": "1.0.2",
+  "version": "1.0.1",
   "description": "Compare local JSON schema shape fingerprints without returning property names, values, paths, or schema text.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/schema-compatibility-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/schema-compatibility-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "schema-compatibility-mcp": "./dist/index.js"
@@ -35,8 +35,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

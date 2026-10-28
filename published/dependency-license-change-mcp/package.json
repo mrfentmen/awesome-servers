@@ -1,12 +1,12 @@
 {
   "name": "dependency-license-change-mcp",
-  "version": "1.0.5",
+  "version": "1.0.1",
   "description": "Compare local license evidence across two snapshots without returning package names, text, paths, or source.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/dependency-license-change-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/dependency-license-change-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "dependency-license-change-mcp": "./dist/index.js"
@@ -35,8 +35,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof NasaImagesError || e instanceof Error) return `Error: ${e.message}`
@@ -32,7 +33,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchMedia(query, media_type, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -45,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await itemDetail(nasa_id))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -58,7 +59,7 @@ export function createServer(): McpServer {
       try {
         return text(await assetFiles(nasa_id))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -74,7 +75,7 @@ export function createServer(): McpServer {
       try {
         return text(await byCenter(center, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -90,7 +91,7 @@ export function createServer(): McpServer {
       try {
         return text(await recentMedia(year_start, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -106,7 +107,7 @@ export function createServer(): McpServer {
       try {
         return text(await keywordSummary(query, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

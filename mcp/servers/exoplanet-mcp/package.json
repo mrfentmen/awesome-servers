@@ -1,6 +1,6 @@
 {
   "name": "exoplanet-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NASA Exoplanet Archive: planet search, orbital and physical parameters, system listings, discovery trends.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/exoplanet-mcp",

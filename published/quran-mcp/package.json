@@ -1,24 +1,33 @@
 {
-  "version": "1.0.3",
+  "name": "@mrfentmen/quran-mcp",
+  "version": "1.0.2",
+  "description": "Quran text and translations: read a surah, one ayah by reference, the chapter list and available editions - keyless.",
   "type": "module",
+  "mcpName": "io.github.mrfentmen/quran-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/quran-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "quran-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
-    "dist",
-    "server.json",
-    "README.md"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "dev": "npm run build && node dist/index.js"
+    "start": "node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "quran",
+    "islam",
+    "scripture",
+    "arabic",
+    "translation",
+    "keyless"
+  ],
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -28,16 +37,6 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
   },
-  "name": "quran-mcp",
-  "description": "Quran in one place: Arabic and English verses, surah info, and chapter details. No key required.",
-  "mcpName": "io.github.mrfentmen/quran-mcp",
-  "keywords": [
-    "mcp",
-    "quran",
-    "islam",
-    "religion",
-    "arabic"
-  ],
   "engines": {
     "node": ">=20"
   }

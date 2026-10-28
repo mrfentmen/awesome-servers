@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/sec-edgar-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "SEC EDGAR filings and financial concepts: company profiles by CIK, XBRL tag history and full-text filing search - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/sec-edgar-mcp",

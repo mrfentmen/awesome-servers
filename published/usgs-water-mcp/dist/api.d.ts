@@ -9,13 +9,3 @@ export declare function gauges(bbox: string, limit?: number): Promise<{
     };
 }>;
 export declare function format(data: any): string;
-export interface DailyValuesArgs {
-    site: string;
-    parameter?: string;
-    period?: string;
-}
-export interface LatestValueArgs {
-    site: string;
-    parameter?: string;
-}
-export declare function latestValue(args: LatestValueArgs): Promise<string>;

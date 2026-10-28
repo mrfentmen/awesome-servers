@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { artifactVersions, dependencySnippet, groupArtifacts, latestVersion, MavenError, searchArtifacts, searchByClass, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof MavenError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -19,7 +20,7 @@ export function createServer() {
             return text(await searchArtifacts(query, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("artifact_versions", "Published versions of one artifact, newest first.", {
@@ -31,7 +32,7 @@ export function createServer() {
             return text(await artifactVersions(group_id, artifact_id, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("latest_version", "Latest published version and update date for one artifact.", { group_id: groupArg, artifact_id: artifactArg }, async ({ group_id, artifact_id }) => {
@@ -39,7 +40,7 @@ export function createServer() {
             return text(await latestVersion(group_id, artifact_id));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("group_artifacts", "Every artifact published under one groupId.", {
@@ -50,7 +51,7 @@ export function createServer() {
             return text(await groupArtifacts(group_id, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("search_by_class", "Find which artifact publishes a fully qualified Java class.", {
@@ -61,7 +62,7 @@ export function createServer() {
             return text(await searchByClass(class_name, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("dependency_snippet", "Ready-to-paste pom.xml and build.gradle dependency blocks; uses the latest version when none is given.", {
@@ -73,7 +74,7 @@ export function createServer() {
             return text(await dependencySnippet(group_id, artifact_id, version));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { base64Decode, base64Encode, decodeUrl, encodeUrl, parseUrl, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -16,7 +17,7 @@ export function createServer() {
             return text(await parseUrl(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("encode_url", "Percent-encode text, either as a component or as a whole URL.", {
@@ -27,7 +28,7 @@ export function createServer() {
             return text(await encodeUrl(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("decode_url", "Percent-decode text and report any malformed escapes.", {
@@ -37,7 +38,7 @@ export function createServer() {
             return text(await decodeUrl(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("base64_encode", "Encode text to base64 or base64url.", {
@@ -48,7 +49,7 @@ export function createServer() {
             return text(await base64Encode(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("base64_decode", "Decode base64 or base64url back to text.", {
@@ -59,7 +60,7 @@ export function createServer() {
             return text(await base64Decode(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

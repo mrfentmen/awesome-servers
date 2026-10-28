@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/open5e-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Open5e reference for D&D 5e: spells, monsters and magic items from the open SRD, with stats and text - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/open5e-mcp",

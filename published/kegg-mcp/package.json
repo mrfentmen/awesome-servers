@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/kegg-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Search KEGG genes and compounds, read entries and list their pathways - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/kegg-mcp",

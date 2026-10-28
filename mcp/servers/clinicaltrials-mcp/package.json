@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/clinical-trials-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ClinicalTrials.gov v2 API: trial search, sponsors, eligibility, sites and outcomes \u2014 keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/clinicaltrials-mcp",

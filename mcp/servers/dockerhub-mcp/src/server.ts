@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof DockerHubError || e instanceof Error) return `Error: ${e.message}`
@@ -31,7 +32,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchImages(query, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -44,7 +45,7 @@ export function createServer(): McpServer {
       try {
         return text(await imageDetails(ref))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -64,7 +65,7 @@ export function createServer(): McpServer {
       try {
         return text(await imageTags(ref, limit, ordering))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -77,7 +78,7 @@ export function createServer(): McpServer {
       try {
         return text(await officialImages(limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -93,7 +94,7 @@ export function createServer(): McpServer {
       try {
         return text(await tagInfo(ref, tag))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -109,7 +110,7 @@ export function createServer(): McpServer {
       try {
         return text(await compareImages(first, second))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

@@ -46,11 +46,3 @@ export declare function searchCardsByArchetype(archetype: string): Promise<YgoCa
 export declare function getCardById(id: number): Promise<YgoCard | null>;
 export declare function getBanlist(banlist?: "tcg" | "ocg" | "goat"): Promise<BanlistEntry[]>;
 export declare function formatCard(c: YgoCard, index?: number): string;
-export interface TopAttackArgs {
-    limit?: number;
-    type?: string;
-}
-export interface StapleArgs {
-    limit?: number;
-}
-export declare function stapleCards(args?: StapleArgs): Promise<string>;

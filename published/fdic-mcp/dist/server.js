@@ -1,104 +1,46 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { failures, financials, history, institutions } from "./api.js";
-import { largestBanks } from "./api.js";
-import { locations } from "./api.js";
-import { summary } from "./api.js";
-const text = (value) => ({ content: [{ type: "text", text: value }] });
-const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
-const error = (e) => `Error: ${e instanceof Error ? e.message : String(e)}`;
+import { banksInState, institutionDetail, searchInstitutions, SourceError } from "./api.js";
+const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
+function errorMessage(e) {
+    if (e instanceof SourceError || e instanceof Error)
+        return `Error: ${e.message}`;
+    return `Error: ${String(e)}`;
+}
 export function createServer() {
-    const server = new McpServer({ name: "fdic-mcp", version: "1.0.0" });
-    server.registerTool("search_institutions", {
-        title: "Search institutions",
-        description: "Search FDIC insured institutions by name.",
-        inputSchema: z.object({ name: z.string().describe("Bank name."), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    const server = new McpServer({ name: "fdic-mcp", version: "1.0.1" });
+    server.tool("search_institutions", "Find banks by name, optionally narrowed to a state.", {
+        name: z.string().min(2).optional().describe("Name text to match, e.g. chase or first national"),
+        state: z.string().length(2).optional().describe("Two-letter state code, e.g. NY"),
+        limit: z.number().int().min(1).max(20).default(5).describe("Institutions to return")
+    }, async (a) => {
         try {
-            return text(await institutions(args));
+            return text(await searchInstitutions(a));
         }
         catch (e) {
-            return textError(error(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("get_largest_banks", {
-        title: "Get largest banks",
-        description: "Get the largest FDIC insured institutions by assets.",
-        inputSchema: z.object({ limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("institution_detail", "One bank by its FDIC certificate number.", {
+        cert: z.number().int().min(1).describe("FDIC certificate number, e.g. 628")
+    }, async (a) => {
         try {
-            return text(await largestBanks(args));
+            return text(await institutionDetail(a));
         }
         catch (e) {
-            return textError(error(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("bank_failures", {
-        title: "Bank failures",
-        description: "Failed banks, most recent first.",
-        inputSchema: z.object({ limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("banks_in_state", "Active banks headquartered in a state, largest first.", {
+        state: z.string().length(2).describe("Two-letter state code"),
+        limit: z.number().int().min(1).max(25).default(10).describe("Banks to return")
+    }, async (a) => {
         try {
-            return text(await failures(args));
+            return text(await banksInState(a));
         }
         catch (e) {
-            return textError(error(e));
-        }
-    });
-    server.registerTool("bank_history", {
-        title: "Bank history",
-        description: "Charter and history events.",
-        inputSchema: z.object({ name: z.string().describe("Bank name.").optional(), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await history(args));
-        }
-        catch (e) {
-            return textError(error(e));
-        }
-    });
-    server.registerTool("bank_locations", {
-        title: "Bank locations",
-        description: "Branches by city and state.",
-        inputSchema: z.object({ city: z.string().describe("City.").optional(), state: z.string().describe("State name.").optional(), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await locations(args));
-        }
-        catch (e) {
-            return textError(error(e));
-        }
-    });
-    server.registerTool("bank_financials", {
-        title: "Bank financials",
-        description: "Call-report financials: assets, deposits, equity, income.",
-        inputSchema: z.object({ name: z.string().describe("Bank name.").optional(), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await financials(args));
-        }
-        catch (e) {
-            return textError(error(e));
-        }
-    });
-    server.registerTool("fdic_summary", {
-        title: "FDIC summary",
-        description: "Industry totals.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await summary());
-        }
-        catch (e) {
-            return textError(error(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

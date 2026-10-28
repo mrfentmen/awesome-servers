@@ -1,0 +1,90 @@
+/**
+ * icanhazdadjoke — keyless public API client.
+ */
+const BASE = "https://icanhazdadjoke.com"
+const SOURCE = "icanhazdadjoke"
+
+export class SourceError extends Error {}
+
+async function request(path: string, accept = "application/json", timeoutMs = 25000): Promise<Response> {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs)
+  try {
+    const res = await fetch(path.startsWith("http") ? path : BASE + path, {
+      signal: ctrl.signal,
+      headers: { "user-agent": "dadjoke-mcp", accept },
+    })
+    if (!res.ok) throw new SourceError(`${SOURCE} responded ${res.status}`)
+    return res
+  } catch (e) {
+    if (e instanceof SourceError) throw e
+    if ((e as Error).name === "AbortError") throw new SourceError(`${SOURCE} request timed out`)
+    throw new SourceError(`${SOURCE} request failed: ${(e as Error).message}`)
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+export async function getJson(path: string): Promise<any> {
+  const res = await request(path)
+  const body = await res.text()
+  try {
+    return JSON.parse(body)
+  } catch {
+    throw new SourceError(`${SOURCE} returned malformed JSON`)
+  }
+}
+
+export async function getText(path: string, accept = "text/plain"): Promise<string> {
+  const res = await request(path, accept)
+  return (await res.text()).trim()
+}
+
+export function clampLimit(n: number | undefined, fallback: number, max: number): number {
+  const v = n ?? fallback
+  if (!Number.isInteger(v) || v < 1 || v > max) throw new SourceError(`limit must be between 1 and ${max}`)
+  return v
+}
+
+export function clean(s: unknown): string {
+  return String(s ?? "").replace(/\s+/g, " ").trim()
+}
+
+export function bullet(label: string, value: unknown): string {
+  const v = value === undefined || value === null || value === "" ? "" : String(value)
+  return v ? `${label}: ${v}` : ""
+}
+
+export function section(title: string, rows: string[]): string {
+  return [title, ...rows.filter(Boolean)].join("\n")
+}
+
+export async function randomDadjoke(): Promise<string> {
+  const d = await getJson("/")
+  if (!d?.joke) throw new SourceError("icanhazdadjoke returned no joke")
+  return `${clean(d.joke)}\n  (id ${clean(d.id)} · icanhazdadjoke.com)`
+}
+
+export async function searchDadjokes(a: { term: string; limit?: number }): Promise<string> {
+  const term = clean(a.term)
+  if (term.length < 2) throw new SourceError("term must be at least 2 characters")
+  const limit = a.limit ?? 5
+  if (!Number.isInteger(limit) || limit < 1 || limit > 20) throw new SourceError("limit must be between 1 and 20")
+  const d = await getJson(`/search?term=${encodeURIComponent(term)}&limit=${limit}`)
+  const rows: any[] = Array.isArray(d?.results) ? d.results : []
+  if (!rows.length) return `icanhazdadjoke has no joke matching "${term}".`
+  return [
+    `${d.total_jokes ?? rows.length} joke(s) match "${term}", showing ${rows.length}:`,
+    "",
+    ...rows.map((j, i) => `${i + 1}. ${clean(j.joke)} (id ${clean(j.id)})`),
+    d.total_pages > 1 ? `\nFirst page of ${d.total_pages}; raise limit for more.` : "",
+  ].filter(Boolean).join("\n")
+}
+
+export async function jokeById(a: { jokeId: string }): Promise<string> {
+  const id = clean(a.jokeId)
+  if (!/^[A-Za-z0-9]{3,20}$/.test(id)) throw new SourceError("jokeId must be letters and digits")
+  const d = await getJson(`/j/${encodeURIComponent(id)}`)
+  if (!d?.joke) throw new SourceError(`icanhazdadjoke has no joke ${id}`)
+  return `${clean(d.joke)}\n  (id ${clean(d.id)} · ${clean(d.status) === "200" ? "found" : "unknown status"})`
+}

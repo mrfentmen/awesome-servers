@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/fiscaldata-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "US Treasury fiscal data: national debt, average interest rates and the Monthly Treasury Statement - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/fiscaldata-mcp",

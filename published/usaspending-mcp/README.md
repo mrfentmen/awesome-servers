@@ -1,28 +1,25 @@
-# usaspending-mcp
+# USAspending
 
-USAspending federal agencies and awards, plus nonprofit filings.
+US federal spending: agency totals, awards and recipient summaries.
 
-A merged MCP server that consolidates duplicate single-purpose servers in this monorepo into one focused server.
+Keyless — no signup, no API key, no environment variables.
+
+## Install
+
+```bash
+npx -y @mrfentmen/usaspending-mcp
+```
 
 ## Tools
 
-- `agencies` — Top tier federal agencies.
-- `searchAwards` — Search federal awards by keyword.
-- `searchFederalAwards` — Search federal contract awards.
-- `searchNonprofits` — Search nonprofits and filings.
+| Tool | What it does |
+|---|---|
+| `agency_totals` | Budget, obligations and outlays for every top-tier agency |
+| `agency_detail` | One agency's budget totals by toptier code |
+| `award_search` | Search federal awards by keyword |
+| `recipient_search` | Search award recipients by name |
+| `top_recipients` | Largest recipients of federal awards |
 
-- `agency_details`
-- `category_spending`
-- `recipient_search`
-- `award_details`
-## Run
+## Data source
 
-```bash
-npm install
-npm run build
-node dist/index.js
-```
-
-## Source
-
-Public free APIs only. See `src/api.ts` for exact endpoints.
+USAspending API

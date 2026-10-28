@@ -62,35 +62,3 @@ export function countRequests(complaintType, borough, agency, start, end, limit 
     });
 }
 export function format(value) { return JSON.stringify(value, null, 2).slice(0, 16000); }
-// ---- muxB tools:
-// aggregation only: the existing tools deliberately keep addresses and
-// coordinates out of the response, so these do too
-async function groupBy(column, where, limit) {
-    const params = {
-        $select: `${column},count(*) as n`,
-        $group: column,
-        $order: 'n DESC',
-        $limit: String(limit),
-    };
-    if (where)
-        params.$where = where;
-    const url = new URL(BASE);
-    Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
-    const response = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(30000) });
-    if (!response.ok)
-        throw new Nyc311Error(`NYC 311 error ${response.status}`);
-    return (await response.json());
-}
-const nycCount = (row) => {
-    const n = Number(row.n);
-    return Number.isFinite(n) ? n.toLocaleString('en-US') : 'not reported';
-};
-export async function boroughBreakdown(args) {
-    validateDates(args.start, args.end);
-    const where = filters(undefined, undefined, undefined, args.start, args.end).join(' AND ');
-    const rows = await groupBy('borough', where, 6);
-    if (!rows.length)
-        return 'NYC 311 returned no borough totals.';
-    return `NYC 311 requests by borough (${rows.length} shown):\n` +
-        rows.map((r, i) => `${i + 1}. ${r.borough || 'not reported'}: ${nycCount(r)} requests`).join('\n');
-}

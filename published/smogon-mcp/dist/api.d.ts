@@ -24,11 +24,3 @@ export declare function parseUsage(text: string): UsageRow[];
 export declare function getUsageStats(month: string, format: string, top?: number): Promise<UsageRow[]>;
 export declare function listAvailableMonths(): Promise<string[]>;
 export declare function formatPoke(p: PokeEntry): string;
-export interface ByTypeArgs {
-    type: string;
-    limit?: number;
-}
-export interface ByAbilityArgs {
-    ability: string;
-    limit?: number;
-}

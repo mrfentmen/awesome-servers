@@ -1,6 +1,6 @@
 {
   "name": "gutenberg-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Project Gutenberg via Gutendex: 79,000+ public domain books with summaries and download links \u2014 keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/gutenberg-mcp",

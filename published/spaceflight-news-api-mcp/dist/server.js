@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { SpaceflightError, articleDetail, latestBlogs, latestNews, latestReports, newsBySite, newsSources, searchNews, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SpaceflightError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -15,7 +16,7 @@ export function createServer() {
             return text(await latestNews(limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("search_news", "Full-text search over 36k+ spaceflight articles.", {
@@ -26,7 +27,7 @@ export function createServer() {
             return text(await searchNews(term, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("news_by_site", "Articles from one outlet, e.g. 'NASASpaceflight', 'SpaceNews', 'Arstechnica'.", {
@@ -37,7 +38,7 @@ export function createServer() {
             return text(await newsBySite(site, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("article_detail", "One article with its full summary and image.", { id: z.number().int().positive().describe("Article id from any list tool") }, async ({ id }) => {
@@ -45,7 +46,7 @@ export function createServer() {
             return text(await articleDetail(id));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("latest_reports", "Space agency reports and mission updates.", { limit: limitArg }, async ({ limit }) => {
@@ -53,7 +54,7 @@ export function createServer() {
             return text(await latestReports(limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("latest_blogs", "Newest blog posts from the tracked outlets.", { limit: limitArg }, async ({ limit }) => {
@@ -61,7 +62,7 @@ export function createServer() {
             return text(await latestBlogs(limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("news_sources", "Every outlet the API tracks, plus the API version.", {}, async () => {
@@ -69,7 +70,7 @@ export function createServer() {
             return text(await newsSources());
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

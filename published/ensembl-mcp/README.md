@@ -1,28 +1,33 @@
-# Ensembl MCP
+# Ensembl
 
-Genome data from the public Ensembl REST API. No key required.
+Ensembl genomes: look up genes and transcripts by symbol, fetch sequences and list xrefs - keyless.
 
-This file is self contained. It reads public data only and never writes to the machine. All output is bounded and honest about what could not be fetched.
+Keyless — no signup, no API key, no environment variables.
+
+## Install
+
+```bash
+npx -y @mrfentmen/ensembl-mcp
+```
+
+Or add it to your MCP client:
+
+```json
+{
+  "mcpServers": {
+    "ensembl-mcp": { "command": "npx", "args": ["-y", "@mrfentmen/ensembl-mcp"] }
+  }
+}
+```
 
 ## Tools
 
+| Tool | What it does |
+|---|---|
+| `lookup_gene` | Resolve a gene symbol to its Ensembl gene, with position and biotype. |
+| `gene_sequence` | The genomic sequence of an Ensembl gene, as FASTA-ish text. |
+| `gene_xrefs` | Cross-references for a gene: RefSeq, UniProt, GO and others. |
 
-* `lookup`  Look up a gene.
-* `sequence`  Get a sequence.
+## Data source
 
-## Usage
-
-```bash
-npm install
-npm run build
-node dist/index.js
-```
-
-Data comes from the public Ensembl REST API.
-
-## Licence — no paywall
-
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.
+Ensembl REST API (EBI)

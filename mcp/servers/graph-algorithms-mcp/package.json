@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/graph-algorithms-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Shortest paths, topological order and connected components for directed or undirected graphs - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/graph-algorithms-mcp",

@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { domainToAscii, domainToUnicodeTool, inspectDomain, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -16,7 +17,7 @@ export function createServer() {
             return text(await domainToAscii(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("domain_to_unicode", "Convert a punycode domain back to Unicode.", {
@@ -26,7 +27,7 @@ export function createServer() {
             return text(await domainToUnicodeTool(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("inspect_domain", "Show every label, its ASCII form and whether it needs punycode.", {
@@ -36,7 +37,7 @@ export function createServer() {
             return text(await inspectDomain(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

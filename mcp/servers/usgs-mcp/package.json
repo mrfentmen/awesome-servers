@@ -1,6 +1,6 @@
 {
   "name": "usgs-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Use this MCP server to live earthquake data from the USGS. Latest quakes, magnitudes, locations, and depth",
   "type": "module",
   "mcpName": "io.github.mrfentmen/usgs-mcp",

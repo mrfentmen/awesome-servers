@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/metmuseum-mcp",
-  "description": "Metropolitan Museum collection search.",
+  "description": "Use this MCP server to the Metropolitan Museum of Art. Search 500k artworks, get details, artists, and images",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-mcps",
+    "url": "https://github.com/mrfentmen/metmuseum-mcp",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "@mrfentmen/metmuseum-mcp",
-      "version": "1.0.0",
+      "identifier": "metmuseum-mcp",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       }

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/opensearch-mcp",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "MCP server for OpenSearch. Search indices, manage documents, check health and stats.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/opensearch-mcp",

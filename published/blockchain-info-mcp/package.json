@@ -1,6 +1,9 @@
 {
-  "version": "1.1.1",
+  "name": "@mrfentmen/blockchain-info-mcp",
+  "version": "1.0.1",
+  "description": "Bitcoin chain data from blockchain.info: latest block, BTC price ticker and address balances and transactions - keyless.",
   "type": "module",
+  "mcpName": "io.github.mrfentmen/blockchain-info-mcp",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mrfentmen/awesome-servers.git"
@@ -10,15 +13,21 @@
   },
   "main": "./dist/index.js",
   "files": [
-    "dist",
-    "server.json",
-    "README.md"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "dev": "npm run build && node dist/index.js"
+    "start": "node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "bitcoin",
+    "blockchain",
+    "crypto",
+    "btc",
+    "address",
+    "keyless"
+  ],
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -28,16 +37,6 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
   },
-  "name": "blockchain-info-mcp",
-  "description": "Bitcoin data from blockchain.info: price ticker, latest block, and address balances. No key required.",
-  "mcpName": "io.github.mrfentmen/blockchain-info-mcp",
-  "keywords": [
-    "mcp",
-    "bitcoin",
-    "blockchain",
-    "btc",
-    "address"
-  ],
   "engines": {
     "node": ">=20"
   }

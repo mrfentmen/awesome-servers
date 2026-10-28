@@ -53,13 +53,3 @@ export declare function formatAlbumSearch(a: AlbumSearchResult): string;
 export declare function formatAlbumDetail(a: AlbumDetail): string;
 export declare function formatArtistSearch(a: ArtistSearchResult): string;
 export declare function formatArtistDetail(a: ArtistDetail): string;
-/** Find a track and the album it sits on, which the album and artist searches cannot do. */
-export declare function trackSearch(args: {
-    query?: string;
-    limit?: number;
-}): Promise<string>;
-export interface StorefrontArgs {
-    id: string;
-    storefronts?: string;
-    entity?: 'album' | 'artist';
-}

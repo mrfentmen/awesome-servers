@@ -12,6 +12,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -38,7 +39,7 @@ export function createServer(): McpServer {
             cards.map((c, i) => `${i + 1}. ${formatCardSummary(c)}`).join("\n\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -54,7 +55,7 @@ export function createServer(): McpServer {
         if (!card) return text(`No card with id "${id}".`)
         return text(formatCardDetail(card))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -72,7 +73,7 @@ export function createServer(): McpServer {
             sets.slice(0, 20).map((s, i) => `${i + 1}. ${formatSet(s)}`).join("\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -93,7 +94,7 @@ export function createServer(): McpServer {
         const tail = set.cards.length > 25 ? `\n…and ${set.cards.length - 25} more` : ""
         return text(head + body + tail)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

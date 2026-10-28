@@ -1,12 +1,12 @@
 {
   "name": "pokemon-tcg-mcp",
-  "version": "1.0.3",
-  "description": "Use this MCP server to the Pok\u00e9mon TCG, search cards, sets, rarities via TCGdex. Tools include search cards, get card, list sets",
+  "version": "1.0.1",
+  "description": "MCP server for the Pok\u00e9mon TCG, search cards, sets, rarities via TCGdex.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/pokemon-tcg-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/pokemon-tcg-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "pokemon-tcg-mcp": "./dist/index.js"
@@ -37,8 +37,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

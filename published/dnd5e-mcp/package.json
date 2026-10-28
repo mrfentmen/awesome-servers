@@ -1,12 +1,12 @@
 {
   "name": "dnd5e-mcp",
-  "version": "1.0.5",
-  "description": "Use this MCP server to the D&D 5e SRD, monsters, spells, classes, and equipment. Tools include get monster, get spell, list monsters",
+  "version": "1.0.1",
+  "description": "MCP server for the D&D 5e SRD, monsters, spells, classes, and equipment.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/dnd5e-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/dnd5e-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "dnd5e-mcp": "./dist/index.js"
@@ -36,8 +36,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

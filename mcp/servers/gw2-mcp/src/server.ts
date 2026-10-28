@@ -13,6 +13,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -30,7 +31,7 @@ export function createServer(): McpServer {
         if (items.length === 0) return text(`No GW2 items match "${name}".`)
         return text(`Items matching "${name}":\n\n${items.map((i) => formatItem(i)).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -45,7 +46,7 @@ export function createServer(): McpServer {
         if (!item) return text(`No item ${id}.`)
         return text(formatItem(item))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -60,7 +61,7 @@ export function createServer(): McpServer {
         if (!price) return text(`No trading data for item ${id}.`)
         return text(`Trading Post for ${id}:\n${formatPrice(price)}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -75,7 +76,7 @@ export function createServer(): McpServer {
         if (!a) return text(`No achievement ${id}.`)
         return text(formatAchievement(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -95,7 +96,7 @@ export function createServer(): McpServer {
         }
         return text(`Today's GW2 dailies:\n${out.join("\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

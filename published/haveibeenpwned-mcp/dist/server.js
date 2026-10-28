@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { breachDetail, latestBreach, listBreaches, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -17,7 +18,7 @@ export function createServer() {
             return text(await listBreaches(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("breach_detail", "One breach by its account name, with data classes and counts.", {
@@ -27,7 +28,7 @@ export function createServer() {
             return text(await breachDetail(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("latest_breach", "The most recently added breach in the catalogue.", {
@@ -37,7 +38,7 @@ export function createServer() {
             return text(await latestBreach());
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

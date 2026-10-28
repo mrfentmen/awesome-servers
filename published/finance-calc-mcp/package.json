@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/finance-calc-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Loan payments, amortisation schedules, compound interest and net present value - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/finance-calc-mcp",

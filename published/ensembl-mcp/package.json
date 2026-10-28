@@ -1,24 +1,33 @@
 {
-  "version": "1.0.4",
+  "name": "@mrfentmen/ensembl-mcp",
+  "version": "1.0.1",
+  "description": "Ensembl genomes: look up genes and transcripts by symbol, fetch sequences and list xrefs - keyless.",
   "type": "module",
+  "mcpName": "io.github.mrfentmen/ensembl-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/ensembl-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "ensembl-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
-    "dist",
-    "server.json",
-    "README.md"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "dev": "npm run build && node dist/index.js"
+    "start": "node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "ensembl",
+    "genomics",
+    "genes",
+    "dna",
+    "bioinformatics",
+    "keyless"
+  ],
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -28,16 +37,6 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
   },
-  "name": "ensembl-mcp",
-  "description": "Genome lookup from Ensembl. No key required.",
-  "mcpName": "io.github.mrfentmen/ensembl-mcp",
-  "keywords": [
-    "mcp",
-    "ensembl",
-    "genome",
-    "genes",
-    "bioinformatics"
-  ],
   "engines": {
     "node": ">=20"
   }

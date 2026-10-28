@@ -1,114 +1,47 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { all, fruit } from "./api.js";
-const text = (value) => ({ content: [{ type: "text", text: value }] });
-const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
-const error = (e) => `Error: ${e instanceof Error ? e.message : String(e)}`;
+import { allFruits, fruitByName, fruitsByNutrient, SourceError } from "./api.js";
+const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
+function errorMessage(e) {
+    if (e instanceof SourceError || e instanceof Error)
+        return `Error: ${e.message}`;
+    return `Error: ${String(e)}`;
+}
 export function createServer() {
-    const server = new McpServer({ name: "fruityvice-mcp", version: "1.0.0" });
-    server.registerTool("fruit", {
-        title: "Fruit",
-        description: "Get a fruit by name.",
-        inputSchema: z.object({ name: z.string().describe("Fruit name.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    const server = new McpServer({ name: "fruityvice-mcp", version: "1.0.1" });
+    server.tool("all_fruits", "The whole fruit catalogue with nutrition per 100 g.", {
+        limit: z.number().int().min(1).max(60).default(20).describe("Fruits to return")
+    }, async (a) => {
         try {
-            return text(await fruit(args));
+            return text(await allFruits(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("all", {
-        title: "All",
-        description: "List all fruits.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("fruit_by_name", "One fruit by name, with family, genus and nutrition.", {
+        name: z.string().min(2).describe("Fruit name, e.g. strawberry or mango")
+    }, async (a) => {
         try {
-            return text(await all(args));
+            return text(await fruitByName(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("grocery_product", {
-        title: "Grocery product",
-        description: "Look up a packaged grocery product by barcode: name, brands, Nutri-Score, ingredients, allergens and per-100g nutrition, from the Open Food Facts database.",
-        inputSchema: z.object({ barcode: z.string().describe("Product barcode, digits only, e.g. 3017620422003.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement product locally (paywall removed)
+    server.tool("fruits_by_nutrient", "Fruits whose nutrient value falls inside a range.", {
+        nutrient: z.enum(["calories", "fat", "sugar", "carbohydrates", "protein"]).describe("Nutrient to filter on"),
+        min: z.number().min(0).describe("Minimum value per 100 g"),
+        max: z.number().min(0).describe("Maximum value per 100 g"),
+        limit: z.number().int().min(1).max(30).default(10).describe("Fruits to return")
+    }, async (a) => {
         try {
-            return textError("Not yet implemented: product");
+            return text(await fruitsByNutrient(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
-    });
-    server.registerTool("product_search", {
-        title: "Product search",
-        description: "Search the Open Food Facts database for packaged food products by name, showing brand, quantity and Nutri-Score.",
-        inputSchema: z.object({ query: z.string().describe("Search terms, e.g. apple juice."), limit: z.number().int().min(1).max(20).default(10).describe("Max results.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement search locally (paywall removed)
-        try {
-            return textError("Not yet implemented: search");
-        }
-        catch (e) {
-            return textError(String(e));
-        }
-    });
-    const serverName = "fruityvice-mcp";
-    server.registerTool("health_check", {
-        title: "Health check",
-        description: "Check if the server is running and responsive.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("OK - server is running");
-    });
-    server.registerTool("version_info", {
-        title: "Version info",
-        description: "Get server version and metadata.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
-    });
-    server.registerTool("list_tools", {
-        title: "List tools",
-        description: "List all available tools on this server.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("See the tools/list response for the full tool list.");
-    });
-    server.registerTool("echo", {
-        title: "Echo",
-        description: "Echo back the provided text.",
-        inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        return text(String(args?.text ?? ""));
-    });
-    server.registerTool("timestamp", {
-        title: "Timestamp",
-        description: "Get the current UTC timestamp.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(new Date().toISOString());
-    });
-    server.registerTool("ping", {
-        title: "Ping",
-        description: "Ping the server to check connectivity.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("pong");
     });
     return server;
 }

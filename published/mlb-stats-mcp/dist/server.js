@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { MlbError, playerInfo, schedule, standings, teamRecord, teamRoster, teamSchedule, teams } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof MlbError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -15,7 +16,7 @@ export function createServer() {
             return text(await teams(sportId));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("standings", "Division standings with win-loss records and streaks.", {
@@ -26,7 +27,7 @@ export function createServer() {
             return text(await standings(leagueId, season));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("games_on_date", "Every MLB game on one day, with scores when played.", {
@@ -37,7 +38,7 @@ export function createServer() {
             return text(await schedule(date, sportId));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("team_roster", "Active roster for a team id, with positions and jersey numbers.", {
@@ -48,7 +49,7 @@ export function createServer() {
             return text(await teamRoster(teamId, season));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("team_overview", "One team: league, division, venue and season record.", {
@@ -59,7 +60,7 @@ export function createServer() {
             return text(await teamRecord(teamId, season));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("player_profile", "Player bio plus headline season stats.", { personId: z.number().int().positive().describe("Player id (personId)") }, async ({ personId }) => {
@@ -67,7 +68,7 @@ export function createServer() {
             return text(await playerInfo(personId));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("team_schedule", "A team's season schedule: next five games and last five results.", {
@@ -78,7 +79,7 @@ export function createServer() {
             return text(await teamSchedule(teamId, season));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

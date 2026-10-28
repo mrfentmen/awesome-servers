@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/zippopotam-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Postal code lookup for 60+ countries: place names, state and coordinates from a ZIP or postcode - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/zippopotam-mcp",

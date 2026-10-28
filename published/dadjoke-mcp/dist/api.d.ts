@@ -1,9 +1,16 @@
-export declare class DadJokeError extends Error {
+export declare class SourceError extends Error {
 }
-export interface Joke {
-    id: string;
-    joke: string;
-}
-export declare function randomJoke(): Promise<Joke>;
-export declare function searchJokes(term: string, limit?: number): Promise<Joke[]>;
-export declare function getJoke(id: string): Promise<Joke>;
+export declare function getJson(path: string): Promise<any>;
+export declare function getText(path: string, accept?: string): Promise<string>;
+export declare function clampLimit(n: number | undefined, fallback: number, max: number): number;
+export declare function clean(s: unknown): string;
+export declare function bullet(label: string, value: unknown): string;
+export declare function section(title: string, rows: string[]): string;
+export declare function randomDadjoke(): Promise<string>;
+export declare function searchDadjokes(a: {
+    term: string;
+    limit?: number;
+}): Promise<string>;
+export declare function jokeById(a: {
+    jokeId: string;
+}): Promise<string>;

@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { EonetError, categories, eventDetail, eventsOnMap, listEvents, sources } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof EonetError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -34,7 +35,7 @@ export function createServer() {
             return text(await listEvents({ days, category, status, limit }));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("event_detail", "One event with its full track history and source links.", { id: z.string().min(4).describe("EONET id, e.g. EONET_6439") }, async ({ id }) => {
@@ -42,7 +43,7 @@ export function createServer() {
             return text(await eventDetail(id));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("open_events_map", "Everything currently open in one category, with an average map centre.", {
@@ -53,7 +54,7 @@ export function createServer() {
             return text(await eventsOnMap(category, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("list_categories", "Every EONET category id and title.", {}, async () => {
@@ -61,7 +62,7 @@ export function createServer() {
             return text(await categories());
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("list_sources", "Every agency and dataset feeding EONET.", {}, async () => {
@@ -69,7 +70,7 @@ export function createServer() {
             return text(await sources());
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

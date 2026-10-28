@@ -12,6 +12,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof RxNavError || e instanceof Error) return `Error: ${e.message}`
@@ -34,7 +35,7 @@ export function createServer(): McpServer {
         if (!rows.length) return text(`No RxNorm concepts for "${name}".`)
         return text(rows.slice(0, limit).map(conceptLine).join("\n"))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -48,7 +49,7 @@ export function createServer(): McpServer {
         const ids = await normalize(name)
         return text(ids.length ? ids.join("\n") : `No RxNorm id for "${name}".`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -71,7 +72,7 @@ export function createServer(): McpServer {
           ].join("\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -88,7 +89,7 @@ export function createServer(): McpServer {
         const rows = await ndcs(rxcui)
         return text(rows.length ? rows.slice(0, limit).join("\n") : `No NDCs for ${rxcui}.`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -106,7 +107,7 @@ export function createServer(): McpServer {
         if (!rows.length) return text(`No related concepts for ${rxcui}.`)
         return text(rows.slice(0, limit).map(conceptLine).join("\n"))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -120,7 +121,7 @@ export function createServer(): McpServer {
         const rows = await spellings(name)
         return text(rows.length ? rows.join("\n") : `No suggestions for "${name}".`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

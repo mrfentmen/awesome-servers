@@ -1,6 +1,6 @@
 {
   "name": "telnetbbs-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Telnet BBS Guide, the directory of live retro BBSes you can still dial into.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/telnetbbs-mcp",

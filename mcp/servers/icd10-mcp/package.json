@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/icd10-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Search and validate ICD-10-CM diagnosis codes from the US NLM clinical tables - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/icd10-mcp",

@@ -1,75 +1,45 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { latestValue, listSurveys, popularSeries, series, seriesRange } from "./api.js";
-const text = (value) => ({ content: [{ type: "text", text: value }] });
-const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
-const error = (e) => `Error: ${e instanceof Error ? e.message : String(e)}`;
+import { listSurveys, popularSeries, seriesData, SourceError } from "./api.js";
+const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
+function errorMessage(e) {
+    if (e instanceof SourceError || e instanceof Error)
+        return `Error: ${e.message}`;
+    return `Error: ${String(e)}`;
+}
 export function createServer() {
     const server = new McpServer({ name: "bls-mcp", version: "1.0.0" });
-    server.registerTool("series", {
-        title: "Series",
-        description: "Get a BLS series.",
-        inputSchema: z.object({ id: z.string().describe("Series id like CES0000000001."), year: z.string().describe("Start year like 2023.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("series_data", "Observations for one BLS series id over a year range.", {
+        seriesId: z.string().regex(/^[A-Za-z0-9]{4,40}$/).describe("BLS series id, e.g. CES0000000001 or CUUR0000SA0"),
+        startYear: z.string().regex(/^\d{4}$/).describe("First year YYYY"),
+        endYear: z.string().regex(/^\d{4}$/).describe("Last year YYYY, at most 20 years after startYear")
+    }, async (a) => {
         try {
-            return text(await series(args));
+            return text(await seriesData(a));
         }
         catch (e) {
-            return textError(error(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("latest_value", {
-        title: "Latest value",
-        description: "Latest data point of a BLS series.",
-        inputSchema: z.object({ id: z.string().describe("Series id like LNS14000000.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("list_surveys", "Every BLS survey with its abbreviation and name.", {
+        limit: z.number().int().min(1).max(120).default(40).describe("Surveys to return")
+    }, async (a) => {
         try {
-            return text(await latestValue(args));
+            return text(await listSurveys(a));
         }
         catch (e) {
-            return textError(error(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("series_range", {
-        title: "Series range",
-        description: "BLS series values over a year range.",
-        inputSchema: z.object({ id: z.string().describe("Series id like LNS14000000."), start: z.string().describe("Start year like 2020.").optional(), end: z.string().describe("End year like 2024.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("popular_series", "The series BLS highlights as most requested, with their ids.", {
+        limit: z.number().int().min(1).max(50).default(20).describe("Series to return")
+    }, async (a) => {
         try {
-            return text(await seriesRange(args));
+            return text(await popularSeries(a));
         }
         catch (e) {
-            return textError(error(e));
-        }
-    });
-    server.registerTool("popular_series", {
-        title: "Popular series",
-        description: "Most-requested BLS series ids.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await popularSeries());
-        }
-        catch (e) {
-            return textError(error(e));
-        }
-    });
-    server.registerTool("list_surveys", {
-        title: "List surveys",
-        description: "BLS surveys (CPI, employment, productivity...).",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await listSurveys());
-        }
-        catch (e) {
-            return textError(error(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

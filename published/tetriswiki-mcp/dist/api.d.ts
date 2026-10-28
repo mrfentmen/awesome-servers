@@ -12,18 +12,3 @@ export declare function getPage(title: string, maxChars?: number): Promise<{
     url: string;
 } | null>;
 export declare function wikiTextToPlain(wt: string, maxChars?: number): string;
-export interface PageHistoryArgs {
-    title: string;
-    limit?: number;
-}
-export interface BrowseCategoryArgs {
-    category: string;
-    limit?: number;
-}
-export interface RecentChangesArgs {
-    limit?: number;
-}
-export interface OutlinksArgs {
-    title: string;
-    limit?: number;
-}

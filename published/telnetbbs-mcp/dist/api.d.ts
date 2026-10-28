@@ -12,8 +12,3 @@ export interface BbsEntry {
 export declare function parseListing(html: string): BbsEntry[];
 export declare function listAll(): Promise<BbsEntry[]>;
 export declare function formatBbs(b: BbsEntry, index?: number): string;
-export interface SoftwareCensusArgs {
-    limit?: number;
-}
-export interface BbsStatsArgs {
-}

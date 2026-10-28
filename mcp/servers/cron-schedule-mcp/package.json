@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/cron-schedule-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Cron expression helper: explain a schedule in plain words and list its next run times, with validation - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/cron-schedule-mcp",

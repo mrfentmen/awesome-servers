@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { detectLifeCycle, evolveLife, lifeStats, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -18,7 +19,7 @@ export function createServer() {
             return text(await evolveLife(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("life_stats", "Population, density and bounding box of a Life pattern.", {
@@ -28,7 +29,7 @@ export function createServer() {
             return text(await lifeStats(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("detect_life_cycle", "Find the period or extinction point of a pattern.", {
@@ -39,7 +40,7 @@ export function createServer() {
             return text(await detectLifeCycle(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

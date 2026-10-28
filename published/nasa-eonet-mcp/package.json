@@ -1,6 +1,6 @@
 {
   "name": "nasa-eonet-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NASA EONET: open natural events on Earth \u2014 wildfires, storms, volcanoes, icebergs \u2014 keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nasa-eonet-mcp",

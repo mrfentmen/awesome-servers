@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // src/index.ts
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";

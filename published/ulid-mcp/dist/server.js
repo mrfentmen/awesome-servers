@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { compareUlids, generateUlid, parseUlid, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -17,7 +18,7 @@ export function createServer() {
             return text(await generateUlid(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("parse_ulid", "Decode a ULID into its timestamp and randomness parts.", {
@@ -27,7 +28,7 @@ export function createServer() {
             return text(await parseUlid(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("compare_ulids", "Compare two ULIDs and show chronological order.", {
@@ -38,7 +39,7 @@ export function createServer() {
             return text(await compareUlids(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

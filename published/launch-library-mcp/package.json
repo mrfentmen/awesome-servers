@@ -1,6 +1,6 @@
 {
   "name": "launch-library-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Launch Library 2: upcoming and past rocket launches, missions, orbits, space events and agencies \u2014 keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/launch-library-mcp",

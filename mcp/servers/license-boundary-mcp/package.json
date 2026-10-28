@@ -1,6 +1,6 @@
 {
   "name": "license-boundary-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Summarize local license evidence and uncertainty without returning package names, license text, paths, or source.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/license-boundary-mcp",

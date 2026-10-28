@@ -1,71 +1,122 @@
-const BASE = 'https://api.bart.gov/api';
-const KEY = 'MW9S-E7SL-26DU-VV8V';
-export async function etd(args) {
-    const station = (args.station ?? '').trim();
-    if (!station)
-        return 'Provide a station abbreviation.';
-    const res = await fetch(`${BASE}/etd.aspx?cmd=etd&orig=${encodeURIComponent(station)}&key=${KEY}&json=y`, {
-        headers: { 'User-Agent': 'mrfentmen-bart-mcp/1.0', Accept: 'application/json' },
-        signal: AbortSignal.timeout(20000),
-    });
-    if (!res.ok)
-        throw new Error(`BART returned ${res.status}`);
-    const d = (await res.json());
-    const root = (d.root ?? {});
-    const stations = (root.station ?? []);
-    if (!stations.length)
-        return `No departures for ${station}.`;
-    const out = [];
-    for (const st of stations.slice(0, 5)) {
-        const s = (k) => (st[k] != null ? String(st[k]) : '');
-        const etds = (st.etd ?? []);
-        out.push(`${s('name')}:`);
-        for (const e of etds.slice(0, 3)) {
-            const es = (k) => (e[k] != null ? String(e[k]) : '');
-            const ests = (e.estimate ?? []);
-            const mins = ests.slice(0, 3).map((m) => String(m.minutes ?? '')).join(', ');
-            out.push(`  ${es('destination')} in ${mins} min`);
-        }
+/**
+ * BART — keyless public API client.
+ */
+const BASE = "https://api.bart.gov/api";
+const SOURCE = "BART";
+const UA = "bart-mcp";
+export class SourceError extends Error {
+}
+async function request(path, init, timeoutMs = 25000) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+        const res = await fetch(path.startsWith("http") ? path : BASE + path, {
+            ...init,
+            signal: ctrl.signal,
+            headers: {
+                "user-agent": UA,
+                accept: "application/json",
+                ...init?.headers,
+            },
+        });
+        if (!res.ok)
+            throw new SourceError(`${SOURCE} responded ${res.status}`);
+        return res;
     }
-    return out.join('\n');
+    catch (e) {
+        if (e instanceof SourceError)
+            throw e;
+        if (e.name === "AbortError")
+            throw new SourceError(`${SOURCE} request timed out`);
+        throw new SourceError(`${SOURCE} request failed: ${e.message}`);
+    }
+    finally {
+        clearTimeout(timer);
+    }
 }
-export async function stations(_args) {
-    const res = await fetch(`${BASE}/stn.aspx?cmd=stns&key=${KEY}&json=y`, {
-        headers: { 'User-Agent': 'mrfentmen-bart-mcp/1.0', Accept: 'application/json' },
-        signal: AbortSignal.timeout(20000),
-    });
-    if (!res.ok)
-        throw new Error(`BART returned ${res.status}`);
-    const d = (await res.json());
-    const root = (d.root ?? {});
-    const stations = root.stations?.station ?? [];
-    if (!stations.length)
-        return 'No stations returned.';
-    return `BART stations (${stations.length}):\n` +
-        stations.slice(0, 30).map((st, i) => {
-            const s = (k) => (st[k] != null ? String(st[k]) : '');
-            return `${i + 1}. ${s('abbr')} | ${s('name')} | ${s('city')}`;
-        }).join('\n');
+export async function getJson(path, init) {
+    const res = await request(path, init);
+    const body = await res.text();
+    try {
+        return JSON.parse(body);
+    }
+    catch {
+        throw new SourceError(`${SOURCE} returned malformed JSON`);
+    }
 }
-async function bartStations() {
-    const res = await fetch(`${BASE}/stn.aspx?cmd=stns&key=${KEY}&json=y`, {
-        headers: { "User-Agent": "mrfentmen-bart-mcp/1.0", Accept: "application/json" },
-        signal: AbortSignal.timeout(20000),
-    });
-    if (!res.ok)
-        throw new Error(`BART returned HTTP ${res.status}`);
-    const d = (await res.json());
-    const root = (d.root ?? {});
-    const wrap = root.stations?.station ?? [];
-    if (!wrap.length)
-        throw new Error("BART returned no stations.");
-    return wrap;
+export async function getText(path, init) {
+    const res = await request(path, init);
+    return await res.text();
 }
-const field = (value) => typeof value === "string" && value.trim() ? value.trim() : "not reported";
-function haversineKm(lat1, lon1, lat2, lon2) {
-    const toRad = (d) => (d * Math.PI) / 180;
-    const R = 6371;
-    const a = Math.sin(toRad(lat2 - lat1) / 2) ** 2 +
-        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(toRad(lon2 - lon1) / 2) ** 2;
-    return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+export function clampLimit(n, fallback, max) {
+    const v = n ?? fallback;
+    if (!Number.isInteger(v) || v < 1 || v > max)
+        throw new SourceError(`limit must be between 1 and ${max}`);
+    return v;
+}
+export function clean(s) {
+    return String(s ?? "").replace(/\s+/g, " ").trim();
+}
+export function bullet(label, value) {
+    const v = value === undefined || value === null || value === "" ? "" : String(value);
+    return v ? `${label}: ${v}` : "";
+}
+export function section(title, rows) {
+    return [title, ...rows.filter(Boolean)].join("\n");
+}
+const KEY = "MW9S-E7SL-26DU-VV8V";
+function arr(x) {
+    return Array.isArray(x) ? x : x ? [x] : [];
+}
+export async function departures(a) {
+    const station = clean(a.station).toUpperCase();
+    if (!/^[A-Z0-9]{2,6}$/.test(station))
+        throw new SourceError("station must be a BART abbreviation");
+    const d = await getJson(`/etd.aspx?cmd=etd&orig=${encodeURIComponent(station)}&key=${KEY}&json=y`);
+    const st = arr(d?.root?.station)[0];
+    if (!st)
+        throw new SourceError(`BART has no station ${station}`);
+    const rows = [];
+    for (const e of arr(st.etd)) {
+        const est = arr(e.estimate).slice(0, 3).map((x) => `${clean(x.minutes)} min`);
+        rows.push(`${clean(e.destination)}: ${est.join(", ")}`);
+    }
+    if (!rows.length)
+        return `No departures listed for ${clean(st.name)}.`;
+    return section(`${clean(st.name)} — ${clean(d.root.date)} ${clean(d.root.time)}`, rows);
+}
+export async function stations(a) {
+    const d = await getJson(`/stn.aspx?cmd=stns&key=${KEY}&json=y`);
+    const list = arr(d?.root?.stations?.station);
+    if (!list.length)
+        throw new SourceError("BART returned no stations");
+    return section(`${list.length} stations`, list.map((s, i) => `${i + 1}. ${clean(s.name)} (${clean(s.abbr)}) · ${clean(s.gtfs_latitude)}, ${clean(s.gtfs_longitude)}`));
+}
+export async function routes(a) {
+    const d = await getJson(`/route.aspx?cmd=routes&key=${KEY}&json=y`);
+    const list = arr(d?.root?.routes?.route);
+    if (!list.length)
+        throw new SourceError("BART returned no routes");
+    return section(`${list.length} routes`, list.map((r, i) => `${i + 1}. ${clean(r.name)} · route ${clean(r.number)} · ${clean(r.hexcolor)}`));
+}
+export async function advisories(a) {
+    const d = await getJson(`/bsa.aspx?cmd=bsa&key=${KEY}&json=y`);
+    const list = arr(d?.root?.bsa);
+    if (!list.length)
+        return "No BART advisories right now.";
+    return section(`${list.length} advisory(ies)`, list.map((x, i) => `${i + 1}. ${clean(x.type)} · ${clean(x.station)}\n   ${clean(x.description?.["#cdata-section"] || x.description)}`));
+}
+export async function station_info(a) {
+    const station = clean(a.station).toUpperCase();
+    const d = await getJson(`/stn.aspx?cmd=stninfo&orig=${encodeURIComponent(station)}&key=${KEY}&json=y`);
+    const s = arr(d?.root?.stations?.station)[0];
+    if (!s)
+        throw new SourceError(`BART has no station ${station}`);
+    return section(clean(s.name), [
+        bullet("Abbreviation", s.abbr),
+        bullet("Address", [s.address, s.city, s.county, s.state, s.zipcode].filter(Boolean).map(clean).join(", ")),
+        bullet("Coordinates", `${clean(s.gtfs_latitude)}, ${clean(s.gtfs_longitude)}`),
+        bullet("Platforms", s.platform_info),
+        bullet("Transit", s.transit_info),
+    ]);
 }

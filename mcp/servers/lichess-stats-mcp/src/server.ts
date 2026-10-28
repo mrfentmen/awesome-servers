@@ -3,6 +3,7 @@ import { z } from "zod"
 import { dailyPuzzle, userActivity, userProfile, userStatus, SourceError } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof SourceError || e instanceof Error) return `Error: ${e.message}`
@@ -22,7 +23,7 @@ export function createServer(): McpServer {
       try {
         return text(await userProfile(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -38,7 +39,7 @@ export function createServer(): McpServer {
       try {
         return text(await userActivity(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -53,7 +54,7 @@ export function createServer(): McpServer {
       try {
         return text(await userStatus(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -68,7 +69,7 @@ export function createServer(): McpServer {
       try {
         return text(await dailyPuzzle())
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

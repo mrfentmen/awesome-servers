@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ensembl-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Ensembl genomes: look up genes and transcripts by symbol, fetch sequences and list xrefs - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ensembl-mcp",

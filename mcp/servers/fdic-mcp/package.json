@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/fdic-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "US bank data from the FDIC: search institutions by name, state or city and read assets, deposits and status - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/fdic-mcp",

@@ -1,6 +1,6 @@
 {
   "name": "brainrot-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server that decodes internet slang, brainrot terms, and niche subculture vocabulary.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/brainrot-mcp",

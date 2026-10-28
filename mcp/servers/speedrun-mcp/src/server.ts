@@ -12,6 +12,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -29,7 +30,7 @@ export function createServer(): McpServer {
         if (games.length === 0) return text(`No speedrun.com games match "${query}".`)
         return text(`Games matching "${query}":\n${games.map((g, i) => formatGame(g, i)).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -45,7 +46,7 @@ export function createServer(): McpServer {
         if (records.length === 0) return text(`No records found for game ${gameId}.`)
         return text(`World records for ${gameId}:\n\n${records.map(formatRecordCategory).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -75,7 +76,7 @@ export function createServer(): McpServer {
               .join("\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -95,7 +96,7 @@ export function createServer(): McpServer {
               .join("\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -116,7 +117,7 @@ export function createServer(): McpServer {
             `${u.runCount !== undefined ? `Runs on profile: ${u.runCount}` : ""}`
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

@@ -3,6 +3,7 @@ import { z } from "zod"
 import { hitText, HnError, ids, item, itemText, search, user } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof HnError || e instanceof Error) return `Error: ${e.message}`
@@ -30,7 +31,7 @@ export function createServer(): McpServer {
       try {
         return text(await feed("topstories", limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -43,7 +44,7 @@ export function createServer(): McpServer {
       try {
         return text(await feed("newstories", limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -56,7 +57,7 @@ export function createServer(): McpServer {
       try {
         return text(await feed("beststories", limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -70,7 +71,7 @@ export function createServer(): McpServer {
         const it = await item(id)
         return text(it ? itemText(it) : `No item ${id}.`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -95,7 +96,7 @@ export function createServer(): McpServer {
             .join("\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -113,7 +114,7 @@ export function createServer(): McpServer {
         const hits = await search(query, tags, limit)
         return text(hits.length ? hits.map(hitText).join("\n\n") : "No hits.")
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

@@ -1,139 +1,110 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { z } from 'zod'
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
+import { z } from "zod"
+import { FrankfurterError, compare, convert, currencies, dateRate, history, latest } from "./api.js"
 
-import { m0_history, m0_latest, m1_convert, m1_latest } from "./api.js"
-const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
-const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
-const error = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
-const errorMessage = error
+const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
+
+function errorMessage(e: unknown): string {
+  if (e instanceof FrankfurterError || e instanceof Error) return `Error: ${e.message}`
+  return `Error: ${String(e)}`
+}
 
 export function createServer(): McpServer {
-  const server = new McpServer({ name: 'frankfurter-mcp', version: '1.0.0' })
-server.registerTool(
-    "latest",
-    {
-      title: "Latest",
-      description: "Latest conversion rates.",
-      inputSchema: z.object( { from: z.string().describe("Base currency.").optional(), to: z.string().describe("Target currency.").optional() }),
-      annotations: READ_ONLY,
-    },
-    async (args) => {
-    try { return text(await m0_latest(args)) } catch (e) { return textError(String(e)) }
-  }
-  )
-server.registerTool(
-    "history",
-    {
-      title: "History",
-      description: "Rate history for a period.",
-      inputSchema: z.object( { from: z.string().describe("Base currency."), to: z.string().describe("Target currency."), start: z.string().describe("Start date YYYY-MM-DD."), end: z.string().describe("End date YYYY-MM-DD.") }),
-      annotations: READ_ONLY,
-    },
-    async (args) => {
-    try { return text(await m0_history(args)) } catch (e) { return textError(String(e)) }
-  }
-  )
-server.registerTool(
-    "convert",
-    {
-      title: "Convert",
-      description: "Convert an amount between currencies.",
-      inputSchema: z.object( { amount: z.number().describe("Amount to convert."), from: z.string().describe("Source currency.").optional(), to: z.string().describe("Target currency.") }),
-      annotations: READ_ONLY,
-    },
-    async (args) => {
-    try { return text(await m1_convert(args)) } catch (e) { return textError(String(e)) }
-  }
-  )
-  server.registerTool(
-    "supported_currencies",
-    {
-      title: "Supported currencies",
-      description: "Every currency Frankfurter quotes with its name, or - given a base code - that base's current rate against each currency it tracks.",
-      inputSchema: z.object( { base: z.string().describe("Base code such as EUR to list its rates.").optional(), symbol: z.string().describe("Filter the list to one code or name.").optional() }),
-      annotations: READ_ONLY,
-    },
-    async (args) => {
-    // TODO: implement currencies locally (paywall removed)
-    try { return textError("Not yet implemented: currencies") } catch (e) { return textError(String(e)) }
-  }
-  )
-const serverName = "frankfurter-mcp"
+  const server = new McpServer({ name: "frankfurter-mcp", version: "1.0.0" })
 
-  server.registerTool(
-    "health_check",
-    {
-      title: "Health check",
-      description: "Check if the server is running and responsive.",
-      inputSchema: z.object({}),
-      annotations: READ_ONLY,
-    },
-    async () => {
-      return text("OK - server is running")
+  const codeArg = (what: string) => z.string().length(3).describe(`${what} currency code, e.g. USD`)
+
+  server.tool("list_currencies", "Every currency Frankfurter publishes rates for.", {}, async () => {
+    try {
+      return text(await currencies())
+    } catch (e) {
+      return fail(errorMessage(e))
     }
-  )
-  server.registerTool(
-    "version_info",
+  })
+
+  server.tool(
+    "latest_rates",
+    "Today's ECB reference rates for one base currency.",
     {
-      title: "Version info",
-      description: "Get server version and metadata.",
-      inputSchema: z.object({}),
-      annotations: READ_ONLY,
+      base: codeArg("Base"),
+      symbols: z.array(z.string().length(3)).max(30).optional().describe("Limit to these currencies"),
     },
-    async () => {
-      return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2))
-    }
-  )
-  server.registerTool(
-    "list_tools",
-    {
-      title: "List tools",
-      description: "List all available tools on this server.",
-      inputSchema: z.object({}),
-      annotations: READ_ONLY,
-    },
-    async () => {
-      return text("See the tools/list response for the full tool list.")
-    }
-  )
-  server.registerTool(
-    "echo",
-    {
-      title: "Echo",
-      description: "Echo back the provided text.",
-      inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
-      annotations: READ_ONLY,
-    },
-    async (args) => {
-      return text(String(args?.text ?? ""))
-    }
-  )
-  server.registerTool(
-    "timestamp",
-    {
-      title: "Timestamp",
-      description: "Get the current UTC timestamp.",
-      inputSchema: z.object({}),
-      annotations: READ_ONLY,
-    },
-    async () => {
-      return text(new Date().toISOString())
-    }
-  )
-  server.registerTool(
-    "ping",
-    {
-      title: "Ping",
-      description: "Ping the server to check connectivity.",
-      inputSchema: z.object({}),
-      annotations: READ_ONLY,
-    },
-    async () => {
-      return text("pong")
+    async ({ base, symbols }) => {
+      try {
+        return text(await latest(base, symbols))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
     }
   )
 
+  server.tool(
+    "convert_currency",
+    "Convert an amount between two currencies at the latest ECB rate.",
+    {
+      amount: z.number().positive().describe("Amount to convert"),
+      from: codeArg("From"),
+      to: codeArg("To"),
+    },
+    async ({ amount, from, to }) => {
+      try {
+        return text(await convert(amount, from, to))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
+    }
+  )
+
+  server.tool(
+    "exchange_history",
+    "How one pair moved over the last N days, with first, last, change and range.",
+    {
+      from: codeArg("From"),
+      to: codeArg("To"),
+      days: z.number().int().min(7).max(3650).default(90).describe("Lookback in days"),
+    },
+    async ({ from, to, days }) => {
+      try {
+        return text(await history(from, to, days))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
+    }
+  )
+
+  server.tool(
+    "rates_on_date",
+    "ECB rates for one exact date (weekends fall back to the last business day).",
+    {
+      date: z.string().describe("Date as YYYY-MM-DD"),
+      base: codeArg("Base"),
+      to: z.string().length(3).optional().describe("Optional single currency to narrow to"),
+    },
+    async ({ date, base, to }) => {
+      try {
+        return text(await dateRate(date, base, to))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
+    }
+  )
+
+  server.tool(
+    "compare_currencies",
+    "Percent move of several currencies against USD over a window.",
+    {
+      currencies: z.array(z.string().length(3)).min(2).max(20).describe("Currency codes to compare"),
+      days: z.number().int().min(7).max(3650).default(90).describe("Lookback in days"),
+    },
+    async ({ currencies: list, days }) => {
+      try {
+        return text(await compare(list, days))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
+    }
+  )
 
   return server
 }

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/raiderio-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "World of Warcraft Mythic+ data: weekly affixes and recent high-end dungeon runs - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/raiderio-mcp",

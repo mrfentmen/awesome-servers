@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/randomuser-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Fake people for demos and tests: names, emails, addresses and photos from randomuser.me - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/randomuser-mcp",

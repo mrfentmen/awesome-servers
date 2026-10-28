@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getKeggEntry, pathwaysForEntry, searchCompounds, searchGenes, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -17,7 +18,7 @@ export function createServer() {
             return text(await searchGenes(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("get_kegg_entry", "Read a KEGG entry record such as hsa:7157, C00031 or hsa04115.", {
@@ -27,7 +28,7 @@ export function createServer() {
             return text(await getKeggEntry(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("pathways_for_entry", "List the KEGG pathways linked to a gene or compound.", {
@@ -37,7 +38,7 @@ export function createServer() {
             return text(await pathwaysForEntry(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("search_compounds", "Find chemical compounds by name or formula fragment.", {
@@ -48,7 +49,7 @@ export function createServer() {
             return text(await searchCompounds(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

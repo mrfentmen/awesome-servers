@@ -1,12 +1,12 @@
 {
   "name": "commoncrawl-mcp",
-  "version": "1.0.5",
-  "description": "Use this MCP server to Common Crawl index discovery for historical web captures. Tools include list indexes, latest index, search captures",
+  "version": "1.0.1",
+  "description": "MCP server for Common Crawl index discovery for historical web captures.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/commoncrawl-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/commoncrawl-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "commoncrawl-mcp": "./dist/index.js"
@@ -35,8 +35,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

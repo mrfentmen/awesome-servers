@@ -1,135 +1,72 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
-import { m0_search, m1_appLookup, m1_topFree, m1_topPaid, m2_searchPodcasts, m2_topPodcasts } from "./api.js";
-const text = (value) => ({ content: [{ type: 'text', text: value }] });
-const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
-const error = (e) => `Error: ${e instanceof Error ? e.message : String(e)}`;
-const errorMessage = error;
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
+import { search, lookup, top_songs, top_apps, customer_reviews, SourceError } from "./api.js";
+const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
+function errorMessage(e) {
+    if (e instanceof SourceError || e instanceof Error)
+        return `Error: ${e.message}`;
+    return `Error: ${String(e)}`;
+}
 export function createServer() {
-    const server = new McpServer({ name: 'itunes-mcp', version: '1.0.0' });
-    server.registerTool("search", {
-        title: "Search",
-        description: "Search iTunes media.",
-        inputSchema: z.object({ query: z.string().describe("Search terms."), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    const server = new McpServer({ name: "itunes-mcp", version: "1.0.0" });
+    server.tool("search", "Search apps, music, podcasts, books or films", {
+        term: z.string().min(2).describe("Search text"),
+        media: z.enum(["all", "movie", "podcast", "music", "musicVideo", "audiobook", "shortFilm", "tvShow", "software", "ebook"]).default("all").describe("Media type"),
+        limit: z.number().int().min(1).max(25).default(10).describe("Maximum results")
+    }, async (a) => {
         try {
-            return text(await m0_search(args));
+            return text(await search(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("top_free", {
-        title: "Top free",
-        description: "Top free apps in the App Store.",
-        inputSchema: z.object({ country: z.string().describe("Two letter country code.").optional(), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("lookup", "Look up an item by iTunes id", {
+        id: z.number().int().min(1).describe("iTunes id, e.g. 136975"),
+        entity: z.enum(["song", "album", "artist", "software", "podcast"]).default("song").describe("Entity type")
+    }, async (a) => {
         try {
-            return text(await m1_topFree(args));
+            return text(await lookup(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("top_paid", {
-        title: "Top paid",
-        description: "Top paid apps in the App Store.",
-        inputSchema: z.object({ country: z.string().describe("Two letter country code.").optional(), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("top_songs", "Current iTunes top songs for a country", {
+        country: z.string().length(2).default("us").describe("Two-letter country code"),
+        limit: z.number().int().min(1).max(50).default(10).describe("Maximum songs")
+    }, async (a) => {
         try {
-            return text(await m1_topPaid(args));
+            return text(await top_songs(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("app_lookup", {
-        title: "App lookup",
-        description: "Get details for an app by its App Store ID.",
-        inputSchema: z.object({ appId: z.number().describe("App Store numeric ID.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("top_apps", "Top free or grossing apps for a country", {
+        country: z.string().length(2).default("us").describe("Two-letter country code"),
+        kind: z.enum(["topfreeapplications", "topgrossingapplications", "toppaidapplications"]).default("topfreeapplications").describe("Chart type"),
+        limit: z.number().int().min(1).max(50).default(10).describe("Maximum apps")
+    }, async (a) => {
         try {
-            return text(await m1_appLookup(args));
+            return text(await top_apps(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("search_podcasts", {
-        title: "Search podcasts",
-        description: "Search podcasts by term.",
-        inputSchema: z.object({ query: z.string().describe("Search term."), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("customer_reviews", "Most recent App Store reviews for an app", {
+        appId: z.number().int().min(1).describe("App id, e.g. 284882215"),
+        country: z.string().length(2).default("us").describe("Two-letter store country"),
+        limit: z.number().int().min(1).max(50).default(10).describe("Maximum reviews")
+    }, async (a) => {
         try {
-            return text(await m2_searchPodcasts(args));
+            return text(await customer_reviews(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
-    });
-    server.registerTool("top_podcasts", {
-        title: "Top podcasts",
-        description: "Top podcasts in a category.",
-        inputSchema: z.object({ limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await m2_topPodcasts(args));
-        }
-        catch (e) {
-            return textError(String(e));
-        }
-    });
-    server.registerTool("podcast_episodes", {
-        title: "Podcast episodes",
-        description: "The episode list behind a podcast by its iTunes collection id, with release date and running time, which the podcast search and chart tools do not return.",
-        inputSchema: z.object({ podcastId: z.number().describe("Podcast collection id, e.g. 152249110."), limit: z.number().describe("Max episodes.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement episodes locally (paywall removed)
-        try {
-            return textError("Not yet implemented: episodes");
-        }
-        catch (e) {
-            return textError(String(e));
-        }
-    });
-    server.registerTool("audiobooks", {
-        title: "Audiobooks",
-        description: "Search the iTunes audiobook store by title, author or narrator, which is a separate catalogue from apps, podcasts and music.",
-        inputSchema: z.object({ query: z.string().describe("Title, author or narrator."), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement audiobooks locally (paywall removed)
-        try {
-            return textError("Not yet implemented: audiobooks");
-        }
-        catch (e) {
-            return textError(String(e));
-        }
-    });
-    const serverName = "itunes-mcp";
-    server.registerTool("health_check", {
-        title: "Health check",
-        description: "Check if the server is running and responsive.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("OK - server is running");
-    });
-    server.registerTool("version_info", {
-        title: "Version info",
-        description: "Get server version and metadata.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
     });
     return server;
 }

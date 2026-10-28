@@ -1,12 +1,12 @@
 {
-  "name": "@mrfentmen/datamuse-mcp",
-  "version": "1.0.5",
+  "name": "datamuse-mcp",
+  "version": "1.0.1",
   "description": "Use this MCP server to wordplay. Rhymes, related words, spell checks, and word suggestions for any phrase",
   "type": "module",
   "mcpName": "io.github.mrfentmen/datamuse-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/datamuse-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "datamuse-mcp": "./dist/index.js"
@@ -34,8 +34,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

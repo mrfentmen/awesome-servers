@@ -1,24 +1,39 @@
 {
-  "name": "@mrfentmen/wikidata-mcp",
-  "version": "1.0.3",
-  "description": "Wikidata entity search, lookup, and bounded SPARQL.",
+  "name": "wikidata-mcp",
+  "version": "1.0.1",
+  "description": "MCP server for Wikidata entity search and bounded structured knowledge queries.",
   "type": "module",
-  "main": "dist/index.js",
+  "mcpName": "io.github.mrfentmen/wikidata-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "wikidata-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "public-data",
+    "wikidata"
+  ],
+  "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "zod": "^3.23.0"
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5.5.0",
-    "@types/node": "^20.0.0"
-  },
-  "license": "MIT",
-  "engines": {
-    "node": ">=20"
-  },
-  "mcpName": "io.github.mrfentmen/wikidata-mcp"
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/jwt-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Decode JSON Web Tokens locally: header, claims, expiry timeline and warnings - no signature check, no network.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/jwt-mcp",

@@ -1,6 +1,6 @@
 {
   "name": "musicbrainz-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for MusicBrainz artists, releases, recordings, and open music metadata.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/musicbrainz-mcp",

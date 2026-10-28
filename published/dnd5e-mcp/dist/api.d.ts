@@ -79,24 +79,3 @@ export declare function getClassInfo(index: string): Promise<ClassInfo | null>;
 export declare function fmtSpeed(speed?: Record<string, string>): string;
 export declare function formatMonster(m: Monster): string;
 export declare function formatSpell(s: Spell): string;
-export interface SpellListArgs {
-    level?: number;
-    school?: string;
-    search?: string;
-    ritual_only?: boolean;
-    concentration_only?: boolean;
-    limit?: number;
-    detail_limit?: number;
-}
-export interface MagicItemArgs {
-    rarity?: string;
-    search?: string;
-    attunement?: string;
-    limit?: number;
-    detail_limit?: number;
-}
-export interface RacesArgs {
-    include_details?: boolean;
-    trait_limit?: number;
-}
-export declare function listRaces(args: RacesArgs): Promise<string>;

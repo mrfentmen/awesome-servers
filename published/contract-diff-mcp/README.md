@@ -20,28 +20,3 @@ npm install
 npm run build
 node dist/index.js
 ```
-
-## Quick start
-
-```bash
-npm install
-npm run build
-node dist/index.js
-```
-
-The server uses stdio, so it can be connected to Claude Desktop, Cursor, VS Code, MCP Inspector, or another compatible MCP client.
-
-## Tools at a glance
-
-- `compare_contract_snapshots`: Compare two local JSON contract snapshots using a coarse structural fingerprint; schema names, paths, values, and versions are never returned.
-
-## Try it
-
-After building, connect the server through your MCP client. The repository root also contains `smoke-test.mjs` for projects covered by the shared harness. A typical tool call starts with `compare_contract_snapshots`.
-
-## Licence — no paywall
-
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.

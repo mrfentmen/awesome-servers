@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/rickandmorty-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Rick and Morty universe data: characters, locations and episodes with status, origin and episode counts - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/rickandmorty-mcp",

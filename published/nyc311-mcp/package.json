@@ -1,12 +1,12 @@
 {
   "name": "nyc311-mcp",
-  "version": "1.0.2",
-  "description": "Use this MCP server to NYC 311 public service request search and aggregate civic data. Tools include search requests, count requests",
+  "version": "1.0.1",
+  "description": "MCP server for NYC 311 public service request search and aggregate civic data.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nyc311-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/nyc311-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "nyc311-mcp": "./dist/index.js"
@@ -35,8 +35,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

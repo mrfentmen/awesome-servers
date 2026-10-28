@@ -1,30 +1,32 @@
-# randomuser-mcp
+# Random User Generator
 
-RandomUser profile generation.
+Fake people for demos and tests: names, emails, addresses and photos from randomuser.me - keyless.
 
-A merged MCP server that consolidates duplicate single-purpose servers in this monorepo into one focused server.
+Keyless — no signup, no API key, no environment variables.
+
+## Install
+
+```bash
+npx -y @mrfentmen/randomuser-mcp
+```
+
+Or add it to your MCP client:
+
+```json
+{
+  "mcpServers": {
+    "randomuser-mcp": { "command": "npx", "args": ["-y", "@mrfentmen/randomuser-mcp"] }
+  }
+}
+```
 
 ## Tools
 
-- `users` — Random user profiles.
-- `generate` — Generate random user profiles.
-- `seed` — Generate seeded profiles.
+| Tool | What it does |
+|---|---|
+| `random_users` | Generate fake users, optionally from one nationality. |
+| `users_by_gender` | Generate fake users of one gender, optionally from one nationality. |
 
-## Run
+## Data source
 
-```bash
-npm install
-npm run build
-node dist/index.js
-```
-
-## Source
-
-Public free APIs only. See `src/api.ts` for exact endpoints.
-
-## Licence — no paywall
-
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.
+randomuser.me API (synthetic people - nothing here is a real person)

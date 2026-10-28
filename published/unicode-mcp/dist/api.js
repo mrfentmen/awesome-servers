@@ -64,26 +64,3 @@ export async function emojiSearch(query) {
     return (await lines(`${EMOJI}/emoji-test.txt`, "emoji")).filter((line) => !line.startsWith("#") && line.toLowerCase().includes(q)).slice(0, 30).map((line) => line.trim());
 }
 export function format(value) { return JSON.stringify(value, null, 2).slice(0, 14000); }
-// ---- muxB tools:
-const extraLines = { age: null, norm: null };
-async function dataLines(url, slot) {
-    const cached = slot === "age" ? extraLines.age : extraLines.norm;
-    if (cached)
-        return cached;
-    const response = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(60000) });
-    if (!response.ok)
-        throw new UnicodeError(`Unicode data error ${response.status} for ${url}`);
-    const value = (await response.text()).split(/\r?\n/);
-    if (slot === "age")
-        extraLines.age = value;
-    else
-        extraLines.norm = value;
-    return value;
-}
-function parsePoint(value) {
-    const parsed = Number.parseInt(value.trim().replace(/^U\+/, ""), 16);
-    if (!Number.isFinite(parsed) || parsed < 0 || parsed > 0x10ffff)
-        throw new UnicodeError(`Invalid Unicode code point: ${value}`);
-    return parsed;
-}
-// ---- gap4b3 tools:

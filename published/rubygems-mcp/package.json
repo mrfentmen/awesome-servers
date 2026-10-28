@@ -1,6 +1,6 @@
 {
   "name": "rubygems-mcp",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "RubyGems registry: search, gem stats, release history, top downloads, dependents, owners.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/rubygems-mcp",

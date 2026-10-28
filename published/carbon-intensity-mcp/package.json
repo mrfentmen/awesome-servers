@@ -1,24 +1,33 @@
 {
-  "version": "1.0.5",
+  "name": "@mrfentmen/carbon-intensity-mcp",
+  "version": "1.0.1",
+  "description": "UK grid carbon intensity: live gCO2/kWh, half-hourly forecast and the current generation mix - keyless.",
   "type": "module",
+  "mcpName": "io.github.mrfentmen/carbon-intensity-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/carbon-intensity-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "carbon-intensity-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
-    "dist",
-    "server.json",
-    "README.md"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "dev": "npm run build && node dist/index.js"
+    "start": "node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "carbon",
+    "grid",
+    "energy",
+    "climate",
+    "uk",
+    "keyless"
+  ],
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -28,16 +37,6 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
   },
-  "name": "carbon-intensity-mcp",
-  "description": "UK grid carbon intensity, forecast, and regional breakdown. No key required.",
-  "mcpName": "io.github.mrfentmen/carbon-intensity-mcp",
-  "keywords": [
-    "mcp",
-    "carbon",
-    "energy",
-    "climate",
-    "grid"
-  ],
   "engines": {
     "node": ">=20"
   }

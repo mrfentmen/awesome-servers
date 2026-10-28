@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ols-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Search and read terms across hundreds of biomedical ontologies via the EBI OLS - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ols-mcp",

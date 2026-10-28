@@ -3,6 +3,7 @@ import { z } from "zod"
 import { convertBase, formatNumber, fromRoman, statistics, toRoman, SourceError } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof SourceError || e instanceof Error) return `Error: ${e.message}`
@@ -23,7 +24,7 @@ export function createServer(): McpServer {
       try {
         return text(await statistics(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -38,7 +39,7 @@ export function createServer(): McpServer {
       try {
         return text(await toRoman(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -53,7 +54,7 @@ export function createServer(): McpServer {
       try {
         return text(await fromRoman(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -70,7 +71,7 @@ export function createServer(): McpServer {
       try {
         return text(await convertBase(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -89,7 +90,7 @@ export function createServer(): McpServer {
       try {
         return text(await formatNumber(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

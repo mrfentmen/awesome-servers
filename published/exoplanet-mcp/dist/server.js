@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { discoveryStats, ExoplanetError, habitableCandidates, planetDetail, recentDiscoveries, searchPlanets, systemPlanets, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof ExoplanetError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -17,7 +18,7 @@ export function createServer() {
             return text(await searchPlanets(query, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("planet_detail", "Full physical and orbital parameters for one named planet.", { name: z.string().min(2).describe("Exact planet name, e.g. GJ 436 b") }, async ({ name }) => {
@@ -25,7 +26,7 @@ export function createServer() {
             return text(await planetDetail(name));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("system_planets", "Every confirmed planet around one host star, ordered by distance from the star.", { hostname: z.string().min(1).describe("Host star, e.g. TRAPPIST-1") }, async ({ hostname }) => {
@@ -33,7 +34,7 @@ export function createServer() {
             return text(await systemPlanets(hostname));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("recent_discoveries", "Most recently confirmed planets from a starting year.", {
@@ -44,7 +45,7 @@ export function createServer() {
             return text(await recentDiscoveries(from_year, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("habitable_candidates", "Small planets with equilibrium temperatures between 180 and 310 K — a rough habitable-zone filter.", { limit: z.number().int().min(1).max(50).default(15).describe("Results") }, async ({ limit }) => {
@@ -52,7 +53,7 @@ export function createServer() {
             return text(await habitableCandidates(limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("discovery_stats", "Confirmed-planet counts per discovery year since a starting year.", { from_year: z.number().int().min(1992).max(2100).default(2010).describe("Earliest year to include") }, async ({ from_year }) => {
@@ -60,7 +61,7 @@ export function createServer() {
             return text(await discoveryStats(from_year));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

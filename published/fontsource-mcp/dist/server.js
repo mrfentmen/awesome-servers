@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { list, subsetFinder } from "./api.js";
+import { premiumTool } from "./gateway.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -17,7 +18,7 @@ export function createServer() {
             return text(await list(args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("font_census", {
@@ -26,12 +27,14 @@ export function createServer() {
         inputSchema: z.object({ limit: z.number().describe("Values to list per distribution, 1-20.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement census locally (paywall removed)
+        // ---- paywall: font_census ----
+        // The body runs on the gateway, behind the licence gate.
+        // ---- paywall: end ----
         try {
-            return textError("Not yet implemented: census");
+            return text(await premiumTool("mcp_fontsource_font_census", args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("font_details", {
@@ -40,12 +43,14 @@ export function createServer() {
         inputSchema: z.object({ id: z.string().describe("Fontsource font id, e.g. inter or roboto."), limit: z.number().describe("Weight groups to list, 1-12.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement details locally (paywall removed)
+        // ---- paywall: font_details ----
+        // The body runs on the gateway, behind the licence gate.
+        // ---- paywall: end ----
         try {
-            return textError("Not yet implemented: details");
+            return text(await premiumTool("mcp_fontsource_font_details", args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("subset_finder", {
@@ -58,57 +63,8 @@ export function createServer() {
             return text(await subsetFinder(args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
-    });
-    const serverName = "fontsource-mcp";
-    server.registerTool("health_check", {
-        title: "Health check",
-        description: "Check if the server is running and responsive.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("OK - server is running");
-    });
-    server.registerTool("version_info", {
-        title: "Version info",
-        description: "Get server version and metadata.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
-    });
-    server.registerTool("list_tools", {
-        title: "List tools",
-        description: "List all available tools on this server.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("See the tools/list response for the full tool list.");
-    });
-    server.registerTool("echo", {
-        title: "Echo",
-        description: "Echo back the provided text.",
-        inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        return text(String(args?.text ?? ""));
-    });
-    server.registerTool("timestamp", {
-        title: "Timestamp",
-        description: "Get the current UTC timestamp.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(new Date().toISOString());
-    });
-    server.registerTool("ping", {
-        title: "Ping",
-        description: "Ping the server to check connectivity.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("pong");
     });
     return server;
 }

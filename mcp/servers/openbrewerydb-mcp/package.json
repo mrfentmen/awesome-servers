@@ -1,6 +1,6 @@
 {
   "name": "openbrewerydb-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Open Brewery DB: 8,000+ breweries by name, city, state, country or type, with map links \u2014 keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/openbrewerydb-mcp",

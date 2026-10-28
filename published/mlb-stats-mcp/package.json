@@ -1,6 +1,6 @@
 {
   "name": "mlb-stats-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MLB Stats API: teams, division standings, schedules, rosters, player profiles \u2014 keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/mlb-stats-mcp",

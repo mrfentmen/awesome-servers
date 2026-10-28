@@ -3,6 +3,7 @@ import { z } from "zod"
 import { GutenbergError, bookDetail, byLanguage, popular, searchBooks } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof GutenbergError || e instanceof Error) return `Error: ${e.message}`
@@ -21,7 +22,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchBooks(query, n))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -34,7 +35,7 @@ export function createServer(): McpServer {
       try {
         return text(await bookDetail(id))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -47,7 +48,7 @@ export function createServer(): McpServer {
       try {
         return text(await byLanguage(language, n))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -56,7 +57,7 @@ export function createServer(): McpServer {
     try {
       return text(await popular(n))
     } catch (e) {
-      return text(errorMessage(e))
+      return fail(errorMessage(e))
     }
   })
 

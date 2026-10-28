@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { m0_imageUrl, m0_listImages, m1_list } from "./api.js";
+import { premiumTool } from "./gateway.js";
 const text = (value) => ({ content: [{ type: 'text', text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -18,7 +19,7 @@ export function createServer() {
             return text(await m0_imageUrl(args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("list_images", {
@@ -31,7 +32,7 @@ export function createServer() {
             return text(await m0_listImages(args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("list", {
@@ -44,7 +45,7 @@ export function createServer() {
             return text(await m1_list(args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("image_info", {
@@ -53,12 +54,14 @@ export function createServer() {
         inputSchema: z.object({ id: z.union([z.string(), z.number()]).describe("picsum image id, e.g. 0."), }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement info locally (paywall removed)
+        // ---- paywall: image_info ----
+        // The body runs on the gateway, behind the licence gate.
+        // ---- paywall: end ----
         try {
-            return textError("Not yet implemented: info");
+            return text(await premiumTool("mcp_placeholder_images_image_info", args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("page_images", {
@@ -67,54 +70,15 @@ export function createServer() {
         inputSchema: z.object({ page: z.number().describe("Catalogue page.").optional(), limit: z.number().describe("Images per page.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement images locally (paywall removed)
+        // ---- paywall: page_images ----
+        // The body runs on the gateway, behind the licence gate.
+        // ---- paywall: end ----
         try {
-            return textError("Not yet implemented: images");
+            return text(await premiumTool("mcp_placeholder_images_page_images", args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
-    });
-    const serverName = "placeholder-images-mcp";
-    server.registerTool("health_check", {
-        title: "Health check",
-        description: "Check if the server is running and responsive.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("OK - server is running");
-    });
-    server.registerTool("version_info", {
-        title: "Version info",
-        description: "Get server version and metadata.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
-    });
-    server.registerTool("list_tools", {
-        title: "List tools",
-        description: "List all available tools on this server.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("See the tools/list response for the full tool list.");
-    });
-    server.registerTool("echo", {
-        title: "Echo",
-        description: "Echo back the provided text.",
-        inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        return text(String(args?.text ?? ""));
-    });
-    server.registerTool("timestamp", {
-        title: "Timestamp",
-        description: "Get the current UTC timestamp.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(new Date().toISOString());
     });
     return server;
 }

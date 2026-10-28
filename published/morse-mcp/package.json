@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/morse-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Encode text to Morse and decode Morse back, covering letters, digits and punctuation - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/morse-mcp",

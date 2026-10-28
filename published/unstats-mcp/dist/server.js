@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { indicatorData, indicatorsForGoal, listSdgGoals, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -14,7 +15,7 @@ export function createServer() {
             return text(await listSdgGoals());
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("indicators_for_goal", "Indicators that measure one SDG goal.", {
@@ -24,7 +25,7 @@ export function createServer() {
             return text(await indicatorsForGoal(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("indicator_data", "Official data rows for an indicator code.", {
@@ -36,7 +37,7 @@ export function createServer() {
             return text(await indicatorData(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

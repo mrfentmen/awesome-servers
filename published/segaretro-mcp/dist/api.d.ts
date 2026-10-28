@@ -13,12 +13,3 @@ export declare function getPage(title: string, maxChars?: number): Promise<{
 } | null>;
 export declare function categoryMembers(category: string, limit?: number): Promise<string[]>;
 export declare function wikiTextToPlain(wt: string, maxChars?: number): string;
-export interface RecentChangesArgs {
-    limit?: number;
-}
-export declare function recentChanges(args: RecentChangesArgs): Promise<string>;
-export interface PageMetadataArgs {
-    title: string;
-    categoryLimit?: number;
-}
-export declare function pageMetadata(args: PageMetadataArgs): Promise<string>;

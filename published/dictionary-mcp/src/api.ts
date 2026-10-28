@@ -1,210 +1,132 @@
-const m0 = (() => {
-const BASE = "https://api.dictionaryapi.dev/api/v2/entries/en"
-const UA = "mrfentmen-dictionary-mcp/1.0 (https://github.com/mrfentmen)"
-class DictError extends Error {}
-
-async function get<T>(url: string): Promise<T> {
-  const res = await fetch(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(20000) })
-  if (res.status === 404) throw new DictError("Word not found")
-  if (!res.ok) throw new DictError(`Dictionary error ${res.status}`)
-  return (await res.json()) as T
-}
-
-async function define(args: { word?: string }): Promise<string> {
-  const word = (args.word ?? "").trim()
-  if (!word) throw new DictError("Provide a word")
-  const d = await get<any[]>(`${BASE}/${encodeURIComponent(word)}`)
-  const entry = d[0] ?? {}
-  const phonetics = (entry.phonetics ?? []).map((p: any) => p.text).filter(Boolean).join(", ")
-  const meanings = (entry.meanings ?? []).slice(0, 3).map((m: any) => {
-    const defs = (m.definitions ?? []).slice(0, 3).map((df: any, i: number) => `${i + 1}. ${df.definition ?? ""}${df.example ? ` (e.g. ${df.example})` : ""}`).join("\n   ")
-    return `${m.partOfSpeech ?? ""}\n   ${defs}`
-  }).join("\n")
-  return `${entry.word ?? word}\n${phonetics ? `Phonetics: ${phonetics}\n` : ""}${meanings || "No definitions"}`
-}
-
-async function wordOfDay(_args: Record<string, never>): Promise<string> {
-  const d = await get<any[]>(`${BASE}/random`)
-  const entry = d[0] ?? {}
-  const meanings = (entry.meanings ?? []).slice(0, 2).map((m: any) => {
-    const defs = (m.definitions ?? []).slice(0, 2).map((df: any) => df.definition ?? "").join("; ")
-    return `${m.partOfSpeech ?? ""}: ${defs}`
-  }).join("\n")
-  return `Word: ${entry.word ?? ""}\n${meanings || "No definitions"}`
-}
-
-return { DictError, define, wordOfDay };
-})();
-
-const m1 = (() => {
-const BASE = "https://api.dictionaryapi.dev/api/v2/entries/en"
-const UA = "mrfentmen-word-of-day-mcp/1.0 (https://github.com/mrfentmen)"
-class WordError extends Error {}
-
-async function get<T>(url: string): Promise<T> {
-  const res = await fetch(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(20000) })
-  if (res.status === 404) throw new WordError("No word available right now")
-  if (!res.ok) throw new WordError(`Dictionary error ${res.status}`)
-  return (await res.json()) as T
-}
-
-// Deterministic word pick per UTC day from a curated list, then fetch its real definition.
-const WORDS = ["serendipity", "ephemeral", "luminous", "resilient", "eloquent", "meticulous", "curiosity", "zenith", "quintessential", "effervescent", "solstice", "wanderlust", "euphoria", "tranquil", "vibrant"]
-
-function wordForToday(): string {
-  const day = Math.floor(Date.now() / 86400000)
-  return WORDS[day % WORDS.length]
-}
-
-async function wordOfTheDay(_args: Record<string, never>): Promise<string> {
-  const word = wordForToday()
-  const d = await get<any[]>(`${BASE}/${word}`)
-  const entry = d[0] ?? {}
-  const phonetic = (entry.phonetics ?? []).map((p: any) => p.text).filter(Boolean)[0] ?? ""
-  const meaning = (entry.meanings ?? [])[0] ?? {}
-  const firstDef = (meaning.definitions ?? [])[0]?.definition ?? ""
-  const example = (meaning.definitions ?? [])[0]?.example
-  return `Word of the day: ${entry.word ?? word}\n${phonetic ? `Pronunciation: ${phonetic}\n` : ""}${meaning.partOfSpeech ? `Part of speech: ${meaning.partOfSpeech}\n` : ""}Definition: ${firstDef}${example ? `\nExample: ${example}` : ""}`
-}
-
-async function randomWord(_args: Record<string, never>): Promise<string> {
-  const d = await get<any[]>(`${BASE}/random`)
-  const entry = d[0] ?? {}
-  const meaning = (entry.meanings ?? [])[0] ?? {}
-  const firstDef = (meaning.definitions ?? [])[0]?.definition ?? ""
-  return `${entry.word ?? "word"}\n${meaning.partOfSpeech ?? ""}: ${firstDef}`
-}
-
-return { WordError, randomWord, wordOfTheDay };
-})();
-
-export const DictError = m0.DictError;
-export const WordError = m1.WordError;
-export const define = m0.define;
-export const randomWord = m1.randomWord;
-export const wordOfDay = m0.wordOfDay;
-export const wordOfTheDay = m1.wordOfTheDay;
-export const m0_DictError = m0.DictError;
-export const m0_wordOfDay = m0.wordOfDay;
-export const m0_define = m0.define;
-export const m1_wordOfTheDay = m1.wordOfTheDay;
-export const m1_WordError = m1.WordError;
-export const m1_randomWord = m1.randomWord;
-
-// ---- muxE tools:
-// The four existing tools print a word, its phonetic text and a few definitions
-// with their examples. Two whole parts of the entry are never read: the synonyms
-// and antonyms under every meaning, and the per pronunciation audio, language and
-// licence. The new tools read those, and both cope with the upstream answering
-// 522 for some words, which was verified live and is not a block on this side.
-const DICT = "https://api.dictionaryapi.dev/api/v2/entries/en";
-const DICT_UA = "mrfentmen-dictionary-mcp/1.0 (https://github.com/mrfentmen)";
-
-interface DictPhonetic {
-  text?: string;
-  audio?: string;
-  sourceUrl?: string;
-  license?: { name?: string; url?: string };
-  lang?: string;
-}
-
-interface DictDefinition {
-  definition?: string;
-  example?: string;
-  synonyms?: string[];
-  antonyms?: string[];
-}
-
-interface DictMeaning {
-  partOfSpeech?: string;
-  definitions?: DictDefinition[];
-  synonyms?: string[];
-  antonyms?: string[];
-}
-
-interface DictEntry {
-  word?: string;
-  phonetic?: string;
-  phonetics?: DictPhonetic[];
-  meanings?: DictMeaning[];
-  license?: { name?: string; url?: string };
-  sourceUrls?: string[];
-}
-
 /**
- * Two things about this host were measured live. It answers 200 for a word one
- * request serves and 522 for another, and which is which is stable per word
- * rather than per rate: cat, test and a answered 200 every time while happy,
- * dog, love and apple answered 522 every time. And a successful answer takes
- * about 20 seconds, measured at 19868, 19514, 19513 and 19525 ms across four
- * node fetches, so the timeout has to clear 20 s and a retry does not fit inside
- * a single MCP request. One attempt, a timeout that fits the real latency, and a
- * 522 reported as what it is rather than as a missing word.
+ * Free Dictionary — keyless public API client.
  */
-async function dictGet<T>(word: string): Promise<T> {
-  const url = `${DICT}/${encodeURIComponent(word)}`;
-  let res: Response;
+const BASE = "https://api.dictionaryapi.dev"
+const SOURCE = "Free Dictionary"
+
+export class SourceError extends Error {}
+
+async function request(path: string, accept = "application/json", timeoutMs = 25000): Promise<Response> {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs)
   try {
-    res = await fetch(url, { headers: { "User-Agent": DICT_UA }, signal: AbortSignal.timeout(28000) });
+    const res = await fetch(path.startsWith("http") ? path : BASE + path, {
+      signal: ctrl.signal,
+      headers: { "user-agent": "dictionary-mcp", accept },
+    })
+    if (!res.ok) throw new SourceError(`${SOURCE} responded ${res.status}`)
+    return res
   } catch (e) {
-    const timedOut = e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
-    if (!timedOut) throw new Error(`The dictionary could not be reached: ${e instanceof Error ? e.message : String(e)}`);
-    throw new Error(
-      `The dictionary at api.dictionaryapi.dev did not answer within 28 seconds for "${word}". A successful answer to this host takes about 20 seconds, so this is the upstream being slower than usual rather than this client.`,
-    );
+    if (e instanceof SourceError) throw e
+    if ((e as Error).name === "AbortError") throw new SourceError(`${SOURCE} request timed out`)
+    throw new SourceError(`${SOURCE} request failed: ${(e as Error).message}`)
+  } finally {
+    clearTimeout(timer)
   }
-  if (res.status === 404) throw new Error(`The dictionary holds no entry for "${word}".`);
-  if (res.status === 522) {
-    throw new Error(
-      `The dictionary's own host answered HTTP 522 for "${word}", which is a timeout between it and its origin. It answers 522 for some words and 200 for others, so this is that word rather than this client; try another word.`,
-    );
+}
+
+export async function getJson(path: string): Promise<any> {
+  const res = await request(path)
+  const body = await res.text()
+  try {
+    return JSON.parse(body)
+  } catch {
+    throw new SourceError(`${SOURCE} returned malformed JSON`)
   }
-  if (!res.ok) throw new Error(`The dictionary returned ${res.status}.`);
-  return (await res.json()) as T;
 }
 
-async function entryFor(word: string): Promise<DictEntry> {
-  const raw = (word ?? "").trim();
-  if (!raw) throw new Error("Provide a word.");
-  const list = await dictGet<DictEntry[]>(raw);
-  const entry = Array.isArray(list) ? list[0] : null;
-  if (!entry || typeof entry !== "object") throw new Error(`The dictionary returned no usable entry for "${raw}".`);
-  return entry;
+export async function getText(path: string, accept = "text/plain"): Promise<string> {
+  const res = await request(path, accept)
+  return (await res.text()).trim()
 }
 
-export interface WordRelationsArgs {
-  word: string;
+export function clampLimit(n: number | undefined, fallback: number, max: number): number {
+  const v = n ?? fallback
+  if (!Number.isInteger(v) || v < 1 || v > max) throw new SourceError(`limit must be between 1 and ${max}`)
+  return v
 }
 
-export interface WordPhoneticsArgs {
-  word: string;
+export function clean(s: unknown): string {
+  return String(s ?? "").replace(/\s+/g, " ").trim()
 }
 
-export async function wordPhonetics(args: WordPhoneticsArgs): Promise<string> {
-  const entry = await entryFor(args?.word ?? "");
-  const items = Array.isArray(entry.phonetics) ? entry.phonetics : [];
-  const seen = new Set<string>();
-  const unique = items.filter((p) => {
-    const key = `${p.text ?? ""}|${p.audio ?? ""}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-  const withAudio = unique.filter((p) => typeof p.audio === "string" && p.audio);
-  const lines = [
-    `Pronunciations recorded for ${entry.word ?? args?.word}:`,
-    `  headword phonetic: ${entry.phonetic || "not reported"}`,
-    `  pronunciation records: ${items.length}, of which ${unique.length} are distinct`,
-    `  with an audio file: ${withAudio.length}`,
-  ];
-  for (const p of unique.slice(0, 15)) {
-    lines.push(`  ${p.text || "no phonetic text"}${p.lang ? ` (${p.lang})` : ""}`);
-    if (p.audio) lines.push(`    audio: ${p.audio.slice(0, 140)}`);
-    if (p.sourceUrl) lines.push(`    recorded by: ${p.sourceUrl.slice(0, 120)}`);
-    if (p.license?.name) lines.push(`    licence: ${p.license.name}${p.license.url ? ` - ${p.license.url}` : ""}`);
+export function bullet(label: string, value: unknown): string {
+  const v = value === undefined || value === null || value === "" ? "" : String(value)
+  return v ? `${label}: ${v}` : ""
+}
+
+export function section(title: string, rows: string[]): string {
+  return [title, ...rows.filter(Boolean)].join("\n")
+}
+
+function entries(d: any, word: string): any[] {
+  const rows: any[] = Array.isArray(d) ? d : []
+  if (!rows.length) throw new SourceError(`the dictionary has no entry for "${word}"`)
+  return rows
+}
+
+function phonetic(row: any): string {
+  const listed: any[] = Array.isArray(row?.phonetics) ? row.phonetics : []
+  const withAudio = listed.find((p) => p?.audio)
+  const text = clean(row?.phonetic) || clean(listed.find((p) => p?.text)?.text)
+  return [text, withAudio?.audio ? `audio ${clean(withAudio.audio)}` : "", withAudio?.sourceUrl ? `source ${clean(withAudio.sourceUrl)}` : ""]
+    .filter(Boolean).join(" · ")
+}
+
+function sameOrigin(url: string): string {
+  return clean(url)
+}
+
+export async function define(a: { word: string; definitionsPerSense?: number }): Promise<string> {
+  const word = clean(a.word).toLowerCase()
+  if (!/^[a-z][a-z'-]{0,44}$/.test(word)) throw new SourceError("word must be letters, apostrophes or dashes")
+  const per = a.definitionsPerSense ?? 3
+  if (!Number.isInteger(per) || per < 1 || per > 6) throw new SourceError("definitionsPerSense must be between 1 and 6")
+  const d = await getJson(`/api/v2/entries/en/${encodeURIComponent(word)}`)
+  const rows = entries(d, word)
+  const blocks: string[] = [`${clean(rows[0].word)}${phonetic(rows[0]) ? ` - ${phonetic(rows[0])}` : ""}`]
+  for (const row of rows) {
+    for (const meaning of row.meanings ?? []) {
+      const defs: any[] = Array.isArray(meaning.definitions) ? meaning.definitions.slice(0, per) : []
+      blocks.push(`\n${clean(meaning.partOfSpeech) || "unknown part of speech"}`)
+      for (const def of defs) {
+        blocks.push(`  - ${clean(def.definition)}`)
+        if (def.example) blocks.push(`    e.g. ${clean(def.example)}`)
+      }
+      if (meaning.synonyms?.length) blocks.push(`    synonyms: ${meaning.synonyms.slice(0, 8).join(", ")}`)
+    }
   }
-  if (unique.length > 15) lines.push(`  and ${unique.length - 15} more pronunciation(s) not listed here`);
-  if (!unique.length) lines.push("  this entry records no per pronunciation data at all.");
-  lines.push("  the existing tools print at most a comma joined list of the phonetic text, with no audio, no language and no recording licence.");
-  return lines.join("\n");
+  const sources = [...new Set(rows.flatMap((r) => (r.sourceUrls ?? []).map(sameOrigin)).filter(Boolean))]
+  if (sources.length) blocks.push(`\nSource: ${sources.join(", ")}`)
+  return blocks.join("\n")
+}
+
+export async function synonyms(a: { word: string }): Promise<string> {
+  const word = clean(a.word).toLowerCase()
+  if (!/^[a-z][a-z'-]{0,44}$/.test(word)) throw new SourceError("word must be letters, apostrophes or dashes")
+  const d = await getJson(`/api/v2/entries/en/${encodeURIComponent(word)}`)
+  const rows = entries(d, word)
+  const blocks: string[] = []
+  const seen = new Set<string>()
+  for (const row of rows) {
+    for (const meaning of row.meanings ?? []) {
+      const syn: string[] = (meaning.synonyms ?? []).filter((s: string) => !seen.has(s))
+      syn.forEach((s) => seen.add(s))
+      const ant: string[] = meaning.antonyms ?? []
+      const fromDefs = (meaning.definitions ?? []).flatMap((def: any) => def.synonyms ?? [])
+      for (const s of fromDefs) {
+        if (!seen.has(s)) { seen.add(s); syn.push(s) }
+      }
+      if (!syn.length && !ant.length) continue
+      blocks.push(`${clean(meaning.partOfSpeech) || "?"}:`)
+      if (syn.length) blocks.push(`  synonyms: ${syn.slice(0, 12).join(", ")}`)
+      if (ant.length) blocks.push(`  antonyms: ${ant.slice(0, 12).join(", ")}`)
+    }
+  }
+  if (!blocks.length) return `The dictionary lists no synonyms or antonyms for "${word}".`
+  return [
+    `${clean(rows[0].word)}${phonetic(rows[0]) ? ` - ${phonetic(rows[0])}` : ""}`,
+    "",
+    ...blocks,
+  ].join("\n")
 }

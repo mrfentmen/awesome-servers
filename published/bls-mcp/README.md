@@ -1,24 +1,33 @@
-# BLS MCP
+# US Bureau of Labor Statistics
 
-US labor statistics from the public BLS API. No key required.
+BLS economic series: employment, CPI, wages and more by series id, with the survey list and popular series - keyless.
 
-This file is self contained. It reads public data only and never writes to the machine. All output is bounded and honest about what could not be fetched.
+Keyless — no signup, no API key, no environment variables.
+
+## Install
+
+```bash
+npx -y @mrfentmen/bls-mcp
+```
+
+Or add it to your MCP client:
+
+```json
+{
+  "mcpServers": {
+    "bls-mcp": { "command": "npx", "args": ["-y", "@mrfentmen/bls-mcp"] }
+  }
+}
+```
 
 ## Tools
 
+| Tool | What it does |
+|---|---|
+| `series_data` | Observations for one BLS series id over a year range. |
+| `list_surveys` | Every BLS survey with its abbreviation and name. |
+| `popular_series` | The series BLS highlights as most requested, with their ids. |
 
-* `series`  Get a BLS series.
+## Data source
 
-* `latest_value`
-* `series_range`
-* `popular_series`
-* `list_surveys`
-## Usage
-
-```bash
-npm install
-npm run build
-node dist/index.js
-```
-
-Data comes from the public BLS API.
+BLS Public Data API v2 (no registration key - limited to 25 queries a day per IP)

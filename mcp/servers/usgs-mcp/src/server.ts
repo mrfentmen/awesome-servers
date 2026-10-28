@@ -3,6 +3,7 @@ import { z } from "zod"
 import { biggestQuakes, formatQuake, latestQuakes, quakeDetail, quakesNear, queryQuakes, UsgsError } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -24,7 +25,7 @@ export function createServer(): McpServer {
         if (quakes.length === 0) return text(`No M${magnitude}+ quakes in the last ${timeframe}.`)
         return text(`Latest M${magnitude}+ earthquakes (${timeframe}):\n\n${quakes.map((q, i) => `${i + 1}. ${formatQuake(q)}`).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -43,7 +44,7 @@ export function createServer(): McpServer {
         if (quakes.length === 0) return text(`No quakes M${minMagnitude}+${starttime ? ` since ${starttime}` : ""}.`)
         return text(`Quakes M${minMagnitude}+${starttime ? ` since ${starttime}` : ""}:\n\n${quakes.map((q, i) => `${i + 1}. ${formatQuake(q)}`).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -56,7 +57,7 @@ export function createServer(): McpServer {
       try {
         return text(formatQuake(await quakeDetail(id)))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -77,7 +78,7 @@ export function createServer(): McpServer {
         if (quakes.length === 0) return text(`No M${min_magnitude}+ quakes within ${radius_km} km of ${latitude}, ${longitude}.`)
         return text(`Quakes within ${radius_km} km (${quakes.length}):\n\n${quakes.map((q, i) => `${i + 1}. ${formatQuake(q)}`).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -96,7 +97,7 @@ export function createServer(): McpServer {
         if (quakes.length === 0) return text(`No M${min_magnitude}+ quakes in the last ${days} days.`)
         return text(`Strongest quakes in the last ${days} days (${quakes.length}):\n\n${quakes.map((q, i) => `${i + 1}. ${formatQuake(q)}`).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

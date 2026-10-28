@@ -49,7 +49,3 @@ export declare function getTags(): Promise<{
 }[]>;
 export declare function formatManga(m: Manga): string;
 export declare function formatChapter(c: Chapter): string;
-export interface MangaByTagArgs {
-    tag: string;
-    limit?: number;
-}

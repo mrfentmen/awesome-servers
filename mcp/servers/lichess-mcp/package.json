@@ -1,6 +1,6 @@
 {
   "name": "lichess-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Lichess, chess puzzles by rating, player stats, and top players.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/lichess-mcp",

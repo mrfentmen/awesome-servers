@@ -3,6 +3,7 @@ import { z } from "zod"
 import { BbsError, formatBbs, listAll } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -36,7 +37,7 @@ export function createServer(): McpServer {
             shown.map((b, i) => formatBbs(b, i)).join("\n\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -54,7 +55,7 @@ export function createServer(): McpServer {
         if (!found) return text(`No BBS named "${name}". Try list_bbses first.`)
         return text(formatBbs(found))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -70,7 +71,7 @@ export function createServer(): McpServer {
         const pick = all[Math.floor(Math.random() * all.length)]
         return text(`Dialing ${pick.name}...\n\n${formatBbs(pick)}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

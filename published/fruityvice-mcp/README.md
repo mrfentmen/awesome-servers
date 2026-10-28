@@ -1,28 +1,33 @@
-# Fruityvice MCP
+# Fruityvice
 
-Fruit nutrition data from the public Fruityvice API. No key required.
+Fruit nutrition data: calories, sugar, fat and carbs per fruit, with lookup by name and nutrient ranges - keyless.
 
-This file is self contained. It reads public data only and never writes to the machine. All output is bounded and honest about what could not be fetched.
+Keyless — no signup, no API key, no environment variables.
+
+## Install
+
+```bash
+npx -y @mrfentmen/fruityvice-mcp
+```
+
+Or add it to your MCP client:
+
+```json
+{
+  "mcpServers": {
+    "fruityvice-mcp": { "command": "npx", "args": ["-y", "@mrfentmen/fruityvice-mcp"] }
+  }
+}
+```
 
 ## Tools
 
+| Tool | What it does |
+|---|---|
+| `all_fruits` | The whole fruit catalogue with nutrition per 100 g. |
+| `fruit_by_name` | One fruit by name, with family, genus and nutrition. |
+| `fruits_by_nutrient` | Fruits whose nutrient value falls inside a range. |
 
-* `fruit`  Get a fruit.
-* `all`  List all fruits.
+## Data source
 
-## Usage
-
-```bash
-npm install
-npm run build
-node dist/index.js
-```
-
-Data comes from the public Fruityvice API.
-
-## Licence — no paywall
-
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.
+Fruityvice API

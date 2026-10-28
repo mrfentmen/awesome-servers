@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/open5e-mcp",
-  "description": "Dungeons and Dragons monsters, spells, and classes. No key required.",
+  "description": "Open5e reference for D&D 5e: spells, monsters and magic items from the open SRD, with stats and text",
   "repository": {
-    "url": "https://github.com/mrfentmen/open5e-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.2",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "open5e-mcp",
-      "version": "1.0.0",
+      "identifier": "@mrfentmen/open5e-mcp",
+      "version": "1.0.2",
       "transport": {
         "type": "stdio"
       }

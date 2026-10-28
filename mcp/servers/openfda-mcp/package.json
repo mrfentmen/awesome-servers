@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/openfda-api-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "openFDA: drug labels, adverse events, drug/device/food recalls and NDC directory \u2014 keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/openfda-mcp",

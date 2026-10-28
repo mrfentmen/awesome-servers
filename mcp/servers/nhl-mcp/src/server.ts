@@ -3,6 +3,7 @@ import { z } from "zod"
 import { formatGame, formatStanding, formatTeamStats, getSchedule, getStandings, getTeamStats, NhlError } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -20,7 +21,7 @@ export function createServer(): McpServer {
         if (teams.length === 0) return text(`No team stats for season ${season}.`)
         return text(`NHL team stats ${season}:\n\n${teams.map((t) => formatTeamStats(t)).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -35,7 +36,7 @@ export function createServer(): McpServer {
         if (rows.length === 0) return text("No standings right now.")
         return text(`NHL standings:\n\n${rows.map((r, i) => formatStanding(r, i)).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -50,7 +51,7 @@ export function createServer(): McpServer {
         if (games.length === 0) return text("No games on today's schedule.")
         return text(`NHL games today:\n${games.map((g) => `- ${formatGame(g)}`).join("\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

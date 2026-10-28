@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { checkIsbnBatch, convertIsbn, validateIsbn, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -16,7 +17,7 @@ export function createServer() {
             return text(await validateIsbn(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("convert_isbn", "Convert between ISBN-10 and ISBN-13 where the book has both.", {
@@ -26,7 +27,7 @@ export function createServer() {
             return text(await convertIsbn(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("check_isbn_batch", "Validate a list of ISBNs at once and report the bad ones.", {
@@ -36,7 +37,7 @@ export function createServer() {
             return text(await checkIsbnBatch(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

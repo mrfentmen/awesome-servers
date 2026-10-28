@@ -1,24 +1,33 @@
 {
-  "version": "1.1.0",
+  "name": "@mrfentmen/arxiv-mcp",
+  "version": "1.0.1",
+  "description": "arXiv: 2.4M+ preprints - search, fetch by id, browse authors, latest per category - keyless.",
   "type": "module",
+  "mcpName": "io.github.mrfentmen/arxiv-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/arxiv-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "arxiv-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
-    "dist",
-    "server.json",
-    "README.md"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "dev": "npm run build && node dist/index.js"
+    "start": "node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "arxiv",
+    "preprints",
+    "papers",
+    "research",
+    "science",
+    "keyless"
+  ],
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -28,16 +37,6 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
   },
-  "name": "arxiv-mcp",
-  "description": "Search academic papers on arXiv by keyword, author, or title. No key required.",
-  "mcpName": "io.github.mrfentmen/arxiv-mcp",
-  "keywords": [
-    "mcp",
-    "arxiv",
-    "papers",
-    "research",
-    "academic"
-  ],
   "engines": {
     "node": ">=20"
   }

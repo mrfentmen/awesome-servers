@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/chembl-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ChEMBL bioactivity data: search molecules and targets, read properties and known activities - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/chembl-mcp",

@@ -1,12 +1,12 @@
 {
   "name": "mangadex-mcp",
-  "version": "1.0.3",
-  "description": "Use this MCP server to MangaDex, search manga, browse chapters, authors, and tags. Tools include search manga, get manga, list chapters",
+  "version": "1.0.1",
+  "description": "MCP server for MangaDex, search manga, browse chapters, authors, and tags.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/mangadex-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/mangadex-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "mangadex-mcp": "./dist/index.js"
@@ -37,8 +37,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

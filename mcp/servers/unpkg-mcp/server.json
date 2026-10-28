@@ -6,12 +6,12 @@
     "url": "https://github.com/mrfentmen/unpkg-mcp",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.2",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "unpkg-mcp",
-      "version": "1.0.0",
+      "version": "1.0.2",
       "transport": {
         "type": "stdio"
       }

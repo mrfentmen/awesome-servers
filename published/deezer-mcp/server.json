@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/deezer-mcp",
-  "description": "Search tracks and albums on Deezer. No key required.",
+  "description": "Music catalogue search: tracks, artists, albums and charts.",
   "repository": {
-    "url": "https://github.com/mrfentmen/deezer-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
-  "version": "1.0.1",
+  "version": "1.0.0",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "deezer-mcp",
-      "version": "1.0.1",
+      "identifier": "@mrfentmen/deezer-mcp",
+      "version": "1.0.0",
       "transport": {
         "type": "stdio"
       }

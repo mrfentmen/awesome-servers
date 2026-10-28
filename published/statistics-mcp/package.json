@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/statistics-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Descriptive statistics, correlation and linear regression for numeric samples - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/statistics-mcp",

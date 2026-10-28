@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { comparePackages, PackagistError, packageDependencies, packageInfo, packageVersions, popularPackages, registryTotals, searchPackages, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof PackagistError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -18,7 +19,7 @@ export function createServer() {
             return text(await searchPackages(query, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("package_info", "Downloads, favers, latest version and requirements for one package.", { name: nameArg }, async ({ name }) => {
@@ -26,7 +27,7 @@ export function createServer() {
             return text(await packageInfo(name));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("popular_packages", "Packagist's most popular packages right now.", { limit: z.number().int().min(1).max(50).default(15).describe("Packages to return") }, async ({ limit }) => {
@@ -34,7 +35,7 @@ export function createServer() {
             return text(await popularPackages(limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("package_versions", "Recent release history for a package, newest first.", {
@@ -45,7 +46,7 @@ export function createServer() {
             return text(await packageVersions(name, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("package_dependencies", "Runtime and dev requirements of a package's newest release.", { name: nameArg }, async ({ name }) => {
@@ -53,7 +54,7 @@ export function createServer() {
             return text(await packageDependencies(name));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("compare_packages", "Compare downloads, favers and latest version of two packages.", {
@@ -64,7 +65,7 @@ export function createServer() {
             return text(await comparePackages(first, second));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("registry_totals", "Total packages, versions and downloads tracked by Packagist.", {}, async () => {
@@ -72,7 +73,7 @@ export function createServer() {
             return text(await registryTotals());
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

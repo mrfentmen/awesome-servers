@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/csv-tools-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CSV work offline: column summary with detected types, rows as JSON, and simple filtering by column value - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/csv-tools-mcp",

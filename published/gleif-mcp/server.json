@@ -1,16 +1,16 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/gleif-mcp",
-  "description": "Legal entity identifiers from GLEIF. No key required.",
+  "description": "Legal entity identifiers: look up LEIs, parent companies and reporting status.",
   "repository": {
-    "url": "https://github.com/mrfentmen/gleif-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "gleif-mcp",
+      "identifier": "@mrfentmen/gleif-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"

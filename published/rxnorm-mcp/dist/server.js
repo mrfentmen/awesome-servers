@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { conceptLine, drugs, ndcs, normalize, properties, related, RxNavError, spellings, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof RxNavError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -20,7 +21,7 @@ export function createServer() {
             return text(rows.slice(0, limit).map(conceptLine).join("\n"));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("normalize_name", "Resolve a messy drug string to RxNorm concept ids.", { name: z.string().min(1).describe("Free-text drug name, e.g. glucophage 500mg") }, async ({ name }) => {
@@ -29,7 +30,7 @@ export function createServer() {
             return text(ids.length ? ids.join("\n") : `No RxNorm id for "${name}".`);
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("drug_properties", "Full RxNorm record for one concept id.", { rxcui: z.string().min(1).describe("RxNorm concept id") }, async ({ rxcui }) => {
@@ -46,7 +47,7 @@ export function createServer() {
             ].join("\n"));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("package_ndcs", "National Drug Codes that package a concept.", {
@@ -58,7 +59,7 @@ export function createServer() {
             return text(rows.length ? rows.slice(0, limit).join("\n") : `No NDCs for ${rxcui}.`);
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("related_concepts", "Everything RxNorm relates to a concept: brands, ingredients, packs and dose forms.", {
@@ -72,7 +73,7 @@ export function createServer() {
             return text(rows.slice(0, limit).map(conceptLine).join("\n"));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("spelling_suggestions", "Did-you-mean suggestions for a misspelled drug name.", { name: z.string().min(1).describe("Misspelled name, e.g. metformn") }, async ({ name }) => {
@@ -81,7 +82,7 @@ export function createServer() {
             return text(rows.length ? rows.join("\n") : `No suggestions for "${name}".`);
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

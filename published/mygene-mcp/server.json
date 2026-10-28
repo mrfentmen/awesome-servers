@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/mygene-mcp",
-  "description": "MyGene.info gene annotation API.",
+  "description": "Gene annotations from mygene.info: search genes by symbol or keyword and read full records",
   "repository": {
-    "url": "https://github.com/mrfentmen/mygene-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.2",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "mygene-mcp",
-      "version": "1.0.0",
+      "identifier": "@mrfentmen/mygene-mcp",
+      "version": "1.0.2",
       "transport": {
         "type": "stdio"
       }

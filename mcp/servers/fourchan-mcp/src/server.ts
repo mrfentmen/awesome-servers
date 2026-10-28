@@ -10,6 +10,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -31,7 +32,7 @@ export function createServer(): McpServer {
             `NSFW boards:\n${nsfw.map((b) => `  /${b.board}/ — ${b.title}`).join("\n")}`
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -50,7 +51,7 @@ export function createServer(): McpServer {
             sorted.map((t, i) => formatThreadSummary(t, i)).join("\n\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -69,7 +70,7 @@ export function createServer(): McpServer {
             posts.slice(0, max).map(formatPost).join("\n\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

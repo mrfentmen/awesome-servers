@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 
 import { m0_pluginInfo, m0_searchPlugins, m1_search } from "./api.js"
+import { premiumTool } from "./gateway.js"
 const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
 const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
@@ -19,7 +20,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_pluginInfo(args)) } catch (e) { return textError(String(e)) }
+    try { return text(await m0_pluginInfo(args)) } catch (e) { return textError(error(e)) }
   }
   )
 server.registerTool(
@@ -31,7 +32,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m0_searchPlugins(args)) } catch (e) { return textError(String(e)) }
+    try { return text(await m0_searchPlugins(args)) } catch (e) { return textError(error(e)) }
   }
   )
 server.registerTool(
@@ -43,7 +44,7 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    try { return text(await m1_search(args)) } catch (e) { return textError(String(e)) }
+    try { return text(await m1_search(args)) } catch (e) { return textError(error(e)) }
   }
   )
   server.registerTool(
@@ -55,8 +56,10 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // TODO: implement info locally (paywall removed)
-    try { return textError("Not yet implemented: info") } catch (e) { return textError(String(e)) }
+    // ---- paywall: theme_info ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_wordpress_theme_info", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -69,8 +72,10 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // TODO: implement list locally (paywall removed)
-    try { return textError("Not yet implemented: list") } catch (e) { return textError(String(e)) }
+    // ---- paywall: theme_list ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_wordpress_theme_list", args)) } catch (e) { return textError(error(e)) }
   }
   )
 
@@ -83,61 +88,12 @@ server.registerTool(
       annotations: READ_ONLY,
     },
     async (args) => {
-    // TODO: implement releases locally (paywall removed)
-    try { return textError("Not yet implemented: releases") } catch (e) { return textError(String(e)) }
+    // ---- paywall: core_releases ----
+        // The body runs on the gateway, behind the licence gate.
+    // ---- paywall: end ----
+    try { return text(await premiumTool("mcp_wordpress_core_releases", args)) } catch (e) { return textError(error(e)) }
   }
   )
-const serverName = "wordpress-mcp"
-
-  server.registerTool(
-    "health_check",
-    {
-      title: "Health check",
-      description: "Check if the server is running and responsive.",
-      inputSchema: z.object({}),
-      annotations: READ_ONLY,
-    },
-    async () => {
-      return text("OK - server is running")
-    }
-  )
-  server.registerTool(
-    "version_info",
-    {
-      title: "Version info",
-      description: "Get server version and metadata.",
-      inputSchema: z.object({}),
-      annotations: READ_ONLY,
-    },
-    async () => {
-      return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2))
-    }
-  )
-  server.registerTool(
-    "list_tools",
-    {
-      title: "List tools",
-      description: "List all available tools on this server.",
-      inputSchema: z.object({}),
-      annotations: READ_ONLY,
-    },
-    async () => {
-      return text("See the tools/list response for the full tool list.")
-    }
-  )
-  server.registerTool(
-    "echo",
-    {
-      title: "Echo",
-      description: "Echo back the provided text.",
-      inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
-      annotations: READ_ONLY,
-    },
-    async (args) => {
-      return text(String(args?.text ?? ""))
-    }
-  )
-
 
   return server
 }

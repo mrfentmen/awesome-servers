@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { PdbError, ligandInfo, searchStructures, structureChains, structureCitation, structureLigands, structureSummary, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof PdbError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -18,7 +19,7 @@ export function createServer() {
             return text(await searchStructures(query, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("structure_summary", "Title, experimental method, resolution, authors and molecule counts.", { pdbId: id }, async ({ pdbId }) => {
@@ -26,7 +27,7 @@ export function createServer() {
             return text(await structureSummary(pdbId));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("structure_chains", "Polymer entities: chain names, description and residue counts.", { pdbId: id }, async ({ pdbId }) => {
@@ -34,7 +35,7 @@ export function createServer() {
             return text(await structureChains(pdbId));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("structure_ligands", "Every bound ligand with its chemical component id and weight.", { pdbId: id }, async ({ pdbId }) => {
@@ -42,7 +43,7 @@ export function createServer() {
             return text(await structureLigands(pdbId));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("ligand_info", "Chemical component record: formula, weight and synonyms.", { compId: z.string().min(1).max(5).describe("Chemical component id, e.g. HEM") }, async ({ compId }) => {
@@ -50,7 +51,7 @@ export function createServer() {
             return text(await ligandInfo(compId));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("structure_citation", "The paper that published a structure, with DOI and PubMed id.", { pdbId: id }, async ({ pdbId }) => {
@@ -58,7 +59,7 @@ export function createServer() {
             return text(await structureCitation(pdbId));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

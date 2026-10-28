@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { averageInterestRates, monthlyTreasuryStatement, nationalDebt, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -16,7 +17,7 @@ export function createServer() {
             return text(await nationalDebt(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("average_interest_rates", "Latest average interest rates on Treasury securities.", {
@@ -26,7 +27,7 @@ export function createServer() {
             return text(await averageInterestRates(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("monthly_treasury_statement", "Latest Monthly Treasury Statement receipt and outlay rows.", {
@@ -36,7 +37,7 @@ export function createServer() {
             return text(await monthlyTreasuryStatement(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

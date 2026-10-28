@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { compareImages, DockerHubError, imageDetails, imageTags, officialImages, searchImages, tagInfo, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof DockerHubError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -17,7 +18,7 @@ export function createServer() {
             return text(await searchImages(query, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("image_details", "Description, stars, pulls and status for one image (namespace/name; official images accept just the name).", { ref: z.string().min(1).describe("e.g. library/nginx or nginx") }, async ({ ref }) => {
@@ -25,7 +26,7 @@ export function createServer() {
             return text(await imageDetails(ref));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("image_tags", "List an image's tags, with size, architectures and update date.", {
@@ -40,7 +41,7 @@ export function createServer() {
             return text(await imageTags(ref, limit, ordering));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("official_images", "Official Docker images ranked by pull count.", { limit: z.number().int().min(1).max(100).default(20).describe("Images to return") }, async ({ limit }) => {
@@ -48,7 +49,7 @@ export function createServer() {
             return text(await officialImages(limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("tag_info", "Digest, compressed and full size, and per-architecture manifests for a single tag.", {
@@ -59,7 +60,7 @@ export function createServer() {
             return text(await tagInfo(ref, tag));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("compare_images", "Side-by-side stars, update date and official status for two images.", {
@@ -70,7 +71,7 @@ export function createServer() {
             return text(await compareImages(first, second));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

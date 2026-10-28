@@ -1,12 +1,12 @@
 {
   "name": "speedrun-mcp",
-  "version": "1.0.2",
-  "description": "Use this MCP server to speedrun.com, world records, category leaderboards, and runner profiles. Tools include search games, get world records, get leaderboard",
+  "version": "1.0.1",
+  "description": "MCP server for speedrun.com, world records, category leaderboards, and runner profiles.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/speedrun-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/speedrun-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "speedrun-mcp": "./dist/index.js"
@@ -36,8 +36,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

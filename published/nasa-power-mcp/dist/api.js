@@ -1,155 +1,132 @@
-const BASE = "https://power.larc.nasa.gov/api/temporal/daily/point";
-const UA = "mrfentmen-nasa-power-mcp/1.0 (https://github.com/mrfentmen)";
-const KNOWN = ["T2M", "T2M_MIN", "T2M_MAX", "PRECTOTCORR", "ALLSKY_SFC_SW_DWN", "ALLSKY_SRF_ALB", "WS2M", "RH2M", "PS"];
-export class NasaPowerError extends Error {
+/**
+ * NASA POWER — keyless public API client.
+ */
+const BASE = "https://power.larc.nasa.gov/api";
+const SOURCE = "NASA POWER";
+export class SourceError extends Error {
 }
-function ymd(d) {
-    return d.toISOString().slice(0, 10).replace(/-/g, "");
-}
-export async function daily(args) {
-    const lat = Number(args.latitude);
-    const lon = Number(args.longitude);
-    if (!Number.isFinite(lat) || !Number.isFinite(lon))
-        throw new NasaPowerError("Provide valid latitude and longitude");
-    const params = (args.parameters ?? "T2M,PRECTOTCORR,ALLSKY_SFC_SW_DWN")
-        .split(",")
-        .map((p) => p.trim().toUpperCase())
-        .filter(Boolean);
-    const bad = params.filter((p) => !KNOWN.includes(p));
-    if (bad.length)
-        throw new NasaPowerError(`Unknown parameters: ${bad.join(", ")}`);
-    const now = new Date();
-    const endDate = new Date(now);
-    endDate.setDate(endDate.getDate() + 7);
-    const start = (args.start ?? ymd(new Date(now.getTime() - 7 * 86400000))).trim();
-    const end = (args.end ?? ymd(endDate)).trim();
-    if (!/^\d{8}$/.test(start) || !/^\d{8}$/.test(end))
-        throw new NasaPowerError("Dates must be YYYYMMDD");
-    const url = `${BASE}?parameters=${encodeURIComponent(params.join(","))}&community=RE&longitude=${lon}&latitude=${lat}&start=${start}&end=${end}&format=JSON`;
-    const res = await fetch(url, {
-        headers: { "User-Agent": UA, Accept: "application/json" },
-        signal: AbortSignal.timeout(45000),
-    });
-    if (!res.ok)
-        throw new NasaPowerError(`NASA POWER returned HTTP ${res.status}`);
-    const d = (await res.json());
-    const p = d?.properties?.parameter ?? {};
-    const dates = Object.keys(p?.[params[0]] ?? {}).sort();
-    if (!dates.length)
-        throw new NasaPowerError("No data returned for those dates");
-    const header = `NASA POWER daily at ${lat.toFixed(2)}, ${lon.toFixed(2)} (${params.join(", ")})`;
-    const rows = dates.map((dt) => {
-        const vals = params.map((prm) => {
-            const v = p?.[prm]?.[dt];
-            return `${prm}=${v != null ? Number(v).toFixed(2) : "n/a"}`;
+async function request(path, accept = "application/json", timeoutMs = 25000) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+        const res = await fetch(path.startsWith("http") ? path : BASE + path, {
+            signal: ctrl.signal,
+            headers: { "user-agent": "nasa-power-mcp", accept },
         });
-        return `${dt}: ${vals.join(" | ")}`;
-    });
-    const shown = rows.length > 14 ? [...rows.slice(0, 14), `... and ${rows.length - 14} more days`] : rows;
-    return header + "\n" + shown.join("\n");
-}
-// ---- muxC tools:
-const POWER_ROOT = "https://power.larc.nasa.gov/api/temporal";
-const POWER_UA = "mrfentmen-nasa-power-mcp/1.0 (https://github.com/mrfentmen)";
-// NASA fills absent values with -999 rather than omitting them, so anything at
-// or below that is missing data, not a measurement.
-const POWER_FILL = -999;
-async function powerGet(path, query) {
-    const url = `${POWER_ROOT}/${path}?${new URLSearchParams({ community: "RE", format: "JSON", ...query }).toString()}`;
-    const res = await fetch(url, {
-        headers: { "User-Agent": POWER_UA, Accept: "application/json" },
-        signal: AbortSignal.timeout(45000),
-    });
-    if (!res.ok) {
-        const body = await res.text().catch(() => "");
-        throw new NasaPowerError(`NASA POWER returned HTTP ${res.status}${body ? `: ${body.slice(0, 200)}` : ""}`);
+        if (!res.ok)
+            throw new SourceError(`${SOURCE} responded ${res.status}`);
+        return res;
     }
-    return (await res.json());
-}
-function checkKnown(params) {
-    const bad = params.filter((p) => !KNOWN.includes(p));
-    if (bad.length)
-        throw new NasaPowerError(`Unknown parameters: ${bad.join(", ")}. Known: ${KNOWN.join(", ")}`);
-    return params;
-}
-function coordinates(args) {
-    const lat = Number(args.latitude);
-    const lon = Number(args.longitude);
-    if (!Number.isFinite(lat) || lat < -90 || lat > 90)
-        throw new NasaPowerError("Provide a latitude between -90 and 90");
-    if (!Number.isFinite(lon) || lon < -180 || lon > 180)
-        throw new NasaPowerError("Provide a longitude between -180 and 180");
-    return { lat, lon };
-}
-function shown(value) {
-    const n = Number(value);
-    if (!Number.isFinite(n) || n <= POWER_FILL)
-        return "not reported";
-    return n.toFixed(2);
-}
-/** A bounding box rather than a single point, so you can see a gradient. */
-export async function regional(args) {
-    const latMin = Number(args.latitude_min);
-    const latMax = Number(args.latitude_max);
-    const lonMin = Number(args.longitude_min);
-    const lonMax = Number(args.longitude_max);
-    for (const [v, lo, hi, name] of [[latMin, -90, 90, "latitude_min"], [latMax, -90, 90, "latitude_max"], [lonMin, -180, 180, "longitude_min"], [lonMax, -180, 180, "longitude_max"]]) {
-        if (!Number.isFinite(v) || v < lo || v > hi)
-            throw new NasaPowerError(`Provide ${name} between ${lo} and ${hi}`);
+    catch (e) {
+        if (e instanceof SourceError)
+            throw e;
+        if (e.name === "AbortError")
+            throw new SourceError(`${SOURCE} request timed out`);
+        throw new SourceError(`${SOURCE} request failed: ${e.message}`);
     }
-    if (latMin > latMax)
-        throw new NasaPowerError("latitude_min must not be above latitude_max");
-    if (lonMin > lonMax)
-        throw new NasaPowerError("longitude_min must not be right of longitude_max");
-    // POWER's regional endpoint refuses boxes under 2 degrees, so say that here
-    // rather than passing the request on and surfacing a 422.
-    if (latMax - latMin < 2 || lonMax - lonMin < 2) {
-        throw new NasaPowerError("NASA POWER's regional endpoint needs a box at least 2 degrees on each side, so widen latitude_min/latitude_max and longitude_min/longitude_max");
+    finally {
+        clearTimeout(timer);
     }
-    const params = checkKnown((args.parameters ?? "T2M").split(",").map((p) => p.trim().toUpperCase()).filter(Boolean));
-    const now = new Date();
-    const fmt = (d) => d.toISOString().slice(0, 10).replace(/-/g, "");
-    const end = (args.end ?? fmt(now)).trim();
-    const start = (args.start ?? fmt(new Date(now.getTime() - 5 * 86400000))).trim();
+}
+export async function getJson(path) {
+    const res = await request(path);
+    const body = await res.text();
+    try {
+        return JSON.parse(body);
+    }
+    catch {
+        throw new SourceError(`${SOURCE} returned malformed JSON`);
+    }
+}
+export async function getText(path, accept = "text/plain") {
+    const res = await request(path, accept);
+    return (await res.text()).trim();
+}
+export function clampLimit(n, fallback, max) {
+    const v = n ?? fallback;
+    if (!Number.isInteger(v) || v < 1 || v > max)
+        throw new SourceError(`limit must be between 1 and ${max}`);
+    return v;
+}
+export function clean(s) {
+    return String(s ?? "").replace(/\s+/g, " ").trim();
+}
+export function bullet(label, value) {
+    const v = value === undefined || value === null || value === "" ? "" : String(value);
+    return v ? `${label}: ${v}` : "";
+}
+export function section(title, rows) {
+    return [title, ...rows.filter(Boolean)].join("\n");
+}
+function coords(a) {
+    if (!Number.isFinite(a.latitude) || a.latitude < -90 || a.latitude > 90)
+        throw new SourceError("latitude must be between -90 and 90");
+    if (!Number.isFinite(a.longitude) || a.longitude < -180 || a.longitude > 180)
+        throw new SourceError("longitude must be between -180 and 180");
+    return `latitude=${a.latitude}&longitude=${a.longitude}`;
+}
+function params(value) {
+    const list = clean(value).split(",").map((s) => s.trim().toUpperCase()).filter(Boolean);
+    if (!list.length)
+        throw new SourceError("parameters must list at least one POWER parameter");
+    if (list.length > 12)
+        throw new SourceError("parameters accepts at most 12 names");
+    return list.join(",");
+}
+const UNITS = { T2M: "°C", T2M_MAX: "°C", T2M_MIN: "°C", PRECTOTCORR: "mm/day", WS2M: "m/s", WS10M: "m/s", RH2M: "%", ALLSKY_SFC_SW_DWN: "kWh/m²/day", PS: "kPa" };
+function rowsFor(values) {
+    return Object.values(values ?? {}).filter((v) => v && typeof v === "object").map((v) => Object.keys(v).length).sort((a, b) => b - a)[0] ?? 0;
+}
+export async function dailyPoint(a) {
+    const start = clean(a.start);
+    const end = clean(a.end);
     if (!/^\d{8}$/.test(start) || !/^\d{8}$/.test(end))
-        throw new NasaPowerError("Dates must be YYYYMMDD");
-    const limit = Math.max(1, Math.min(args.limit ?? 20, 100));
-    const d = await powerGet("daily/regional", {
-        parameters: params.join(","),
-        "longitude-min": String(lonMin),
-        "longitude-max": String(lonMax),
-        "latitude-min": String(latMin),
-        "latitude-max": String(latMax),
-        start,
-        end,
-    });
-    const cells = Array.isArray(d?.features) ? d.features : [];
-    if (!cells.length)
-        throw new NasaPowerError("NASA POWER returned no cells for that box");
-    // POWER's daily regional feed lags, so pick the last date any cell actually
-    // carries rather than the last date in the payload.
-    const dates = new Set();
-    for (const cell of cells) {
-        for (const stamp of Object.keys(cell?.properties?.parameter?.[params[0]] ?? {}))
-            dates.add(stamp);
+        throw new SourceError("start and end must be YYYYMMDD");
+    if (start > end)
+        throw new SourceError("start must not be after end");
+    const d = await getJson(`/temporal/daily/point?parameters=${params(a.parameters)}&community=RE&${coords(a)}&start=${start}&end=${end}&format=JSON`);
+    const values = d?.properties?.parameter;
+    if (!values)
+        throw new SourceError("NASA POWER returned no parameter block");
+    const names = Object.keys(values);
+    const count = rowsFor(values);
+    if (!count)
+        return `NASA POWER returned no daily values for ${a.latitude}, ${a.longitude} between ${start} and ${end}.`;
+    const lines = [];
+    for (const name of names) {
+        const series = Object.entries(values[name]);
+        const numeric = series.map(([, v]) => Number(v)).filter((v) => Number.isFinite(v));
+        const mean = numeric.reduce((s, v) => s + v, 0) / (numeric.length || 1);
+        const min = Math.min(...numeric);
+        const max = Math.max(...numeric);
+        lines.push(`- ${name} (${UNITS[name.toUpperCase()] ?? "POWER units"}): mean ${mean.toFixed(2)} · min ${min.toFixed(2)} · max ${max.toFixed(2)} over ${series.length} day(s)`);
     }
-    const sorted = [...dates].sort();
-    let useDate = sorted[sorted.length - 1];
-    if (useDate) {
-        while (useDate && !cells.some((c) => params.some((prm) => Number(c?.properties?.parameter?.[prm]?.[useDate]) > POWER_FILL))) {
-            sorted.pop();
-            useDate = sorted[sorted.length - 1];
-        }
-    }
-    if (!useDate)
-        throw new NasaPowerError(`Every date NASA POWER returned for that box is still the -999 fill value (${start}-${end}), so nothing has been published yet`);
-    const rows = cells.map((cell) => {
-        const [lon, lat, elev] = cell?.geometry?.coordinates ?? [];
-        return `  ${Number(lat).toFixed(2)}, ${Number(lon).toFixed(2)} (${Number(elev ?? 0).toFixed(0)} m): ${params.map((prm) => `${prm}=${shown(cell?.properties?.parameter?.[prm]?.[useDate])}`).join(" | ")} on ${useDate}`;
-    });
+    const first = Object.entries(values[names[0]]).slice(-5);
     return [
-        `NASA POWER regional grid ${params.join(", ")}`,
-        `Box: lat ${latMin}-${latMax}, lon ${lonMin}-${lonMax} | ${cells.length} cells${cells.length > limit ? `, showing ${limit}` : ""} | dates ${start}-${end} (latest value per cell)`,
-        ...rows.slice(0, limit),
+        `NASA POWER daily data at ${a.latitude}, ${a.longitude} for ${start}-${end}`,
+        "",
+        ...lines,
+        "",
+        `Last days (${names[0]}): ${first.map(([day, v]) => `${day}=${v}`).join(", ")}`,
+        `Source: https://power.larc.nasa.gov/data-access-viewer/`,
+    ].join("\n");
+}
+export async function climatology(a) {
+    const d = await getJson(`/temporal/climatology/point?parameters=${params(a.parameters)}&community=RE&${coords(a)}&format=JSON`);
+    const values = d?.properties?.parameter;
+    if (!values)
+        throw new SourceError("NASA POWER returned no climatology block");
+    const out = [];
+    for (const [name, months] of Object.entries(values)) {
+        const entries = Object.entries(months).filter(([k]) => /^[A-Z]{3}$/.test(k));
+        const warmest = entries.reduce((best, cur) => (Number(cur[1]) > Number(best[1]) ? cur : best), entries[0]);
+        const coldest = entries.reduce((best, cur) => (Number(cur[1]) < Number(best[1]) ? cur : best), entries[0]);
+        out.push(`- ${name} (${UNITS[name.toUpperCase()] ?? "POWER units"}): high ${warmest[0]} ${warmest[1]} · low ${coldest[0]} ${coldest[1]}`);
+        out.push(`    ${entries.map(([m, v]) => `${m} ${v}`).join(" · ")}`);
+    }
+    return [
+        `NASA POWER monthly climatology at ${a.latitude}, ${a.longitude} (long-term averages):`,
+        "",
+        ...out,
     ].join("\n");
 }

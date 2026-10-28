@@ -14,7 +14,3 @@ export declare function spellCheck(word: string): Promise<WordHit[]>;
 export declare function suggest(prefix: string, limit?: number): Promise<WordHit[]>;
 export declare function formatHits(hits: WordHit[]): string;
 export declare function formatWithDefs(hits: WordHit[]): string;
-export declare function confusablesWith(args: {
-    word?: string;
-    limit?: number;
-}): Promise<string>;

@@ -8,7 +8,7 @@ const classify = (t) => /apache\s*2|apache-2/i.test(t) ? "apache-2" : /mit licen
 async function root(input) { const base = process.env.LICENSE_CHANGE_ROOT ?? path.join(process.cwd(), ".."); const root = await realpath(path.resolve(base)).catch(() => path.resolve(base)); const req = path.isAbsolute(input) ? path.resolve(input) : path.resolve(root, input); const target = await realpath(req).catch(() => req); const rel = path.relative(root, target); if (rel.startsWith("..") || path.isAbsolute(rel))
     throw new LicenseChangeError("Snapshot path must stay inside the configured root"); if (!(await stat(target).catch(() => null)))
     throw new LicenseChangeError("Snapshot path does not exist"); return target; }
-export async function scan(input) { const base = await root(input), counts = {}; let files = 0; async function walk(dir, d) { if (d > 5 || files > 500)
+async function scan(input) { const base = await root(input), counts = {}; let files = 0; async function walk(dir, d) { if (d > 5 || files > 500)
     return; for (const e of await readdir(dir, { withFileTypes: true }).catch(() => [])) {
     if (skip.has(e.name))
         continue;

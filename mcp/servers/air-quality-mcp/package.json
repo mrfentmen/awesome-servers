@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/air-quality-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Open-Meteo air quality: AQI, PM2.5, ozone, NO2 and pollen forecasts for any coordinate - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/air-quality-mcp",

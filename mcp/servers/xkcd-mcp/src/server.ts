@@ -3,6 +3,7 @@ import { z } from "zod"
 import { formatComic, getComic, latestComic, XkcdError } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -18,7 +19,7 @@ export function createServer(): McpServer {
       try {
         return text(formatComic(await latestComic()))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -31,7 +32,7 @@ export function createServer(): McpServer {
       try {
         return text(formatComic(await getComic(num)))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

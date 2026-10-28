@@ -15,22 +15,4 @@ export declare function searchCaptures(urlPattern: string, index: string | undef
     records: any[];
 }>;
 export declare function format(value: unknown): string;
-export interface HistoryArgs {
-    url: string;
-    index?: string;
-    match_type?: string;
-    from_year?: number;
-    to_year?: number;
-    limit?: number;
-}
-export interface StatsArgs {
-    url: string;
-    index?: string;
-    match_type?: string;
-    sample?: number;
-}
-export interface CollectionArgs {
-    id: string;
-}
-export declare function collectionDetails(args: CollectionArgs): Promise<string>;
 export {};

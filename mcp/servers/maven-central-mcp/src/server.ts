@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof MavenError || e instanceof Error) return `Error: ${e.message}`
@@ -34,7 +35,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchArtifacts(query, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -51,7 +52,7 @@ export function createServer(): McpServer {
       try {
         return text(await artifactVersions(group_id, artifact_id, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -64,7 +65,7 @@ export function createServer(): McpServer {
       try {
         return text(await latestVersion(group_id, artifact_id))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -80,7 +81,7 @@ export function createServer(): McpServer {
       try {
         return text(await groupArtifacts(group_id, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -96,7 +97,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchByClass(class_name, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -113,7 +114,7 @@ export function createServer(): McpServer {
       try {
         return text(await dependencySnippet(group_id, artifact_id, version))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

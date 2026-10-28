@@ -1,462 +1,126 @@
-export class OpenLibraryError extends Error {
-    constructor(message) {
-        super(message);
-        this.name = "OpenLibraryError";
-    }
-}
-export function errorMessage(e) {
-    return e instanceof Error ? e.message : String(e);
-}
-const UA = "mrfentmen-openlibrary-mcp/1.0 (https://github.com/mrfentmen)";
-const BASE = "https://openlibrary.org";
-const COVERS = "https://covers.openlibrary.org/b/id";
 /**
- * Open Library answers some merged/deleted IDs with a 200 redirect record
- * ({"type":{"/type/redirect"},"location":"/works/OL...W"}) instead of a 404,
- * so follow those before giving up.
+ * Open Library — keyless public API client.
  */
-async function req(path) {
-    let target = path;
-    for (let hop = 0; hop < 4; hop++) {
-        let res;
-        try {
-            res = await fetch(BASE + target, {
-                headers: { "User-Agent": UA, Accept: "application/json" },
-                signal: AbortSignal.timeout(20000),
-            });
-        }
-        catch (e) {
-            throw new OpenLibraryError(`Network error: ${e.message}`);
-        }
-        if (res.status === 404)
-            throw new OpenLibraryError(`Not found (404) for ${target}`);
-        if (!res.ok) {
-            const body = (await res.text()).slice(0, 300);
-            throw new OpenLibraryError(`HTTP ${res.status}: ${body}`);
-        }
-        const data = await res.json();
-        const location = typeof data?.location === "string" ? data.location : "";
-        if (data?.type?.key === "/type/redirect" && location) {
-            // location is a path like "/works/OL893414W"; strip a trailing .json if present.
-            target = `${location.replace(/\.json$/, "")}.json`;
-            continue;
-        }
-        return data;
+const BASE = "https://openlibrary.org";
+const SOURCE = "Open Library";
+const UA = "openlibrary-mcp";
+export class SourceError extends Error {
+}
+async function request(path, init, timeoutMs = 25000) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+        const res = await fetch(path.startsWith("http") ? path : BASE + path, {
+            ...init,
+            signal: ctrl.signal,
+            headers: {
+                "user-agent": UA,
+                accept: "application/json",
+                ...init?.headers,
+            },
+        });
+        if (!res.ok)
+            throw new SourceError(`${SOURCE} responded ${res.status}`);
+        return res;
     }
-    throw new OpenLibraryError(`Too many redirects for ${path}`);
+    catch (e) {
+        if (e instanceof SourceError)
+            throw e;
+        if (e.name === "AbortError")
+            throw new SourceError(`${SOURCE} request timed out`);
+        throw new SourceError(`${SOURCE} request failed: ${e.message}`);
+    }
+    finally {
+        clearTimeout(timer);
+    }
 }
-function textOf(value) {
-    if (typeof value !== "object" || value === null)
-        return "";
-    const row = value;
-    return "value" in row ? String(row.value) : "";
+export async function getJson(path, init) {
+    const res = await request(path, init);
+    const body = await res.text();
+    try {
+        return JSON.parse(body);
+    }
+    catch {
+        throw new SourceError(`${SOURCE} returned malformed JSON`);
+    }
 }
-/** Open Library returns descriptions/bios as a string or as { value: string }. */
-function asText(value, max = 800) {
-    const raw = typeof value === "string" ? value : textOf(value);
-    const clean = raw.replace(/\r/g, "").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").replace(/\n{3,}/g, "\n\n").trim();
-    if (!clean)
-        return "";
-    return clean.length > max ? `${clean.slice(0, max).trimEnd()}…` : clean;
+export function clampLimit(n, fallback, max) {
+    const v = n ?? fallback;
+    if (!Number.isInteger(v) || v < 1 || v > max)
+        throw new SourceError(`limit must be between 1 and ${max}`);
+    return v;
 }
-const idPart = (id, prefix) => id.replace(`${prefix}/`, "").replace(/^\//, "").trim();
-const keyToString = (key) => (typeof key === "string" ? key.replace(/^\//, "") : "");
-// ---------------------------------------------------------------------------
-// Search
-// ---------------------------------------------------------------------------
-async function search(params) {
-    const d = await req(`/search.json?${params.toString()}`);
+export function clean(s) {
+    return String(s ?? "").replace(/\s+/g, " ").trim();
+}
+export function bullet(label, value) {
+    const v = value === undefined || value === null || value === "" ? "" : String(value);
+    return v ? `${label}: ${v}` : "";
+}
+export function section(title, rows) {
+    return [title, ...rows.filter(Boolean)].join("\n");
+}
+export async function search_books(a) {
+    const query = clean(a.query);
+    if (query.length < 2)
+        throw new SourceError("query must be at least 2 characters");
+    const limit = clampLimit(a.limit, 10, 20);
+    const d = await getJson(`/search.json?q=${encodeURIComponent(query)}&limit=${limit}`);
     const docs = Array.isArray(d?.docs) ? d.docs : [];
     if (!docs.length)
-        return "No books found.";
-    const head = `${(d?.numFound ?? docs.length).toLocaleString()} match(es), showing ${docs.length}:`;
-    return (`${head}\n` +
-        docs
-            .map((b, i) => {
-            const authors = (b.author_name ?? []).slice(0, 3).join(", ");
-            const bits = [
-                authors || "unknown author",
-                b.first_publish_year ? `${b.first_publish_year}` : "",
-                b.edition_count ? `${b.edition_count} edition(s)` : "",
-            ].filter(Boolean);
-            const cover = b.cover_i ? `\n   cover: ${COVERS}/${b.cover_i}-M.jpg` : "";
-            return `${i + 1}. ${b.title ?? "Untitled"} — ${bits.join(" | ")}\n   work: ${b.key ?? "?"}${cover}`;
-        })
-            .join("\n"));
+        return `Open Library has no book matching "${query}".`;
+    return section(`${d?.numFound ?? docs.length} book(s) match "${query}"`, docs.map((b, i) => `${i + 1}. ${clean(b.title)}${Array.isArray(b.author_name) && b.author_name.length ? " — " + b.author_name.slice(0, 2).join(", ") : ""} · ${clean(b.first_publish_year) || "no year"} · ${clean(b.key)}`));
 }
-export function searchBooks(query, limit = 10) {
-    const p = new URLSearchParams({ q: query, limit: String(Math.min(Math.max(limit, 1), 25)) });
-    return search(p);
+export async function work(a) {
+    let id = clean(a.workId);
+    if (!id.includes("/"))
+        id = "/works/" + id;
+    if (!/^\/works\/[A-Z0-9]+$/i.test(id))
+        throw new SourceError("workId must look like OL893414W");
+    let d = await getJson(`${id}.json`);
+    if (d?.type?.key === "/type/redirect" && d?.location)
+        d = await getJson(`${clean(d.location)}.json`);
+    const desc = typeof d?.description === "string" ? d.description : clean(d?.description?.value);
+    return section(clean(d?.title) || id, [
+        bullet("First published", d?.first_publish_date),
+        bullet("Subjects", Array.isArray(d?.subjects) ? d.subjects.slice(0, 8).join(", ") : ""),
+        bullet("Description", desc.slice(0, 600)),
+    ]);
 }
-export function searchByAuthor(name, limit = 10) {
-    const p = new URLSearchParams({ author: name, limit: String(Math.min(Math.max(limit, 1), 25)) });
-    return search(p);
+export async function author(a) {
+    let id = clean(a.authorId);
+    if (!id.includes("/"))
+        id = "/authors/" + id;
+    if (!/^\/authors\/[A-Z0-9]+$/i.test(id))
+        throw new SourceError("authorId must look like OL25712A");
+    const d = await getJson(`${id}.json`);
+    if (!d?.name)
+        throw new SourceError(`Open Library has no author ${id}`);
+    const bio = typeof d.bio === "string" ? d.bio : clean(d.bio?.value);
+    return section(clean(d.name), [bullet("Born", d.birth_date), bullet("Died", d.death_date), bullet("Bio", bio.slice(0, 600))]);
 }
-export function searchBySubject(subject, limit = 10) {
-    const p = new URLSearchParams({ subject, limit: String(Math.min(Math.max(limit, 1), 25)) });
-    return search(p);
+export async function isbn_lookup(a) {
+    const isbn = clean(a.isbn).replace(/[^0-9Xx]/g, "");
+    if (isbn.length !== 10 && isbn.length !== 13)
+        throw new SourceError("isbn must be 10 or 13 digits");
+    const d = await getJson(`/isbn/${isbn}.json`);
+    if (!d?.title)
+        throw new SourceError(`Open Library has no edition for ISBN ${isbn}`);
+    return section(clean(d.title), [
+        bullet("Published", d.publish_date),
+        bullet("Publishers", Array.isArray(d.publishers) ? d.publishers.join(", ") : d.publishers),
+        bullet("Pages", d.number_of_pages),
+        bullet("Authors", Array.isArray(d.authors) ? d.authors.map((x) => clean(x.key)).join(", ") : ""),
+    ]);
 }
-// ---------------------------------------------------------------------------
-// Single records
-// ---------------------------------------------------------------------------
-export async function getWork(workId) {
-    const id = idPart(workId, "/works/");
-    const w = await req(`/works/${encodeURIComponent(id)}.json`);
-    const lines = [`${w?.title ?? "Untitled"} (works/${id})`];
-    const desc = asText(w?.description);
-    if (desc)
-        lines.push("", desc);
-    const subjects = Array.isArray(w?.subjects) ? w.subjects.slice(0, 12) : [];
-    if (subjects.length)
-        lines.push("", `Subjects: ${subjects.join(", ")}`);
-    const meta = [];
-    if (w?.first_publish_date)
-        meta.push(`First published: ${w.first_publish_date}`);
-    if (Array.isArray(w?.covers) && w.covers.length)
-        meta.push(`Cover: ${COVERS}/${w.covers[0]}-L.jpg`);
-    if (meta.length)
-        lines.push("", meta.join("\n"));
-    const first = asText(w?.first_sentence, 300);
-    if (first)
-        lines.push("", `First sentence: ${first}`);
-    return lines.join("\n");
-}
-export async function getEdition(editionId) {
-    const id = idPart(editionId, "/books/");
-    const b = await req(`/books/${encodeURIComponent(id)}.json`);
-    const lines = [`${b?.title ?? "Untitled"} (books/${id})`];
-    const meta = [];
-    const authors = Array.isArray(b?.authors)
-        ? b.authors.map((a) => keyToString(a?.key)).filter(Boolean)
-        : [];
-    if (authors.length)
-        meta.push(`Authors: ${authors.join(", ")}`);
-    if (b?.publish_date)
-        meta.push(`Published: ${b.publish_date}`);
-    if (Array.isArray(b?.publishers) && b.publishers.length)
-        meta.push(`Publisher: ${b.publishers.join(", ")}`);
-    if (b?.number_of_pages)
-        meta.push(`Pages: ${b.number_of_pages}`);
-    const isbn = [...(b?.isbn_13 ?? []), ...(b?.isbn_10 ?? [])];
-    if (isbn.length)
-        meta.push(`ISBN: ${isbn.slice(0, 6).join(", ")}`);
-    const langs = Array.isArray(b?.languages) ? b.languages.map((l) => keyToString(l?.key).replace("languages/", "")).filter(Boolean) : [];
-    if (langs.length)
-        meta.push(`Languages: ${langs.join(", ")}`);
-    if (Array.isArray(b?.covers) && b.covers[0])
-        meta.push(`Cover: ${COVERS}/${b.covers[0]}-L.jpg`);
-    if (meta.length)
-        lines.push("", ...meta);
-    return lines.join("\n");
-}
-export async function getAuthor(authorId) {
-    const id = idPart(authorId, "/authors/");
-    const a = await req(`/authors/${encodeURIComponent(id)}.json`);
-    const lines = [`${a?.name ?? "Unknown author"} (authors/${id})`];
-    const meta = [];
-    if (a?.birth_date)
-        meta.push(`Born: ${a.birth_date}`);
-    if (a?.death_date)
-        meta.push(`Died: ${a.death_date}`);
-    if (Array.isArray(a?.alternate_names) && a.alternate_names.length) {
-        meta.push(`Also known as: ${a.alternate_names.slice(0, 5).join(", ")}`);
-    }
-    if (meta.length)
-        lines.push("", ...meta);
-    const bio = asText(a?.bio, 900);
-    if (bio)
-        lines.push("", bio);
-    const links = Array.isArray(a?.links) ? a.links.filter((l) => l?.url).slice(0, 3) : [];
-    if (links.length)
-        lines.push("", "Links:", ...links.map((l) => `  ${l.title ?? l.url}: ${l.url}`));
-    return lines.join("\n");
-}
-export async function authorWorks(authorId, limit = 20) {
-    const id = idPart(authorId, "/authors/");
-    const d = await req(`/authors/${encodeURIComponent(id)}/works.json?limit=${Math.min(Math.max(limit, 1), 50)}`);
-    const entries = Array.isArray(d?.entries) ? d.entries : [];
-    if (!entries.length)
-        return `No works listed for ${id}.`;
-    return (`${(d?.size ?? entries.length).toLocaleString()} work(s) by ${id}, showing ${entries.length}:\n` +
-        entries
-            .map((w, i) => {
-            const year = typeof w?.first_publish_date === "string" ? ` (${w.first_publish_date.slice(0, 4)})` : "";
-            return `${i + 1}. ${w?.title ?? "Untitled"}${year} — ${keyToString(w?.key)}`;
-        })
-            .join("\n"));
-}
-/**
- * An ISBN carries a check digit, so a mistyped one can be rejected before a
- * request is spent on it.
- */
-function normalizeIsbn(input) {
-    const clean = (input ?? "").replace(/[^0-9Xx]/g, "").toUpperCase();
-    if (clean.length === 10) {
-        if (!/^[0-9]{9}[0-9X]$/.test(clean))
-            throw new OpenLibraryError(`"${input}" is not a valid ISBN-10.`);
-        let sum = 0;
-        for (let i = 0; i < 10; i++)
-            sum += (clean[i] === "X" ? 10 : Number(clean[i])) * (10 - i);
-        if (sum % 11 !== 0)
-            throw new OpenLibraryError(`ISBN-10 "${clean}" fails its check digit, so it is a typo.`);
-        return clean;
-    }
-    if (clean.length === 13) {
-        if (!/^[0-9]{13}$/.test(clean))
-            throw new OpenLibraryError(`"${input}" is not a valid ISBN-13.`);
-        let sum = 0;
-        for (let i = 0; i < 13; i++)
-            sum += Number(clean[i]) * (i % 2 === 0 ? 1 : 3);
-        if (sum % 10 !== 0)
-            throw new OpenLibraryError(`ISBN-13 "${clean}" fails its check digit, so it is a typo.`);
-        return clean;
-    }
-    throw new OpenLibraryError(`"${input}" has ${clean.length} digit(s); an ISBN has 10 or 13.`);
-}
-const asList = (value, max = 4) => (value ?? []).slice(0, max).join(", ");
-const languageList = (languages) => (languages ?? [])
-    .map((l) => (l.key ?? "").replace("/languages/", ""))
-    .filter(Boolean)
-    .slice(0, 8)
-    .join(", ");
-/** Resolve an ISBN to its edition record, without walking through search first. */
-export async function editionByIsbn(args) {
-    const isbn = normalizeIsbn(args.isbn);
-    const edition = await req(`/isbn/${isbn}.json`);
-    const authors = (edition.authors ?? []).map((a) => keyToString(a.key)).filter(Boolean);
-    const cover = (edition.covers ?? []).find((id) => id > 0);
-    return [
-        `Edition for ISBN ${isbn}`,
-        `  ${edition.title ?? "Untitled"}${edition.subtitle ? `: ${edition.subtitle}` : ""}`,
-        `  format: ${edition.physical_format ?? edition.edition_name ?? "not stated"} | pages: ${edition.number_of_pages ?? "not stated"}`,
-        `  published: ${edition.publish_date ?? "not stated"}${edition.publish_places?.length ? ` in ${asList(edition.publish_places, 3)}` : ""}`,
-        `  publisher(s): ${asList(edition.publishers) || "not stated"}`,
-        authors.length ? `  author record(s): ${authors.map((k) => `/${k}`).join(", ")}` : `  by: ${edition.by_statement ?? "not stated"}`,
-        `  work: ${keyToString(edition.works?.[0]?.key) || "not linked"}`,
-        `  ISBN-13: ${asList(edition.isbn_13, 3) || "none"} | ISBN-10: ${asList(edition.isbn_10, 2) || "none"}`,
-        cover ? `  cover: ${COVERS}/${cover}-L.jpg` : "  no cover on this edition",
-        edition.ocaid ? `  scanned copy: https://archive.org/details/${edition.ocaid}` : "",
-    ].filter((line) => line !== "").join("\n");
-}
-/**
- * Every edition Open Library knows for a work — the answer to "is there a later
- * or translated printing", which a single work record does not contain.
- */
-export async function workEditions(args) {
-    const id = idPart(args.workId, "/works/");
-    if (!id)
-        throw new OpenLibraryError("Give a work id such as OL27448W.");
-    const limit = Math.min(Math.max(Math.trunc(args.limit ?? 10), 1), 50);
-    const d = await req(`/works/${encodeURIComponent(id)}/editions.json?limit=${limit}`);
-    const entries = Array.isArray(d.entries) ? d.entries : [];
-    if (!entries.length)
-        return `Work ${id} has no editions listed.`;
-    const total = typeof d.size === "number" ? d.size : entries.length;
-    const years = entries
-        .map((e) => Number(String(e.publish_date ?? "").match(/\d{4}/)?.[0] ?? 0))
-        .filter((y) => y > 0)
-        .sort((a, b) => a - b);
-    const publishers = [...new Set(entries.flatMap((e) => e.publishers ?? []))].slice(0, 10);
-    return [
-        `Editions of work ${id}: ${total.toLocaleString()} listed, showing ${entries.length}`,
-        years.length ? `  publication years in this page: ${years[0]} to ${years[years.length - 1]}` : "  no dated editions in this page",
-        publishers.length ? `  publishers: ${publishers.join(", ")}` : "",
-        "",
-        ...entries.map((e, i) => {
-            const bits = [
-                e.publish_date ?? "",
-                asList(e.publishers, 1) || "",
-                e.number_of_pages ? `${e.number_of_pages}pp` : "",
-                languageList(e.languages) || "",
-            ].filter(Boolean);
-            return `${i + 1}. ${e.title ?? "Untitled"} — ${bits.join(" | ") || "no details"}\n   edition: ${keyToString(e.key) || "?"}`;
-        }),
-        total > entries.length ? `\nRaise limit (max 50) to see more than ${entries.length} of ${total.toLocaleString()}.` : "",
-    ].filter((line) => line !== "").join("\n");
-}
-/** A subject as an entity: how many works it holds and which ones Open Library ranks first. */
-export async function subjectOverview(args) {
-    const slug = (args.subject ?? "").trim().toLowerCase().replace(/\s+/g, "_").replace(/^\/subjects\//, "");
-    if (!slug)
-        throw new OpenLibraryError("Give a subject, e.g. 'science fiction' or 'cooking'.");
-    const limit = Math.min(Math.max(Math.trunc(args.limit ?? 10), 1), 25);
-    const d = await req(`/subjects/${encodeURIComponent(slug)}.json?limit=${limit}`);
-    const works = Array.isArray(d.works) ? d.works : [];
-    if (typeof d.work_count !== "number" && !works.length)
-        throw new OpenLibraryError(`Open Library has no subject "${args.subject}".`);
-    return [
-        `Subject "${d.name ?? slug}" (${d.subject_type ?? "subject"})`,
-        `  works: ${typeof d.work_count === "number" ? d.work_count.toLocaleString() : "unknown"}`,
-        "",
-        works.length ? "Top works:" : "No works listed for this subject.",
-        ...works.map((w, i) => {
-            const authors = (w.authors ?? []).map((a) => a.name).filter(Boolean).slice(0, 2).join(", ");
-            return `${i + 1}. ${w.title ?? "Untitled"}${authors ? ` — ${authors}` : ""}${w.first_publish_year ? ` (${w.first_publish_year})` : ""}\n   work: ${keyToString(w.key) || "?"}`;
-        }),
-    ].join("\n");
-}
-// ---- muxG tools:
-const OL_API = "https://openlibrary.org";
-const OL_IA_API = "https://archive.org/metadata";
-const OL_FACET_CAP = 8;
-const OL_AVAILABILITY_CAP = 8;
-/** The volumes API returns these as either plain strings or {name} objects depending on the endpoint. */
-function olNames(list, cap) {
-    return (list ?? [])
-        .map((x) => (typeof x === "string" ? x : x.name ?? ""))
-        .filter(Boolean)
-        .slice(0, cap);
-}
-function olBound(value, min, max, fallback) {
-    const n = Number(value);
-    if (!Number.isFinite(n))
-        return fallback;
-    return Math.max(min, Math.min(Math.floor(n), max));
-}
-function olCleanIsbn(input) {
-    const raw = String(input ?? "").replace(/[^0-9Xx]/g, "").toUpperCase();
-    if (raw.length !== 10 && raw.length !== 13) {
-        throw new Error(`"${input}" is not an ISBN: after stripping dashes it must be 10 or 13 characters, and it is ${raw.length}.`);
-    }
-    return raw;
-}
-async function olJson(url, accept = "application/json") {
-    const res = await fetch(url, { headers: { "User-Agent": UA, Accept: accept }, signal: AbortSignal.timeout(30000) });
-    if (res.status === 404)
-        throw new Error(`Open Library has no record at ${url.replace(OL_API, "")}`);
-    if (!res.ok)
-        throw new Error(`Open Library returned ${res.status}`);
-    return (await res.json());
-}
-/** Whether a book can actually be read today, and through which library. */
-export async function readAvailability(args) {
-    const isbn = olCleanIsbn(args?.isbn ?? "");
-    const d = await olJson(`${OL_API}/api/volumes/full/isbn/${isbn}.json`);
-    const records = Object.values(d.records ?? {});
-    if (!records.length) {
-        return [`No Open Library edition is indexed for ISBN ${isbn}.`, "An unindexed ISBN is not proof the book was never published; it may be a newer edition Open Library has not ingested yet."].join("\n");
-    }
-    const lines = [`Read availability for ISBN ${isbn}`, `Open Library indexes ${records.length} edition(s) of this ISBN.`, ""];
-    let borrowable = 0;
-    let anyPreview = false;
-    for (const r of records.slice(0, OL_AVAILABILITY_CAP)) {
-        const det = r.details ?? {};
-        const data = r.data ?? {};
-        const preview = det.preview ?? data.ebooks?.[0]?.availability ?? "not reported";
-        const ocaid = det.ocaid ?? (det.preview_url ? det.preview_url.split("/details/")[1]?.split(/[/?#]/)[0] : undefined);
-        if (preview !== "no" && preview !== "not reported")
-            anyPreview = true;
-        if (preview === "borrowable" || preview === "available" || preview === "restricted")
-            borrowable += 1;
-        const formats = Object.keys(data.ebooks?.[0]?.formats ?? {});
-        lines.push(`${data.title ?? "untitled"}${data.authors?.length ? ` by ${data.authors.map((a) => a.name ?? "?").join(", ")}` : ""}`, `  Open Library key: ${data.key ?? "not reported"}`, `  Publishers: ${olNames(data.publishers, 3).join("; ") || "not reported"}${data.publish_date ? `, published ${data.publish_date}` : ""}`, `  Pages: ${data.number_of_pages ?? "not reported"} | subjects: ${olNames(data.subjects, 4).join("; ") || "not reported"}`, data.excerpts?.length ? `  First sentence: "${String(data.excerpts[0].text ?? "").trim().slice(0, 160)}"` : "", `  Preview: ${preview}${ocaid ? ` via the Internet Archive scan ${ocaid}` : " (no Internet Archive scan linked)"}`, formats.length ? `  Formats: ${formats.slice(0, 8).join(", ")}` : "", `  Cover: ${det.thumbnail_url ?? "not reported"}`, `  Record: ${r.recordURL ?? "not reported"}`);
-    }
-    lines.push("", anyPreview
-        ? "A restricted preview still means a borrowable copy exists somewhere, but the lending terms (who may borrow, for how long) are set by the holding library, not by Open Library."
-        : "No preview or borrowable copy is linked, so this ISBN is catalogue-only in Open Library. Try the work-level record: editions of a work can be borrowable even when one printing is not.", "The Internet Archive scan is the physical copy digitised by a library. Borrowing it requires a free Internet Archive account, which is a different account from anything Open Library holds.");
-    return lines.filter(Boolean).join("\n");
-}
-/** The Internet Archive's own record of the scanned copy behind a borrowable edition. */
-export async function scannedCopyReport(args) {
-    const ocaid = String(args?.ocaid ?? "").trim();
-    if (!ocaid)
-        throw new Error("ocaid is required, for example fantasticmrfoxpu00roal. Find it in read_availability.");
-    const d = await olJson(`${OL_IA_API}/${encodeURIComponent(ocaid)}`);
-    const m = d.metadata ?? {};
-    if (!Object.keys(m).length)
-        throw new Error(`The Internet Archive has no item called "${ocaid}".`);
-    const asArray = (v) => (Array.isArray(v) ? v.map(String) : v ? [String(v)] : []);
-    const files = d.files ?? [];
-    const searchable = files.filter((f) => /(_djvu\.txt|_text\.pdf|searchtext|_hocr_searchtext)/.test(f.name ?? ""));
-    const pdfs = files.filter((f) => (f.name ?? "").endsWith(".pdf"));
-    const encrypted = files.filter((f) => (f.name ?? "").includes("encrypted") || f.name?.endsWith("lcp.epub"));
-    const totalBytes = files.reduce((s, f) => s + (Number(f.size) || 0), 0);
-    const restricted = String(m["access-restricted-item"] ?? "false") === "true";
-    return [
-        `Internet Archive scan ${ocaid}: ${m.title ?? "untitled"}`,
-        `Creator: ${asArray(m.creator).join("; ") || "not reported"} | date: ${m.date ?? "not reported"} | media type: ${m.mediatype ?? "not reported"}`,
-        `Collections: ${asArray(m.collection).join(", ") || "not reported"}`,
-        `Access restricted: ${restricted ? "yes, this item is borrow-only" : "no"}`,
-        `Loans: ${m.loans__status ?? "not reported"}${m.loans__availability ? `, availability ${m.loans__availability}` : ""}`,
-        `Added to the archive: ${String(m.publicdate ?? "not reported").slice(0, 10)}${m.addeddate ? `, metadata last changed ${String(m.addeddate).slice(0, 10)}` : ""}`,
-        `Scanned by: ${m.scanner ?? "not reported"}${m.contributor ? `, contributor ${m.contributor}` : ""}`,
-        `Physical description: ${asArray(m.description)[0] ?? "not reported"}`,
-        `Subjects: ${asArray(m.subject).slice(0, 6).join("; ") || "not reported"}`,
-        "",
-        `Files in the item: ${files.length}, ${(totalBytes / 1048576).toFixed(1)} MB total`,
-        `  searchable text files: ${searchable.length}${searchable.length ? ` (${searchable.slice(0, 3).map((f) => f.name).join(", ")})` : ""}`,
-        `  PDF files: ${pdfs.length}${pdfs.length ? `, ${pdfs.slice(0, 2).map((f) => f.name).join(", ")}` : ""}`,
-        `  encrypted or lending-protected: ${encrypted.length}`,
-        `  served from ${d.server ?? "not reported"}${d.dir ?? ""}`,
-        "",
-        restricted
-            ? "Because this item is print-disabled, the full text is served encrypted to a logged-in borrower; the presence of a _djvu.txt file does not mean it is downloadable."
-            : "This item is not print-disabled, so its files are normally downloadable straight from the archive.",
-        "The archive's own metadata is a catalogue of the physical book, so the publication date here is the printing that was scanned, not necessarily the first edition.",
-    ].filter(Boolean).join("\n");
-}
-/** A real aggregation over a search: who publishes this, when it appears, in what language. */
-export async function searchFacets(args) {
-    const query = String(args.query ?? "").trim();
-    if (!query)
-        throw new Error("query is empty, for example \"time travel\" or \"sea monsters\".");
-    const limit = olBound(args.limit, 5, 100, 40);
-    const d = await olJson(`${OL_API}/search.json?q=${encodeURIComponent(query)}&limit=${limit}&fields=title,author_name,first_publish_year,publisher,language,subject,edition_count`);
-    const docs = d.docs ?? [];
-    if (!docs.length)
-        return [`No Open Library work matches "${query}".`].join("\n");
-    const toArray = (v) => (Array.isArray(v) ? v : v ? [v] : []);
-    const publishers = new Map();
-    const languages = new Map();
-    const subjects = new Map();
-    const authors = new Map();
-    const decades = new Map();
-    let years = 0;
-    let noYear = 0;
-    let editions = 0;
-    for (const doc of docs) {
-        for (const p of toArray(doc.publisher))
-            publishers.set(p, (publishers.get(p) ?? 0) + 1);
-        for (const l of toArray(doc.language))
-            languages.set(l, (languages.get(l) ?? 0) + 1);
-        for (const s of toArray(doc.subject))
-            subjects.set(s, (subjects.get(s) ?? 0) + 1);
-        for (const a of toArray(doc.author_name))
-            authors.set(a, (authors.get(a) ?? 0) + 1);
-        if (typeof doc.first_publish_year === "number" && doc.first_publish_year > 1400) {
-            const decade = Math.floor(doc.first_publish_year / 10) * 10;
-            decades.set(decade, (decades.get(decade) ?? 0) + 1);
-            years += 1;
-        }
-        else {
-            noYear += 1;
-        }
-        editions += doc.edition_count ?? 0;
-    }
-    const top = (m, n = OL_FACET_CAP) => [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => `  ${String(v).padStart(3)}  ${k.slice(0, 64)}`);
-    const spread = decades.size ? `${Math.min(...decades.keys())}s to ${Math.max(...decades.keys())}s` : "not reported";
-    const span = decades.size > 1 ? Math.max(...decades.keys()) - Math.min(...decades.keys()) : 0;
-    return [
-        `Open Library facets for "${query}"`,
-        `${(d.numFound ?? docs.length).toLocaleString("en-US")} work(s) match; aggregated over the first ${docs.length}`,
-        `First-publish years present for ${years} of them, ${noYear} with no year recorded, spanning ${spread} (${span} year(s) of decade buckets)`,
-        `Editions across those works: ${editions.toLocaleString("en-US")}`,
-        "",
-        "Publishers in the sample:",
-        ...top(publishers),
-        "",
-        "Languages in the sample:",
-        ...top(languages),
-        "",
-        "Most frequent subjects:",
-        ...top(subjects, 10),
-        "",
-        "Most frequent authors:",
-        ...top(authors, 6),
-        "",
-        "When these works first appeared, by decade:",
-        ...[...decades.entries()].sort((a, b) => a[0] - b[0]).map(([decade, n]) => `  ${String(n).padStart(3)}  ${decade}s`),
-        "",
-        "This is a sample, not the whole result set, and the sample is ordered by Open Library's own relevance, so these counts describe what it chose to show you. A publisher with many imprints shows up split across several rows.",
-    ].join("\n");
+export async function subject(a) {
+    const subject = clean(a.subject).toLowerCase().replace(/\s+/g, "_");
+    if (subject.length < 2)
+        throw new SourceError("subject is required");
+    const limit = clampLimit(a.limit, 10, 20);
+    const d = await getJson(`/subjects/${encodeURIComponent(subject)}.json?limit=${limit}`);
+    const works = Array.isArray(d?.works) ? d.works : [];
+    if (!works.length)
+        return `Open Library has no works for subject "${subject}".`;
+    return section(`${d?.work_count ?? works.length} work(s) in ${clean(d?.name) || subject}`, works.slice(0, limit).map((w, i) => `${i + 1}. ${clean(w.title)} · ${clean(w.edition_count)} edition(s)`));
 }

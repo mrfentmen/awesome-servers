@@ -20,10 +20,4 @@ export declare function info(): Promise<{
     count: number;
 }>;
 export declare function format(x: unknown): string;
-export declare function byCve(cve: string): Promise<Vuln[]>;
-export declare function byVendor(vendor: string): Promise<Vuln[]>;
-export declare function byProduct(product: string): Promise<Vuln[]>;
-export declare function ransomware(): Promise<Vuln[]>;
-export declare function vendors(): Promise<string[]>;
-export declare function yearly(year: string): Promise<Vuln[]>;
 export {};

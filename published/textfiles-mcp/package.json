@@ -1,12 +1,12 @@
 {
   "name": "textfiles-mcp",
-  "version": "1.0.3",
-  "description": "Use this MCP server to textfiles.com, the BBS era archive of zines, phreaking docs, and early internet culture",
+  "version": "1.0.1",
+  "description": "MCP server for textfiles.com, the BBS era archive of zines, phreaking docs, and early internet culture.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/textfiles-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/textfiles-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "textfiles-mcp": "./dist/index.js"
@@ -36,8 +36,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

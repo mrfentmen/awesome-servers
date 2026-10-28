@@ -1,12 +1,12 @@
 {
-  "name": "dadjoke-mcp",
-  "version": "1.0.5",
-  "description": "Keyless MCP server for icanhazdadjoke: random dad jokes, search, lookup by id.",
+  "name": "@mrfentmen/dadjoke-mcp",
+  "version": "1.0.1",
+  "description": "Dad jokes from icanhazdadjoke: a random one, keyword search or a lookup by joke id - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/dadjoke-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/awesome-mcps.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "dadjoke-mcp": "./dist/index.js"
@@ -17,15 +17,15 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
-    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+    "start": "node dist/index.js"
   },
   "keywords": [
     "mcp",
-    "dad-jokes",
     "jokes",
-    "api"
+    "dadjokes",
+    "fun",
+    "humour",
+    "keyless"
   ],
   "license": "MIT",
   "dependencies": {

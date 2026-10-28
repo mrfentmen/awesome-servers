@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { searchSpecies, speciesChildren, speciesClassification, speciesRecord, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -17,7 +18,7 @@ export function createServer() {
             return text(await searchSpecies(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("species_record", "Read one WoRMS record by AphiaID.", {
@@ -27,7 +28,7 @@ export function createServer() {
             return text(await speciesRecord(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("species_children", "Direct children of a taxon.", {
@@ -38,7 +39,7 @@ export function createServer() {
             return text(await speciesChildren(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("species_classification", "Full taxonomic classification from kingdom to species.", {
@@ -48,7 +49,7 @@ export function createServer() {
             return text(await speciesClassification(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

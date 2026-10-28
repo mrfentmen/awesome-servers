@@ -3,6 +3,7 @@ import { z } from "zod"
 import { monsterDetail, searchMonsters, searchSpells, spellDetail, SourceError } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof SourceError || e instanceof Error) return `Error: ${e.message}`
@@ -24,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchSpells(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -39,7 +40,7 @@ export function createServer(): McpServer {
       try {
         return text(await spellDetail(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -55,7 +56,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchMonsters(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -70,7 +71,7 @@ export function createServer(): McpServer {
       try {
         return text(await monsterDetail(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

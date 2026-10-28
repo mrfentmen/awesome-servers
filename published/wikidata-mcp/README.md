@@ -1,15 +1,14 @@
 # wikidata-mcp
 
-Wikidata entity search, lookup, and bounded SPARQL.
-
-A merged MCP server that consolidates duplicate single-purpose servers in this monorepo into one focused server.
+A compact interface to Wikidata for entity lookup and structured public knowledge exploration.
 
 ## Tools
 
-- `searchEntities` — Search Wikidata entities.
-- `getEntity` — Wikidata entity details.
-- `queryKnowledge` — Bounded read-only SPARQL query.
-- `search` — Search Wikidata entities.
+- `search_entities`: search labels and descriptions.
+- `get_entity`: fetch English labels, descriptions, claims, and sitelinks for a Q id.
+- `query_knowledge`: run a bounded, read-only SPARQL query.
+
+SPARQL input is capped at 8,000 characters and blocks write, federation, and dataset-management operations. Include a selective `LIMIT` in queries. Wikidata statements vary in completeness and should be checked against their references for important work.
 
 ## Run
 
@@ -18,14 +17,3 @@ npm install
 npm run build
 node dist/index.js
 ```
-
-## Source
-
-Public free APIs only. See `src/api.ts` for exact endpoints.
-
-## Licence — no paywall
-
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.

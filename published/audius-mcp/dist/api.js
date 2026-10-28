@@ -68,33 +68,3 @@ export function formatUser(u, index) {
     const lines = [head, meta, u.bio ? u.bio.slice(0, 200) : "", `https://audius.co/${u.handle}`].filter(Boolean);
     return lines.join("\n");
 }
-// ---- muxA tools:
-function bound(value, fallback, max) {
-    return Math.max(1, Math.min(Math.round(value ?? fallback), max));
-}
-function clean(value) {
-    return value != null ? String(value) : '';
-}
-export async function artistFollowers(args) {
-    const id = (args.user_id ?? '').trim();
-    if (!id)
-        return 'Provide an artist user id.';
-    const limit = bound(args.limit, 10, 50);
-    const rows = await getJson(`/users/${encodeURIComponent(id)}/followers?limit=${limit}`);
-    if (!rows?.length)
-        return `Audius returned no followers for user ${id}, or the id is not a current user.`;
-    return `Followers of Audius user ${id} (${rows.length} shown):\n` +
-        rows
-            .map((u, i) => {
-            const followers = Number(u.follower_count) || 0;
-            const tracks = Number(u.track_count) || 0;
-            return [
-                `${i + 1}. ${clean(u.name) || 'unnamed'}${u.is_verified ? ' ✓' : ''} (@${clean(u.handle) || 'no handle'})`,
-                `   ${followers ? `${followers.toLocaleString('en-US')} followers` : 'follower count not reported'}${tracks ? ` · ${tracks} tracks` : ''}`,
-                `   https://audius.co/${clean(u.handle)}`,
-            ]
-                .filter(Boolean)
-                .join('\n');
-        })
-            .join('\n');
-}

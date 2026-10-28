@@ -1,139 +1,96 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { z } from 'zod'
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
+import { z } from "zod"
+import { search_shows, show, schedule, cast, episode_by_number, SourceError } from "./api.js"
 
-import { m0_schedule, m0_search, m1_searchShows, m1_showEpisodes, m1_todaySchedule } from "./api.js"
-const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
-const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
-const error = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
-const errorMessage = error
+const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
+
+function errorMessage(e: unknown): string {
+  if (e instanceof SourceError || e instanceof Error) return `Error: ${e.message}`
+  return `Error: ${String(e)}`
+}
 
 export function createServer(): McpServer {
-  const server = new McpServer({ name: 'tvmaze-mcp', version: '1.0.0' })
-server.registerTool(
-    "search",
-    {
-      title: "Search",
-      description: "Search shows.",
-      inputSchema: z.object( { query: z.string().describe("Show name."), limit: z.number().describe("Max results.").optional() }),
-      annotations: READ_ONLY,
-    },
-    async (args) => {
-    try { return text(await m0_search(args)) } catch (e) { return textError(String(e)) }
-  }
-  )
-server.registerTool(
-    "schedule",
-    {
-      title: "Schedule",
-      description: "Schedule for a date and country.",
-      inputSchema: z.object( { country: z.string().describe("ISO country like US.").optional(), date: z.string().describe("YYYY-MM-DD.").optional(), limit: z.number().describe("Max results.").optional() }),
-      annotations: READ_ONLY,
-    },
-    async (args) => {
-    try { return text(await m0_schedule(args)) } catch (e) { return textError(String(e)) }
-  }
-  )
-server.registerTool(
+  const server = new McpServer({ name: "tvmaze-mcp", version: "1.0.0" })
+
+  server.tool(
     "search_shows",
+    "Search TV shows by name",
     {
-      title: "Search shows",
-      description: "Search for TV shows by name.",
-      inputSchema: z.object( { query: z.string().describe("Show name."), limit: z.number().describe("Max results.").optional() }),
-      annotations: READ_ONLY,
+      query: z.string().min(2).describe("Show name"),
+      limit: z.number().int().min(1).max(20).default(10).describe("Maximum shows")
     },
-    async (args) => {
-    try { return text(await m1_searchShows(args)) } catch (e) { return textError(String(e)) }
-  }
-  )
-server.registerTool(
-    "show_episodes",
-    {
-      title: "Show episodes",
-      description: "List episodes for a show by TVMaze ID.",
-      inputSchema: z.object( { showId: z.number().describe("TVMaze show ID.") }),
-      annotations: READ_ONLY,
-    },
-    async (args) => {
-    try { return text(await m1_showEpisodes(args)) } catch (e) { return textError(String(e)) }
-  }
-  )
-server.registerTool(
-    "today_schedule",
-    {
-      title: "Today schedule",
-      description: "List shows airing today.",
-      inputSchema: z.object( { country: z.string().describe("Two letter country code.").optional() }),
-      annotations: READ_ONLY,
-    },
-    async (args) => {
-    try { return text(await m1_todaySchedule(args)) } catch (e) { return textError(String(e)) }
-  }
-  )
-  server.registerTool(
-    "show_lookup",
-    {
-      title: "Show lookup",
-      description: "Resolve a show from an id another database holds - TheTVDB, IMDb or TVRage - into its TVMaze record, so you can skip a name search.",
-      inputSchema: z.object( { tvdb: z.string().describe("TheTVDB show id, e.g. 121361.").optional(), imdb: z.string().describe("IMDb show id, e.g. tt0944947.").optional(), tvrage: z.string().describe("TVRage show id.").optional() }),
-      annotations: READ_ONLY,
-    },
-    async (args) => {
-    // TODO: implement lookup locally (paywall removed)
-    try { return textError("Not yet implemented: lookup") } catch (e) { return textError(String(e)) }
-  }
-  )
-const serverName = "tvmaze-mcp"
-
-  server.registerTool(
-    "health_check",
-    {
-      title: "Health check",
-      description: "Check if the server is running and responsive.",
-      inputSchema: z.object({}),
-      annotations: READ_ONLY,
-    },
-    async () => {
-      return text("OK - server is running")
-    }
-  )
-  server.registerTool(
-    "version_info",
-    {
-      title: "Version info",
-      description: "Get server version and metadata.",
-      inputSchema: z.object({}),
-      annotations: READ_ONLY,
-    },
-    async () => {
-      return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2))
-    }
-  )
-  server.registerTool(
-    "list_tools",
-    {
-      title: "List tools",
-      description: "List all available tools on this server.",
-      inputSchema: z.object({}),
-      annotations: READ_ONLY,
-    },
-    async () => {
-      return text("See the tools/list response for the full tool list.")
-    }
-  )
-  server.registerTool(
-    "echo",
-    {
-      title: "Echo",
-      description: "Echo back the provided text.",
-      inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
-      annotations: READ_ONLY,
-    },
-    async (args) => {
-      return text(String(args?.text ?? ""))
+    async (a) => {
+      try {
+        return text(await search_shows(a))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
     }
   )
 
+  server.tool(
+    "show",
+    "Show details with its episode list",
+    {
+      showId: z.number().int().min(1).describe("TVmaze show id, e.g. 169")
+    },
+    async (a) => {
+      try {
+        return text(await show(a))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
+    }
+  )
+
+  server.tool(
+    "schedule",
+    "Shows airing on a given date in a country",
+    {
+      country: z.string().length(2).default("US").describe("Two-letter country code"),
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Date YYYY-MM-DD, defaults to today")
+    },
+    async (a) => {
+      try {
+        return text(await schedule(a))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
+    }
+  )
+
+  server.tool(
+    "cast",
+    "Cast of a show with character names",
+    {
+      showId: z.number().int().min(1).describe("TVmaze show id")
+    },
+    async (a) => {
+      try {
+        return text(await cast(a))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
+    }
+  )
+
+  server.tool(
+    "episode_by_number",
+    "One episode by season and episode number",
+    {
+      showId: z.number().int().min(1).describe("TVmaze show id"),
+      season: z.number().int().min(0).describe("Season number"),
+      number: z.number().int().min(0).describe("Episode number")
+    },
+    async (a) => {
+      try {
+        return text(await episode_by_number(a))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
+    }
+  )
 
   return server
 }

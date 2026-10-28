@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { companyConcept, companyProfile, fullTextSearch, tickerLookup, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -16,7 +17,7 @@ export function createServer() {
             return text(await companyProfile(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("company_concept", "Historical values of one XBRL tag (a financial concept) for a company.", {
@@ -28,7 +29,7 @@ export function createServer() {
             return text(await companyConcept(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("full_text_search", "Search filing text across EDGAR, newest first.", {
@@ -40,7 +41,7 @@ export function createServer() {
             return text(await fullTextSearch(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("ticker_lookup", "Convert a stock ticker to the company name and CIK.", {
@@ -50,7 +51,7 @@ export function createServer() {
             return text(await tickerLookup(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

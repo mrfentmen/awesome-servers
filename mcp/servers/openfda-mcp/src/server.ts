@@ -3,6 +3,7 @@ import { z } from "zod"
 import { adverseEvents, drugLabels, labelSections, ndcLookup, OpenFdaError, recalls } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof OpenFdaError || e instanceof Error) return `Error: ${e.message}`
@@ -23,7 +24,7 @@ export function createServer(): McpServer {
       try {
         return text(await drugLabels(name, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -36,7 +37,7 @@ export function createServer(): McpServer {
       try {
         return text(await labelSections(name))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -52,7 +53,7 @@ export function createServer(): McpServer {
       try {
         return text(await adverseEvents(drug, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -68,7 +69,7 @@ export function createServer(): McpServer {
       try {
         return text(await recalls("drug", term, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -84,7 +85,7 @@ export function createServer(): McpServer {
       try {
         return text(await recalls("device", term, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -100,7 +101,7 @@ export function createServer(): McpServer {
       try {
         return text(await recalls("food", term, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -116,7 +117,7 @@ export function createServer(): McpServer {
       try {
         return text(await ndcLookup(name, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

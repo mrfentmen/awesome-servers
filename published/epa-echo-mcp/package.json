@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/epa-echo-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "EPA ECHO enforcement and compliance: search regulated facilities by state or city, read enforcement totals, and pull a facility site record from Envirofacts - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/epa-echo-mcp",

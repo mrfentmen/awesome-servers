@@ -1,6 +1,6 @@
 {
   "name": "gw2-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Guild Wars 2, items, trading post prices, achievements, and living world data.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/gw2-mcp",

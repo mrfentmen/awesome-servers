@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/wordpress-mcp",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "WordPress plugin and theme search from wordpress.org.",
   "type": "module",
   "main": "dist/index.js",
@@ -20,5 +20,9 @@
   "engines": {
     "node": ">=20"
   },
-  "mcpName": "io.github.mrfentmen/wordpress-mcp"
+  "mcpName": "io.github.mrfentmen/wordpress-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  }
 }

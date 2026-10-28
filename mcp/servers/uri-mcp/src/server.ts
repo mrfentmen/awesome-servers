@@ -3,6 +3,7 @@ import { z } from "zod"
 import { base64Decode, base64Encode, decodeUrl, encodeUrl, parseUrl, SourceError } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof SourceError || e instanceof Error) return `Error: ${e.message}`
@@ -22,7 +23,7 @@ export function createServer(): McpServer {
       try {
         return text(await parseUrl(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -38,7 +39,7 @@ export function createServer(): McpServer {
       try {
         return text(await encodeUrl(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -53,7 +54,7 @@ export function createServer(): McpServer {
       try {
         return text(await decodeUrl(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -69,7 +70,7 @@ export function createServer(): McpServer {
       try {
         return text(await base64Encode(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -85,7 +86,7 @@ export function createServer(): McpServer {
       try {
         return text(await base64Decode(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

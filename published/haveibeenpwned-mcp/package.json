@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/haveibeenpwned-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "The Have I Been Pwned breach catalogue: every known data breach, one breach in detail and the newest addition - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/haveibeenpwned-mcp",

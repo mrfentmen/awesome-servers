@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -39,7 +40,7 @@ export function createServer(): McpServer {
             items.map((it, i) => formatItem(it, i)).join("\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -60,7 +61,7 @@ export function createServer(): McpServer {
         if (!cleaned.trim()) return text(`Empty file at gopher://${host}/${selector}`)
         return text(cleaned.slice(0, maxChars))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -86,7 +87,7 @@ export function createServer(): McpServer {
             items.slice(0, 40).map((it, i) => formatItem(it, i)).join("\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

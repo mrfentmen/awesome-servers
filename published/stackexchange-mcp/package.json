@@ -1,24 +1,32 @@
 {
-  "version": "1.1.0",
+  "name": "@mrfentmen/stackexchange-mcp",
+  "version": "1.0.1",
+  "description": "Stack Exchange: search questions, tags, answers and user profiles across 180+ sites - keyless.",
   "type": "module",
+  "mcpName": "io.github.mrfentmen/stackexchange-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/stackexchange-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "stackexchange-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
-    "dist",
-    "server.json",
-    "README.md"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "dev": "npm run build && node dist/index.js"
+    "start": "node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "stackoverflow",
+    "stackexchange",
+    "q-and-a",
+    "developer",
+    "keyless"
+  ],
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -28,16 +36,6 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
   },
-  "name": "stackexchange-mcp",
-  "description": "Search questions and read answers across Stack Exchange sites. No key required.",
-  "mcpName": "io.github.mrfentmen/stackexchange-mcp",
-  "keywords": [
-    "mcp",
-    "stackoverflow",
-    "qna",
-    "questions",
-    "answers"
-  ],
   "engines": {
     "node": ">=20"
   }

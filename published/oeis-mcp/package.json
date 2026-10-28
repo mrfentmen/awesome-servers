@@ -1,12 +1,12 @@
 {
   "name": "oeis-mcp",
-  "version": "1.0.4",
+  "version": "1.0.1",
   "description": "Use this MCP server to the OEIS, the encyclopedia of integer sequences. Look up any sequence, find its name, formula, and neighbors",
   "type": "module",
   "mcpName": "io.github.mrfentmen/oeis-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/oeis-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "oeis-mcp": "./dist/index.js"
@@ -34,8 +34,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

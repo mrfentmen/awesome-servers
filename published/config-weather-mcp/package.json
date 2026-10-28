@@ -1,12 +1,12 @@
 {
   "name": "config-weather-mcp",
-  "version": "1.0.5",
+  "version": "1.0.1",
   "description": "Measure local configuration complexity and environment contract pressure without returning values, keys, paths, or source.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/config-weather-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/config-weather-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "config-weather-mcp": "./dist/index.js"
@@ -35,8 +35,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

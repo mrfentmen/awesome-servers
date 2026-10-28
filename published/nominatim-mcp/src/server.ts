@@ -1,139 +1,65 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { z } from 'zod'
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
+import { z } from "zod"
+import { lookupOsmIds, reverseGeocode, searchPlaces, SourceError } from "./api.js"
 
-import { m0_reverse, m0_search, m1_geocode, m1_reverse } from "./api.js"
-const text = (value: string) => ({ content: [{ type: 'text' as const, text: value }] })
-const textError = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true as const })
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true } as const
-const error = (e: unknown) => `Error: ${e instanceof Error ? e.message : String(e)}`
-const errorMessage = error
+const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
+
+function errorMessage(e: unknown): string {
+  if (e instanceof SourceError || e instanceof Error) return `Error: ${e.message}`
+  return `Error: ${String(e)}`
+}
 
 export function createServer(): McpServer {
-  const server = new McpServer({ name: 'nominatim-mcp', version: '1.0.0' })
-server.registerTool(
-    "search",
-    {
-      title: "Search",
-      description: "Search places by name.",
-      inputSchema: z.object( { query: z.string().describe("Place name."), limit: z.number().describe("Max results.").optional() }),
-      annotations: READ_ONLY,
-    },
-    async (args) => {
-    try { return text(await m0_search(args)) } catch (e) { return textError(String(e)) }
-  }
-  )
-server.registerTool(
-    "reverse",
-    {
-      title: "Reverse",
-      description: "Address for coordinates.",
-      inputSchema: z.object( { lat: z.number().describe("Latitude."), lon: z.number().describe("Longitude.") }),
-      annotations: READ_ONLY,
-    },
-    async (args) => {
-    try { return text(await m0_reverse(args)) } catch (e) { return textError(String(e)) }
-  }
-  )
-server.registerTool(
-    "geocode",
-    {
-      title: "Geocode",
-      description: "Find coordinates for a place name or address.",
-      inputSchema: z.object( { query: z.string().describe("Place or address."), limit: z.number().describe("Max results.").optional() }),
-      annotations: READ_ONLY,
-    },
-    async (args) => {
-    try { return text(await m1_geocode(args)) } catch (e) { return textError(String(e)) }
-  }
-  )
-  server.registerTool(
-    "lookup_osm",
-    {
-      title: "Lookup OSM ids",
-      description: "Resolve a batch of OpenStreetMap ids at once, with namedetails and extra tags attached, using the ids a search or reverse reports.",
-      inputSchema: z.object( { ids: z.string().describe("OSM ids like W5013364, comma separated, max 50."), extratags: z.boolean().describe("Include extra tags (default true).").optional(), namedetails: z.boolean().describe("Include name details (default true).").optional() }),
-      annotations: READ_ONLY,
-    },
-    async (args) => {
-    // TODO: implement osm locally (paywall removed)
-    try { return textError("Not yet implemented: osm") } catch (e) { return textError(String(e)) }
-  }
-  )
-const serverName = "nominatim-mcp"
+  const server = new McpServer({ name: "nominatim-mcp", version: "1.0.1" })
 
-  server.registerTool(
-    "health_check",
+  server.tool(
+    "search_places",
+    "Find places by free-text name or address.",
     {
-      title: "Health check",
-      description: "Check if the server is running and responsive.",
-      inputSchema: z.object({}),
-      annotations: READ_ONLY,
+      query: z.string().min(2).describe("What to look for, e.g. eiffel tower or Berlin"),
+      limit: z.number().int().min(1).max(10).default(5).describe("Results to return"),
+      countryCode: z.string().length(2).optional().describe("Optional two-letter country filter")
     },
-    async () => {
-      return text("OK - server is running")
-    }
-  )
-  server.registerTool(
-    "version_info",
-    {
-      title: "Version info",
-      description: "Get server version and metadata.",
-      inputSchema: z.object({}),
-      annotations: READ_ONLY,
-    },
-    async () => {
-      return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2))
-    }
-  )
-  server.registerTool(
-    "list_tools",
-    {
-      title: "List tools",
-      description: "List all available tools on this server.",
-      inputSchema: z.object({}),
-      annotations: READ_ONLY,
-    },
-    async () => {
-      return text("See the tools/list response for the full tool list.")
-    }
-  )
-  server.registerTool(
-    "echo",
-    {
-      title: "Echo",
-      description: "Echo back the provided text.",
-      inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
-      annotations: READ_ONLY,
-    },
-    async (args) => {
-      return text(String(args?.text ?? ""))
-    }
-  )
-  server.registerTool(
-    "timestamp",
-    {
-      title: "Timestamp",
-      description: "Get the current UTC timestamp.",
-      inputSchema: z.object({}),
-      annotations: READ_ONLY,
-    },
-    async () => {
-      return text(new Date().toISOString())
-    }
-  )
-  server.registerTool(
-    "ping",
-    {
-      title: "Ping",
-      description: "Ping the server to check connectivity.",
-      inputSchema: z.object({}),
-      annotations: READ_ONLY,
-    },
-    async () => {
-      return text("pong")
+    async (a) => {
+      try {
+        return text(await searchPlaces(a))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
     }
   )
 
+  server.tool(
+    "reverse_geocode",
+    "Turn coordinates into the address OpenStreetMap holds there.",
+    {
+      latitude: z.number().min(-90).max(90).describe("Latitude"),
+      longitude: z.number().min(-180).max(180).describe("Longitude")
+    },
+    async (a) => {
+      try {
+        return text(await reverseGeocode(a))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
+    }
+  )
+
+  server.tool(
+    "lookup_osm_ids",
+    "Resolve OpenStreetMap element ids (N/W/R) to full details.",
+    {
+      osmIds: z.array(z.string().regex(/^[NWR]\d+$/)).min(1).max(5).describe("Ids like W98616190 (N node, W way, R relation)")
+    },
+    async (a) => {
+      try {
+        return text(await lookupOsmIds(a))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
+    }
+  )
 
   return server
 }

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/hash-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Hash and HMAC text locally with MD5, SHA-1, SHA-256, SHA-384 and SHA-512, in hex and base64 - no network.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/hash-mcp",

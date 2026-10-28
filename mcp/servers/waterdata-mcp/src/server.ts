@@ -12,6 +12,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof WaterError || e instanceof Error) return `Error: ${e.message}`
@@ -31,7 +32,7 @@ export function createServer(): McpServer {
         if (!rows.length) return text(`No USGS site found for ${site}.`)
         return text(rows.slice(0, 10).map(describeSite).join("\n"))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -48,7 +49,7 @@ export function createServer(): McpServer {
         const series = await instantaneous(site, parameter, 1)
         return text(seriesLines(series, 3))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -65,7 +66,7 @@ export function createServer(): McpServer {
       try {
         return text(seriesLines(await instantaneous(site, parameter, days), 40))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -82,7 +83,7 @@ export function createServer(): McpServer {
       try {
         return text(seriesLines(await daily(site, parameter, days), 60))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -100,7 +101,7 @@ export function createServer(): McpServer {
         if (!rows.length) return text(`No live stream gauges found for ${state}.`)
         return text(rows.map(describeSite).join("\n"))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

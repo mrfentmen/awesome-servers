@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/truth-table-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Evaluate boolean logic expressions and build full truth tables - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/truth-table-mcp",

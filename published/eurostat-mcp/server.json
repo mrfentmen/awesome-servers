@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/eurostat-mcp",
-  "description": "European statistics datasets from Eurostat. No key required.",
+  "description": "Eurostat statistics: pull any dataset by code with dimension filters, and inspect the dimensions a",
   "repository": {
-    "url": "https://github.com/mrfentmen/eurostat-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
-  "version": "1.1.0",
+  "version": "1.0.2",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "eurostat-mcp",
-      "version": "1.1.0",
+      "identifier": "@mrfentmen/eurostat-mcp",
+      "version": "1.0.2",
       "transport": {
         "type": "stdio"
       }

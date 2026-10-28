@@ -1,6 +1,6 @@
 {
   "name": "test-shape-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Audit local test structure using aggregate assertions without returning test names, paths, or source text.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/test-shape-mcp",

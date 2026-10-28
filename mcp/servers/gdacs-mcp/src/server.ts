@@ -3,6 +3,7 @@ import { z } from "zod"
 import { ALERT_LEVELS, GdacsError, TYPE_CODES, activeByType, alertSummary, currentEvents, eventDetail, typeCatalog } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof GdacsError || e instanceof Error) return `Error: ${e.message}`
@@ -26,7 +27,7 @@ export function createServer(): McpServer {
       try {
         return text(await currentEvents({ types, levels, limit }))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -42,7 +43,7 @@ export function createServer(): McpServer {
       try {
         return text(await activeByType(type, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -55,7 +56,7 @@ export function createServer(): McpServer {
       try {
         return text(await alertSummary())
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -71,7 +72,7 @@ export function createServer(): McpServer {
       try {
         return text(await eventDetail(eventId, eventType))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -80,7 +81,7 @@ export function createServer(): McpServer {
     try {
       return text(await typeCatalog())
     } catch (e) {
-      return text(errorMessage(e))
+      return fail(errorMessage(e))
     }
   })
 

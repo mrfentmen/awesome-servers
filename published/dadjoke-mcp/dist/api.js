@@ -1,31 +1,93 @@
 /**
- * icanhazdadjoke API client, keyless.
- * Docs: https://icanhazdadjoke.com/api
+ * icanhazdadjoke — keyless public API client.
  */
 const BASE = "https://icanhazdadjoke.com";
-export class DadJokeError extends Error {
+const SOURCE = "icanhazdadjoke";
+export class SourceError extends Error {
 }
-async function getJson(path) {
-    const res = await fetch(`${BASE}${path}`, {
-        headers: { "User-Agent": "dadjoke-mcp/1.0", Accept: "application/json" },
-        signal: AbortSignal.timeout(15000),
-    });
-    if (res.status === 404)
-        throw new DadJokeError("No such joke.");
-    if (!res.ok)
-        throw new DadJokeError(`Dad joke error ${res.status}`);
-    return (await res.json());
+async function request(path, accept = "application/json", timeoutMs = 25000) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+        const res = await fetch(path.startsWith("http") ? path : BASE + path, {
+            signal: ctrl.signal,
+            headers: { "user-agent": "dadjoke-mcp", accept },
+        });
+        if (!res.ok)
+            throw new SourceError(`${SOURCE} responded ${res.status}`);
+        return res;
+    }
+    catch (e) {
+        if (e instanceof SourceError)
+            throw e;
+        if (e.name === "AbortError")
+            throw new SourceError(`${SOURCE} request timed out`);
+        throw new SourceError(`${SOURCE} request failed: ${e.message}`);
+    }
+    finally {
+        clearTimeout(timer);
+    }
 }
-export async function randomJoke() {
-    const j = await getJson("/");
-    return { id: String(j.id), joke: String(j.joke) };
+export async function getJson(path) {
+    const res = await request(path);
+    const body = await res.text();
+    try {
+        return JSON.parse(body);
+    }
+    catch {
+        throw new SourceError(`${SOURCE} returned malformed JSON`);
+    }
 }
-export async function searchJokes(term, limit = 5) {
-    const data = await getJson(`/search?term=${encodeURIComponent(term)}&limit=${Math.min(Math.max(limit, 1), 30)}`);
-    const rows = Array.isArray(data.results) ? data.results : [];
-    return rows.slice(0, limit).map((r) => ({ id: String(r.id), joke: String(r.joke) }));
+export async function getText(path, accept = "text/plain") {
+    const res = await request(path, accept);
+    return (await res.text()).trim();
 }
-export async function getJoke(id) {
-    const j = await getJson(`/j/${encodeURIComponent(id.trim())}`);
-    return { id: String(j.id), joke: String(j.joke) };
+export function clampLimit(n, fallback, max) {
+    const v = n ?? fallback;
+    if (!Number.isInteger(v) || v < 1 || v > max)
+        throw new SourceError(`limit must be between 1 and ${max}`);
+    return v;
+}
+export function clean(s) {
+    return String(s ?? "").replace(/\s+/g, " ").trim();
+}
+export function bullet(label, value) {
+    const v = value === undefined || value === null || value === "" ? "" : String(value);
+    return v ? `${label}: ${v}` : "";
+}
+export function section(title, rows) {
+    return [title, ...rows.filter(Boolean)].join("\n");
+}
+export async function randomDadjoke() {
+    const d = await getJson("/");
+    if (!d?.joke)
+        throw new SourceError("icanhazdadjoke returned no joke");
+    return `${clean(d.joke)}\n  (id ${clean(d.id)} · icanhazdadjoke.com)`;
+}
+export async function searchDadjokes(a) {
+    const term = clean(a.term);
+    if (term.length < 2)
+        throw new SourceError("term must be at least 2 characters");
+    const limit = a.limit ?? 5;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 20)
+        throw new SourceError("limit must be between 1 and 20");
+    const d = await getJson(`/search?term=${encodeURIComponent(term)}&limit=${limit}`);
+    const rows = Array.isArray(d?.results) ? d.results : [];
+    if (!rows.length)
+        return `icanhazdadjoke has no joke matching "${term}".`;
+    return [
+        `${d.total_jokes ?? rows.length} joke(s) match "${term}", showing ${rows.length}:`,
+        "",
+        ...rows.map((j, i) => `${i + 1}. ${clean(j.joke)} (id ${clean(j.id)})`),
+        d.total_pages > 1 ? `\nFirst page of ${d.total_pages}; raise limit for more.` : "",
+    ].filter(Boolean).join("\n");
+}
+export async function jokeById(a) {
+    const id = clean(a.jokeId);
+    if (!/^[A-Za-z0-9]{3,20}$/.test(id))
+        throw new SourceError("jokeId must be letters and digits");
+    const d = await getJson(`/j/${encodeURIComponent(id)}`);
+    if (!d?.joke)
+        throw new SourceError(`icanhazdadjoke has no joke ${id}`);
+    return `${clean(d.joke)}\n  (id ${clean(d.id)} · ${clean(d.status) === "200" ? "found" : "unknown status"})`;
 }

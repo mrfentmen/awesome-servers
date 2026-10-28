@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { convertBase, formatNumber, fromRoman, statistics, toRoman, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -17,7 +18,7 @@ export function createServer() {
             return text(await statistics(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("to_roman", "Convert a whole number to a Roman numeral.", {
@@ -27,7 +28,7 @@ export function createServer() {
             return text(await toRoman(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("from_roman", "Convert a Roman numeral to a number, with validation.", {
@@ -37,7 +38,7 @@ export function createServer() {
             return text(await fromRoman(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("convert_base", "Convert a whole number between bases 2 and 36.", {
@@ -49,7 +50,7 @@ export function createServer() {
             return text(await convertBase(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("format_number", "Format a number for a locale: decimal, percent, currency or compact.", {
@@ -63,7 +64,7 @@ export function createServer() {
             return text(await formatNumber(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

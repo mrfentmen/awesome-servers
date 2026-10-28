@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/quickgo-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Gene Ontology terms, definitions, hierarchy and protein annotations via EBI QuickGO - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/quickgo-mcp",

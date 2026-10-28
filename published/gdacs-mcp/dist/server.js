@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { ALERT_LEVELS, GdacsError, TYPE_CODES, activeByType, alertSummary, currentEvents, eventDetail, typeCatalog } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof GdacsError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -19,7 +20,7 @@ export function createServer() {
             return text(await currentEvents({ types, levels, limit }));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("alerts_by_type", "Every current event of one hazard type, e.g. only wildfires.", {
@@ -30,7 +31,7 @@ export function createServer() {
             return text(await activeByType(type, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("alert_summary", "How many events GDACS is tracking right now, by level and hazard, plus the most severe one.", {}, async () => {
@@ -38,7 +39,7 @@ export function createServer() {
             return text(await alertSummary());
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("event_detail", "One GDACS event with severity numbers and the official report link.", {
@@ -49,7 +50,7 @@ export function createServer() {
             return text(await eventDetail(eventId, eventType));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("hazard_types", "The hazard types and alert levels GDACS uses.", {}, async () => {
@@ -57,7 +58,7 @@ export function createServer() {
             return text(await typeCatalog());
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

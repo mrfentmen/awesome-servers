@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/semver-mcp",
-  "description": "Parse, compare, and sort semantic version numbers locally. No network and no key.",
+  "description": "Semantic version toolkit: parse, compare, sort and range-check versions (npm-style ^ ~ and hyphen",
   "repository": {
-    "url": "https://github.com/mrfentmen/semver-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.2",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "semver-mcp",
-      "version": "1.0.0",
+      "identifier": "@mrfentmen/semver-mcp",
+      "version": "1.0.2",
       "transport": {
         "type": "stdio"
       }

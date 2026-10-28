@@ -6,12 +6,12 @@
     "url": "https://github.com/mrfentmen/qr-code-mcp",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.3",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "qr-code-mcp",
-      "version": "1.0.0",
+      "version": "1.0.3",
       "transport": {
         "type": "stdio"
       }

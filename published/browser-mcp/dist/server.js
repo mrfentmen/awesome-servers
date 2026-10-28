@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { openPage, screenshotPage, pageLinks, pageHeadings, runScript } from "./api.js";
+import { premiumTool } from "./gateway.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -17,7 +18,7 @@ export function createServer() {
             return text(await openPage(args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("screenshot_page", {
@@ -30,7 +31,7 @@ export function createServer() {
             return text(await screenshotPage(args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("page_links", {
@@ -43,7 +44,7 @@ export function createServer() {
             return text(await pageLinks(args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("page_headings", {
@@ -56,7 +57,7 @@ export function createServer() {
             return text(await pageHeadings(args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("run_script", {
@@ -69,7 +70,7 @@ export function createServer() {
             return text(await runScript(args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("dns_records", {
@@ -78,46 +79,15 @@ export function createServer() {
         inputSchema: z.object({ domain: z.string().describe("DNS name; defaults to example.com.").optional(), type: z.string().describe("A, AAAA, MX, TXT, NS, CNAME or CAA; defaults to A.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement records locally (paywall removed)
+        // ---- paywall: dns_records ----
+        // The body runs on the gateway, behind the licence gate.
+        // ---- paywall: end ----
         try {
-            return textError("Not yet implemented: records");
+            return text(await premiumTool("mcp_browser_dns_records", args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
-    });
-    const serverName = "browser-mcp";
-    server.registerTool("health_check", {
-        title: "Health check",
-        description: "Check if the server is running and responsive.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("OK - server is running");
-    });
-    server.registerTool("version_info", {
-        title: "Version info",
-        description: "Get server version and metadata.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
-    });
-    server.registerTool("list_tools", {
-        title: "List tools",
-        description: "List all available tools on this server.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("See the tools/list response for the full tool list.");
-    });
-    server.registerTool("echo", {
-        title: "Echo",
-        description: "Echo back the provided text.",
-        inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        return text(String(args?.text ?? ""));
     });
     return server;
 }

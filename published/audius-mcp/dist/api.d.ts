@@ -31,18 +31,3 @@ export declare function getUserTracks(userId: string, limit?: number): Promise<A
 export declare function fmtDur(sec?: number): string;
 export declare function formatTrack(t: AudiusTrack, index?: number): string;
 export declare function formatUser(u: AudiusUser, index?: number): string;
-export interface PlaylistArgs {
-    limit?: number;
-}
-export interface CommentArgs {
-    track_id: string;
-    limit?: number;
-}
-export interface FollowerArgs {
-    user_id: string;
-    limit?: number;
-}
-export declare function artistFollowers(args: FollowerArgs): Promise<string>;
-export interface TrackArgs {
-    track_id: string;
-}

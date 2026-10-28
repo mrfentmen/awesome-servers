@@ -1,7 +1,7 @@
 {
-  "name": "brewery-mcp",
-  "version": "1.1.2",
-  "description": "Open Brewery DB: search breweries, details, random. Keyless.",
+  "name": "@mrfentmen/brewery-mcp",
+  "version": "1.0.1",
+  "description": "Brewery data from Open Brewery DB - name search, filter by city, state or type, and full brewery detail, keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/brewery-mcp",
   "repository": {
@@ -17,16 +17,16 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
-    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+    "start": "node dist/index.js"
   },
   "keywords": [
     "mcp",
-    "beer",
     "breweries",
-    "craft-beer",
-    "travel"
+    "beer",
+    "places",
+    "search",
+    "data",
+    "keyless"
   ],
   "license": "MIT",
   "dependencies": {

@@ -1,6 +1,6 @@
 {
   "name": "iss-tracker-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Live ISS position, ground track, daylight forecast, TLE and overhead checks - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/iss-tracker-mcp",

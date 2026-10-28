@@ -1,6 +1,6 @@
 {
   "name": "placeholder-images-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Placeholder image services (DummyImage, Picsum).",
   "type": "module",
   "main": "dist/index.js",

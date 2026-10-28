@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/fruityvice-mcp",
-  "description": "Fruit nutrition data from Fruityvice. No key required.",
+  "description": "Fruit nutrition data: calories, sugar, fat and carbs per fruit, with lookup by name and nutrient",
   "repository": {
-    "url": "https://github.com/mrfentmen/fruityvice-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.2",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "fruityvice-mcp",
-      "version": "1.0.0",
+      "identifier": "@mrfentmen/fruityvice-mcp",
+      "version": "1.0.2",
       "transport": {
         "type": "stdio"
       }

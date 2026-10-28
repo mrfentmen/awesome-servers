@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/celestrak-mcp",
-  "description": "Fetch satellite TLE orbital elements and catalog data from CelesTrak. No key required.",
+  "description": "Satellite orbits and catalogue data: TLEs, groups and object lookups.",
   "repository": {
-    "url": "https://github.com/mrfentmen/celestrak-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
-  "version": "1.0.1",
+  "version": "1.0.0",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "celestrak-mcp",
-      "version": "1.0.1",
+      "identifier": "@mrfentmen/celestrak-mcp",
+      "version": "1.0.0",
       "transport": {
         "type": "stdio"
       }

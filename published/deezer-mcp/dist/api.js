@@ -1,70 +1,133 @@
-const BASE = 'https://api.deezer.com/search';
-export async function search(args) {
-    const q = (args.query ?? '').trim();
-    if (!q)
-        return 'Provide a search query.';
-    const limit = Math.max(1, Math.min(args.limit ?? 10, 30));
-    const url = `${BASE}?q=${encodeURIComponent(q)}&limit=${limit}`;
-    const res = await fetch(url, {
-        headers: { 'User-Agent': 'mrfentmen-deezer-mcp/1.0', Accept: 'application/json' },
-        signal: AbortSignal.timeout(20000),
+/**
+ * Deezer — keyless public API client.
+ */
+const BASE = "https://api.deezer.com";
+const SOURCE = "Deezer";
+const UA = "deezer-mcp";
+export class SourceError extends Error {
+}
+async function request(path, init, timeoutMs = 25000) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+        const res = await fetch(path.startsWith("http") ? path : BASE + path, {
+            ...init,
+            signal: ctrl.signal,
+            headers: {
+                "user-agent": UA,
+                accept: "application/json",
+                ...init?.headers,
+            },
+        });
+        if (!res.ok)
+            throw new SourceError(`${SOURCE} responded ${res.status}`);
+        return res;
+    }
+    catch (e) {
+        if (e instanceof SourceError)
+            throw e;
+        if (e.name === "AbortError")
+            throw new SourceError(`${SOURCE} request timed out`);
+        throw new SourceError(`${SOURCE} request failed: ${e.message}`);
+    }
+    finally {
+        clearTimeout(timer);
+    }
+}
+export async function getJson(path, init) {
+    const res = await request(path, init);
+    const body = await res.text();
+    try {
+        return JSON.parse(body);
+    }
+    catch {
+        throw new SourceError(`${SOURCE} returned malformed JSON`);
+    }
+}
+export function clampLimit(n, fallback, max) {
+    const v = n ?? fallback;
+    if (!Number.isInteger(v) || v < 1 || v > max)
+        throw new SourceError(`limit must be between 1 and ${max}`);
+    return v;
+}
+export function clean(s) {
+    return String(s ?? "").replace(/\s+/g, " ").trim();
+}
+export function bullet(label, value) {
+    const v = value === undefined || value === null || value === "" ? "" : String(value);
+    return v ? `${label}: ${v}` : "";
+}
+export function section(title, rows) {
+    return [title, ...rows.filter(Boolean)].join("\n");
+}
+export async function search(a) {
+    const query = clean(a.query);
+    if (query.length < 2)
+        throw new SourceError("query must be at least 2 characters");
+    const limit = clampLimit(a.limit, 10, 25);
+    const d = await getJson(`/search/${a.type}?q=${encodeURIComponent(query)}&limit=${limit}`);
+    const list = Array.isArray(d?.data) ? d.data : [];
+    if (!list.length)
+        return `Deezer has no ${a.type} matching "${query}".`;
+    const rows = list.map((x, i) => {
+        if (a.type === "artist")
+            return `${i + 1}. ${clean(x.name)} · ${clean(x.nb_album)} albums · ${clean(x.nb_fan)} fans`;
+        if (a.type === "album")
+            return `${i + 1}. ${clean(x.title)} — ${clean(x.artist?.name)} · ${clean(x.nb_tracks)} tracks`;
+        return `${i + 1}. ${clean(x.title)} — ${clean(x.artist?.name)} · ${clean(x.album?.title)}`;
     });
-    if (!res.ok)
-        throw new Error(`Deezer returned ${res.status}`);
-    const data = (await res.json());
-    const tracks = (data.data ?? []).slice(0, limit);
-    if (!tracks.length)
-        return `No Deezer tracks for "${q}".`;
-    return `Deezer tracks for "${q}" (${data.total ?? tracks.length} total, ${tracks.length} shown):\n` +
-        tracks
-            .map((t, i) => {
-            const dur = t.duration ? `${Math.floor(t.duration / 60)}:${String(t.duration % 60).padStart(2, '0')}` : '';
-            return `${i + 1}. ${t.title ?? 'untitled'} | ${t.artist?.name ?? ''} | ${t.album?.title ?? ''} | ${dur}`;
-        })
-            .join('\n');
+    return section(`${d?.total ?? list.length} ${a.type}(s) match "${query}"`, rows);
 }
-// ---- muxA tools:
-const DEEZER = "https://api.deezer.com";
-function clamp(value, fallback, max) {
-    return Math.max(1, Math.min(Math.round(value ?? fallback), max));
+export async function artist(a) {
+    if (!Number.isInteger(a.artistId) || a.artistId < 1)
+        throw new SourceError("artistId must be a positive integer");
+    const d = await getJson(`/artist/${a.artistId}`);
+    if (!d?.id)
+        throw new SourceError(`Deezer has no artist ${a.artistId}`);
+    return section(clean(d.name), [bullet("Albums", d.nb_album), bullet("Fans", d.nb_fan), bullet("Link", d.link)]);
 }
-async function deezerGet(path) {
-    const res = await fetch(`${DEEZER}${path}`, {
-        headers: { "User-Agent": "mrfentmen-deezer-mcp/1.0", Accept: "application/json" },
-        signal: AbortSignal.timeout(20000),
-    });
-    if (!res.ok)
-        throw new Error(`Deezer returned ${res.status}`);
-    const d = (await res.json());
-    if (d?.error)
-        throw new Error(`Deezer: ${String(d.error.message ?? d.error.type ?? "error")}`);
-    return d;
+export async function album(a) {
+    if (!Number.isInteger(a.albumId) || a.albumId < 1)
+        throw new SourceError("albumId must be a positive integer");
+    const d = await getJson(`/album/${a.albumId}`);
+    if (!d?.id)
+        throw new SourceError(`Deezer has no album ${a.albumId}`);
+    const tracks = Array.isArray(d.tracks?.data) ? d.tracks.data : [];
+    return section(`${clean(d.title)} — ${clean(d.artist?.name)}`, [
+        bullet("Released", d.release_date),
+        bullet("Tracks", d.nb_tracks),
+        ...tracks.slice(0, 20).map((t, i) => `${i + 1}. ${clean(t.title)} (${clean(t.duration)}s)`),
+    ]);
 }
-function clock(seconds) {
-    const n = Number(seconds);
-    if (!Number.isFinite(n) || n <= 0)
-        return "unknown length";
-    const m = Math.floor(n / 60);
-    return `${m}:${String(n % 60).padStart(2, "0")}`;
+export async function track(a) {
+    if (!Number.isInteger(a.trackId) || a.trackId < 1)
+        throw new SourceError("trackId must be a positive integer");
+    const d = await getJson(`/track/${a.trackId}`);
+    if (!d?.id)
+        throw new SourceError(`Deezer has no track ${a.trackId}`);
+    return section(`${clean(d.title)} — ${clean(d.artist?.name)}`, [
+        bullet("Album", d.album?.title),
+        bullet("Duration", clean(d.duration) + "s"),
+        bullet("BPM", d.bpm),
+        bullet("ISRC", d.isrc),
+        bullet("Link", d.link),
+    ]);
 }
-export async function albumDetails(args) {
-    const id = Number(args.album_id);
-    if (!Number.isFinite(id) || id <= 0)
-        throw new Error("Provide a Deezer album id, e.g. 302127.");
-    const limit = clamp(args.limit, 20, 50);
-    const a = await deezerGet(`/album/${id}`);
-    const tracks = (a.tracks?.data ?? []);
-    const genres = (a.genres?.data ?? []);
-    const contributors = (a.contributors ?? []);
-    return [
-        `${a.title ?? "?"} by ${a.artist?.name ?? "?"} (album id ${a.id})`,
-        `Released ${a.release_date ?? "?"} on ${a.label ?? "an unlisted label"} | UPC ${a.upc ?? "not published"} | ${a.record_type ?? "?"}`,
-        `${a.nb_tracks ?? tracks.length} track(s), ${clock(a.duration)} total, ${Number(a.fans ?? 0).toLocaleString("en-US")} fans`,
-        `Explicit ${a.explicit_lyrics ? "yes" : "no"} | genres ${genres.length ? genres.map((g) => g.name).join(", ") : "not tagged"} | contributors ${contributors.length ? contributors.map((c) => c.name).join(", ") : "none listed"}`,
-        "Tracklist:",
-        ...tracks.slice(0, limit).map((t, i) => `  ${i + 1}. ${t.title ?? "?"}${t.title_version ? ` (${t.title_version})` : ""} | ${clock(t.duration)} | track id ${t.id ?? "?"}`),
-        tracks.length > limit ? `  plus ${tracks.length - limit} more tracks` : "",
-    ]
-        .filter(Boolean)
-        .join("\n");
+export async function artist_top_tracks(a) {
+    if (!Number.isInteger(a.artistId) || a.artistId < 1)
+        throw new SourceError("artistId must be a positive integer");
+    const limit = clampLimit(a.limit, 10, 50);
+    const d = await getJson(`/artist/${a.artistId}/top?limit=${limit}`);
+    const list = Array.isArray(d?.data) ? d.data : [];
+    if (!list.length)
+        return `No top tracks for artist ${a.artistId}.`;
+    return section(`${list.length} top track(s)`, list.map((t, i) => `${i + 1}. ${clean(t.title)} · ${clean(t.duration)}s`));
+}
+export async function chart_tracks(a) {
+    const limit = clampLimit(a.limit, 10, 50);
+    const d = await getJson(`/chart/0/tracks?limit=${limit}`);
+    const list = Array.isArray(d?.data) ? d.data : [];
+    if (!list.length)
+        return "Deezer returned an empty chart.";
+    return section(`${list.length} chart track(s)`, list.map((t, i) => `${i + 1}. ${clean(t.title)} — ${clean(t.artist?.name)}`));
 }

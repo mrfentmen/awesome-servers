@@ -1,29 +1,33 @@
-# Carbon Intensity MCP
+# UK Carbon Intensity
 
-UK grid carbon intensity, forecast, and regional breakdown from the public Carbon Intensity API. No key required.
+UK grid carbon intensity: live gCO2/kWh, half-hourly forecast and the current generation mix - keyless.
 
-This file is self contained. It reads public data only and never writes to the machine. All output is bounded and honest about what could not be fetched.
+Keyless — no signup, no API key, no environment variables.
+
+## Install
+
+```bash
+npx -y @mrfentmen/carbon-intensity-mcp
+```
+
+Or add it to your MCP client:
+
+```json
+{
+  "mcpServers": {
+    "carbon-intensity-mcp": { "command": "npx", "args": ["-y", "@mrfentmen/carbon-intensity-mcp"] }
+  }
+}
+```
 
 ## Tools
 
+| Tool | What it does |
+|---|---|
+| `current_intensity` | Live carbon intensity for the UK grid with the published index band. |
+| `intensity_forecast` | Forecast intensity for the next few hours, in half-hour steps. |
+| `generation_mix` | Share of each fuel in the current UK generation mix. |
 
-* `intensity`  Current intensity.
-* `forecast`  Next 48 hours.
-* `regional`  By region.
+## Data source
 
-## Usage
-
-```bash
-npm install
-npm run build
-node dist/index.js
-```
-
-Data comes from the public Carbon Intensity API for the UK electricity grid.
-
-## Licence — no paywall
-
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.
+National Grid ESO Carbon Intensity API (UK)

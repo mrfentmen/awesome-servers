@@ -1,16 +1,16 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/chembl-mcp",
-  "description": "Drug molecules and bioactivity from the ChEMBL database. No key required.",
+  "description": "ChEMBL bioactivity data: search molecules and targets, read properties and known activities",
   "repository": {
-    "url": "https://github.com/mrfentmen/chembl-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "chembl-mcp",
+      "identifier": "@mrfentmen/chembl-mcp",
       "version": "1.0.1",
       "transport": {
         "type": "stdio"

@@ -1,113 +1,65 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { newest, top, story } from "./api.js";
-const text = (value) => ({ content: [{ type: "text", text: value }] });
-const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
-const error = (e) => `Error: ${e instanceof Error ? e.message : String(e)}`;
+import { byTag, domainBreakdown, hottest, LobstersError, newest, storyDetail, userInfo } from "./api.js";
+const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
+function errorMessage(e) {
+    if (e instanceof LobstersError || e instanceof Error)
+        return `Error: ${e.message}`;
+    return `Error: ${String(e)}`;
+}
 export function createServer() {
-    const server = new McpServer({ name: "lobsters-mcp", version: "1.0.0" });
-    server.registerTool("newest", {
-        title: "Newest",
-        description: "Newest stories on Lobsters.",
-        inputSchema: z.object({ limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    const server = new McpServer({ name: "lobsters-mcp", version: "1.0.3" });
+    server.tool("hottest", "The current lobste.rs front page.", { limit: z.number().int().min(1).max(25).default(10).describe("Stories to return") }, async ({ limit }) => {
         try {
-            return text(await newest(args));
+            return text(await hottest(limit));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("top", {
-        title: "Top",
-        description: "Top stories on Lobsters.",
-        inputSchema: z.object({ limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("newest", "Freshly submitted lobste.rs stories.", { limit: z.number().int().min(1).max(25).default(10).describe("Stories to return") }, async ({ limit }) => {
         try {
-            return text(await top(args));
+            return text(await newest(limit));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("tag_stories", {
-        title: "Tag stories",
-        description: "Recent Lobsters stories carrying a given tag, with score, comment count, submitter and link.",
-        inputSchema: z.object({ tag: z.string().describe("Tag name, e.g. 'rust'."), limit: z.number().describe("Max stories.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement stories locally (paywall removed)
+    server.tool("by_tag", "Stories under one tag, e.g. rust, ai, security, programming.", {
+        tag: z.string().min(2).describe("Tag name"),
+        limit: z.number().int().min(1).max(25).default(10).describe("Stories to return"),
+    }, async ({ tag, limit }) => {
         try {
-            return textError("Not yet implemented: stories");
+            return text(await byTag(tag, limit));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("story", {
-        title: "Story",
-        description: "One Lobsters story in full: title, link, discussion url, submitter, score, flags, tags, description and its comment tree.",
-        inputSchema: z.object({ id: z.string().describe("Story id, e.g. 'hq6xj2'."), commentLimit: z.number().describe("Max comments.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("story_detail", "One story by its short id.", { short_id: z.string().min(4).describe("Short id, e.g. olnqh2") }, async ({ short_id }) => {
         try {
-            return text(await story(args));
+            return text(await storyDetail(short_id));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    const serverName = "lobsters-mcp";
-    server.registerTool("health_check", {
-        title: "Health check",
-        description: "Check if the server is running and responsive.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("OK - server is running");
+    server.tool("user_info", "Profile, karma and activity counts for a lobste.rs user.", { username: z.string().min(2).describe("Username") }, async ({ username }) => {
+        try {
+            return text(await userInfo(username));
+        }
+        catch (e) {
+            return fail(errorMessage(e));
+        }
     });
-    server.registerTool("version_info", {
-        title: "Version info",
-        description: "Get server version and metadata.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
-    });
-    server.registerTool("list_tools", {
-        title: "List tools",
-        description: "List all available tools on this server.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("See the tools/list response for the full tool list.");
-    });
-    server.registerTool("echo", {
-        title: "Echo",
-        description: "Echo back the provided text.",
-        inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        return text(String(args?.text ?? ""));
-    });
-    server.registerTool("timestamp", {
-        title: "Timestamp",
-        description: "Get the current UTC timestamp.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(new Date().toISOString());
-    });
-    server.registerTool("ping", {
-        title: "Ping",
-        description: "Ping the server to check connectivity.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("pong");
+    server.tool("domain_breakdown", "Which sites and tags dominate the current front page.", { limit: z.number().int().min(1).max(25).default(10).describe("Domains to list") }, async ({ limit }) => {
+        try {
+            return text(await domainBreakdown(limit));
+        }
+        catch (e) {
+            return fail(errorMessage(e));
+        }
     });
     return server;
 }

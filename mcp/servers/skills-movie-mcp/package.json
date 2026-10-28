@@ -1,6 +1,6 @@
 {
   "name": "skills-movie-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server exposing the skills-2 filmmaker personas + a screenplay toolkit for AI-written long-form scripts",
   "type": "module",
   "main": "./dist/index.js",
@@ -11,7 +11,8 @@
     "start": "tsx src/index.ts",
     "dev": "tsx watch src/index.ts",
     "inspect": "npx @modelcontextprotocol/inspector tsx src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.json && node -e \"const fs=require('fs');const f='dist/index.js';let s=fs.readFileSync(f,'utf8');if(!s.startsWith('#!'))fs.writeFileSync(f,'#!/usr/bin/env node\\n'+s)\""
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.3.1",

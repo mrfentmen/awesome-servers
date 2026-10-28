@@ -1,9 +1,9 @@
 {
-  "version": "1.0.6",
+  "version": "1.0.7",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/browser-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "browser-mcp": "./dist/index.js"

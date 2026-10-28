@@ -1,24 +1,42 @@
 {
-  "name": "openfda-mcp",
-  "version": "1.1.0",
-  "description": "FDA open data: drug recalls, adverse events, and approved drugs.",
+  "name": "@mrfentmen/openfda-api-mcp",
+  "version": "1.0.1",
+  "description": "openFDA: drug labels, adverse events, drug/device/food recalls and NDC directory \u2014 keyless.",
   "type": "module",
-  "main": "dist/index.js",
+  "mcpName": "io.github.mrfentmen/openfda-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "openfda-api-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "fda",
+    "health",
+    "drugs",
+    "safety",
+    "regulatory"
+  ],
+  "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "zod": "^3.23.0"
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5.5.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
   },
-  "license": "MIT",
   "engines": {
     "node": ">=20"
-  },
-  "mcpName": "io.github.mrfentmen/openfda-mcp"
+  }
 }

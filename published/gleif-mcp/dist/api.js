@@ -1,55 +1,135 @@
-const BASE = 'https://api.gleif.org/api/v1';
-export async function search(args) {
-    const query = (args.query ?? '').trim();
-    if (!query)
-        return 'Provide an entity name.';
-    const limit = Math.max(1, Math.min(args.limit ?? 10, 50));
-    const q = encodeURIComponent(`entity.legalName:${query}*`);
-    const res = await fetch(`${BASE}/lei-records?filter[fulltext]=${encodeURIComponent(query)}&page[size]=${limit}`, {
-        headers: { 'User-Agent': 'mrfentmen-gleif-mcp/1.0', Accept: 'application/json' },
-        signal: AbortSignal.timeout(20000),
-    });
-    if (!res.ok)
-        throw new Error(`GLEIF returned ${res.status}`);
-    const d = (await res.json());
-    const rows = d.data ?? [];
-    if (!rows.length)
-        return `No entities found for "${query}".`;
-    return `Legal entities for "${query}" (${rows.length} shown):\n` +
-        rows.map((r, i) => {
-            const a = (r.attributes ?? {});
-            const entity = (a.entity ?? {});
-            const names = (entity.legalName ?? {});
-            const reg = (a.registration ?? {});
-            const status = (reg.registrationStatus ?? {});
-            const s = (k) => (entity[k] != null ? String(entity[k]) : '');
-            return `${i + 1}. ${String(names.name ?? '')} | ${String(a.lei ?? '')} | ${String(status.name ?? '')}`;
-        }).join('\n');
+/**
+ * GLEIF — keyless public API client.
+ */
+const BASE = "https://api.gleif.org/api/v1";
+const SOURCE = "GLEIF";
+const UA = "gleif-mcp";
+export class SourceError extends Error {
 }
-export async function lei(args) {
-    const id = (args.id ?? '').trim().toUpperCase();
-    if (!id)
-        return 'Provide an LEI code.';
-    const res = await fetch(`${BASE}/lei-records/${encodeURIComponent(id)}`, {
-        headers: { 'User-Agent': 'mrfentmen-gleif-mcp/1.0', Accept: 'application/json' },
-        signal: AbortSignal.timeout(20000),
-    });
-    if (!res.ok)
-        throw new Error(`GLEIF returned ${res.status}`);
-    const d = (await res.json());
-    const dd = d.data;
-    const a = ((dd?.attributes ?? d.attributes) ?? {});
-    const entity = (a.entity ?? {});
-    const names = (entity.legalName ?? {});
-    const address = (entity.legalAddress ?? {});
-    const reg = (a.registration ?? {});
-    const s = (k) => (entity[k] != null ? String(entity[k]) : '');
-    const aS = (k) => (address[k] != null ? String(address[k]) : '');
-    return [
-        `${String(names.name ?? '')}`,
-        `LEI: ${String(a.lei ?? id)}`,
-        `Status: ${String(reg.registrationStatus?.name ?? '')}`,
-        s('legalForm') ? `Legal form: ${String(entity.legalForm?.name ?? s('legalForm'))}` : '',
-        `Address: ${aS('addressLines') ? String(address.addressLines).replace(/,/g, ', ') : ''} ${aS('city')} ${aS('country')}`.replace(/  +/g, ' '),
-    ].filter(Boolean).join('\n');
+async function request(path, init, timeoutMs = 25000) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+        const res = await fetch(path.startsWith("http") ? path : BASE + path, {
+            ...init,
+            signal: ctrl.signal,
+            headers: {
+                "user-agent": UA,
+                accept: "application/json",
+                ...init?.headers,
+            },
+        });
+        if (!res.ok)
+            throw new SourceError(`${SOURCE} responded ${res.status}`);
+        return res;
+    }
+    catch (e) {
+        if (e instanceof SourceError)
+            throw e;
+        if (e.name === "AbortError")
+            throw new SourceError(`${SOURCE} request timed out`);
+        throw new SourceError(`${SOURCE} request failed: ${e.message}`);
+    }
+    finally {
+        clearTimeout(timer);
+    }
+}
+export async function getJson(path, init) {
+    const res = await request(path, init);
+    const body = await res.text();
+    try {
+        return JSON.parse(body);
+    }
+    catch {
+        throw new SourceError(`${SOURCE} returned malformed JSON`);
+    }
+}
+export function clampLimit(n, fallback, max) {
+    const v = n ?? fallback;
+    if (!Number.isInteger(v) || v < 1 || v > max)
+        throw new SourceError(`limit must be between 1 and ${max}`);
+    return v;
+}
+export function clean(s) {
+    return String(s ?? "").replace(/\s+/g, " ").trim();
+}
+export function bullet(label, value) {
+    const v = value === undefined || value === null || value === "" ? "" : String(value);
+    return v ? `${label}: ${v}` : "";
+}
+export function section(title, rows) {
+    return [title, ...rows.filter(Boolean)].join("\n");
+}
+function leiRows(d) {
+    const data = d?.data;
+    return Array.isArray(data) ? data : data ? [data] : [];
+}
+function leiSummary(x) {
+    const a = x?.attributes ?? {};
+    const name = clean(a.entity?.legalName?.name);
+    const country = clean(a.entity?.legalAddress?.country);
+    const status = clean(a.registration?.status);
+    return `${name || "unknown entity"}${country ? " · " + country : ""}${status ? " · " + status : ""} · LEI ${clean(a.lei || x?.id)}`;
+}
+export async function search_by_name(a) {
+    const name = clean(a.name);
+    if (name.length < 2)
+        throw new SourceError("name must be at least 2 characters");
+    const limit = clampLimit(a.limit, 5, 20);
+    const d = await getJson(`/lei-records?filter%5Bentity.legalName%5D=${encodeURIComponent(name)}&page%5Bsize%5D=${limit}`);
+    const list = leiRows(d);
+    if (!list.length)
+        return `GLEIF has no entity matching "${name}".`;
+    return section(`${d?.meta?.pagination?.total ?? list.length} entit(ies) match "${name}"`, list.map((x, i) => `${i + 1}. ${leiSummary(x)}`));
+}
+export async function lei_record(a) {
+    const lei = clean(a.lei).toUpperCase();
+    if (!/^[A-Z0-9]{20}$/.test(lei))
+        throw new SourceError("lei must be 20 characters");
+    const d = await getJson(`/lei-records/${lei}`);
+    const x = leiRows(d)[0];
+    if (!x)
+        throw new SourceError(`No LEI record ${lei}`);
+    const attrs = x.attributes ?? {};
+    const addr = attrs.entity?.legalAddress ?? {};
+    return section(clean(attrs.entity?.legalName?.name), [
+        bullet("LEI", attrs.lei),
+        bullet("Status", attrs.registration?.status),
+        bullet("Jurisdiction", attrs.entity?.jurisdiction),
+        bullet("Legal form", attrs.entity?.legalForm?.id),
+        bullet("Address", [addr.addressLines, addr.city, addr.region, addr.country].flat().filter(Boolean).map(clean).join(", ")),
+        bullet("Registered", attrs.registration?.initialRegistrationDate),
+        bullet("Last update", attrs.registration?.lastUpdateDate),
+    ]);
+}
+export async function ultimate_parent(a) {
+    const lei = clean(a.lei).toUpperCase();
+    if (!/^[A-Z0-9]{20}$/.test(lei))
+        throw new SourceError("lei must be 20 characters");
+    const d = await getJson(`/lei-records/${lei}/ultimate-parent`);
+    const list = leiRows(d);
+    if (!list.length)
+        return `No ultimate parent is recorded for ${lei}.`;
+    return section(`Ultimate parent of ${lei}`, list.map((x) => leiSummary(x)));
+}
+export async function direct_children(a) {
+    const lei = clean(a.lei).toUpperCase();
+    if (!/^[A-Z0-9]{20}$/.test(lei))
+        throw new SourceError("lei must be 20 characters");
+    const limit = clampLimit(a.limit, 15, 50);
+    const d = await getJson(`/lei-records/${lei}/direct-children?page%5Bsize%5D=${limit}`);
+    const list = leiRows(d);
+    if (!list.length)
+        return `No direct children are recorded for ${lei}.`;
+    return section(`${list.length} direct child(ren) of ${lei}`, list.map((x, i) => `${i + 1}. ${leiSummary(x)}`));
+}
+export async function fuzzy_search(a) {
+    const name = clean(a.name);
+    if (name.length < 2)
+        throw new SourceError("name must be at least 2 characters");
+    const d = await getJson(`/fuzzycompletions?field=entity.legalName&q=${encodeURIComponent(name)}`);
+    const list = leiRows(d);
+    if (!list.length)
+        return `No fuzzy match for "${name}".`;
+    return section(`${list.length} suggestion(s) for "${name}"`, list.slice(0, 15).map((x, i) => `${i + 1}. ${clean(x.attributes?.value)} · LEI ${clean(x.relationships?.["lei-records"]?.data?.id)}`));
 }

@@ -10,6 +10,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -30,7 +31,7 @@ export function createServer(): McpServer {
           `Pokemon matching "${query}":\n\n` + found.map((p) => formatPoke(p)).join("\n\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -45,7 +46,7 @@ export function createServer(): McpServer {
         if (!p) return text(`No Pokemon named "${name}".`)
         return text(formatPoke(p))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -74,7 +75,7 @@ export function createServer(): McpServer {
               .join("\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -89,7 +90,7 @@ export function createServer(): McpServer {
         if (months.length === 0) return text("No months found.")
         return text("Available usage months:\n" + months.join("\n"))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

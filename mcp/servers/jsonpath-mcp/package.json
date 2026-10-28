@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/jsonpath-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Query JSON documents with JSONPath expressions, list every path and count matches - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/jsonpath-mcp",

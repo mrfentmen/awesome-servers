@@ -3,6 +3,7 @@ import { z } from "zod"
 import { FrankfurterError, compare, convert, currencies, dateRate, history, latest } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof FrankfurterError || e instanceof Error) return `Error: ${e.message}`
@@ -18,7 +19,7 @@ export function createServer(): McpServer {
     try {
       return text(await currencies())
     } catch (e) {
-      return text(errorMessage(e))
+      return fail(errorMessage(e))
     }
   })
 
@@ -33,7 +34,7 @@ export function createServer(): McpServer {
       try {
         return text(await latest(base, symbols))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -50,7 +51,7 @@ export function createServer(): McpServer {
       try {
         return text(await convert(amount, from, to))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -67,7 +68,7 @@ export function createServer(): McpServer {
       try {
         return text(await history(from, to, days))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -84,7 +85,7 @@ export function createServer(): McpServer {
       try {
         return text(await dateRate(date, base, to))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -100,7 +101,7 @@ export function createServer(): McpServer {
       try {
         return text(await compare(list, days))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

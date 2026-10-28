@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { generateMeme, listGenerators, MemeError, popularTemplates, randomTemplate, searchTemplates, templateInfo, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof MemeError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -17,7 +18,7 @@ export function createServer() {
             return text(await searchTemplates(query, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("popular_templates", "The most-used meme templates in the Imgflip catalogue.", { limit: z.number().int().min(1).max(50).default(15).describe("Templates to return") }, async ({ limit }) => {
@@ -25,7 +26,7 @@ export function createServer() {
             return text(await popularTemplates(limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("template_info", "Dimensions, caption-box count and usage for one template; lists the candidates when the name is ambiguous.", { template: z.string().min(2).describe("Template name or Imgflip id") }, async ({ template }) => {
@@ -33,7 +34,7 @@ export function createServer() {
             return text(await templateInfo(template));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("random_template", "One random template from the catalogue, with its blank image.", {}, async () => {
@@ -41,7 +42,7 @@ export function createServer() {
             return text(await randomTemplate());
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("list_generators", "memegen generators that can render text onto an image, with line counts and styles.", {
@@ -52,7 +53,7 @@ export function createServer() {
             return text(await listGenerators(query, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("generate_meme", "Render text onto a template and return the image URL (memegen, checked to be a real render).", {
@@ -63,7 +64,7 @@ export function createServer() {
             return text(await generateMeme(template, lines));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

@@ -1,20 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { DndError, formatMonster, formatSpell, getClassInfo, getMonster, getSpell, listMonsters, listRaces } from "./api.js";
+import { DndError, formatMonster, formatSpell, getClassInfo, getMonster, getSpell, listMonsters, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
-const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 export function createServer() {
     const server = new McpServer({
         name: "dnd5e-mcp",
         version: "1.0.0",
     });
-    server.registerTool("get_monster", {
-        title: "Get monster",
-        description: "Get a D&D 5e monster by index slug (e.g. 'aboleth', 'adult-red-dragon', 'goblin').",
-        inputSchema: z.object({ index: z.string().describe("Monster index slug") }),
-        annotations: READ_ONLY,
-    }, async ({ index }) => {
+    server.tool("get_monster", "Get a D&D 5e monster by index slug (e.g. 'aboleth', 'adult-red-dragon', 'goblin').", { index: z.string().describe("Monster index slug") }, async ({ index }) => {
         try {
             const m = await getMonster(index);
             if (!m)
@@ -22,15 +16,10 @@ export function createServer() {
             return text(formatMonster(m));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("get_spell", {
-        title: "Get spell",
-        description: "Get a D&D 5e spell by index slug (e.g. 'fireball', 'magic-missile', 'wish').",
-        inputSchema: z.object({ index: z.string().describe("Spell index slug") }),
-        annotations: READ_ONLY,
-    }, async ({ index }) => {
+    server.tool("get_spell", "Get a D&D 5e spell by index slug (e.g. 'fireball', 'magic-missile', 'wish').", { index: z.string().describe("Spell index slug") }, async ({ index }) => {
         try {
             const s = await getSpell(index);
             if (!s)
@@ -38,30 +27,20 @@ export function createServer() {
             return text(formatSpell(s));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("list_monsters", {
-        title: "List monsters",
-        description: "List D&D 5e SRD monsters by name (a-z), useful for finding valid slugs.",
-        inputSchema: z.object({ limit: z.number().int().min(5).max(100).default(30) }),
-        annotations: READ_ONLY,
-    }, async ({ limit }) => {
+    server.tool("list_monsters", "List D&D 5e SRD monsters by name (a-z), useful for finding valid slugs.", { limit: z.number().int().min(5).max(100).default(30) }, async ({ limit }) => {
         try {
             const monsters = await listMonsters(limit);
             return text(`SRD monsters (${monsters.length}):\n` +
                 monsters.map((m, i) => `${i + 1}. ${m.name} [${m.index}]`).join("\n"));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("get_class", {
-        title: "Get class",
-        description: "Get a D&D 5e class overview — hit die, proficiencies, starting equipment.",
-        inputSchema: z.object({ index: z.string().describe("Class index slug, e.g. 'barbarian', 'wizard'") }),
-        annotations: READ_ONLY,
-    }, async ({ index }) => {
+    server.tool("get_class", "Get a D&D 5e class overview — hit die, proficiencies, starting equipment.", { index: z.string().describe("Class index slug, e.g. 'barbarian', 'wizard'") }, async ({ index }) => {
         try {
             const c = await getClassInfo(index);
             if (!c)
@@ -89,74 +68,8 @@ export function createServer() {
             return text(lines.join("\n"));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
-    });
-    server.registerTool("list_spells", {
-        title: "List spells",
-        description: "Browse the D&D 5e SRD spell list filtered by level, school, ritual or concentration, with optional text search, showing casting time, range and components metadata.",
-        inputSchema: z.object({ level: z.number().describe("Spell level 0 to 9.").optional(), school: z.string().describe("School name, e.g. evocation.").optional(), search: z.string().describe("Text to look for.").optional(), ritual_only: z.boolean().describe("Only ritual spells.").optional(), concentration_only: z.boolean().describe("Only concentration spells.").optional(), limit: z.number().describe("Max spells.").optional(), detail_limit: z.number().describe("Max spells expanded with full casting data.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement spells locally (paywall removed)
-        try {
-            return textError("Not yet implemented: spells");
-        }
-        catch (e) {
-            return textError(String(e));
-        }
-    });
-    server.registerTool("list_magic_items", {
-        title: "List magic items",
-        description: "Browse the D&D 5e SRD magic item list, reading each item record for rarity, attunement requirement and equipment category, then filtering by rarity, attunement or name.",
-        inputSchema: z.object({ rarity: z.string().describe("Rarity, e.g. rare.").optional(), search: z.string().describe("Name fragment.").optional(), attunement: z.string().describe("required or none.").optional(), limit: z.number().describe("Max items scanned.").optional(), detail_limit: z.number().describe("Max item records to read.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement items locally (paywall removed)
-        try {
-            return textError("Not yet implemented: items");
-        }
-        catch (e) {
-            return textError(String(e));
-        }
-    });
-    server.registerTool("list_races", {
-        title: "List races",
-        description: "List the D&D 5e SRD playable races and optionally fetch each full record with speed, size, darkvision, languages, subraces, ability score increases and trait descriptions.",
-        inputSchema: z.object({ include_details: z.boolean().describe("Fetch full race records.").optional(), trait_limit: z.number().describe("Max traits per race.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await listRaces(args));
-        }
-        catch (e) {
-            return textError(e instanceof Error ? `Error: ${e.message}` : String(e));
-        }
-    });
-    const serverName = "dnd5e-mcp";
-    server.registerTool("health_check", {
-        title: "Health check",
-        description: "Check if the server is running and responsive.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("OK - server is running");
-    });
-    server.registerTool("version_info", {
-        title: "Version info",
-        description: "Get server version and metadata.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
-    });
-    server.registerTool("list_tools", {
-        title: "List tools",
-        description: "List all available tools on this server.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("See the tools/list response for the full tool list.");
     });
     return server;
 }

@@ -1,24 +1,40 @@
 {
   "name": "archive-org-mcp",
-  "version": "1.0.6",
-  "description": "Internet Archive search, item metadata, and Wayback snapshots.",
+  "version": "1.0.1",
+  "description": "MCP server for the Internet Archive, search old software, bootleg concerts, 78rpm records, and dead web pages.",
   "type": "module",
-  "main": "dist/index.js",
+  "mcpName": "io.github.mrfentmen/archive-org-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "archive-org-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "archive",
+    "wayback",
+    "retro",
+    "media"
+  ],
+  "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "zod": "^3.23.0"
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5.5.0",
-    "@types/node": "^20.0.0"
-  },
-  "license": "MIT",
-  "engines": {
-    "node": ">=20"
-  },
-  "mcpName": "io.github.mrfentmen/archive-org-mcp"
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
 }

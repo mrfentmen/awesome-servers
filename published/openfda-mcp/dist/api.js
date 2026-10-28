@@ -1,158 +1,132 @@
-const m0 = (() => {
-    const BASE = "https://api.fda.gov";
-    class FdaError extends Error {
-    }
-    async function request(path) {
-        const res = await fetch(`${BASE}${path}`, { signal: AbortSignal.timeout(25000) });
-        if (!res.ok)
-            throw new FdaError(`openFDA error ${res.status}`);
-        return (await res.json());
-    }
-    async function drugRecalls(args) {
-        const search = args.search ? `&search=${encodeURIComponent(args.search)}` : "";
-        const limit = Math.min(args.limit ?? 10, 50);
-        const d = await request(`/drug/enforcement.json?limit=${limit}${search}`);
-        const rows = d.results ?? [];
-        return rows.map((r) => `${r.status ?? ""} | ${r.recall_number ?? ""}\n  ${r.product_description ?? ""}\n  Reason: ${r.reason_for_recall ?? ""}\n  ${r.classification ?? ""}`).join("\n\n") || "No recalls found";
-    }
-    async function adverseEvents(args) {
-        const drug = encodeURIComponent(args.drug ?? "");
-        const limit = Math.min(args.limit ?? 10, 50);
-        const d = await request(`/drug/event.json?search=patient.drug.medicinalproduct:"${drug}"&limit=${limit}`);
-        const rows = d.results ?? [];
-        return rows.map((r, i) => {
-            const rx = r.patient?.drug?.[0];
-            return `${i + 1}. ${rx?.medicinalproduct ?? "unknown drug"} | ${r.seriousnessdeath ? "DEATH" : r.seriousnesshospitalization ? "HOSPITAL" : "report"}\n   Reactions: ${(r.patient?.reaction ?? []).map((x) => x.reactionmeddrapt).join(", ") || "none listed"}`;
-        }).join("\n\n") || "No adverse events found";
-    }
-    async function approvedDrugs(args) {
-        const q = encodeURIComponent(args.query ?? "");
-        const limit = Math.min(args.limit ?? 10, 50);
-        const d = await request(`/drug/drugsfda.json?search=openfda.brand_name:"${q}"+OR+openfda.generic_name:"${q}"&limit=${limit}`);
-        const rows = d.results ?? [];
-        return rows.map((r) => {
-            const o = r.openfda ?? {};
-            return `${o.brand_name?.[0] ?? "unknown brand"} | ${o.generic_name?.[0] ?? ""}\n  Application ${r.application_number ?? ""} | ${o.route?.[0] ?? ""} | ${o.manufacturer_name?.[0] ?? ""}`;
-        }).join("\n\n") || "No approved drugs found";
-    }
-    return { FdaError, adverseEvents, approvedDrugs, drugRecalls };
-})();
-const m1 = (() => {
-    const BASE = 'https://api.fda.gov/drug/event.json';
-    async function events(args) {
-        const drug = (args.drug ?? '').trim();
-        if (!drug)
-            return 'Provide a drug brand name.';
-        const limit = Math.max(1, Math.min(args.limit ?? 5, 20));
-        const query = `patient.drug.openfda.brand_name:"${drug}"`;
-        const url = `${BASE}?search=${encodeURIComponent(query)}&limit=${limit}`;
-        const res = await fetch(url, {
-            headers: { 'User-Agent': 'mrfentmen-daily-med-mcp/1.0', Accept: 'application/json' },
-            signal: AbortSignal.timeout(25000),
+/**
+ * openFDA. Keyless for modest volumes; every response carries the agency's
+ * "not validated, not medical advice" disclaimer, which the tools repeat.
+ */
+const BASE = "https://api.fda.gov";
+const DISCLAIMER = "openFDA data is unvalidated and is not medical advice.";
+export class OpenFdaError extends Error {
+}
+async function getJson(path, search, limit, timeoutMs = 30000) {
+    const params = new URLSearchParams({ limit: String(Math.min(limit, 100)), ...search });
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+        const res = await fetch(`${BASE}/${path}?${params.toString()}`, {
+            signal: ctrl.signal,
+            headers: { "user-agent": "openfda-mcp", accept: "application/json" },
         });
+        if (res.status === 404)
+            throw new OpenFdaError("openFDA found no matching records");
+        if (res.status === 429)
+            throw new OpenFdaError("openFDA rate limit reached — try again in a minute");
         if (!res.ok)
-            throw new Error(`openFDA returned ${res.status}`);
-        const data = (await res.json());
-        const rows = data.results ?? [];
-        if (!rows.length)
-            return `No FDA event reports found for "${drug}".`;
-        return `FDA adverse event reports for "${drug}" (${data.meta?.results?.total ?? rows.length} total, ${rows.length} shown):\n` +
-            rows
-                .map((r, i) => {
-                const serious = r.serious ? 'SERIOUS' : 'not serious';
-                const reportDate = r.report_date ? String(r.report_date) : '';
-                return `${i + 1}. ${reportDate || 'no date'} | ${serious}${r.reaction ? ` | ${JSON.stringify(r.reaction).slice(0, 100)}` : ''}`;
-            })
-                .join('\n');
+            throw new OpenFdaError(`openFDA responded ${res.status}`);
+        return await res.json();
     }
-    return { events };
-})();
-export const FdaError = m0.FdaError;
-export const adverseEvents = m0.adverseEvents;
-export const approvedDrugs = m0.approvedDrugs;
-export const drugRecalls = m0.drugRecalls;
-export const events = m1.events;
-export const m0_adverseEvents = m0.adverseEvents;
-export const m0_FdaError = m0.FdaError;
-export const m0_approvedDrugs = m0.approvedDrugs;
-export const m0_drugRecalls = m0.drugRecalls;
-export const m1_events = m1.events;
-const m2 = (() => {
-    const BASE2 = "https://api.fda.gov";
-    class Fda2Error extends Error {
+    catch (e) {
+        if (e instanceof OpenFdaError)
+            throw e;
+        if (e.name === "AbortError")
+            throw new OpenFdaError("openFDA request timed out");
+        if (e instanceof SyntaxError)
+            throw new OpenFdaError("openFDA returned a non-JSON response");
+        throw new OpenFdaError(`openFDA request failed: ${e.message}`);
     }
-    async function get2(path) {
-        const res = await fetch(`${BASE2}${path}`, {
-            headers: { "User-Agent": "mrfentmen-openfda-mcp/1.0", Accept: "application/json" },
-            signal: AbortSignal.timeout(25000),
-        });
-        if (!res.ok)
-            throw new Fda2Error(`openFDA error ${res.status}`);
-        return res.json();
+    finally {
+        clearTimeout(timer);
     }
-    async function deviceRecalls(args) {
-        const search = args.search ? `&search=${encodeURIComponent(args.search)}` : "";
-        const limit = Math.min(args.limit ?? 10, 50);
-        const d = await get2(`/device/enforcement.json?limit=${limit}${search}`);
-        const rows = d.results ?? [];
-        return rows.map((r) => `${r.status ?? ""} | ${r.recall_number ?? ""}\n  ${r.product_description ?? ""}\n  Reason: ${r.reason_for_recall ?? ""}`).join("\n\n") || "No device recalls found";
+}
+function quote(term, field) {
+    const t = term.trim().replace(/"/g, "");
+    if (t.length < 2)
+        throw new OpenFdaError("Search term must be at least 2 characters");
+    return `${field}:"${t}"`;
+}
+const day = (v) => String(v ?? "").slice(0, 10) || "unknown";
+export async function drugLabels(name, limit) {
+    const d = await getJson("drug/label.json", { search: quote(name, "openfda.brand_name") }, limit);
+    const rows = d.results ?? [];
+    if (rows.length === 0)
+        return `No FDA drug labels for "${name}". ${DISCLAIMER}`;
+    const body = rows.map((r, i) => {
+        const openfda = r.openfda ?? {};
+        const brand = (openfda.brand_name ?? []).join(", ") || "unknown brand";
+        const generic = (openfda.generic_name ?? []).join(", ") || "unknown generic";
+        const route = (openfda.route ?? []).join(", ") || "n/a";
+        const indications = String((r.indications_and_usage ?? [""])[0] ?? "").replace(/\s+/g, " ").slice(0, 260);
+        return `${i + 1}. ${brand} (${generic})\n   Route: ${route} · effective ${day(r.effective_time)}\n   Use: ${indications || "not stated"}`;
+    });
+    return [`FDA drug labels for "${name}" (${rows.length}):`, "", ...body, "", DISCLAIMER].join("\n");
+}
+export async function adverseEvents(drug, limit) {
+    const d = await getJson("drug/event.json", { search: quote(drug, "patient.drug.medicinalproduct") }, limit);
+    const rows = d.results ?? [];
+    if (rows.length === 0)
+        return `No adverse-event reports naming "${drug}". ${DISCLAIMER}`;
+    const body = rows.map((r, i) => {
+        const reactions = (r.patient?.reaction ?? []).map((x) => x.reactionmeddrapt).filter(Boolean).slice(0, 5);
+        const serious = r.serious === "1" ? "serious" : "non-serious";
+        const country = r.occurcountry ?? "unknown country";
+        return `${i + 1}. ${day(r.receiptdate)} · ${serious} · ${country}\n   Reactions: ${reactions.join(", ") || "none listed"}`;
+    });
+    const total = d.meta?.results?.total;
+    return [
+        `Adverse-event reports naming "${drug}"${total ? ` (${total.toLocaleString("en-US")} reports exist)` : ""}, ${rows.length} shown:`,
+        "",
+        ...body,
+        "",
+        `${DISCLAIMER} A report does not mean the drug caused the reaction.`,
+    ].join("\n");
+}
+export async function recalls(kind, term, limit) {
+    const field = kind === "device" ? "product_description" : kind === "food" ? "product_description" : "openfda.brand_name";
+    const d = await getJson(`${kind}/enforcement.json`, { search: quote(term, field) }, limit);
+    const rows = d.results ?? [];
+    if (rows.length === 0)
+        return `No ${kind} recalls matched "${term}". ${DISCLAIMER}`;
+    const body = rows.map((r, i) => {
+        const reason = String(r.reason_for_recall ?? "").replace(/\s+/g, " ").slice(0, 200);
+        return `${i + 1}. ${day(r.report_date)} · class ${r.classification ?? "?"} · ${r.status ?? "?"}\n   ${(r.product_description ?? "").replace(/\s+/g, " ").slice(0, 150)}\n   Firm: ${r.recalling_firm ?? "unknown"} · Reason: ${reason}`;
+    });
+    const total = d.meta?.results?.total;
+    return [
+        `${kind[0].toUpperCase()}${kind.slice(1)} recalls matching "${term}"${total ? ` (${total.toLocaleString("en-US")} total)` : ""}:`,
+        "",
+        ...body,
+        "",
+        DISCLAIMER,
+    ].join("\n");
+}
+export async function ndcLookup(name, limit) {
+    const d = await getJson("drug/ndc.json", { search: quote(name, "brand_name") }, limit);
+    const rows = d.results ?? [];
+    if (rows.length === 0)
+        return `No NDC records for "${name}". ${DISCLAIMER}`;
+    const body = rows.map((r, i) => {
+        const pack = (r.packaging ?? []).map((p) => p.description).filter(Boolean).slice(0, 2).join("; ");
+        return `${i + 1}. ${r.brand_name ?? "unknown"} (${r.generic_name ?? "generic n/a"})\n   NDC ${r.product_ndc ?? "?"} · ${r.dosage_form ?? "form n/a"} · ${r.product_type ?? "type n/a"}\n   ${pack}`;
+    });
+    return [`NDC directory for "${name}" (${rows.length}):`, "", ...body, "", DISCLAIMER].join("\n");
+}
+export async function labelSections(name) {
+    const d = await getJson("drug/label.json", { search: quote(name, "openfda.brand_name") }, 1);
+    const r = (d.results ?? [])[0];
+    if (!r)
+        return `No FDA label for "${name}". ${DISCLAIMER}`;
+    const wanted = [
+        ["Indications", "indications_and_usage"],
+        ["Dosage", "dosage_and_administration"],
+        ["Warnings", "warnings_and_cautions"],
+        ["Adverse reactions", "adverse_reactions"],
+        ["Contraindications", "contraindications"],
+        ["Drug interactions", "drug_interactions"],
+    ];
+    const rows = [];
+    for (const [label, key] of wanted) {
+        const value = Array.isArray(r[key]) ? r[key][0] : r[key];
+        if (!value)
+            continue;
+        rows.push(`${label}: ${String(value).replace(/\s+/g, " ").slice(0, 400)}`);
     }
-    async function deviceEvents(args) {
-        const device = encodeURIComponent(args.device ?? "");
-        const limit = Math.min(args.limit ?? 10, 50);
-        const d = await get2(`/device/event.json?search=device.generic_name:"${device}"&limit=${limit}`);
-        const rows = d.results ?? [];
-        return rows.map((r, i) => `${i + 1}. ${r.event_type ?? "report"} | ${r.date_received ?? ""}\n   ${(r.event_description ?? "").slice(0, 200)}`).join("\n\n") || "No device events found";
-    }
-    async function foodRecalls(args) {
-        const search = args.search ? `&search=${encodeURIComponent(args.search)}` : "";
-        const limit = Math.min(args.limit ?? 10, 50);
-        const d = await get2(`/food/enforcement.json?limit=${limit}${search}`);
-        const rows = d.results ?? [];
-        return rows.map((r) => `${r.status ?? ""} | ${r.recall_number ?? ""}\n  ${r.product_description ?? ""}\n  Reason: ${r.reason_for_recall ?? ""}`).join("\n\n") || "No food recalls found";
-    }
-    async function labelSearch(args) {
-        const q = encodeURIComponent(args.query ?? "");
-        const limit = Math.min(args.limit ?? 10, 50);
-        const d = await get2(`/drug/label.json?search=openfda.brand_name:"${q}"+OR+openfda.generic_name:"${q}"&limit=${limit}`);
-        const rows = d.results ?? [];
-        return rows.map((r) => {
-            const o = r.openfda ?? {};
-            return `${o.brand_name?.[0] ?? "unknown"} | ${o.generic_name?.[0] ?? ""}\n  Purpose: ${(r.purpose?.[0] ?? "").slice(0, 160)}`;
-        }).join("\n\n") || "No labels found";
-    }
-    async function topReactions(args) {
-        const drug = encodeURIComponent(args.drug ?? "");
-        const d = await get2(`/drug/event.json?search=patient.drug.medicinalproduct:"${drug}"&count=patient.reaction.reactionmeddrapt.exact&limit=10`);
-        const rows = d.results ?? [];
-        if (!rows.length)
-            return `No reaction counts for "${args.drug ?? ""}".`;
-        return rows.map((r, i) => `${i + 1}. ${r.term ?? "?"} (${r.count ?? 0})`).join("\n");
-    }
-    async function ndcLookup(args) {
-        const code = encodeURIComponent((args.code ?? "").trim());
-        if (!code)
-            throw new Fda2Error("Provide an NDC code");
-        const d = await get2(`/ndc.json?search=product_ndc:"${code}"&limit=5`);
-        const rows = d.results ?? [];
-        if (!rows.length)
-            return `No NDC record for ${args.code}.`;
-        const r = rows[0];
-        return `${r.brand_name ?? "?"} | ${r.generic_name ?? ""}\n  NDC: ${r.product_ndc ?? ""} | Manufacturer: ${r.manufacturer_name ?? ""} | Type: ${r.product_type ?? ""}`;
-    }
-    return { Fda2Error, deviceRecalls, deviceEvents, foodRecalls, labelSearch, topReactions, ndcLookup };
-})();
-export const Fda2Error = m2.Fda2Error;
-export const deviceRecalls = m2.deviceRecalls;
-export const deviceEvents = m2.deviceEvents;
-export const foodRecalls = m2.foodRecalls;
-export const labelSearch = m2.labelSearch;
-export const topReactions = m2.topReactions;
-export const ndcLookup = m2.ndcLookup;
-export const m2_Fda2Error = m2.Fda2Error;
-export const m2_deviceRecalls = m2.deviceRecalls;
-export const m2_deviceEvents = m2.deviceEvents;
-export const m2_foodRecalls = m2.foodRecalls;
-export const m2_labelSearch = m2.labelSearch;
-export const m2_topReactions = m2.topReactions;
-export const m2_ndcLookup = m2.ndcLookup;
+    return [`Label sections for "${name}":`, "", rows.length ? rows.join("\n\n") : "No labelled sections found.", "", DISCLAIMER].join("\n");
+}

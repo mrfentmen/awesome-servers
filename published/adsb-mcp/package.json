@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/adsb-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Live ADS-B aircraft positions from adsb.lol: find traffic near a point or look up a callsign or ICAO hex - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/adsb-mcp",

@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/police-transparency-mcp",
-  "description": "Use this MCP server to Aggregate historical NYC police complaint statistics with no person...",
+  "description": "MCP server for Aggregate historical NYC police complaint statistics with no person lookup.",
   "repository": {
     "url": "https://github.com/mrfentmen/police-transparency-mcp",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "police-transparency-mcp",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       }

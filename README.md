@@ -5,7 +5,7 @@ can still be built, run and published on its own.
 
 | Subtree | What it holds | Run one |
 |---|---|---|
-| [`mcp/`](mcp) | 319 TypeScript MCP servers, plus 1088 published packages in [`published/`](published) | `cd mcp/servers/<slug> && npm install && npm run build` |
+| [`mcp/`](mcp) | 338 TypeScript MCP servers, plus 1107 published packages in [`published/`](published) | `cd mcp/servers/<slug> && npm install && npm run build` |
 | [`acp/`](acp) | 79 Python ACP agents | `python3 acp/agents/<name>/agent.py` |
 | [`a2a/`](a2a) | 37 Python A2A servers plus the shared `a2a_kit` | `python3 a2a/servers/<name>/server.py` |
 | [`watchd/`](watchd) | a threshold watcher that runs the feeds between editor sessions | `python3 watchd/watchd.py --config conditions.json --loop` |

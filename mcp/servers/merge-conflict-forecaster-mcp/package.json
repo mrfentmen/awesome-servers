@@ -1,6 +1,6 @@
 {
   "name": "merge-conflict-forecaster-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Predict local Git merge-conflict pressure from branch topology and changed-file overlap without returning source content.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/merge-conflict-forecaster-mcp",

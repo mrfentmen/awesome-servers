@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { connectedComponents, shortestPath, topologicalSort, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -19,7 +20,7 @@ export function createServer() {
             return text(await shortestPath(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("topological_sort", "Order a directed acyclic graph so every edge points forward.", {
@@ -29,7 +30,7 @@ export function createServer() {
             return text(await topologicalSort(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("connected_components", "Group nodes into connected components.", {
@@ -40,7 +41,7 @@ export function createServer() {
             return text(await connectedComponents(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

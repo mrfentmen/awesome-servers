@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/stackexchange-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Stack Exchange: search questions, tags, answers and user profiles across 180+ sites - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/stackexchange-mcp",

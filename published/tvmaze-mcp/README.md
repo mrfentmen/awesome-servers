@@ -1,31 +1,25 @@
-# tvmaze-mcp
+# TVmaze
 
-TVMaze show search and schedules.
+TV show data: search shows, episode lists and daily airing schedules.
 
-A merged MCP server that consolidates duplicate single-purpose servers in this monorepo into one focused server.
+Keyless — no signup, no API key, no environment variables.
+
+## Install
+
+```bash
+npx -y @mrfentmen/tvmaze-mcp
+```
 
 ## Tools
 
-- `search` — Search TV shows.
-- `schedule` — Schedule for a date and country.
-- `showEpisodes` — Episodes for a show by TVMaze id.
-- `todaySchedule` — Shows airing today.
+| Tool | What it does |
+|---|---|
+| `search_shows` | Search TV shows by name |
+| `show` | Show details with its episode list |
+| `schedule` | Shows airing on a given date in a country |
+| `cast` | Cast of a show with character names |
+| `episode_by_number` | One episode by season and episode number |
 
-## Run
+## Data source
 
-```bash
-npm install
-npm run build
-node dist/index.js
-```
-
-## Source
-
-Public free APIs only. See `src/api.ts` for exact endpoints.
-
-## Licence — no paywall
-
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.
+TVmaze API

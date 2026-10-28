@@ -3,6 +3,7 @@ import { z } from "zod"
 import { MlbError, playerInfo, schedule, standings, teamRecord, teamRoster, teamSchedule, teams } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof MlbError || e instanceof Error) return `Error: ${e.message}`
@@ -22,7 +23,7 @@ export function createServer(): McpServer {
       try {
         return text(await teams(sportId))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -38,7 +39,7 @@ export function createServer(): McpServer {
       try {
         return text(await standings(leagueId, season))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -54,7 +55,7 @@ export function createServer(): McpServer {
       try {
         return text(await schedule(date, sportId))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -70,7 +71,7 @@ export function createServer(): McpServer {
       try {
         return text(await teamRoster(teamId, season))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -86,7 +87,7 @@ export function createServer(): McpServer {
       try {
         return text(await teamRecord(teamId, season))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -99,7 +100,7 @@ export function createServer(): McpServer {
       try {
         return text(await playerInfo(personId))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -115,7 +116,7 @@ export function createServer(): McpServer {
       try {
         return text(await teamSchedule(teamId, season))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

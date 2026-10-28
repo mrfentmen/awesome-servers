@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/unicode-mcp",
-  "description": "Use this MCP server to Unicode characters, blocks, names, scripts, and properties. Tools include...",
+  "description": "Unicode characters, blocks, names, scripts, and properties.",
   "repository": {
     "url": "https://github.com/mrfentmen/unicode-mcp",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "unicode-mcp",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       }

@@ -1,87 +1,127 @@
-const m0 = (() => {
-    const BASE = 'https://nominatim.openstreetmap.org';
-    async function search(args) {
-        const q = (args.query ?? '').trim();
-        if (!q)
-            return 'Provide a place name.';
-        const limit = Math.max(1, Math.min(args.limit ?? 5, 20));
-        const url = `${BASE}/search?q=${encodeURIComponent(q)}&format=jsonv2&limit=${limit}`;
-        const res = await fetch(url, {
-            headers: { 'User-Agent': 'mrfentmen-nominatim-mcp/1.0 (https://github.com/mrfentmen)', Accept: 'application/json' },
-            signal: AbortSignal.timeout(20000),
+/**
+ * OpenStreetMap Nominatim — keyless public API client.
+ */
+const BASE = "https://nominatim.openstreetmap.org";
+const SOURCE = "OpenStreetMap Nominatim";
+export class SourceError extends Error {
+}
+async function request(path, accept = "application/json", timeoutMs = 25000) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+        const res = await fetch(path.startsWith("http") ? path : BASE + path, {
+            signal: ctrl.signal,
+            headers: { "user-agent": "nominatim-mcp", accept },
         });
         if (!res.ok)
-            throw new Error(`Nominatim returned ${res.status}`);
-        const rows = (await res.json());
-        if (!rows.length)
-            return `No places found for "${q}".`;
-        return `Places matching "${q}" (${rows.length} shown):\n` +
-            rows
-                .map((r, i) => `${i + 1}. ${r.display_name ?? 'n/a'}\n   ${r.type ?? ''} | lat ${r.lat} lon ${r.lon}`)
-                .join('\n');
+            throw new SourceError(`${SOURCE} responded ${res.status}`);
+        return res;
     }
-    async function reverse(args) {
-        if (typeof args.lat !== 'number' || typeof args.lon !== 'number') {
-            return 'Provide numeric latitude and longitude.';
-        }
-        const url = `${BASE}/reverse?lat=${args.lat}&lon=${args.lon}&format=jsonv2`;
-        const res = await fetch(url, {
-            headers: { 'User-Agent': 'mrfentmen-nominatim-mcp/1.0 (https://github.com/mrfentmen)', Accept: 'application/json' },
-            signal: AbortSignal.timeout(20000),
-        });
-        if (!res.ok)
-            throw new Error(`Nominatim returned ${res.status}`);
-        const d = (await res.json());
-        if (!d.display_name)
-            return `No address found for ${args.lat}, ${args.lon}.`;
-        return `Address for ${args.lat}, ${args.lon}:\n${d.display_name}`;
+    catch (e) {
+        if (e instanceof SourceError)
+            throw e;
+        if (e.name === "AbortError")
+            throw new SourceError(`${SOURCE} request timed out`);
+        throw new SourceError(`${SOURCE} request failed: ${e.message}`);
     }
-    return { reverse, search };
-})();
-const m1 = (() => {
-    const BASE = "https://nominatim.openstreetmap.org";
-    const UA = "mrfentmen-geocoding-mcp/1.0 (https://github.com/mrfentmen)";
-    class GeocodeError extends Error {
+    finally {
+        clearTimeout(timer);
     }
-    async function get(url) {
-        const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "application/json" }, signal: AbortSignal.timeout(20000) });
-        if (res.status === 429)
-            throw new GeocodeError("Nominatim rate limit hit, wait a second and retry");
-        if (!res.ok)
-            throw new GeocodeError(`Nominatim error ${res.status}`);
-        return (await res.json());
+}
+export async function getJson(path) {
+    const res = await request(path);
+    const body = await res.text();
+    try {
+        return JSON.parse(body);
     }
-    async function geocode(args) {
-        const q = (args.query ?? "").trim();
-        if (!q)
-            throw new GeocodeError("Provide a place name or address");
-        const limit = Math.min(args.limit ?? 5, 10);
-        const d = await get(`${BASE}/search?q=${encodeURIComponent(q)}&format=json&limit=${limit}&addressdetails=0`);
-        if (!d.length)
-            return "No results found";
-        return d.map((r, i) => {
-            const city = r?.address?.city || r?.address?.town || r?.address?.village || "";
-            return `${i + 1}. ${r?.display_name ?? "n/a"}\n   ${r?.lat ?? "?"}, ${r?.lon ?? "?"}${city ? ` | ${city}` : ""}`;
-        }).join("\n\n");
+    catch {
+        throw new SourceError(`${SOURCE} returned malformed JSON`);
     }
-    async function reverse(args) {
-        const lat = args.lat;
-        const lon = args.lon;
-        if (lat === undefined || lon === undefined || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-            throw new GeocodeError("Provide valid latitude and longitude");
-        }
-        const d = await get(`${BASE}/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1`);
-        return `${d?.display_name ?? "No address found"}\n\nLatitude: ${d?.lat ?? lat} | Longitude: ${d?.lon ?? lon}\nType: ${d?.type ?? "n/a"} (${d?.category ?? ""})`;
+}
+export async function getText(path, accept = "text/plain") {
+    const res = await request(path, accept);
+    return (await res.text()).trim();
+}
+export function clampLimit(n, fallback, max) {
+    const v = n ?? fallback;
+    if (!Number.isInteger(v) || v < 1 || v > max)
+        throw new SourceError(`limit must be between 1 and ${max}`);
+    return v;
+}
+export function clean(s) {
+    return String(s ?? "").replace(/\s+/g, " ").trim();
+}
+export function bullet(label, value) {
+    const v = value === undefined || value === null || value === "" ? "" : String(value);
+    return v ? `${label}: ${v}` : "";
+}
+export function section(title, rows) {
+    return [title, ...rows.filter(Boolean)].join("\n");
+}
+function common(r) {
+    const lat = Number(r.lat);
+    const lon = Number(r.lon);
+    return [
+        `${clean(r.display_name)}`,
+        `  ${clean(r.type) || "?"} · ${clean(r.category) || clean(r.class) || "?"}${r.addresstype ? ` · ${clean(r.addresstype)}` : ""}${Number.isFinite(lat) && Number.isFinite(lon) ? ` · ${lat.toFixed(5)}, ${lon.toFixed(5)}` : ""}`,
+        r.osm_type && r.osm_id ? `  ${clean(r.osm_type)[0].toUpperCase()}${r.osm_id}` : "",
+    ].filter(Boolean).join("\n");
+}
+export async function searchPlaces(a) {
+    const q = clean(a.query);
+    if (q.length < 2)
+        throw new SourceError("query must be at least 2 characters");
+    const limit = a.limit ?? 5;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 10)
+        throw new SourceError("limit must be between 1 and 10");
+    const country = a.countryCode ? clean(a.countryCode).toLowerCase() : "";
+    if (a.countryCode && !/^[a-z]{2}$/i.test(a.countryCode))
+        throw new SourceError("countryCode must be two letters");
+    const d = await getJson(`/search?q=${encodeURIComponent(q)}${country ? `&countrycodes=${country}` : ""}&format=jsonv2&addressdetails=1&limit=${limit}`);
+    const rows = Array.isArray(d) ? d : [];
+    if (!rows.length)
+        return `OpenStreetMap has no place matching "${q}"${country ? ` in ${country.toUpperCase()}` : ""}.`;
+    return [
+        `${rows.length} match(es) for "${q}"${country ? ` in ${country.toUpperCase()}` : ""}:`,
+        "",
+        ...rows.map(common),
+    ].join("\n");
+}
+export async function reverseGeocode(a) {
+    if (!Number.isFinite(a.latitude) || a.latitude < -90 || a.latitude > 90)
+        throw new SourceError("latitude must be between -90 and 90");
+    if (!Number.isFinite(a.longitude) || a.longitude < -180 || a.longitude > 180)
+        throw new SourceError("longitude must be between -180 and 180");
+    const d = await getJson(`/reverse?lat=${a.latitude}&lon=${a.longitude}&format=jsonv2&addressdetails=1`);
+    if (!d || d.error)
+        throw new SourceError(clean(d?.error) || "Nominatim found no address for those coordinates");
+    const addr = d.address ?? {};
+    const parts = ["house_number", "road", "suburb", "city", "town", "village", "county", "state", "postcode", "country"]
+        .map((k) => (addr[k] ? `${k.replace(/_/g, " ")}: ${clean(addr[k])}` : ""))
+        .filter(Boolean);
+    return [
+        `Address at ${a.latitude}, ${a.longitude}:`,
+        clean(d.display_name) || "(no display name)",
+        "",
+        parts.length ? parts.join("\n") : "No structured address fields returned.",
+        d.osm_type && d.osm_id ? `\nOpenStreetMap element: ${clean(d.osm_type)[0].toUpperCase()}${d.osm_id}` : "",
+    ].join("\n");
+}
+export async function lookupOsmIds(a) {
+    const ids = (a.osmIds ?? []).map((i) => clean(i).toUpperCase());
+    if (!ids.length || ids.length > 5)
+        throw new SourceError("osmIds must list between 1 and 5 ids");
+    for (const id of ids) {
+        if (!/^[NWR]\d+$/.test(id))
+            throw new SourceError(`${id} is not a valid OSM id; use W123, N123 or R123`);
     }
-    return { GeocodeError, geocode, reverse };
-})();
-export const GeocodeError = m1.GeocodeError;
-export const geocode = m1.geocode;
-export const reverse = m0.reverse;
-export const search = m0.search;
-export const m0_reverse = m0.reverse;
-export const m0_search = m0.search;
-export const m1_geocode = m1.geocode;
-export const m1_reverse = m1.reverse;
-export const m1_GeocodeError = m1.GeocodeError;
-// ---- muxC tools:
+    const d = await getJson(`/lookup?osm_ids=${ids.join(",")}&format=jsonv2&addressdetails=1`);
+    const rows = Array.isArray(d) ? d : [];
+    if (!rows.length)
+        return `OpenStreetMap has no element for ${ids.join(", ")}.`;
+    return [
+        `${rows.length} element(s) found:`,
+        "",
+        ...rows.map(common),
+    ].join("\n");
+}

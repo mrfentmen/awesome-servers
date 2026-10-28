@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/worldbank-mcp",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "World Bank Open Data: indicator catalogue search, country series, cross-country comparisons, latest values.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/@mrfentmen/worldbank-mcp",

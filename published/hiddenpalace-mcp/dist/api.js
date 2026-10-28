@@ -63,17 +63,3 @@ export function wikiTextToPlain(wt, maxChars = 12000) {
         .trim()
         .slice(0, maxChars);
 }
-export async function listCategories(args) {
-    const limit = Math.max(1, Math.min(Number(args?.limit ?? 40) || 40, 200));
-    const d = await getJson({
-        action: "query",
-        list: "allcategories",
-        aclimit: String(limit),
-    });
-    const rows = (d.query?.allcategories ?? []).map((c) => String(c["*"] ?? "").trim()).filter(Boolean);
-    if (!rows.length)
-        return "hiddenpalace.org reported no categories.";
-    return `hiddenpalace.org categories (${rows.length} shown, alphabetical from the start of the list):\n` +
-        rows.map((name, i) => `${i + 1}. ${name}`).join("\n");
-}
-// ---- gap4b1 tools:

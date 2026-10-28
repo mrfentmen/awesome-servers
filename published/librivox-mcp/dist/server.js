@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { bookLine, browse, detail, detailText, LibriVoxError, linksText, searchByAuthor, searchByTitle, sectionsText, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof LibriVoxError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -30,7 +31,7 @@ export function createServer() {
             return text(books.length ? books.map(bookLine).join("\n") : "No audiobooks matched.");
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("audiobook_detail", "One audiobook: author, language, runtime, section count and description.", { id: z.number().int().positive().describe("LibriVox book id, e.g. 47") }, async ({ id }) => {
@@ -39,7 +40,7 @@ export function createServer() {
             return text(book ? detailText(book) : `No audiobook with id ${id}.`);
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("audiobook_sections", "Chapter list with per-chapter mp3 links and readers.", {
@@ -51,7 +52,7 @@ export function createServer() {
             return text(book ? sectionsText(book, limit) : `No audiobook with id ${id}.`);
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("audiobook_links", "Download links for an audiobook: zip, RSS feed, source text, archive.", { id: z.number().int().positive().describe("LibriVox book id") }, async ({ id }) => {
@@ -60,7 +61,7 @@ export function createServer() {
             return text(book ? linksText(book) : `No audiobook with id ${id}.`);
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("browse_catalog", "Page through the LibriVox catalog in id order.", {
@@ -72,7 +73,7 @@ export function createServer() {
             return text(books.length ? books.map(bookLine).join("\n") : "No rows at that offset.");
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

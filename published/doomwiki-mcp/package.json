@@ -1,12 +1,12 @@
 {
   "name": "doomwiki-mcp",
-  "version": "1.0.5",
+  "version": "1.0.1",
   "description": "Use this MCP server to the Doom Wiki. Every demon, weapon, level, and piece of Doom lore since 1993. Tools include search pages, get page, get category",
   "type": "module",
   "mcpName": "io.github.mrfentmen/doomwiki-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/doomwiki-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "doomwiki-mcp": "./dist/index.js"
@@ -34,8 +34,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

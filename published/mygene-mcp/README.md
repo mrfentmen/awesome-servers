@@ -1,28 +1,32 @@
-# Mygene MCP
+# mygene.info
 
-MyGene.info gene annotation API. No key required.
+Gene annotations from mygene.info: search genes by symbol or keyword and read full records - keyless.
 
-This file is self contained. It reads public data only and never writes to the machine. All output is bounded and honest about what could not be fetched.
+Keyless — no signup, no API key, no environment variables.
+
+## Install
+
+```bash
+npx -y @mrfentmen/mygene-mcp
+```
+
+Or add it to your MCP client:
+
+```json
+{
+  "mcpServers": {
+    "mygene-mcp": { "command": "npx", "args": ["-y", "@mrfentmen/mygene-mcp"] }
+  }
+}
+```
 
 ## Tools
 
+| Tool | What it does |
+|---|---|
+| `search_genes` | Search genes by symbol, name or free text, optionally limited to a species. |
+| `gene_record` | One gene record with summary, aliases, genomic position and RefSeq ids. |
 
-* `query`  Query genes.
-* `get`  Get a gene by id.
+## Data source
 
-## Usage
-
-```bash
-npm install
-npm run build
-node dist/index.js
-```
-
-Data comes from the public Mygene API.
-
-## Licence — no paywall
-
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.
+mygene.info (The Scripps Research Institute)

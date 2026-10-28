@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -28,7 +29,7 @@ export function createServer(): McpServer {
         if (!m) return text(`No monster "${index}". Try list_monsters for valid slugs.`)
         return text(formatMonster(m))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -43,7 +44,7 @@ export function createServer(): McpServer {
         if (!s) return text(`No spell "${index}".`)
         return text(formatSpell(s))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -60,7 +61,7 @@ export function createServer(): McpServer {
             monsters.map((m, i) => `${i + 1}. ${m.name} [${m.index}]`).join("\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -98,7 +99,7 @@ export function createServer(): McpServer {
         ].filter(Boolean)
         return text(lines.join("\n"))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ip-subnet-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "IPv4 subnet calculator: network, broadcast, masks, host ranges and CIDR splitting - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ip-subnet-mcp",

@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { findPoem, poemsByAuthor, poemsByTitle, randomPoem, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -17,7 +18,7 @@ export function createServer() {
             return text(await poemsByAuthor(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("poems_by_title", "Poems whose title matches, with author and lines.", {
@@ -28,7 +29,7 @@ export function createServer() {
             return text(await poemsByTitle(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("find_poem", "One poem by both author and title.", {
@@ -39,7 +40,7 @@ export function createServer() {
             return text(await findPoem(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("random_poem", "A random poem (or a few) from the collection.", {
@@ -49,7 +50,7 @@ export function createServer() {
             return text(await randomPoem(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

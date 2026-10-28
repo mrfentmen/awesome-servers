@@ -143,14 +143,3 @@ export function formatChapter(c) {
     const ext = c.externalUrl ? ` [external: ${c.externalUrl}]` : "";
     return `${num}${vol}${title}${grp}${when} — ${c.pages}p${ext} — id ${c.id}`;
 }
-// the statistics route answers { result, statistics }, not the collection shape
-// every other MangaDex route uses, so it needs its own fetch
-async function getStatistics(path) {
-    const res = await fetch(`${BASE}${path}`, {
-        headers: { Accept: "application/json", "User-Agent": "mangadex-mcp/1.0" },
-        signal: AbortSignal.timeout(20000),
-    });
-    if (!res.ok)
-        throw new MangaDexError(`MangaDex API error ${res.status}: ${res.statusText}`);
-    return (await res.json());
-}

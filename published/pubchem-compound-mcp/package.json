@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/pubchem-compound-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "PubChem compounds: properties by name or CID, synonyms, and a short description - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/pubchem-compound-mcp",

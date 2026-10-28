@@ -1,95 +1,116 @@
+/**
+ * Random User Generator — keyless public API client.
+ */
+const BASE = "https://randomuser.me"
+const SOURCE = "Random User Generator"
 
-export interface m0_UsersArgs {
-  count?: number;
+export class SourceError extends Error {}
+
+async function request(path: string, accept = "application/json", timeoutMs = 25000): Promise<Response> {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs)
+  try {
+    const res = await fetch(path.startsWith("http") ? path : BASE + path, {
+      signal: ctrl.signal,
+      headers: { "user-agent": "randomuser-mcp", accept },
+    })
+    if (!res.ok) throw new SourceError(`${SOURCE} responded ${res.status}`)
+    return res
+  } catch (e) {
+    if (e instanceof SourceError) throw e
+    if ((e as Error).name === "AbortError") throw new SourceError(`${SOURCE} request timed out`)
+    throw new SourceError(`${SOURCE} request failed: ${(e as Error).message}`)
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
-const m0 = (() => {
-const BASE = 'https://randomuser.me/api/';
-
-async function users(args: m0_UsersArgs = {}): Promise<string> {
-  const count = Math.max(1, Math.min(args.count ?? 5, 20));
-  const res = await fetch(`${BASE}?results=${count}`, {
-    headers: { 'User-Agent': 'mrfentmen-randomuser-mcp/1.0', Accept: 'application/json' },
-    signal: AbortSignal.timeout(20000),
-  });
-  if (!res.ok) throw new Error(`Random User returned ${res.status}`);
-  const data = (await res.json()) as {
-    results?: Array<{
-      name?: { first?: string; last?: string };
-      email?: string;
-      location?: { city?: string; country?: string };
-      picture?: { large?: string };
-    }>;
-  };
-  const results = data.results ?? [];
-  if (!results.length) return 'No users returned.';
-  return `Random users (${results.length}):\n` +
-    results
-      .map((u, i) => `${i + 1}. ${u.name?.first ?? ''} ${u.name?.last ?? ''} | ${u.email ?? ''} | ${u.location?.city ?? ''}, ${u.location?.country ?? ''}${u.picture?.large ? `\n   ${u.picture.large}` : ''}`)
-      .join('\n');
+export async function getJson(path: string): Promise<any> {
+  const res = await request(path)
+  const body = await res.text()
+  try {
+    return JSON.parse(body)
+  } catch {
+    throw new SourceError(`${SOURCE} returned malformed JSON`)
+  }
 }
 
-return { users };
-})();
-
-const m1 = (() => {
-const UA = "mrfentmen-random-user-mcp/1.0 (https://github.com/mrfentmen)"
-const BASE = "https://randomuser.me/api"
-
-class RandomUserError extends Error {}
-
-async function get(count: number, gender: string, nat: string, seed: string): Promise<any> {
-  const params = new URLSearchParams({ results: String(count) })
-  if (gender && (gender === "male" || gender === "female")) params.set("gender", gender)
-  if (nat) params.set("nat", nat)
-  if (seed) params.set("seed", seed)
-  const res = await fetch(`${BASE}/?${params.toString()}`, { headers: { "User-Agent": UA, Accept: "application/json" }, signal: AbortSignal.timeout(20000) })
-  if (!res.ok) throw new RandomUserError(`RandomUser returned HTTP ${res.status}`)
-  const d = (await res.json()) as { results: any[] }
-  return d.results ?? []
+export async function getText(path: string, accept = "text/plain"): Promise<string> {
+  const res = await request(path, accept)
+  return (await res.text()).trim()
 }
 
-function formatUser(u: any, i: number): string {
-  const name = `${u.name?.first ?? ""} ${u.name?.last ?? ""}`.trim()
+export function clampLimit(n: number | undefined, fallback: number, max: number): number {
+  const v = n ?? fallback
+  if (!Number.isInteger(v) || v < 1 || v > max) throw new SourceError(`limit must be between 1 and ${max}`)
+  return v
+}
+
+export function clean(s: unknown): string {
+  return String(s ?? "").replace(/\s+/g, " ").trim()
+}
+
+export function bullet(label: string, value: unknown): string {
+  const v = value === undefined || value === null || value === "" ? "" : String(value)
+  return v ? `${label}: ${v}` : ""
+}
+
+export function section(title: string, rows: string[]): string {
+  return [title, ...rows.filter(Boolean)].join("\n")
+}
+
+const NATIONS = ["AU", "BR", "CA", "CH", "DE", "DK", "ES", "FI", "FR", "GB", "IE", "IN", "IR", "MX", "NL", "NO", "NZ", "RS", "TR", "UA", "US"]
+
+function normalizeNat(value: string | undefined): string {
+  if (!value) return ""
+  const nat = clean(value).toUpperCase()
+  if (!NATIONS.includes(nat)) throw new SourceError(`nat must be one of ${NATIONS.join(", ")}`)
+  return nat
+}
+
+function render(u: any): string {
+  const loc = u.location ?? {}
+  const street = loc.street ? `${loc.street.number} ${clean(loc.street.name)}` : ""
+  const address = [street, clean(loc.city), clean(loc.state), clean(loc.postcode), clean(loc.country)].filter(Boolean).join(", ")
   return [
-    `${i + 1}. ${name}`,
-    `   ${u.gender ?? "n/a"} | ${u.dob?.age ?? "n/a"} years old | ${u.nat ?? "n/a"}`,
-    `   Email: ${u.email ?? "n/a"}`,
-    `   Location: ${u.location?.city ?? "n/a"}, ${u.location?.country ?? "n/a"}`,
-    `   Phone: ${u.phone ?? "n/a"}`,
+    `${clean(u.name?.title)} ${clean(u.name?.first)} ${clean(u.name?.last)} (${clean(u.gender)}, ${clean(u.nat)})`,
+    `  ${clean(u.email)} · username ${clean(u.login?.username)} · age ${u.dob?.age ?? "?"}`,
+    address ? `  ${address}` : "",
+    `  ${clean(u.phone)} · registered ${clean(u.registered?.date)?.slice(0, 10) || "?"}`,
+    u.picture?.thumbnail ? `  ${clean(u.picture.thumbnail)}` : "",
+  ].filter(Boolean).join("\n")
+}
+
+export async function randomUsers(a: { count?: number; nat?: string }): Promise<string> {
+  const count = a.count ?? 3
+  if (!Number.isInteger(count) || count < 1 || count > 20) throw new SourceError("count must be between 1 and 20")
+  const nat = normalizeNat(a.nat)
+  const qs = new URLSearchParams({ results: String(count) })
+  if (nat) qs.set("nat", nat.toLowerCase())
+  const d = await getJson(`/api/?${qs.toString()}`)
+  const rows: any[] = Array.isArray(d?.results) ? d.results : []
+  if (!rows.length) throw new SourceError("randomuser.me returned nobody")
+  return [
+    `${rows.length} generated user(s)${nat ? ` from ${nat}` : ""} - synthetic, not real people:`,
+    "",
+    ...rows.map(render),
   ].join("\n")
 }
 
-async function generate(args: { count?: number; gender?: string; nat?: string }): Promise<string> {
-  const count = Math.min(args.count ?? 1, 20)
-  const users = await get(count, (args.gender ?? "").trim(), (args.nat ?? "").trim(), "")
-  if (!users.length) throw new RandomUserError("No profiles generated")
-  return users.map((u: any, i: number) => formatUser(u, i)).join("\n")
+export async function usersByGender(a: { gender: "male" | "female"; count?: number; nat?: string }): Promise<string> {
+  const gender = clean(a.gender).toLowerCase()
+  if (gender !== "male" && gender !== "female") throw new SourceError("gender must be male or female")
+  const count = a.count ?? 3
+  if (!Number.isInteger(count) || count < 1 || count > 20) throw new SourceError("count must be between 1 and 20")
+  const nat = normalizeNat(a.nat)
+  const qs = new URLSearchParams({ results: String(count), gender })
+  if (nat) qs.set("nat", nat.toLowerCase())
+  const d = await getJson(`/api/?${qs.toString()}`)
+  const rows: any[] = Array.isArray(d?.results) ? d.results : []
+  if (!rows.length) throw new SourceError("randomuser.me returned nobody")
+  return [
+    `${rows.length} generated ${gender} user(s)${nat ? ` from ${nat}` : ""} - synthetic, not real people:`,
+    "",
+    ...rows.map(render),
+  ].join("\n")
 }
-
-async function seed(args: { seed?: string; count?: number }): Promise<string> {
-  const seed = (args.seed ?? "").trim()
-  if (!seed) throw new RandomUserError("Provide a seed value")
-  const count = Math.min(args.count ?? 1, 20)
-  const users = await get(count, "", "", seed)
-  if (!users.length) throw new RandomUserError("No profiles generated")
-  return users.map((u: any, i: number) => formatUser(u, i)).join("\n")
-}
-
-return { RandomUserError, generate, seed };
-})();
-
-export const RandomUserError = m1.RandomUserError;
-export const generate = m1.generate;
-export const seed = m1.seed;
-export const users = m0.users;
-export const m0_users = m0.users;
-export const m1_generate = m1.generate;
-export const m1_RandomUserError = m1.RandomUserError;
-export const m1_seed = m1.seed;
-
-// ---- muxC tools:
-
-// randomuser.me's own field names, so an invalid one fails loudly rather than
-// silently returning a profile with nothing in it.
-

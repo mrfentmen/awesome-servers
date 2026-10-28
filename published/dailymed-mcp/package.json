@@ -1,24 +1,33 @@
 {
-  "version": "1.0.5",
+  "name": "@mrfentmen/dailymed-mcp",
+  "version": "1.0.1",
+  "description": "DailyMed drug labels from the FDA: find labels by drug name and read one label's sections - keyless.",
   "type": "module",
+  "mcpName": "io.github.mrfentmen/dailymed-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/dailymed-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "dailymed-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
-    "dist",
-    "server.json",
-    "README.md"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "dev": "npm run build && node dist/index.js"
+    "start": "node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "dailymed",
+    "fda",
+    "drug-labels",
+    "pharmacy",
+    "spl",
+    "keyless"
+  ],
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -28,16 +37,6 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
   },
-  "name": "dailymed-mcp",
-  "description": "FDA drug label information from DailyMed. No key required.",
-  "mcpName": "io.github.mrfentmen/dailymed-mcp",
-  "keywords": [
-    "mcp",
-    "drugs",
-    "labels",
-    "fda",
-    "health"
-  ],
   "engines": {
     "node": ">=20"
   }

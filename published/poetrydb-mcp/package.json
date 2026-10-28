@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/poetrydb-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Public-domain poetry from PoetryDB: find poems by author or title, read the lines, or pull a random one - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/poetrydb-mcp",

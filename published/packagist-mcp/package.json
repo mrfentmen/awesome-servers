@@ -1,6 +1,6 @@
 {
   "name": "packagist-mcp",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Packagist PHP packages: search, download stats, release history, dependency lists, popularity, registry totals.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/packagist-mcp",

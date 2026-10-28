@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/epss-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Exploit Prediction Scoring System scores: how likely a CVE will be exploited in the next 30 days - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/epss-mcp",

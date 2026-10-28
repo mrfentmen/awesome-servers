@@ -50,13 +50,3 @@ export function formatStation(s, index) {
     const lines = [head, meta, s.url_resolved ?? s.homepage ?? ""].filter(Boolean);
     return lines.join("\n");
 }
-// ---- muxB tools:
-async function rbGet(path) {
-    const res = await fetch(`${BASE}${path}`, {
-        headers: { Accept: "application/json", "User-Agent": "radio-browser-mcp/1.0" },
-        signal: AbortSignal.timeout(25000),
-    });
-    if (!res.ok)
-        throw new RadioError(`Radio Browser error ${res.status}: ${res.statusText}`);
-    return (await res.json());
-}

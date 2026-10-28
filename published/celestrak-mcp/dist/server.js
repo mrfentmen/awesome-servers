@@ -1,119 +1,65 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { group, satellite, nameSearch } from "./api.js";
-const text = (value) => ({ content: [{ type: "text", text: value }] });
-const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
-const error = (e) => `Error: ${e instanceof Error ? e.message : String(e)}`;
+import { satellites_by_group, satellite_by_catnr, satellite_by_name, satcat_by_catnr, groups, SourceError } from "./api.js";
+const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
+function errorMessage(e) {
+    if (e instanceof SourceError || e instanceof Error)
+        return `Error: ${e.message}`;
+    return `Error: ${String(e)}`;
+}
 export function createServer() {
     const server = new McpServer({ name: "celestrak-mcp", version: "1.0.0" });
-    server.registerTool("group", {
-        title: "Group",
-        description: "Satellites in a named group.",
-        inputSchema: z.object({ group: z.string().describe("Group like stations, visual, or active.").optional(), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("satellites_by_group", "Satellites in a named CelesTrak group, with current orbital elements", {
+        group: z.string().min(2).describe("Group name, e.g. stations, active, weather, gps-ops"),
+        limit: z.number().int().min(1).max(100).default(20).describe("Maximum satellites")
+    }, async (a) => {
         try {
-            return text(await group(args));
+            return text(await satellites_by_group(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("satellite", {
-        title: "Satellite",
-        description: "One satellite by NORAD catalog number.",
-        inputSchema: z.object({ noradId: z.number().describe("NORAD catalog number.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("satellite_by_catnr", "Orbital elements for one satellite by NORAD catalogue number", {
+        catnr: z.number().int().min(1).describe("NORAD catalogue number, e.g. 25544")
+    }, async (a) => {
         try {
-            return text(await satellite(args));
+            return text(await satellite_by_catnr(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("satellite_catalogue", {
-        title: "Satellite catalogue",
-        description: "CelesTrak catalogue records for a group: owner, launch date and site, decay date, period and apogee/perigee.",
-        inputSchema: z.object({ group: z.string().describe("CelesTrak group, e.g. stations or starlink.").optional(), limit: z.number().describe("Max records.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement catalogue locally (paywall removed)
+    server.tool("satellite_by_name", "Find satellites by name", {
+        name: z.string().min(2).describe("Name or part of it, e.g. ISS")
+    }, async (a) => {
         try {
-            return textError("Not yet implemented: catalogue");
+            return text(await satellite_by_name(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("name_search", {
-        title: "Name search",
-        description: "Find satellites in a CelesTrak group whose name contains a fragment, with their orbital elements.",
-        inputSchema: z.object({ query: z.string().describe("Name fragment, e.g. noaa or GPS."), group: z.string().describe("CelesTrak group.").optional(), limit: z.number().describe("Max matches.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("satcat_by_catnr", "Catalogue entry for a satellite: launch date, orbit class and radar cross-section", {
+        catnr: z.number().int().min(1).describe("NORAD catalogue number, e.g. 25544")
+    }, async (a) => {
         try {
-            return text(await nameSearch(args));
+            return text(await satcat_by_catnr(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("orbit_summary", {
-        title: "Orbit summary",
-        description: "Aggregate orbital picture of a CelesTrak group: inclination and period ranges, plus LEO, MEO and GEO counts.",
-        inputSchema: z.object({ group: z.string().describe("CelesTrak group.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement summary locally (paywall removed)
+    server.tool("groups", "List the satellite groups this server can fetch", {
+    // no arguments
+    }, async (a) => {
         try {
-            return textError("Not yet implemented: summary");
+            return text(await groups(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
-    });
-    const serverName = "celestrak-mcp";
-    server.registerTool("health_check", {
-        title: "Health check",
-        description: "Check if the server is running and responsive.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("OK - server is running");
-    });
-    server.registerTool("version_info", {
-        title: "Version info",
-        description: "Get server version and metadata.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
-    });
-    server.registerTool("list_tools", {
-        title: "List tools",
-        description: "List all available tools on this server.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("See the tools/list response for the full tool list.");
-    });
-    server.registerTool("echo", {
-        title: "Echo",
-        description: "Echo back the provided text.",
-        inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        return text(String(args?.text ?? ""));
-    });
-    server.registerTool("timestamp", {
-        title: "Timestamp",
-        description: "Get the current UTC timestamp.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(new Date().toISOString());
     });
     return server;
 }

@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof MemeError || e instanceof Error) return `Error: ${e.message}`
@@ -31,7 +32,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchTemplates(query, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -44,7 +45,7 @@ export function createServer(): McpServer {
       try {
         return text(await popularTemplates(limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -57,7 +58,7 @@ export function createServer(): McpServer {
       try {
         return text(await templateInfo(template))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -70,7 +71,7 @@ export function createServer(): McpServer {
       try {
         return text(await randomTemplate())
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -86,7 +87,7 @@ export function createServer(): McpServer {
       try {
         return text(await listGenerators(query, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -102,7 +103,7 @@ export function createServer(): McpServer {
       try {
         return text(await generateMeme(template, lines))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

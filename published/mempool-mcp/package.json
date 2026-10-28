@@ -1,6 +1,6 @@
 {
   "name": "mempool-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Bitcoin network status from mempool.space: fees, mempool backlog, blocks, addresses, difficulty retargets.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/mempool-mcp",

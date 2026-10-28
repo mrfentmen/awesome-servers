@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { biggestQuakes, formatQuake, latestQuakes, quakeDetail, quakesNear, queryQuakes, UsgsError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 export function createServer() {
     const server = new McpServer({
         name: "usgs-mcp",
@@ -19,7 +20,7 @@ export function createServer() {
             return text(`Latest M${magnitude}+ earthquakes (${timeframe}):\n\n${quakes.map((q, i) => `${i + 1}. ${formatQuake(q)}`).join("\n\n")}`);
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("query_quakes", "Query earthquakes by magnitude, count, and start time.", {
@@ -34,7 +35,7 @@ export function createServer() {
             return text(`Quakes M${minMagnitude}+${starttime ? ` since ${starttime}` : ""}:\n\n${quakes.map((q, i) => `${i + 1}. ${formatQuake(q)}`).join("\n\n")}`);
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("quake_detail", "Full record for one earthquake by its USGS event id.", { id: z.string().min(4).describe("USGS event id, e.g. us7000abcd") }, async ({ id }) => {
@@ -42,7 +43,7 @@ export function createServer() {
             return text(formatQuake(await quakeDetail(id)));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("quakes_near", "Earthquakes within a radius of a coordinate, strongest first.", {
@@ -59,7 +60,7 @@ export function createServer() {
             return text(`Quakes within ${radius_km} km (${quakes.length}):\n\n${quakes.map((q, i) => `${i + 1}. ${formatQuake(q)}`).join("\n\n")}`);
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("biggest_quakes", "Strongest earthquakes over the last N days.", {
@@ -74,7 +75,7 @@ export function createServer() {
             return text(`Strongest quakes in the last ${days} days (${quakes.length}):\n\n${quakes.map((q, i) => `${i + 1}. ${formatQuake(q)}`).join("\n\n")}`);
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

@@ -1,178 +1,36 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { errorMessage, getJoke, jokeById, jokeInfo, listCategories, listLanguages, searchJokes, jokesByType, jokeRange, jokeLengthProfile, jokeTypeCoverage } from "./api.js";
+import { jokesBatch, randomJoke, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
-const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
-const CATEGORY = z
-    .string()
-    .describe("Category such as Programming, Pun, Misc, Spooky, Christmas (default Any)")
-    .optional();
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
+function errorMessage(e) {
+    if (e instanceof SourceError || e instanceof Error)
+        return `Error: ${e.message}`;
+    return `Error: ${String(e)}`;
+}
 export function createServer() {
-    const server = new McpServer({
-        name: "jokeapi-mcp",
-        version: "1.0.0",
-    });
-    server.registerTool("get_joke", {
-        title: "Get a joke",
-        description: "One safe-mode joke, or several at once, optionally from a category like Programming or Pun.",
-        inputSchema: z.object({
-            category: CATEGORY,
-            amount: z.number().int().min(1).max(10).default(1).describe("How many jokes to return"),
-        }),
-        annotations: READ_ONLY,
-    }, async ({ category, amount }) => {
+    const server = new McpServer({ name: "jokeapi-mcp", version: "1.0.1" });
+    server.tool("random_joke", "One joke from a category, safe by default.", {
+        category: z.enum(["Any", "Misc", "Programming", "Pun", "Spooky", "Christmas", "Dark"]).default("Any").describe("Joke category"),
+        safeMode: z.boolean().default(true).describe("Keep the blacklist filters on (Dark jokes need this false)")
+    }, async (a) => {
         try {
-            return text(await getJoke(category, amount));
+            return text(await randomJoke(a));
         }
         catch (e) {
-            return textError(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("search_jokes", {
-        title: "Search jokes",
-        description: "Find jokes that contain a word or phrase, e.g. 'chicken' or 'programmer'.",
-        inputSchema: z.object({
-            contains: z.string().describe("Word or phrase the joke must contain"),
-            category: CATEGORY,
-            amount: z.number().int().min(1).max(10).default(3).describe("How many jokes to return"),
-        }),
-        annotations: READ_ONLY,
-    }, async ({ contains, category, amount }) => {
+    server.tool("jokes_batch", "Several jokes at once from one category.", {
+        category: z.enum(["Any", "Misc", "Programming", "Pun", "Spooky", "Christmas", "Dark"]).default("Any").describe("Joke category"),
+        amount: z.number().int().min(2).max(10).default(3).describe("Jokes to return"),
+        safeMode: z.boolean().default(true).describe("Keep the blacklist filters on")
+    }, async (a) => {
         try {
-            return text(await searchJokes(contains, category, amount));
+            return text(await jokesBatch(a));
         }
         catch (e) {
-            return textError(errorMessage(e));
-        }
-    });
-    server.registerTool("joke_by_id", {
-        title: "Joke by id",
-        description: "Fetch one specific joke by its numeric id, so you can reuse the same joke.",
-        inputSchema: z.object({
-            id: z.string().describe("Numeric joke id, e.g. '1'"),
-            category: CATEGORY,
-        }),
-        annotations: READ_ONLY,
-    }, async ({ id, category }) => {
-        try {
-            return text(await jokeById(id, category));
-        }
-        catch (e) {
-            return textError(errorMessage(e));
-        }
-    });
-    server.registerTool("list_categories", {
-        title: "List categories",
-        description: "All safe-mode joke categories.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        try {
-            return text(await listCategories());
-        }
-        catch (e) {
-            return textError(errorMessage(e));
-        }
-    });
-    server.registerTool("joke_info", {
-        title: "Joke database info",
-        description: "How many jokes exist and how they break down by category.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        try {
-            return text(await jokeInfo());
-        }
-        catch (e) {
-            return textError(errorMessage(e));
-        }
-    });
-    server.registerTool("list_languages", {
-        title: "List languages",
-        description: "Languages the joke database is translated into.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        try {
-            return text(await listLanguages());
-        }
-        catch (e) {
-            return textError(errorMessage(e));
-        }
-    });
-    server.registerTool("random_programming_joke", {
-        title: "Programming joke",
-        description: "A quick programming joke - handy when you just want something to say to a developer.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        try {
-            return text(await getJoke("Programming", 1));
-        }
-        catch (e) {
-            return textError(errorMessage(e));
-        }
-    });
-    server.registerTool("jokes_by_type", {
-        title: "Jokes by type",
-        description: "Only one-liners or only setup-and-punchline jokes, from any safe-mode category.",
-        inputSchema: z.object({
-            type: z.enum(["single", "twopart"]).describe("single (one-liners) or twopart (setup and punchline)."),
-            category: z.string().describe("Any category name, or omit for Any.").optional(),
-            amount: z.number().describe("How many jokes, 1-10 (default 3).").optional()
-        }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await jokesByType(args));
-        }
-        catch (e) {
-            return textError(errorMessage(e));
-        }
-    });
-    server.registerTool("joke_range", {
-        title: "Joke range",
-        description: "Fetch a batch of jokes by id range, for building lists or checking ids.",
-        inputSchema: z.object({
-            from: z.string().describe("First joke id, e.g. 1."),
-            to: z.string().describe("Last joke id, e.g. 200."),
-            category: z.string().describe("Any category name, or omit for Any.").optional(),
-            amount: z.number().describe("How many jokes, 1-10 (default 3).").optional()
-        }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await jokeRange(args));
-        }
-        catch (e) {
-            return textError(errorMessage(e));
-        }
-    });
-    server.registerTool("joke_length_profile", {
-        title: "Joke length profile",
-        description: "Measure how long the jokes actually are - characters, words, median and range - with the setup and delivery split, the languages returned and any flags the service set. Optional length filter and flag filter.",
-        inputSchema: z.object({ count: z.number().int().min(1).max(30).default(12).describe("How many jokes to measure (default 12, max 30)."), type: z.string().describe("Type filter, e.g. twopart, chain, programming, dark. No filter by default.").optional(), flags: z.string().describe("Comma separated flags to request, e.g. explicit,sexist.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await jokeLengthProfile(args));
-        }
-        catch (e) {
-            return textError(errorMessage(e));
-        }
-    });
-    server.registerTool("joke_type_coverage", {
-        title: "Joke type coverage",
-        description: "Which joke types actually have a joke waiting right now: sample each type in safe mode and report the hit rate and mean length, which the catalogue listing never shows.",
-        inputSchema: z.object({ samples: z.number().int().min(2).max(30).default(8).describe("How many times to ask per type (default 8, max 30).") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await jokeTypeCoverage(args));
-        }
-        catch (e) {
-            return textError(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

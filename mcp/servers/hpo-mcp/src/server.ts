@@ -3,6 +3,7 @@ import { z } from "zod"
 import { phenotypeChildren, phenotypeTerm, searchPhenotypes, SourceError } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof SourceError || e instanceof Error) return `Error: ${e.message}`
@@ -23,7 +24,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchPhenotypes(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -38,7 +39,7 @@ export function createServer(): McpServer {
       try {
         return text(await phenotypeTerm(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -54,7 +55,7 @@ export function createServer(): McpServer {
       try {
         return text(await phenotypeChildren(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

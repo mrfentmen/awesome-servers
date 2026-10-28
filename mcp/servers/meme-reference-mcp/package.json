@@ -1,6 +1,6 @@
 {
   "name": "meme-reference-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Meme template reference and image generation from the official Imgflip and memegen APIs: search, detail, popularity, random pick, generator list and rendered memes.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/meme-reference-mcp",

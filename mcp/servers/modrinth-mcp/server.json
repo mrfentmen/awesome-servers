@@ -6,12 +6,12 @@
     "url": "https://github.com/mrfentmen/modrinth-mcp",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.4",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "modrinth-mcp",
-      "version": "1.0.0",
+      "version": "1.0.4",
       "transport": {
         "type": "stdio"
       }

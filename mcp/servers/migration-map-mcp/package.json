@@ -1,6 +1,6 @@
 {
   "name": "migration-map-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Find local migration numbering gaps and rollback pairing signals without returning SQL, paths, or migration names.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/migration-map-mcp",

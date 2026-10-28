@@ -1,6 +1,6 @@
 {
   "name": "metmuseum-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Use this MCP server to the Metropolitan Museum of Art. Search 500k artworks, get details, artists, and images",
   "type": "module",
   "mcpName": "io.github.mrfentmen/metmuseum-mcp",

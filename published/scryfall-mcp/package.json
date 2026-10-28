@@ -1,7 +1,7 @@
 {
-  "name": "scryfall-mcp",
-  "version": "1.0.6",
-  "description": "Use this MCP server to Scryfall, Magic: The Gathering card database with rulings, printings, and prices. Tools include search cards, get card, get rulings",
+  "name": "@mrfentmen/scryfall-mcp",
+  "version": "1.0.2",
+  "description": "Magic: The Gathering cards from Scryfall: full-text search, exact lookups, prices and legalities - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/scryfall-mcp",
   "repository": {
@@ -17,16 +17,16 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
-    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+    "start": "node dist/index.js"
   },
   "keywords": [
     "mcp",
-    "mtg",
     "magic",
+    "mtg",
     "cards",
-    "scryfall"
+    "scryfall",
+    "gaming",
+    "keyless"
   ],
   "license": "MIT",
   "dependencies": {

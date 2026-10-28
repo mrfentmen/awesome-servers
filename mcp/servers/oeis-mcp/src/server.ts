@@ -3,6 +3,7 @@ import { z } from "zod"
 import { formatSequence, getSequence, OeisError, searchSequences } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -20,7 +21,7 @@ export function createServer(): McpServer {
         if (results.length === 0) return text(`No OEIS sequences match "${query}".`)
         return text(`OEIS results for "${query}":\n\n${results.map((s, i) => formatSequence(s, i)).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -35,7 +36,7 @@ export function createServer(): McpServer {
         if (!s) return text(`No OEIS sequence ${id}.`)
         return text(formatSequence(s))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

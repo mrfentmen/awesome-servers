@@ -3,6 +3,7 @@ import { z } from "zod"
 import { asylumByCountry, populationByOrigin, trends, SourceError } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof SourceError || e instanceof Error) return `Error: ${e.message}`
@@ -24,7 +25,7 @@ export function createServer(): McpServer {
       try {
         return text(await populationByOrigin(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -41,7 +42,7 @@ export function createServer(): McpServer {
       try {
         return text(await asylumByCountry(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -58,7 +59,7 @@ export function createServer(): McpServer {
       try {
         return text(await trends(a))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

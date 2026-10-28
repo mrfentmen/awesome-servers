@@ -1,30 +1,47 @@
-# frankfurter-mcp
+# Frankfurter MCP
 
-ECB reference exchange rates (Frankfurter).
+Frankfurter: ECB exchange rates, conversion, per-date rates, history and multi-currency comparison — keyless.
 
-A merged MCP server that consolidates duplicate single-purpose servers in this monorepo into one focused server.
+Keyless — no signup, no API key, no environment variables.
+
+## Install
+
+```bash
+npx -y @mrfentmen/frankfurter-mcp
+```
+
+Or add it to your MCP client:
+
+```json
+{
+  "mcpServers": {
+    "frankfurter-mcp": { "command": "npx", "args": ["-y", "@mrfentmen/frankfurter-mcp"] }
+  }
+}
+```
 
 ## Tools
 
-- `latest` — Latest ECB reference rates.
-- `convert` — Convert an amount.
-- `history` — Rate history for a period.
+| Tool | What it does |
+|---|---|
+| `list_currencies` | Every currency with a published rate |
+| `latest_rates` | Latest ECB rates for a base currency |
+| `convert_currency` | Convert an amount at the latest rate |
+| `exchange_history` | First, last, change and range over N days |
+| `rates_on_date` | Rates for one exact date |
+| `compare_currencies` | Percent moves of several currencies vs USD |
 
-## Run
+## Example
 
-```bash
-npm install
-npm run build
-node dist/index.js
+```
+100 USD = 89.38 EUR
+Rate: 1 USD = 0.893810 EUR · ECB reference for 2026-10-26
 ```
 
-## Source
+## Notes
 
-Public free APIs only. See `src/api.ts` for exact endpoints.
+Data is the European Central Bank reference rates, not live interbank quotes. Weekends and holidays fall back to the previous business day.
 
-## Licence — no paywall
+## Licence
 
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.
+MIT

@@ -46,16 +46,3 @@ export function formatWithDefs(hits) {
     })
         .join("\n");
 }
-// ---- muxA tools:
-function boundedLimit(value, fallback) {
-    return Math.max(1, Math.min(Math.round(value ?? fallback), 50));
-}
-export async function confusablesWith(args) {
-    const word = (args.word ?? "").trim();
-    if (!word)
-        throw new DatamuseError("Provide a word to look up confusables for");
-    const hits = await words({ sl: word, max: String(boundedLimit(args.limit, 10)) });
-    if (!hits.length)
-        return `No confusables for "${word}".`;
-    return `Words that can be confused with "${word}":\n${formatHits(hits)}`;
-}

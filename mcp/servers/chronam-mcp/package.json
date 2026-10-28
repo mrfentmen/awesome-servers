@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/chronam-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Chronicling America historical US newspapers at the Library of Congress: search scanned pages 1690-1963 by keyword, state or date, and read one page's details - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/chronam-mcp",

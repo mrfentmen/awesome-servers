@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/isbn-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Validate and convert ISBN-10 and ISBN-13 numbers, with checksum maths - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/isbn-mcp",

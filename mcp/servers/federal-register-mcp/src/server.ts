@@ -3,7 +3,8 @@ import { z } from "zod"
 import { format, getDocument, listAgencies, searchDocuments } from "./api.js"
 
 const text = (value: string) => ({ content: [{ type: "text" as const, text: value }] })
-const errorText = (error: unknown) => text(`Error: ${error instanceof Error ? error.message : String(error)}`)
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
+const errorText = (error: unknown) => fail(`Error: ${error instanceof Error ? error.message : String(error)}`)
 
 export function createServer() {
   const server = new McpServer({ name: "federal-register-mcp", version: "1.0.0" })

@@ -12,6 +12,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof HolidayError || e instanceof Error) return `Error: ${e.message}`
@@ -28,7 +29,7 @@ export function createServer(): McpServer {
     try {
       return text(await listCountries())
     } catch (e) {
-      return text(errorMessage(e))
+      return fail(errorMessage(e))
     }
   })
 
@@ -40,7 +41,7 @@ export function createServer(): McpServer {
       try {
         return text(await upcoming(c))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -53,7 +54,7 @@ export function createServer(): McpServer {
       try {
         return text(await holidaysForYear(c, y))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -66,7 +67,7 @@ export function createServer(): McpServer {
       try {
         return text(await isToday(c))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -79,7 +80,7 @@ export function createServer(): McpServer {
       try {
         return text(await holidayOnDate(c, date))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -92,7 +93,7 @@ export function createServer(): McpServer {
       try {
         return text(await longWeekends(c, y))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -105,7 +106,7 @@ export function createServer(): McpServer {
       try {
         return text(await countryInfo(c))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

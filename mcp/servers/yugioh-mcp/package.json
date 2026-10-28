@@ -1,6 +1,6 @@
 {
   "name": "yugioh-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for YGOPRODeck, Yu Gi Oh! cards, archetypes, and banlists.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/yugioh-mcp",

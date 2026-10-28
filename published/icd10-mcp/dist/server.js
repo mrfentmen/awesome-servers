@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { browseIcd10Prefix, lookupIcd10Code, searchIcd10, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -17,7 +18,7 @@ export function createServer() {
             return text(await searchIcd10(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("lookup_icd10_code", "Look up the exact meaning and validity of an ICD-10-CM code.", {
@@ -27,7 +28,7 @@ export function createServer() {
             return text(await lookupIcd10Code(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("browse_icd10_prefix", "List codes under a chapter or category prefix.", {
@@ -38,7 +39,7 @@ export function createServer() {
             return text(await browseIcd10Prefix(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

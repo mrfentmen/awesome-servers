@@ -1,24 +1,43 @@
 {
-  "name": "nominatim-mcp",
+  "name": "@mrfentmen/nominatim-mcp",
   "version": "1.0.2",
-  "description": "OpenStreetMap Nominatim geocoding and reverse geocoding (merged).",
+  "description": "Geocode with OpenStreetMap: find places by name, reverse geocode coordinates and resolve OSM ids - keyless.",
   "type": "module",
-  "main": "dist/index.js",
+  "mcpName": "io.github.mrfentmen/nominatim-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "nominatim-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "geocoding",
+    "osm",
+    "openstreetmap",
+    "maps",
+    "coordinates",
+    "keyless"
+  ],
+  "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "zod": "^3.23.0"
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5.5.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
   },
-  "license": "MIT",
   "engines": {
     "node": ">=20"
-  },
-  "mcpName": "io.github.mrfentmen/nominatim-mcp"
+  }
 }

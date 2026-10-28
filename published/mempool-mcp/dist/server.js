@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { addressInfo, blockInfo, difficultyAdjustment, MempoolError, mempoolStats, recentBlocks, recommendedFees, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof MempoolError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -14,7 +15,7 @@ export function createServer() {
             return text(await recommendedFees());
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("mempool_stats", "How many transactions are waiting and how much fee is queued.", {}, async () => {
@@ -22,7 +23,7 @@ export function createServer() {
             return text(await mempoolStats());
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("recent_blocks", "The most recently mined Bitcoin blocks.", { limit: z.number().int().min(1).max(15).default(5).describe("Blocks to return") }, async ({ limit }) => {
@@ -30,7 +31,7 @@ export function createServer() {
             return text(await recentBlocks(limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("block_info", "Details for one block, by height or hash.", { block: z.string().min(1).describe("Height (e.g. 800000) or 64-character hash") }, async ({ block }) => {
@@ -38,7 +39,7 @@ export function createServer() {
             return text(await blockInfo(block));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("address_info", "Confirmed and unconfirmed balance and transaction counts for a Bitcoin address.", { address: z.string().min(14).describe("Bitcoin address") }, async ({ address }) => {
@@ -46,7 +47,7 @@ export function createServer() {
             return text(await addressInfo(address));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("difficulty_adjustment", "Progress and estimate for the next Bitcoin difficulty retarget.", {}, async () => {
@@ -54,7 +55,7 @@ export function createServer() {
             return text(await difficultyAdjustment());
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

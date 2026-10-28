@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/bible-api-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Read Bible verses and passages in 30+ translations, with reference lookup and a random verse - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/bible-api-mcp",

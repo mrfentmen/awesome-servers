@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { LaunchLibraryError, launchDetail, launchesBySearch, listAgencies, recentLaunches, upcomingEvents, upcomingLaunches, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof LaunchLibraryError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -15,7 +16,7 @@ export function createServer() {
             return text(await upcomingLaunches(n));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("recent_launches", "The most recent launches, newest first, with outcomes.", { limit }, async ({ limit: n }) => {
@@ -23,7 +24,7 @@ export function createServer() {
             return text(await recentLaunches(n));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("launch_detail", "One launch with window, mission, orbit and image.", { id: z.string().min(20).describe("Launch id from any list tool") }, async ({ id }) => {
@@ -31,7 +32,7 @@ export function createServer() {
             return text(await launchDetail(id));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("search_launches", "Search the full launch history by name — rocket, mission or provider.", {
@@ -42,7 +43,7 @@ export function createServer() {
             return text(await launchesBySearch(term, n));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("upcoming_events", "Upcoming space events beyond launches, e.g. dockings and tests.", { limit }, async ({ limit: n }) => {
@@ -50,7 +51,7 @@ export function createServer() {
             return text(await upcomingEvents(n));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("list_agencies", "Featured space agencies, optionally filtered by country code.", {
@@ -61,7 +62,7 @@ export function createServer() {
             return text(await listAgencies(n, country));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

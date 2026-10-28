@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { matrixDeterminant, matrixInverse, matrixMultiply, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -17,7 +18,7 @@ export function createServer() {
             return text(await matrixMultiply(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("matrix_determinant", "Compute a square matrix determinant with fraction-free elimination.", {
@@ -27,7 +28,7 @@ export function createServer() {
             return text(await matrixDeterminant(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("matrix_inverse", "Invert a square matrix using Gauss-Jordan elimination.", {
@@ -37,7 +38,7 @@ export function createServer() {
             return text(await matrixInverse(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

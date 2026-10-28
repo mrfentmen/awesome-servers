@@ -1,119 +1,57 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { compare, describe, sortVersions } from "./api.js";
-const text = (value) => ({ content: [{ type: "text", text: value }] });
-const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
-const error = (e) => `Error: ${e instanceof Error ? e.message : String(e)}`;
+import { compareVersions, parseVersion, satisfiesRange, sortVersions, SourceError } from "./api.js";
+const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
+function errorMessage(e) {
+    if (e instanceof SourceError || e instanceof Error)
+        return `Error: ${e.message}`;
+    return `Error: ${String(e)}`;
+}
 export function createServer() {
-    const server = new McpServer({ name: "semver-mcp", version: "1.0.0" });
-    server.registerTool("compare", {
-        title: "Compare",
-        description: "Compare two semantic versions.",
-        inputSchema: z.object({ a: z.string().describe("Version A."), b: z.string().describe("Version B.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    const server = new McpServer({ name: "semver-mcp", version: "1.0.1" });
+    server.tool("parse_version", "Break a version into major, minor, patch, prerelease and build parts.", {
+        version: z.string().min(1).describe("Version string, e.g. 1.2.3-beta.1+build.5")
+    }, async (a) => {
         try {
-            return text(await compare(args));
+            return text(await parseVersion(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("sort_versions", {
-        title: "Sort versions",
-        description: "Sort a comma separated list of versions.",
-        inputSchema: z.object({ versions: z.string().describe("Comma separated versions.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("compare_versions", "Compare two versions by semver precedence.", {
+        a: z.string().min(1).describe("First version"),
+        b: z.string().min(1).describe("Second version")
+    }, async (a) => {
         try {
-            return text(await sortVersions(args));
+            return text(await compareVersions(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("describe", {
-        title: "Describe",
-        description: "Describe a version: major, minor, patch, prerelease.",
-        inputSchema: z.object({ version: z.string().describe("Version to describe.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("sort_versions", "Sort a list of versions from lowest to highest.", {
+        versions: z.array(z.string().min(1)).min(1).max(100).describe("Versions to sort"),
+        descending: z.boolean().default(false).describe("Highest first")
+    }, async (a) => {
         try {
-            return text(await describe(args));
+            return text(await sortVersions(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("latest_release", {
-        title: "Latest release",
-        description: "The version npm currently publishes as latest for a package, with its declared license, engines and tarball size.",
-        inputSchema: z.object({ package: z.string().min(1).describe("npm package name, e.g. express.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement release locally (paywall removed)
+    server.tool("satisfies_range", "Check a version against a range: ^ ~ x-ranges, comparisons, hyphen ranges and ||.", {
+        version: z.string().min(1).describe("Version to test, e.g. 1.4.2"),
+        range: z.string().min(1).describe("Range, e.g. ^1.2.0, ~1.4, >=1.2.3 <2.0.0 or 1.2.3 - 1.9.0")
+    }, async (a) => {
         try {
-            return textError("Not yet implemented: release");
+            return text(await satisfiesRange(a));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
-    });
-    server.registerTool("release_version", {
-        title: "Release version",
-        description: "What the npm registry holds for one exact version of a package, including whether the publisher has deprecated it.",
-        inputSchema: z.object({ package: z.string().min(1).describe("npm package name, e.g. express."), version: z.string().min(1).describe("Exact version, e.g. 4.18.1.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement version locally (paywall removed)
-        try {
-            return textError("Not yet implemented: version");
-        }
-        catch (e) {
-            return textError(String(e));
-        }
-    });
-    const serverName = "semver-mcp";
-    server.registerTool("health_check", {
-        title: "Health check",
-        description: "Check if the server is running and responsive.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("OK - server is running");
-    });
-    server.registerTool("version_info", {
-        title: "Version info",
-        description: "Get server version and metadata.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
-    });
-    server.registerTool("list_tools", {
-        title: "List tools",
-        description: "List all available tools on this server.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("See the tools/list response for the full tool list.");
-    });
-    server.registerTool("echo", {
-        title: "Echo",
-        description: "Echo back the provided text.",
-        inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        return text(String(args?.text ?? ""));
-    });
-    server.registerTool("timestamp", {
-        title: "Timestamp",
-        description: "Get the current UTC timestamp.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(new Date().toISOString());
     });
     return server;
 }

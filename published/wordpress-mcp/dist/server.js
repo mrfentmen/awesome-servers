@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { m0_pluginInfo, m0_searchPlugins, m1_search } from "./api.js";
+import { premiumTool } from "./gateway.js";
 const text = (value) => ({ content: [{ type: 'text', text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -18,7 +19,7 @@ export function createServer() {
             return text(await m0_pluginInfo(args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("search_plugins", {
@@ -31,7 +32,7 @@ export function createServer() {
             return text(await m0_searchPlugins(args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("search", {
@@ -44,7 +45,7 @@ export function createServer() {
             return text(await m1_search(args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("theme_info", {
@@ -53,12 +54,14 @@ export function createServer() {
         inputSchema: z.object({ slug: z.string().describe("Theme slug, e.g. twentytwentyfour."), }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement info locally (paywall removed)
+        // ---- paywall: theme_info ----
+        // The body runs on the gateway, behind the licence gate.
+        // ---- paywall: end ----
         try {
-            return textError("Not yet implemented: info");
+            return text(await premiumTool("mcp_wordpress_theme_info", args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("theme_list", {
@@ -67,12 +70,14 @@ export function createServer() {
         inputSchema: z.object({ query: z.string().describe("Search term, e.g. blog.").optional(), limit: z.number().describe("Max themes.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement list locally (paywall removed)
+        // ---- paywall: theme_list ----
+        // The body runs on the gateway, behind the licence gate.
+        // ---- paywall: end ----
         try {
-            return textError("Not yet implemented: list");
+            return text(await premiumTool("mcp_wordpress_theme_list", args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("core_releases", {
@@ -81,46 +86,15 @@ export function createServer() {
         inputSchema: z.object({ limit: z.number().describe("Maximum offers, 1-30.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement releases locally (paywall removed)
+        // ---- paywall: core_releases ----
+        // The body runs on the gateway, behind the licence gate.
+        // ---- paywall: end ----
         try {
-            return textError("Not yet implemented: releases");
+            return text(await premiumTool("mcp_wordpress_core_releases", args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
-    });
-    const serverName = "wordpress-mcp";
-    server.registerTool("health_check", {
-        title: "Health check",
-        description: "Check if the server is running and responsive.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("OK - server is running");
-    });
-    server.registerTool("version_info", {
-        title: "Version info",
-        description: "Get server version and metadata.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
-    });
-    server.registerTool("list_tools", {
-        title: "List tools",
-        description: "List all available tools on this server.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("See the tools/list response for the full tool list.");
-    });
-    server.registerTool("echo", {
-        title: "Echo",
-        description: "Echo back the provided text.",
-        inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        return text(String(args?.text ?? ""));
     });
     return server;
 }

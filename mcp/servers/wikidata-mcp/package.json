@@ -1,6 +1,6 @@
 {
   "name": "wikidata-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Wikidata entity search and bounded structured knowledge queries.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/wikidata-mcp",

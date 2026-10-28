@@ -1,141 +1,74 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { doiLookup, funderLookup, funders, journalLookup, journals, licenses, memberLookup, members, workTypes } from "./api.js";
-import { searchWorks } from "./api.js";
-const text = (value) => ({ content: [{ type: "text", text: value }] });
-const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
-const error = (e) => `Error: ${e instanceof Error ? e.message : String(e)}`;
+import { CrossrefError, funderSearch, journalInfo, recentWorks, searchWorks, workByDoi, worksByAuthor, } from "./api.js";
+const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
+function errorMessage(e) {
+    if (e instanceof CrossrefError || e instanceof Error)
+        return `Error: ${e.message}`;
+    return `Error: ${String(e)}`;
+}
 export function createServer() {
     const server = new McpServer({ name: "crossref-mcp", version: "1.0.0" });
-    server.registerTool("search_works", {
-        title: "Search works",
-        description: "Search scholarly works.",
-        inputSchema: z.object({ query: z.string().describe("Search terms."), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("search_works", "Search 160M+ scholarly works by title, topic or citation text.", {
+        query: z.string().min(3).describe('What to search for, e.g. "graph neural networks for molecules"'),
+        rows: z.number().int().min(1).max(25).default(8).describe("How many works to return"),
+    }, async ({ query, rows }) => {
         try {
-            return text(await searchWorks(args));
+            return text(await searchWorks(query, rows));
         }
         catch (e) {
-            return textError(error(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("doi_lookup", {
-        title: "Doi lookup",
-        description: "Resolve a DOI to its metadata.",
-        inputSchema: z.object({ doi: z.string().describe("Digital Object Identifier.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("work_by_doi", "Full metadata for one paper by its DOI: authors, venue, citations, references, license.", { doi: z.string().min(6).describe("DOI, e.g. 10.1038/nature12373") }, async ({ doi }) => {
         try {
-            return text(await doiLookup(args));
+            return text(await workByDoi(doi));
         }
         catch (e) {
-            return textError(error(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("journals", {
-        title: "Search journals",
-        description: "Search scholarly journals.",
-        inputSchema: z.object({ query: z.string().describe("Search terms.").optional(), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("journal_info", "Journal record by ISSN: publisher, ISSNs, how many works Crossref indexes.", { issn: z.string().min(8).describe("ISSN, e.g. 0028-0836") }, async ({ issn }) => {
         try {
-            return text(await journals(args));
+            return text(await journalInfo(issn));
         }
         catch (e) {
-            return textError(error(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("journal_lookup", {
-        title: "Journal lookup",
-        description: "Journal metadata by ISSN.",
-        inputSchema: z.object({ issn: z.string().describe("ISSN like 0028-0836.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("recent_works", "Journal articles published in the last N days, optionally filtered by topic.", {
+        query: z.string().optional().describe("Optional topic filter"),
+        days: z.number().int().min(1).max(365).default(7).describe("Look back this many days"),
+        rows: z.number().int().min(1).max(25).default(8).describe("How many works to return"),
+    }, async ({ query, days, rows }) => {
         try {
-            return text(await journalLookup(args));
+            return text(await recentWorks(query, days, rows));
         }
         catch (e) {
-            return textError(error(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("funders", {
-        title: "Search funders",
-        description: "Search research funders.",
-        inputSchema: z.object({ query: z.string().describe("Search terms.").optional(), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("works_by_author", "Most-cited works Crossref attributes to an author name.", {
+        author: z.string().min(3).describe('Author name, e.g. "Yann LeCun"'),
+        rows: z.number().int().min(1).max(25).default(8).describe("How many works to return"),
+    }, async ({ author, rows }) => {
         try {
-            return text(await funders(args));
+            return text(await worksByAuthor(author, rows));
         }
         catch (e) {
-            return textError(error(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("funder_lookup", {
-        title: "Funder lookup",
-        description: "Funder metadata by id.",
-        inputSchema: z.object({ id: z.string().describe("Funder id like 100000001.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
+    server.tool("funder_search", "Find research funders registered with Crossref by name.", {
+        query: z.string().min(2).describe('Funder name, e.g. "gates" or "european commission"'),
+        rows: z.number().int().min(1).max(25).default(8).describe("How many funders to return"),
+    }, async ({ query, rows }) => {
         try {
-            return text(await funderLookup(args));
+            return text(await funderSearch(query, rows));
         }
         catch (e) {
-            return textError(error(e));
-        }
-    });
-    server.registerTool("members", {
-        title: "Search members",
-        description: "Search Crossref members (publishers).",
-        inputSchema: z.object({ query: z.string().describe("Search terms.").optional(), limit: z.number().describe("Max results.").optional() }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await members(args));
-        }
-        catch (e) {
-            return textError(error(e));
-        }
-    });
-    server.registerTool("member_lookup", {
-        title: "Member lookup",
-        description: "Member metadata and DOI counts.",
-        inputSchema: z.object({ id: z.string().describe("Member id.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await memberLookup(args));
-        }
-        catch (e) {
-            return textError(error(e));
-        }
-    });
-    server.registerTool("work_types", {
-        title: "Work types",
-        description: "Crossref work type vocabulary.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await workTypes());
-        }
-        catch (e) {
-            return textError(error(e));
-        }
-    });
-    server.registerTool("licenses", {
-        title: "Licenses",
-        description: "License URLs with DOI counts.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await licenses());
-        }
-        catch (e) {
-            return textError(error(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

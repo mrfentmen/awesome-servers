@@ -1,24 +1,42 @@
 {
-  "name": "frankfurter-mcp",
-  "version": "1.0.2",
-  "description": "ECB reference exchange rates (Frankfurter).",
+  "name": "@mrfentmen/frankfurter-mcp",
+  "version": "1.0.1",
+  "description": "Frankfurter: ECB exchange rates, conversion, per-date rates, history and multi-currency comparison \u2014 keyless.",
   "type": "module",
-  "main": "dist/index.js",
+  "mcpName": "io.github.mrfentmen/frankfurter-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "frankfurter-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "currency",
+    "forex",
+    "exchange-rates",
+    "finance",
+    "keyless"
+  ],
+  "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "zod": "^3.23.0"
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5.5.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
   },
-  "license": "MIT",
   "engines": {
     "node": ">=20"
-  },
-  "mcpName": "io.github.mrfentmen/frankfurter-mcp"
+  }
 }

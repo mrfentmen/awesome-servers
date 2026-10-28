@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -35,7 +36,7 @@ export function createServer(): McpServer {
             tracks.map((t, i) => formatTrack(t, i)).join("\n\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -50,7 +51,7 @@ export function createServer(): McpServer {
         if (tracks.length === 0) return text(`No tracks match "${query}".`)
         return text(`Tracks matching "${query}":\n\n${tracks.map((t, i) => formatTrack(t, i)).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -65,7 +66,7 @@ export function createServer(): McpServer {
         if (users.length === 0) return text(`No artists match "${query}".`)
         return text(`Artists matching "${query}":\n\n${users.map((u, i) => formatUser(u, i)).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -80,7 +81,7 @@ export function createServer(): McpServer {
         if (tracks.length === 0) return text(`No tracks for user ${userId}.`)
         return text(`Tracks from user ${userId}:\n\n${tracks.map((t, i) => formatTrack(t, i)).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

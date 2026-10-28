@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/mfapi-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Indian mutual fund NAVs from MFapi: search schemes by name, read the latest NAV, and pull a NAV history - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/mfapi-mcp",

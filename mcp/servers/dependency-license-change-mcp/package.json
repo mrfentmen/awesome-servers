@@ -1,6 +1,6 @@
 {
   "name": "dependency-license-change-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Compare local license evidence across two snapshots without returning package names, text, paths, or source.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/dependency-license-change-mcp",

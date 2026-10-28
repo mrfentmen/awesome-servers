@@ -1,24 +1,33 @@
 {
+  "name": "@mrfentmen/string-db-mcp",
   "version": "1.0.2",
+  "description": "STRING protein networks: map identifiers and list interaction partners with confidence scores - keyless.",
   "type": "module",
+  "mcpName": "io.github.mrfentmen/string-db-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/string-db-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "string-db-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
-    "dist",
-    "server.json",
-    "README.md"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "dev": "npm run build && node dist/index.js"
+    "start": "node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "string-db",
+    "protein-interactions",
+    "ppi",
+    "networks",
+    "bioinformatics",
+    "keyless"
+  ],
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -28,16 +37,6 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
   },
-  "name": "string-db-mcp",
-  "description": "Protein interaction networks from STRING DB. No key required.",
-  "mcpName": "io.github.mrfentmen/string-db-mcp",
-  "keywords": [
-    "mcp",
-    "string",
-    "proteins",
-    "biology",
-    "interactions"
-  ],
   "engines": {
     "node": ">=20"
   }

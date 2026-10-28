@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/nasa-power-mcp",
-  "description": "Solar, weather, and climate data from NASA POWER. No key required.",
+  "description": "NASA POWER climate data: daily temperature, rain, wind and solar series for any coordinate, plus",
   "repository": {
-    "url": "https://github.com/mrfentmen/nasa-power-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.2",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "nasa-power-mcp",
-      "version": "1.0.0",
+      "identifier": "@mrfentmen/nasa-power-mcp",
+      "version": "1.0.2",
       "transport": {
         "type": "stdio"
       }

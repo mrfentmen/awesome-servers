@@ -1,6 +1,6 @@
 {
   "name": "ietf-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for IETF documents, RFCs, Internet-Drafts, and working groups.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ietf-mcp",

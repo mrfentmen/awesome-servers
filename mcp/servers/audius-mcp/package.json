@@ -1,6 +1,6 @@
 {
   "name": "audius-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Audius, underground and independent music: trending tracks, artists, search.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/audius-mcp",

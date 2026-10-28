@@ -1,16 +1,16 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/clinvar-mcp",
-  "description": "Clinical variants from ClinVar. No key required.",
+  "description": "ClinVar variant interpretations from NCBI: search variants by gene or condition and read - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/clinvar-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "clinvar-mcp",
+      "identifier": "@mrfentmen/clinvar-mcp",
       "version": "1.0.1",
       "transport": {
         "type": "stdio"

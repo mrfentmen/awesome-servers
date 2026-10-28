@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/unhcr-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "UNHCR forced displacement statistics: refugees, asylum seekers and stateless people by origin or country of asylum - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/unhcr-mcp",

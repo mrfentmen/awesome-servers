@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/openlibrary-mcp",
-  "version": "1.0.6",
-  "description": "Query the Open Library (openlibrary.org, keyless): full-text book search, work details, and author details with covers and publish years.",
+  "version": "1.0.5",
+  "description": "Book data from Open Library: search, works, authors and editions.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/openlibrary-mcp",
   "repository": {
@@ -17,16 +17,12 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
-    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+    "start": "node dist/index.js"
   },
   "keywords": [
     "mcp",
-    "books",
-    "open-library",
-    "reading",
-    "library"
+    "mcp-server",
+    "keyless"
   ],
   "license": "MIT",
   "dependencies": {

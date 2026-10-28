@@ -72,7 +72,3 @@ export declare function fmtDownloads(n: number): string;
 export declare function formatHit(h: ProjectHit, index: number): string;
 export declare function formatProject(p: Project): string;
 export declare function formatVersion(v: Version, index: number): string;
-export declare function filterIndex(args: {
-    projectType?: string;
-    releaseLimit?: number;
-}): Promise<string>;

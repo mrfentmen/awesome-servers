@@ -1,6 +1,6 @@
 {
   "name": "anime-filler-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server that tells you which anime episodes are filler vs canon. Powered by animefillerlist.com.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/anime-filler-mcp",

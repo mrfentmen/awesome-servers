@@ -3,20 +3,12 @@ import { z } from "zod";
 import { writeFile, mkdir, readFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { astToFountain, estimateRuntime, getSceneBreakdown, parseFountain, sceneToFountain } from "./parser.js";
-const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
-const WRITE = { readOnlyHint: false, openWorldHint: true };
 const store = new Map();
 export function createServer() {
     const server = new McpServer({ name: "screenplaywriter", version: "1.0.0" });
-    server.registerTool("parse_screenplay", {
-        title: "Parse screenplay",
-        description: "Parse a Fountain screenplay from text or file into a structured AST. This is the first step before any analysis or editing.",
-        inputSchema: z.object({
-            content: z.string().describe("The Fountain screenplay text content"),
-            name: z.string().optional().describe("Name to store the parsed screenplay under for later reference"),
-        }),
-        annotations: READ_ONLY,
+    server.tool("parse_screenplay", "Parse a Fountain screenplay from text or file into a structured AST. This is the first step before any analysis or editing.", {
+        content: z.string().describe("The Fountain screenplay text content"),
+        name: z.string().optional().describe("Name to store the parsed screenplay under for later reference"),
     }, 
     // @ts-ignore - SDK overload resolution depth
     async (args) => {
@@ -43,17 +35,12 @@ export function createServer() {
             return { content: [{ type: "text", text }] };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Parse error: ${err.message}` }], isError: true };
+            return { content: [{ type: "text", text: `Parse error: ${err.message}` }] };
         }
     });
-    server.registerTool("load_screenplay_file", {
-        title: "Load screenplay file",
-        description: "Load a Fountain screenplay from a file path on disk and parse it.",
-        inputSchema: z.object({
-            path: z.string().describe("Path to the .fountain file"),
-            name: z.string().optional().describe("Name to store under"),
-        }),
-        annotations: READ_ONLY,
+    server.tool("load_screenplay_file", "Load a Fountain screenplay from a file path on disk and parse it.", {
+        path: z.string().describe("Path to the .fountain file"),
+        name: z.string().optional().describe("Name to store under"),
     }, async (args) => {
         try {
             const content = await readFile(args.path, "utf-8");
@@ -72,18 +59,13 @@ export function createServer() {
             };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
         }
     });
-    server.registerTool("write_screenplay", {
-        title: "Write screenplay",
-        description: "Write a new screenplay in Fountain format. The LLM should provide proper Fountain syntax. Saves to disk.",
-        inputSchema: z.object({
-            filename: z.string().describe("Output filename (e.g., 'my_screenplay.fountain')"),
-            content: z.string().describe("The screenplay in Fountain format"),
-            output_dir: z.string().describe("Directory to save to"),
-        }),
-        annotations: WRITE,
+    server.tool("write_screenplay", "Write a new screenplay in Fountain format. The LLM should provide proper Fountain syntax. Saves to disk.", {
+        filename: z.string().describe("Output filename (e.g., 'my_screenplay.fountain')"),
+        content: z.string().describe("The screenplay in Fountain format"),
+        output_dir: z.string().describe("Directory to save to"),
     }, async (args) => {
         try {
             await mkdir(args.output_dir, { recursive: true });
@@ -101,17 +83,12 @@ export function createServer() {
             };
         }
         catch (err) {
-            return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
+            return { content: [{ type: "text", text: `Error: ${err.message}` }] };
         }
     });
-    server.registerTool("get_scene", {
-        title: "Get scene",
-        description: "Get a specific scene from a stored screenplay by number.",
-        inputSchema: z.object({
-            screenplay_id: z.string().describe("The screenplay name/ID from parse_screenplay"),
-            scene_number: z.number().describe("Scene number (1-indexed)"),
-        }),
-        annotations: READ_ONLY,
+    server.tool("get_scene", "Get a specific scene from a stored screenplay by number.", {
+        screenplay_id: z.string().describe("The screenplay name/ID from parse_screenplay"),
+        scene_number: z.number().describe("Scene number (1-indexed)"),
     }, async (args) => {
         const ast = store.get(args.screenplay_id);
         if (!ast)
@@ -126,16 +103,11 @@ export function createServer() {
         }
         return { content: [{ type: "text", text: sceneToFountain(scene) }] };
     });
-    server.registerTool("edit_scene", {
-        title: "Edit scene",
-        description: "Replace a scene in a stored screenplay. Writes the modified screenplay to disk.",
-        inputSchema: z.object({
-            screenplay_id: z.string().describe("The screenplay name/ID"),
-            scene_number: z.number().describe("Scene number to replace"),
-            new_content: z.string().describe("New scene in Fountain format (including heading)"),
-            output_path: z.string().describe("Where to save the modified screenplay"),
-        }),
-        annotations: WRITE,
+    server.tool("edit_scene", "Replace a scene in a stored screenplay. Writes the modified screenplay to disk.", {
+        screenplay_id: z.string().describe("The screenplay name/ID"),
+        scene_number: z.number().describe("Scene number to replace"),
+        new_content: z.string().describe("New scene in Fountain format (including heading)"),
+        output_path: z.string().describe("Where to save the modified screenplay"),
     }, async (args) => {
         const ast = store.get(args.screenplay_id);
         if (!ast)
@@ -155,16 +127,11 @@ export function createServer() {
             content: [{ type: "text", text: `Scene ${args.scene_number} updated. Saved to ${args.output_path}` }],
         };
     });
-    server.registerTool("add_scene", {
-        title: "Add scene",
-        description: "Add a new scene to a stored screenplay. Writes the modified screenplay to disk.",
-        inputSchema: z.object({
-            screenplay_id: z.string().describe("The screenplay name/ID"),
-            after_scene: z.number().describe("Insert after this scene number (0 = beginning)"),
-            scene_content: z.string().describe("New scene in Fountain format (including heading)"),
-            output_path: z.string().describe("Where to save the modified screenplay"),
-        }),
-        annotations: WRITE,
+    server.tool("add_scene", "Add a new scene to a stored screenplay. Writes the modified screenplay to disk.", {
+        screenplay_id: z.string().describe("The screenplay name/ID"),
+        after_scene: z.number().describe("Insert after this scene number (0 = beginning)"),
+        scene_content: z.string().describe("New scene in Fountain format (including heading)"),
+        output_path: z.string().describe("Where to save the modified screenplay"),
     }, async (args) => {
         const ast = store.get(args.screenplay_id);
         if (!ast)
@@ -185,15 +152,10 @@ export function createServer() {
             ],
         };
     });
-    server.registerTool("remove_scene", {
-        title: "Remove scene",
-        description: "Remove a scene from a stored screenplay.",
-        inputSchema: z.object({
-            screenplay_id: z.string().describe("The screenplay name/ID"),
-            scene_number: z.number().describe("Scene number to remove"),
-            output_path: z.string().describe("Where to save the modified screenplay"),
-        }),
-        annotations: WRITE,
+    server.tool("remove_scene", "Remove a scene from a stored screenplay.", {
+        screenplay_id: z.string().describe("The screenplay name/ID"),
+        scene_number: z.number().describe("Scene number to remove"),
+        output_path: z.string().describe("Where to save the modified screenplay"),
     }, async (args) => {
         const ast = store.get(args.screenplay_id);
         if (!ast)
@@ -215,13 +177,8 @@ export function createServer() {
             ],
         };
     });
-    server.registerTool("character_report", {
-        title: "Character report",
-        description: "Get detailed stats for all characters in a stored screenplay.",
-        inputSchema: z.object({
-            screenplay_id: z.string().describe("The screenplay name/ID"),
-        }),
-        annotations: READ_ONLY,
+    server.tool("character_report", "Get detailed stats for all characters in a stored screenplay.", {
+        screenplay_id: z.string().describe("The screenplay name/ID"),
     }, async (args) => {
         const ast = store.get(args.screenplay_id);
         if (!ast)
@@ -238,13 +195,8 @@ export function createServer() {
         }
         return { content: [{ type: "text", text: lines.join("\n") }] };
     });
-    server.registerTool("scene_breakdown", {
-        title: "Scene breakdown",
-        description: "Get a production breakdown of all scenes: characters, action/dialogue lines, estimated pages.",
-        inputSchema: z.object({
-            screenplay_id: z.string().describe("The screenplay name/ID"),
-        }),
-        annotations: READ_ONLY,
+    server.tool("scene_breakdown", "Get a production breakdown of all scenes: characters, action/dialogue lines, estimated pages.", {
+        screenplay_id: z.string().describe("The screenplay name/ID"),
     }, async (args) => {
         const ast = store.get(args.screenplay_id);
         if (!ast)
@@ -264,13 +216,8 @@ export function createServer() {
         lines.push(`**Total estimated pages: ${Math.round(totalPages * 10) / 10}**`);
         return { content: [{ type: "text", text: lines.join("\n") }] };
     });
-    server.registerTool("runtime_estimate", {
-        title: "Runtime estimate",
-        description: "Estimate the runtime of a stored screenplay based on page count (1 page ≈ 1 minute).",
-        inputSchema: z.object({
-            screenplay_id: z.string().describe("The screenplay name/ID"),
-        }),
-        annotations: READ_ONLY,
+    server.tool("runtime_estimate", "Estimate the runtime of a stored screenplay based on page count (1 page ≈ 1 minute).", {
+        screenplay_id: z.string().describe("The screenplay name/ID"),
     }, async (args) => {
         const ast = store.get(args.screenplay_id);
         if (!ast)
@@ -300,14 +247,9 @@ export function createServer() {
         ].join("\n");
         return { content: [{ type: "text", text }] };
     });
-    server.registerTool("export_fountain", {
-        title: "Export fountain",
-        description: "Export a stored screenplay back to Fountain format and save to disk.",
-        inputSchema: z.object({
-            screenplay_id: z.string().describe("The screenplay name/ID"),
-            output_path: z.string().describe("Where to save the .fountain file"),
-        }),
-        annotations: WRITE,
+    server.tool("export_fountain", "Export a stored screenplay back to Fountain format and save to disk.", {
+        screenplay_id: z.string().describe("The screenplay name/ID"),
+        output_path: z.string().describe("Where to save the .fountain file"),
     }, async (args) => {
         const ast = store.get(args.screenplay_id);
         if (!ast)
@@ -317,12 +259,7 @@ export function createServer() {
         await writeFile(args.output_path, fountain, "utf-8");
         return { content: [{ type: "text", text: `Exported to ${args.output_path}` }] };
     });
-    server.registerTool("list_screenplays", {
-        title: "List screenplays",
-        description: "List all currently loaded screenplays in memory.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async (_args) => {
+    server.tool("list_screenplays", "List all currently loaded screenplays in memory.", async (_args) => {
         const ids = Array.from(store.keys());
         if (ids.length === 0)
             return { content: [{ type: "text", text: "No screenplays loaded" }] };

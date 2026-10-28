@@ -1,6 +1,6 @@
 {
   "name": "openalex-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for OpenAlex scholarly works, authors, institutions, and citations.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/openalex-mcp",

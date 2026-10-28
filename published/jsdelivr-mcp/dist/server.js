@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { packageInfo, stats } from "./api.js";
+import { premiumTool } from "./gateway.js";
 const text = (value) => ({ content: [{ type: "text", text: value }] });
 const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
@@ -17,7 +18,7 @@ export function createServer() {
             return text(await packageInfo(args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("stats", {
@@ -30,7 +31,7 @@ export function createServer() {
             return text(await stats(args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("resolve_version", {
@@ -39,12 +40,14 @@ export function createServer() {
         inputSchema: z.object({ package: z.string().describe("npm package, e.g. express."), range: z.string().describe("Semver range or dist-tag.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement version locally (paywall removed)
+        // ---- paywall: resolve_version ----
+        // The body runs on the gateway, behind the licence gate.
+        // ---- paywall: end ----
         try {
-            return textError("Not yet implemented: version");
+            return text(await premiumTool("mcp_jsdelivr_resolve_version", args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("version_detail", {
@@ -53,12 +56,14 @@ export function createServer() {
         inputSchema: z.object({ package: z.string().describe("npm package, e.g. express."), version: z.string().describe("Exact version such as 4.22.3."), }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement detail locally (paywall removed)
+        // ---- paywall: version_detail ----
+        // The body runs on the gateway, behind the licence gate.
+        // ---- paywall: end ----
         try {
-            return textError("Not yet implemented: detail");
+            return text(await premiumTool("mcp_jsdelivr_version_detail", args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
     });
     server.registerTool("version_list", {
@@ -67,54 +72,15 @@ export function createServer() {
         inputSchema: z.object({ package: z.string().describe("npm package, e.g. express."), limit: z.number().describe("Max versions.").optional() }),
         annotations: READ_ONLY,
     }, async (args) => {
-        // TODO: implement list locally (paywall removed)
+        // ---- paywall: version_list ----
+        // The body runs on the gateway, behind the licence gate.
+        // ---- paywall: end ----
         try {
-            return textError("Not yet implemented: list");
+            return text(await premiumTool("mcp_jsdelivr_version_list", args));
         }
         catch (e) {
-            return textError(String(e));
+            return textError(error(e));
         }
-    });
-    const serverName = "jsdelivr-mcp";
-    server.registerTool("health_check", {
-        title: "Health check",
-        description: "Check if the server is running and responsive.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("OK - server is running");
-    });
-    server.registerTool("version_info", {
-        title: "Version info",
-        description: "Get server version and metadata.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
-    });
-    server.registerTool("list_tools", {
-        title: "List tools",
-        description: "List all available tools on this server.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("See the tools/list response for the full tool list.");
-    });
-    server.registerTool("echo", {
-        title: "Echo",
-        description: "Echo back the provided text.",
-        inputSchema: z.object({ text: z.string().describe("Text to echo.") }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        return text(String(args?.text ?? ""));
-    });
-    server.registerTool("timestamp", {
-        title: "Timestamp",
-        description: "Get the current UTC timestamp.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(new Date().toISOString());
     });
     return server;
 }

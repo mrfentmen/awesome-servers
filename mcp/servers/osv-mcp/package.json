@@ -1,6 +1,6 @@
 {
   "name": "osv-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for OSV open source vulnerability data and package security checks.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/osv-mcp",

@@ -1,9 +1,5 @@
 export declare class LicenseChangeError extends Error {
 }
-export declare function scan(input: string): Promise<{
-    files: number;
-    counts: Record<string, number>;
-}>;
 export declare function compareLicenseEvidence(input: {
     before: string;
     after: string;

@@ -13,6 +13,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof NwsError || e instanceof Error) return `Error: ${e.message}`
@@ -35,7 +36,7 @@ export function createServer(): McpServer {
       try {
         return text((await forecast(lat, lon)).map(periodText).join("\n\n"))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -48,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text((await hourly(lat, lon)).slice(0, hours).map(periodText).join("\n"))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -63,7 +64,7 @@ export function createServer(): McpServer {
         if (!rows.length) return text("No active alerts.")
         return text(`${rows.length} active alert(s)\n\n${rows.slice(0, 15).map(alertText).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -76,7 +77,7 @@ export function createServer(): McpServer {
       try {
         return text(await observation(station))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -98,7 +99,7 @@ export function createServer(): McpServer {
             .join("\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -119,7 +120,7 @@ export function createServer(): McpServer {
           ].join("\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

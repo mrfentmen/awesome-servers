@@ -1,31 +1,32 @@
-# dictionary-mcp
+# Free Dictionary
 
-Dictionary definitions and word of the day (DictionaryAPI).
+English dictionary lookups: definitions by part of speech, examples, synonyms and antonyms for any word - keyless.
 
-A merged MCP server that consolidates duplicate single-purpose servers in this monorepo into one focused server.
+Keyless — no signup, no API key, no environment variables.
+
+## Install
+
+```bash
+npx -y @mrfentmen/dictionary-mcp
+```
+
+Or add it to your MCP client:
+
+```json
+{
+  "mcpServers": {
+    "dictionary-mcp": { "command": "npx", "args": ["-y", "@mrfentmen/dictionary-mcp"] }
+  }
+}
+```
 
 ## Tools
 
-- `define` — Definition of a word.
-- `wordOfDay` — Random word with definition.
-- `randomWord` — Another random word with definition.
-- `featuredWord` — Featured word of the day.
+| Tool | What it does |
+|---|---|
+| `define` | Definitions of a word, grouped by part of speech. |
+| `synonyms` | Synonyms and antonyms of a word, with pronunciation links. |
 
-## Run
+## Data source
 
-```bash
-npm install
-npm run build
-node dist/index.js
-```
-
-## Source
-
-Public free APIs only. See `src/api.ts` for exact endpoints.
-
-## Licence — no paywall
-
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.
+Free Dictionary API (dictionaryapi.dev, Wiktionary-based)

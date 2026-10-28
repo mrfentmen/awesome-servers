@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { currentPosition, IssError, listSatellites, overheadCheck, positionTrack, satelliteTle, visibilityReport, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof IssError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -15,7 +16,7 @@ export function createServer() {
             return text(await currentPosition(satellite_id));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("position_track", "Recent ground track: a series of positions over the past N minutes.", {
@@ -27,7 +28,7 @@ export function createServer() {
             return text(await positionTrack(satellite_id, minutes, points));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("visibility_report", "Whether the ISS will be in sunlight over the next hours, with daylight/eclipse transitions.", {
@@ -39,7 +40,7 @@ export function createServer() {
             return text(await visibilityReport(satellite_id, hours, points));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("list_satellites", "Which satellites this tracking API currently covers.", {}, async () => {
@@ -47,7 +48,7 @@ export function createServer() {
             return text(await listSatellites());
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("satellite_tle", "Current orbital elements (TLE) so you can propagate passes yourself.", { satellite_id: satArg }, async ({ satellite_id }) => {
@@ -55,7 +56,7 @@ export function createServer() {
             return text(await satelliteTle(satellite_id));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("overhead_check", "Is the ISS above a given latitude/longitude right now? Distance to its sub-point and footprint coverage.", {
@@ -67,7 +68,7 @@ export function createServer() {
             return text(await overheadCheck(satellite_id, latitude, longitude));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

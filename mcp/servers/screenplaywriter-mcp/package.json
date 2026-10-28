@@ -1,6 +1,6 @@
 {
   "name": "screenplaywriter-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "MCP server for reading, writing, and analyzing screenplays in Fountain format",
   "type": "module",
   "mcpName": "io.github.mrfentmen/screenplaywriter-mcp",

@@ -33,10 +33,3 @@ export declare function getThread(board: string, threadNo: number): Promise<Post
 export declare function fmtChanTime(ts?: number): string;
 export declare function formatThreadSummary(t: ThreadSummary, index: number): string;
 export declare function formatPost(p: Post): string;
-/**
- * The per-board limits 4chan publishes in `/boards.json`: paging, bump and image
- * caps, upload ceilings, cooldowns and whether the board is archived.
- */
-export declare function boardConfig(args: {
-    board: string;
-}): Promise<string>;

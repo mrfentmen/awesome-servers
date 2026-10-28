@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/themealdb-mcp",
-  "description": "TheMealDB recipes, categories, and ingredient filters.",
+  "description": "TheMealDB: recipes with full ingredient lists, numbered steps, cuisine and category filters \u2014 keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "themealdb-mcp",
-      "version": "1.0.0",
+      "identifier": "@mrfentmen/themealdb-mcp",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       }

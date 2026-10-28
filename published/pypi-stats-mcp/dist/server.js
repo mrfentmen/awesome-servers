@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { byDate, byPythonMajor, bySystem, number, PyPIStatsError, recent, sliceLines, totals, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof PyPIStatsError)
         return `Error: ${e.message}`;
@@ -16,7 +17,7 @@ export function createServer() {
             return text(`${pkg}\n${totals(await recent(pkg))}`);
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("downloads_over_time", "Daily download counts for a PyPI package, newest first. Mirrors excluded.", {
@@ -32,7 +33,7 @@ export function createServer() {
             return text(`${pkg} — ${rows.length} days\n${withTotal.join("\n")}\n\nsum: ${number(sum)}`);
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("python_versions", "Download split by Python major version for a PyPI package.", { package: z.string().min(1).describe("PyPI package name") }, async ({ package: pkg }) => {
@@ -40,7 +41,7 @@ export function createServer() {
             return text(`${pkg} by Python version\n${sliceLines(await byPythonMajor(pkg), "version")}`);
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("system_breakdown", "Download split by operating system for a PyPI package.", {
@@ -51,7 +52,7 @@ export function createServer() {
             return text(`${pkg} by system\n${sliceLines(await bySystem(pkg), "system", limit)}`);
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("compare_packages", "Compare last-week downloads for up to ten PyPI packages.", {
@@ -84,7 +85,7 @@ export function createServer() {
             ].join("\n"));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/nonogram-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Solve, check and render nonogram (picross) puzzles from row and column clues - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nonogram-mcp",

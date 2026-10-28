@@ -1,33 +1,25 @@
-# itunes-mcp
+# iTunes
 
-iTunes Search API: apps, podcasts, and media.
+Apple media catalogue: search apps, music and podcasts, plus top charts.
 
-A merged MCP server that consolidates duplicate single-purpose servers in this monorepo into one focused server.
+Keyless — no signup, no API key, no environment variables.
+
+## Install
+
+```bash
+npx -y @mrfentmen/itunes-mcp
+```
 
 ## Tools
 
-- `search` — Search iTunes media.
-- `topFree` — Top free apps.
-- `topPaid` — Top paid apps.
-- `appLookup` — App details by App Store id.
-- `searchPodcasts` — Search podcasts by term.
-- `topPodcasts` — Top podcasts in a category.
+| Tool | What it does |
+|---|---|
+| `search` | Search apps, music, podcasts, books or films |
+| `lookup` | Look up an item by iTunes id |
+| `top_songs` | Current iTunes top songs for a country |
+| `top_apps` | Top free or grossing apps for a country |
+| `customer_reviews` | Most recent App Store reviews for an app |
 
-## Run
+## Data source
 
-```bash
-npm install
-npm run build
-node dist/index.js
-```
-
-## Source
-
-Public free APIs only. See `src/api.ts` for exact endpoints.
-
-## Licence — no paywall
-
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.
+iTunes Search API

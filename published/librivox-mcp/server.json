@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/librivox-mcp",
+  "description": "LibriVox public-domain audiobooks: title and author search, book detail, chapter lists with mp3 links, download links.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-servers",
+    "source": "github"
+  },
+  "version": "1.0.6",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "librivox-mcp",
+      "version": "1.0.6",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

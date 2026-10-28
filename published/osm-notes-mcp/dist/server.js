@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { noteDetail, noteDetailText, noteLine, notesInBbox, OsmNotesError, radiusBbox, searchNotes, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof OsmNotesError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -25,7 +26,7 @@ export function createServer() {
             return text(list(await notesInBbox(min_lon, min_lat, max_lon, max_lat, limit)));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("notes_near", "OpenStreetMap notes within a radius of a point.", {
@@ -39,7 +40,7 @@ export function createServer() {
             return text(list(await notesInBbox(w, s, e, n, limit)));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("search_notes", "Search OpenStreetMap notes by their text.", {
@@ -50,7 +51,7 @@ export function createServer() {
             return text(list(await searchNotes(query, limit)));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("note_detail", "Full thread for one OpenStreetMap note.", { id: z.number().int().positive().describe("Note id") }, async ({ id }) => {
@@ -58,7 +59,7 @@ export function createServer() {
             return text(noteDetailText(await noteDetail(id)));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("note_comments", "Just the comments of one note, oldest first.", { id: z.number().int().positive().describe("Note id") }, async ({ id }) => {
@@ -68,7 +69,7 @@ export function createServer() {
             return text(rows.length ? rows.join("\n") : "No comments.");
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("notes_stats", "Count open versus resolved notes in a bounding box.", {
@@ -85,7 +86,7 @@ export function createServer() {
             return text(`notes sampled: ${notes.length}\nopen: ${open}\nclosed: ${closed}\ncomments: ${comments}`);
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

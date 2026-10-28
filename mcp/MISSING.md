@@ -7,6 +7,16 @@ Updated: 2026-10-27. Repo count at time of writing: 1088 published packages, 319
 
 Plus built 2026-10-27, a 50-server keyless wave (all on npm and in `published/`, no gate, no key):
 `hgnc-mcp`, `cbioportal-mcp`, `gdc-mcp`, `ncbi-datasets-mcp`, `metabolights-mcp`, `emdb-mcp`, `jsonschema-mcp`, `ucsc-genome-mcp`, `pathway-commons-mcp`, `astronomy-mcp`, `ghcn-mcp`, `soilgrids-mcp`, `hashid-mcp`, `spaceweather-mcp`, `smk-mcp`, `tfl-mcp`, `f1-mcp`, `nasdaq-mcp`, `jsonc-mcp`, `osrs-ge-mcp`, `tcgdex-mcp`, `potterdb-mcp`, `dogceo-mcp`, `catfact-mcp`, `brewery-mcp`, `patch-mcp`, `ical-mcp`, `vcard-mcp`, `x509-mcp`, `iban-mcp`, `totp-mcp`, `unit-convert-mcp`, `timezone-mcp`, `jsondiff-mcp`, `sql-format-mcp`, `password-mcp`, `btc-address-mcp`, `ini-mcp`, `xml-mcp`, `hexdump-mcp`, `endian-mcp`, `base58-mcp`, `float-mcp`, `combinatorics-mcp`, `primes-mcp`, `dns-mcp`, `npm-registry-mcp`, `http-check-mcp`, `crc-mcp`, `qr-mcp`.
+Plus built 2026-10-28, a 19-server keyless wave across gaps the registry had no
+wrappers for: `ripestat-mcp` (routing), `peeringdb-mcp` (interconnect),
+`aviationweather-mcp` (aviation), `celestrak-mcp` (satellites),
+`launchlibrary-mcp` (launches), `deezer-mcp` (music), `openlibrary-mcp` (books),
+`artic-mcp` (museum), `propublica-nonprofits-mcp` (nonprofit finance),
+`fema-disasters-mcp` (emergency management), `gleif-mcp` (legal entities),
+`cheapshark-mcp` (game prices), `water-quality-portal-mcp` (water quality),
+`nasa-sbdb-mcp` (asteroids), `bart-mcp` (transit), `grid-carbon-mcp` (power grid),
+`tvmaze-mcp` (TV), `itunes-mcp` (media catalogue), `usaspending-mcp` (procurement).
+
 
 ## Verified missing — build next
 

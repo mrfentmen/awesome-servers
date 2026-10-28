@@ -3,6 +3,7 @@ import { z } from "zod"
 import { formatObject, getDepartments, getObject, MetError, searchObjects } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -20,7 +21,7 @@ export function createServer(): McpServer {
         if (objects.length === 0) return text(`No Met artworks match "${query}".`)
         return text(`Met Museum results for "${query}":\n\n${objects.map((o, i) => formatObject(o)).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -35,7 +36,7 @@ export function createServer(): McpServer {
         if (!o) return text(`No Met object ${id}.`)
         return text(formatObject(o))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -49,7 +50,7 @@ export function createServer(): McpServer {
         const deps = await getDepartments()
         return text(`Met Museum departments:\n${deps.map((d) => `- ${d.departmentId}: ${d.displayName}`).join("\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

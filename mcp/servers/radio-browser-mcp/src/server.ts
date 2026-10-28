@@ -10,6 +10,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -27,7 +28,7 @@ export function createServer(): McpServer {
         if (stations.length === 0) return text(`No stations match "${name}".`)
         return text(`Stations matching "${name}":\n\n${stations.map((s, i) => formatStation(s, i)).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -42,7 +43,7 @@ export function createServer(): McpServer {
         if (stations.length === 0) return text(`No stations tagged "${tag}".`)
         return text(`Top "${tag}" stations:\n\n${stations.map((s, i) => formatStation(s, i)).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -57,7 +58,7 @@ export function createServer(): McpServer {
         if (stations.length === 0) return text(`No stations in "${country}".`)
         return text(`Top stations in ${country}:\n\n${stations.map((s, i) => formatStation(s, i)).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -71,7 +72,7 @@ export function createServer(): McpServer {
         const stations = await topVoted(limit)
         return text(`Most-voted stations:\n\n${stations.map((s, i) => formatStation(s, i)).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

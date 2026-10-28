@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { organizationBatch, organizationDetail, organizationsByCountry, organizationsByType, RorError, searchOrganizations, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof RorError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -17,7 +18,7 @@ export function createServer() {
             return text(await searchOrganizations(query, country));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("organization_detail", "Full ROR record for one organization: names, aliases, location, type, links.", { ror_id: z.string().min(9).describe("ROR id, e.g. 042nb2s44 (or the full ror.org URL)") }, async ({ ror_id }) => {
@@ -25,7 +26,7 @@ export function createServer() {
             return text(await organizationDetail(ror_id));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("organizations_by_country", "A sample of ROR organizations registered in a country.", {
@@ -36,7 +37,7 @@ export function createServer() {
             return text(await organizationsByCountry(country, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("organizations_by_type", "ROR organizations of one type (education, company, government, healthcare, nonprofit, funder...), optionally in one country.", {
@@ -50,7 +51,7 @@ export function createServer() {
             return text(await organizationsByType(type, country, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("organization_batch", "Look up several ROR ids at once and get a one-line summary for each.", {
@@ -60,7 +61,7 @@ export function createServer() {
             return text(await organizationBatch(ror_ids));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

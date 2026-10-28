@@ -1,6 +1,6 @@
 {
   "name": "incident-timeline-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Summarize local log timeline gaps and severity counts without returning messages, IDs, paths, or IP addresses.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/incident-timeline-mcp",

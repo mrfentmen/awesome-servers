@@ -3,6 +3,7 @@ import { z } from "zod"
 import { formatForecast, formatPlace, geocode, getForecast, MeteoError } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -20,7 +21,7 @@ export function createServer(): McpServer {
         if (results.length === 0) return text(`No place found for "${place}".`)
         return text(`Places matching "${place}":\n\n${results.map((p, i) => `${i + 1}. ${formatPlace(p)}`).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -38,7 +39,7 @@ export function createServer(): McpServer {
         const f = await getForecast(latitude, longitude, days)
         return text(formatForecast(f, `${latitude}, ${longitude}`))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -56,7 +57,7 @@ export function createServer(): McpServer {
         const f = await getForecast(p.latitude, p.longitude, days)
         return text(formatForecast(f, `${p.name}${p.country ? `, ${p.country}` : ""}`))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

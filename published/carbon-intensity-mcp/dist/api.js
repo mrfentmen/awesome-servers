@@ -1,116 +1,126 @@
+/**
+ * UK Carbon Intensity — keyless public API client.
+ */
 const BASE = "https://api.carbonintensity.org.uk";
-const UA = "mrfentmen-carbon-intensity-mcp/1.0 (https://github.com/mrfentmen)";
-export class CarbonError extends Error {
+const SOURCE = "UK Carbon Intensity";
+export class SourceError extends Error {
 }
-async function get(url) {
-    const res = await fetch(url, {
-        headers: { "User-Agent": UA, Accept: "application/json" },
-        signal: AbortSignal.timeout(30000),
-    });
-    if (!res.ok)
-        throw new CarbonError(`Carbon Intensity returned HTTP ${res.status}`);
-    return (await res.json());
-}
-function fmtIntensity(row) {
-    const from = row?.from ? new Date(row.from).toISOString().slice(11, 16) : "?";
-    const actual = row?.intensity?.actual ?? row?.intensity?.forecast;
-    const index = row?.intensity?.index ?? "";
-    return `${from}: ${actual != null ? `${Math.round(actual)} gCO2/kWh` : "n/a"} (${index})`;
-}
-export async function intensity(_args) {
-    const d = await get(`${BASE}/intensity`);
-    const row = d?.data?.[0];
-    if (!row)
-        throw new CarbonError("No intensity data");
-    const from = row?.from ? new Date(row.from).toISOString().replace("T", " ").slice(0, 16) : "?";
-    const actual = row?.intensity?.actual ?? row?.intensity?.forecast;
-    return `UK grid carbon intensity at ${from}:\n  ${actual != null ? `${Math.round(actual)} gCO2/kWh` : "n/a"} (${row?.intensity?.index ?? ""})`;
-}
-export async function forecast(args) {
-    const limit = Math.min(args.limit ?? 24, 48);
-    const from = new Date();
-    const to = new Date(from.getTime() + 48 * 3600000);
-    const f = from.toISOString().slice(0, 16) + "Z";
-    const t = to.toISOString().slice(0, 16) + "Z";
-    const d = await get(`${BASE}/intensity/${f}/${t}`);
-    const rows = (d?.data ?? []).slice(0, limit);
-    if (!rows.length)
-        throw new CarbonError("No forecast data");
-    return `UK carbon intensity forecast (next ${rows.length} half hours):\n` + rows.map(fmtIntensity).join("\n");
-}
-export async function regional(_args) {
-    const d = await get(`${BASE}/regional`);
-    const regions = d?.data?.[0]?.regions ?? [];
-    if (!regions.length)
-        throw new CarbonError("No regional data");
-    const rows = regions
-        .sort((a, b) => (a?.intensity?.forecast ?? 0) - (b?.intensity?.forecast ?? 0))
-        .map((r, i) => `${i + 1}. ${r?.shortname ?? "n/a"}: ${r?.intensity?.forecast != null ? `${Math.round(r.intensity.forecast)} gCO2/kWh` : "n/a"} (${r?.intensity?.index ?? ""})`);
-    return `UK regional carbon intensity (cleanest first):\n` + rows.join("\n");
-}
-// ---- muxA tools:
-const CARBON = "https://api.carbonintensity.org.uk";
-async function ciGet(path) {
-    const res = await fetch(`${CARBON}${path}`, {
-        headers: { "User-Agent": "mrfentmen-carbon-intensity-mcp/1.0 (https://github.com/mrfentmen)", Accept: "application/json" },
-        signal: AbortSignal.timeout(30000),
-    });
-    if (!res.ok) {
-        const body = (await res.json().catch(() => ({})));
-        throw new CarbonError(`Carbon Intensity returned HTTP ${res.status}${body.error ? `: ${String(body.error)}` : ""}`);
+async function request(path, accept = "application/json", timeoutMs = 25000) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+        const res = await fetch(path.startsWith("http") ? path : BASE + path, {
+            signal: ctrl.signal,
+            headers: { "user-agent": "carbon-intensity-mcp", accept },
+        });
+        if (!res.ok)
+            throw new SourceError(`${SOURCE} responded ${res.status}`);
+        return res;
     }
-    return (await res.json());
-}
-function at(value) {
-    return value != null ? String(value) : "not reported";
-}
-export async function nationalFuelMix(args) {
-    const d = await ciGet("/intensity");
-    const row = (d?.data ?? [])[0];
-    const mix = (row?.generationmix ?? []);
-    if (!mix.length) {
-        // The national endpoint sometimes omits the mix, so fall back to a roll up.
-        const reg = await ciGet("/regional");
-        const regions = (reg?.data?.[0]?.regions ?? []);
-        const totals = new Map();
-        for (const r of regions) {
-            for (const m of (r.generationmix ?? [])) {
-                totals.set(String(m.fuel ?? "?"), (totals.get(String(m.fuel ?? "?")) ?? 0) + (Number(m.perc) || 0));
-            }
-        }
-        if (!totals.size)
-            throw new CarbonError("Carbon Intensity returned no generation mix for the national or regional endpoints.");
-        // Each region reports its own mix as a percentage of itself, so the totals
-        // are divided by the region count to give a mean share rather than a sum.
-        const n = regions.length;
-        const mean = new Map();
-        for (const [fuel, total] of totals)
-            mean.set(fuel, total / n);
-        const sum = [...mean.values()].reduce((a, b) => a + b, 0);
-        const sorted = [...mean.entries()].sort((a, b) => b[1] - a[1]);
-        const fossil = ["coal", "gas", "oil"].reduce((a, f) => a + (mean.get(f) ?? 0), 0);
-        return [
-            `UK generation mix, averaged across ${n} DNO regions because the national endpoint did not publish a mix right now.`,
-            `Mean reported share per region: ${sum.toFixed(0)}% across ${mean.size} fuel(s).`,
-            ...sorted.map(([k, v], i) => `${i + 1}. ${k} | ${v.toFixed(1)}% mean regional share`),
-            `Fossil fuels (coal, gas, oil) average ${fossil.toFixed(1)}% of regional generation.`,
-            "This is a mean across distribution regions, not a national generation total, so treat it as the typical regional mix.",
-        ].join("\n");
+    catch (e) {
+        if (e instanceof SourceError)
+            throw e;
+        if (e.name === "AbortError")
+            throw new SourceError(`${SOURCE} request timed out`);
+        throw new SourceError(`${SOURCE} request failed: ${e.message}`);
     }
-    const total = mix.reduce((a, m) => a + (Number(m.perc) || 0), 0);
-    const sorted = [...mix].sort((a, b) => (Number(b.perc) || 0) - (Number(a.perc) || 0));
-    const fuelPerc = (f) => Number(mix.find((m) => String(m.fuel).toLowerCase() === f)?.perc ?? 0);
-    const fossil = ["coal", "gas", "oil"].reduce((a, f) => a + fuelPerc(f), 0);
-    const renewable = ["wind", "solar", "hydro", "biomass"].reduce((a, f) => a + fuelPerc(f), 0);
-    const wanted = (args.fuel ?? "").trim().toLowerCase();
+    finally {
+        clearTimeout(timer);
+    }
+}
+export async function getJson(path) {
+    const res = await request(path);
+    const body = await res.text();
+    try {
+        return JSON.parse(body);
+    }
+    catch {
+        throw new SourceError(`${SOURCE} returned malformed JSON`);
+    }
+}
+export async function getText(path, accept = "text/plain") {
+    const res = await request(path, accept);
+    return (await res.text()).trim();
+}
+export function clampLimit(n, fallback, max) {
+    const v = n ?? fallback;
+    if (!Number.isInteger(v) || v < 1 || v > max)
+        throw new SourceError(`limit must be between 1 and ${max}`);
+    return v;
+}
+export function clean(s) {
+    return String(s ?? "").replace(/\s+/g, " ").trim();
+}
+export function bullet(label, value) {
+    const v = value === undefined || value === null || value === "" ? "" : String(value);
+    return v ? `${label}: ${v}` : "";
+}
+export function section(title, rows) {
+    return [title, ...rows.filter(Boolean)].join("\n");
+}
+function isoHalfHour(d) {
+    const ms = 30 * 60 * 1000;
+    return new Date(Math.floor(d.getTime() / ms) * ms).toISOString().slice(0, 16) + "Z";
+}
+export async function currentIntensity() {
+    const d = await getJson("/intensity");
+    const block = Array.isArray(d?.data) ? d.data[0] : undefined;
+    if (!block)
+        throw new SourceError("Carbon Intensity returned no data block");
+    const i = block.intensity ?? {};
     return [
-        `UK national generation mix at ${String(row?.from ?? "unknown time")}, total reported share ${total.toFixed(0)}%.`,
-        wanted ? `Highlighted fuel ${wanted}: ${fuelPerc(wanted)}%.` : "",
-        `Renewables and biomass combined: ${renewable.toFixed(0)}% | fossil combined: ${fossil.toFixed(0)}% | imports: ${fuelPerc("imports")}% | nuclear: ${fuelPerc("nuclear")}%`,
+        `UK grid carbon intensity ${clean(block.from)} → ${clean(block.to)}`,
+        `Forecast: ${i.forecast ?? "?"} gCO2/kWh · actual: ${i.actual ?? "not yet measured"} · index: ${clean(i.index) || "unknown"}`,
+        indexMeaning(clean(i.index)),
+        `Source: https://carbonintensity.org.uk/`,
+    ].filter(Boolean).join("\n");
+}
+function indexMeaning(index) {
+    const bands = {
+        "very low": "very low means under 50 gCO2/kWh - a good time to run heavy jobs",
+        low: "low is 50-100 gCO2/kWh",
+        moderate: "moderate is 100-200 gCO2/kWh",
+        high: "high is 200-300 gCO2/kWh",
+        "very high": "very high is over 300 gCO2/kWh - shift flexible work if you can",
+    };
+    return bands[index] ?? "";
+}
+export async function intensityForecast(a) {
+    const hours = a.hours ?? 6;
+    if (!Number.isInteger(hours) || hours < 1 || hours > 48)
+        throw new SourceError("hours must be between 1 and 48");
+    const from = isoHalfHour(new Date());
+    const to = isoHalfHour(new Date(Date.now() + hours * 3600 * 1000));
+    const d = await getJson(`/intensity/${from}/${to}`);
+    const rows = Array.isArray(d?.data) ? d.data : [];
+    if (!rows.length)
+        return `Carbon Intensity published no forecast between ${from} and ${to}.`;
+    const actuals = rows.map((r) => r.intensity?.actual).filter((v) => typeof v === "number");
+    const forecasts = rows.map((r) => r.intensity?.forecast).filter((v) => typeof v === "number");
+    const lines = rows.slice(0, 24).map((r) => `  ${clean(r.from)} → ${clean(r.to)}  forecast ${r.intensity?.forecast ?? "?"} gCO2/kWh${r.intensity?.actual !== null && r.intensity?.actual !== undefined ? ` · actual ${r.intensity.actual}` : ""} (${clean(r.intensity?.index) || "unknown"})`);
+    return [
+        `UK carbon intensity forecast, ${rows.length} half-hour blocks from ${from}:`,
         "",
-        ...sorted.map((m, i) => `${i + 1}. ${String(m.fuel ?? "?")} | ${Number(m.perc ?? 0)}%`),
-        "Shares are live generation, so they move through the day. Carbon intensity is driven by this mix, which is why the two tools answer different questions.",
-    ]
-        .filter((l) => l !== "")
-        .join("\n");
+        ...lines,
+        rows.length > 24 ? `... ${rows.length - 24} more blocks not shown` : "",
+        "",
+        actuals.length ? `Measured so far: ${Math.min(...actuals)}-${Math.max(...actuals)} gCO2/kWh` : "",
+        forecasts.length ? `Forecast range: ${Math.min(...forecasts)}-${Math.max(...forecasts)} gCO2/kWh · lowest block ${forecasts.indexOf(Math.min(...forecasts)) + 1} of ${forecasts.length}` : "",
+    ].filter(Boolean).join("\n");
+}
+export async function generationMix() {
+    const d = await getJson("/generation");
+    const mix = Array.isArray(d?.data?.generationmix) ? d.data.generationmix : [];
+    if (!mix.length)
+        throw new SourceError("Carbon Intensity returned no generation mix");
+    const sorted = [...mix].sort((a, b) => Number(b.perc) - Number(a.perc));
+    const renewable = sorted.filter((m) => ["wind", "solar", "hydro", "biomass"].includes(clean(m.fuel))).reduce((sum, m) => sum + Number(m.perc), 0);
+    const fossil = sorted.filter((m) => ["gas", "coal", "oil"].includes(clean(m.fuel))).reduce((sum, m) => sum + Number(m.perc), 0);
+    return [
+        `UK generation mix ${clean(d?.data?.from)} → ${clean(d?.data?.to)}`,
+        "",
+        ...sorted.map((m) => `  ${clean(m.fuel).padEnd(10)} ${Number(m.perc).toFixed(1).padStart(5)}%`),
+        "",
+        `Wind + solar + hydro + biomass: ${renewable.toFixed(1)}% · gas + coal + oil: ${fossil.toFixed(1)}%`,
+    ].join("\n");
 }

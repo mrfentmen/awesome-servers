@@ -3,6 +3,7 @@ import { z } from "zod"
 import { MetNoError, compare, currentConditions, daily, hourly, precipitationOutlook } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof MetNoError || e instanceof Error) return `Error: ${e.message}`
@@ -23,7 +24,7 @@ export function createServer(): McpServer {
       try {
         return text(await currentConditions(la, lo))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -40,7 +41,7 @@ export function createServer(): McpServer {
       try {
         return text(await hourly(la, lo, hours))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -57,7 +58,7 @@ export function createServer(): McpServer {
       try {
         return text(await daily(la, lo, days))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -74,7 +75,7 @@ export function createServer(): McpServer {
       try {
         return text(await precipitationOutlook(la, lo, hours))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -92,7 +93,7 @@ export function createServer(): McpServer {
       try {
         return text(await compare(latA, lonA, latB, lonB))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

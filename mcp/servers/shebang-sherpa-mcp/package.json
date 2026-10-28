@@ -1,6 +1,6 @@
 {
   "name": "shebang-sherpa-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Aggregate local script portability risks without exposing script text or project names.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/shebang-sherpa-mcp",

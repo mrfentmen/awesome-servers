@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/cleveland-art-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Cleveland Museum of Art open access: 60,000+ works, CC0 images, department and artist filtering \u2014 keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/cleveland-art-mcp",

@@ -12,6 +12,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -28,7 +29,7 @@ export function createServer(): McpServer {
         const hits = await rhymesWith(word, limit)
         return text(hits.length ? `Words that rhyme with "${word}":\n${formatHits(hits)}` : `No rhymes for "${word}".`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -42,7 +43,7 @@ export function createServer(): McpServer {
         const hits = await meansLike(word, limit)
         return text(hits.length ? `Words meaning like "${word}":\n${formatWithDefs(hits)}` : `Nothing meaning like "${word}".`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -56,7 +57,7 @@ export function createServer(): McpServer {
         const hits = await relatedTo(word, limit)
         return text(hits.length ? `Words related to "${word}":\n${formatHits(hits)}` : `Nothing related to "${word}".`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -72,7 +73,7 @@ export function createServer(): McpServer {
         const body = hits.length ? `Closest matches:\n${formatHits(hits)}` : "No close matches."
         return text(correct ? `"${word}" looks correctly spelled. ${body}` : `"${word}" may be misspelled. ${body}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -86,7 +87,7 @@ export function createServer(): McpServer {
         const hits = await suggest(prefix, limit)
         return text(hits.length ? `Words starting with "${prefix}":\n${formatHits(hits)}` : `Nothing starts with "${prefix}".`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

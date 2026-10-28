@@ -1,6 +1,6 @@
 {
   "name": "nhl-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Use this MCP server to the NHL. Team and player stats, standings, schedules, and game results. Tools include get team stats, get standings, get schedule",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nhl-mcp",

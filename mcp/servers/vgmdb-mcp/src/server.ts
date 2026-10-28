@@ -13,6 +13,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -34,7 +35,7 @@ export function createServer(): McpServer {
             albums.map((a, i) => `${i + 1}. ${formatAlbumSearch(a)}`).join("\n\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -49,7 +50,7 @@ export function createServer(): McpServer {
         if (!album) return text(`No album with id "${id}".`)
         return text(formatAlbumDetail(album))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -67,7 +68,7 @@ export function createServer(): McpServer {
             artists.map((a, i) => `${i + 1}. ${formatArtistSearch(a)}`).join("\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -82,7 +83,7 @@ export function createServer(): McpServer {
         if (!artist) return text(`No artist with id "${id}".`)
         return text(formatArtistDetail(artist))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

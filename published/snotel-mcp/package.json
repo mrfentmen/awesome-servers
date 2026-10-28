@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/snotel-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "USDA SNOTEL and SCAN stations: snow water equivalent, snow depth and temperature readings - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/snotel-mcp",

@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/clinicaltrials-mcp",
-  "description": "ClinicalTrials.gov search and PubMed.",
+  "description": "ClinicalTrials.gov v2 API: trial search, sponsors, eligibility, sites and outcomes \u2014 keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
-  "version": "1.1.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "@mrfentmen/clinicaltrials-mcp",
-      "version": "1.1.0",
+      "identifier": "@mrfentmen/clinical-trials-mcp",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       }

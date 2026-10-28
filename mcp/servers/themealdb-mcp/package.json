@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/themealdb-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "TheMealDB: recipes with full ingredient lists, numbered steps, cuisine and category filters \u2014 keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/themealdb-mcp",

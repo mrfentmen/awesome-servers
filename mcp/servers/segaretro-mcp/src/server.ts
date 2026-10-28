@@ -9,6 +9,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -34,7 +35,7 @@ export function createServer(): McpServer {
               .join("\n\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -53,7 +54,7 @@ export function createServer(): McpServer {
         const plain = wikiTextToPlain(page.wikitext, maxChars)
         return text(`${page.title}\n${page.url}\n\n${plain || "(no readable content)"}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -68,7 +69,7 @@ export function createServer(): McpServer {
         if (members.length === 0) return text(`Empty or missing category "${category}".`)
         return text(`Pages in ${category}:\n` + members.map((m, i) => `${i + 1}. ${m}`).join("\n"))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

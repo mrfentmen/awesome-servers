@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { hitText, HnError, ids, item, itemText, search, user } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof HnError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -24,7 +25,7 @@ export function createServer() {
             return text(await feed("topstories", limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("new_stories", "Newest Hacker News submissions.", { limit: z.number().int().min(1).max(30).default(10).describe("Stories") }, async ({ limit }) => {
@@ -32,7 +33,7 @@ export function createServer() {
             return text(await feed("newstories", limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("best_stories", "Hacker News best stories of the recent window.", { limit: z.number().int().min(1).max(30).default(10).describe("Stories") }, async ({ limit }) => {
@@ -40,7 +41,7 @@ export function createServer() {
             return text(await feed("beststories", limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("item_detail", "One story or comment by id.", { id: z.number().int().positive().describe("HN item id") }, async ({ id }) => {
@@ -49,7 +50,7 @@ export function createServer() {
             return text(it ? itemText(it) : `No item ${id}.`);
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("user_profile", "Karma, join date, about text and submission count for a HN user.", { id: z.string().min(1).describe("HN username, case-sensitive") }, async ({ id }) => {
@@ -68,7 +69,7 @@ export function createServer() {
                 .join("\n"));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("search", "Full-text Hacker News search. tags=story for stories, comment for comments, ask_hn/show_hn for those.", {
@@ -81,7 +82,7 @@ export function createServer() {
             return text(hits.length ? hits.map(hitText).join("\n\n") : "No hits.");
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof LaunchLibraryError || e instanceof Error) return `Error: ${e.message}`
@@ -25,7 +26,7 @@ export function createServer(): McpServer {
     try {
       return text(await upcomingLaunches(n))
     } catch (e) {
-      return text(errorMessage(e))
+      return fail(errorMessage(e))
     }
   })
 
@@ -33,7 +34,7 @@ export function createServer(): McpServer {
     try {
       return text(await recentLaunches(n))
     } catch (e) {
-      return text(errorMessage(e))
+      return fail(errorMessage(e))
     }
   })
 
@@ -45,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await launchDetail(id))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -61,7 +62,7 @@ export function createServer(): McpServer {
       try {
         return text(await launchesBySearch(term, n))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -70,7 +71,7 @@ export function createServer(): McpServer {
     try {
       return text(await upcomingEvents(n))
     } catch (e) {
-      return text(errorMessage(e))
+      return fail(errorMessage(e))
     }
   })
 
@@ -85,7 +86,7 @@ export function createServer(): McpServer {
       try {
         return text(await listAgencies(n, country))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

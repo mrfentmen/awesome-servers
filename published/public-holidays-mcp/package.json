@@ -1,6 +1,6 @@
 {
   "name": "public-holidays-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Nager.Date public holidays for 110 countries: yearly lists, upcoming days, long weekends, bridge days \u2014 keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/public-holidays-mcp",

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/color-contrast-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "WCAG contrast ratios, AA/AAA checks and accessible colour suggestions for hex pairs - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/color-contrast-mcp",

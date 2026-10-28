@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof IssError || e instanceof Error) return `Error: ${e.message}`
@@ -30,7 +31,7 @@ export function createServer(): McpServer {
       try {
         return text(await currentPosition(satellite_id))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -47,7 +48,7 @@ export function createServer(): McpServer {
       try {
         return text(await positionTrack(satellite_id, minutes, points))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -64,7 +65,7 @@ export function createServer(): McpServer {
       try {
         return text(await visibilityReport(satellite_id, hours, points))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -77,7 +78,7 @@ export function createServer(): McpServer {
       try {
         return text(await listSatellites())
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -90,7 +91,7 @@ export function createServer(): McpServer {
       try {
         return text(await satelliteTle(satellite_id))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -107,7 +108,7 @@ export function createServer(): McpServer {
       try {
         return text(await overheadCheck(satellite_id, latitude, longitude))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

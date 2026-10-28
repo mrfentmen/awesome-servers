@@ -1,28 +1,33 @@
-# ChEMBL MCP
+# ChEMBL
 
-Drug molecules and bioactivity from the public ChEMBL database. No key required.
+ChEMBL bioactivity data: search molecules and targets, read properties and known activities - keyless.
 
-This file is self contained. It reads public data only and never writes to the machine. All output is bounded and honest about what could not be fetched.
+Keyless — no signup, no API key, no environment variables.
+
+## Install
+
+```bash
+npx -y @mrfentmen/chembl-mcp
+```
+
+Or add it to your MCP client:
+
+```json
+{
+  "mcpServers": {
+    "chembl-mcp": { "command": "npx", "args": ["-y", "@mrfentmen/chembl-mcp"] }
+  }
+}
+```
 
 ## Tools
 
+| Tool | What it does |
+|---|---|
+| `search_molecules` | Find ChEMBL molecules by name or synonym. |
+| `molecule_detail` | Full ChEMBL record for one molecule: formula, weight, approval phase. |
+| `search_targets` | Find ChEMBL drug targets by name or gene. |
 
-* `molecule`  Details for a molecule.
-* `search`  Search molecules.
+## Data source
 
-## Usage
-
-```bash
-npm install
-npm run build
-node dist/index.js
-```
-
-Data comes from the public ChEMBL API maintained by EMBL EBI.
-
-## Licence — no paywall
-
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.
+ChEMBL API (EBI)

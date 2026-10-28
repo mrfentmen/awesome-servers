@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/unstats-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "UN Sustainable Development Goals: goal list, indicators and official indicator data - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/unstats-mcp",

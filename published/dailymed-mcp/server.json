@@ -1,16 +1,16 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/dailymed-mcp",
-  "description": "FDA drug label information from DailyMed. No key required.",
+  "description": "DailyMed drug labels from the FDA: find labels by drug name and read one label's sections - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/dailymed-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "dailymed-mcp",
+      "identifier": "@mrfentmen/dailymed-mcp",
       "version": "1.0.1",
       "transport": {
         "type": "stdio"

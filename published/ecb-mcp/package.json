@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ecb-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "European Central Bank reference rates, rate history and the ECB policy rate - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ecb-mcp",

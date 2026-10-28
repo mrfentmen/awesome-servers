@@ -1,6 +1,6 @@
 {
   "name": "pdb-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "RCSB PDB: search 230k+ structures, read chains, ligands, formulas and citations \u2014 keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/pdb-mcp",

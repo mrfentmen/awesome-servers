@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof WorldBankError || e instanceof Error) return `Error: ${e.message}`
@@ -34,7 +35,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchIndicators(query, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -47,7 +48,7 @@ export function createServer(): McpServer {
       try {
         return text(await indicatorInfo(indicator))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -60,7 +61,7 @@ export function createServer(): McpServer {
       try {
         return text(await countryInfo(country))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -78,7 +79,7 @@ export function createServer(): McpServer {
       try {
         return text(await indicatorSeries(country, indicator, from_year, to_year))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -95,7 +96,7 @@ export function createServer(): McpServer {
       try {
         return text(await compareCountries(countries, indicator, year))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -108,7 +109,7 @@ export function createServer(): McpServer {
       try {
         return text(await latestValue(country, indicator))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

@@ -1,6 +1,6 @@
 {
   "name": "space-weather-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for NOAA solar wind, geomagnetic scales, and space weather alerts.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/space-weather-mcp",

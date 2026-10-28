@@ -1,6 +1,6 @@
 {
   "name": "dnd5e-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for the D&D 5e SRD, monsters, spells, classes, and equipment.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/dnd5e-mcp",

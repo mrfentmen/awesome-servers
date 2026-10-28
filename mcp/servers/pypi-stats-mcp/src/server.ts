@@ -12,6 +12,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof PyPIStatsError) return `Error: ${e.message}`
@@ -30,7 +31,7 @@ export function createServer(): McpServer {
       try {
         return text(`${pkg}\n${totals(await recent(pkg))}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -50,7 +51,7 @@ export function createServer(): McpServer {
         const sum = rows.reduce((a, r) => a + (r.downloads ?? 0), 0)
         return text(`${pkg} — ${rows.length} days\n${withTotal.join("\n")}\n\nsum: ${number(sum)}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -63,7 +64,7 @@ export function createServer(): McpServer {
       try {
         return text(`${pkg} by Python version\n${sliceLines(await byPythonMajor(pkg), "version")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -79,7 +80,7 @@ export function createServer(): McpServer {
       try {
         return text(`${pkg} by system\n${sliceLines(await bySystem(pkg), "system", limit)}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -124,7 +125,7 @@ export function createServer(): McpServer {
           ].join("\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

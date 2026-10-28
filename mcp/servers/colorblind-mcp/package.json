@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/colorblind-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Simulate colour-vision deficiency on hex colours and palettes, and measure how far colours collapse - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/colorblind-mcp",

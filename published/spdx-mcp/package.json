@@ -1,12 +1,12 @@
 {
   "name": "spdx-mcp",
-  "version": "1.0.2",
-  "description": "Use this MCP server to SPDX open source license metadata and compatibility helpers. Tools include search licenses, get license",
+  "version": "1.0.1",
+  "description": "MCP server for SPDX open source license metadata and compatibility helpers.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/spdx-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/spdx-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "spdx-mcp": "./dist/index.js"
@@ -35,8 +35,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/dadjoke-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Dad jokes from icanhazdadjoke: a random one, keyword search or a lookup by joke id - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/dadjoke-mcp",

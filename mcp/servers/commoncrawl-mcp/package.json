@@ -1,6 +1,6 @@
 {
   "name": "commoncrawl-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Common Crawl index discovery for historical web captures.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/commoncrawl-mcp",

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/nasa-neo-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "NASA near-earth asteroids: who passes close on a date range, with size, speed and miss distance - NASA_API_KEY optional.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nasa-neo-mcp",

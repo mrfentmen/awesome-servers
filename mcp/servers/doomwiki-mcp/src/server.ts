@@ -3,6 +3,7 @@ import { z } from "zod"
 import { categoryMembers, cleanWikiText, DoomWikiError, getPage, searchPages } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -20,7 +21,7 @@ export function createServer(): McpServer {
         if (hits.length === 0) return text(`No Doom Wiki pages match "${query}".`)
         return text(`Doom Wiki pages matching "${query}":\n${hits.map((h, i) => `${i + 1}. ${h.title}${h.pageid ? ` (id ${h.pageid})` : ""}`).join("\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -34,7 +35,7 @@ export function createServer(): McpServer {
         const wt = await getPage(title)
         return text(`# ${title}\n\n${cleanWikiText(wt, maxChars)}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -49,7 +50,7 @@ export function createServer(): McpServer {
         if (hits.length === 0) return text(`No pages in category "${category}".`)
         return text(`Doom Wiki category ${category}:\n${hits.map((h, i) => `${i + 1}. ${h.title}`).join("\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

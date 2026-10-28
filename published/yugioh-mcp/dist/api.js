@@ -101,13 +101,3 @@ export function formatCard(c, index) {
         lines.push(c.card_images[0].image_url);
     return lines.join("\n");
 }
-export async function stapleCards(args = {}) {
-    const limit = Math.max(1, Math.min(Number(args.limit ?? 10) || 10, 30));
-    const params = new URLSearchParams({ staple: 'yes', num: String(limit), offset: '0' });
-    const data = await getJson(`/cardinfo.php?${params.toString()}`);
-    const cards = (data.data ?? []).map(mapCard);
-    if (!cards.length)
-        return 'No YGOPRODeck staple cards reported.';
-    return `Staple cards per YGOPRODeck (${cards.length} shown):\n\n` +
-        cards.map((c, i) => formatCard(c, i)).join('\n\n');
-}

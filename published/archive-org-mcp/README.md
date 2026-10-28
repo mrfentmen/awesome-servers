@@ -1,32 +1,25 @@
-# archive-org-mcp
+# archive org mcp
 
-Internet Archive search, item metadata, and Wayback snapshots.
-
-A merged MCP server that consolidates duplicate single-purpose servers in this monorepo into one focused server.
+MCP server for the **Internet Archive**, the largest library on earth.
 
 ## Tools
 
-- `searchItems` — Search the Internet Archive.
-- `getItem` — Details and file manifest for an item.
-- `getSnapshots` — Wayback snapshot history for a URL.
-- `getAvailability` — Closest Wayback snapshot for a URL.
-- `readSnapshot` — Read archived page text.
+| Tool | What it does |
+|---|---|
+| `search_items` | Search ~200M items, filterable by media type (software, audio, movies, texts, web…) |
+| `get_item` | Full item details + file manifest with sizes/formats |
 
-## Run
+## Usage
 
 ```bash
-npm install
-npm run build
-node dist/index.js
+npm run build && node dist/index.js
 ```
 
-## Source
+Example:
 
-Public free APIs only. See `src/api.ts` for exact endpoints.
+```
+search_items { query: "sonic the hedgehog prototype", mediatype: "software" }
+get_item { identifier: "sonic-the-hedgehog-triple-trouble-prototype-aug-161994..." }
+```
 
-## Licence — no paywall
-
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.
+Keyless. Great for abandoned CD ROM software, bootleg concert tapes, 78rpm records, Geocities snapshots, and old Flash games. Item entries include download counts; manifests show file sizes and formats.

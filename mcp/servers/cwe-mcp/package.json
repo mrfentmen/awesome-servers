@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/cwe-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MITRE CWE weakness records: descriptions, mitigations, consequences and the weakness hierarchy - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/cwe-mcp",

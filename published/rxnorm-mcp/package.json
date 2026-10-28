@@ -1,17 +1,41 @@
 {
   "name": "rxnorm-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "RxNorm drug concepts: lookup, normalisation, properties, package NDCs, interaction checks, spelling suggestions.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/rxnorm-mcp",
-  "repository": { "type": "git", "url": "git+https://github.com/mrfentmen/awesome-servers.git" },
-  "bin": { "rxnorm-mcp": "./dist/index.js" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "rxnorm-mcp": "./dist/index.js"
+  },
   "main": "./dist/index.js",
-  "files": ["dist"],
-  "scripts": { "build": "tsc -p tsconfig.json", "start": "node dist/index.js" },
-  "keywords": ["mcp","rxnorm","drugs","pharmacy","health"],
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "rxnorm",
+    "drugs",
+    "pharmacy",
+    "health"
+  ],
   "license": "MIT",
-  "dependencies": { "@modelcontextprotocol/sdk": "^1.0.4", "zod": "^3.23.8" },
-  "devDependencies": { "@types/node": "^22.0.0", "typescript": "^5.6.0" },
-  "engines": { "node": ">=20" }
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
 }

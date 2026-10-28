@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/pride-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Proteomics identifications database: search mass-spec projects and read their methods and metadata - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/pride-mcp",

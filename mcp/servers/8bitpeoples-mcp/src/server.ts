@@ -3,6 +3,7 @@ import { z } from "zod"
 import { BitError, formatRelease, getRelease, listReleases } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -24,7 +25,7 @@ export function createServer(): McpServer {
             releases.map((r, i) => formatRelease(r, i)).join("\n\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -39,7 +40,7 @@ export function createServer(): McpServer {
         if (!r) return text(`No release at ${slug}.`)
         return text(formatRelease(r))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

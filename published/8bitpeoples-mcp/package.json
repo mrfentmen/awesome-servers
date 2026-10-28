@@ -1,12 +1,12 @@
 {
   "name": "8bitpeoples-mcp",
-  "version": "1.0.5",
-  "description": "Use this MCP server to 8bitpeoples, the free chiptune record label, browse the full release catalog. Tools include list releases, get release",
+  "version": "1.0.1",
+  "description": "MCP server for 8bitpeoples, the free chiptune record label, browse the full release catalog.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/8bitpeoples-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/8bitpeoples-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "8bitpeoples-mcp": "./dist/index.js"
@@ -36,8 +36,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

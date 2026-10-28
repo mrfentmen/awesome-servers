@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/arxiv-mcp",
-  "description": "Search academic papers on arXiv by keyword, author, or title. No key required.",
+  "description": "arXiv: 2.4M+ preprints - search, fetch by id, browse authors, latest per category - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/arxiv-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
-  "version": "1.1.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "arxiv-mcp",
-      "version": "1.1.0",
+      "identifier": "@mrfentmen/arxiv-mcp",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       }

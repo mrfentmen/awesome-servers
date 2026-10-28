@@ -1,24 +1,33 @@
 {
+  "name": "@mrfentmen/mygene-mcp",
   "version": "1.0.2",
+  "description": "Gene annotations from mygene.info: search genes by symbol or keyword and read full records - keyless.",
   "type": "module",
+  "mcpName": "io.github.mrfentmen/mygene-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/mygene-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "mygene-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
-    "dist",
-    "server.json",
-    "README.md"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "dev": "npm run build && node dist/index.js"
+    "start": "node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "genes",
+    "annotation",
+    "entrez",
+    "bioinformatics",
+    "scripps",
+    "keyless"
+  ],
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -28,17 +37,7 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
   },
-  "name": "mygene-mcp",
-  "description": "MyGene.info gene annotation API.",
-  "keywords": [
-    "mcp",
-    "mygene",
-    "gene",
-    "genomics",
-    "annotation"
-  ],
   "engines": {
     "node": ">=20"
-  },
-  "mcpName": "io.github.mrfentmen/mygene-mcp"
+  }
 }

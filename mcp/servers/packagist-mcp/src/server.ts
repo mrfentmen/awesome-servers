@@ -12,6 +12,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof PackagistError || e instanceof Error) return `Error: ${e.message}`
@@ -34,7 +35,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchPackages(query, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -47,7 +48,7 @@ export function createServer(): McpServer {
       try {
         return text(await packageInfo(name))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -60,7 +61,7 @@ export function createServer(): McpServer {
       try {
         return text(await popularPackages(limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -76,7 +77,7 @@ export function createServer(): McpServer {
       try {
         return text(await packageVersions(name, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -89,7 +90,7 @@ export function createServer(): McpServer {
       try {
         return text(await packageDependencies(name))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -105,7 +106,7 @@ export function createServer(): McpServer {
       try {
         return text(await comparePackages(first, second))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -118,7 +119,7 @@ export function createServer(): McpServer {
       try {
         return text(await registryTotals())
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

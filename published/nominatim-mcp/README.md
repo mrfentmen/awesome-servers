@@ -1,30 +1,33 @@
-# nominatim-mcp
+# OpenStreetMap Nominatim
 
-OpenStreetMap Nominatim geocoding and reverse geocoding (merged).
+Geocode with OpenStreetMap: find places by name, reverse geocode coordinates and resolve OSM ids - keyless.
 
-A merged MCP server that consolidates duplicate single-purpose servers in this monorepo into one focused server.
+Keyless — no signup, no API key, no environment variables.
+
+## Install
+
+```bash
+npx -y @mrfentmen/nominatim-mcp
+```
+
+Or add it to your MCP client:
+
+```json
+{
+  "mcpServers": {
+    "nominatim-mcp": { "command": "npx", "args": ["-y", "@mrfentmen/nominatim-mcp"] }
+  }
+}
+```
 
 ## Tools
 
-- `search` — Search places by name.
-- `reverse` — Address for coordinates.
-- `geocode` — Find coordinates for a place name or address.
+| Tool | What it does |
+|---|---|
+| `search_places` | Find places by free-text name or address. |
+| `reverse_geocode` | Turn coordinates into the address OpenStreetMap holds there. |
+| `lookup_osm_ids` | Resolve OpenStreetMap element ids (N/W/R) to full details. |
 
-## Run
+## Data source
 
-```bash
-npm install
-npm run build
-node dist/index.js
-```
-
-## Source
-
-Public free APIs only. See `src/api.ts` for exact endpoints.
-
-## Licence — no paywall
-
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.
+OpenStreetMap Nominatim. Public instance policy: at most 1 request per second, no heavy use

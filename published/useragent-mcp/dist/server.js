@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { detectBot, parseUserAgent, parseUserAgentBatch, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -16,7 +17,7 @@ export function createServer() {
             return text(await parseUserAgent(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("detect_bot", "Identify search engine crawlers, social previewers and automation clients.", {
@@ -26,7 +27,7 @@ export function createServer() {
             return text(await detectBot(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("parse_user_agent_batch", "Parse up to 50 user-agent strings at once.", {
@@ -36,7 +37,7 @@ export function createServer() {
             return text(await parseUserAgentBatch(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

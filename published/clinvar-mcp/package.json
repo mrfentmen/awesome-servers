@@ -1,24 +1,33 @@
 {
-  "version": "1.0.5",
+  "name": "@mrfentmen/clinvar-mcp",
+  "version": "1.0.1",
+  "description": "ClinVar variant interpretations from NCBI: search variants by gene or condition and read classifications - keyless.",
   "type": "module",
+  "mcpName": "io.github.mrfentmen/clinvar-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/clinvar-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "clinvar-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
-    "dist",
-    "server.json",
-    "README.md"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "dev": "npm run build && node dist/index.js"
+    "start": "node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "clinvar",
+    "variants",
+    "genetics",
+    "ncbi",
+    "clinical",
+    "keyless"
+  ],
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -28,16 +37,6 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
   },
-  "name": "clinvar-mcp",
-  "description": "Clinical variants from ClinVar. No key required.",
-  "mcpName": "io.github.mrfentmen/clinvar-mcp",
-  "keywords": [
-    "mcp",
-    "clinvar",
-    "variants",
-    "clinical",
-    "genetics"
-  ],
   "engines": {
     "node": ">=20"
   }

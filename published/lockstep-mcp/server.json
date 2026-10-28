@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/lockstep-mcp",
-  "description": "Local lockfile and package-manager reproducibility analysis without dependency details. Tools...",
+  "description": "Local lockfile and package-manager reproducibility analysis without dependency details.",
   "repository": {
     "url": "https://github.com/mrfentmen/lockstep-mcp",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "@mrfentmen/lockstep-mcp",
-      "version": "1.0.0",
+      "identifier": "lockstep-mcp",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       }

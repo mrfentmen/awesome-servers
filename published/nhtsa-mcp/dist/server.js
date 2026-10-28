@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { NhtsaError, complaints, decodeVin, listMakes, listModels, recalls } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof NhtsaError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -17,7 +18,7 @@ export function createServer() {
             return text(await decodeVin(vin));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("vehicle_recalls", "Every NHTSA safety recall for a make, model and year, with risk and fix.", { make, model, year }, async ({ make: mk, model: md, year: yr }) => {
@@ -25,7 +26,7 @@ export function createServer() {
             return text(await recalls(mk, md, yr));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("vehicle_complaints", "Owner complaints filed with NHTSA, with crash, fire and injury counts.", { make, model, year }, async ({ make: mk, model: md, year: yr }) => {
@@ -33,7 +34,7 @@ export function createServer() {
             return text(await complaints(mk, md, yr));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("makes_with_recalls", "Vehicle makes that have recalls in a model year.", { year }, async ({ year: yr }) => {
@@ -41,7 +42,7 @@ export function createServer() {
             return text(await listMakes(yr));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("models_with_recalls", "Models for one make that have recalls in a model year.", { make, year }, async ({ make: mk, year: yr }) => {
@@ -49,7 +50,7 @@ export function createServer() {
             return text(await listModels(mk, yr));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

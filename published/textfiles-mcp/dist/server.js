@@ -1,21 +1,15 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { TextfilesError, formatEntry, listDirectory, listTopics, readTextFile, findFiles } from "./api.js";
+import { TextfilesError, formatEntry, listDirectory, listTopics, readTextFile, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
-const textError = (t) => ({ content: [{ type: "text", text: t }], isError: true });
-const READ_ONLY = { readOnlyHint: true, openWorldHint: true };
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 export function createServer() {
     const server = new McpServer({
         name: "textfiles-mcp",
         version: "1.0.0",
     });
-    server.registerTool("list_topics", {
-        title: "List topics",
-        description: "List the topic sections of textfiles.com (art, etext, hacking, " +
-            "phreaking, 100, etc.).",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
+    server.tool("list_topics", "List the topic sections of textfiles.com (art, etext, hacking, " +
+        "phreaking, 100, etc.).", {}, async () => {
         try {
             const topics = await listTopics();
             if (topics.length === 0)
@@ -23,15 +17,10 @@ export function createServer() {
             return text(`textfiles.com topics:\n` + topics.map((t, i) => formatEntry(t, i)).join("\n"));
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("list_files", {
-        title: "List files",
-        description: "List the files in a textfiles.com directory.",
-        inputSchema: z.object({ dir: z.string().describe("Directory path, e.g. 'hacking' or 'phreaking'") }),
-        annotations: READ_ONLY,
-    }, async ({ dir }) => {
+    server.tool("list_files", "List the files in a textfiles.com directory.", { dir: z.string().describe("Directory path, e.g. 'hacking' or 'phreaking'") }, async ({ dir }) => {
         try {
             const files = await listDirectory(dir);
             if (files.length === 0)
@@ -39,17 +28,12 @@ export function createServer() {
             return text(`textfiles.com/${dir}:\n\n${files.map((f, i) => formatEntry(f, i)).join("\n")}`);
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
     });
-    server.registerTool("read_file", {
-        title: "Read file",
-        description: "Read a text file from the archive (1980s/90s zines, docs, and net culture).",
-        inputSchema: z.object({
-            path: z.string().describe("File path, e.g. 'hacking/phrack.txt' or '100/foo.txt'"),
-            maxChars: z.number().int().min(500).max(50000).default(20000),
-        }),
-        annotations: READ_ONLY,
+    server.tool("read_file", "Read a text file from the archive (1980s/90s zines, docs, and net culture).", {
+        path: z.string().describe("File path, e.g. 'hacking/phrack.txt' or '100/foo.txt'"),
+        maxChars: z.number().int().min(500).max(50000).default(20000),
     }, async ({ path, maxChars }) => {
         try {
             const content = await readTextFile(path, maxChars);
@@ -58,103 +42,8 @@ export function createServer() {
             return text(content);
         }
         catch (e) {
-            return textError(String(e));
+            return fail(errorMessage(e));
         }
-    });
-    server.registerTool("archive_stats", {
-        title: "Archive statistics",
-        description: "The archive's own published size table: file count and bytes per section, how the sections rank, and the archive totals it states. Read from textfiles.com/filestats.html.",
-        inputSchema: z.object({
-            limit: z.number().describe("Max sections to rank, 1-40.").optional(),
-            sort: z.string().describe("Rank by 'files' (default) or 'bytes'.").optional(),
-        }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement stats locally (paywall removed)
-        try {
-            return textError("Not yet implemented: stats");
-        }
-        catch (e) {
-            return textError(String(e));
-        }
-    });
-    server.registerTool("topic_profile", {
-        title: "Section profile",
-        description: "A textfiles.com section's own front page: its title, the archive's own description of it, how many files and sub-sections it lists, and the most common file extensions.",
-        inputSchema: z.object({
-            topic: z.string().describe("Section name, e.g. hacking, phreak, magazines, ufo"),
-            descriptionChars: z.number().describe("Characters of the archive's description to keep, 80-3000.").optional(),
-        }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement profile locally (paywall removed)
-        try {
-            return textError("Not yet implemented: profile");
-        }
-        catch (e) {
-            return textError(String(e));
-        }
-    });
-    server.registerTool("find_files", {
-        title: "Find files by name",
-        description: "Search file names across several textfiles.com sections at once. With no sections named it works through the first 8 sections in the archive's own statistics table.",
-        inputSchema: z.object({
-            query: z.string().describe("Text to look for in file names, e.g. phreaking, virus, 2600"),
-            topics: z.string().describe("Comma or space separated section names, up to 8. Optional.").optional(),
-            limit: z.number().describe("Max matches to print, 1-80.").optional(),
-        }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        try {
-            return text(await findFiles(args));
-        }
-        catch (e) {
-            return textError(String(e));
-        }
-    });
-    server.registerTool("grep_files", {
-        title: "Search inside files",
-        description: "Search the CONTENTS of textfiles.com files, not just their names: walks the directory listings of the sections given, downloads a bounded sample of the files they point at and reports each file that matches with its matching line numbers and the lines themselves. find_files only matches file names, so it cannot reach a document whose title says nothing about what is inside, and the archive has no search index. Wrap the query in slashes to use it as a regular expression.",
-        inputSchema: z.object({
-            query: z.string().describe("Text to look for inside the files, e.g. 'blue box' or '/modem.{0,20}baud/'. Wrap in slashes for a regular expression."),
-            topics: z.string().describe("Comma or space separated section names, up to 8. Optional.").optional(),
-            limit: z.number().describe("Max matching files to print, 1-40.").optional(),
-            maxFiles: z.number().describe("Max files to download, 1-60. Default 30.").optional(),
-        }),
-        annotations: READ_ONLY,
-    }, async (args) => {
-        // TODO: implement files locally (paywall removed)
-        try {
-            return textError("Not yet implemented: files");
-        }
-        catch (e) {
-            return textError(String(e));
-        }
-    });
-    const serverName = "textfiles-mcp";
-    server.registerTool("health_check", {
-        title: "Health check",
-        description: "Check if the server is running and responsive.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("OK - server is running");
-    });
-    server.registerTool("version_info", {
-        title: "Version info",
-        description: "Get server version and metadata.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text(JSON.stringify({ name: serverName, version: "1.0.0" }, null, 2));
-    });
-    server.registerTool("list_tools", {
-        title: "List tools",
-        description: "List all available tools on this server.",
-        inputSchema: z.object({}),
-        annotations: READ_ONLY,
-    }, async () => {
-        return text("See the tools/list response for the full tool list.");
     });
     return server;
 }

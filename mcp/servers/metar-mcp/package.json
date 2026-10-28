@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/metar-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Live aviation weather from NOAA: current METAR observations, TAF forecasts and station records for airports worldwide - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/metar-mcp",

@@ -14,6 +14,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -31,7 +32,7 @@ export function createServer(): McpServer {
         if (!p) return text(`No chess.com player "${username}".`)
         return text(formatPlayer(p))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -46,7 +47,7 @@ export function createServer(): McpServer {
         const out = formatStats(stats)
         return text(out || `No rated stats for "${username}".`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -66,7 +67,7 @@ export function createServer(): McpServer {
         if (games.length === 0) return text(`No games for ${username} in ${year}-${String(month).padStart(2, "0")}.`)
         return text(`Games for ${username} in ${year}-${String(month).padStart(2, "0")}:\n${games.slice(0, limit).map((g, i) => formatGame(g, i)).join("\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -85,7 +86,7 @@ export function createServer(): McpServer {
         }
         return text(parts.join("\n\n") || "No leaderboard data.")
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -99,7 +100,7 @@ export function createServer(): McpServer {
         const users = await getTitledPlayers(title)
         return text(`${title} players on chess.com (${users.length} total):\n${users.slice(0, 40).join(", ")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

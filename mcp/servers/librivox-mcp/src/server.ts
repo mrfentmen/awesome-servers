@@ -13,6 +13,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof LibriVoxError || e instanceof Error) return `Error: ${e.message}`
@@ -51,7 +52,7 @@ export function createServer(): McpServer {
         const books = await searchByAuthor(author, limit)
         return text(books.length ? books.map(bookLine).join("\n") : "No audiobooks matched.")
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -65,7 +66,7 @@ export function createServer(): McpServer {
         const book = await detail(id)
         return text(book ? detailText(book) : `No audiobook with id ${id}.`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -82,7 +83,7 @@ export function createServer(): McpServer {
         const book = await detail(id)
         return text(book ? sectionsText(book, limit) : `No audiobook with id ${id}.`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -96,7 +97,7 @@ export function createServer(): McpServer {
         const book = await detail(id)
         return text(book ? linksText(book) : `No audiobook with id ${id}.`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -113,7 +114,7 @@ export function createServer(): McpServer {
         const books = await browse(limit, offset)
         return text(books.length ? books.map(bookLine).join("\n") : "No rows at that offset.")
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

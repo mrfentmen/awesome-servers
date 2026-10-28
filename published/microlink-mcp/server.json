@@ -6,12 +6,12 @@
     "url": "https://github.com/mrfentmen/microlink-mcp",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.2",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "microlink-mcp",
-      "version": "1.0.0",
+      "version": "1.0.2",
       "transport": {
         "type": "stdio"
       }

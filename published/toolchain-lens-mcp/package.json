@@ -1,12 +1,12 @@
 {
   "name": "toolchain-lens-mcp",
-  "version": "1.0.2",
-  "description": "Local explanation of reproducibility signals and toolchain contradictions without exact versions or secret values",
+  "version": "1.0.1",
+  "description": "Local explanation of reproducibility signals and toolchain contradictions without exact versions or secret values.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/toolchain-lens-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/toolchain-lens-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "toolchain-lens-mcp": "./dist/index.js"
@@ -37,8 +37,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

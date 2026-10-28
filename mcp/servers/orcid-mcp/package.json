@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/orcid-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Search ORCID researcher profiles, read affiliations and list published works - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/orcid-mcp",

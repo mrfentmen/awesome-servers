@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/wikisource-mcp",
-  "description": "Use this MCP server to searching and reading public-domain texts on Wikisource. Tools include...",
+  "description": "Search and read bounded extracts from public-domain texts on Wikisource.",
   "repository": {
     "url": "https://github.com/mrfentmen/wikisource-mcp",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "wikisource-mcp",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       }

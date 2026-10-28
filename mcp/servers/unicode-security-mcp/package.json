@@ -1,6 +1,6 @@
 {
   "name": "unicode-security-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Local first MCP checks for Unicode confusables, mixed scripts, invisible controls, and suspicious identifiers.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/unicode-security-mcp",

@@ -12,16 +12,3 @@ export declare function getPage(title: string, maxChars?: number): Promise<{
     url: string;
 } | null>;
 export declare function wikiTextToPlain(wt: string, maxChars?: number): string;
-export interface DfDetailsArgs {
-    title: string;
-}
-export interface DfCategoryArgs {
-    category: string;
-    limit?: number;
-}
-export interface DfLinksArgs {
-    title: string;
-    limit?: number;
-    search?: string;
-}
-export declare function pageLinks(args: DfLinksArgs): Promise<string>;

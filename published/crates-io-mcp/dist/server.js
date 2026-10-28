@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { crateDependencies, crateInfo, CratesError, crateOwners, crateVersions, downloadTrend, searchCrates, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof CratesError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -21,7 +22,7 @@ export function createServer() {
             return text(await searchCrates(query, limit, sort));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("crate_info", "Downloads, latest version, repository and metadata for one crate.", { name: z.string().min(1).describe("Crate name, e.g. serde") }, async ({ name }) => {
@@ -29,7 +30,7 @@ export function createServer() {
             return text(await crateInfo(name));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("crate_versions", "Recent release history for a crate, newest first.", {
@@ -40,7 +41,7 @@ export function createServer() {
             return text(await crateVersions(name, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("crate_owners", "Current owners (maintainers) of a crate.", { name: z.string().min(1).describe("Crate name") }, async ({ name }) => {
@@ -48,7 +49,7 @@ export function createServer() {
             return text(await crateOwners(name));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("crate_dependencies", "What a crate depends on, grouped into normal, build and dev requirements.", {
@@ -59,7 +60,7 @@ export function createServer() {
             return text(await crateDependencies(name, version));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("download_trend", "Day-by-day download totals for a crate, newest first.", { name: z.string().min(1).describe("Crate name") }, async ({ name }) => {
@@ -67,7 +68,7 @@ export function createServer() {
             return text(await downloadTrend(name));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

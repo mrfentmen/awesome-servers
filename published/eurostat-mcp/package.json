@@ -1,24 +1,33 @@
 {
-  "version": "1.1.0",
+  "name": "@mrfentmen/eurostat-mcp",
+  "version": "1.0.2",
+  "description": "Eurostat statistics: pull any dataset by code with dimension filters, and inspect the dimensions a dataset exposes - keyless.",
   "type": "module",
+  "mcpName": "io.github.mrfentmen/eurostat-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/eurostat-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "eurostat-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
-    "dist",
-    "server.json",
-    "README.md"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "dev": "npm run build && node dist/index.js"
+    "start": "node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "eurostat",
+    "eu",
+    "statistics",
+    "economy",
+    "data",
+    "keyless"
+  ],
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -28,16 +37,6 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
   },
-  "name": "eurostat-mcp",
-  "description": "European statistics datasets from Eurostat. No key required.",
-  "mcpName": "io.github.mrfentmen/eurostat-mcp",
-  "keywords": [
-    "mcp",
-    "eurostat",
-    "statistics",
-    "europe",
-    "data"
-  ],
   "engines": {
     "node": ">=20"
   }

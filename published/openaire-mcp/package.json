@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/openaire-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Search OpenAIRE for European research publications, datasets and funded projects - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/openaire-mcp",

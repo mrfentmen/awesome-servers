@@ -1,6 +1,6 @@
 {
   "name": "thecocktaildb-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "TheCocktailDB: search 600+ cocktails, full recipes with measures and steps, browse by letter \u2014 keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/thecocktaildb-mcp",

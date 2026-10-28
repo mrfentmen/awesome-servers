@@ -3,6 +3,7 @@ import { z } from "zod"
 import { NhtsaError, complaints, decodeVin, listMakes, listModels, recalls } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof NhtsaError || e instanceof Error) return `Error: ${e.message}`
@@ -23,7 +24,7 @@ export function createServer(): McpServer {
       try {
         return text(await decodeVin(vin))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -36,7 +37,7 @@ export function createServer(): McpServer {
       try {
         return text(await recalls(mk, md, yr))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -49,7 +50,7 @@ export function createServer(): McpServer {
       try {
         return text(await complaints(mk, md, yr))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -62,7 +63,7 @@ export function createServer(): McpServer {
       try {
         return text(await listMakes(yr))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -75,7 +76,7 @@ export function createServer(): McpServer {
       try {
         return text(await listModels(mk, yr))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

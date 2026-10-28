@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { MetNoError, compare, currentConditions, daily, hourly, precipitationOutlook } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof MetNoError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -16,7 +17,7 @@ export function createServer() {
             return text(await currentConditions(la, lo));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("hourly_forecast", "Hour by hour temperature, wind, sky and rain.", {
@@ -28,7 +29,7 @@ export function createServer() {
             return text(await hourly(la, lo, hours));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("daily_forecast", "Daily min and max temperature with total rain, up to nine days.", {
@@ -40,7 +41,7 @@ export function createServer() {
             return text(await daily(la, lo, days));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("rain_outlook", "Only the hours when rain or snow is expected, with amounts.", {
@@ -52,7 +53,7 @@ export function createServer() {
             return text(await precipitationOutlook(la, lo, hours));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("compare_locations", "Temperature at two coordinates side by side for the first forecast day.", {
@@ -65,7 +66,7 @@ export function createServer() {
             return text(await compare(latA, lonA, latB, lonB));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

@@ -1,24 +1,40 @@
 {
   "name": "space-weather-mcp",
-  "version": "1.0.2",
-  "description": "Unified space weather server: solar wind, NOAA scales and alerts, aurora forecasts, and X-ray flux.",
+  "version": "1.0.1",
+  "description": "MCP server for NOAA solar wind, geomagnetic scales, and space weather alerts.",
   "type": "module",
-  "main": "dist/index.js",
+  "mcpName": "io.github.mrfentmen/space-weather-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "space-weather-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "dev": "npm run build && node dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "space-weather",
+    "noaa",
+    "solar"
+  ],
+  "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "zod": "^3.23.0"
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5.5.0",
-    "@types/node": "^20.0.0"
-  },
-  "license": "MIT",
-  "engines": {
-    "node": ">=20"
-  },
-  "mcpName": "io.github.mrfentmen/space-weather-mcp"
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
 }

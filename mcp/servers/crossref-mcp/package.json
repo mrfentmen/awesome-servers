@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/crossref-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Crossref: search 160M+ scholarly works, DOIs, journals, authors and funders - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/crossref-mcp",

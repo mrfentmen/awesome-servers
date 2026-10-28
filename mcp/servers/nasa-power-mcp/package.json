@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/nasa-power-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "NASA POWER climate data: daily temperature, rain, wind and solar series for any coordinate, plus monthly climatology - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nasa-power-mcp",

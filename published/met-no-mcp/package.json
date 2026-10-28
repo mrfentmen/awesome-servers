@@ -1,6 +1,6 @@
 {
   "name": "met-no-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MET Norway (yr.no) forecast: current conditions, hourly and daily outlook, rain-only view \u2014 keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/met-no-mcp",

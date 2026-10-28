@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/uk-parliament-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "UK Parliament open data: find MPs and Lords, read member profiles, and search bills with their stages - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/uk-parliament-mcp",

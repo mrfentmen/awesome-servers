@@ -1,6 +1,6 @@
 {
   "name": "crates-io-mcp",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Rust crates on crates.io: search, download trends, versions, owners, reverse dependencies.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/crates-io-mcp",

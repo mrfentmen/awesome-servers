@@ -1,46 +1,49 @@
-# themealdb-mcp
+# TheMealDB MCP
 
-TheMealDB recipes, categories, and ingredient filters.
+TheMealDB: recipes with full ingredient lists, numbered steps, cuisine and category filters — keyless.
 
-A merged MCP server that consolidates duplicate single-purpose servers in this monorepo into one focused server.
+Keyless — no signup, no API key, no environment variables.
+
+## Install
+
+```bash
+npx -y @mrfentmen/themealdb-mcp
+```
+
+Or add it to your MCP client:
+
+```json
+{
+  "mcpServers": {
+    "themealdb-mcp": { "command": "npx", "args": ["-y", "@mrfentmen/themealdb-mcp"] }
+  }
+}
+```
 
 ## Tools
 
-- `search` — Search meals by name.
-- `random` — Random meal.
-- `categories` — Meal categories.
-- `filterByIngredient` — Meals by ingredient.
-- `searchRecipes` — Search recipes by name.
-- `byIngredient` — Recipes using an ingredient.
-- `recipeDetails` — Full recipe by id.
+| Tool | What it does |
+|---|---|
+| `search_meals` | Find recipes by name |
+| `meal_detail` | Ingredients, measures and numbered steps |
+| `random_meal` | One random recipe |
+| `meals_by_category` | All recipes in a category |
+| `meals_by_cuisine` | All recipes from a cuisine |
+| `meals_by_ingredient` | Recipes whose main ingredient you name |
+| `list_options` | Every category, cuisine and ingredient |
 
-## Run
+## Example
 
-```bash
-npm install
-npm run build
-node dist/index.js
+```
+Meals in "Seafood" (84):
+
+1. Acaraje black-eyed pea fritters with shrimp filling (53483)
 ```
 
-## Source
+## Notes
 
-Public free APIs only. See `src/api.ts` for exact endpoints.
+Uses TheMealDB's public test key. Filter endpoints return names only; meal_detail adds the full list.
 
-<!-- paywall -->
-## Premium tools
+## Licence
 
-These tools need a license key:
-
-* `filter_by_category`
-* `filter_by_area`
-
-Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-themealdb-mcp and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
-```
-
-The key is checked against MCP Marketplace, cached for 24 hours, and keeps
-working offline once one check has succeeded. Every other tool on this server
-stays free.
-<!-- /paywall -->
+MIT

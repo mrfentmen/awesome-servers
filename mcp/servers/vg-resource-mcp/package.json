@@ -1,6 +1,6 @@
 {
   "name": "vg-resource-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "MCP server for The VG Resource network (Sprites, Models, Textures, Sounds)",
   "type": "module",
   "mcpName": "io.github.mrfentmen/vg-resource-mcp",

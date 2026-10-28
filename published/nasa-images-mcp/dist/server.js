@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { assetFiles, byCenter, itemDetail, keywordSummary, NasaImagesError, recentMedia, searchMedia, } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof NasaImagesError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -18,7 +19,7 @@ export function createServer() {
             return text(await searchMedia(query, media_type, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("item_detail", "Full record for one NASA asset by its NASA ID.", { nasa_id: z.string().min(3).describe("NASA ID, e.g. PIA04413") }, async ({ nasa_id }) => {
@@ -26,7 +27,7 @@ export function createServer() {
             return text(await itemDetail(nasa_id));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("asset_files", "Every downloadable file for a NASA asset, including full-resolution originals.", { nasa_id: z.string().min(3).describe("NASA ID, e.g. PIA04413") }, async ({ nasa_id }) => {
@@ -34,7 +35,7 @@ export function createServer() {
             return text(await assetFiles(nasa_id));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("by_center", "Images published by a NASA center (JPL, GSFC, HQ, MSFC, KSC, ...).", {
@@ -45,7 +46,7 @@ export function createServer() {
             return text(await byCenter(center, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("recent_media", "Latest media added to the NASA library since a given year.", {
@@ -56,7 +57,7 @@ export function createServer() {
             return text(await recentMedia(year_start, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("keyword_summary", "Aggregate keywords, centers and media types across the top results for a query.", {
@@ -67,7 +68,7 @@ export function createServer() {
             return text(await keywordSummary(query, limit));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

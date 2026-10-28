@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/poker-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Evaluate poker hands, compare players and pick the best five from seven cards - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/poker-mcp",

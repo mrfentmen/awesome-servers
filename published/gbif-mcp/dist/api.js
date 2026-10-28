@@ -8,10 +8,3 @@ export function match(name) { return get("species/match", { name }); }
 export function species(key) { return get(`species/${encodeURIComponent(key)}`); }
 export function occurrences(params) { return get("occurrence/search", { limit: "20", ...params }); }
 export function format(data) { return JSON.stringify(data, null, 2).slice(0, 14000); }
-export function speciesSearch(q, limit = 10) { return get("species/search", { q, limit: String(limit) }); }
-export function occurrenceCount(taxonKey) { return get("occurrence/count", { taxonKey }); }
-export function countries() { return get("enumeration/country"); }
-export function organizations(limit = 5) { return get("organization", { limit: String(limit) }); }
-export function installations(limit = 5) { return get("installation", { limit: String(limit) }); }
-export function nodes(limit = 5) { return get("node", { limit: String(limit) }); }
-export function dataset(key) { return get(`dataset/${encodeURIComponent(key)}`); }

@@ -5,7 +5,7 @@ const MAX_OUTPUT = 14000;
 const MAX_KEYS = 10000;
 export class ContractDiffError extends Error {
 }
-export async function load(file) { const configured = process.env.CONTRACT_DIFF_ROOT ?? path.join(process.cwd(), ".."); const root = await realpath(path.resolve(configured)).catch(() => path.resolve(configured)); const requested = path.isAbsolute(file) ? file : path.resolve(root, file); const target = await realpath(requested).catch(() => requested); const relative = path.relative(root, target); if (relative.startsWith("..") || path.isAbsolute(relative))
+async function load(file) { const configured = process.env.CONTRACT_DIFF_ROOT ?? path.join(process.cwd(), ".."); const root = await realpath(path.resolve(configured)).catch(() => path.resolve(configured)); const requested = path.isAbsolute(file) ? file : path.resolve(root, file); const target = await realpath(requested).catch(() => requested); const relative = path.relative(root, target); if (relative.startsWith("..") || path.isAbsolute(relative))
     throw new ContractDiffError("Snapshot path must stay inside the configured local workspace"); const info = await stat(target).catch(() => null); if (!info?.isFile() || info.size > MAX_BYTES)
     throw new ContractDiffError("Snapshot is missing or exceeds the local size limit"); try {
     return JSON.parse(await readFile(target, "utf8"));

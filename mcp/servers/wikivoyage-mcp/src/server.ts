@@ -12,6 +12,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof WikivoyageError || e instanceof Error) return `Error: ${e.message}`
@@ -32,7 +33,7 @@ export function createServer(): McpServer {
       try {
         return text(await search(query, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -45,7 +46,7 @@ export function createServer(): McpServer {
       try {
         return text(await overview(title))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -58,7 +59,7 @@ export function createServer(): McpServer {
       try {
         return text(await sections(title))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -76,7 +77,7 @@ export function createServer(): McpServer {
       try {
         return text(await nearby(lat, lon, radius_m, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -92,7 +93,7 @@ export function createServer(): McpServer {
       try {
         return text(await links(title, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -108,7 +109,7 @@ export function createServer(): McpServer {
       try {
         return text(with_overview ? await randomWithOverviews(limit) : await random(limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

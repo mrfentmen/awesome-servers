@@ -1,12 +1,12 @@
 {
   "name": "merge-conflict-forecaster-mcp",
-  "version": "1.0.2",
+  "version": "1.0.1",
   "description": "Predict local Git merge-conflict pressure from branch topology and changed-file overlap without returning source content.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/merge-conflict-forecaster-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/merge-conflict-forecaster-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "merge-conflict-forecaster-mcp": "./dist/index.js"
@@ -37,8 +37,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/lichess-stats-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Lichess accounts and puzzles: player ratings, recent activity, online status and the puzzle of the day - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/lichess-stats-mcp",

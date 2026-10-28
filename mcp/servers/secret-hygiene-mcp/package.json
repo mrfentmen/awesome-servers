@@ -1,6 +1,6 @@
 {
   "name": "secret-hygiene-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Count secret-like patterns in bounded local files without returning values, keys, paths, filenames, or matches.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/secret-hygiene-mcp",

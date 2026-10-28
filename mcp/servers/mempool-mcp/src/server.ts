@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof MempoolError || e instanceof Error) return `Error: ${e.message}`
@@ -28,7 +29,7 @@ export function createServer(): McpServer {
       try {
         return text(await recommendedFees())
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -41,7 +42,7 @@ export function createServer(): McpServer {
       try {
         return text(await mempoolStats())
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -54,7 +55,7 @@ export function createServer(): McpServer {
       try {
         return text(await recentBlocks(limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -67,7 +68,7 @@ export function createServer(): McpServer {
       try {
         return text(await blockInfo(block))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -80,7 +81,7 @@ export function createServer(): McpServer {
       try {
         return text(await addressInfo(address))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -93,7 +94,7 @@ export function createServer(): McpServer {
       try {
         return text(await difficultyAdjustment())
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

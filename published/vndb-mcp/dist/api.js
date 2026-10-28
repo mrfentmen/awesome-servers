@@ -131,4 +131,3 @@ function strip(s) {
         .replace(/\s+/g, " ")
         .trim();
 }
-// ---- muxC tools:

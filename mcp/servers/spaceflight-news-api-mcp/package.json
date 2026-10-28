@@ -1,6 +1,6 @@
 {
   "name": "spaceflight-news-api-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Spaceflight News API v4: 36k+ space articles, full-text search, outlet filter, agency reports \u2014 keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/spaceflight-news-api-mcp",

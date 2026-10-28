@@ -12,6 +12,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -35,7 +36,7 @@ export function createServer(): McpServer {
             results.map((m, i) => `${i + 1}. ${formatManga(m)}`).join("\n\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -50,7 +51,7 @@ export function createServer(): McpServer {
         if (!m) return text(`No manga with id "${id}".`)
         return text(formatManga(m))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -73,7 +74,7 @@ export function createServer(): McpServer {
         const head = `Chapters (${lang})${oldestFirst ? " oldest first" : " newest first"}:\n`
         return text(head + chapters.map((c) => `• ${formatChapter(c)}`).join("\n"))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -98,7 +99,7 @@ export function createServer(): McpServer {
               .join("\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -121,7 +122,7 @@ export function createServer(): McpServer {
         )
         return text(`MangaDex tags:\n\n${lines.join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

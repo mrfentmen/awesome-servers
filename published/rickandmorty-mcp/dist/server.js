@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { characterDetail, searchCharacters, searchEpisodes, searchLocations, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -19,7 +20,7 @@ export function createServer() {
             return text(await searchCharacters(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("character_detail", "One character by id, with origin, location, episodes and image link.", {
@@ -29,7 +30,7 @@ export function createServer() {
             return text(await characterDetail(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("search_locations", "Find locations and dimensions by name.", {
@@ -40,7 +41,7 @@ export function createServer() {
             return text(await searchLocations(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("search_episodes", "Find episodes by name or code, with air dates.", {
@@ -51,7 +52,7 @@ export function createServer() {
             return text(await searchEpisodes(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

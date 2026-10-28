@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { dailyPuzzle, userActivity, userProfile, userStatus, SourceError } from "./api.js";
 const text = (t) => ({ content: [{ type: "text", text: t }] });
+const fail = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 function errorMessage(e) {
     if (e instanceof SourceError || e instanceof Error)
         return `Error: ${e.message}`;
@@ -16,7 +17,7 @@ export function createServer() {
             return text(await userProfile(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("user_activity", "Recent activity streaks: games, puzzles and practice days.", {
@@ -27,7 +28,7 @@ export function createServer() {
             return text(await userActivity(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("user_status", "Whether accounts are online, playing or otherwise busy.", {
@@ -37,7 +38,7 @@ export function createServer() {
             return text(await userStatus(a));
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     server.tool("daily_puzzle", "The puzzle of the day with its solution moves and themes.", {
@@ -47,7 +48,7 @@ export function createServer() {
             return text(await dailyPuzzle());
         }
         catch (e) {
-            return text(errorMessage(e));
+            return fail(errorMessage(e));
         }
     });
     return server;

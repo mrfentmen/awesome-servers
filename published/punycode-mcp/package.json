@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/punycode-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Convert internationalised domain names between Unicode and punycode (IDNA) and inspect labels - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/punycode-mcp",

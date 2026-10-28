@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/lorcana-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Disney Lorcana TCG cards via Lorcast: search by name, read stats, text and prices, and list every set - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/lorcana-mcp",

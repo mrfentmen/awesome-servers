@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof CratesError || e instanceof Error) return `Error: ${e.message}`
@@ -35,7 +36,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchCrates(query, limit, sort))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -48,7 +49,7 @@ export function createServer(): McpServer {
       try {
         return text(await crateInfo(name))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -64,7 +65,7 @@ export function createServer(): McpServer {
       try {
         return text(await crateVersions(name, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -77,7 +78,7 @@ export function createServer(): McpServer {
       try {
         return text(await crateOwners(name))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -93,7 +94,7 @@ export function createServer(): McpServer {
       try {
         return text(await crateDependencies(name, version))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -106,7 +107,7 @@ export function createServer(): McpServer {
       try {
         return text(await downloadTrend(name))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

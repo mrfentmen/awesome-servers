@@ -43,10 +43,3 @@ export declare function getRunner(userId: string): Promise<any>;
 export declare function fmtDuration(iso?: string): string;
 export declare function formatGame(g: SpeedrunGame, index: number): string;
 export declare function formatRecordCategory(rc: RecordCategory): string;
-export interface LatestRunsArgs {
-    limit?: number;
-}
-export interface PlayerPbsArgs {
-    userId: string;
-    limit?: number;
-}

@@ -10,6 +10,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -27,7 +28,7 @@ export function createServer(): McpServer {
         if (cards.length === 0) return text(`No Yu-Gi-Oh! card named "${name}".`)
         return text(`Cards matching "${name}":\n\n${cards.map((c, i) => formatCard(c, i)).join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -45,7 +46,7 @@ export function createServer(): McpServer {
             cards.slice(0, limit).map((c, i) => formatCard(c, i)).join("\n\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -60,7 +61,7 @@ export function createServer(): McpServer {
         if (!card) return text(`No Yu-Gi-Oh! card with id ${id}.`)
         return text(formatCard(card))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -86,7 +87,7 @@ export function createServer(): McpServer {
         }
         return text(`${format.toUpperCase()} banlist:\n\n${out.join("\n\n")}`)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

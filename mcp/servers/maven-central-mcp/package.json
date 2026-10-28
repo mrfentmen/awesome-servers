@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/maven-central-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Maven Central: artifact search, version history, group listings, class lookup, dependency snippets.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/maven-central-mcp",

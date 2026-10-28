@@ -1,6 +1,6 @@
 {
   "name": "release-notes-forge-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Summarize local Git release shape without returning commit messages, paths, hashes, or remotes.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/release-notes-forge-mcp",

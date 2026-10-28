@@ -1,6 +1,6 @@
 {
   "name": "tetriswiki-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for the Tetris wiki, covering every game, piece, and technique in the tetromino universe.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/tetriswiki-mcp",

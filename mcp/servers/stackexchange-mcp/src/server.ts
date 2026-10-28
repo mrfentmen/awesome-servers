@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof StackExchangeError || e instanceof Error) return `Error: ${e.message}`
@@ -35,7 +36,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchQuestions(query, site, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -52,7 +53,7 @@ export function createServer(): McpServer {
       try {
         return text(await questionsByTag(tag, site, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -65,7 +66,7 @@ export function createServer(): McpServer {
       try {
         return text(await hotQuestions(site, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -81,7 +82,7 @@ export function createServer(): McpServer {
       try {
         return text(await questionDetail(question_id, site))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -98,7 +99,7 @@ export function createServer(): McpServer {
       try {
         return text(await answersForQuestion(question_id, site, limit))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -114,7 +115,7 @@ export function createServer(): McpServer {
       try {
         return text(await userProfile(user_id, site))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )

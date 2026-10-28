@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/tides-mcp",
-  "description": "Use this MCP server to NOAA tides and currents predictions and water levels. Tools include get...",
+  "description": "MCP server for NOAA tides and currents predictions and water levels.",
   "repository": {
     "url": "https://github.com/mrfentmen/tides-mcp",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "tides-mcp",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       }

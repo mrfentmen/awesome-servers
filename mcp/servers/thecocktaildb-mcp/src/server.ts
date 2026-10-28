@@ -11,6 +11,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 function errorMessage(e: unknown): string {
   if (e instanceof CocktailError || e instanceof Error) return `Error: ${e.message}`
@@ -29,7 +30,7 @@ export function createServer(): McpServer {
       try {
         return text(await searchCocktails(name, n))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -42,7 +43,7 @@ export function createServer(): McpServer {
       try {
         return text(await cocktailDetail(id))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -51,7 +52,7 @@ export function createServer(): McpServer {
     try {
       return text(await randomCocktail())
     } catch (e) {
-      return text(errorMessage(e))
+      return fail(errorMessage(e))
     }
   })
 
@@ -63,7 +64,7 @@ export function createServer(): McpServer {
       try {
         return text(await browseByLetter(letter, n))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -76,7 +77,7 @@ export function createServer(): McpServer {
       try {
         return text(await listIngredients(n))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -85,7 +86,7 @@ export function createServer(): McpServer {
     try {
       return text(await listFilters())
     } catch (e) {
-      return text(errorMessage(e))
+      return fail(errorMessage(e))
     }
   })
 

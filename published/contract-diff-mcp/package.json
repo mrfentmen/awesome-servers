@@ -1,12 +1,12 @@
 {
   "name": "contract-diff-mcp",
-  "version": "1.0.6",
-  "description": "Aggregate local contract snapshot changes without exposing schema contents. Tools include compare contract snapshots",
+  "version": "1.0.1",
+  "description": "Aggregate local contract snapshot changes without exposing schema contents.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/contract-diff-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/contract-diff-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "contract-diff-mcp": "./dist/index.js"
@@ -38,8 +38,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

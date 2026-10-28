@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/volcano-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Smithsonian Global Volcanism Program: search Holocene volcanoes, read summaries, eruption years and rock types - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/volcano-mcp",

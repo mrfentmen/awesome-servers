@@ -1,29 +1,34 @@
-# Semver MCP
+# Semantic Version
 
-Parse, compare, and sort semantic version numbers locally. No network, no key.
+Semantic version toolkit: parse, compare, sort and range-check versions (npm-style ^ ~ and hyphen ranges) - fully local.
 
-This file is self contained. It reads public data only and never writes to the machine. All output is bounded and honest about what could not be fetched.
+Keyless — no signup, no API key, no environment variables.
+
+## Install
+
+```bash
+npx -y @mrfentmen/semver-mcp
+```
+
+Or add it to your MCP client:
+
+```json
+{
+  "mcpServers": {
+    "semver-mcp": { "command": "npx", "args": ["-y", "@mrfentmen/semver-mcp"] }
+  }
+}
+```
 
 ## Tools
 
+| Tool | What it does |
+|---|---|
+| `parse_version` | Break a version into major, minor, patch, prerelease and build parts. |
+| `compare_versions` | Compare two versions by semver precedence. |
+| `sort_versions` | Sort a list of versions from lowest to highest. |
+| `satisfies_range` | Check a version against a range: ^ ~ x-ranges, comparisons, hyphen ranges and ||. |
 
-* `compare`  Compare two versions.
-* `sort_versions`  Sort a list of versions.
-* `describe`  Break a version into parts.
+## Data source
 
-## Usage
-
-```bash
-npm install
-npm run build
-node dist/index.js
-```
-
-All parsing happens locally with the standard semantic version rules.
-
-## Licence — no paywall
-
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.
+Semantic versioning 2.0.0 rules, implemented locally

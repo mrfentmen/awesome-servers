@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/dailymed-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "DailyMed drug labels from the FDA: find labels by drug name and read one label's sections - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/dailymed-mcp",

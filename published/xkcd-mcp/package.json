@@ -1,12 +1,12 @@
 {
   "name": "xkcd-mcp",
-  "version": "1.0.3",
+  "version": "1.0.1",
   "description": "Use this MCP server to xkcd. The latest comic, any comic by number, alt text, and transcripts. Tools include latest comic, get comic",
   "type": "module",
   "mcpName": "io.github.mrfentmen/xkcd-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/xkcd-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "xkcd-mcp": "./dist/index.js"
@@ -34,8 +34,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

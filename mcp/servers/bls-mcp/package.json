@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/bls-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "BLS economic series: employment, CPI, wages and more by series id, with the survey list and popular series - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/bls-mcp",

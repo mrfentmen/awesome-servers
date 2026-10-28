@@ -19,9 +19,21 @@ node dist/index.js
 
 Output files are written to the system temp directory and the path is returned.
 
-## Licence — no paywall
+<!-- paywall -->
+## Premium tools
 
-Every tool in this package is free: no licence key, no premium tier, no hosted
-licence gateway. The paywall machinery this repo once carried (per-tool licence
-checks and paid hosted endpoints) was removed repo-wide on 2026-10-17. Nothing
-that this package installs or calls asks you to pay.
+These tools need a license key:
+
+* `qr_capacity`
+* `qr_size_report`
+
+Buy a key at https://mcp-marketplace.io/server/io-github-mrfentmen-qr-code-mcp and set it in your MCP client config:
+
+```json
+"env": { "MCP_LICENSE_KEY": "mcp_live_..." }
+```
+
+The key is checked against MCP Marketplace, cached for 24 hours, and keeps
+working offline once one check has succeeded. Every other tool on this server
+stays free.
+<!-- /paywall -->

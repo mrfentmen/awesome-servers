@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/worms-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "World Register of Marine Species: search names, read records, children and full classification - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/worms-mcp",

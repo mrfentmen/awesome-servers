@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/numbers-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Number work offline: statistics summaries, roman numerals, base conversion and locale-aware formatting - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/numbers-mcp",

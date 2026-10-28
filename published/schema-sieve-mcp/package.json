@@ -1,12 +1,12 @@
 {
   "name": "schema-sieve-mcp",
-  "version": "1.0.3",
-  "description": "Local JSON Schema structure inspection and privacy-safe fixture planning. Tools include inspect schema, plan fixture",
+  "version": "1.0.1",
+  "description": "Local JSON Schema structure inspection and privacy-safe fixture planning.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/schema-sieve-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrfentmen/schema-sieve-mcp.git"
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
     "schema-sieve-mcp": "./dist/index.js"
@@ -37,8 +37,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }

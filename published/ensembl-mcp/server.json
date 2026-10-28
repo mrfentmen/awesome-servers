@@ -1,16 +1,16 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/ensembl-mcp",
-  "description": "Genome lookup from Ensembl. No key required.",
+  "description": "Ensembl genomes: look up genes and transcripts by symbol, fetch sequences and list xrefs - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/ensembl-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "ensembl-mcp",
+      "identifier": "@mrfentmen/ensembl-mcp",
       "version": "1.0.1",
       "transport": {
         "type": "stdio"

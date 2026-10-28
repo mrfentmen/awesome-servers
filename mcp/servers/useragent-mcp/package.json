@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/useragent-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Parse user-agent strings into browser, engine, OS and device, and flag crawlers - fully local.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/useragent-mcp",

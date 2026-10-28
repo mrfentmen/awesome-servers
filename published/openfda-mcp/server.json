@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/openfda-mcp",
-  "description": "FDA open data: drug recalls, adverse events, and approved drugs.",
+  "description": "openFDA: drug labels, adverse events, drug/device/food recalls and NDC directory \u2014 keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
-  "version": "1.1.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "openfda-mcp",
-      "version": "1.1.0",
+      "identifier": "@mrfentmen/openfda-api-mcp",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       }

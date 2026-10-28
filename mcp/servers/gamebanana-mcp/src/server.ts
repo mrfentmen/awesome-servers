@@ -13,6 +13,7 @@ import {
 } from "./api.js"
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] })
+const fail = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true })
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -33,7 +34,7 @@ export function createServer(): McpServer {
             results.map((r, i) => formatSearchResult(r, i + 1)).join("\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -48,7 +49,7 @@ export function createServer(): McpServer {
         if (!mod) return text(`No mod with id ${id}.`)
         return text(formatMod(mod))
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -66,7 +67,7 @@ export function createServer(): McpServer {
             results.map((r, i) => formatSearchResult(r, i + 1)).join("\n")
         )
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
@@ -94,7 +95,7 @@ export function createServer(): McpServer {
           .join("\n")
         return text(head + body)
       } catch (e) {
-        return text(errorMessage(e))
+        return fail(errorMessage(e))
       }
     }
   )
