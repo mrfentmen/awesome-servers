@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
+import { LOBSTER, checkToolchain, formatResult, formatStatus, runProgram } from "./runner.js"
 import {
   formatBuiltinLookup,
   formatBuiltinSearch,
@@ -31,7 +32,7 @@ function errorMessage(e: unknown): string {
 }
 
 export function createServer(): McpServer {
-  const server = new McpServer({ name: "lobster-mcp", version: "1.0.0" })
+  const server = new McpServer({ name: "lobster-mcp", version: "1.1.0" })
 
   server.tool(
     "overview",
@@ -232,6 +233,53 @@ export function createServer(): McpServer {
     async ({ query, limit }) => {
       try {
         return text(formatSampleSearch(query, limit ?? 5))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
+    }
+  )
+
+  server.tool(
+    "toolchain_status",
+    "Check whether the Lobster toolchain is installed and reachable. Reports the binary it would use (LOBSTER_BIN or `lobster` on PATH) without compiling anything.",
+    {},
+    async () => {
+      try {
+        return text(formatStatus(LOBSTER, checkToolchain(LOBSTER)))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
+    }
+  )
+
+  server.tool(
+    "run_code",
+    "Compile and run a Lobster program with the locally installed toolchain. Writes the code to a temporary directory, runs `lobster main.lobster` there, and returns the exit code, stdout and stderr. Requires Lobster to be installed on the machine (see toolchain_status). Times out after 10s by default and the reference data never leaves the machine.",
+    {
+      code: z.string().min(1).describe("Complete Lobster source code to compile and run."),
+      args: z
+        .array(z.string())
+        .optional()
+        .describe("Arguments passed to the program after `--` (Lobster exposes them via command_line_arguments())."),
+      timeoutMs: z
+        .number()
+        .int()
+        .min(100)
+        .max(60000)
+        .optional()
+        .describe("Kill the process after this many milliseconds. Default 10000, max 60000."),
+    },
+    async ({ code, args, timeoutMs }) => {
+      try {
+        return text(
+          formatResult(
+            await runProgram(LOBSTER, {
+              code,
+              ...(args ? { args } : {}),
+              ...(timeoutMs !== undefined ? { timeoutMs } : {}),
+            })
+          )
+        )
       } catch (e) {
         return fail(errorMessage(e))
       }

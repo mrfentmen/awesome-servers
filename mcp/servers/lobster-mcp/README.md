@@ -17,6 +17,18 @@ Generated from [aardappel/lobster](https://github.com/aardappel/lobster) at comm
 
 The 187 sections cover the language reference, the language spec, memory management, the type checker, the style guide, getting started, the shooter tutorial, philosophy, command line usage, the C-style cheat sheet, the engine, the language server, implementation notes and the "welcome" page.
 
+## Requirements
+
+The reference tools work offline with no dependencies. Only `run_code` and `toolchain_status` need a Lobster compiler on the machine:
+
+```bash
+git clone https://github.com/aardappel/lobster.git
+cd lobster/dev && cmake -DCMAKE_BUILD_TYPE=Release && make -j8
+export LOBSTER_BIN="$PWD/../bin/lobster"
+```
+
+If the binary is missing and `LOBSTER_BIN` is unset, `toolchain_status` reports NOT FOUND and `run_code` returns an error naming the variable. Neither crashes.
+
 ## Install
 
 ```bash
@@ -58,6 +70,8 @@ No API key, no environment variables, no network access at runtime.
 | `list_samples` | none | Sample programs with path and size |
 | `get_sample` | `name` (required) | Source of one sample, with or without the `.lobster` extension |
 | `search_samples` | `query` (required), `limit` (optional, default 5, max 20) | Samples whose code contains the substring, with a window around each hit |
+| `toolchain_status` | none | Whether the compiler was found, which binary it resolved, and how it was found (`LOBSTER_BIN` or PATH) |
+| `run_code` | `code` (required), `args` (optional array), `timeoutMs` (optional, default 10000, max 60000) | Compiles and runs the code in a temp dir: exit code, duration, stdout, stderr |
 
 ## Example prompts
 
@@ -77,6 +91,8 @@ Everything is extracted from the upstream repository at build time:
 - the samples are the real `samples/*.lobster` files, unmodified.
 
 The result is shipped as JSON in `data/` and read from disk at startup. The server makes no network requests and needs no credentials.
+
+**`run_code` executes the code you pass it** on this machine, in a temporary directory, with the permissions of the MCP client process. There is no sandbox: treat it exactly like running `lobster file.lobster` in a shell.
 
 ## Regenerating
 
