@@ -1,0 +1,42 @@
+{
+  "name": "motoko-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Motoko: the language docs, 339 public Motoko Base symbols and real canister samples.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/motoko-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "motoko-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "data"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "motoko",
+    "language",
+    "reference"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

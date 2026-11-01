@@ -1,0 +1,9 @@
+{
+ "language": "Motoko",
+ "repo": "https://github.com/dfinity/motoko",
+ "site": "https://internetcomputer.org/docs/motoko",
+ "commit": "61ea72bd9cfadfb54751d938647b9e2b32d1ea43",
+ "docs": 710,
+ "symbols": 339,
+ "samples": 7
+}

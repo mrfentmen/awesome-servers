@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/motoko-mcp",
+  "description": "MCP server for Motoko: the language docs, 339 public Motoko Base symbols and real canister samples.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/motoko-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "motoko-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
