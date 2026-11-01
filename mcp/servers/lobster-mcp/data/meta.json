@@ -1,0 +1,26 @@
+{
+ "language": "Lobster",
+ "repo": "https://github.com/aardappel/lobster",
+ "site": "https://strlen.com/lobster/",
+ "commit": "6c1389c6e2a6f79cd351813829076a4d653f1e2b",
+ "docs": 187,
+ "builtins": 879,
+ "keywords": 45,
+ "samples": 18,
+ "sources": [
+  "https://raw.githubusercontent.com/aardappel/lobster/master/docs/language_reference.html",
+  "https://raw.githubusercontent.com/aardappel/lobster/master/docs/language_spec.html",
+  "https://raw.githubusercontent.com/aardappel/lobster/master/docs/memory_management.html",
+  "https://raw.githubusercontent.com/aardappel/lobster/master/docs/type_checker.html",
+  "https://raw.githubusercontent.com/aardappel/lobster/master/docs/style_guide.html",
+  "https://raw.githubusercontent.com/aardappel/lobster/master/docs/getting_started.html",
+  "https://raw.githubusercontent.com/aardappel/lobster/master/docs/shooter_tutorial.html",
+  "https://raw.githubusercontent.com/aardappel/lobster/master/docs/philosophy.html",
+  "https://raw.githubusercontent.com/aardappel/lobster/master/docs/command_line_usage.html",
+  "https://raw.githubusercontent.com/aardappel/lobster/master/docs/C_style language Cheat Sheet for Lobster.html",
+  "https://raw.githubusercontent.com/aardappel/lobster/master/docs/engine.html",
+  "https://raw.githubusercontent.com/aardappel/lobster/master/docs/lsp.html",
+  "https://raw.githubusercontent.com/aardappel/lobster/master/docs/implementation.html",
+  "https://raw.githubusercontent.com/aardappel/lobster/master/docs/README_FIRST.html"
+ ]
+}
