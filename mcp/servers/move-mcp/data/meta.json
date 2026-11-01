@@ -1,0 +1,9 @@
+{
+ "language": "Move",
+ "repo": "https://github.com/move-language/move",
+ "site": "https://move-language.github.io/move/",
+ "commit": "c453c90994cba0af30314fe4134acee57fb20d0c",
+ "docs": 222,
+ "symbols": 289,
+ "samples": 10
+}
