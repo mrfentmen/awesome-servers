@@ -23,6 +23,20 @@ Extracted from `aardappel/goose` at commit `b78158797a3a4199a2c519d90d4e5421b276
 Documents bundled: overview, tutorial, language reference, standard library, language spec,
 command line, packages, testing, "Goose for C++ and Rust Programmers", editors.
 
+## Requirements
+
+The reference tools work offline with no dependencies. Only `run_code` and `toolchain_status` need a Goose compiler on the machine:
+
+```bash
+git clone https://github.com/aardappel/goose
+cd goose
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DGOOSE_BUILTIN_LIBS=all
+cmake --build build --config Release
+export GOOSE_BIN="$PWD/build/goose"
+```
+
+If the binary is missing and `GOOSE_BIN` is unset, `toolchain_status` reports NOT FOUND and `run_code` returns an error naming the variable. Neither crashes.
+
 ## Install
 
 ```bash
@@ -65,6 +79,8 @@ No API key and no network access are needed at runtime.
 | `get_sample` | `name` (required, `.goose` optional) | The real source in a fenced block |
 | `find_pattern` | `query`, `limit` (optional, default 3) | Sections from the C++/Rust translation guide |
 | `search_samples` | `query`, `limit` (optional, default 5) | Samples containing the substring, with code context |
+| `toolchain_status` | none | Whether the compiler was found, which binary it resolved, and how it was found (`GOOSE_BIN` or PATH) |
+| `run_code` | `code` (required), `args` (optional array), `timeoutMs` (optional, default 10000, max 60000) | Compiles and runs the code in a temp dir: exit code, duration, stdout, stderr |
 
 ## Example prompts
 

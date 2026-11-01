@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
+import { GOOSE, checkToolchain, formatResult, formatStatus, runProgram } from "./runner.js"
 import {
   docGroups,
   findSample,
@@ -43,7 +44,7 @@ function formatSectionHeader(s: Section): string {
 }
 
 export function createServer(): McpServer {
-  const server = new McpServer({ name: "goose-mcp", version: "1.0.0" })
+  const server = new McpServer({ name: "goose-mcp", version: "1.1.0" })
 
   server.tool(
     "overview",
@@ -370,6 +371,53 @@ export function createServer(): McpServer {
         }
         const body = hits.map((h) => `${h.sample.name} (${h.sample.path})\n  ${h.snippet}`)
         return text(`${hits.length} sample(s) containing "${query}":\n\n${body.join("\n\n")}`)
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
+    }
+  )
+
+  server.tool(
+    "toolchain_status",
+    "Check whether the Goose toolchain is installed and reachable. Reports the binary it would use (GOOSE_BIN or `goose` on PATH) without compiling anything.",
+    {},
+    async () => {
+      try {
+        return text(formatStatus(GOOSE, checkToolchain(GOOSE)))
+      } catch (e) {
+        return fail(errorMessage(e))
+      }
+    }
+  )
+
+  server.tool(
+    "run_code",
+    "Compile and run a Goose program with the locally installed toolchain. Writes the code to a temporary directory, runs `goose main.goose` there, and returns the exit code, stdout and stderr. Requires Goose to be installed on the machine (see toolchain_status). Times out after 10s by default.",
+    {
+      code: z.string().min(1).describe("Complete Goose source code to compile and run."),
+      args: z
+        .array(z.string())
+        .optional()
+        .describe("Arguments passed to the program after `--`."),
+      timeoutMs: z
+        .number()
+        .int()
+        .min(100)
+        .max(60000)
+        .optional()
+        .describe("Kill the process after this many milliseconds. Default 10000, max 60000."),
+    },
+    async ({ code, args, timeoutMs }) => {
+      try {
+        return text(
+          formatResult(
+            await runProgram(GOOSE, {
+              code,
+              ...(args ? { args } : {}),
+              ...(timeoutMs !== undefined ? { timeoutMs } : {}),
+            })
+          )
+        )
       } catch (e) {
         return fail(errorMessage(e))
       }
