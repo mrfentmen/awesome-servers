@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/gocardless-mcp",
+  "description": "MCP server for GoCardless: payments, refunds, customers, mandates, subscriptions, payouts, balances and webhooks. Sandbox supported.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/gocardless-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "gocardless-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
