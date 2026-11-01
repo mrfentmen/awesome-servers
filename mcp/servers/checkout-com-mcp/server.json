@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/checkout-com-mcp",
+  "description": "MCP server for Checkout.com payments: payments, refunds, customers, instruments and disputes. Sandbox supported.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/checkout-com-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "checkout-com-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
