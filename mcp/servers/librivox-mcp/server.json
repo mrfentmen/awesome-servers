@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/librivox-mcp",
   "description": "LibriVox public-domain audiobooks: title and author search, book detail, chapter lists with mp3 links, download links.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/librivox-mcp",
     "source": "github"
   },
   "version": "1.0.6",

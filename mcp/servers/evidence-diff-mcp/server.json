@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/evidence-diff-mcp",
   "description": "Explain coarse Git and test-build evidence changes without source diff contents.",
   "repository": {
-    "url": "https://github.com/mrfentmen/evidence-diff-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/evidence-diff-mcp",
     "source": "github"
   },
   "version": "1.0.1",

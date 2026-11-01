@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/collegefootballdata-mcp",
   "description": "College football: conferences, venues, teams, games, scoreboards, team stats and lines.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/collegefootballdata-mcp",
     "source": "github"
   },
   "version": "1.0.0",

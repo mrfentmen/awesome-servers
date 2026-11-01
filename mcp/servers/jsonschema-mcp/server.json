@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/jsonschema-mcp",
   "description": "Validate JSON against a JSON Schema offline, with a clear list of every structural error",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/jsonschema-mcp",
     "source": "github"
   },
   "version": "1.0.1",

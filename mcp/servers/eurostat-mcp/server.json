@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/eurostat-mcp",
   "description": "Eurostat statistics: pull any dataset by code with dimension filters, and inspect the dimensions a",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/eurostat-mcp",
     "source": "github"
   },
   "version": "1.0.2",

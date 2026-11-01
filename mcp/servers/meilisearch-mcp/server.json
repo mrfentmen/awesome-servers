@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/meilisearch-mcp",
   "description": "Search indexes, manage documents, check health and stats.",
   "repository": {
-    "url": "https://github.com/mrfentmen/meilisearch-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/meilisearch-mcp",
     "source": "github"
   },
   "version": "1.0.2",

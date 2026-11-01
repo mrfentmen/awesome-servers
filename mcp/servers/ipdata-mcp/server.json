@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ipdata-mcp",
   "description": "ipdata.co IP intelligence: geolocation, ASN, company, threat and timezone lookups.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ipdata-mcp",
     "source": "github"
   },
   "version": "1.0.0",

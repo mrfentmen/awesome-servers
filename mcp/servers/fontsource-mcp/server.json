@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/fontsource-mcp",
   "description": "Browse open source fonts from Fontsource. No key required.",
   "repository": {
-    "url": "https://github.com/mrfentmen/fontsource-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/fontsource-mcp",
     "source": "github"
   },
   "version": "1.0.2",

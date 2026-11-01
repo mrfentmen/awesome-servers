@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/dockerhub-mcp",
   "description": "Docker Hub: image search, details, tags with sizes and digests, and official image ranking.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/dockerhub-mcp",
     "source": "github"
   },
   "version": "1.0.2",

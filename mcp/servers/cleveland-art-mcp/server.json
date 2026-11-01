@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/cleveland-art-mcp",
   "description": "Cleveland Museum of Art open access: 60,000+ works, CC0 images, department and artist filtering.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/cleveland-art-mcp",
     "source": "github"
   },
   "version": "1.0.1",

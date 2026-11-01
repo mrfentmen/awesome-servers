@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/archive-org-mcp",
   "description": "MCP server for the Internet Archive, old software, tapes, and dead web pages.",
   "repository": {
-    "url": "https://github.com/mrfentmen/archive-org-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/archive-org-mcp",
     "source": "github"
   },
   "version": "1.0.1",

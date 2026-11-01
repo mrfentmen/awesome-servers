@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/fdic-mcp",
   "description": "US bank data from the FDIC: search institutions by name, state or city and read assets, deposits",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/fdic-mcp",
     "source": "github"
   },
   "version": "1.0.3",

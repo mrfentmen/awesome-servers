@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/adsbdb-mcp",
   "description": "Aircraft and route metadata: map a callsign to its flight route, or a hex code to the airframe.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/adsbdb-mcp",
     "source": "github"
   },
   "version": "1.0.1",

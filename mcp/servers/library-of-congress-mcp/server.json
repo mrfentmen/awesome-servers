@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/library-of-congress-mcp",
   "description": "Search the Library of Congress catalogue, collections and digitised items - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/library-of-congress-mcp",
     "source": "github"
   },
   "version": "1.0.2",

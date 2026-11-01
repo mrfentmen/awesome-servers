@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/jsonc-mcp",
   "description": "Work with JSONC offline: strip comments and trailing commas, parse to JSON and locate errors",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/jsonc-mcp",
     "source": "github"
   },
   "version": "1.0.1",

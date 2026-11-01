@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/brainrot-mcp",
   "description": "Decode internet slang, brainrot terms, and niche subculture vocabulary. Fully offline dictionary.",
   "repository": {
-    "url": "https://github.com/mrfentmen/brainrot-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/brainrot-mcp",
     "source": "github"
   },
   "version": "1.0.1",

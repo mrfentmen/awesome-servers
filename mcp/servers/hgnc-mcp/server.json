@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/hgnc-mcp",
   "description": "HGNC gene nomenclature: search genes by symbol, alias or id, and read approved names",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/hgnc-mcp",
     "source": "github"
   },
   "version": "1.0.1",

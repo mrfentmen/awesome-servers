@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/cwe-mcp",
   "description": "MITRE CWE weakness records: descriptions, mitigations, consequences and the weakness hierarchy.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/cwe-mcp",
     "source": "github"
   },
   "version": "1.0.1",

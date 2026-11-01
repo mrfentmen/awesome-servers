@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/gutenberg-mcp",
   "description": "Project Gutenberg via Gutendex: 79,000+ public domain books with summaries and download links.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/gutenberg-mcp",
     "source": "github"
   },
   "version": "1.0.1",

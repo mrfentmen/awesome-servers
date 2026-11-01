@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/license-boundary-mcp",
   "description": "Summarize local license evidence and uncertainty without returning package names, license text, paths, or source.",
   "repository": {
-    "url": "https://github.com/mrfentmen/license-boundary-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/license-boundary-mcp",
     "source": "github"
   },
   "version": "1.0.1",

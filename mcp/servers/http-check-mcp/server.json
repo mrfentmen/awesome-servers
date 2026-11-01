@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/http-check-mcp",
   "description": "Check a URL live: status, timing, redirect chains and security headers; private hosts blocked",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/http-check-mcp",
     "source": "github"
   },
   "version": "1.0.1",

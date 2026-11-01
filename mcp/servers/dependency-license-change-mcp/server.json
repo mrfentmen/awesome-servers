@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/dependency-license-change-mcp",
   "description": "Compare local license evidence across two snapshots without returning package names, text, paths, or source.",
   "repository": {
-    "url": "https://github.com/mrfentmen/dependency-license-change-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/dependency-license-change-mcp",
     "source": "github"
   },
   "version": "1.0.1",

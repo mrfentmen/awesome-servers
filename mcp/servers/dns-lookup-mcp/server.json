@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/dns-lookup-mcp",
   "description": "Look up DNS records for any domain using Google DNS over HTTPS. No key required.",
   "repository": {
-    "url": "https://github.com/mrfentmen/dns-lookup-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/dns-lookup-mcp",
     "source": "github"
   },
   "version": "1.0.3",

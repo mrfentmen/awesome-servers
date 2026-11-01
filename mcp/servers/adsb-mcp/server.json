@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/adsb-mcp",
   "description": "Live aircraft positions from the adsb.lol network: traffic near a point, a callsign or a hex code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/adsb-mcp",
     "source": "github"
   },
   "version": "1.0.1",

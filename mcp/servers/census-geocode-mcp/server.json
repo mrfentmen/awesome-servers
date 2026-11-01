@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/census-geocode-mcp",
   "description": "US Census geocoder: addresses to coordinates, reverse geocoding and census geography lookup.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/census-geocode-mcp",
     "source": "github"
   },
   "version": "1.0.1",

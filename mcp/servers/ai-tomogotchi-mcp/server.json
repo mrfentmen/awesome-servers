@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ai-tomogotchi-mcp",
   "description": "MCP server for AI Tomogotchi virtual pet. Feed, play, and care for your AI pet.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ai-tomogotchi-mcp",
     "source": "github"
   },
   "version": "1.0.1",

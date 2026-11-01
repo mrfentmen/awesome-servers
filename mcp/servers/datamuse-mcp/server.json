@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/datamuse-mcp",
   "description": "Use this MCP server to wordplay. Rhymes, related words, spell checks, and word suggestions for any phrase",
   "repository": {
-    "url": "https://github.com/mrfentmen/datamuse-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/datamuse-mcp",
     "source": "github"
   },
   "version": "1.0.1",

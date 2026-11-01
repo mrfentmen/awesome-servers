@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/dependency-drift-mcp",
   "description": "Summarize local dependency manifest and lockfile drift without returning package names, versions, paths, or contents.",
   "repository": {
-    "url": "https://github.com/mrfentmen/dependency-drift-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/dependency-drift-mcp",
     "source": "github"
   },
   "version": "1.0.1",

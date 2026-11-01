@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/dictionary-mcp",
   "description": "English dictionary lookups: definitions by part of speech, examples, synonyms and antonyms for any",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/dictionary-mcp",
     "source": "github"
   },
   "version": "1.0.1",

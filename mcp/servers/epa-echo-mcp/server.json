@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/epa-echo-mcp",
   "description": "EPA ECHO enforcement and compliance: find regulated facilities by state, city, ZIP or name and read.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/epa-echo-mcp",
     "source": "github"
   },
   "version": "1.0.2",

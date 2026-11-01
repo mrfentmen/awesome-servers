@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/gbif-mcp",
   "description": "MCP server for GBIF species taxonomy and biodiversity occurrence search.",
   "repository": {
-    "url": "https://github.com/mrfentmen/gbif-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/gbif-mcp",
     "source": "github"
   },
   "version": "1.0.1",

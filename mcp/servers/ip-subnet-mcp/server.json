@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ip-subnet-mcp",
   "description": "IPv4 subnet calculator: network, broadcast, masks, host ranges and CIDR splitting - fully local.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ip-subnet-mcp",
     "source": "github"
   },
   "version": "1.0.1",

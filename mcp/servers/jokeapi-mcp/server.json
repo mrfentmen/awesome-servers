@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/jokeapi-mcp",
   "description": "Jokes from JokeAPI across categories, with safe mode, one-liners and two-part setups - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/jokeapi-mcp",
     "source": "github"
   },
   "version": "1.0.2",

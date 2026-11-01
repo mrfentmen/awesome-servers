@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/fema-disasters-mcp",
   "description": "US disaster declarations: search by state, type and date.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/fema-disasters-mcp",
     "source": "github"
   },
   "version": "1.0.0",

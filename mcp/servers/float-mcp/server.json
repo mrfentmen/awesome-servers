@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/float-mcp",
   "description": "See exactly how a number is stored as a float offline: bit layout, f32 rounding and neighbours",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/float-mcp",
     "source": "github"
   },
   "version": "1.0.1",

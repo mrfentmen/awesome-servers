@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/chess-mcp",
   "description": "Use this MCP server to chess.com. Player profiles, ratings, game archives, leaderboards, and titled players",
   "repository": {
-    "url": "https://github.com/mrfentmen/chess-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/chess-mcp",
     "source": "github"
   },
   "version": "1.0.1",

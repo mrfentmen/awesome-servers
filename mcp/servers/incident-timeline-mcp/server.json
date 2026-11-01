@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/incident-timeline-mcp",
   "description": "Summarize local log timeline gaps and severity counts without returning messages, IDs, paths, or IP addresses.",
   "repository": {
-    "url": "https://github.com/mrfentmen/incident-timeline-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/incident-timeline-mcp",
     "source": "github"
   },
   "version": "1.0.1",

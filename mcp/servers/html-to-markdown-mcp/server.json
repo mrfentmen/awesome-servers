@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/html-to-markdown-mcp",
   "description": "Convert HTML to clean markdown locally. No network and no key.",
   "repository": {
-    "url": "https://github.com/mrfentmen/html-to-markdown-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/html-to-markdown-mcp",
     "source": "github"
   },
   "version": "1.0.4",

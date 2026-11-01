@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/base58-mcp",
   "description": "Encode and decode base58 and base58check offline, with version bytes and checksums",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/base58-mcp",
     "source": "github"
   },
   "version": "1.0.1",

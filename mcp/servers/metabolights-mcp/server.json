@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/metabolights-mcp",
   "description": "EBI MetaboLights: search public metabolomics studies and read study detail and organisms",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/metabolights-mcp",
     "source": "github"
   },
   "version": "1.0.1",

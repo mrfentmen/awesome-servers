@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ini-mcp",
   "description": "Parse, validate, convert and generate INI configuration offline: sections, comments, quotes",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ini-mcp",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/chembl-mcp",
   "description": "ChEMBL bioactivity data: search molecules and targets, read properties and known activities",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/chembl-mcp",
     "source": "github"
   },
   "version": "1.0.1",

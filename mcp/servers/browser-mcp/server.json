@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/browser-mcp",
   "description": "Control a local headless Chrome browser: open pages, read titles, and take screenshots.",
   "repository": {
-    "url": "https://github.com/mrfentmen/browser-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/browser-mcp",
     "source": "github"
   },
   "version": "1.0.7",

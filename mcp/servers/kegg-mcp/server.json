@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/kegg-mcp",
   "description": "Search KEGG genes and compounds, read entries and list their pathways - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/kegg-mcp",
     "source": "github"
   },
   "version": "1.0.1",

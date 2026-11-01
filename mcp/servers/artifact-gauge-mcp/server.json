@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/artifact-gauge-mcp",
   "description": "Local build artifact size and dependency weight inspection without file content output.",
   "repository": {
-    "url": "https://github.com/mrfentmen/artifact-gauge-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/artifact-gauge-mcp",
     "source": "github"
   },
   "version": "1.0.1",

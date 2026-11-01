@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/emdb-mcp",
   "description": "EBI Electron Microscopy Data Bank: search cryo-EM maps and read resolution and method",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/emdb-mcp",
     "source": "github"
   },
   "version": "1.0.1",

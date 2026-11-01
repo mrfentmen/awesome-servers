@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/doomwiki-mcp",
   "description": "Use this MCP server to the Doom Wiki. Every demon, weapon, level, and piece of Doom lore since 1993. Tools include search pages, get page, get category",
   "repository": {
-    "url": "https://github.com/mrfentmen/doomwiki-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/doomwiki-mcp",
     "source": "github"
   },
   "version": "1.0.1",

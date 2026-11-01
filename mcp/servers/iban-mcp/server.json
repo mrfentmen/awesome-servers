@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/iban-mcp",
   "description": "Validate IBANs offline with the official length table and mod-97 checksum, country by country",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/iban-mcp",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/cftc-mcp",
   "description": "Commitments of Traders reports: commercial, fund and small-trader positioning in futures markets.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/cftc-mcp",
     "source": "github"
   },
   "version": "1.0.2",

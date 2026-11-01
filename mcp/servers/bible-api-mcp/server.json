@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/bible-api-mcp",
   "description": "Read Bible verses and passages in 30+ translations, with reference lookup and a random verse",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/bible-api-mcp",
     "source": "github"
   },
   "version": "1.0.1",

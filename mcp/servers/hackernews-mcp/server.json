@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/hackernews-mcp",
   "description": "Hacker News: front page, new and best feeds, item detail, user profiles, full-text search.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/hackernews-mcp",
     "source": "github"
   },
   "version": "1.0.1",

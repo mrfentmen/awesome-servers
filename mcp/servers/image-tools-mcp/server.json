@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/image-tools-mcp",
   "description": "Resize, compress, and inspect local images. No network and no key.",
   "repository": {
-    "url": "https://github.com/mrfentmen/image-tools-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/image-tools-mcp",
     "source": "github"
   },
   "version": "1.0.4",

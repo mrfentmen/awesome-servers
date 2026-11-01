@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/gimp-mcp",
   "description": "Control GIMP image editing via Python-Fu scripting from AI agents.",
   "repository": {
-    "url": "https://github.com/mrfentmen/gimp-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/gimp-mcp",
     "source": "github"
   },
   "version": "1.0.2",

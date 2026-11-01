@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/f1-mcp",
   "description": "Formula 1 history from the Jolpica/Ergast archive: seasons, schedules, results and standings",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/f1-mcp",
     "source": "github"
   },
   "version": "1.0.1",

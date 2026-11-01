@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/fruityvice-mcp",
   "description": "Fruit nutrition data: calories, sugar, fat and carbs per fruit, with lookup by name and nutrient",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/fruityvice-mcp",
     "source": "github"
   },
   "version": "1.0.2",

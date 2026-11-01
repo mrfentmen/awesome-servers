@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/bart-mcp",
   "description": "Bay Area Rapid Transit: real-time departures, stations and route info.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/bart-mcp",
     "source": "github"
   },
   "version": "1.0.0",

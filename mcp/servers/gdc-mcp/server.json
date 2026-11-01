@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/gdc-mcp",
   "description": "NCI Genomic Data Commons: TCGA and other cancer projects, with full project detail",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/gdc-mcp",
     "source": "github"
   },
   "version": "1.0.1",

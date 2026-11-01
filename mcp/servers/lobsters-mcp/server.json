@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/lobsters-mcp",
-  "description": "Lobsters: hottest and newest stories, tags, story details, user profiles \u2014 keyless.",
+  "description": "Lobsters: hottest and newest stories, tags, story details, user profiles — keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/lobsters-mcp",
     "source": "github"
   },
   "version": "1.0.1",

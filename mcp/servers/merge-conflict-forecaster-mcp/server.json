@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/merge-conflict-forecaster-mcp",
   "description": "Predict local Git merge-conflict pressure from branch topology and changed-file overlap without returning source content.",
   "repository": {
-    "url": "https://github.com/mrfentmen/merge-conflict-forecaster-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/merge-conflict-forecaster-mcp",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/lorcana-mcp",
   "description": "Disney Lorcana TCG cards via Lorcast: search by name, read stats, text and prices, and list every",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/lorcana-mcp",
     "source": "github"
   },
   "version": "1.0.2",

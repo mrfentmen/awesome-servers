@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/jwt-mcp",
   "description": "Decode JSON Web Tokens locally: header, claims, expiry timeline and warnings",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/jwt-mcp",
     "source": "github"
   },
   "version": "1.0.2",

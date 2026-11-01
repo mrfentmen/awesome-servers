@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/commoncrawl-mcp",
   "description": "MCP server for Common Crawl index discovery for historical web captures.",
   "repository": {
-    "url": "https://github.com/mrfentmen/commoncrawl-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/commoncrawl-mcp",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/config-weather-mcp",
   "description": "Measure local configuration complexity and environment contract pressure without returning values, keys, paths, or source.",
   "repository": {
-    "url": "https://github.com/mrfentmen/config-weather-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/config-weather-mcp",
     "source": "github"
   },
   "version": "1.0.1",

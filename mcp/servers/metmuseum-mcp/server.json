@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/metmuseum-mcp",
   "description": "Use this MCP server to the Metropolitan Museum of Art. Search 500k artworks, get details, artists, and images",
   "repository": {
-    "url": "https://github.com/mrfentmen/metmuseum-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/metmuseum-mcp",
     "source": "github"
   },
   "version": "1.0.1",

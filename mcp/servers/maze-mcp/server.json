@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/maze-mcp",
   "description": "Generate, solve and render mazes deterministically from a seed - fully local.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/maze-mcp",
     "source": "github"
   },
   "version": "1.0.1",

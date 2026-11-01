@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/locale-format-mcp",
   "description": "Format numbers, currencies, dates and relative times for any locale using ICU data - fully local.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/locale-format-mcp",
     "source": "github"
   },
   "version": "1.0.1",

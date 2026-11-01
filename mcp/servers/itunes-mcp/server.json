@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/itunes-mcp",
   "description": "Apple media catalogue: search apps, music and podcasts, plus top charts.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/itunes-mcp",
     "source": "github"
   },
   "version": "1.0.1",

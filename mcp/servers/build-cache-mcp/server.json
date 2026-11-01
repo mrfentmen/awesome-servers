@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/build-cache-mcp",
   "description": "Summarize local build and cache footprint using size and age buckets without returning paths or file contents.",
   "repository": {
-    "url": "https://github.com/mrfentmen/build-cache-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/build-cache-mcp",
     "source": "github"
   },
   "version": "1.0.1",

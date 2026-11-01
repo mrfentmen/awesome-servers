@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/mempool-mcp",
   "description": "Bitcoin network status: recommended fees, mempool backlog, blocks, addresses, difficulty retargets.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/mempool-mcp",
     "source": "github"
   },
   "version": "1.0.2",

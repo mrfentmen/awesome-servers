@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ifdb",
   "description": "Interactive Fiction Database: search text adventures and read one game's details.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ifdb",
     "source": "github"
   },
   "version": "1.0.0",

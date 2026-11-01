@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/fourchan-mcp",
   "description": "MCP server for 4chan, board catalogs, threads, and posts.",
   "repository": {
-    "url": "https://github.com/mrfentmen/fourchan-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/fourchan-mcp",
     "source": "github"
   },
   "version": "1.0.1",

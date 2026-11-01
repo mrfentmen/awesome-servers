@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/energy-charts-mcp",
   "description": "European electricity data: live generation mix, day-ahead prices, installed capacity and renewable.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/energy-charts-mcp",
     "source": "github"
   },
   "version": "1.0.0",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/jsondiff-mcp",
   "description": "Compare two JSON documents and apply RFC 6902 JSON Patch offline, with canonical output",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/jsondiff-mcp",
     "source": "github"
   },
   "version": "1.0.1",

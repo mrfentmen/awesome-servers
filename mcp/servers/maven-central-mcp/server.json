@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/maven-central-mcp",
   "description": "Maven Central: artifact search, versions, group listings, class lookup, dependency snippets.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/maven-central-mcp",
     "source": "github"
   },
   "version": "1.0.2",

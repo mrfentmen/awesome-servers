@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/html-meta-mcp",
   "description": "Fetch title, description, and open graph tags from a web page. No key required.",
   "repository": {
-    "url": "https://github.com/mrfentmen/html-meta-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/html-meta-mcp",
     "source": "github"
   },
   "version": "1.0.2",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/api-deprecation-radar-mcp",
   "description": "Count local API deprecation markers by broad severity without returning endpoint names, paths, values, or source.",
   "repository": {
-    "url": "https://github.com/mrfentmen/api-deprecation-radar-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/api-deprecation-radar-mcp",
     "source": "github"
   },
   "version": "1.0.1",

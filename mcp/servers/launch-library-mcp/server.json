@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/launch-library-mcp",
   "description": "Launch Library 2: upcoming and past rocket launches, missions, orbits, space events and agencies.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/launch-library-mcp",
     "source": "github"
   },
   "version": "1.0.1",
