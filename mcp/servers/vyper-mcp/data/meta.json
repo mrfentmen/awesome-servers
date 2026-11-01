@@ -1,0 +1,9 @@
+{
+ "language": "Vyper",
+ "repo": "https://github.com/vyperlang/vyper",
+ "site": "https://docs.vyperlang.org/",
+ "commit": "803062676390fe975f4d6b0794a42b8513656a4a",
+ "docs": 288,
+ "symbols": 51,
+ "samples": 1
+}
