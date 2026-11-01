@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/chempirical-mcp",
+  "description": "MCP server for Chempirical: search 48,000 compounds, substructure and similarity search, reactions, Antoine constants and azeotropes. Keyless.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/chempirical-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "chempirical-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
