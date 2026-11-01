@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/deepai-mcp",
   "description": "MCP server for DeepAI: text-to-image, image-to-image, style transfer, super resolution, colorization, background removal, summarisation and sentiment.",
   "repository": {
-    "url": "https://github.com/mrfentmen/deepai-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/deepai-mcp",
     "source": "github"
   },
   "version": "1.0.0",

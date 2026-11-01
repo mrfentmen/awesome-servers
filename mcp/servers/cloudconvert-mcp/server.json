@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/cloudconvert-mcp",
   "description": "MCP server for CloudConvert: convert, compress, merge and thumbnail files across 200+ formats via jobs and tasks. Sandbox supported.",
   "repository": {
-    "url": "https://github.com/mrfentmen/cloudconvert-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/cloudconvert-mcp",
     "source": "github"
   },
   "version": "1.0.0",

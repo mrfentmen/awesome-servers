@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/canadapost-mcp",
   "description": "MCP server for Canada Post: rate quotes, shipping, labels, manifests, tracking and post office lookup.",
   "repository": {
-    "url": "https://github.com/mrfentmen/canadapost-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/canadapost-mcp",
     "source": "github"
   },
   "version": "1.0.0",

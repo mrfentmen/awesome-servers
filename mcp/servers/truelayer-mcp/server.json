@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/truelayer-mcp",
   "description": "MCP server for TrueLayer open banking: accounts, balances, transactions, cards, payments and refunds. Sandbox supported.",
   "repository": {
-    "url": "https://github.com/mrfentmen/truelayer-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/truelayer-mcp",
     "source": "github"
   },
   "version": "1.0.0",

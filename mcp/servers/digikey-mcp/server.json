@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/digikey-mcp",
   "description": "MCP server for Digi-Key: component search, product details, pricing, availability, media and categories.",
   "repository": {
-    "url": "https://github.com/mrfentmen/digikey-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/digikey-mcp",
     "source": "github"
   },
   "version": "1.0.0",

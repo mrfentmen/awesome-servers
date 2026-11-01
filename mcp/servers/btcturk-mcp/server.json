@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/btcturk-mcp",
   "description": "MCP server for BtcTurk: tickers, order books, trades, OHLC candles and authenticated orders and balances.",
   "repository": {
-    "url": "https://github.com/mrfentmen/btcturk-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/btcturk-mcp",
     "source": "github"
   },
   "version": "1.0.0",

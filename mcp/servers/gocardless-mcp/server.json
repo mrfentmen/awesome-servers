@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/gocardless-mcp",
   "description": "MCP server for GoCardless: payments, refunds, customers, mandates, subscriptions, payouts, balances and webhooks. Sandbox supported.",
   "repository": {
-    "url": "https://github.com/mrfentmen/gocardless-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/gocardless-mcp",
     "source": "github"
   },
   "version": "1.0.0",

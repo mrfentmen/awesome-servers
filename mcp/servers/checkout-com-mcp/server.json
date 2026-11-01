@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/checkout-com-mcp",
   "description": "MCP server for Checkout.com payments: payments, refunds, customers, instruments and disputes. Sandbox supported.",
   "repository": {
-    "url": "https://github.com/mrfentmen/checkout-com-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/checkout-com-mcp",
     "source": "github"
   },
   "version": "1.0.0",
