@@ -161,7 +161,12 @@ function parseMolecule(payload: unknown): Molecule {
     formula: str(o.formula),
     smiles: str(o.smiles) ?? str(ident.smiles),
     inchi: str(o.inchi) ?? str(ident.inchi),
-    inchiKey: str(o.inchikey) ?? str(o.inchiKey) ?? str(ident.inchikey),
+    inchiKey:
+      str(o.inchikey) ??
+      str(o.inchiKey) ??
+      str(ident.inchikey) ??
+      str(ident.inchiKey) ??
+      str(ident.inchi_key),
     molarMass: num(o.molar_mass_g_per_mol) ?? num(props.molar_mass_g_per_mol) ?? num(o.molarMass),
     exactMass: num(o.exact_mass_g_per_mol) ?? num(props.exact_mass_g_per_mol) ?? num(o.exactMass),
     density: textOf(physical.density) ?? str(o.density),
