@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/runtime-support-mcp",
   "description": "Summarize runtime declarations across local manifests and CI files without returning versions, paths, or source.",
   "repository": {
-    "url": "https://github.com/mrfentmen/runtime-support-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/runtime-support-mcp",
     "source": "github"
   },
   "version": "1.0.1",

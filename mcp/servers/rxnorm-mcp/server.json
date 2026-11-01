@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/rxnorm-mcp",
   "description": "RxNorm drug concepts: lookup, normalisation, properties, package NDCs, interaction checks, spelling.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/rxnorm-mcp",
     "source": "github"
   },
   "version": "1.0.1",

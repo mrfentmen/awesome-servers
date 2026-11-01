@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/textfiles-mcp",
   "description": "MCP server for textfiles.com, the BBS era archive of zines and old net culture.",
   "repository": {
-    "url": "https://github.com/mrfentmen/textfiles-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/textfiles-mcp",
     "source": "github"
   },
   "version": "1.0.1",

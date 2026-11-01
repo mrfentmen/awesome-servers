@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/zork-mcp",
   "description": "Play classic text adventure games. The AI is the player, explore dungeons, solve puzzles, collect treasure.",
   "repository": {
-    "url": "https://github.com/mrfentmen/zork-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/zork-mcp",
     "source": "github"
   },
   "version": "1.0.1",

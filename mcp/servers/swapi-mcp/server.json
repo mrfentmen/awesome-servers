@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/swapi-mcp",
   "description": "SWAPI: characters, planets, films, starships, vehicles and species, with film cross-references.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/swapi-mcp",
     "source": "github"
   },
   "version": "1.0.1",

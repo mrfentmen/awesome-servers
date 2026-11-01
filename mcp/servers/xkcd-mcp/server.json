@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/xkcd-mcp",
   "description": "Use this MCP server to xkcd. The latest comic, any comic by number, alt text, and transcripts. Tools include latest comic, get comic",
   "repository": {
-    "url": "https://github.com/mrfentmen/xkcd-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/xkcd-mcp",
     "source": "github"
   },
   "version": "1.0.1",

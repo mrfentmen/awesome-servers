@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ripestat-mcp",
   "description": "Internet routing data from RIPE Stat: ASN, prefix, BGP and geolocation lookups.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ripestat-mcp",
     "source": "github"
   },
   "version": "1.0.0",

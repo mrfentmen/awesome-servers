@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/numbers-mcp",
   "description": "Number work offline: statistics summaries, roman numerals, base conversion and locale-aware",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/numbers-mcp",
     "source": "github"
   },
   "version": "1.0.2",

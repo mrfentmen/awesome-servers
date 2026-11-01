@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/qr-mcp",
   "description": "Generate QR codes offline: module matrix, ASCII rendering or ready SVG, versions 1 to 9",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/qr-mcp",
     "source": "github"
   },
   "version": "1.0.1",

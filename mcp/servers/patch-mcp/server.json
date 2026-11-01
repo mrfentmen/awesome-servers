@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/patch-mcp",
   "description": "Create, check and apply unified diffs offline, with no shell and no repository needed",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/patch-mcp",
     "source": "github"
   },
   "version": "1.0.1",

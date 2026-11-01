@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/potterdb-mcp",
   "description": "Harry Potter world data from Potter DB: characters, spells and books with full detail",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/potterdb-mcp",
     "source": "github"
   },
   "version": "1.0.1",

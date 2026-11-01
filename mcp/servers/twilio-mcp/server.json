@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/twilio-mcp-server",
   "description": "Send SMS, MMS, WhatsApp messages, make voice calls, and manage Twilio phone numbers.",
   "repository": {
-    "url": "https://github.com/mrfentmen/twilio-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/twilio-mcp",
     "source": "github"
   },
   "version": "1.0.3",

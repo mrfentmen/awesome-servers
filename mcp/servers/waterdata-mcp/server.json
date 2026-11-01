@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/waterdata-mcp",
   "description": "USGS Water Services: gauge metadata, live readings, daily values and statewide gauge search.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/waterdata-mcp",
     "source": "github"
   },
   "version": "1.0.1",

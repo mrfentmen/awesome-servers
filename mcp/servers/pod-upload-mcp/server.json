@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/pod-upload-mcp",
   "description": "Browser-driven uploads of artwork to print-on-demand shops: Redbubble and TeePublic.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/pod-upload-mcp",
     "source": "github"
   },
   "version": "1.0.0",

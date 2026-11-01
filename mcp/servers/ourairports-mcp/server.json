@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ourairports-mcp",
   "description": "Global airport database: airports, runways, navaids and radio frequencies from OurAirports.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ourairports-mcp",
     "source": "github"
   },
   "version": "1.0.2",

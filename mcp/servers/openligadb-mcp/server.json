@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/openligadb-mcp",
   "description": "German football results from OpenLigaDB: available leagues, fixtures by matchday and the current",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/openligadb-mcp",
     "source": "github"
   },
   "version": "1.0.2",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/poetrydb-mcp",
   "description": "Public-domain poetry from PoetryDB: find poems by author or title, read the lines, or pull a random",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/poetrydb-mcp",
     "source": "github"
   },
   "version": "1.0.2",

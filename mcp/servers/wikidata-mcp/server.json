@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/wikidata-mcp",
   "description": "MCP server for Wikidata entity search and bounded structured knowledge queries.",
   "repository": {
-    "url": "https://github.com/mrfentmen/wikidata-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/wikidata-mcp",
     "source": "github"
   },
   "version": "1.0.1",

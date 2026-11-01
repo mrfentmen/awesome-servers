@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/scryfall-mcp",
   "description": "Magic: The Gathering cards from Scryfall: full-text search, exact lookups, prices and legalities",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/scryfall-mcp",
     "source": "github"
   },
   "version": "1.0.2",

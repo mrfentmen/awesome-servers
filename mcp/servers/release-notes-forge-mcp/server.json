@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/release-notes-forge-mcp",
   "description": "Summarize local Git release shape without returning commit messages, paths, hashes, or remotes.",
   "repository": {
-    "url": "https://github.com/mrfentmen/release-notes-forge-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/release-notes-forge-mcp",
     "source": "github"
   },
   "version": "1.0.1",

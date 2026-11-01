@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/packagist-mcp",
   "description": "Packagist PHP packages: search, download stats, release history, dependency lists, popularity, registry totals.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/packagist-mcp",
     "source": "github"
   },
   "version": "1.0.4",

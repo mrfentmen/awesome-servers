@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/unicode-mcp",
   "description": "Unicode characters, blocks, names, scripts, and properties.",
   "repository": {
-    "url": "https://github.com/mrfentmen/unicode-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/unicode-mcp",
     "source": "github"
   },
   "version": "1.0.1",

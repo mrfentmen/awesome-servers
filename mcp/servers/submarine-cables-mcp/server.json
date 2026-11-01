@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/submarine-cables-mcp",
   "description": "Submarine communications cables: list, search, landing points and route geometry from TeleGeography.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/submarine-cables-mcp",
     "source": "github"
   },
   "version": "1.0.0",

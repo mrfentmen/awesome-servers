@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/neverbounce-mcp",
   "description": "NeverBounce email verification: single checks, bulk jobs and job results.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/neverbounce-mcp",
     "source": "github"
   },
   "version": "1.0.0",

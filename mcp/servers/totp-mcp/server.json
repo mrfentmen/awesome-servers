@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/totp-mcp",
   "description": "Generate and verify TOTP codes offline: RFC 6238 with SHA-1/256/512 and fresh base32 secrets",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/totp-mcp",
     "source": "github"
   },
   "version": "1.0.1",

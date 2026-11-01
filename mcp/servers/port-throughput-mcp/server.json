@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/port-throughput-mcp",
   "description": "US port cargo throughput: rankings, volumes by cargo type and year for every major port - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/port-throughput-mcp",
     "source": "github"
   },
   "version": "1.0.0",

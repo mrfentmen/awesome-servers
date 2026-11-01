@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/segaretro-mcp",
   "description": "MCP server for Sega Retro, every Sega game, console, and unreleased hardware.",
   "repository": {
-    "url": "https://github.com/mrfentmen/segaretro-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/segaretro-mcp",
     "source": "github"
   },
   "version": "1.0.1",

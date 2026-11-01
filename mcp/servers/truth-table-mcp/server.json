@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/truth-table-mcp",
   "description": "Evaluate boolean logic expressions and build full truth tables - fully local.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/truth-table-mcp",
     "source": "github"
   },
   "version": "1.0.1",

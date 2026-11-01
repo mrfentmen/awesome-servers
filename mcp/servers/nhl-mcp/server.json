@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/nhl-mcp",
   "description": "Use this MCP server to the NHL. Team and player stats, standings, schedules, and game results. Tools include get team stats, get standings, get schedule",
   "repository": {
-    "url": "https://github.com/mrfentmen/nhl-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/nhl-mcp",
     "source": "github"
   },
   "version": "1.0.1",

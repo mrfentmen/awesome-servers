@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/rubygems-mcp",
   "description": "RubyGems registry: search, gem stats, release history, newest releases, dependents, owners.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/rubygems-mcp",
     "source": "github"
   },
   "version": "1.0.4",

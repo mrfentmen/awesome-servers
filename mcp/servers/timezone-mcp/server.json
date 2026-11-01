@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/timezone-mcp",
   "description": "IANA time zone maths offline: the time right now anywhere, wall-clock conversion and DST",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/timezone-mcp",
     "source": "github"
   },
   "version": "1.0.1",

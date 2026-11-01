@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/vg-resource-mcp",
   "description": "Search and download sprites, models, textures, and sounds from VG Resource.",
   "repository": {
-    "url": "https://github.com/mrfentmen/vg-resource-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/vg-resource-mcp",
     "source": "github"
   },
   "version": "1.0.3",

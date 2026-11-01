@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/open-food-facts-mcp",
   "description": "MCP server for Open Food Facts product, ingredient, allergen, and nutrition lookup.",
   "repository": {
-    "url": "https://github.com/mrfentmen/open-food-facts-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/open-food-facts-mcp",
     "source": "github"
   },
   "version": "1.0.1",

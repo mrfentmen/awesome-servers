@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/wikivoyage-mcp",
   "description": "Wikivoyage travel guides: search destinations, overviews, section outlines, nearby places, outbound links, random picks.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/wikivoyage-mcp",
     "source": "github"
   },
   "version": "1.0.5",

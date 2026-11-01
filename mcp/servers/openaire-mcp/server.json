@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/openaire-mcp",
   "description": "Search OpenAIRE for European research publications, datasets and funded projects - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/openaire-mcp",
     "source": "github"
   },
   "version": "1.0.1",

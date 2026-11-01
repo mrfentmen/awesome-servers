@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/vcard-mcp",
   "description": "Read and build vCard contacts offline: parse .vcf cards or JSON and generate vCard 4.0",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/vcard-mcp",
     "source": "github"
   },
   "version": "1.0.1",

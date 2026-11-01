@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/pypi-stats-mcp",
   "description": "PyPI download statistics: recent totals, daily series, Python and OS splits, package comparison.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/pypi-stats-mcp",
     "source": "github"
   },
   "version": "1.0.1",

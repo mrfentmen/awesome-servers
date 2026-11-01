@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/xml-mcp",
   "description": "Parse, validate and convert XML offline with a real parser: entities, CDATA, attributes",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/xml-mcp",
     "source": "github"
   },
   "version": "1.0.1",

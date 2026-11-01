@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/qr-code-mcp",
   "description": "Generate QR codes as PNG images locally. No network and no key.",
   "repository": {
-    "url": "https://github.com/mrfentmen/qr-code-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/qr-code-mcp",
     "source": "github"
   },
   "version": "1.0.3",

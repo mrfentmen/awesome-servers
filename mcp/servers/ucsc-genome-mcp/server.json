@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ucsc-genome-mcp",
   "description": "UCSC Genome Browser: list genomes, fetch DNA ranges and search genes by name",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ucsc-genome-mcp",
     "source": "github"
   },
   "version": "1.0.1",

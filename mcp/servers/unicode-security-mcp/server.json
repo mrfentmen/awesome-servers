@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/unicode-security-mcp",
   "description": "Local checks for Unicode confusables, mixed scripts, invisible controls, and suspicious identifiers.",
   "repository": {
-    "url": "https://github.com/mrfentmen/unicode-security-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/unicode-security-mcp",
     "source": "github"
   },
   "version": "1.0.1",

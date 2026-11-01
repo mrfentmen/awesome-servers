@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/oeis-mcp",
   "description": "Use this MCP server to the OEIS, the encyclopedia of integer sequences. Look up any sequence, find its name, formula, and neighbors",
   "repository": {
-    "url": "https://github.com/mrfentmen/oeis-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/oeis-mcp",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/tetriswiki-mcp",
   "description": "MCP server for the Tetris wiki, covering every game, piece, and technique in the tetromino universe.",
   "repository": {
-    "url": "https://github.com/mrfentmen/tetriswiki-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/tetriswiki-mcp",
     "source": "github"
   },
   "version": "1.0.1",

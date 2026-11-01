@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/poker-mcp",
   "description": "Evaluate poker hands, compare players and pick the best five from seven cards - fully local.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/poker-mcp",
     "source": "github"
   },
   "version": "1.0.1",

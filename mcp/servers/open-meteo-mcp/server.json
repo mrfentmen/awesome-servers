@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/open-meteo-mcp",
   "description": "Use this MCP server to weather forecasts from Open Meteo. No API key, 7 day forecasts, geocoding. Tools include geocode, get forecast, get forecast for place",
   "repository": {
-    "url": "https://github.com/mrfentmen/open-meteo-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/open-meteo-mcp",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/usgs-water-mcp",
   "description": "MCP server for USGS streamflow, gauge status, and water observations.",
   "repository": {
-    "url": "https://github.com/mrfentmen/usgs-water-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/usgs-water-mcp",
     "source": "github"
   },
   "version": "1.0.5",

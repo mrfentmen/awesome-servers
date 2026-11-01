@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/skills-movie-mcp",
   "description": "MCP server exposing the skills-2 filmmaker personas + a screenplay toolkit for AI-written long-form.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/skills-movie-mcp",
     "source": "github"
   },
   "version": "1.0.1",

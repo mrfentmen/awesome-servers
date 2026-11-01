@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/tfl-mcp",
   "description": "TfL live data: line status across tube, DLR and rail, stop search and real-time arrivals - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/tfl-mcp",
     "source": "github"
   },
   "version": "1.0.2",

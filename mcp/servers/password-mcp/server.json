@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/password-mcp",
   "description": "Generate strong passwords and passphrases and estimate strength, offline with a crypto RNG",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/password-mcp",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/worldbank-mcp",
   "description": "World Bank Open Data: indicator catalogue search, country series, cross-country comparisons, latest values.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/worldbank-mcp",
     "source": "github"
   },
   "version": "1.0.5",

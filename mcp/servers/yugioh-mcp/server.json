@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/yugioh-mcp",
   "description": "MCP server for YGOPRODeck, Yu Gi Oh! cards, archetypes, and banlists.",
   "repository": {
-    "url": "https://github.com/mrfentmen/yugioh-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/yugioh-mcp",
     "source": "github"
   },
   "version": "1.0.1",

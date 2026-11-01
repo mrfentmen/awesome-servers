@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/spaceflight-news-api-mcp",
   "description": "Spaceflight News API v4: 36k+ space articles, full-text search, outlet filter, agency reports.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/spaceflight-news-api-mcp",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/nasa-neo-mcp",
   "description": "NASA near-earth asteroids: who passes close on a date range, with size, speed and miss distance",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/nasa-neo-mcp",
     "source": "github"
   },
   "version": "1.0.2",

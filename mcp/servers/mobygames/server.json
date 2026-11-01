@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/mobygames-mcp",
   "description": "MobyGames (API key): search 300k+ games incl. retro, with credits, platforms and release dates.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/mobygames",
     "source": "github"
   },
   "version": "1.1.3",

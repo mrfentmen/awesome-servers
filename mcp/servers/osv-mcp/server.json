@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/osv-mcp",
   "description": "MCP server for OSV open source vulnerability data and package security checks.",
   "repository": {
-    "url": "https://github.com/mrfentmen/osv-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/osv-mcp",
     "source": "github"
   },
   "version": "1.0.1",

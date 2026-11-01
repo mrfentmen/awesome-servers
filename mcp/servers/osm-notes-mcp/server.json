@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/osm-notes-mcp",
   "description": "OpenStreetMap notes: browse by area or radius, read threads, count open versus resolved.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/osm-notes-mcp",
     "source": "github"
   },
   "version": "1.0.1",

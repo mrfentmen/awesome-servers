@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/wordpress-mcp",
   "description": "WordPress plugin and theme search from wordpress.org.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/wordpress-mcp",
     "source": "github"
   },
   "version": "1.0.4",

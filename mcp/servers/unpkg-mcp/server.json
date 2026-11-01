@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/unpkg-mcp",
   "description": "Package file metadata from the unpkg CDN. No key required.",
   "repository": {
-    "url": "https://github.com/mrfentmen/unpkg-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/unpkg-mcp",
     "source": "github"
   },
   "version": "1.0.2",

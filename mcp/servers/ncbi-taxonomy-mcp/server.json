@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ncbi-taxonomy-mcp",
   "description": "Look up NCBI taxonomy records, scientific names and full lineage by name or taxon ID - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ncbi-taxonomy-mcp",
     "source": "github"
   },
   "version": "1.0.1",

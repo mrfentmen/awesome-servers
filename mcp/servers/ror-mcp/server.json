@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ror-mcp",
   "description": "ROR: search 110k+ research organizations by name, country and type with stable ids - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ror-mcp",
     "source": "github"
   },
   "version": "1.0.1",

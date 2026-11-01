@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/secret-hygiene-mcp",
   "description": "Count secret-like patterns in bounded local files without returning values, keys, paths, filenames, or matches.",
   "repository": {
-    "url": "https://github.com/mrfentmen/secret-hygiene-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/secret-hygiene-mcp",
     "source": "github"
   },
   "version": "1.0.1",

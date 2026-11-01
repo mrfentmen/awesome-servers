@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/worktree-orbit-mcp",
   "description": "Aggregate local Git worktree topology without exposing repository content.",
   "repository": {
-    "url": "https://github.com/mrfentmen/worktree-orbit-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/worktree-orbit-mcp",
     "source": "github"
   },
   "version": "1.0.1",

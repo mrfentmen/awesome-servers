@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/speedrun-mcp",
   "description": "MCP server for speedrun.com, world records, category leaderboards, runner profiles.",
   "repository": {
-    "url": "https://github.com/mrfentmen/speedrun-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/speedrun-mcp",
     "source": "github"
   },
   "version": "1.0.1",

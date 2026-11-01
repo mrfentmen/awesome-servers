@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/placeholder-images-mcp",
   "description": "Placeholder image services (DummyImage, Picsum).",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-mcps",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/placeholder-images-mcp",
     "source": "github"
   },
   "version": "1.0.2",

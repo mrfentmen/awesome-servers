@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/rail-infrastructure-mcp",
   "description": "US rail infrastructure: highway-rail grade crossings and railroad bridges by state, with inspection.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/rail-infrastructure-mcp",
     "source": "github"
   },
   "version": "1.0.0",

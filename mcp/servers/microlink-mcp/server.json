@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/microlink-mcp",
   "description": "Link previews from Microlink. No key required.",
   "repository": {
-    "url": "https://github.com/mrfentmen/microlink-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/microlink-mcp",
     "source": "github"
   },
   "version": "1.0.2",

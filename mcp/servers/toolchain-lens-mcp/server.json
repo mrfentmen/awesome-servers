@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/toolchain-lens-mcp",
   "description": "Local explanation of reproducibility signals and toolchain contradictions without exact versions or secret values.",
   "repository": {
-    "url": "https://github.com/mrfentmen/toolchain-lens-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/toolchain-lens-mcp",
     "source": "github"
   },
   "version": "1.0.1",

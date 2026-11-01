@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/string-db-mcp",
   "description": "STRING protein networks: map identifiers and list interaction partners with confidence scores",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/string-db-mcp",
     "source": "github"
   },
   "version": "1.0.2",

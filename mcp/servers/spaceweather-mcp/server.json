@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/spaceweather-mcp",
   "description": "NOAA space weather: Kp index, aurora probability for a place and active SWPC alerts",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/spaceweather-mcp",
     "source": "github"
   },
   "version": "1.0.1",

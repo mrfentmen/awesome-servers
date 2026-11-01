@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/osrs-ge-mcp",
   "description": "Old School RuneScape Grand Exchange prices: item search, live buy/sell and price history",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/osrs-ge-mcp",
     "source": "github"
   },
   "version": "1.0.1",

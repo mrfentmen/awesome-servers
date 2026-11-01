@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/nasa-images-mcp",
   "description": "NASA image and video library: media search, asset files with originals, center filters, keyword summaries.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/nasa-images-mcp",
     "source": "github"
   },
   "version": "1.0.4",

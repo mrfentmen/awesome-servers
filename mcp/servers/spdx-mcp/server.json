@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/spdx-mcp",
   "description": "MCP server for SPDX open source license metadata and compatibility helpers.",
   "repository": {
-    "url": "https://github.com/mrfentmen/spdx-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/spdx-mcp",
     "source": "github"
   },
   "version": "1.0.1",

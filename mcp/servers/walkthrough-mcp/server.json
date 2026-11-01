@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/walkthrough-mcp",
   "description": "Search retro game walkthroughs, FAQs, and cheats via StrategyWiki's open API.",
   "repository": {
-    "url": "https://github.com/mrfentmen/walkthrough-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/walkthrough-mcp",
     "source": "github"
   },
   "version": "1.0.1",

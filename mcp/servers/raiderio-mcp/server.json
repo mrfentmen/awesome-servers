@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/raiderio-mcp",
   "description": "World of Warcraft Mythic+ data: weekly affixes and recent high-end dungeon runs - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/raiderio-mcp",
     "source": "github"
   },
   "version": "1.0.1",

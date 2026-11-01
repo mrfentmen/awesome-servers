@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/tvmaze-mcp",
   "description": "TV show data: search shows, episode lists and daily airing schedules.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers",
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/tvmaze-mcp",
     "source": "github"
   },
   "version": "1.0.0",
