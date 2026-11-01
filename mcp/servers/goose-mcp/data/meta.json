@@ -1,0 +1,22 @@
+{
+ "language": "Goose",
+ "repo": "https://github.com/aardappel/goose",
+ "site": "https://github.com/aardappel/goose",
+ "commit": "b78158797a3a4199a2c519d90d4e5421b2760fe3",
+ "docs": 389,
+ "symbols": 702,
+ "keywords": 57,
+ "samples": 32,
+ "sources": [
+  "https://raw.githubusercontent.com/aardappel/goose/master/docs/index.md",
+  "https://raw.githubusercontent.com/aardappel/goose/master/docs/tutorial.md",
+  "https://raw.githubusercontent.com/aardappel/goose/master/docs/reference.md",
+  "https://raw.githubusercontent.com/aardappel/goose/master/docs/stdlib.md",
+  "https://raw.githubusercontent.com/aardappel/goose/master/docs/goose_spec.md",
+  "https://raw.githubusercontent.com/aardappel/goose/master/docs/command_line.md",
+  "https://raw.githubusercontent.com/aardappel/goose/master/docs/packages.md",
+  "https://raw.githubusercontent.com/aardappel/goose/master/docs/testing.md",
+  "https://raw.githubusercontent.com/aardappel/goose/master/docs/Goose for C++ and Rust Programmers Translating Common Patterns.md",
+  "https://raw.githubusercontent.com/aardappel/goose/master/docs/editors.md"
+ ]
+}

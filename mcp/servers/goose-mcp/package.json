@@ -1,0 +1,42 @@
+{
+  "name": "goose-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for the Goose programming language: 700+ stdlib symbols, full language reference, spec, keywords, operator precedence and 32 sample programs.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/goose-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "goose-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "data"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "goose",
+    "language",
+    "reference"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}
