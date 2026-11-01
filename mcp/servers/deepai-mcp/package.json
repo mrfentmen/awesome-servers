@@ -19,7 +19,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
-    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js",
+    "test": "npm run build && node --test tests/tools.test.mjs"
   },
   "keywords": [
     "mcp",
