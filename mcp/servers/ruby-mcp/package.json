@@ -1,0 +1,46 @@
+{
+  "name": "ruby-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Ruby: live introspection of your installed interpreter (classes, methods, real parameter signatures, ancestry), the language reference (verified keywords, operator precedence) and 12 runnable sample programs, plus run_code and syntax checking.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/ruby-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "ruby-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "data",
+    "scripts",
+    "samples"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "build:data": "ruby scripts/build-data.rb",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ruby",
+    "ruby-lang",
+    "language",
+    "reference"
+  ],
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

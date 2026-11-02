@@ -1,0 +1,44 @@
+ruby-mcp — use-only license (all rights reserved)
+Copyright (c) 2026 mrfentmen. All rights reserved.
+
+This package is published so that people can USE it as a tool. The source code
+is not given away for reuse.
+
+YOU MAY, free of charge and without asking:
+
+  1. install, run and use this package as a program, including through
+     `npx ruby-mcp`, a global install, or as an MCP server in any client;
+  2. use its tools for any purpose, personal or commercial, including in
+     closed-source work;
+  3. read the source code in order to understand what the program does and
+     how it behaves.
+
+YOU MAY NOT, without prior written permission from the copyright holder:
+
+  1. copy, reproduce, republish, mirror or redistribute the source code, in
+     whole or in part, including as part of another package, product, starter
+     template, boilerplate, dataset or training corpus;
+  2. modify, adapt, translate, or create derivative works from the source code,
+     including copying its functions, classes or data files into your own
+     project;
+  3. sublicense, rent, lease, sell, or otherwise make the source code available
+     to third parties;
+  4. remove, alter or hide this notice, or any copyright notice in the source;
+  5. represent this package as your own work, or use its name to endorse a
+     derivative copy.
+
+Using the program's OUTPUT (for example text returned by its tools) is allowed
+and is not restricted by this license.
+
+No trademark rights are granted. "ruby-mcp" and the package name belong to the
+copyright holder.
+
+TERMINATION: this license ends automatically if you breach any of the terms
+above. On termination you must stop using the package and delete all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

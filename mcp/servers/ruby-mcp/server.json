@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/ruby-mcp",
+  "description": "MCP server for Ruby: live introspection of your installed interpreter (classes, methods, real parameter signatures, ancestry), the language reference and runnable samples, plus run_code and syntax checking.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ruby-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "ruby-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

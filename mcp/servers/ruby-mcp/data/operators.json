@@ -1,0 +1,186 @@
+[
+  {
+    "level": 1,
+    "name": "method call, index, scope",
+    "operators": [
+      ".",
+      "&.",
+      "::",
+      "[]",
+      "[]="
+    ]
+  },
+  {
+    "level": 2,
+    "name": "exponentiation (right assoc)",
+    "operators": [
+      "**"
+    ]
+  },
+  {
+    "level": 3,
+    "name": "unary (binding to the value, not the result)",
+    "operators": [
+      "!",
+      "~",
+      "+@"
+    ]
+  },
+  {
+    "level": 4,
+    "name": "unary minus (weaker than **)",
+    "operators": [
+      "-@"
+    ]
+  },
+  {
+    "level": 5,
+    "name": "multiplicative",
+    "operators": [
+      "*",
+      "/",
+      "%"
+    ]
+  },
+  {
+    "level": 6,
+    "name": "additive",
+    "operators": [
+      "+",
+      "-"
+    ]
+  },
+  {
+    "level": 7,
+    "name": "bitwise shift",
+    "operators": [
+      "<<",
+      ">>"
+    ]
+  },
+  {
+    "level": 8,
+    "name": "bitwise and",
+    "operators": [
+      "&"
+    ]
+  },
+  {
+    "level": 9,
+    "name": "bitwise or / xor",
+    "operators": [
+      "|",
+      "^"
+    ]
+  },
+  {
+    "level": 10,
+    "name": "comparison",
+    "operators": [
+      ">",
+      ">=",
+      "<",
+      "<="
+    ]
+  },
+  {
+    "level": 11,
+    "name": "equality, match, spaceship",
+    "operators": [
+      "<=>",
+      "==",
+      "===",
+      "!=",
+      "=~",
+      "!~"
+    ]
+  },
+  {
+    "level": 12,
+    "name": "logical and",
+    "operators": [
+      "&&"
+    ]
+  },
+  {
+    "level": 13,
+    "name": "logical or",
+    "operators": [
+      "||"
+    ]
+  },
+  {
+    "level": 14,
+    "name": "range",
+    "operators": [
+      "..",
+      "..."
+    ]
+  },
+  {
+    "level": 15,
+    "name": "ternary",
+    "operators": [
+      "? :"
+    ]
+  },
+  {
+    "level": 16,
+    "name": "modifier rescue",
+    "operators": [
+      "expr rescue expr"
+    ]
+  },
+  {
+    "level": 17,
+    "name": "assignment (right assoc)",
+    "operators": [
+      "=",
+      "+=",
+      "-=",
+      "*=",
+      "/=",
+      "%=",
+      "**=",
+      "&&=",
+      "||=",
+      "&=",
+      "|=",
+      "^=",
+      "<<=",
+      ">>="
+    ]
+  },
+  {
+    "level": 18,
+    "name": "defined?",
+    "operators": [
+      "defined?"
+    ]
+  },
+  {
+    "level": 19,
+    "name": "not",
+    "operators": [
+      "not"
+    ]
+  },
+  {
+    "level": 20,
+    "name": "and / or",
+    "operators": [
+      "and",
+      "or"
+    ]
+  },
+  {
+    "level": 21,
+    "name": "modifier if / unless / while / until",
+    "operators": [
+      "expr if expr",
+      "expr unless expr",
+      "expr while expr",
+      "expr until expr"
+    ]
+  }
+]

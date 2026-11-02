@@ -1,0 +1,20 @@
+{
+  "language": "Ruby",
+  "site": "https://www.ruby-lang.org",
+  "docs": "https://docs.ruby-lang.org/en/2.6/",
+  "generated_with": "ruby 2.6.10p210 (2022-04-12 revision 67958) [universal.x86_64-darwin21]",
+  "ruby_version": "2.6.10",
+  "engine": "ruby",
+  "generated_at": "2026-11-02",
+  "keywords": 41,
+  "operators": 58,
+  "precedence_levels": 21,
+  "operator_checks": 14,
+  "samples": 14,
+  "notes": [
+    "Keywords are verified with Ripper: a candidate is kept only when the lexer emits an :on_kw token for it.",
+    "The precedence table is checked against this interpreter by 14 real expressions; the build aborts if any disagree.",
+    "Every sample program is executed during the build and its real stdout/stderr/exit status is stored.",
+    "Class, method and signature data is not bundled - it is read live from whichever ruby is on PATH at request time."
+  ]
+}

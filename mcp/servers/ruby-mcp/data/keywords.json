@@ -1,0 +1,166 @@
+[
+  {
+    "word": "BEGIN",
+    "kind": "keyword"
+  },
+  {
+    "word": "END",
+    "kind": "keyword"
+  },
+  {
+    "word": "alias",
+    "kind": "keyword"
+  },
+  {
+    "word": "and",
+    "kind": "keyword"
+  },
+  {
+    "word": "begin",
+    "kind": "keyword"
+  },
+  {
+    "word": "break",
+    "kind": "keyword"
+  },
+  {
+    "word": "case",
+    "kind": "keyword"
+  },
+  {
+    "word": "class",
+    "kind": "keyword"
+  },
+  {
+    "word": "def",
+    "kind": "keyword"
+  },
+  {
+    "word": "defined?",
+    "kind": "keyword"
+  },
+  {
+    "word": "do",
+    "kind": "keyword"
+  },
+  {
+    "word": "else",
+    "kind": "keyword"
+  },
+  {
+    "word": "elsif",
+    "kind": "keyword"
+  },
+  {
+    "word": "end",
+    "kind": "keyword"
+  },
+  {
+    "word": "ensure",
+    "kind": "keyword"
+  },
+  {
+    "word": "false",
+    "kind": "keyword"
+  },
+  {
+    "word": "for",
+    "kind": "keyword"
+  },
+  {
+    "word": "if",
+    "kind": "keyword"
+  },
+  {
+    "word": "in",
+    "kind": "keyword"
+  },
+  {
+    "word": "module",
+    "kind": "keyword"
+  },
+  {
+    "word": "next",
+    "kind": "keyword"
+  },
+  {
+    "word": "nil",
+    "kind": "keyword"
+  },
+  {
+    "word": "not",
+    "kind": "keyword"
+  },
+  {
+    "word": "or",
+    "kind": "keyword"
+  },
+  {
+    "word": "redo",
+    "kind": "keyword"
+  },
+  {
+    "word": "rescue",
+    "kind": "keyword"
+  },
+  {
+    "word": "retry",
+    "kind": "keyword"
+  },
+  {
+    "word": "return",
+    "kind": "keyword"
+  },
+  {
+    "word": "self",
+    "kind": "keyword"
+  },
+  {
+    "word": "super",
+    "kind": "keyword"
+  },
+  {
+    "word": "then",
+    "kind": "keyword"
+  },
+  {
+    "word": "true",
+    "kind": "keyword"
+  },
+  {
+    "word": "undef",
+    "kind": "keyword"
+  },
+  {
+    "word": "unless",
+    "kind": "keyword"
+  },
+  {
+    "word": "until",
+    "kind": "keyword"
+  },
+  {
+    "word": "when",
+    "kind": "keyword"
+  },
+  {
+    "word": "while",
+    "kind": "keyword"
+  },
+  {
+    "word": "yield",
+    "kind": "keyword"
+  },
+  {
+    "word": "__FILE__",
+    "kind": "pseudo_variable"
+  },
+  {
+    "word": "__LINE__",
+    "kind": "pseudo_variable"
+  },
+  {
+    "word": "__ENCODING__",
+    "kind": "pseudo_variable"
+  }
+]

@@ -680,6 +680,7 @@ Browser extensions are maintained separately in private repositories and are int
 - [`ron-swanson-mcp`](./servers/ron-swanson-mcp)
 - [`ror-mcp`](./servers/ror-mcp)
 - [`rss-mcp`](./servers/rss-mcp)
+- [`ruby-mcp`](./servers/ruby-mcp)
 - [`rubygems-mcp`](./servers/rubygems-mcp)
 - [`runescape-mcp`](./servers/runescape-mcp)
 - [`runtime-support-mcp`](./servers/runtime-support-mcp)
