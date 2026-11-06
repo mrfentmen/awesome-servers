@@ -410,3 +410,32 @@ API notes worth keeping:
   PDF text dump, so only file URLs are surfaced — no fake text extraction.
 
 3 tools: `search`, `record`, `facets`. Live stdio smoke test covers all three.
+
+## OSTI — built 2026-11-06
+
+`osti-mcp` wraps the US DOE Office of Scientific and Technical Information
+(`osti.gov/api/v1`). Keyless, 5,176,741 records, no signup.
+
+Why it was a gap: OSTI is the main index of US government energy and physical
+science research, but the science servers already published cover arXiv,
+OpenAlex, Crossref, PubMed and DataCite. DOE lab reports, technical reports and
+patents only live in OSTI.
+
+API notes worth keeping:
+- `GET /records` returns a bare array; the match count is only in the
+  `x-total-count` response header.
+- `GET /records/<id>` also returns an array (one item). Unknown ids fall through
+  to the website and answer HTML with status 200, so content-type is checked.
+  Some ids that appear in search results (e.g. 3818549) have no record page.
+- Working filters: `q`, `title`, `author`, `subject`, `product_type`,
+  `research_org`, `sponsor_org`, `osti_id`, `publication_date_start/end`.
+  `accession_number` is ignored.
+- Date filters accept a bare year or `MM/DD/YYYY`. A `YYYY-MM-DD` value returns
+  HTTP 500, so ISO dates are converted before the call.
+- Sorting does not work: `sort=`, `order=`, `sort=-field` all return the same
+  order as an unsorted request.
+- No facets: `/api/v1/facets` and `/api/v1/records/facets` both 404.
+- `rows` accepts 2000 in one call; the tool caps at 100.
+- Links come as `{rel, href}` pairs; `fulltext` is the `/servlets/purl/` copy.
+
+2 tools: `search`, `record`. Live stdio smoke test covers both.

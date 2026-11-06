@@ -587,6 +587,7 @@ Browser extensions are maintained separately in private repositories and are int
 - [`osm-notes-mcp`](./servers/osm-notes-mcp)
 - [`osrm-mcp`](./servers/osrm-mcp)
 - [`osrs-ge-mcp`](./servers/osrs-ge-mcp)
+- [`osti-mcp`](./servers/osti-mcp)
 - [`osv-mcp`](./servers/osv-mcp)
 - [`otp-mcp`](./servers/otp-mcp)
 - [`otx-mcp`](./servers/otx-mcp)
