@@ -1,0 +1,37 @@
+{
+  "name": "@mrfentmen/analysis-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for offline security-artifact analysis: mine JS bundles for endpoints and hardcoded secrets, diff HTTP responses for BOLA/IDOR evidence, triage JWTs, parse Burp exports, search a local OWASP/payload corpus. Pure text transformation, no network.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/analysis-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/awesome-servers.git",
+    "directory": "mcp/servers/analysis-mcp"
+  },
+  "bin": {
+    "analysis-mcp": "bin.js"
+  },
+  "main": "bin.js",
+  "files": [
+    "bin.js",
+    "src"
+  ],
+  "scripts": {
+    "test": "node --test tests/smoke.test.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "security",
+    "bugbounty",
+    "bola",
+    "idor",
+    "jwt",
+    "burp",
+    "owasp"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  }
+}
