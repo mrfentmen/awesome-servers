@@ -250,6 +250,7 @@ Browser extensions are maintained separately in private repositories and are int
 - [`esm-mcp`](./servers/esm-mcp)
 - [`esplora-mcp`](./servers/esplora-mcp)
 - [`espn-core-mcp`](./servers/espn-core-mcp)
+- [`espn-mcp`](./servers/espn-mcp)
 - [`europepmc-mcp`](./servers/europepmc-mcp)
 - [`eurostat-mcp`](./servers/eurostat-mcp)
 - [`eveonline-mcp`](./servers/eveonline-mcp)
