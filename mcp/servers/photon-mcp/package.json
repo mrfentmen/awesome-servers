@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/photon-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Photon: fast OpenStreetMap geocoding with address parts and coordinates - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/photon-mcp",
