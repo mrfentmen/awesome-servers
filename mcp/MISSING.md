@@ -353,3 +353,32 @@ package already in the snapshot (`bls-mcp`, `blockchain-info-mcp`, `carbon-inten
 `semver-mcp`, `string-db-mcp`). Sixteen of those older packages still answer a tool with
 `Not yet implemented`; the campaign to implement them in place is separate, so those
 packages were left untouched here.
+
+## Research-paper sweep — 2026-11-06
+
+Screened the scholarly-search space again, because the brief was "which paper sites
+still have no community MCP". Result up front: almost none. arXiv, PubMed/PMC,
+Europe PMC, Semantic Scholar, OpenAlex, Crossref, Google Scholar, DBLP, DOAJ, CORE,
+OpenAIRE, BASE, CiteSeerX, Zenodo, Figshare, OSF, PLOS, Papers with Code, IEEE
+Xplore, ACM (via CrossRef), SSRN, OpenReview and INSPIRE-HEP all already have
+community servers, most with several.
+
+Checked and rejected (no usable public surface or already covered):
+- ChemRxiv — public API answers 403 behind a Cloudflare challenge.
+- J-STAGE — search API answers `ERR_012` without account registration.
+- ResearchGate, Academia.edu, JSTOR — no public API; terms forbid scraping, so a
+  server would be a terms violation rather than a wrapper.
+- ScienceDirect, Scopus, Dimensions, Lens, Web of Science — licensed APIs only.
+- Papers with Code, OSF, Figshare, PLOS — servers already exist.
+
+Two genuinely uncovered, keyless surfaces were built:
+- `acl-anthology-mcp` — 100k+ computational-linguistics papers. Dedicated npm
+  package name was free; ACL coverage elsewhere exists only as a sub-tool inside
+  larger academic aggregators. Uses the Anthology's published per-paper BibTeX and
+  its static archive pages; no search API exists, so title search is per-volume.
+- `scielo-mcp` — 567k+ open-access articles from Latin America, Spain, Portugal and
+  South Africa. No SciELO server found on npm, GitHub or the registries. Uses the
+  public ArticleMeta API; it has no full-text search endpoint, so browsing is by
+  collection with an indexing-date window.
+
+Both keyless, both 5 tools, both with a live stdio smoke test (`npm test`).
