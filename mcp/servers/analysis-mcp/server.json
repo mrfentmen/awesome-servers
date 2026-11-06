@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/analysis-mcp",
+  "description": "Offline security-artifact analysis: mine JS bundles for endpoints and hardcoded secrets, diff HTTP responses for BOLA/IDOR evidence, triage JWTs, parse Burp exports, search a local OWASP/payload corpus. Pure text transformation, no network.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/analysis-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@mrfentmen/analysis-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
