@@ -487,3 +487,31 @@ API notes worth keeping:
   progress.
 
 2 tools: `search`, `record`.
+
+## MCP gap research — 2026-11-06
+
+Asked: find 50 companies with no official or community MCP server, then build
+them. Answer: 50 does not exist in that shape.
+
+Method: 197 candidate services were checked against this repo's server list and
+against the npm registry search API (`<name> mcp`). Anything that looked open was
+re-checked, twice, to rule out network noise from the first pass.
+
+Result: 164 of the 197 already have a server here or on npm. Of the 33 that
+looked open, 13 turned out to have an npm MCP package on the second pass, 2 were
+dead APIs and 1 was my own wrong path:
+  - restcountries v3.1 returns a deprecation stub (`success:false`), not data
+  - worldtimeapi resets the connection on every request
+  - Nager's `/Countries` is 404; the real path is `/AvailableCountries`
+
+That leaves roughly 20 genuine gaps, not 50.
+
+Verified open gaps and why they are not all built:
+  key required: abstractapi, tradingeconomics, springer, wiley, elsevier,
+                base-search, ballotpedia, charity-nav, clearbit, fullcontact,
+                entsoe, himalayas, recruitee
+  overlaps an existing server: cveawg (nvd-cve-mcp covers CVE lookup)
+  thin or unclear API: mpc, stooq, favqs, internetarchive
+
+Built from that list: `nager-date-mcp` and `opencitations-mcp`. Both keyless,
+both covered by live smoke tests.
