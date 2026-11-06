@@ -439,3 +439,51 @@ API notes worth keeping:
 - Links come as `{rel, href}` pairs; `fulltext` is the `/servlets/purl/` copy.
 
 2 tools: `search`, `record`. Live stdio smoke test covers both.
+
+## DataONE — built 2026-11-06
+
+`dataone-mcp` wraps the DataONE Solr index (`cn.dataone.org/cn/v2/query/solr/`).
+Keyless, 3,704,461 indexed objects.
+
+Why it was a gap: the science servers already published index papers (arXiv,
+OpenAlex, Crossref, OSTI) but not the data behind them. DataONE is the shared
+index for NCEI, PANGAEA, LTER, DRYAD and others.
+
+API notes worth keeping:
+- One endpoint does everything: `q`, `rows`, `start`, `fl`, `facet=true`.
+- `fl` is required in practice: without it each row carries the full indexed
+  text and a two-row page is 121 KB.
+- `facet.field` accepts several fields at once; formatType, datasource and
+  keywords all return real buckets.
+- Sorting is rejected: `sort=datePublished desc` answers HTTP 400.
+- Field queries work only for some fields: `title:climate` and
+  `keywords:oceanography` work, `datasource:urn:node:NCEI` is a 400.
+- A record is fetched with `q=id:"<pid>"`; unknown pids return numFound 0.
+- PIDs are long: `sha256:<64 hex>`.
+
+3 tools: `search`, `record`, `facets`.
+
+## theses.fr — built 2026-11-06
+
+`theses-fr-mcp` wraps the French doctoral thesis registry
+(`theses.fr/api/v1/theses/recherche/`). Keyless.
+
+Why it was a gap: servers exist for arXiv, OpenAlex, Crossref, DOAJ and OSTI,
+but nothing covered French doctoral theses, which theses.fr holds with
+supervisors, jury, doctoral school and Rameau subjects.
+
+API notes worth keeping:
+- One endpoint only, with `q`, `nombre`, `debut`. A blank `q` returns 0 hits.
+- No per-record route: `/api/v1/theses/<id>` and every variant tried answers
+  404. A single thesis is fetched by searching its id and requiring an exact
+  match on `id` or `nnt`.
+- Both id forms work as search terms: `s431762` (in progress) and
+  `2016REN1S112` (NNT).
+- No filters: `annee`, `discipline`, `status`, `etablissement`, and the
+  `filtres` JSON parameter (raw or percent-encoded) leave totalHits unchanged.
+- No sorting: `tri=pertinence|date|dateSoutenance` all return the same order.
+- No facets: the response has only `totalHits`, `took` and `theses`.
+- Dates arrive as DD/MM/YYYY strings; `dateSoutenance` is null for theses in
+  progress.
+
+2 tools: `search`, `record`.
