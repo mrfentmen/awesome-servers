@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/gamebanana-mcp",
   "description": "GameBanana mods database: search mods by game, browse mod feeds, read mod pages.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/gamebanana-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",
