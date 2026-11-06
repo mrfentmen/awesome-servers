@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/eol-mcp",
+  "version": "1.0.0",
+  "description": "EOL: search the Encyclopedia of Life for species pages and identifiers - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/eol-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "eol-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "node tests/smoke.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "eol",
+    "biology",
+    "species",
+    "taxonomy",
+    "nature",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

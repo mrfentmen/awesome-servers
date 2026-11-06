@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/jpl-horizons-mcp",
+  "version": "1.0.0",
+  "description": "JPL Horizons: NASA ephemerides for planets, moons, asteroids and comets - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/jpl-horizons-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "jpl-horizons-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "node tests/smoke.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "jpl-horizons",
+    "nasa",
+    "astronomy",
+    "ephemeris",
+    "space",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

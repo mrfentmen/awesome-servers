@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/pub-dev-mcp",
+  "version": "1.0.0",
+  "description": "pub.dev: Dart and Flutter package versions, descriptions and publishers - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/pub-dev-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "pub-dev-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "node tests/smoke.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "pub-dev",
+    "dart",
+    "flutter",
+    "packages",
+    "mobile",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

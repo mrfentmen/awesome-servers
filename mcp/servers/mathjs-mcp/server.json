@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/mathjs-mcp",
+  "description": "mathjs: evaluate any maths expression remotely with the math.js service - keyless.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/mathjs-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@mrfentmen/mathjs-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

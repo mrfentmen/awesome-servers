@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/adviceslip-mcp",
+  "description": "Advice Slip: random short advice, with ids you can fetch again - keyless.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/adviceslip-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@mrfentmen/adviceslip-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

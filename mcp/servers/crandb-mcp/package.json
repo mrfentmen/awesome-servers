@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/crandb-mcp",
+  "version": "1.0.0",
+  "description": "CRAN: R package versions, titles, maintainers and licences from crandb - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/crandb-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "crandb-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "node tests/smoke.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "crandb",
+    "r",
+    "cran",
+    "packages",
+    "statistics",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

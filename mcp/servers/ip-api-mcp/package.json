@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/ip-api-mcp",
+  "version": "1.0.0",
+  "description": "ip-api: geolocate any IPv4 address with country, city, ISP and timezone - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/ip-api-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "ip-api-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "node tests/smoke.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "ip-api",
+    "ip",
+    "geolocation",
+    "network",
+    "dns",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

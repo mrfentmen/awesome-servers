@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/sunrisesunset-mcp",
+  "description": "SunriseSunset: sunrise, sunset, dawn, dusk and day length for any coordinates - keyless.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/sunrisesunset-mcp",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@mrfentmen/sunrisesunset-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

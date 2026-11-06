@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/open-notify-mcp",
+  "version": "1.0.0",
+  "description": "Open Notify: live ISS position and the people currently in space - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/open-notify-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "open-notify-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "node tests/smoke.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "open-notify",
+    "iss",
+    "space",
+    "satellite",
+    "nasa",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
