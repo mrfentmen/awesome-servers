@@ -187,6 +187,7 @@ Browser extensions are maintained separately in private repositories and are int
 - [`dependency-drift-mcp`](./servers/dependency-drift-mcp)
 - [`dependency-license-change-mcp`](./servers/dependency-license-change-mcp)
 - [`deps-dev-mcp`](./servers/deps-dev-mcp)
+- [`deribit-mcp`](./servers/deribit-mcp)
 - [`destiny2-mcp`](./servers/destiny2-mcp)
 - [`deviantart-mcp`](./servers/deviantart-mcp)
 - [`devrant-mcp`](./servers/devrant-mcp)
