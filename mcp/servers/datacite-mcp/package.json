@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/datacite-mcp",
+  "version": "1.0.0",
+  "description": "DataCite: DOI metadata for datasets, software and preprints - search and read records - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/datacite-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "datacite-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "node tests/smoke.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "datacite",
+    "doi",
+    "research-data",
+    "datasets",
+    "metadata",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
