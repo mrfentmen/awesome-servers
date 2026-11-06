@@ -55,7 +55,7 @@ export async function search(query: string, limit = 10): Promise<string> {
   const body = await get<unknown>(`${API}/release/_search?q=${encodeURIComponent(q)}&size=${size}`)
   const items = rows(at(body, "hits.hits"))
   if (items.length === 0) return `MetaCPAN found nothing for "${q}".`
-  const total = val(at(body, "hits.total.value"))
+  const total = val(at(body, "hits.total.value")) || val(at(body, "hits.total"))
   const lines = items.map((r, i) => {
     const name = val(at(r, "_source.name"))
     const abstract = val(at(r, "_source.abstract"))

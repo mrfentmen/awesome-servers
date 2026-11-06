@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/metacpan-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MetaCPAN: search Perl module releases, authors and abstracts - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/metacpan-mcp",
