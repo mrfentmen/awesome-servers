@@ -1,0 +1,43 @@
+{
+  "name": "@mrfentmen/himalayas-mcp",
+  "version": "1.0.0",
+  "description": "Himalayas: remote job postings with company, allowed locations, salary and apply link - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/himalayas-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "himalayas-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "node tests/smoke.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "jobs",
+    "remote-work",
+    "hiring",
+    "himalayas",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
