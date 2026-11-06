@@ -540,6 +540,7 @@ Browser extensions are maintained separately in private repositories and are int
 - [`npms-mcp`](./servers/npms-mcp)
 - [`nps-mcp`](./servers/nps-mcp)
 - [`ns-mcp`](./servers/ns-mcp)
+- [`ntrs-mcp`](./servers/ntrs-mcp)
 - [`nuget-mcp`](./servers/nuget-mcp)
 - [`number-tools-mcp`](./servers/number-tools-mcp)
 - [`numbers-mcp`](./servers/numbers-mcp)

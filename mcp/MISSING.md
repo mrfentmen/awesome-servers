@@ -382,3 +382,31 @@ Two genuinely uncovered, keyless surfaces were built:
   collection with an indexing-date window.
 
 Both keyless, both 5 tools, both with a live stdio smoke test (`npm test`).
+
+## NTRS — built 2026-11-06
+
+`ntrs-mcp` wraps NASA's Technical Reports Server (`ntrs.nasa.gov/api/citations`).
+Keyless, no signup, 500 requests per rate-limit window.
+
+Why it was a gap: NTRS has a clean public JSON API over a very large report
+corpus, yet every NASA server found on npm and GitHub covers imagery, APOD,
+EONET, NeoWs, POWER, SBDB or TLE. None touch the report archive itself.
+
+API notes worth keeping:
+- Search accepts `q`, `page.size` (100 works, 200 too), `page.number`, `center`
+  and `stiType`. No other filter parameter tested changed the total.
+- Sort parameters (`sortBy`, `sortOrder`, `sort.field`, `sort.order`) are
+  accepted and silently ignored — result order never changed. No sort option is
+  exposed, rather than pretending one works.
+- There is no working date-range filter: `startDate`, `endDate`, `from`,
+  `publicationDate.from`, `dateFrom`, `distributionDateFrom` all returned the
+  unfiltered total.
+- `aggregations` on the search response carries real facet buckets for center,
+  stiType, subjectCategory, keyword, published, author and organization, capped
+  at 20 buckets each. That backs the `facets` tool.
+- `GET /api/citations/<id>` returns one record; unknown ids answer 404 JSON.
+- `downloads[].links.pdf` / `.original` are relative paths, resolved against
+  `https://ntrs.nasa.gov`. The `.txt` fulltext link is an XHTML wrapper around a
+  PDF text dump, so only file URLs are surfaced — no fake text extraction.
+
+3 tools: `search`, `record`, `facets`. Live stdio smoke test covers all three.
