@@ -1,0 +1,36 @@
+{
+  "name": "@mrfentmen/research-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for keyless market research: DuckDuckGo autocomplete demand breadth, Etsy saturation proxies via Bing/Mojeek site-search counts, and an optional 12-month Google Trends read via pytrends. stdio MCP, Python 3.9+.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/research-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/awesome-servers.git",
+    "directory": "mcp/servers/research-mcp"
+  },
+  "bin": {
+    "research-mcp": "bin.js"
+  },
+  "main": "bin.js",
+  "files": [
+    "bin.js",
+    "src"
+  ],
+  "scripts": {
+    "test": "node --test tests/smoke.test.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "research",
+    "market",
+    "seo",
+    "etsy",
+    "trends",
+    "duckduckgo"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  }
+}
