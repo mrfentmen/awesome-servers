@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/alquran-mcp",
+  "version": "1.0.0",
+  "description": "AlQuran Cloud: Quran surahs, verses and English translations - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/alquran-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "alquran-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "node tests/smoke.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "alquran",
+    "quran",
+    "islam",
+    "religion",
+    "text",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
