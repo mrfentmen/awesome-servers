@@ -44,6 +44,7 @@ The server speaks stdio. All library output is kept off stdout.
 | --- | --- |
 | `extract_steering_vector` | Build a vector from positive/negative prompt pairs, save it, return its layers and dimension |
 | `steer_generate` | Generate with a saved vector applied, optionally next to an unsteered baseline |
+| `steer_generate_conditional` | Generate, but apply the vector only when a condition vector fires |
 | `list_vectors` | List saved vectors with model, method and layer count |
 | `vector_info` | One vector's metadata plus per-layer explained variance |
 
@@ -65,6 +66,20 @@ The server speaks stdio. All library output is kept off stdout.
 - `baseline` — add the unsteered answer for comparison
 - `chat_template` — `null` auto-detects, `false` uses raw text, `true` requires a template
 
+### steer_generate_conditional
+
+- `model`, `vector`, `condition_vector`, `prompts`
+- `condition_threshold` — cosine cutoff, -1 to 1; default 0.0
+- `fire_when` — `below` (default) applies the vector when similarity is under the threshold, `above` when over
+- `condition_layers` — layers used to score the condition; defaults to the middle band
+- `condition_comparison` — `mean` over tokens (default) or `last` token
+- `strength`, `max_new_tokens`, `baseline`, `chat_template` — same as `steer_generate`
+
+Train the condition vector the same way as a behaviour vector: positive examples are the
+prompts that should trigger it, negative examples are prompts that should not. Tune the
+threshold on real prompts; the upstream `find_best_condition_point` helper does a grid search
+if you need it.
+
 ## Example
 
 ```
@@ -80,6 +95,16 @@ steer_generate(
   vector="positivity",
   prompts=["The weather today is"],
   strength=2.0,
+  baseline=true
+)
+
+steer_generate_conditional(
+  model="gpt2",
+  vector="positivity",
+  condition_vector="weather",
+  prompts=["The weather today is", "Two plus two is"],
+  condition_threshold=0.05,
+  fire_when="above",
   baseline=true
 )
 ```

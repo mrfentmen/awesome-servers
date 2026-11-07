@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import math
 import os
 import sys
 import threading
@@ -31,6 +32,8 @@ if TYPE_CHECKING:
 
 METHODS = ("pca_pairwise", "pca_center", "pca_diff")
 ACCUMULATE = ("all", "last-token")
+FIRE_WHEN = ("below", "above")
+COMPARISON_MODES = ("mean", "last")
 
 
 class EngineError(RuntimeError):
@@ -145,6 +148,30 @@ class Engine:
     def chat_template_available(self) -> bool:
         return self._chat_template
 
+    def _check_layers(self, layers: Iterable[int], label: str) -> list[int]:
+        layer_ids = list(layers)
+        if not layer_ids:
+            raise EngineError(f"{label} must contain at least one layer")
+        if min(layer_ids) < 0 or max(layer_ids) >= self.num_layers:
+            raise EngineError(f"{label} must be between 0 and {self.num_layers - 1}")
+        return layer_ids
+
+    @staticmethod
+    def _check_vector_layers(vector: "SteeringVectorType", layers: Iterable[int], label: str) -> None:
+        missing = [layer for layer in layers if layer not in vector.directions]
+        if missing:
+            raise EngineError(f"the vector has no direction for {label} {missing}")
+
+    def _generation_settings(self, max_new_tokens: int) -> dict:
+        if self._tokenizer is None:
+            raise EngineError("no model is loaded")
+        return {
+            "pad_token_id": self._tokenizer.pad_token_id or self._tokenizer.eos_token_id,
+            "do_sample": False,
+            "max_new_tokens": max_new_tokens,
+            "repetition_penalty": 1.1,
+        }
+
     def _ensure_unwrapped(self) -> None:
         if self._malleable is not None:
             self._malleable.unwrap()
@@ -203,19 +230,11 @@ class Engine:
         use_chat = self.chat_template_available if chat_template is None else chat_template
         if use_chat and not self.chat_template_available:
             raise EngineError("this tokenizer has no usable chat template; pass chat_template=false")
-        layer_ids = list(layers)
-        if not layer_ids:
-            raise EngineError("at least one layer is required")
-        if max(layer_ids) >= self.num_layers or min(layer_ids) < 0:
-            raise EngineError(f"layers must be between 0 and {self.num_layers - 1}")
         if self._model is None or self._tokenizer is None:
             raise EngineError("no model is loaded")
-        settings = {
-            "pad_token_id": self._tokenizer.pad_token_id or self._tokenizer.eos_token_id,
-            "do_sample": False,
-            "max_new_tokens": max_new_tokens,
-            "repetition_penalty": 1.1,
-        }
+        layer_ids = self._check_layers(layers, "layers")
+        self._check_vector_layers(vector, layer_ids, "layers")
+        settings = self._generation_settings(max_new_tokens)
         results: list[dict[str, str | None]] = []
         with self._lock, _quiet():
             malleable = self._malleable or MalleableModel(model=self._model, tokenizer=self._tokenizer)
@@ -235,6 +254,78 @@ class Engine:
                     behavior_vector=vector,
                     behavior_layer_ids=layer_ids,
                     behavior_vector_strength=strength,
+                )
+                steered = _clean(
+                    malleable.respond(
+                        prompt,
+                        settings=settings,
+                        use_chat_template=use_chat,
+                    )
+                )
+                results.append({"prompt": prompt, "steered": steered, "baseline": plain})
+        return results
+
+    def generate_conditional(
+        self,
+        vector: "SteeringVectorType",
+        condition_vector: "SteeringVectorType",
+        layers: Iterable[int],
+        condition_layers: Iterable[int],
+        strength: float,
+        threshold: float,
+        fire_when: str,
+        comparison_mode: str,
+        prompts: Sequence[str],
+        max_new_tokens: int,
+        baseline: bool,
+        chat_template: bool | None = None,
+    ) -> list[dict[str, str | None]]:
+        """Generate with the behaviour applied only when the condition fires.
+
+        Upstream names its comparator backwards: its "larger" fires when the
+        similarity is below the threshold and its "smaller" fires above it.
+        """
+        use_chat = self.chat_template_available if chat_template is None else chat_template
+        if use_chat and not self.chat_template_available:
+            raise EngineError("this tokenizer has no usable chat template; pass chat_template=false")
+        if fire_when not in FIRE_WHEN:
+            raise EngineError("fire_when must be 'below' or 'above'")
+        if comparison_mode not in COMPARISON_MODES:
+            raise EngineError("comparison_mode must be 'mean' or 'last'")
+        if not math.isfinite(threshold):
+            raise EngineError("condition_threshold must be a finite number")
+        if self._model is None or self._tokenizer is None:
+            raise EngineError("no model is loaded")
+        layer_ids = self._check_layers(layers, "layers")
+        condition_layer_ids = self._check_layers(condition_layers, "condition_layers")
+        self._check_vector_layers(vector, layer_ids, "layers")
+        self._check_vector_layers(condition_vector, condition_layer_ids, "condition_layers")
+        comparator = "smaller" if fire_when == "above" else "larger"
+        settings = self._generation_settings(max_new_tokens)
+        results: list[dict[str, str | None]] = []
+        with self._lock, _quiet():
+            malleable = self._malleable or MalleableModel(model=self._model, tokenizer=self._tokenizer)
+            self._malleable = malleable
+            for prompt in prompts:
+                plain: str | None = None
+                if baseline:
+                    malleable.steer(behavior_vector=None)
+                    plain = _clean(
+                        malleable.respond(
+                            prompt,
+                            settings=settings,
+                            use_chat_template=use_chat,
+                        )
+                    )
+                malleable.steer(
+                    behavior_vector=vector,
+                    behavior_layer_ids=layer_ids,
+                    behavior_vector_strength=strength,
+                    condition_vector=condition_vector,
+                    condition_layer_ids=condition_layer_ids,
+                    condition_vector_threshold=threshold,
+                    condition_comparator_threshold_is=comparator,
+                    condition_threshold_comparison_mode=comparison_mode,
                 )
                 steered = _clean(
                     malleable.respond(

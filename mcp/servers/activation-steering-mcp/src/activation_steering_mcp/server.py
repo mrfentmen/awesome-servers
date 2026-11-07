@@ -22,6 +22,29 @@ def _check_model(model: str) -> str:
     return model
 
 
+def _clean_prompts(prompts: list[str]) -> list[str]:
+    if not prompts:
+        raise EngineError("at least one prompt is required")
+    if len(prompts) > MAX_PROMPTS:
+        raise EngineError(f"at most {MAX_PROMPTS} prompts are allowed per call")
+    cleaned = []
+    for index, prompt in enumerate(prompts, start=1):
+        prompt = prompt.strip()
+        if not prompt:
+            raise EngineError(f"prompt {index} is empty")
+        if len(prompt) > MAX_TEXT:
+            raise EngineError(f"prompt {index} is longer than {MAX_TEXT} characters")
+        cleaned.append(prompt)
+    return cleaned
+
+
+def _check_generation(strength: float, max_new_tokens: int) -> None:
+    if not 0.1 <= strength <= 10:
+        raise EngineError("strength must be between 0.1 and 10")
+    if not 1 <= max_new_tokens <= 512:
+        raise EngineError("max_new_tokens must be between 1 and 512")
+
+
 @mcp.tool()
 def extract_steering_vector(
     model: str,
@@ -87,22 +110,8 @@ def steer_generate(
     chat_template: null auto-detects; false forces raw text; true requires a template.
     """
     model = _check_model(model)
-    if not prompts:
-        raise EngineError("at least one prompt is required")
-    if len(prompts) > MAX_PROMPTS:
-        raise EngineError(f"at most {MAX_PROMPTS} prompts are allowed per call")
-    cleaned = []
-    for index, prompt in enumerate(prompts, start=1):
-        prompt = prompt.strip()
-        if not prompt:
-            raise EngineError(f"prompt {index} is empty")
-        if len(prompt) > MAX_TEXT:
-            raise EngineError(f"prompt {index} is longer than {MAX_TEXT} characters")
-        cleaned.append(prompt)
-    if not 0.1 <= strength <= 10:
-        raise EngineError("strength must be between 0.1 and 10")
-    if not 1 <= max_new_tokens <= 512:
-        raise EngineError("max_new_tokens must be between 1 and 512")
+    cleaned = _clean_prompts(prompts)
+    _check_generation(strength, max_new_tokens)
     _engine.load(model)
     saved = store.load(vector)
     if saved.model_type != _engine.model_type:
@@ -116,6 +125,77 @@ def steer_generate(
         "vector": vector,
         "layers": layer_ids,
         "strength": strength,
+        "results": outputs,
+    }
+
+
+@mcp.tool()
+def steer_generate_conditional(
+    model: str,
+    vector: str,
+    condition_vector: str,
+    prompts: list[str],
+    layers: list[int] | None = None,
+    condition_layers: list[int] | None = None,
+    strength: float = 1.5,
+    condition_threshold: float = 0.0,
+    fire_when: str = "below",
+    condition_comparison: str = "mean",
+    max_new_tokens: int = 64,
+    baseline: bool = False,
+    chat_template: bool | None = None,
+) -> dict:
+    """Generate text, applying a vector only when a condition vector fires.
+
+    The condition vector measures how close the prompt is to its concept at
+    condition_layers. fire_when=below (default) applies the behaviour when that
+    cosine similarity is under condition_threshold; above applies it when over.
+    Similarity runs from -1 to 1. condition_comparison uses the mean token or
+    the last token. baseline adds the unsteered answer for comparison.
+    """
+    model = _check_model(model)
+    cleaned = _clean_prompts(prompts)
+    _check_generation(strength, max_new_tokens)
+    if fire_when not in ("below", "above"):
+        raise EngineError("fire_when must be 'below' or 'above'")
+    if condition_comparison not in ("mean", "last"):
+        raise EngineError("condition_comparison must be 'mean' or 'last'")
+    _engine.load(model)
+    saved = store.load(vector)
+    condition = store.load(condition_vector)
+    for label, candidate in ((vector, saved), (condition_vector, condition)):
+        if candidate.model_type != _engine.model_type:
+            raise EngineError(
+                f"vector {label!r} was built for {candidate.model_type}, but {model} is {_engine.model_type}"
+            )
+    layer_ids = layers if layers is not None else default_layers(_engine.num_layers)
+    condition_layer_ids = condition_layers if condition_layers is not None else default_layers(_engine.num_layers)
+    outputs = _engine.generate_conditional(
+        saved,
+        condition,
+        layer_ids,
+        condition_layer_ids,
+        strength,
+        condition_threshold,
+        fire_when,
+        condition_comparison,
+        cleaned,
+        max_new_tokens,
+        baseline,
+        chat_template,
+    )
+    return {
+        "model": model,
+        "vector": vector,
+        "condition_vector": condition_vector,
+        "layers": layer_ids,
+        "condition_layers": condition_layer_ids,
+        "strength": strength,
+        "condition": {
+            "fire_when": fire_when,
+            "threshold": condition_threshold,
+            "comparison": condition_comparison,
+        },
         "results": outputs,
     }
 

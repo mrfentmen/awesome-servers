@@ -18,6 +18,10 @@ PAIRS = [
     ("What a nice day", "What a bad day"),
     ("I feel happy", "I feel sad"),
 ]
+CONDITION_PAIRS = [
+    ("The topic is cats", "The topic is dogs"),
+    ("Cats are great pets", "Dogs are great pets"),
+]
 
 
 def payload(result) -> dict:
@@ -40,7 +44,13 @@ async def main() -> None:
         async with ClientSession(read, write) as session:
             await session.initialize()
             tools = sorted(tool.name for tool in (await session.list_tools()).tools)
-            expected = ["extract_steering_vector", "list_vectors", "steer_generate", "vector_info"]
+            expected = [
+                "extract_steering_vector",
+                "list_vectors",
+                "steer_generate",
+                "steer_generate_conditional",
+                "vector_info",
+            ]
             assert tools == expected, f"tools mismatch: {tools}"
             print(f"PASS tools={tools}")
 
@@ -87,6 +97,52 @@ async def main() -> None:
             assert isinstance(row["baseline"], str), row
             print(f"PASS steer steered={row['steered'][:40]!r}")
             print(f"PASS baseline={row['baseline'][:40]!r}")
+
+            condition = payload(
+                await session.call_tool(
+                    "extract_steering_vector",
+                    {
+                        "model": MODEL,
+                        "positive": [p for p, _ in CONDITION_PAIRS],
+                        "negative": [n for _, n in CONDITION_PAIRS],
+                        "name": "smoke-condition",
+                        "method": "pca_diff",
+                    },
+                )
+            )
+            assert condition["name"] == "smoke-condition", condition
+            print(f"PASS condition extract layers={condition['layers']}")
+
+            common = {
+                "model": MODEL,
+                "vector": "smoke-vector",
+                "condition_vector": "smoke-condition",
+                "prompts": ["Hello there"],
+                "layers": [created["layers"][-1]],
+                "condition_layers": [condition["layers"][0]],
+                "strength": 2.0,
+                "max_new_tokens": 8,
+                "baseline": True,
+            }
+            gated_off = payload(
+                await session.call_tool(
+                    "steer_generate_conditional",
+                    {**common, "fire_when": "above", "condition_threshold": 2.0},
+                )
+            )
+            off_row = gated_off["results"][0]
+            assert off_row["steered"] == off_row["baseline"], off_row
+            print("PASS conditional gate off matches baseline")
+
+            gated_on = payload(
+                await session.call_tool(
+                    "steer_generate_conditional",
+                    {**common, "fire_when": "below", "condition_threshold": 2.0},
+                )
+            )
+            on_row = gated_on["results"][0]
+            assert isinstance(on_row["steered"], str) and on_row["steered"], on_row
+            print(f"PASS conditional gate on steered={on_row['steered'][:40]!r}")
 
             missing = await session.call_tool("steer_generate", {"model": MODEL, "vector": "nope", "prompts": ["x"]})
             assert missing.isError, "missing vector should be an error"
