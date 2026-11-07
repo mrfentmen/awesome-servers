@@ -14,6 +14,7 @@ Browser extensions are maintained separately in private repositories and are int
 - [`abuseipdb-mcp`](./servers/abuseipdb-mcp)
 - [`ackee-mcp`](./servers/ackee-mcp)
 - [`acl-anthology-mcp`](./servers/acl-anthology-mcp)
+- [`activation-steering-mcp`](./servers/activation-steering-mcp)
 - [`actor-mcp`](./servers/actor-mcp)
 - [`adobe-premiere-mcp`](./servers/adobe-premiere-mcp)
 - [`adsb-mcp`](./servers/adsb-mcp)

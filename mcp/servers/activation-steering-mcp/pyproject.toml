@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "activation-steering-mcp"
+version = "1.0.0"
+description = "MCP server for IBM activation-steering: extract steering vectors and steer local HF models - keyless."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10,<3.13"
+keywords = ["mcp", "activation-steering", "interpretability", "llm", "steering", "local", "keyless"]
+dependencies = [
+  "mcp>=1.9,<2",
+  "activation-steering @ git+https://github.com/IBM/activation-steering",
+  "torch>=2.2",
+  "transformers>=4.41,<5",
+  "numpy>=1.26,<2",
+  "scikit-learn>=1.4",
+  "accelerate>=0.31",
+]
+
+[project.scripts]
+activation-steering-mcp = "activation_steering_mcp.server:main"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/activation_steering_mcp"]
