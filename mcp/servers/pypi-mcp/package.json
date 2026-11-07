@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/pypi-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "PyPI: Python package versions, summaries, authors and release files - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/pypi-mcp",

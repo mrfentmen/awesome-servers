@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/rick-and-morty-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Rick and Morty: characters with status, species and origin from the public API - keyless.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/rick-and-morty-mcp",
