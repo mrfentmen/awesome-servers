@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/data-gov-uk-mcp",
+  "version": "1.0.0",
+  "description": "data.gov.uk: search UK government open datasets with publishers and dates - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/data-gov-uk-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "data-gov-uk-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "node tests/smoke.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "data-gov-uk",
+    "open-data",
+    "uk",
+    "government",
+    "datasets",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

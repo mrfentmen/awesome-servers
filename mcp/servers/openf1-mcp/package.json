@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/openf1-mcp",
+  "version": "1.0.0",
+  "description": "OpenF1: Formula 1 drivers, teams and session data from the live timing API - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/openf1-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "openf1-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "node tests/smoke.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "openf1",
+    "f1",
+    "formula1",
+    "motorsport",
+    "racing",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

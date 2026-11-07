@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/timeapi-mcp",
+  "version": "1.0.0",
+  "description": "TimeAPI: current date, time and weekday for any IANA timezone - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/timeapi-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "timeapi-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "node tests/smoke.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "timeapi",
+    "time",
+    "timezone",
+    "date",
+    "clock",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
