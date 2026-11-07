@@ -1,0 +1,38 @@
+{
+  "name": "@mrfentmen/duckdb-mcp",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Query local CSV, Parquet and JSON files with DuckDB SQL. No key, no network.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "duckdb-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "npm run build && node tests/smoke.mjs"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "duckdb": "^1.4.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "mcpName": "io.github.mrfentmen/duckdb-mcp",
+  "keywords": ["mcp", "duckdb", "sql", "csv", "parquet", "json", "local"],
+  "engines": {
+    "node": ">=20"
+  }
+}

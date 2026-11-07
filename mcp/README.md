@@ -4,7 +4,7 @@ A monorepo of MCP servers from the `mrfentmen` account and local workspace.
 
 ## Contents
 
-- **879 MCP servers** indexed here — 338 with hand-written source in [`servers/`](./servers), the rest mirrored in [`published/`](../published)
+- **883 MCP servers** indexed here — 342 with hand-written source in [`servers/`](./servers), the rest mirrored in [`published/`](../published)
 
 Browser extensions are maintained separately in private repositories and are intentionally not included here.
 
@@ -236,6 +236,7 @@ Browser extensions are maintained separately in private repositories and are int
 - [`dragonball-mcp`](./servers/dragonball-mcp)
 - [`drought-mcp`](./servers/drought-mcp)
 - [`duck-mcp`](./servers/duck-mcp)
+- [`duckdb-mcp`](./servers/duckdb-mcp)
 - [`duckduckgo-mcp`](./servers/duckduckgo-mcp)
 - [`dummyjson-mcp`](./servers/dummyjson-mcp)
 - [`duolingo-mcp`](./servers/duolingo-mcp)
@@ -293,6 +294,7 @@ Browser extensions are maintained separately in private repositories and are int
 - [`federal-register-mcp`](./servers/federal-register-mcp)
 - [`fema-disasters-mcp`](./servers/fema-disasters-mcp)
 - [`fema-mcp`](./servers/fema-mcp)
+- [`ffmpeg-mcp`](./servers/ffmpeg-mcp)
 - [`figshare-mcp`](./servers/figshare-mcp)
 - [`filerun-mcp`](./servers/filerun-mcp)
 - [`finalspace-mcp`](./servers/finalspace-mcp)
@@ -394,6 +396,7 @@ Browser extensions are maintained separately in private repositories and are int
 - [`htx-mcp`](./servers/htx-mcp)
 - [`hubitat-mcp`](./servers/hubitat-mcp)
 - [`hudsonrock-mcp`](./servers/hudsonrock-mcp)
+- [`huggingface-hub-mcp`](./servers/huggingface-hub-mcp)
 - [`huggingface-mcp`](./servers/huggingface-mcp)
 - [`iana-tld-mcp`](./servers/iana-tld-mcp)
 - [`iban-mcp`](./servers/iban-mcp)
@@ -449,6 +452,7 @@ Browser extensions are maintained separately in private repositories and are int
 - [`jsonpath-mcp`](./servers/jsonpath-mcp)
 - [`jsonplaceholder-mcp`](./servers/jsonplaceholder-mcp)
 - [`jsonschema-mcp`](./servers/jsonschema-mcp)
+- [`jupyter-mcp`](./servers/jupyter-mcp)
 - [`jwt-mcp`](./servers/jwt-mcp)
 - [`jwt-tools-mcp`](./servers/jwt-tools-mcp)
 - [`kanye-mcp`](./servers/kanye-mcp)

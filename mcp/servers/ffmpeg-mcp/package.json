@@ -1,0 +1,37 @@
+{
+  "name": "@mrfentmen/ffmpeg-mcp",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Probe, convert, trim, compress and extract audio or thumbnails from local media with ffmpeg. No key, no cloud.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "ffmpeg-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "npm run build && node tests/smoke.mjs"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "mcpName": "io.github.mrfentmen/ffmpeg-mcp",
+  "keywords": ["mcp", "ffmpeg", "video", "audio", "convert", "trim", "thumbnail"],
+  "engines": {
+    "node": ">=20"
+  }
+}
