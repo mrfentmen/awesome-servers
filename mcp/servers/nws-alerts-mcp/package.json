@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/nws-alerts-mcp",
+  "version": "1.0.0",
+  "description": "NWS Alerts: live US weather warnings and watches by state code - keyless.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/nws-alerts-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "nws-alerts-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "node tests/smoke.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "nws-alerts",
+    "weather",
+    "alerts",
+    "warnings",
+    "usa",
+    "keyless"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
