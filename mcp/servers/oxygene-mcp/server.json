@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/oxygene-mcp",
   "description": "Oxygene MCP: 20 real tools to read, check, lint, scaffold, build and run Oxygene code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/oxygene-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

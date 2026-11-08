@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/monkey-c-mcp",
   "description": "Monkey C MCP: 20 real tools to read, check, lint, scaffold, build and run Monkey C code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/monkey-c-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

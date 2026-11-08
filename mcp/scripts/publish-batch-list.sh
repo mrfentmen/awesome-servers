@@ -5,6 +5,7 @@ set -u
 LIST=${1:?list file required}
 PUB=${PUBLISHER_BIN:-mcp-publisher}
 N=0
+FAILED=0
 while read -r s; do
   [ -z "$s" ] && continue
   [ -d "servers/$s" ] || { echo "SKIP:$s:no-dir"; continue; }
@@ -30,12 +31,18 @@ except Exception:
   ENC=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$NAME")
   HAVE=$(curl -s -m 15 "https://registry.npmjs.org/$ENC" | python3 -c "import json,sys; print(' '.join(json.load(sys.stdin).get('versions',{}).keys()))" 2>/dev/null)
   if ! echo " $HAVE " | grep -q " $VER "; then
-    ( cd "$d" && npm install --no-audit --no-fund >/dev/null 2>&1; ./node_modules/.bin/tsc -p tsconfig.json >/dev/null 2>&1 ) || { echo "FAIL:$s:build"; continue; }
-    if ! ( cd "$d" && npm publish --access public 2>&1 | grep -qE "^\+\s" ); then echo "FAIL:$s:npm"; continue; fi
+    ( cd "$d" && npm install --no-audit --no-fund >/dev/null 2>&1; ./node_modules/.bin/tsc -p tsconfig.json >/dev/null 2>&1 ) || { echo "FAIL:$s:build"; FAILED=$((FAILED + 1)); continue; }
+    if ! ( cd "$d" && npm publish --access public 2>&1 | grep -qE "^\+\s" ); then echo "FAIL:$s:npm"; FAILED=$((FAILED + 1)); continue; fi
   fi
-  if ( cd "$d" && $PUB publish 2>&1 | grep -qiE "successfully published" ); then
+  OUT=$( cd "$d" && $PUB publish 2>&1 ); RC=$?
+  if [ "$RC" -eq 0 ]; then
     echo "OK:$s"
+  elif echo "$OUT" | grep -qi "duplicate version"; then
+    echo "OK:$s:already-live"
   else
-    if ( cd "$d" && $PUB publish 2>&1 | grep -q "duplicate version" ); then echo "OK:$s:already-live"; else echo "FAIL:$s:registry"; fi
+    echo "FAIL:$s:registry"
+    echo "$OUT" | tail -20
+    FAILED=$((FAILED + 1))
   fi
 done < "$LIST"
+if [ "$FAILED" -ne 0 ]; then echo "FAILED:$FAILED"; exit 1; fi

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/literate-coffeescript-mcp",
   "description": "Literate CoffeeScript MCP: 20 real tools to read, check, lint, scaffold, build and run Literate CoffeeScript code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/literate-coffeescript-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

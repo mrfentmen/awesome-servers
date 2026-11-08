@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/wolfram-mcp",
   "description": "Wolfram Language MCP: 20 real tools to read, check, lint, scaffold, build and run Wolfram Language code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/wolfram-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

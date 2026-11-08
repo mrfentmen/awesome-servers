@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/rocq-prover-mcp",
   "description": "Rocq Prover MCP: 20 real tools to read, check, lint, scaffold, build and run Rocq Prover code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/rocq-prover-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

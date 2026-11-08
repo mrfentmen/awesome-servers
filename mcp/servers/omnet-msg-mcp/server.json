@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/omnet-msg-mcp",
   "description": "OMNeT++ MSG MCP: 20 real tools to read, check, lint, scaffold, build and run OMNeT++ MSG code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/omnet-msg-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

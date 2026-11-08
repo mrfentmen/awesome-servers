@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/nextflow-mcp",
   "description": "Nextflow MCP: 20 real tools to read, check, lint, scaffold, build and run Nextflow code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/nextflow-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

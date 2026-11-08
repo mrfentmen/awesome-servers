@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/xbase-mcp",
   "description": "xBase MCP: 20 real tools to read, check, lint, scaffold, build and run xBase code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/xbase-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

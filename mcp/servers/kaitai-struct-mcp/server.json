@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/kaitai-struct-mcp",
   "description": "Kaitai Struct MCP: 20 real tools to read, check, lint, scaffold, build and run Kaitai Struct code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/kaitai-struct-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/literate-agda-mcp",
   "description": "Literate Agda MCP: 20 real tools to read, check, lint, scaffold, build and run Literate Agda code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/literate-agda-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

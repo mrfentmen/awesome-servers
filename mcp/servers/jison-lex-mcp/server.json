@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/jison-lex-mcp",
   "description": "Jison Lex MCP: 20 real tools to read, check, lint, scaffold, build and run Jison Lex code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/jison-lex-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

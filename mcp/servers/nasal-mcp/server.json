@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/nasal-mcp",
   "description": "Nasal MCP: 20 real tools to read, check, lint, scaffold, build and run Nasal code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/nasal-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

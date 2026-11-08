@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/tl-verilog-mcp",
   "description": "TL-Verilog MCP: 20 real tools to read, check, lint, scaffold, build and run TL-Verilog code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/tl-verilog-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

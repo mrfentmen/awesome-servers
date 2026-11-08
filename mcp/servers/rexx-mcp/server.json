@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/rexx-mcp",
   "description": "REXX MCP: 20 real tools to read, check, lint, scaffold, build and run REXX code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/rexx-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

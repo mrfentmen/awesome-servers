@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/kolmafia-ash-mcp",
   "description": "KoLmafia ASH MCP: 20 real tools to read, check, lint, scaffold, build and run KoLmafia ASH code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/kolmafia-ash-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

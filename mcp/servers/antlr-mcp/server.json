@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/antlr-mcp",
   "description": "ANTLR MCP: 20 real tools to read, check, lint, scaffold, build and run ANTLR code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/antlr-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/mathematical-programming-system-mcp",
   "description": "Mathematical Programming System MCP: 20 real tools to read, check, lint, scaffold, build and run Mathematical Programming System code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/mathematical-programming-system-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

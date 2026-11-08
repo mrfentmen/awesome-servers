@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/elvish-transcript-mcp",
   "description": "Elvish Transcript MCP: 20 real tools to read, check, lint, scaffold, build and run Elvish Transcript code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/elvish-transcript-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

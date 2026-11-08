@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/supercollider-mcp",
   "description": "SuperCollider MCP: 20 real tools to read, check, lint, scaffold, build and run SuperCollider code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/supercollider-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

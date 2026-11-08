@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/metapost-mcp",
   "description": "MetaPost MCP: 20 real tools to read, check, lint, scaffold, build and run MetaPost code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/metapost-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

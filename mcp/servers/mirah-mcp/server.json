@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/mirah-mcp",
   "description": "Mirah MCP: 20 real tools to read, check, lint, scaffold, build and run Mirah code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/mirah-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/jsoniq-mcp",
   "description": "JSONiq MCP: 20 real tools to read, check, lint, scaffold, build and run JSONiq code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/jsoniq-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

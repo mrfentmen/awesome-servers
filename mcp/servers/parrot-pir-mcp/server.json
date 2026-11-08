@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/parrot-pir-mcp",
   "description": "Parrot Internal Representation MCP: 20 real tools to read, check, lint, scaffold, build and run Parrot Internal Representation code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/parrot-pir-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",
