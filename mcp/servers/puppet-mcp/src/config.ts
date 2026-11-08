@@ -1,0 +1,47 @@
+import type { LanguageConfig } from "./types.js"
+
+export const config: LanguageConfig = {
+  "slug": "puppet",
+  "displayName": "Puppet",
+  "version": "1.0.0",
+  "extensions": [
+    ".pp"
+  ],
+  "markers": [],
+  "comment": "#",
+  "stringQuotes": [
+    "\""
+  ],
+  "symbols": [
+    {
+      "kind": "function",
+      "pattern": "\\b(?:function|def|fn|fun|func|proc|procedure|sub|method|class|struct|enum|module|namespace|type|interface|trait|record|object)\\s+([A-Za-z_]\\w*)"
+    },
+    {
+      "kind": "function",
+      "pattern": "^\\s*(?:[A-Za-z_][\\w<>\\[\\]]*\\s+)+([A-Za-z_]\\w*)\\s*\\("
+    },
+    {
+      "kind": "value",
+      "pattern": "^([A-Za-z_]\\w*)\\s*(?::=|=|:)"
+    }
+  ],
+  "imports": [],
+  "scaffold": [
+    {
+      "path": "src/demo.pp",
+      "content": "class demo { notify { 'hello': } }\n"
+    },
+    {
+      "path": "tests/run.pp",
+      "content": "class demo { notify { 'hello': } }\n"
+    }
+  ],
+  "snippets": {
+    "function": {
+      "description": "function",
+      "body": "class demo { notify { 'hello': } }\n"
+    }
+  },
+  "reference": "Puppet syntax reference\n- Example: class demo { notify { 'hello': } }\n- Comment: #\n- No CLI runner configured"
+}
