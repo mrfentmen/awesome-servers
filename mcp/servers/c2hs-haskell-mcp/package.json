@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/c2hs-haskell-mcp",
+  "version": "1.0.0",
+  "description": "C2hs Haskell MCP: 20 real tools to read, check, lint, scaffold, build and run C2hs Haskell code.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/c2hs-haskell-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "c2hs-haskell-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "npm run build && node --test tests/tools.test.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "c2hs-haskell",
+    "language",
+    "toolchain"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
