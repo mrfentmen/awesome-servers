@@ -21,6 +21,10 @@ on:
     branches: [main]
     paths: ["mcp/servers/**"]
 
+concurrency:
+  group: publish-mcp-servers
+  cancel-in-progress: false
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -40,8 +44,22 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Install mcp-publisher
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+          set -euo pipefail
+          OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+          ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+          TAG=$(gh release view --repo modelcontextprotocol/registry --json tagName --jq .tagName)
+          for attempt in 1 2 3 4 5; do
+            rm -f "/tmp/mcp-publisher_${OS}_${ARCH}.tar.gz" mcp-publisher
+            if gh release download "$TAG" --repo modelcontextprotocol/registry --pattern "mcp-publisher_${OS}_${ARCH}.tar.gz" --dir /tmp --clobber && tar -xzf "/tmp/mcp-publisher_${OS}_${ARCH}.tar.gz" mcp-publisher; then
+              break
+            fi
+            echo "mcp-publisher download failed (attempt $attempt), retrying in 5s"
+            sleep 5
+          done
+          test -x mcp-publisher || { echo "mcp-publisher download failed after retries"; exit 1; }
           sudo mv mcp-publisher /usr/local/bin/
 
       - name: Determine server list
