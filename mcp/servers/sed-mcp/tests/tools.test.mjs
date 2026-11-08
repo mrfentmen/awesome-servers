@@ -52,9 +52,9 @@ test('server boots and answers tools/list', async () => {
   assert.ok(serverInfo && serverInfo.version, 'expected serverInfo.version');
 });
 
-test('registers at least 10 tools', async () => {
+test('registers at least 20 tools', async () => {
   const { tools } = await listTools();
-  assert.ok(tools.length >= 10, `expected >= 10 tools, got ${tools.length}`);
+  assert.ok(tools.length >= 20, `expected >= 20 tools, got ${tools.length}`);
 });
 
 test('every tool is well formed', async () => {

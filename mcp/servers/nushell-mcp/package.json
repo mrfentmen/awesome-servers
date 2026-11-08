@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/nushell-mcp",
+  "version": "1.0.0",
+  "description": "Nushell MCP: 20 real tools to read, check, lint, scaffold, build and run Nushell code.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/nushell-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "nushell-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "npm run build && node --test tests/tools.test.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "nushell",
+    "language",
+    "toolchain"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

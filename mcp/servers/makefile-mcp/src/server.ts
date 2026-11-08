@@ -75,6 +75,18 @@ function variablesFrom(textValue: string): string[] {
   return found
 }
 
+function defaultGoalFrom(textValue: string): string {
+  for (const line of textValue.split("\n")) {
+    const explicit = /^\s*\.DEFAULT_GOAL\s*[:?+]?=\s*([^\s#]+)/.exec(line)?.[1]
+    if (explicit) return explicit
+  }
+  for (const line of textValue.split("\n")) {
+    const match = /^([A-Za-z0-9_.%/-]+)\s*::?(?!=)/.exec(line)
+    if (match && !match[1].startsWith(".") && !match[1].includes("%")) return match[1]
+  }
+  return "No default goal found"
+}
+
 export function createServer(): McpServer {
   const server = new McpServer({ name: "makefile-mcp", version: "1.0.0" })
 
@@ -296,6 +308,151 @@ export function createServer(): McpServer {
       return fail(errorMessage(error))
     }
   })
+
+  server.tool(
+    "show_target_prerequisites",
+    "Show the prerequisites listed on one Makefile target line.",
+    { target: z.string().min(1).max(300), makefile, cwd },
+    async (a) => {
+      try {
+        const lines = (await source(a.makefile, workdir(a.cwd))).split("\n")
+        const line = lines.find((value) =>
+          new RegExp(`^${escapeRegExp(a.target)}\\s*::?(?!=)`).test(value),
+        )
+        if (!line) throw new ToolError(`Target not found: ${a.target}`)
+        const body = line.replace(new RegExp(`^${escapeRegExp(a.target)}\\s*::?`), "")
+        const prerequisites = body.split(";")[0].trim()
+        return text(prerequisites || `Target ${a.target} has no prerequisites`)
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "show_phony_targets",
+    "List targets declared in .PHONY.",
+    { makefile, cwd },
+    async (a) => {
+      try {
+        const found = new Set<string>()
+        for (const line of (await source(a.makefile, workdir(a.cwd))).split("\n")) {
+          const match = /^\s*\.PHONY\s*:\s*(.*)$/.exec(line)
+          if (!match) continue
+          for (const name of match[1].split(/\s+/).filter(Boolean)) found.add(name)
+        }
+        return text(found.size ? [...found].join("\n") : "No .PHONY targets found")
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "show_default_goal",
+    "Show .DEFAULT_GOAL, or the first ordinary target when it is not set.",
+    { makefile, cwd },
+    async (a) => {
+      try {
+        return text(defaultGoalFrom(await source(a.makefile, workdir(a.cwd))))
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "show_variable",
+    "Show one expanded Make variable value from make's database.",
+    { name: z.string().regex(/^[A-Za-z_][A-Za-z0-9_]*$/, "Use a valid make variable name"), makefile, cwd, timeoutMs: timeout },
+    async (a) => {
+      try {
+        const result = await make(a.makefile, workdir(a.cwd), ["-pn"], a.timeoutMs)
+        const prefix = `${a.name} = `
+        const line = result.stdout.split("\n").find((value) => value.startsWith(prefix))
+        if (!line) {
+          throw new ToolError(result.stderr.trim() || `Variable not found: ${a.name}`)
+        }
+        return text(line.slice(prefix.length))
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "check_up_to_date",
+    "Check whether a target is up to date with make -q, without running recipes.",
+    { target, makefile, cwd, variables, timeoutMs: timeout },
+    async (a) => {
+      try {
+        const args = ["-q", ...varArgs(a.variables), ...(a.target ? [a.target] : [])]
+        const result = await make(a.makefile, workdir(a.cwd), args, a.timeoutMs)
+        if (result.code === 0) return text("Up to date")
+        if (result.code === 1) return text("Needs rebuild")
+        throw new ToolError((result.stderr || result.stdout).trim() || `make exited with code ${result.code}`)
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "run_with_keep_going",
+    "Run make with -k so it keeps building independent targets after an error.",
+    { target, makefile, cwd, variables, timeoutMs: timeout },
+    async (a) => {
+      try {
+        const output = await makeOutput(
+          a.makefile,
+          workdir(a.cwd),
+          ["-k", ...varArgs(a.variables), ...(a.target ? [a.target] : [])],
+          a.timeoutMs,
+        )
+        return text(output || "Make completed with no output")
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "run_with_always_make",
+    "Run make with -B to rebuild targets even when they look up to date.",
+    { target, makefile, cwd, variables, timeoutMs: timeout },
+    async (a) => {
+      try {
+        const output = await makeOutput(
+          a.makefile,
+          workdir(a.cwd),
+          ["-B", ...varArgs(a.variables), ...(a.target ? [a.target] : [])],
+          a.timeoutMs,
+        )
+        return text(output || "Make completed with no output")
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "run_quiet",
+    "Run make with -s so recipe commands are not echoed.",
+    { target, makefile, cwd, variables, timeoutMs: timeout },
+    async (a) => {
+      try {
+        const output = await makeOutput(
+          a.makefile,
+          workdir(a.cwd),
+          ["-s", ...varArgs(a.variables), ...(a.target ? [a.target] : [])],
+          a.timeoutMs,
+        )
+        return text(output || "Make completed with no output")
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
 
   return server
 }

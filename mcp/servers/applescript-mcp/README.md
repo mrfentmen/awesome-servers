@@ -2,7 +2,7 @@
 
 AppleScript is a missing language in the MCP ecosystem. This server gives agents real macOS automation tools instead of a stub.
 
-Keyless. No API key. No signup. Requires macOS and the built-in `osascript`, `osacompile`, `sdef`, `open`, and `pbcopy` tools.
+Keyless. No API key. No signup. Requires macOS and the built-in `osascript`, `osacompile`, `osadecompile`, `open`, and `pbcopy` tools. Dictionary lookup reads app bundles and uses `sdef` when available.
 
 ## Install
 
@@ -44,9 +44,14 @@ Or in an MCP client:
 | `quit_app` | Ask an app to quit. |
 | `system_info` | Return the macOS system info record. |
 
+| `run_script_with_args` | Run AppleScript with argv values. |
+| `compile_app` | Compile an AppleScript string into a `.app` bundle. |
+| `decompile_script` | Turn a compiled script or app back into source. |
+| `search_app_dictionary` | Search an app dictionary for a class, command or property. |
+
 ## Safety
 
-These tools can run arbitrary AppleScript and control applications. Use them with trusted input only. `run_script`, `run_script_file`, `tell_app`, and `run_handler` are intentionally powerful.
+These tools can run arbitrary AppleScript and control applications. Use them with trusted input only. `run_script`, `run_script_file`, `tell_app`, `run_handler`, and `compile_app` are intentionally powerful.
 
 ## Run locally
 

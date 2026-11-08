@@ -40,9 +40,18 @@ Or in an MCP client:
 | `transform_file` | Write a transformed copy of a file. |
 | `print_version` | Show the local sed version. |
 
+| `insert_line` | Insert one line before a line number. |
+| `append_line` | Append one line after a line number. |
+| `translate_chars` | Translate characters with sed y. |
+| `number_lines` | Print 1-based line numbers. |
+| `normalize_whitespace` | Collapse and trim whitespace. |
+| `remove_comments` | Delete comment lines. |
+| `join_lines` | Join lines with a separator. |
+| `delete_range` | Delete an inclusive line range. |
+
 ## Safety
 
-This server executes the local `sed` command. Treat scripts and targets as trusted input. `transform_file` refuses to overwrite its input path.
+This server executes the local `sed` command. Treat scripts as trusted input. `transform_file` refuses to overwrite its input path.
 
 ## Run locally
 

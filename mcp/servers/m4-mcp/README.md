@@ -39,9 +39,19 @@ Or in an MCP client:
 | `prefix_all` | Prefix built-in macros with m4_. |
 | `print_version` | Show the local M4 version. |
 
+| `check_file` | Preprocess a file and report errors. |
+| `trace_file` | Trace one macro in a file. |
+| `run_macro` | Invoke one macro with arguments. |
+| `run_macro_file` | Load a macro file and invoke a macro. |
+| `expand_to_file` | Write an expansion to a file. |
+| `evaluate` | Evaluate an M4 arithmetic expression. |
+| `regex_replace` | Replace regex matches with patsubst. |
+| `change_quotes` | Preprocess with custom quote delimiters. |
+| `macro_exists` | Check whether a macro is defined. |
+
 ## Safety
 
-This server executes the local `m4` command. Treat scripts and targets as trusted input. `transform_file` refuses to overwrite its input path.
+This server executes the local `m4` command. Treat macros and input as trusted input.
 
 ## Run locally
 

@@ -14,6 +14,7 @@ const input = z.string().max(MAX_INPUT).default("")
 const timeout = z.number().int().min(1_000).max(120_000).default(30_000)
 const delimiter = z.string().min(1).max(4).optional()
 const file = z.string().min(1).max(2_000).optional()
+const variables = z.record(z.string()).default({})
 
 const awkLit = (value: string): string => JSON.stringify(value)
 
@@ -26,6 +27,15 @@ function sourceArgs(separator: string | undefined, outputSeparator: string | und
   if (separator) parts.push(`FS=${awkLit(separator)}`)
   if (outputSeparator) parts.push(`OFS=${awkLit(outputSeparator)}`)
   return parts.length ? `BEGIN{${parts.join(";")}} ` : ""
+}
+
+function variableArgs(values: Record<string, string>): string[] {
+  return Object.entries(values).flatMap(([key, value]) => {
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) {
+      throw new ToolError(`Invalid AWK variable name: ${key}`)
+    }
+    return ["-v", `${key}=${value}`]
+  })
 }
 
 async function awk(args: string[], stdin: string, timeoutMs: number): Promise<string> {
@@ -291,6 +301,181 @@ export function createServer(): McpServer {
         if (result.code === 0) return text((result.stdout || result.stderr).trim())
         const path = await run("which", ["awk"], { timeoutMs: 5_000 })
         return text(`awk is available at ${path.stdout.trim() || "unknown path"}; this build has no version flag`)
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "run_with_variables",
+    "Run an AWK program with named -v variable assignments.",
+    {
+      program: z.string().min(1).max(100_000),
+      variables,
+      input,
+      file,
+      fieldSeparator: delimiter,
+      timeoutMs: timeout,
+    },
+    async (a) => {
+      try {
+        const source = inputOrFile(a.input, a.file)
+        const output = await awk(
+          [...variableArgs(a.variables), ...fsArgs(a.fieldSeparator), a.program, ...source.extra],
+          source.stdin,
+          a.timeoutMs,
+        )
+        return text(output || "(no output)")
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "match_rows",
+    "Keep rows whose whole line matches an AWK regular expression.",
+    {
+      input: z.string().min(1).max(MAX_INPUT),
+      pattern: z.string().min(1).max(20_000),
+      invert: z.boolean().default(false),
+      fieldSeparator: delimiter,
+      timeoutMs: timeout,
+    },
+    async (a) => {
+      try {
+        const program = `${sourceArgs(a.fieldSeparator, undefined)}${a.invert ? "!" : ""}($0 ~ re) {print}`
+        const output = await awk(
+          [...fsArgs(a.fieldSeparator), "-v", `re=${a.pattern}`, program],
+          a.input,
+          a.timeoutMs,
+        )
+        return text(output || "(no matches)")
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "replace_text",
+    "Replace every regex match on each line with literal replacement text.",
+    {
+      input: z.string().min(1).max(MAX_INPUT),
+      pattern: z.string().min(1).max(20_000),
+      replacement: z.string().max(100_000).default(""),
+      timeoutMs: timeout,
+    },
+    async (a) => {
+      try {
+        const program =
+          "function replaceAll(s, re, rep, n, a, out, i) {" +
+          " n = split(s, a, re); out = a[1];" +
+          " for (i = 2; i <= n; i++) out = out rep a[i]; return out }" +
+          " { print replaceAll($0, p, r) }"
+        const output = await awk(
+          ["-v", `p=${a.pattern}`, "-v", `r=${a.replacement}`, program],
+          a.input,
+          a.timeoutMs,
+        )
+        return text(output)
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "group_count",
+    "Count rows per value in one column, preserving first-seen order.",
+    {
+      input: z.string().min(1).max(MAX_INPUT),
+      column: z.number().int().min(1).max(100),
+      fieldSeparator: delimiter,
+      outputSeparator: delimiter,
+      timeoutMs: timeout,
+    },
+    async (a) => {
+      try {
+        const program =
+          `${sourceArgs(a.fieldSeparator, a.outputSeparator)}` +
+          `{ key = $${a.column}; if (!seen[key]++) order[++n] = key; count[key]++ } ` +
+          `END { for (i = 1; i <= n; i++) print order[i], count[order[i]] }`
+        return text(await awk([...fsArgs(a.fieldSeparator), program], a.input, a.timeoutMs))
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "column_stats",
+    "Report count, sum, min, max and mean for one numeric column.",
+    {
+      input: z.string().min(1).max(MAX_INPUT),
+      column: z.number().int().min(1).max(100),
+      fieldSeparator: delimiter,
+      timeoutMs: timeout,
+    },
+    async (a) => {
+      try {
+        const program =
+          `${sourceArgs(a.fieldSeparator, undefined)}` +
+          `{ v = $${a.column} + 0; if (n == 0 || v < min) min = v; if (n == 0 || v > max) max = v; sum += v; n++ } ` +
+          `END { if (n == 0) { print "count=0" } else { printf "count=%d\\nsum=%.6f\\nmin=%.6f\\nmax=%.6f\\nmean=%.6f\\n", n, sum, min, max, sum / n } }`
+        return text(await awk([...fsArgs(a.fieldSeparator), program], a.input, a.timeoutMs))
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "distinct_count",
+    "Count distinct values in one column.",
+    {
+      input: z.string().min(1).max(MAX_INPUT),
+      column: z.number().int().min(1).max(100),
+      fieldSeparator: delimiter,
+      timeoutMs: timeout,
+    },
+    async (a) => {
+      try {
+        const program = `${sourceArgs(a.fieldSeparator, undefined)}{ if (!seen[$${a.column}]++) n++ } END { print n }`
+        return text(await awk([...fsArgs(a.fieldSeparator), program], a.input, a.timeoutMs))
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "number_lines",
+    "Prefix each line with its 1-based line number and a tab.",
+    {
+      input: z.string().min(1).max(MAX_INPUT),
+      timeoutMs: timeout,
+    },
+    async (a) => {
+      try {
+        return text(await awk([`{ printf "%d\\t%s\\n", NR, $0 }`], a.input, a.timeoutMs))
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "dedupe_lines",
+    "Remove duplicate whole lines, preserving first-seen order.",
+    {
+      input: z.string().min(1).max(MAX_INPUT),
+      timeoutMs: timeout,
+    },
+    async (a) => {
+      try {
+        return text(await awk([`!seen[$0]++ { print }`], a.input, a.timeoutMs))
       } catch (error) {
         return fail(errorMessage(error))
       }

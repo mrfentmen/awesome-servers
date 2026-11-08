@@ -40,9 +40,18 @@ Or in an MCP client:
 | `count_rows` | Count input rows. |
 | `print_version` | Show the local AWK version. |
 
+| `run_with_variables` | Run an AWK program with named variables. |
+| `match_rows` | Keep rows matching an AWK regex. |
+| `replace_text` | Replace regex matches with literal text. |
+| `group_count` | Count rows per column value. |
+| `column_stats` | Report count, sum, min, max and mean. |
+| `distinct_count` | Count distinct values in a column. |
+| `number_lines` | Prefix lines with line numbers. |
+| `dedupe_lines` | Remove duplicate whole lines. |
+
 ## Safety
 
-This server executes the local `awk` command. Treat scripts and targets as trusted input. `transform_file` refuses to overwrite its input path.
+This server executes the local `awk` command. Treat programs as trusted input.
 
 ## Run locally
 

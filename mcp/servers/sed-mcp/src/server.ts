@@ -39,6 +39,11 @@ function countLines(output: string): number {
   return lines.length
 }
 
+function appendScript(line: number, value: string, command: "a" | "i"): string {
+  if (/[\r\n]/.test(value)) throw new ToolError("text must be a single line")
+  return `${line}${command}\\\n${value.replace(/\\/g, "\\\\")}`
+}
+
 export function createServer(): McpServer {
   const server = new McpServer({ name: "sed-mcp", version: "1.0.0" })
 
@@ -268,6 +273,170 @@ export function createServer(): McpServer {
       return fail(errorMessage(error))
     }
   })
+
+  server.tool(
+    "insert_line",
+    "Insert one line before a 1-based line number.",
+    {
+      input: z.string().max(MAX_INPUT).default(""),
+      line: z.number().int().min(1),
+      text: z.string().max(100_000),
+      timeoutMs: timeout,
+    },
+    async (a) => {
+      try {
+        return text(
+          await sed(["-e", appendScript(a.line, a.text, "i")], a.input, a.timeoutMs),
+        )
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "append_line",
+    "Append one line after a 1-based line number.",
+    {
+      input: z.string().max(MAX_INPUT).default(""),
+      line: z.number().int().min(1),
+      text: z.string().max(100_000),
+      timeoutMs: timeout,
+    },
+    async (a) => {
+      try {
+        return text(
+          await sed(["-e", appendScript(a.line, a.text, "a")], a.input, a.timeoutMs),
+        )
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "translate_chars",
+    "Translate characters with sed y; source and target must be the same length.",
+    {
+      input: z.string().max(MAX_INPUT).default(""),
+      source: z.string().min(1).max(2_000),
+      target: z.string().min(1).max(2_000),
+      timeoutMs: timeout,
+    },
+    async (a) => {
+      try {
+        if ([...a.source].length !== [...a.target].length) {
+          throw new ToolError("source and target must have the same character length")
+        }
+        const script = `y/${escapeSlash(a.source)}/${escapeSlash(a.target)}/`
+        return text(await sed(scriptArgs(script, false), a.input, a.timeoutMs))
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "number_lines",
+    "Print only the 1-based line numbers for input lines.",
+    {
+      input: z.string().max(MAX_INPUT).default(""),
+      timeoutMs: timeout,
+    },
+    async (a) => {
+      try {
+        return text(await sed(["-n", "="], a.input, a.timeoutMs))
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "normalize_whitespace",
+    "Collapse runs of whitespace to one space and trim each line.",
+    {
+      input: z.string().max(MAX_INPUT).default(""),
+      timeoutMs: timeout,
+    },
+    async (a) => {
+      try {
+        return text(
+          await sed(
+            ["-e", "s/[[:space:]][[:space:]]*/ /g", "-e", "s/^ //", "-e", "s/[[:space:]]*$//"],
+            a.input,
+            a.timeoutMs,
+          ),
+        )
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "remove_comments",
+    "Delete lines whose first non-space character is a comment marker.",
+    {
+      input: z.string().max(MAX_INPUT).default(""),
+      prefix: z.string().regex(/^[#;]+$/, "Use # or ; as the comment prefix").default("#"),
+      timeoutMs: timeout,
+    },
+    async (a) => {
+      try {
+        const script = `/^[[:space:]]*${a.prefix}/d`
+        return text(await sed(scriptArgs(script, false), a.input, a.timeoutMs))
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "join_lines",
+    "Join all lines into one line, separated by a chosen text.",
+    {
+      input: z.string().max(MAX_INPUT).default(""),
+      separator: z.string().max(1_000).default(" "),
+      timeoutMs: timeout,
+    },
+    async (a) => {
+      try {
+        const args = [
+          "-e",
+          ":a",
+          "-e",
+          "N",
+          "-e",
+          "$!ba",
+          "-e",
+          `s/\\n/${escapeSlash(a.separator)}/g`,
+        ]
+        return text(await sed(args, a.input, a.timeoutMs))
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "delete_range",
+    "Delete an inclusive range of 1-based line numbers.",
+    {
+      input: z.string().max(MAX_INPUT).default(""),
+      start: z.number().int().min(1),
+      end: z.number().int().min(1),
+      timeoutMs: timeout,
+    },
+    async (a) => {
+      try {
+        if (a.end < a.start) throw new ToolError("end must be greater than or equal to start")
+        return text(await sed(["-e", `${a.start},${a.end}d`], a.input, a.timeoutMs))
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
 
   return server
 }

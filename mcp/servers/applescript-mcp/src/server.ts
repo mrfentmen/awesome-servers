@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
-import { access, mkdtemp, rm, writeFile } from "node:fs/promises"
+import { access, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises"
 import { homedir, tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import {
@@ -40,10 +40,20 @@ async function osaFile(path: string, args: string[], timeoutMs = 30_000): Promis
   return result.stdout.trim()
 }
 
+async function osaWithArgs(script: string, args: string[], timeoutMs = 30_000): Promise<string> {
+  const result = await run("osascript", ["-e", script, "--", ...args], { timeoutMs })
+  if (result.code !== 0) {
+    throw new ToolError(result.stderr.trim() || `osascript exited with code ${result.code}`)
+  }
+  return result.stdout.trim()
+}
+
 async function appPath(name: string): Promise<string> {
   const candidates = [
     join("/Applications", `${name}.app`),
     join("/System/Applications", `${name}.app`),
+    join("/System/Library/CoreServices", `${name}.app`),
+    join("/System/Library/CoreServices/Applications", `${name}.app`),
     join(homedir(), "Applications", `${name}.app`),
   ]
   for (const candidate of candidates) {
@@ -54,7 +64,24 @@ async function appPath(name: string): Promise<string> {
       // Try the next standard app location.
     }
   }
-  throw new ToolError(`Could not find ${name}.app in /Applications, /System/Applications or ~/Applications`)
+  throw new ToolError(`Could not find ${name}.app in the standard application folders`)
+}
+
+async function dictionaryText(name: string): Promise<string> {
+  const path = await appPath(name)
+  const resources = join(path, "Contents", "Resources")
+  try {
+    const files = await readdir(resources)
+    const sdefs = files.filter((file) => file.endsWith(".sdef"))
+    if (sdefs.length) {
+      return (await Promise.all(sdefs.map((file) => readFile(join(resources, file), "utf8")))).join("\n")
+    }
+  } catch {
+    // Fall through to sdef, which can also read dictionaries outside Resources.
+  }
+  const result = await run("sdef", [path], { timeoutMs: 30_000 })
+  if (result.code === 0 && result.stdout.trim()) return result.stdout
+  throw new ToolError(result.stderr.trim() || `No AppleScript dictionary found for ${name}`)
 }
 
 export function createServer(): McpServer {
@@ -202,10 +229,7 @@ export function createServer(): McpServer {
     { app: appName },
     async (a) => {
       try {
-        await requireCommand("sdef")
-        const path = await appPath(a.app)
-        const result = await runChecked("sdef", [path], { timeoutMs: 30_000 })
-        const body = result.stdout.trim()
+        const body = (await dictionaryText(a.app)).trim()
         return text(body.slice(0, 30_000) || "The app returned an empty dictionary")
       } catch (error) {
         return fail(errorMessage(error))
@@ -331,6 +355,82 @@ export function createServer(): McpServer {
     async () => {
       try {
         return text(await osa("system info"))
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "run_script_with_args",
+    "Run AppleScript with argv values. The script must read them from 'on run argv'.",
+    {
+      script: z.string().min(1).max(200_000),
+      args: z.array(z.string().max(2_000)).max(50).default([]),
+      timeoutMs: timeout,
+    },
+    async (a) => {
+      try {
+        return text(await osaWithArgs(a.script, a.args, a.timeoutMs))
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "compile_app",
+    "Compile an AppleScript string into a runnable .app bundle.",
+    {
+      script: z.string().min(1).max(200_000),
+      outputPath: z.string().min(1).max(2_000).regex(/\.app$/i, "outputPath must end in .app"),
+    },
+    async (a) => {
+      try {
+        await requireCommand("osacompile")
+        const output = resolve(a.outputPath)
+        await runChecked("osacompile", ["-e", a.script, "-o", output], { timeoutMs: 30_000 })
+        return text(`Compiled AppleScript app to ${output}`)
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "decompile_script",
+    "Turn a compiled .scpt or .app AppleScript back into source text.",
+    { path: z.string().min(1).max(2_000) },
+    async (a) => {
+      try {
+        await requireCommand("osadecompile")
+        const result = await runChecked("osadecompile", [resolve(a.path)], { timeoutMs: 30_000 })
+        return text(result.stdout.trim().slice(0, 30_000) || "The script returned no source")
+      } catch (error) {
+        return fail(errorMessage(error))
+      }
+    },
+  )
+
+  server.tool(
+    "search_app_dictionary",
+    "Search an app's AppleScript dictionary for a class, command, property or term.",
+    {
+      app: appName,
+      term: z.string().min(1).max(200),
+      maxResults: z.number().int().min(1).max(100).default(20),
+    },
+    async (a) => {
+      try {
+        const body = await dictionaryText(a.app)
+        const needle = a.term.toLowerCase()
+        const matches = body
+          .split("\n")
+          .map((line, index) => ({ line: line.trim(), index }))
+          .filter((item) => item.line.toLowerCase().includes(needle))
+          .slice(0, a.maxResults)
+          .map((item) => `${item.index + 1}: ${item.line}`)
+        return text(matches.length ? matches.join("\n") : `No dictionary entries matched ${a.term}`)
       } catch (error) {
         return fail(errorMessage(error))
       }

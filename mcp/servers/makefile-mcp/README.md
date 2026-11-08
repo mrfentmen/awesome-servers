@@ -40,9 +40,18 @@ Or in an MCP client:
 | `show_include_files` | List include directives. |
 | `print_version` | Show the local GNU Make version. |
 
+| `show_target_prerequisites` | Show a target's prerequisites. |
+| `show_phony_targets` | List .PHONY targets. |
+| `show_default_goal` | Show the default target. |
+| `show_variable` | Show one expanded make variable. |
+| `check_up_to_date` | Check a target with make -q. |
+| `run_with_keep_going` | Run make with -k. |
+| `run_with_always_make` | Run make with -B. |
+| `run_quiet` | Run make with -s. |
+
 ## Safety
 
-This server executes the local `makefile` command. Treat scripts and targets as trusted input. `transform_file` refuses to overwrite its input path.
+This server executes the local `make` command. Treat Makefiles and targets as trusted input.
 
 ## Run locally
 

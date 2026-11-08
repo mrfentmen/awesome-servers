@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/applescript-mcp",
   "version": "1.0.0",
-  "description": "AppleScript MCP: run, compile, inspect and control macOS apps with 14 real tools.",
+  "description": "AppleScript MCP: run, compile, inspect and control macOS apps with 20 real tools.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/applescript-mcp",
   "repository": {

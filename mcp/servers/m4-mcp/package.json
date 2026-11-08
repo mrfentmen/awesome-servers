@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/m4-mcp",
   "version": "1.0.0",
-  "description": "M4 MCP: expand macros, trace definitions, include files and preprocess with 11 real tools.",
+  "description": "M4 MCP: expand macros, trace definitions, include files and preprocess with 20 real tools.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/m4-mcp",
   "repository": {

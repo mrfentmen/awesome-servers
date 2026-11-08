@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/sed-mcp",
   "version": "1.0.0",
-  "description": "Sed MCP: substitute, filter, count, extract and transform text with 12 real tools.",
+  "description": "Sed MCP: substitute, filter, count, extract and transform text with 20 real tools.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/sed-mcp",
   "repository": {

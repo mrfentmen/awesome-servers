@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/makefile-mcp",
   "version": "1.0.0",
-  "description": "Makefile MCP: inspect targets, variables, includes and recipes, then dry-run or run make with 12 real tools.",
+  "description": "Makefile MCP: inspect targets, variables, includes and recipes, then dry-run or run make with 20 real tools.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/makefile-mcp",
   "repository": {

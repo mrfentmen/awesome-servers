@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/awk-mcp",
   "version": "1.0.0",
-  "description": "Awk MCP: run programs, filter rows, aggregate columns and join delimited files with 12 real tools.",
+  "description": "Awk MCP: run programs, filter rows, aggregate columns and join delimited files with 20 real tools.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/awk-mcp",
   "repository": {
