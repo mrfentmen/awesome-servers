@@ -6,7 +6,6 @@ import { dirname, join } from 'node:path';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-/** Boot the built server, do the MCP handshake, return {serverInfo, tools}. */
 function listTools() {
   return new Promise((resolve, reject) => {
     const child = spawn('node', ['dist/index.js'], { cwd: root, stdio: ['pipe', 'pipe', 'pipe'] });
@@ -52,9 +51,9 @@ test('server boots and answers tools/list', async () => {
   assert.ok(serverInfo && serverInfo.version, 'expected serverInfo.version');
 });
 
-test('registers at least 10 tools', async () => {
+test('registers exactly 20 tools', async () => {
   const { tools } = await listTools();
-  assert.ok(tools.length >= 10, `expected >= 10 tools, got ${tools.length}`);
+  assert.equal(tools.length, 20, `expected 20 tools, got ${tools.length}`);
 });
 
 test('every tool is well formed', async () => {

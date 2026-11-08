@@ -1,37 +1,23 @@
-# vyper-mcp
+# Vyper MCP
 
-MCP server for **Vyper**, the Python-like smart-contract language for the EVM. Vyper is deliberately small: no inheritance, no recursion, no inline assembly, bounded loops — and this server gives an agent the whole language reference offline, from builtin functions to compiler attributes.
+Vyper had no dedicated MCP in the checked catalogs. This server gives agents 20 real tools instead of a stub.
 
-## What's inside
-
-| Dataset | Count |
-|---|---|
-| Documentation sections | 288, split by heading from the official reStructuredText docs |
-| Symbols | 51 builtin functions, classes, methods and compiler attributes |
-| Example contracts | 1 real example from the upstream `examples/` directory |
-
-Generated from [vyperlang/vyper](https://github.com/vyperlang/vyper) at commit `803062676390fe975f4d6b0794a42b8513656a4a`. Docs site: <https://docs.vyperlang.org/>.
+Requires `the language toolchain` for execution. The source, lint, symbol and scaffold tools work without it.
 
 ## Install
 
 ```bash
-npx -y vyper-mcp
+npx -y @mrfentmen/vyper-mcp
 ```
 
-or
-
-```bash
-npm i -g vyper-mcp
-```
-
-Claude Desktop / any stdio MCP client:
+Or in an MCP client:
 
 ```json
 {
   "mcpServers": {
-    "vyper": {
+    "vyper-mcp": {
       "command": "npx",
-      "args": ["-y", "vyper-mcp"]
+      "args": ["-y", "@mrfentmen/vyper-mcp"]
     }
   }
 }
@@ -39,44 +25,37 @@ Claude Desktop / any stdio MCP client:
 
 ## Tools
 
-| Tool | Arguments | Returns |
-|---|---|---|
-| `overview` | none | Repo, docs site, source commit, dataset counts, page list |
-| `list_docs` | none | Every page with its section count and page id |
-| `list_sections` | `doc` (optional) | Section titles and ids for one page or all pages |
-| `get_section` | `id` (required) | Full section text, truncated at 60,000 chars with a marker |
-| `search_docs` | `query` (required), `limit` (optional, default 5, max 20) | Title-first ranked hits with a window around the match |
-| `quickstart` | none | The whole quickstart page: install, compile, deploy |
-| `lookup_symbol` | `name` (required) | Exact then prefix matches, every overload signature |
-| `search_symbols` | `query` (required), `module` (optional), `limit` (optional, default 10, max 50) | Matching symbols by name or signature |
-| `list_modules` | none | Pages that contributed symbols, with counts and kinds |
-| `list_symbols_in_module` | `module` (required) | Every symbol from one page |
-| `list_symbol_kinds` | none | Symbol kinds with counts |
-| `list_symbols_by_kind` | `kind` (required) | Every symbol of one kind |
-| `list_builtin_functions` | none | The full built-in reference grouped by kind |
-| `list_samples` | none | Bundled example contracts with path and size |
-| `get_sample` | `name` (required) | Example source, with or without `.vy` |
-| `search_samples` | `query` (required), `limit` (optional, default 5, max 20) | Example hits with a code window |
-| `search_all` | `query` (required), `limit` (optional, default 5, max 20) | One query across docs, symbols and examples |
+| Tool | What it does |
+|---|---|
+| `detect_project` | Find language files, project markers and layout in a directory. |
+| `read_source` | Read a source file or a line range. |
+| `write_source` | Write a source file, with overwrite protection. |
+| `syntax_check` | Check brackets, strings and comments; run the parser when configured. |
+| `format_source` | Trim whitespace, normalize line endings and add a final newline. |
+| `lint_source` | Find trailing whitespace, tabs, long lines and unbalanced structure. |
+| `extract_symbols` | List functions, classes, types and other definitions. |
+| `list_imports` | List imports, includes and dependencies. |
+| `list_todos` | Find TODO, FIXME, HACK and XXX comments. |
+| `find_references` | Find every mention of a symbol in one file. |
+| `rename_symbol` | Rename a symbol in one file, with a dry-run default. |
+| `insert_snippet` | Insert a language-specific starter snippet. |
+| `comment_lines` | Comment a line range using the language marker. |
+| `uncomment_lines` | Remove the comment marker from a line range. |
+| `scaffold_project` | Create a small runnable starter project. |
+| `run_source` | Run a file with the installed interpreter or compiler. |
+| `run_tests` | Run the configured test command. |
+| `build_project` | Build a project with the configured compiler command. |
+| `toolchain_status` | Show which local compilers and tools are installed. |
+| `language_reference` | Return a compact syntax and toolchain reference. |
 
-## Example prompts
+## Safety
 
-- "What is the signature of `raw_call` and what does each argument mean?"
-- "How do I use `@nonreentrant` in Vyper 0.4?"
-- "Show me every built-in function related to hashing."
-- "What changed between Solidity and Vyper for storage variables?"
-- "Give me the quickstart — how do I compile and deploy a contract?"
+This server reads and writes local source files and runs local compiler commands. Treat project files and commands as trusted input.
 
-## Data provenance
+## Run locally
 
-Everything is extracted from the upstream repository at build time:
-
-- the reStructuredText docs are converted to text and split into 288 sections by heading;
-- `docs/built-in-functions.rst` and the other pages are parsed for their `py:function` / `py:class` / `py:method` directives, giving 51 symbols with real signatures;
-- the example contract is taken unmodified from the upstream `examples/` directory.
-
-The result is shipped as JSON in `data/` and read from disk at startup. The server makes no network requests, needs no credentials and works fully offline.
-
-## License
-
-MIT for this package. Vyper itself is licensed upstream — see <https://github.com/vyperlang/vyper>.
+```bash
+npm install
+npm run build
+node dist/index.js
+```

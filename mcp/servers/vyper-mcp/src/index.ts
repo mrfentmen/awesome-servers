@@ -6,10 +6,10 @@ async function main(): Promise<void> {
   const server = createServer()
   const transport = new StdioServerTransport()
   await server.connect(transport)
-  console.error("MCP server running on stdio")
+  console.error(`${process.env.npm_package_name ?? "language-mcp"} running on stdio`)
 }
 
-main().catch((err: unknown) => {
-  console.error("Fatal error:", err)
+main().catch((error: unknown) => {
+  console.error("Fatal error:", error)
   process.exit(1)
 })
