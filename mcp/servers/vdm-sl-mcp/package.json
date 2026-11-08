@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/vdm-sl-mcp",
+  "version": "1.0.0",
+  "description": "VDM-SL MCP: 20 real tools to read, check, lint, scaffold, build and run VDM-SL code.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/vdm-sl-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "vdm-sl-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "npm run build && node --test tests/tools.test.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "vdm-sl",
+    "language",
+    "toolchain"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
