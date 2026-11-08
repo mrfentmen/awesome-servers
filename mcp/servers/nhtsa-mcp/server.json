@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/nhtsa-mcp",
-  "description": "NHTSA: VIN decoding, safety recalls, owner complaints, make and model catalogues — keyless.",
+  "description": "NHTSA: VIN decoding, safety recalls, owner complaints, make and model catalogues \u2014 keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/nhtsa-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

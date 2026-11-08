@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/bridges-mcp",
   "description": "US bridge conditions: New York State bridge inspections and New York City bridge ratings - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/bridges-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

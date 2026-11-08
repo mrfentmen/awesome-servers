@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/sourcepawn-mcp",
   "description": "SourcePawn MCP: 20 real tools to read, check, lint, scaffold, build and run SourcePawn code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/sourcepawn-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

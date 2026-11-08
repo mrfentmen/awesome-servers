@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/jai-mcp",
   "description": "Jai MCP: 20 real tools to read, check, lint, scaffold, build and run Jai code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/jai-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

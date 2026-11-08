@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.mrfentmen/itunes-mcp",
-  "description": "iTunes Search API: music, albums, tracks, podcasts, apps and ebooks — all keyless.",
+  "name": "io.github.mrfentmen/apple-media-search-mcp",
+  "description": "iTunes Search API: music, albums, tracks, podcasts, apps and ebooks \u2014 all keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/apple-media-search-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

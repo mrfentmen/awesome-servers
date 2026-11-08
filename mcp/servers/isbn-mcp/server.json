@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/isbn-mcp",
   "description": "Validate and convert ISBN-10 and ISBN-13 numbers, with checksum maths - fully local.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/isbn-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

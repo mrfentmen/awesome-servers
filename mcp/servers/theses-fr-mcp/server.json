@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/theses-fr-mcp",
-  "description": "theses.fr: French doctoral theses - search by title, author or subject, read supervisors, jury, subjects and DOI - keyless.",
+  "description": "theses.fr: French doctoral theses - search by MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/theses-fr-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

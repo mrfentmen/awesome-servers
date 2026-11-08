@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/jisho-mcp",
   "description": "Japanese English dictionary: words, kanji readings, and example sentences.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/jisho-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/worms-mcp",
   "description": "World Register of Marine Species: search names, read records, children and full classification.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/worms-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

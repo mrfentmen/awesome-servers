@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/unit-convert-mcp",
   "description": "Convert 100+ units offline: length, mass, temperature, volume, area, speed, data and time",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/unit-convert-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/datacite-mcp",
   "description": "DataCite: DOI metadata for datasets, software and preprints - search and read records - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/datacite-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

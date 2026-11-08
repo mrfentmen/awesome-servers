@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/dependency-drift-mcp",
-  "description": "Summarize local dependency manifest and lockfile drift without returning package names, versions, paths, or contents.",
+  "description": "Summarize local dependency manifest and lockf MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/dependency-drift-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

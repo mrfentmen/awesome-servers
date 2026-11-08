@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/nemerle-mcp",
   "description": "Nemerle MCP: 20 real tools to read, check, lint, scaffold, build and run Nemerle code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/nemerle-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

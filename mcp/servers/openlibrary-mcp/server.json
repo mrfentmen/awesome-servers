@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/openlibrary-mcp",
   "description": "Book data from Open Library: search, works, authors and editions.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/openlibrary-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.5",

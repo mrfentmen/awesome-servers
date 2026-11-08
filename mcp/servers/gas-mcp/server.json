@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/gas-mcp",
   "description": "GAS MCP: 20 real tools to read, check, lint, scaffold, build and run GAS code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/gas-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

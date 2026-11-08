@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/btc-address-mcp",
   "description": "Validate Bitcoin addresses offline with real base58check and bech32/bech32m checksums",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/btc-address-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/modrinth-mcp",
   "description": "Search Minecraft mods on Modrinth, filter by loader/game version, browse versions.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/modrinth-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.4",

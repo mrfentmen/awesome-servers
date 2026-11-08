@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/nonogram-mcp",
   "description": "Solve, check and render nonogram (picross) puzzles from row and column clues - fully local.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/nonogram-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

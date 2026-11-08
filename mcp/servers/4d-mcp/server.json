@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/4d-mcp",
   "description": "4D MCP: 20 real tools to read, check, lint, scaffold, build and run 4D code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/4d-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

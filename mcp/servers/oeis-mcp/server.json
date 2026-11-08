@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/oeis-mcp",
-  "description": "Use this MCP server to the OEIS, the encyclopedia of integer sequences. Look up any sequence, find its name, formula, and neighbors",
+  "description": "Use this MCP server to the OEIS, the encyclop MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/oeis-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

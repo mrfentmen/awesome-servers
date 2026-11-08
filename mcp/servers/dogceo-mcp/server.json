@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/dogceo-mcp",
   "description": "Dog photos from dog.ceo: a random image, every breed with sub-breeds and breed galleries",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/dogceo-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

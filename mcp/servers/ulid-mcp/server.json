@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ulid-mcp",
   "description": "Generate, parse, compare and sort ULIDs, with timestamps and monotonic sort keys.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ulid-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

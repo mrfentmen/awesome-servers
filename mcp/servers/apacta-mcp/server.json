@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/apacta-mcp",
   "description": "MCP server for Apacta: projects, activities, clocking records, todos, customers and time tracking.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/apacta-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

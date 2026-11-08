@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/himalayas-mcp",
   "description": "Himalayas: remote job postings with company, allowed locations, salary and apply link - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/himalayas-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

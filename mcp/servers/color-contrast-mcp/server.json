@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/color-contrast-mcp",
   "description": "WCAG contrast ratios, AA/AAA checks and accessible colour suggestions for hex pairs - fully local.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/color-contrast-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

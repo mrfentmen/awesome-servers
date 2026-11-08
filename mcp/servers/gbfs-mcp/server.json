@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/gbfs-mcp",
   "description": "Live bike-share station availability for New York, Chicago, San Francisco, Boston and Montreal.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/gbfs-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

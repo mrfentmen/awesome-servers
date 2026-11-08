@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/quickgo-mcp",
   "description": "Gene Ontology terms, definitions, hierarchy and protein annotations via EBI QuickGO - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/quickgo-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

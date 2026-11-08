@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/frankfurter-mcp",
-  "description": "Frankfurter: ECB exchange rates, conversion, per-date rates, history and multi-currency comparison — keyless.",
+  "description": "Frankfurter: ECB exchange rates, conversion, MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/frankfurter-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

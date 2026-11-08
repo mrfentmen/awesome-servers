@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/rhai-mcp",
   "description": "Rhai MCP: 20 real tools to read, check, lint, scaffold, build and run Rhai code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/rhai-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

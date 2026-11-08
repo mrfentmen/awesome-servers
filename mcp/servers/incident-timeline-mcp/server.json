@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/incident-timeline-mcp",
-  "description": "Summarize local log timeline gaps and severity counts without returning messages, IDs, paths, or IP addresses.",
+  "description": "Summarize local log timeline gaps and severit MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/incident-timeline-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

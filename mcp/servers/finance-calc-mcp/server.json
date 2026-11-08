@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/finance-calc-mcp",
   "description": "Loan payments, amortisation schedules, compound interest and net present value - fully local.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/finance-calc-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

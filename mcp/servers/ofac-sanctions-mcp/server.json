@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ofac-sanctions-mcp",
   "description": "OFAC sanctions screening: search the SDN and consolidated lists by name, program or entity type and.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ofac-sanctions-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

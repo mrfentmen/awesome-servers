@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/opendota-mcp",
   "description": "OpenDota: Dota 2 hero stats, roles and win rates from public and pro games - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/opendota-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

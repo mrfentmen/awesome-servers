@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/punycode-mcp",
   "description": "Convert internationalised domain names between Unicode and punycode (IDNA), label by label.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/punycode-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

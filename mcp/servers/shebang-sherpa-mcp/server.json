@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/shebang-sherpa-mcp",
   "description": "Aggregate local script portability risks without exposing script text or project names.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/shebang-sherpa-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

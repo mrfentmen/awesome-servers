@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/figshare-mcp",
   "description": "Figshare: search open research outputs with DOIs, authors and links - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/figshare-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

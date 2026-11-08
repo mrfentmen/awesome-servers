@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/art-institute-mcp",
   "description": "Art Institute of Chicago: search artworks with artist and date from the open API - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/art-institute-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

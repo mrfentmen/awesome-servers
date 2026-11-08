@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/gleif-mcp",
   "description": "Legal entity identifiers: look up LEIs, parent companies and reporting status.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/gleif-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

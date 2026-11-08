@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/hts-tariff-mcp",
   "description": "US Harmonized Tariff Schedule from the USITC: look up a tariff code, search descriptions, walk a.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/hts-tariff-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

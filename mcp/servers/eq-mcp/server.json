@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/eq-mcp",
   "description": "EQ MCP: 20 real tools to read, check, lint, scaffold, build and run EQ code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/eq-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

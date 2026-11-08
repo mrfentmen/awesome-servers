@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/usgs-mcp",
   "description": "USGS earthquakes: latest quakes and queries by magnitude, count and start time.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/usgs-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/spir-v-mcp",
   "description": "SPIR-V MCP: 20 real tools to read, check, lint, scaffold, build and run SPIR-V code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/spir-v-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

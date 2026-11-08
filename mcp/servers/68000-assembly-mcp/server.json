@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/68000-assembly-mcp",
   "description": "68000 Assembly MCP: 20 real tools to read, check, lint, scaffold, build and run 68000 Assembly code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/68000-assembly-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

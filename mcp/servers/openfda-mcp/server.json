@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/openfda-mcp",
-  "description": "openFDA: drug labels, adverse events, drug/device/food recalls and NDC directory — keyless.",
+  "description": "openFDA: drug labels, adverse events, drug/device/food recalls and NDC directory \u2014 keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/openfda-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

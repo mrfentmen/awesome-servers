@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/text-diff-mcp",
   "description": "Unified diffs of two texts: change hunks with context, plus added and removed line counts",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/text-diff-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/unhcr-mcp",
   "description": "UNHCR forced displacement statistics: refugees, asylum seekers and stateless people by origin or",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/unhcr-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.2",

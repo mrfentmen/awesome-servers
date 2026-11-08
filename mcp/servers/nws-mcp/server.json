@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/nws-mcp",
   "description": "US National Weather Service: forecasts, hourly forecasts, active alerts and station observations.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/nws-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

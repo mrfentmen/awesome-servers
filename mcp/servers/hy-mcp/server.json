@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/hy-mcp",
   "description": "Hy MCP: 20 real tools to read, check, lint, scaffold, build and run Hy code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/hy-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

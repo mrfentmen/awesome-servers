@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/wdl-mcp",
   "description": "WDL MCP: 20 real tools to read, check, lint, scaffold, build and run WDL code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/wdl-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

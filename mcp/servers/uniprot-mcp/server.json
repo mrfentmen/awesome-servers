@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/uniprot-mcp",
   "description": "UniProt: protein records, sequences and organism names from the UniProtKB - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/uniprot-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

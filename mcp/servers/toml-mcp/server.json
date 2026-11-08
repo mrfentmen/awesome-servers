@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/toml-mcp",
   "description": "Read, write and query TOML config files: parse TOML to JSON, emit TOML, read one path.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/toml-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/objective-c-mcp",
   "description": "Objective-C MCP: 20 real tools to read, check, lint, scaffold, build and run Objective-C code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/objective-c-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

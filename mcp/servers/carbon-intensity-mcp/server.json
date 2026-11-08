@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/carbon-intensity-mcp",
   "description": "UK grid carbon intensity: live gCO2/kWh, half-hourly forecast and the current generation mix",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/carbon-intensity-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

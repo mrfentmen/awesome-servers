@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/police-transparency-mcp",
   "description": "MCP server for Aggregate historical NYC police complaint statistics with no person lookup.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/police-transparency-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/soilgrids-mcp",
   "description": "SoilGrids soil properties by depth for any coordinate: clay, sand, carbon, pH and WRB",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/soilgrids-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

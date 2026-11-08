@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/crandb-mcp",
   "description": "CRAN: R package versions, titles, maintainers and licences from crandb - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/crandb-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

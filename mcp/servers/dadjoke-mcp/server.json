@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/dadjoke-mcp",
   "description": "Dad jokes from icanhazdadjoke: a random one, keyword search or a lookup by joke id - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/dadjoke-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

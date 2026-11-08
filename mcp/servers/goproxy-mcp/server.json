@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/goproxy-mcp",
   "description": "Go Proxy: every published version of a Go module, straight from proxy.golang.org - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/goproxy-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

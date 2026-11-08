@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/julia-mcp",
   "description": "Julia MCP: 20 real tools to read, check, lint, scaffold, build and run Julia code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/julia-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

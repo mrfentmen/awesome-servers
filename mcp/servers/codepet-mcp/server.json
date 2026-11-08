@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/codepet-mcp",
   "description": "Local MCP companion for CodePet status, quests, and source free coding events.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/codepet-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

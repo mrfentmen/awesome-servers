@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/er-api-mcp",
   "description": "ExchangeRate-API: daily currency conversion and rates for 160+ currencies - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/er-api-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

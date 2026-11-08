@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/schema-sieve-mcp",
   "description": "Local JSON Schema structure inspection and privacy-safe fixture planning.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/schema-sieve-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

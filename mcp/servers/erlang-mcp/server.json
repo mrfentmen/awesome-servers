@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/erlang-mcp",
   "description": "Erlang MCP: 20 real tools to read, check, lint, scaffold, build and run Erlang code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/erlang-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/epss-mcp",
   "description": "Exploit Prediction Scoring System scores: how likely a CVE will be exploited in the next 30 days.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/epss-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

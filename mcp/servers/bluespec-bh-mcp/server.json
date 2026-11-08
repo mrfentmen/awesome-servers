@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/bluespec-bh-mcp",
   "description": "Bluespec BH MCP: 20 real tools to read, check, lint, scaffold, build and run Bluespec BH code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/bluespec-bh-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

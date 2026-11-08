@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "description": "iTunes Search API: music, albums, tracks, podcasts, apps and ebooks \u2014 all keyless.",
   "type": "module",
-  "mcpName": "io.github.mrfentmen/itunes-mcp",
+  "mcpName": "io.github.mrfentmen/apple-media-search-mcp",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mrfentmen/awesome-servers.git"

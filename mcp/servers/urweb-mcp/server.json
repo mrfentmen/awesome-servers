@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/urweb-mcp",
   "description": "Ur/Web MCP: 20 real tools to read, check, lint, scaffold, build and run Ur/Web code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/urweb-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

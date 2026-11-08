@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/hpo-mcp",
   "description": "Search HPO phenotype terms, read definitions and explore the phenotype hierarchy - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/hpo-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/pride-mcp",
   "description": "Proteomics identifications database: search mass-spec projects and read their methods and metadata.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/pride-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

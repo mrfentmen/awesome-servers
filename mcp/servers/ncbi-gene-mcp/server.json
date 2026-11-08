@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ncbi-gene-mcp",
   "description": "NCBI Gene records: search by symbol, disease or chromosome and read names, location, aliases and",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ncbi-gene-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.2",

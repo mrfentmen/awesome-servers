@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/vgmdb-mcp",
   "description": "Search the VGMdb video game music database: albums, composers, and tracklists for game OSTs.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/vgmdb-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/sec-edgar-mcp",
   "description": "SEC EDGAR filings and financial concepts: company profiles by CIK, XBRL tag history and full-text",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/sec-edgar-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.2",

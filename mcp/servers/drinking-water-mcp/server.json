@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/drinking-water-mcp",
   "description": "US drinking water systems from EPA SDWIS: look up a public water system, its violations and its.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/drinking-water-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/docraptor-mcp",
   "description": "DocRaptor: render HTML to PDF and XLSX documents through the DocRaptor API.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/docraptor-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

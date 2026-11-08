@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/openbeautyfacts-mcp",
   "description": "Open Beauty Facts cosmetics database: look products up by barcode, brand or search terms with",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/openbeautyfacts-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.2",

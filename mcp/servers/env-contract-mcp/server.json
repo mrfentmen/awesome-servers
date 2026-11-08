@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/env-contract-mcp",
   "description": "Local value-free environment contract and configuration drift inspection.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/env-contract-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

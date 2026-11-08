@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/mlb-stats-mcp",
-  "description": "MLB Stats API: teams, division standings, schedules, rosters, player profiles — keyless.",
+  "description": "MLB Stats API: teams, division standings, schedules, rosters, player profiles \u2014 keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/mlb-stats-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

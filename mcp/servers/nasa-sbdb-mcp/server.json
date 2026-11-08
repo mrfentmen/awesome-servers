@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/nasa-sbdb-mcp",
   "description": "Asteroids and comets: orbital elements, close approaches and physical data.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/nasa-sbdb-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

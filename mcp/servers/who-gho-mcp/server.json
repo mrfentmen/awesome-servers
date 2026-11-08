@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/who-gho-mcp",
   "description": "WHO GHO: search global health indicators and their codes - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/who-gho-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

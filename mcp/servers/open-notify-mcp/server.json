@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/open-notify-mcp",
   "description": "Open Notify: live ISS position and the people currently in space - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/open-notify-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

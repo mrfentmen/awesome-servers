@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/semver-mcp",
   "description": "Semantic version toolkit: parse, compare, sort and range-check versions (npm-style ^ ~ and hyphen",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/semver-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.2",

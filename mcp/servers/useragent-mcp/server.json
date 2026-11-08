@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/useragent-mcp",
   "description": "Parse user-agent strings into browser, engine, OS and device, and flag crawlers - fully local.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/useragent-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

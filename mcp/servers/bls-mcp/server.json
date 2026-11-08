@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/bls-mcp",
   "description": "BLS economic series: employment, CPI, wages and more by series id, with the survey list and popular",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/bls-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

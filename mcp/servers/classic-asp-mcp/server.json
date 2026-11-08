@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/classic-asp-mcp",
   "description": "Classic ASP MCP: 20 real tools to read, check, lint, scaffold, build and run Classic ASP code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/classic-asp-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

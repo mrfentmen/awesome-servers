@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/dracoon-mcp",
-  "description": "MCP server for DRACOON: nodes, rooms, users, groups, shares, uploads and downloads on a DRACOON tenant.",
+  "description": "MCP server for DRACOON: nodes, rooms, users, MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/dracoon-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

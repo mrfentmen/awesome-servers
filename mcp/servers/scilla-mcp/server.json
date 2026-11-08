@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/scilla-mcp",
   "description": "Scilla MCP: 20 real tools to read, check, lint, scaffold, build and run Scilla code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/scilla-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

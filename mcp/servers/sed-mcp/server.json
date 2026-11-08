@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/sed-mcp",
   "description": "Sed MCP: substitute, filter, count, extract and transform text with 20 real tools.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/sed-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

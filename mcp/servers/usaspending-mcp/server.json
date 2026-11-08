@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/usaspending-mcp",
   "description": "US federal spending: agency totals, awards and recipient summaries.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/usaspending-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

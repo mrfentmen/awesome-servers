@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/openf1-mcp",
   "description": "OpenF1: Formula 1 drivers, teams and session data from the live timing API - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/openf1-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

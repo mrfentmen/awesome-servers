@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/awk-mcp",
   "description": "Awk MCP: run programs, filter rows, aggregate columns and join delimited files with 20 real tools.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/awk-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

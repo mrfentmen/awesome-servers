@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/vhdl-mcp",
   "description": "VHDL MCP: 20 real tools to read, check, lint, scaffold, build and run VHDL code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/vhdl-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

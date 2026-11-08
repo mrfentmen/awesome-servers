@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ndbc-mcp",
   "description": "NDBC ocean buoys and coastal stations: latest wind, wave and water temperatures, plus recent history",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ndbc-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.2",

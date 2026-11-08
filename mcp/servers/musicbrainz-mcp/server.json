@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/musicbrainz-mcp",
   "description": "MCP server for MusicBrainz artists, releases, recordings, and open music metadata.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/musicbrainz-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

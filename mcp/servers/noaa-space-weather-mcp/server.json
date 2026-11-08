@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/noaa-space-weather-mcp",
   "description": "NOAA Space Weather: live Kp index and geomagnetic storm readings - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/noaa-space-weather-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

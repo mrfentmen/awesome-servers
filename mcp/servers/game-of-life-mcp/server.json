@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/game-of-life-mcp",
   "description": "Run Conway's Game of Life, detect cycles and measure populations on ASCII grids - fully local.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/game-of-life-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

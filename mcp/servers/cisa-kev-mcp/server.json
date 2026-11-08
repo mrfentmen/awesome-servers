@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/cisa-kev-mcp",
   "description": "MCP server for CISA Known Exploited Vulnerabilities catalog search.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/cisa-kev-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

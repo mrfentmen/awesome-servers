@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/space-weather-mcp",
   "description": "MCP server for NOAA solar wind, geomagnetic scales, and space weather alerts.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/space-weather-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

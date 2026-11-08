@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/doomwiki-mcp",
-  "description": "Use this MCP server to the Doom Wiki. Every demon, weapon, level, and piece of Doom lore since 1993. Tools include search pages, get page, get category",
+  "description": "Use this MCP server to the Doom Wiki. Every d MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/doomwiki-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

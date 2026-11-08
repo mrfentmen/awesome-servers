@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ampl-mcp",
   "description": "AMPL MCP: 20 real tools to read, check, lint, scaffold, build and run AMPL code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ampl-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

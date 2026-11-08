@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/celestrak-mcp",
   "description": "Satellite orbits and catalogue data: TLEs, groups and object lookups.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/celestrak-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

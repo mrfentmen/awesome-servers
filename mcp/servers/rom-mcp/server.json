@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/rom-mcp",
   "description": "Search ROMs across Internet Archive, ROMsgames, CoolROM, and more. Verify checksums and parse saves.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/rom-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.2.1",

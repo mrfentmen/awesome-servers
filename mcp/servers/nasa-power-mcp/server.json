@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/nasa-power-mcp",
   "description": "NASA POWER climate data: daily temperature, rain, wind and solar series for any coordinate, plus",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/nasa-power-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.2",

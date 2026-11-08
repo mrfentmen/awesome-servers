@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/git-reflog-archaeologist-mcp",
   "description": "Aggregate local Git reflog and recovery signals without exposing repository content.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/git-reflog-archaeologist-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/8bitpeoples-mcp",
   "description": "MCP server for 8bitpeoples, the free chiptune record label. Browse the full release catalog.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/8bitpeoples-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

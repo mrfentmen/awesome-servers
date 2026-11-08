@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/endian-mcp",
   "description": "Byte order and integer tools offline: swap endianness, read raw bytes and inspect two's complement",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/endian-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

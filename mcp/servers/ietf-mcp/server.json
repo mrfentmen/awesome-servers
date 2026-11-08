@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ietf-mcp",
   "description": "IETF documents, RFCs, Internet-Drafts, and working groups.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ietf-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

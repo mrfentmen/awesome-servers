@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/nasa-eonet-mcp",
-  "description": "NASA EONET: open natural events on Earth — wildfires, storms, volcanoes, icebergs — keyless.",
+  "description": "NASA EONET: open natural events on Earth \u2014 wildfires, storms, volcanoes, icebergs \u2014 keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/nasa-eonet-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

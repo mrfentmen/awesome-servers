@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/mangadex-mcp",
   "description": "Search MangaDex for manga, chapters, authors and tags. Free public API.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/mangadex-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

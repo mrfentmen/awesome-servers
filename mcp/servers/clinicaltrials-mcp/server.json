@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/clinicaltrials-mcp",
-  "description": "ClinicalTrials.gov v2 API: trial search, sponsors, eligibility, sites and outcomes — keyless.",
+  "description": "ClinicalTrials.gov v2 API: trial search, sponsors, eligibility, sites and outcomes \u2014 keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/clinicaltrials-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

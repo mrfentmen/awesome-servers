@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/answer-set-programming-mcp",
-  "description": "Answer Set Programming MCP: 20 real tools to read, check, lint, scaffold, build and run Answer Set Programming code.",
+  "description": "Answer Set Programming MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/answer-set-programming-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

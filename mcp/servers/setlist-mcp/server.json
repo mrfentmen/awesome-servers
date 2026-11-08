@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/setlist-mcp",
   "description": "Search artists, fetch concert setlists, and count how many times a song was played live.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/setlist-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.4",

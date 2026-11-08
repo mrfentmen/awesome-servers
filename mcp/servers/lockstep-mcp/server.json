@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/lockstep-mcp",
   "description": "Local lockfile and package-manager reproducibility analysis without dependency details.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/lockstep-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

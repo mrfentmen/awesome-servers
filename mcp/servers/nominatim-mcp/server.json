@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/nominatim-mcp",
   "description": "Geocode with OpenStreetMap: find places by name, reverse geocode coordinates and resolve OSM ids",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/nominatim-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.2",

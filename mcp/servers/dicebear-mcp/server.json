@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/dicebear-mcp",
   "description": "DiceBear: deterministic avatar images in dozens of styles from a seed - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/dicebear-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

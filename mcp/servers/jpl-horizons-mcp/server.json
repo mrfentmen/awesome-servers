@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/jpl-horizons-mcp",
   "description": "JPL Horizons: NASA ephemerides for planets, moons, asteroids and comets - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/jpl-horizons-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

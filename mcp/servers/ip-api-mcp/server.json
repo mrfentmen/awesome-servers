@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ip-api-mcp",
   "description": "ip-api: geolocate any IPv4 address with country, city, ISP and timezone - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ip-api-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

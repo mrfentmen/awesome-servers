@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/pokeapi-mcp",
   "description": "Pok\u00e9API: Pok\u00e9mon types, stats, abilities, height and weight - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/pokeapi-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

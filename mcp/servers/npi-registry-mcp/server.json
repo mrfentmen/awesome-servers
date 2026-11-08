@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/npi-registry-mcp",
   "description": "CMS NPI Registry: look up US healthcare providers and organisations by NPI, name, state or taxonomy",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/npi-registry-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.3",

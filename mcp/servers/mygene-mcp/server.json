@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/mygene-mcp",
   "description": "Gene annotations from mygene.info: search genes by symbol or keyword and read full records",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/mygene-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.2",

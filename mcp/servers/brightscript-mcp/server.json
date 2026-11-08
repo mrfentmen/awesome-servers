@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/brightscript-mcp",
   "description": "BrightScript MCP: 20 real tools to read, check, lint, scaffold, build and run BrightScript code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/brightscript-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

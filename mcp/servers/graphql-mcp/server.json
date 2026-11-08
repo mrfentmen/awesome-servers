@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/graphql-mcp",
   "description": "GraphQL MCP: 20 real tools to read, check, lint, scaffold, build and run GraphQL code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/graphql-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

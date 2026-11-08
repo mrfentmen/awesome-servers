@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/agda-mcp",
   "description": "Agda MCP: 20 real tools to read, check, lint, scaffold, build and run Agda code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/agda-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

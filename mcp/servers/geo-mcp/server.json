@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/geo-mcp",
   "description": "NCBI GEO datasets: search transcriptomics and methylation studies and read one dataset in full.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/geo-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

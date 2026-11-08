@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/wikisource-mcp",
   "description": "Search and read bounded extracts from public-domain texts on Wikisource.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/wikisource-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

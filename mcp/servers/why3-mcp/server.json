@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/why3-mcp",
   "description": "Why3 MCP: 20 real tools to read, check, lint, scaffold, build and run Why3 code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/why3-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

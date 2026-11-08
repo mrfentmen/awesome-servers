@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/brewery-mcp",
   "description": "Brewery data from Open Brewery DB: name search, filter by city, state or type, full detail",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/brewery-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

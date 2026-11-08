@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/scielo-mcp",
-  "description": "SciELO: 567k+ open-access articles from Latin America, Spain and Portugal - articles, journals, collections - keyless.",
+  "description": "SciELO: 567k+ open-access articles from Latin MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/scielo-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

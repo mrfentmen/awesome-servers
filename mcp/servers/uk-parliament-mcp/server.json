@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/uk-parliament-mcp",
   "description": "UK Parliament open data: find MPs and Lords, read member profiles, and search bills with their",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/uk-parliament-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.2",

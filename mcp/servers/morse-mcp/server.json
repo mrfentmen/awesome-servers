@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/morse-mcp",
   "description": "Encode text to Morse and decode Morse back, covering letters, digits and punctuation - fully local.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/morse-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

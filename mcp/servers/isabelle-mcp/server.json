@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/isabelle-mcp",
   "description": "Isabelle MCP: 20 real tools to read, check, lint, scaffold, build and run Isabelle code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/isabelle-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

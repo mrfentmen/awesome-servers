@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/nickel-mcp",
   "description": "Nickel MCP: 20 real tools to read, check, lint, scaffold, build and run Nickel code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/nickel-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

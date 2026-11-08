@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/deribit-mcp",
   "description": "Deribit: public market data for crypto futures and options - instruments and live tickers - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/deribit-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

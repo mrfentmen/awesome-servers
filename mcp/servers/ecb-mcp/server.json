@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ecb-mcp",
   "description": "European Central Bank reference rates, rate history and the ECB policy rate - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ecb-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

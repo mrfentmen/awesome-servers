@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/metmuseum-mcp",
-  "description": "Use this MCP server to the Metropolitan Museum of Art. Search 500k artworks, get details, artists, and images",
+  "description": "Use this MCP server to the Metropolitan Museu MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/metmuseum-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

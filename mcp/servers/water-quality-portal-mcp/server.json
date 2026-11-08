@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/water-quality-portal-mcp",
   "description": "US water monitoring stations and sample results from USGS and EPA.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/water-quality-portal-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

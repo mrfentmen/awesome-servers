@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/openfoodfacts-mcp",
   "description": "Open Food Facts: ingredients, nutrition and Nutri-Score for food barcodes - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/openfoodfacts-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

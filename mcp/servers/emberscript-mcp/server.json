@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/emberscript-mcp",
   "description": "EmberScript MCP: 20 real tools to read, check, lint, scaffold, build and run EmberScript code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/emberscript-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

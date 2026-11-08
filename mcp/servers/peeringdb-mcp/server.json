@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/peeringdb-mcp",
   "description": "Internet peering data: networks, exchange points and data-centre facilities.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/peeringdb-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

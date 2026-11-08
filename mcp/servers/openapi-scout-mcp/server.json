@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/openapi-scout-mcp",
   "description": "Local read-only OpenAPI and Swagger inspection with secret-safe summaries.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/openapi-scout-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

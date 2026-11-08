@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/astronomy-mcp",
   "description": "Solar and lunar almanac offline: sunrise, sunset, twilight, sun position and moon phase",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/astronomy-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/gopher-mcp",
   "description": "MCP server for the Gopher protocol, browse gopherspace, the pre HTTP internet.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/gopher-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

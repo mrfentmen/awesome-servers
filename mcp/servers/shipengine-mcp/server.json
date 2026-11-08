@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/shipengine-mcp",
-  "description": "MCP server for ShipEngine: carriers, rate quotes, labels, tracking, batches, manifests, warehouses and webhooks.",
+  "description": "MCP server for ShipEngine: carriers, rate quo MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/shipengine-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

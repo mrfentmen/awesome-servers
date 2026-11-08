@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/pypi-mcp",
   "description": "PyPI: Python package versions, summaries, authors and release files - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/pypi-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/snotel-mcp",
   "description": "USDA SNOTEL and SCAN stations: snow water equivalent, snow depth and temperature readings - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/snotel-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.3",

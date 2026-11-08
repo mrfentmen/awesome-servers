@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/dylan-mcp",
   "description": "Dylan MCP: 20 real tools to read, check, lint, scaffold, build and run Dylan code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/dylan-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/rcsb-pdb-mcp",
   "description": "RCSB PDB: 3D protein structures with method, resolution and release date - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/rcsb-pdb-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

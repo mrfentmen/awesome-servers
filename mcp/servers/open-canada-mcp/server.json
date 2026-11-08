@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/open-canada-mcp",
   "description": "Open Government Canada: search federal open datasets with publishers - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/open-canada-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

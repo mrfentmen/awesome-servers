@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/data-gov-au-mcp",
   "description": "data.gov.au: search Australian public sector datasets and their formats - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/data-gov-au-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

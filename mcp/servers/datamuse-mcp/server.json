@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/datamuse-mcp",
-  "description": "Use this MCP server to wordplay. Rhymes, related words, spell checks, and word suggestions for any phrase",
+  "description": "Use this MCP server to wordplay. Rhymes, rela MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/datamuse-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

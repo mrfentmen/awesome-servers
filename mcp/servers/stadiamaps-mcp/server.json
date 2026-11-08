@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/stadiamaps-mcp",
   "description": "Stadia Maps: geocoding, routing, isochrones, static maps and elevation lookups.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/stadiamaps-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

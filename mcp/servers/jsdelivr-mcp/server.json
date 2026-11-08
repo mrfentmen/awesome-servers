@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/jsdelivr-mcp",
   "description": "Package versions and CDN statistics from jsDelivr. No key required.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/jsdelivr-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.3",

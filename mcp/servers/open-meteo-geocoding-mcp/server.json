@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/open-meteo-geocoding-mcp",
   "description": "Open-Meteo Geocoding: place names to coordinates, country and timezone - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/open-meteo-geocoding-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

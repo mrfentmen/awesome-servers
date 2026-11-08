@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/pub-dev-mcp",
   "description": "pub.dev: Dart and Flutter package versions, descriptions and publishers - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/pub-dev-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

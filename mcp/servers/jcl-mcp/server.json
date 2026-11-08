@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/jcl-mcp",
   "description": "JCL MCP: 20 real tools to read, check, lint, scaffold, build and run JCL code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/jcl-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

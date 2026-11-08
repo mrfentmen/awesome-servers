@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/genero-4gl-mcp",
   "description": "Genero 4gl MCP: 20 real tools to read, check, lint, scaffold, build and run Genero 4gl code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/genero-4gl-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

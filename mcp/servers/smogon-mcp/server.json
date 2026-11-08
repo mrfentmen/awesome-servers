@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/smogon-mcp",
   "description": "MCP server for competitive Pokemon, full dex data plus monthly Smogon usage statistics.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/smogon-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

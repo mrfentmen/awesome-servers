@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/contract-diff-mcp",
   "description": "Aggregate local contract snapshot changes without exposing schema contents.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/contract-diff-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

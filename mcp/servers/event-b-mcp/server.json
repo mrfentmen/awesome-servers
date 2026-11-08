@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/event-b-mcp",
   "description": "Event-B MCP: 20 real tools to read, check, lint, scaffold, build and run Event-B code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/event-b-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

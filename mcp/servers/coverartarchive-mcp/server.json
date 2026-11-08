@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/coverartarchive-mcp",
   "description": "Cover Art Archive: album covers as images and thumbnails by release id - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/coverartarchive-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

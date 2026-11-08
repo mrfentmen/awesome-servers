@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/opensearch-mcp",
   "description": "Search OpenSearch indices, manage documents, check health and stats.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/opensearch-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.3",

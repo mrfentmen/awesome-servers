@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/propublica-nonprofits-mcp",
   "description": "US nonprofit data: search organisations and read their IRS filings.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/propublica-nonprofits-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

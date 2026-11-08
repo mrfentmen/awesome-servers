@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/redirection-mcp",
-  "description": "MCP server for redirection.io: projects, rules, rule changes, rule-set versions, crawls, imports and impact analysis.",
+  "description": "MCP server for redirection.io: projects, rule MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/redirection-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

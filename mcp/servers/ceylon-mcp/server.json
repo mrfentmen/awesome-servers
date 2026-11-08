@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/ceylon-mcp",
   "description": "Ceylon MCP: 20 real tools to read, check, lint, scaffold, build and run Ceylon code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/ceylon-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

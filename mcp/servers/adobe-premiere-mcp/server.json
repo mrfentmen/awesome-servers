@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/adobe-premiere-mcp",
   "description": "Control Adobe Premiere Pro video editing via ExtendScript.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/adobe-premiere-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.2",

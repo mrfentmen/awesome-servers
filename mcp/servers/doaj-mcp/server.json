@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/doaj-mcp",
   "description": "DOAJ: search open access journal articles with titles and years - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/doaj-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

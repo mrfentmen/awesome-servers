@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/postcodes-mcp",
-  "description": "postcodes.io: UK postcode lookup and reverse geocoding with region, district, constituency and coordinates - keyless.",
+  "description": "postcodes.io: UK postcode lookup and reverse MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/postcodes-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

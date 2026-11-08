@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/deepai-mcp",
-  "description": "MCP server for DeepAI: text-to-image, image-to-image, style transfer, super resolution, colorization, background removal, summarisation and sentiment.",
+  "description": "MCP server for DeepAI: text-to-image, image-t MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/deepai-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

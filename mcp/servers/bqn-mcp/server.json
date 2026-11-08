@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/bqn-mcp",
-  "description": "MCP server for BQN: the docs, all 71 primitives and concepts, keywords, and real programs from the BQN test suite.",
+  "description": "MCP server for BQN: the docs, all 71 primitiv MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/bqn-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

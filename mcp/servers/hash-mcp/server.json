@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/hash-mcp",
   "description": "Hash and HMAC text locally with MD5, SHA-1, SHA-256, SHA-384 and SHA-512, in hex and base64",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/hash-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.2",

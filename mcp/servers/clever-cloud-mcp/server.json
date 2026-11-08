@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/clever-cloud-mcp",
-  "description": "MCP server for Clever Cloud: applications, deployments, instances, add-ons, environment variables and logs.",
+  "description": "MCP server for Clever Cloud: applications, de MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/clever-cloud-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/radio-browser-mcp",
   "description": "MCP server for Radio Browser, 40,000+ internet radio stations by genre and country.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/radio-browser-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

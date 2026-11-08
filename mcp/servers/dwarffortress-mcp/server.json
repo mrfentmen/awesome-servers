@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/dwarffortress-mcp",
   "description": "MCP server for the Dwarf Fortress wiki. !!FUN!! knowledge about the most complex game ever made.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/dwarffortress-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

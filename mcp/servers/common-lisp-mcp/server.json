@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/common-lisp-mcp",
   "description": "Common Lisp MCP: 20 real tools to read, check, lint, scaffold, build and run Common Lisp code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/common-lisp-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

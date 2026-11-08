@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/graph-algorithms-mcp",
   "description": "Shortest paths, topological order and connected components for directed or undirected graphs",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/graph-algorithms-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

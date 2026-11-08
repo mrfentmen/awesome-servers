@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/dart-mcp",
   "description": "Dart MCP: 20 real tools to read, check, lint, scaffold, build and run Dart code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/dart-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/fiscaldata-mcp",
   "description": "US Treasury fiscal data: national debt, average interest rates and the Monthly Treasury Statement.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/fiscaldata-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

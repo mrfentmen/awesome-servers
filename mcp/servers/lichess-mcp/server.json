@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/lichess-mcp",
   "description": "MCP server for Lichess, chess puzzles by rating, player stats, top players.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/lichess-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

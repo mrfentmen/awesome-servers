@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/gdacs-mcp",
   "description": "GDACS: live earthquake, cyclone, flood, volcano, wildfire and drought alerts with severity.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/gdacs-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/pdb-mcp",
-  "description": "RCSB PDB: search 230k+ structures, read chains, ligands, formulas and citations — keyless.",
+  "description": "RCSB PDB: search 230k+ structures, read chains, ligands, formulas and citations \u2014 keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/pdb-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

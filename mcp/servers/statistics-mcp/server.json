@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/statistics-mcp",
   "description": "Descriptive statistics, correlation and linear regression for numeric samples - fully local.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/statistics-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

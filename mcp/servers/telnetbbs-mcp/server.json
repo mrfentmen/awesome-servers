@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/telnetbbs-mcp",
   "description": "MCP server for Telnet BBS Guide, the directory of live retro BBSes you can still dial into.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/telnetbbs-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

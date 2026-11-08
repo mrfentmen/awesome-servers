@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/exoplanet-archive-mcp",
   "description": "NASA Exoplanet Archive: confirmed exoplanets, host stars and discovery year - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/exoplanet-archive-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

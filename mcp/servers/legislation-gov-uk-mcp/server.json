@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/legislation-gov-uk-mcp",
   "description": "legislation.gov.uk: pull UK Acts of Parliament and read them as plain text - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/legislation-gov-uk-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

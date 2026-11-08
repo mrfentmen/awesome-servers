@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/anime-filler-mcp",
   "description": "Check if anime episodes are filler or canon. Is this episode skippable?",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/anime-filler-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

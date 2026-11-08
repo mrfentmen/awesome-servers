@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/demozoo-mcp",
   "description": "Demoscene database: search 390k+ demos, intros, graphics and music, with group and credit data.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/demozoo",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.5",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/colorblind-mcp",
   "description": "Simulate colour-vision deficiency on hex colours and palettes",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/colorblind-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

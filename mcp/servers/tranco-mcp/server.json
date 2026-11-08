@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/tranco-mcp",
   "description": "Tranco: daily popularity rank for any domain from the Tranco research list - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/tranco-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

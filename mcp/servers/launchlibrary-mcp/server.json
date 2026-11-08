@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/launchlibrary-mcp",
   "description": "Space launches, pads, agencies and events from the Launch Library 2 database.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/launchlibrary-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

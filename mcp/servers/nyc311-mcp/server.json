@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/nyc311-mcp",
   "description": "MCP server for NYC 311 public service request search and aggregate civic data.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/nyc311-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.6",

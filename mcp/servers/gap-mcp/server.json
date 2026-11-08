@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/gap-mcp",
   "description": "GAP MCP: 20 real tools to read, check, lint, scaffold, build and run GAP code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/gap-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

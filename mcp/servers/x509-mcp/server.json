@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/x509-mcp",
   "description": "Decode PEM certificates, check expiry and inspect a live TLS certificate, all offline",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/x509-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

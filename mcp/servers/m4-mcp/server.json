@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/m4-mcp",
   "description": "M4 MCP: expand macros, trace definitions, include files and preprocess with 20 real tools.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/m4-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

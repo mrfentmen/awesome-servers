@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/xkcd-mcp",
-  "description": "Use this MCP server to xkcd. The latest comic, any comic by number, alt text, and transcripts. Tools include latest comic, get comic",
+  "description": "Use this MCP server to xkcd. The latest comic MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/xkcd-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

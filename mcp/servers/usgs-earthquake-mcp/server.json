@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/usgs-earthquake-mcp",
   "description": "USGS Earthquakes: recent quakes with magnitude, place and time - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/usgs-earthquake-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

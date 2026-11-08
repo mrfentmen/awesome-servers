@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/nvd-mcp",
   "description": "NVD: search CVEs with severity and descriptions from the NIST database - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/nvd-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

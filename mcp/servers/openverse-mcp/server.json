@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/openverse-mcp",
   "description": "Openverse: search Creative Commons licensed images and their creators - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/openverse-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

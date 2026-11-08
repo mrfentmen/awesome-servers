@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/flaky-history-mcp",
   "description": "Local aggregate test-history stability analysis without test names or raw result contents.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/flaky-history-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

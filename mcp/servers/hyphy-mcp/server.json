@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/hyphy-mcp",
   "description": "HyPhy MCP: 20 real tools to read, check, lint, scaffold, build and run HyPhy code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/hyphy-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

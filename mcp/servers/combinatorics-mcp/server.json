@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/combinatorics-mcp",
   "description": "Exact combinatorics offline with BigInt: factorials, nCr, nPr, Fibonacci and permutations",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/combinatorics-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

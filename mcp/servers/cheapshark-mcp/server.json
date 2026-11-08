@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/cheapshark-mcp",
   "description": "Game price data: current deals, store list and price history by game.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/cheapshark-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

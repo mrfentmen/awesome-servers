@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/zippopotam-mcp",
   "description": "Postal code lookup for 60+ countries: place names, state and coordinates from a ZIP or postcode",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/zippopotam-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.2",

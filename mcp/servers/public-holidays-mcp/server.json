@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/public-holidays-mcp",
   "description": "Public holidays for 110 countries via Nager.Date, by year and country code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/public-holidays-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

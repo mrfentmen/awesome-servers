@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/open-library-mcp",
   "description": "MCP server for Open Library books, authors, works, editions, and subjects.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/open-library-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

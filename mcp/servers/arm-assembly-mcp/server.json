@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/arm-assembly-mcp",
   "description": "ARM Assembly MCP: 20 real tools to read, check, lint, scaffold, build and run ARM Assembly code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/arm-assembly-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

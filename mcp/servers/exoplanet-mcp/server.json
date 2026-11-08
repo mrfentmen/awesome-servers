@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/exoplanet-mcp",
   "description": "NASA Exoplanet Archive: planet search, system planets, habitable candidates, discovery stats.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/exoplanet-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

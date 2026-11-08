@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/hiddenpalace-mcp",
   "description": "MCP server for hiddenpalace.org, unreleased game prototypes and beta content.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/hiddenpalace-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

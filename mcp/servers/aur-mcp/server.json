@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/aur-mcp",
   "description": "Arch User Repository: AUR package search with versions and votes - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/aur-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

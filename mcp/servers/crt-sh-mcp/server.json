@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/crt-sh-mcp",
   "description": "crt.sh: certificate transparency search with issuer and expiry dates - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/crt-sh-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/nuget-mcp",
   "description": "NuGet: .NET package versions, authors and descriptions from nuget.org - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/nuget-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/amtrak-mcp",
   "description": "Amtrak realtime: every train on the map with delay, speed and next stop, plus route and station.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/amtrak-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

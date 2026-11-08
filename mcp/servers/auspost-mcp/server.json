@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/auspost-mcp",
   "description": "MCP server for Australia Post: shipments, labels, order tracking and delivery updates.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/auspost-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

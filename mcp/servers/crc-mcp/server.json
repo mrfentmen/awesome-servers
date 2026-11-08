@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/crc-mcp",
   "description": "CRC-32, CRC-32C, CRC-16 variants and Adler-32 offline, with checksum check values verified, keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/crc-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

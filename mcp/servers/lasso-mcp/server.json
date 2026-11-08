@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/lasso-mcp",
   "description": "Lasso MCP: 20 real tools to read, check, lint, scaffold, build and run Lasso code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/lasso-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

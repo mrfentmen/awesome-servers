@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/matrix-mcp",
   "description": "Multiply, invert and find the determinant of matrices with exact rational arithmetic - fully local.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/matrix-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

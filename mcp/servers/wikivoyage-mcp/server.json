@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/wikivoyage-mcp",
-  "description": "Wikivoyage travel guides: search destinations, overviews, section outlines, nearby places, outbound links, random picks.",
+  "description": "Wikivoyage travel guides: search destinations MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/wikivoyage-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.5",

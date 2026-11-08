@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/europe-data-mcp",
   "description": "EU Open Data: search 70,000+ European Union datasets by keyword - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/europe-data-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/applescript-mcp",
   "description": "AppleScript MCP: run, compile, inspect and control macOS apps with 20 real tools.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/applescript-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

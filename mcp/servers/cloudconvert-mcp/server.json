@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/cloudconvert-mcp",
-  "description": "MCP server for CloudConvert: convert, compress, merge and thumbnail files across 200+ formats via jobs and tasks. Sandbox supported.",
+  "description": "MCP server for CloudConvert: convert, compres MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/cloudconvert-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

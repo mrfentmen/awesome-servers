@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/pathway-commons-mcp",
   "description": "Pathway Commons graph search: find pathways, proteins and complexes by name",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/pathway-commons-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

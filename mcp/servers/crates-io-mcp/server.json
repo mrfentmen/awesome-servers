@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/crates-io-mcp",
   "description": "Rust crates from crates.io: search, download trends, version history, owners, dependency lists.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/crates-io-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.8",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/orcid-mcp",
   "description": "Search ORCID researcher profiles, read affiliations and list published works - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/orcid-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/audius-mcp",
   "description": "MCP server for Audius, underground and independent music discovery.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/audius-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

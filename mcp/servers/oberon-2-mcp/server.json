@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/oberon-2-mcp",
   "description": "Oberon-2 MCP: 20 real tools to read, check, lint, scaffold, build and run Oberon-2 code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/oberon-2-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

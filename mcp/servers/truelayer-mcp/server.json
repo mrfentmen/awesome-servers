@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/truelayer-mcp",
-  "description": "MCP server for TrueLayer open banking: accounts, balances, transactions, cards, payments and refunds. Sandbox supported.",
+  "description": "MCP server for TrueLayer open banking: accoun MCP: real tools for real work.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/truelayer-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

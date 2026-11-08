@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/sather-mcp",
   "description": "Sather MCP: 20 real tools to read, check, lint, scaffold, build and run Sather code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/sather-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

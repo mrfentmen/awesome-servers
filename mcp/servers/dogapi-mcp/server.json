@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/dogapi-mcp",
   "description": "Dog API: dog breeds with lifespan, size and temperament from dogapi.dog - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/dogapi-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

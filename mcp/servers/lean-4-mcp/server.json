@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/lean-4-mcp",
   "description": "Lean 4 MCP: 20 real tools to read, check, lint, scaffold, build and run Lean 4 code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/lean-4-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

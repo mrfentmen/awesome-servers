@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/osf-mcp",
   "description": "OSF: search Open Science Framework projects and their creation dates - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/osf-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

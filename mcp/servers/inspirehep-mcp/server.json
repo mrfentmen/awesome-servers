@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/inspirehep-mcp",
   "description": "INSPIRE-HEP: particle physics papers with authors, arXiv ids and citations - keyless.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/inspirehep-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

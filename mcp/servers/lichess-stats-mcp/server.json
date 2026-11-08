@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/lichess-stats-mcp",
   "description": "Lichess accounts and puzzles: player ratings, recent activity, online status and the puzzle of the",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/lichess-stats-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

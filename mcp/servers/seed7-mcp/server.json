@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/seed7-mcp",
   "description": "Seed7 MCP: 20 real tools to read, check, lint, scaffold, build and run Seed7 code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/seed7-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",

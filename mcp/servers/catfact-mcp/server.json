@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/catfact-mcp",
   "description": "Cat facts and breed data from catfact.ninja: a random fact, paging and every breed",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/catfact-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.1",

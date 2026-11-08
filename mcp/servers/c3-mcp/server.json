@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/c3-mcp",
   "description": "C3 MCP: 20 real tools to read, check, lint, scaffold, build and run C3 code.",
   "repository": {
-    "url": "https://github.com/mrfentmen/awesome-servers/tree/main/mcp/servers/c3-mcp",
+    "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
   },
   "version": "1.0.0",
