@@ -1,9 +1,9 @@
 {
   "name": "@mrfentmen/worldbank-mcp",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "World Bank Open Data: indicator catalogue search, country series, cross-country comparisons, latest values.",
   "type": "module",
-  "mcpName": "io.github.mrfentmen/@mrfentmen/worldbank-mcp",
+  "mcpName": "io.github.mrfentmen/worldbank-mcp",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mrfentmen/awesome-servers.git"

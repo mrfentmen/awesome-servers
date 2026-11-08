@@ -10,7 +10,7 @@
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "lockstep-mcp",
+      "identifier": "@mrfentmen/lockstep-mcp",
       "version": "1.0.1",
       "transport": {
         "type": "stdio"

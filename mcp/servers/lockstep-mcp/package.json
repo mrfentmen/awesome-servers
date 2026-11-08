@@ -1,5 +1,5 @@
 {
-  "name": "lockstep-mcp",
+  "name": "@mrfentmen/lockstep-mcp",
   "version": "1.0.1",
   "description": "Local lockfile and package-manager reproducibility analysis without dependency details.",
   "type": "module",
