@@ -1,97 +1,61 @@
-# ruby-mcp
+# Ruby MCP
 
-MCP server for Ruby. It answers questions about Ruby using **your own installed interpreter**: real classes, real ancestors, real method signatures — plus a bundled language reference (verified keywords, operator precedence, 14 runnable sample programs) and tools to run and syntax-check code.
+Ruby had no dedicated MCP in the checked catalogs. This server gives agents 20 real tools instead of a stub.
 
-Nothing about classes or methods is baked into a dataset, so the answers always match the Ruby you actually run (2.6, 3.3, or anything else with `Method#parameters`).
-
-## Tools (16)
-
-| Tool | What it gives you |
-|---|---|
-| `overview` | What is bundled vs. what is read live, plus the tool list |
-| `ruby_version` | Version, engine, platform, encodings, gem dir, how many stdlib modules exist |
-| `toolchain_status` | Is Ruby reachable, which binary (`RUBY_BIN` or `ruby`), which version |
-| `search_classes` | Find core/stdlib classes and modules by partial name, with superclass and method counts |
-| `get_class_info` | Superclass chain, ancestors, included modules, method counts, constants |
-| `list_methods` | Methods of a class, grouped by visibility, with real parameter signatures |
-| `get_method_info` | One method: signature, parameter kinds, arity, defining class, docs URL |
-| `search_methods` | Search method names across every core/stdlib class (or one class) |
-| `get_constant` | Resolve a constant and show its value, type and where it is defined |
-| `list_keywords` | Ruby keywords, each one verified by the Ripper lexer |
-| `get_operator_precedence` | The precedence table, tightest first, with associativity notes |
-| `list_samples` | The 14 bundled sample programs |
-| `get_sample` | One sample's source plus the output it really produced at build time |
-| `compare_versions` | Compare version strings with `Gem::Version` semantics (prereleases included) |
-| `check_syntax` | Parse without running: valid, or the exact error with line and column |
-| `run_code` | Run a Ruby program in a temp dir: exit status, stdout, stderr, timeout |
-
-## Requirements
-
-- Node 18+
-- A Ruby interpreter on `PATH` for the introspection, execution and syntax tools (`RUBY_BIN=/path/to/ruby` to override). The offline tools (`overview`, `list_keywords`, `get_operator_precedence`, `list_samples`, `get_sample`) work without Ruby.
+Requires `the language toolchain` for execution. The source, lint, symbol and scaffold tools work without it.
 
 ## Install
 
 ```bash
-npm install -g ruby-mcp        # or: npx -y ruby-mcp
+npx -y @mrfentmen/ruby-mcp
 ```
 
-Configure a stdio MCP client (Claude Desktop, Claude Code, Cursor, …):
+Or in an MCP client:
 
 ```json
 {
   "mcpServers": {
-    "ruby": {
+    "ruby-mcp": {
       "command": "npx",
-      "args": ["-y", "ruby-mcp"],
-      "env": { "RUBY_BIN": "/usr/bin/ruby" }
+      "args": ["-y", "@mrfentmen/ruby-mcp"]
     }
   }
 }
 ```
 
-`env` is optional — drop it to use whatever `ruby` is on `PATH`.
+## Tools
 
-## Example prompts
+| Tool | What it does |
+|---|---|
+| `detect_project` | Find language files, project markers and layout in a directory. |
+| `read_source` | Read a source file or a line range. |
+| `write_source` | Write a source file, with overwrite protection. |
+| `syntax_check` | Check brackets, strings and comments; run the parser when configured. |
+| `format_source` | Trim whitespace, normalize line endings and add a final newline. |
+| `lint_source` | Find trailing whitespace, tabs, long lines and unbalanced structure. |
+| `extract_symbols` | List functions, classes, types and other definitions. |
+| `list_imports` | List imports, includes and dependencies. |
+| `list_todos` | Find TODO, FIXME, HACK and XXX comments. |
+| `find_references` | Find every mention of a symbol in one file. |
+| `rename_symbol` | Rename a symbol in one file, with a dry-run default. |
+| `insert_snippet` | Insert a language-specific starter snippet. |
+| `comment_lines` | Comment a line range using the language marker. |
+| `uncomment_lines` | Remove the comment marker from a line range. |
+| `scaffold_project` | Create a small runnable starter project. |
+| `run_source` | Run a file with the installed interpreter or compiler. |
+| `run_tests` | Run the configured test command. |
+| `build_project` | Build a project with the configured compiler command. |
+| `toolchain_status` | Show which local compilers and tools are installed. |
+| `language_reference` | Return a compact syntax and toolchain reference. |
 
-- "What arguments does `String#split` take in my Ruby?"
-- "Show me every method on `Enumerable` that mentions slice."
-- "Which module defines `each_with_object`, and what is its docs URL?"
-- "Compare versions 1.2.0 and 1.10.0 the way Bundler would."
-- "Run this snippet and tell me why it raises."
-- "Why is `-2 ** 2` negative?"
+## Safety
 
-## Where each answer comes from
+This server reads and writes local source files and runs local compiler commands. Treat project files and commands as trusted input.
 
-- **Live** (`search_classes`, `get_class_info`, `list_methods`, `get_method_info`, `search_methods`, `get_constant`, `ruby_version`, `compare_versions`): `scripts/introspect.rb` is executed by your interpreter and reads `Module#ancestors`, `Method#parameters`, `const_source_location`, `Gem::Version`, and so on. Core and stdlib are filtered by where the constant was defined, so gem classes only appear if `include_gems` is set.
-- **On demand**: asking for a namespaced stdlib class (`Net::HTTP`, `JSON::Ext`) makes the introspection process `require` the conventional feature first (`net/http`), so the class is real rather than missing. Partial namespaced searches can't do this — ask for the exact name.
-- **Bundled** (`list_keywords`, `get_operator_precedence`, `list_samples`, `get_sample`): generated by `scripts/build-data.rb` at build time. Keywords are kept only if Ripper emits an `:on_kw` token for them; the precedence table is checked against the interpreter by 14 real expressions (the build aborts if one disagrees); every sample program is executed and its real output stored.
-
-## Development
+## Run locally
 
 ```bash
 npm install
-npm run build          # tsc -> dist/
-npm run build:data     # regenerate data/ with the local ruby
-npm test               # build + node:test (data checks, live tool calls over stdio)
-npm run inspect        # MCP inspector against dist/index.js
+npm run build
+node dist/index.js
 ```
-
-The test suite spawns the compiled server through the MCP SDK client, so it exercises the same stdio path a real client uses. Suites that need Ruby skip themselves when no interpreter is found.
-
-## Notes & limitations
-
-- Introspection reflects the interpreter that runs the server, not a fixed version. Run the server with the Ruby you care about.
-- C implementation: methods implemented in C expose no parameter names. The server shows `(...)` and the real `arity` instead of inventing names.
-- `run_code` executes real code with your user's permissions in a temporary directory; it is not a sandbox. It kills the process after 10 s by default (max 60 s).
-- Docs links point at `docs.ruby-lang.org` for the local version's minor release; they are not fetched at runtime.
-
-## License
-
-Use-only. Use it as a tool, freely — including in commercial and closed-source work.
-Do not copy the source code into another project, modify it, or redistribute it.
-Full terms in [LICENSE](LICENSE).
-
-Be aware of what a license can and cannot do: the JavaScript in `dist/` is readable
-by anyone who installs the package, and no license stops that. This one is the
-legal rule that you may not reuse the code, not a technical lock.
