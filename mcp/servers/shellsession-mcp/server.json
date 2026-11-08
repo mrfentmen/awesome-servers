@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/shellsession-mcp",
-  "description": "ShellSession MCP: 20 real tools to read, check, lint, scaffold, build and run ShellSession code.",
+  "description": "ShellSession MCP: read, check, lint, scaffold and run code.",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"

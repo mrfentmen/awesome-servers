@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/praat-mcp",
-  "description": "Praat MCP: 20 real tools to read, check, lint, scaffold, build and run Praat code.",
+  "description": "Praat MCP: read, check, lint, scaffold and run code.",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
