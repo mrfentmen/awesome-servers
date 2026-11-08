@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/parrot-pir-mcp",
+  "version": "1.0.0",
+  "description": "Parrot Internal Representation MCP: 20 real tools to read, check, lint, scaffold, build and run Parrot Internal Representation code.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/parrot-pir-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "parrot-pir-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "npm run build && node --test tests/tools.test.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "parrot-pir",
+    "language",
+    "toolchain"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
