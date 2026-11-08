@@ -1,7 +1,7 @@
 {
-  "name": "motoko-mcp",
+  "name": "@mrfentmen/motoko-mcp",
   "version": "1.0.0",
-  "description": "MCP server for Motoko: the language docs, 339 public Motoko Base symbols and real canister samples.",
+  "description": "Motoko MCP: 20 real tools to read, check, lint, scaffold, build and run Motoko code.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/motoko-mcp",
   "repository": {
@@ -14,21 +14,20 @@
   "main": "./dist/index.js",
   "files": [
     "dist",
-    "data"
+    "server.json",
+    "README.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "dev": "rm -rf dist && tsc -p tsconfig.json && node dist/index.js",
-    "test": "npm run build && node --test tests/*.test.mjs",
-    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js"
+    "test": "npm run build && node --test tests/tools.test.mjs"
   },
   "keywords": [
     "mcp",
     "model-context-protocol",
     "motoko",
     "language",
-    "reference"
+    "toolchain"
   ],
   "license": "MIT",
   "dependencies": {
@@ -38,5 +37,8 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

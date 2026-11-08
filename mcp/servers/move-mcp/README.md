@@ -1,82 +1,61 @@
-# move-mcp
+# Move MCP
 
-MCP server for the [Move](https://github.com/move-language/move) language. Move is a resource-oriented smart-contract language where values are linear by default, and a bytecode verifier enforces safety before anything runs on chain. Its type system is built around four abilities — `copy`, `drop`, `store` and `key` — that decide what a value may do.
+Move had no dedicated MCP in the checked catalogs. This server gives agents 20 real tools instead of a stub.
 
-This server answers language questions offline: the whole Move book, every declaration that appears in it, and real standard-library sources.
-
-## What's inside
-
-| Dataset | Count |
-|---|---|
-| Documentation sections (the Move book) | **222** |
-| Declarations (struct, fun, enum, module, const, use, script) | **289** |
-| Real `.move` source files from `move-stdlib` | **10** |
-
-Generated from the upstream repository at commit `c453c90994cba0af30314fe4134acee57fb20d0c`.
+Requires `the language toolchain` for execution. The source, lint, symbol and scaffold tools work without it.
 
 ## Install
 
 ```bash
-npx -y move-mcp
-# or
-npm i -g move-mcp
+npx -y @mrfentmen/move-mcp
 ```
 
-Claude Desktop or any MCP client:
+Or in an MCP client:
 
 ```json
 {
   "mcpServers": {
-    "move": {
+    "move-mcp": {
       "command": "npx",
-      "args": ["-y", "move-mcp"]
+      "args": ["-y", "@mrfentmen/move-mcp"]
     }
   }
 }
 ```
 
-No API key, no network access at runtime.
-
 ## Tools
 
-| Tool | Arguments | Returns |
-|---|---|---|
-| `overview` | none | Upstream repo, commit, dataset counts, book page list |
-| `list_docs` | none | Every book page with its section count and doc id |
-| `list_sections` | `doc` (optional) | `id — title` for one page or all of them |
-| `get_section` | `id` (required) | Full section text, truncated at 60,000 chars with a marker |
-| `search_docs` | `query` (required), `limit` (optional, default 5, max 20) | Title-first ranked hits with a snippet |
-| `quickstart` | none | The book introduction and first examples |
-| `lookup_symbol` | `name` (required) | Exact matches, then prefix matches, with signatures |
-| `search_symbols` | `query` (required), `module` (optional), `limit` (optional, default 10, max 50) | Declarations matching the query |
-| `list_modules` | none | Every book page by declaration count |
-| `list_symbols_in_module` | `module` (required) | One page's declarations |
-| `list_symbol_kinds` | none | Kinds with counts |
-| `list_symbols_by_kind` | `kind` (required) | All declarations of one kind |
-| `list_samples` | none | Bundled `.move` files with path and size |
-| `get_sample` | `name` (required) | Full source of one file |
-| `search_samples` | `query` (required), `limit` (optional, default 5) | Matching files with a code window |
-| `search_all` | `query` (required), `limit` (optional, default 5) | Docs, declarations and samples in one answer |
-| `list_abilities` | none | `copy`, `drop`, `store`, `key` with the sections that define them |
+| Tool | What it does |
+|---|---|
+| `detect_project` | Find language files, project markers and layout in a directory. |
+| `read_source` | Read a source file or a line range. |
+| `write_source` | Write a source file, with overwrite protection. |
+| `syntax_check` | Check brackets, strings and comments; run the parser when configured. |
+| `format_source` | Trim whitespace, normalize line endings and add a final newline. |
+| `lint_source` | Find trailing whitespace, tabs, long lines and unbalanced structure. |
+| `extract_symbols` | List functions, classes, types and other definitions. |
+| `list_imports` | List imports, includes and dependencies. |
+| `list_todos` | Find TODO, FIXME, HACK and XXX comments. |
+| `find_references` | Find every mention of a symbol in one file. |
+| `rename_symbol` | Rename a symbol in one file, with a dry-run default. |
+| `insert_snippet` | Insert a language-specific starter snippet. |
+| `comment_lines` | Comment a line range using the language marker. |
+| `uncomment_lines` | Remove the comment marker from a line range. |
+| `scaffold_project` | Create a small runnable starter project. |
+| `run_source` | Run a file with the installed interpreter or compiler. |
+| `run_tests` | Run the configured test command. |
+| `build_project` | Build a project with the configured compiler command. |
+| `toolchain_status` | Show which local compilers and tools are installed. |
+| `language_reference` | Return a compact syntax and toolchain reference. |
 
-## Example prompts
+## Safety
 
-- "What is the difference between `copy` and `store` in Move?"
-- "Show me how `Option` is implemented in the Move standard library."
-- "What does a `script` look like, and how is it different from a module?"
-- "Find every function in the book that mentions `acquires`."
-- "How do I write a unit test in Move?"
+This server reads and writes local source files and runs local compiler commands. Treat project files and commands as trusted input.
 
-## Data provenance
+## Run locally
 
-Everything is extracted from the upstream repository at build time:
-
-- `language/documentation/book/src/*.md` is split into 222 sections by heading;
-- declarations are parsed from fenced Move code across the book — 289 of them, each keeping its kind and the page it appeared on;
-- samples are the real `language/move-stdlib/sources/*.move` files, unmodified.
-
-The result ships as JSON in `data/` and is read from disk at startup. The server makes no network requests and needs no credentials.
-
-## License
-
-MIT for this package. Move itself is licensed upstream — see the [repository](https://github.com/move-language/move).
+```bash
+npm install
+npm run build
+node dist/index.js
+```

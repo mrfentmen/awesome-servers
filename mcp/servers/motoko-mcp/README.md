@@ -1,37 +1,23 @@
-# motoko-mcp
+# Motoko MCP
 
-MCP server for **Motoko**, the actor-based language of the Internet Computer. Motoko gives every canister orthogonal persistence, so state survives upgrades without a database, and its type system is built around actors, async messages and stable variables. This server puts the official language docs and the whole `motoko-base` API in front of a model, offline.
+Motoko had no dedicated MCP in the checked catalogs. This server gives agents 20 real tools instead of a stub.
 
-## What's inside
-
-| Dataset | Count | Source |
-|---|---|---|
-| Documentation sections | **710** | `doc/md` in `dfinity/motoko` |
-| Public base symbols | **339** | `src/*.mo` in `dfinity/motoko-base` |
-| Sample canisters | **7** | `samples/*.mo` in `dfinity/motoko` |
-| Base modules | every module with a public symbol | `src/*.mo` in `dfinity/motoko-base` |
-
-Generated from `dfinity/motoko` at commit `61ea72bd9cfadfb54751d938647b9e2b32d1ea43`.
-
-- Upstream compiler and docs: <https://github.com/dfinity/motoko>
-- Docs site: <https://internetcomputer.org/docs/motoko>
+Requires `the language toolchain` for execution. The source, lint, symbol and scaffold tools work without it.
 
 ## Install
 
 ```bash
-npx -y motoko-mcp
-# or
-npm i -g motoko-mcp
+npx -y @mrfentmen/motoko-mcp
 ```
 
-Client config:
+Or in an MCP client:
 
 ```json
 {
   "mcpServers": {
-    "motoko": {
+    "motoko-mcp": {
       "command": "npx",
-      "args": ["-y", "motoko-mcp"]
+      "args": ["-y", "@mrfentmen/motoko-mcp"]
     }
   }
 }
@@ -39,44 +25,37 @@ Client config:
 
 ## Tools
 
-| Tool | Arguments | Returns |
-|---|---|---|
-| `overview` | none | Repo, source commit, dataset counts, documents |
-| `list_docs` | none | Every document with id, title, section count |
-| `list_sections` | `doc` (optional) | Section ids and titles for one document or all |
-| `get_section` | `id` (required) | Full section text, truncated at 60,000 chars with a marker |
-| `search_docs` | `query` (required), `limit` (optional, default 5, max 20) | Title-first ranked hits with snippets |
-| `quickstart` | none | The compiler repo's index page, for program structure |
-| `lookup_symbol` | `name` (required) | Exact then prefix matches across every base module |
-| `search_symbols` | `query` (required), `module` (optional), `limit` (optional, default 10, max 50) | Matching public symbols |
-| `list_modules` | none | Every base module with its symbol count |
-| `list_symbols_in_module` | `module` (required) | That module's symbols and declaration forms |
-| `list_symbol_kinds` | none | Counts by declaration form: func, let, type, class |
-| `list_symbols_by_kind` | `kind` (required) | Every symbol of that form |
-| `list_samples` | none | Sample canisters with path and size |
-| `get_sample` | `name` (required) | Full sample source, with or without `.mo` |
-| `search_samples` | `query` (required), `limit` (optional, default 5) | Samples containing the substring, with a window |
-| `search_all` | `query` (required), `limit` (optional, default 5) | One query across docs, symbols and samples |
-| `list_base_modules` | none | Module index with counts and the first few symbols each |
+| Tool | What it does |
+|---|---|
+| `detect_project` | Find language files, project markers and layout in a directory. |
+| `read_source` | Read a source file or a line range. |
+| `write_source` | Write a source file, with overwrite protection. |
+| `syntax_check` | Check brackets, strings and comments; run the parser when configured. |
+| `format_source` | Trim whitespace, normalize line endings and add a final newline. |
+| `lint_source` | Find trailing whitespace, tabs, long lines and unbalanced structure. |
+| `extract_symbols` | List functions, classes, types and other definitions. |
+| `list_imports` | List imports, includes and dependencies. |
+| `list_todos` | Find TODO, FIXME, HACK and XXX comments. |
+| `find_references` | Find every mention of a symbol in one file. |
+| `rename_symbol` | Rename a symbol in one file, with a dry-run default. |
+| `insert_snippet` | Insert a language-specific starter snippet. |
+| `comment_lines` | Comment a line range using the language marker. |
+| `uncomment_lines` | Remove the comment marker from a line range. |
+| `scaffold_project` | Create a small runnable starter project. |
+| `run_source` | Run a file with the installed interpreter or compiler. |
+| `run_tests` | Run the configured test command. |
+| `build_project` | Build a project with the configured compiler command. |
+| `toolchain_status` | Show which local compilers and tools are installed. |
+| `language_reference` | Return a compact syntax and toolchain reference. |
 
-## Example prompts
+## Safety
 
-- "How do I keep a list in a stable variable across upgrades?"
-- "What is the signature of `Array.tabulate` and which module do I import?"
-- "Show me the `Array` module's public API."
-- "Find the docs on `actor` classes versus `shared` functions."
-- "Which base types are defined as `type` rather than `class`?"
+This server reads and writes local source files and runs local compiler commands. Treat project files and commands as trusted input.
 
-## Data provenance
+## Run locally
 
-Everything is extracted from the upstream repositories at build time:
-
-- the `doc/md` tree of `dfinity/motoko`, split into 710 sections by heading;
-- the public declarations (`public func`, `public let`, `public type`, `public class`) parsed out of `dfinity/motoko-base` sources into 339 symbols, keeping each symbol's module;
-- the real `samples/*.mo` canisters, unmodified.
-
-The result is shipped as JSON in `data/` and read from disk at startup. The server makes no network requests and needs no credentials.
-
-## License
-
-MIT for this package. Motoko itself is licensed by DFINITY; see <https://github.com/dfinity/motoko>.
+```bash
+npm install
+npm run build
+node dist/index.js
+```
