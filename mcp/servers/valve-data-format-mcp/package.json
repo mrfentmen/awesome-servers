@@ -1,0 +1,44 @@
+{
+  "name": "@mrfentmen/valve-data-format-mcp",
+  "version": "1.0.0",
+  "description": "Valve Data Format MCP: 20 real tools to read, check, lint, scaffold, build and run Valve Data Format code.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/valve-data-format-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "valve-data-format-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "npm run build && node --test tests/tools.test.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "valve-data-format",
+    "language",
+    "toolchain"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
