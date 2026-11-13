@@ -1,0 +1,46 @@
+{
+  "name": "@mrfentmen/hl7-cda-mcp",
+  "version": "1.0.0",
+  "description": "CDA MCP: parse HL7 clinical documents, validate templates, patient and sections.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/hl7-cda-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "hl7-cda-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "npm run build && node --test tests/tools.test.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "hl7",
+    "cda",
+    "clinical",
+    "document",
+    "healthcare"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

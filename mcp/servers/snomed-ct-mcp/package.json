@@ -1,0 +1,46 @@
+{
+  "name": "@mrfentmen/snomed-ct-mcp",
+  "version": "1.0.0",
+  "description": "SNOMED CT MCP: parse RF2 files, validate SCTIDs, columns and active flags.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/snomed-ct-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "snomed-ct-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "npm run build && node --test tests/tools.test.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "snomed",
+    "terminology",
+    "healthcare",
+    "rf2",
+    "clinical"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
