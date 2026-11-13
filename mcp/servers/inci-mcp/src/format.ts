@@ -5,7 +5,7 @@ const INGREDIENT = /^[A-Za-z0-9][A-Za-z0-9 .,'()/+-]*$/
 function parse(text: string): Parsed {
   const issues: Parsed["issues"] = []
   const records: ParsedRecord[] = []
-  const lines = text.split(/\r?\n/).map((line) => line.replace(/#.*$/, "").trim()).filter((line) => line.length > 0)
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter((line) => line.length > 0 && !line.startsWith("#"))
   const seen = new Set<string>()
   let lists = 0
 
