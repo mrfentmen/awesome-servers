@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/ls-dyna-mcp",
+  "description": "LS-DYNA MCP: parse keyword files, validate nodes, elements and connectivity.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-servers",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@mrfentmen/ls-dyna-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

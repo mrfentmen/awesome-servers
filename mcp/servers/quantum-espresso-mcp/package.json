@@ -1,0 +1,46 @@
+{
+  "name": "@mrfentmen/quantum-espresso-mcp",
+  "version": "1.0.0",
+  "description": "Quantum ESPRESSO MCP: parse pw.x inputs, validate namelists and cards.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/quantum-espresso-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "quantum-espresso-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "npm run build && node --test tests/tools.test.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "quantum-espresso",
+    "dft",
+    "materials",
+    "physics",
+    "simulation"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

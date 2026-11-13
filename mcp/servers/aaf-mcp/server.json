@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/aaf-mcp",
+  "description": "AAF MCP: parse AAF-XML content storage, mobs and tagged values.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-servers",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@mrfentmen/aaf-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

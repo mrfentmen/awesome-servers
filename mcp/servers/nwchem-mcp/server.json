@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/nwchem-mcp",
+  "description": "NWChem MCP: parse inputs, validate blocks, geometry and task lines.",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-servers",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@mrfentmen/nwchem-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
