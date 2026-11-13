@@ -23,7 +23,7 @@ function parse(text: string): Parsed {
       return
     }
 
-    const edge = /^([\w.]+)\s*->\s*([\w.]+)$/.exec(line)
+    const edge = /^edge\s+([\w.]+)\s+([\w.]+)$/i.exec(line) ?? /^([\w.]+)\s*->\s*([\w.]+)$/.exec(line)
     if (edge) {
       edges.push({ from: edge[1], to: edge[2], line: number })
       return
@@ -111,6 +111,7 @@ export const format: FormatModule = {
   description: "Parse Ab Initio graphs, validate components, ports and edges.",
   reference,
   parse,
+  regressions: [{ doc: "graph\n  component Reformat r1\n  edge r1 nope\nend\n", expectError: "not defined" }],
   sample: () =>
     [
       "graph",

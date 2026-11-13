@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ab-initio-mcp",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Ab Initio MCP: parse graphs, validate components, ports and edges.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ab-initio-mcp",
