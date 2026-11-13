@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/openedge-abl-mcp",
   "version": "1.0.0",
-  "description": "OpenEdge ABL MCP: 20 real tools to read, check, lint, scaffold, build and run OpenEdge ABL code.",
+  "description": "OpenEdge MCP: parse ABL source, validate variables, blocks and statements.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/openedge-abl-mcp",
   "repository": {
@@ -25,9 +25,11 @@
   "keywords": [
     "mcp",
     "model-context-protocol",
-    "openedge-abl",
-    "language",
-    "toolchain"
+    "openedge",
+    "progress",
+    "abl",
+    "erp",
+    "4gl"
   ],
   "license": "MIT",
   "dependencies": {
