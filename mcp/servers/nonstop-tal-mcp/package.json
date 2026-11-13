@@ -1,0 +1,46 @@
+{
+  "name": "@mrfentmen/nonstop-tal-mcp",
+  "version": "1.0.0",
+  "description": "NonStop TAL MCP: parse source, validate procedures, declarations and semicolons.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/nonstop-tal-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "nonstop-tal-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "npm run build && node --test tests/tools.test.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "nonstop",
+    "tal",
+    "hp",
+    "mainframe",
+    "transaction"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
