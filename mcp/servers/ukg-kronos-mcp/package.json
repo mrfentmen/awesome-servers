@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ukg-kronos-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "UKG MCP: parse timecard CSVs, validate employees, times and hours.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ukg-kronos-mcp",

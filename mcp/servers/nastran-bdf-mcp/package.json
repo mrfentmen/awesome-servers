@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/nastran-bdf-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Nastran MCP: parse BDF cards, validate grids, elements and ENDDATA.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nastran-bdf-mcp",

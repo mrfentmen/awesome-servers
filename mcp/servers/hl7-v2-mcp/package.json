@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/hl7-v2-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "HL7 v2 message MCP: parse segments, validate MSH headers, summarize message types and extract fields.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/hl7-v2-mcp",

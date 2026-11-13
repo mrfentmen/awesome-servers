@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/sage-accounting-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Sage MCP: parse ledger exports, validate dates, debits, credits and totals.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/sage-accounting-mcp",

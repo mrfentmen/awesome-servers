@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/gbxml-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "gbXML MCP: parse buildings, spaces and surfaces, validate structure and areas.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/gbxml-mcp",

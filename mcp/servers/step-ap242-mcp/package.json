@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/step-ap242-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "STEP AP242 MCP: parse ISO 10303-21 entities, index references and catch dangling ids.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/step-ap242-mcp",

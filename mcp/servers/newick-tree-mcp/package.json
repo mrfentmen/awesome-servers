@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/newick-tree-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Newick MCP: parse phylogenetic trees, list taxa and clades, validate branch lengths and compute tree stats.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/newick-tree-mcp",

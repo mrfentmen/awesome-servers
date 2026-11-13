@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/aaf-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AAF MCP: parse AAF-XML content storage, mobs and tagged values.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/aaf-mcp",

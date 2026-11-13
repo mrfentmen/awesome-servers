@@ -4,12 +4,9 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import type { FormatModule, Parsed, ParsedRecord } from "./types.js"
 import { errorMessage, fail, text, ToolError } from "./run.js"
-import { GatewayError, premiumTool } from "./gateway.js"
 
 const MAX_INPUT = 4_000_000
 const SKIP_DIRS = new Set([".git", "node_modules", "dist", "build", ".mcp-build"])
-
-const PREMIUM = new Set(["to_json", "diff"])
 
 async function readInput(input: { path?: string; content?: string; cwd?: string }): Promise<{ body: string; file?: string }> {
   if (input.path && input.content !== undefined) throw new ToolError("Use path or content, not both")
@@ -352,17 +349,26 @@ export function registerFormatTools(server: McpServer, format: FormatModule): vo
 
   server.tool(
     "to_json",
-    `Export every parsed ${format.displayName} record as JSON. Premium: needs MCP_LICENSE_KEY.`,
+    `Export every parsed ${format.displayName} record as JSON.`,
     { ...sourceArgs },
     async (a) => {
       try {
-        if (PREMIUM.has("to_json")) {
-          const { body, file } = await readInput(a)
-          return text(await premiumTool("to_json", { format: format.slug, file: file ?? null, content: body }))
-        }
-        return fail("to_json is not configured")
+        const { body, file } = await readInput(a)
+        const parsed = parseOrThrow(format, body)
+        return text(
+          JSON.stringify(
+            {
+              file: file ?? null,
+              format: parsed.format,
+              meta: parsed.meta,
+              issues: parsed.issues,
+              records: parsed.records,
+            },
+            null,
+            2,
+          ),
+        )
       } catch (error) {
-        if (error instanceof GatewayError) return fail(error.message)
         return fail(errorMessage(error))
       }
     },
@@ -370,7 +376,7 @@ export function registerFormatTools(server: McpServer, format: FormatModule): vo
 
   server.tool(
     "diff",
-    `Compare two ${format.displayName} documents: added, removed and changed records. Premium: needs MCP_LICENSE_KEY.`,
+    `Compare two ${format.displayName} documents: added, removed and changed records.`,
     {
       leftPath: z.string().min(1).max(2_000).optional(),
       leftContent: z.string().max(MAX_INPUT).optional(),
@@ -382,15 +388,31 @@ export function registerFormatTools(server: McpServer, format: FormatModule): vo
       try {
         const left = await readInput({ path: a.leftPath, content: a.leftContent, cwd: a.cwd })
         const right = await readInput({ path: a.rightPath, content: a.rightContent, cwd: a.cwd })
+        const before = parseOrThrow(format, left.body)
+        const after = parseOrThrow(format, right.body)
+        const beforeFields = new Map(before.records.map((record) => [record.id, JSON.stringify(record.fields)]))
+        const afterFields = new Map(after.records.map((record) => [record.id, JSON.stringify(record.fields)]))
+        const added = [...afterFields.keys()].filter((id) => !beforeFields.has(id))
+        const removed = [...beforeFields.keys()].filter((id) => !afterFields.has(id))
+        const changed = [...afterFields.keys()].filter(
+          (id) => beforeFields.has(id) && beforeFields.get(id) !== afterFields.get(id),
+        )
         return text(
-          await premiumTool("diff", {
-            format: format.slug,
-            left: left.body,
-            right: right.body,
-          }),
+          JSON.stringify(
+            {
+              format: before.format,
+              added: added.length,
+              removed: removed.length,
+              changed: changed.length,
+              unchanged: afterFields.size - added.length - changed.length,
+              records: { added, removed, changed },
+              issues: { left: before.issues.length, right: after.issues.length },
+            },
+            null,
+            2,
+          ),
         )
       } catch (error) {
-        if (error instanceof GatewayError) return fail(error.message)
         return fail(errorMessage(error))
       }
     },

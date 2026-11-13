@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/calypso-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Calypso MCP: parse trade export CSV, validate columns, amounts and dates.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/calypso-mcp",

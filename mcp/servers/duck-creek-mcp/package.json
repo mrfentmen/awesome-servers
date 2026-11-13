@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/duck-creek-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Duck Creek MCP: parse XML manifests, validate structure and duplicate names.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/duck-creek-mcp",

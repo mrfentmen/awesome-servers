@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/buck2-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Buck2 MCP: parse BUCK files, validate targets, loads and names.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/buck2-mcp",

@@ -39,23 +39,8 @@ Or in an MCP client:
 | `stats` | Numeric min/max/mean per field. |
 | `format_reference` | Compact spec reference. |
 | `sample` | A small valid example document. |
-| `diff` | *(premium)* Compare two documents. |
-| `to_json` | *(premium)* Export every record as JSON. |
-
-<!-- paywall -->
-## Premium tools
-
-`diff` and `to_json` need a licence key. Their bodies run on our gateway, not
-inside this package, so the key is what buys access. Buy one at
-https://buy.polar.sh/polar_cl_mrO7rS5LZxpqM7oAFFEA10i9121J240U40IIj4JRZO4
-and set it in your MCP client config:
-
-```json
-"env": { "MCP_LICENSE_KEY": "polar_..." }
-```
-
-Every other tool on this server stays free.
-<!-- /paywall -->
+| `diff` | Compare two documents. |
+| `to_json` | Export every record as JSON. |
 
 ## Safety
 

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/nftables-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "nftables MCP: parse rulesets, validate tables, chains, hooks and policies.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nftables-mcp",

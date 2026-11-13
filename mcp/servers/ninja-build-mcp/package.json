@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ninja-build-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Ninja MCP: parse build.ninja files, validate rules, builds and bindings.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ninja-build-mcp",

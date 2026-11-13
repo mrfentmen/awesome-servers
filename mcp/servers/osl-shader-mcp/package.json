@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/osl-shader-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "OSL MCP: parse shader declarations, parameters, includes and closures.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/osl-shader-mcp",

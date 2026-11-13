@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/dts-device-tree-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Device Tree MCP: parse nodes, properties and phandles, validate braces and summarize compatible strings.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/dts-device-tree-mcp",

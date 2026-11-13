@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ufo-font-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "UFO MCP: parse .glif glyph files, contours, points and components.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ufo-font-mcp",

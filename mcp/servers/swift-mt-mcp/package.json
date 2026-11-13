@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/swift-mt-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SWIFT MT MCP: parse block structure and fields, validate mandatory sequences and summarize message types.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/swift-mt-mcp",

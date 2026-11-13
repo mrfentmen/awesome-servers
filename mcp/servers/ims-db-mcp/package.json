@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ims-db-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "IMS MCP: parse DBD and PSB source, validate segments, fields and parents.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ims-db-mcp",

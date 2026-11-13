@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/temenos-t24-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Temenos MCP: parse jBC source, validate program headers, inserts and END.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/temenos-t24-mcp",

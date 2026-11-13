@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/openedge-abl-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "OpenEdge MCP: parse ABL source, validate variables, blocks and statements.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/openedge-abl-mcp",

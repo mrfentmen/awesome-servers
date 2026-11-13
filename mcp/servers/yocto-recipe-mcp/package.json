@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/yocto-recipe-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Yocto MCP: parse BitBake recipes, validate variables, tasks and SRC_URI.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/yocto-recipe-mcp",

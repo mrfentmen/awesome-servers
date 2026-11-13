@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/adabas-natural-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Adabas Natural MCP: parse programs, validate data blocks and variables.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/adabas-natural-mcp",

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/oracle-reports-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Oracle Reports MCP: parse REX definitions, validate queries, groups and fields.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/oracle-reports-mcp",

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/mil-std-1553-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MIL-STD-1553 MCP: decode command, data and status words with field checks.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/mil-std-1553-mcp",

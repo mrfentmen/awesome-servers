@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/asn1-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ASN.1 MCP: parse modules, list type assignments and validate structure.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/asn1-mcp",

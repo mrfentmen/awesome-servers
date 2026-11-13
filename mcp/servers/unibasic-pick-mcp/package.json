@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/unibasic-pick-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "UniBasic MCP: parse Pick BASIC source, validate headers and RETURN.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/unibasic-pick-mcp",

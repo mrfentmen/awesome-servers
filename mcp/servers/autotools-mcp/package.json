@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/autotools-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Autotools MCP: parse configure.ac and Makefile.am, validate macros and sources.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/autotools-mcp",

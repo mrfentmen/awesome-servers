@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/nonstop-tal-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NonStop TAL MCP: parse source, validate procedures, declarations and semicolons.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nonstop-tal-mcp",

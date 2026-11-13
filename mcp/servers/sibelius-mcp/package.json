@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/sibelius-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Sibelius MCP: parse ManuScript plugins, validate blocks, functions and calls.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/sibelius-mcp",

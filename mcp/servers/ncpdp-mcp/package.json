@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ncpdp-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NCPDP MCP: parse Telecom segments, validate header and patient fields.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ncpdp-mcp",

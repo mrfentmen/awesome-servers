@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/orca-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ORCA MCP: parse inputs, validate method lines, blocks and coordinates.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/orca-mcp",

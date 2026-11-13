@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/edl-cmx3600-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CMX3600 EDL MCP: parse edit events, timecodes and reel names, validate event numbering and compute durations.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/edl-cmx3600-mcp",

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/neuroml-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NeuroML MCP: parse cells, populations and networks with size checks.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/neuroml-mcp",

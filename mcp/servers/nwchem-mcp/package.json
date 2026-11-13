@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/nwchem-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NWChem MCP: parse inputs, validate blocks, geometry and task lines.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nwchem-mcp",

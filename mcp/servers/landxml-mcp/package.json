@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/landxml-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "LandXML MCP: parse parcels, alignments and surfaces, validate structure and units.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/landxml-mcp",

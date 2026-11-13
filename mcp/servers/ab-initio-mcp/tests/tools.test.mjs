@@ -100,11 +100,17 @@ test('known broken documents are rejected', async () => {
   }
 });
 
-test('premium tool refuses without a licence key', async () => {
+test('to_json and diff work with no licence key', async () => {
+  const { format } = await import('../dist/format.js');
+  const sample = format.sample();
   const answers = await call([
-    { jsonrpc: '2.0', method: 'tools/call', params: { name: 'to_json', arguments: { content: 'x' } } },
+    { jsonrpc: '2.0', method: 'tools/call', params: { name: 'to_json', arguments: { content: sample } } },
+    { jsonrpc: '2.0', method: 'tools/call', params: { name: 'diff', arguments: { leftContent: sample, rightContent: sample } } },
   ]);
-  const result = answers.get(1).result;
-  assert.equal(result.isError, true);
-  assert.match(result.content[0].text, /premium tool|MCP_LICENSE_KEY/i);
+  const exported = answers.get(1).result;
+  assert.notEqual(exported.isError, true, exported.content[0].text);
+  assert.ok(JSON.parse(exported.content[0].text).records.length > 0);
+  const diff = answers.get(2).result;
+  assert.notEqual(diff.isError, true, diff.content[0].text);
+  assert.equal(JSON.parse(diff.content[0].text).added, 0);
 });

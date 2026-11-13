@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/cellml-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CellML MCP: parse models, validate components, variables and units.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/cellml-mcp",

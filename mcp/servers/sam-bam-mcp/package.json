@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/sam-bam-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SAM MCP: parse alignment records, decode FLAG and CIGAR, validate field counts and summarize mapping stats.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/sam-bam-mcp",

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/syslog-rfc5424-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "syslog MCP: parse RFC5424 and RFC3164 lines, decode PRI/facility/severity, validate timestamps and summarize sources.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/syslog-rfc5424-mcp",

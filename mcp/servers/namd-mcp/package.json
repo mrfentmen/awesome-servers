@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/namd-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NAMD MCP: parse configurations, validate commands, timestep and job control.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/namd-mcp",

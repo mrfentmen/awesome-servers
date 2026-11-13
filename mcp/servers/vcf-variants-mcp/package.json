@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/vcf-variants-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "VCF MCP: parse variant records, read INFO/FORMAT fields, validate columns and summarize genotypes.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/vcf-variants-mcp",

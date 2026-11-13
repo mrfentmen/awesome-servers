@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/waf-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Waf MCP: parse wscript files, validate build functions and targets.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/waf-mcp",

@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/arinc429-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ARINC 429 MCP: decode label, SDI, data, SSM and odd parity from 32-bit words.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/arinc429-mcp",

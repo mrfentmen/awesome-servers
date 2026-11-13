@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/nexus-phylo-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NEXUS MCP: parse blocks, taxa and character matrices, validate alignment rows and summarize partitions.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/nexus-phylo-mcp",

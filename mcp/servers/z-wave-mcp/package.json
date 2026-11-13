@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/z-wave-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Z-Wave MCP: parse hex frames, validate SOF, length and checksum.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/z-wave-mcp",

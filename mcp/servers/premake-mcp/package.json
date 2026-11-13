@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/premake-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Premake MCP: parse premake5.lua scripts, validate projects, kinds and file lists.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/premake-mcp",

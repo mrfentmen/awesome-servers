@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/can-dbc-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CAN DBC MCP: parse messages and signals, decode bit layouts, validate signal ranges and summarize bus load.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/can-dbc-mcp",

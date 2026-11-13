@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/mmcif-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "mmCIF MCP: parse macromolecular CIF categories and atom site loops.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/mmcif-mcp",

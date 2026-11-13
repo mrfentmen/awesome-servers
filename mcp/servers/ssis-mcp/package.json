@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/ssis-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SSIS MCP: parse DTSX packages, validate executables, connections and variables.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/ssis-mcp",

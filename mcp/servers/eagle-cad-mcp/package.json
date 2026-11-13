@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/eagle-cad-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "EAGLE MCP: parse schematics and boards, validate parts, nets and sheets.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/eagle-cad-mcp",

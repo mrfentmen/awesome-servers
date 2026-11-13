@@ -1,6 +1,6 @@
 {
   "name": "@mrfentmen/jd-edwards-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "JD Edwards MCP: parse World DDS specs, validate fields, types and keys.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/jd-edwards-mcp",
