@@ -1,0 +1,46 @@
+{
+  "name": "@mrfentmen/edl-cmx3600-mcp",
+  "version": "1.0.0",
+  "description": "CMX3600 EDL MCP: parse edit events, timecodes and reel names, validate event numbering and compute durations.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/edl-cmx3600-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "edl-cmx3600-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "npm run build && node --test tests/tools.test.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "edl",
+    "cmx3600",
+    "editing",
+    "timecode",
+    "post-production"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

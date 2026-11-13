@@ -1,0 +1,46 @@
+{
+  "name": "@mrfentmen/newick-tree-mcp",
+  "version": "1.0.0",
+  "description": "Newick MCP: parse phylogenetic trees, list taxa and clades, validate branch lengths and compute tree stats.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/newick-tree-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "newick-tree-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "npm run build && node --test tests/tools.test.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "newick",
+    "phylogenetics",
+    "tree",
+    "bioinformatics",
+    "taxonomy"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
