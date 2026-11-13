@@ -1,49 +1,32 @@
-export interface CommandSpec {
-  command: string
-  args: string[]
-  timeoutMs?: number
+export type Severity = "error" | "warning"
+
+export interface Issue {
+  code: string
+  severity: Severity
+  message: string
+  line?: number
 }
 
-export interface SymbolRule {
+export interface ParsedRecord {
+  id: string
   kind: string
-  pattern: string
-  flags?: string
+  fields: Record<string, string | number | boolean | null>
 }
 
-export interface ImportRule {
-  kind: string
-  pattern: string
-  flags?: string
+export interface Parsed {
+  format: string
+  records: ParsedRecord[]
+  meta: Record<string, string | number | boolean | null>
+  issues: Issue[]
 }
 
-export interface Snippet {
-  description: string
-  body: string
-}
-
-export interface ScaffoldFile {
-  path: string
-  content: string
-}
-
-export interface LanguageConfig {
+export interface FormatModule {
   slug: string
   displayName: string
-  version: string
   extensions: string[]
-  markers: string[]
-  comment: string
-  blockComment?: { start: string; end: string }
-  stringQuotes?: string[]
-  allowTabs?: boolean
-  buildDir?: string
-  symbols: SymbolRule[]
-  imports: ImportRule[]
-  runner?: CommandSpec[]
-  syntax?: CommandSpec
-  build?: CommandSpec[]
-  test?: CommandSpec[]
-  scaffold: ScaffoldFile[]
-  snippets: Record<string, Snippet>
+  description: string
   reference: string
+  parse(text: string): Parsed
+  sample(): string
+  regressions?: Array<{ doc: string; expectError: string }>
 }

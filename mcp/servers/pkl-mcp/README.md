@@ -1,8 +1,8 @@
 # Pkl MCP
 
-Pkl had no dedicated MCP in the checked catalogs. This server gives agents 20 real tools instead of a stub.
+Pkl MCP: parse configs, validate modules, imports, classes and braces.
 
-Requires `pkl` for execution. The source, lint, symbol and scaffold tools work without it.
+No network calls. Files are parsed locally and nothing leaves the machine.
 
 ## Install
 
@@ -27,30 +27,25 @@ Or in an MCP client:
 
 | Tool | What it does |
 |---|---|
-| `detect_project` | Find language files, project markers and layout in a directory. |
-| `read_source` | Read a source file or a line range. |
-| `write_source` | Write a source file, with overwrite protection. |
-| `syntax_check` | Check brackets, strings and comments; run the parser when configured. |
-| `format_source` | Trim whitespace, normalize line endings and add a final newline. |
-| `lint_source` | Find trailing whitespace, tabs, long lines and unbalanced structure. |
-| `extract_symbols` | List functions, classes, types and other definitions. |
-| `list_imports` | List imports, includes and dependencies. |
-| `list_todos` | Find TODO, FIXME, HACK and XXX comments. |
-| `find_references` | Find every mention of a symbol in one file. |
-| `rename_symbol` | Rename a symbol in one file, with a dry-run default. |
-| `insert_snippet` | Insert a language-specific starter snippet. |
-| `comment_lines` | Comment a line range using the language marker. |
-| `uncomment_lines` | Remove the comment marker from a line range. |
-| `scaffold_project` | Create a small runnable starter project. |
-| `run_source` | Run a file with the installed interpreter or compiler. |
-| `run_tests` | Run the configured test command. |
-| `build_project` | Build a project with the configured compiler command. |
-| `toolchain_status` | Show which local compilers and tools are installed. |
-| `language_reference` | Return a compact syntax and toolchain reference. |
+| `detect_files` | Find Pkl files in a directory tree. |
+| `read_file` | Read a file or line range. |
+| `write_file` | Write a file, with overwrite protection. |
+| `parse` | Parse into records, fields and metadata. |
+| `validate` | Check structural rules and report issues by line. |
+| `summarize` | Record counts, kinds and document metadata. |
+| `list_records` | List record ids and kinds. |
+| `get_record` | Full fields for one record. |
+| `search` | Plain text or regex search across records. |
+| `stats` | Numeric min/max/mean per field. |
+| `format_reference` | Compact spec reference. |
+| `sample` | A small valid example document. |
+| `diff` | Compare two documents. |
+| `to_json` | Export every record as JSON. |
 
 ## Safety
 
-This server reads and writes local source files and runs local compiler commands. Treat project files and commands as trusted input.
+This server reads and writes local files. Treat file paths as trusted input.
+Invalid documents are reported, never silently repaired.
 
 ## Run locally
 

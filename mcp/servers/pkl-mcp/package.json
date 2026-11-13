@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/pkl-mcp",
   "version": "1.0.0",
-  "description": "Pkl MCP: 20 real tools to read, check, lint, scaffold, build and run Pkl code.",
+  "description": "Pkl MCP: parse configs, validate modules, imports, classes and braces.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/pkl-mcp",
   "repository": {
@@ -26,8 +26,10 @@
     "mcp",
     "model-context-protocol",
     "pkl",
-    "language",
-    "toolchain"
+    "config",
+    "apple",
+    "configuration",
+    "dsl"
   ],
   "license": "MIT",
   "dependencies": {
