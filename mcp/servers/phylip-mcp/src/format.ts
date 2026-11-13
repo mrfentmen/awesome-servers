@@ -71,9 +71,9 @@ export const format: FormatModule = {
   sample: () =>
     [
       " 4 8",
-      "Alpha    ACGTACGT",
-      "Beta     ACGTTCGT",
-      "Gamma    ACGTACGA",
-      "Delta    ACGTACGG",
+      "Alpha     ACGTACGT",
+      "Beta      ACGTTCGT",
+      "Gamma     ACGTACGA",
+      "Delta     ACGTACGG",
     ].join("\n") + "\n",
 }

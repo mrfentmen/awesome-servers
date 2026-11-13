@@ -1,32 +1,49 @@
-export type Severity = "error" | "warning"
-
-export interface Issue {
-  code: string
-  severity: Severity
-  message: string
-  line?: number
+export interface CommandSpec {
+  command: string
+  args: string[]
+  timeoutMs?: number
 }
 
-export interface ParsedRecord {
-  id: string
+export interface SymbolRule {
   kind: string
-  fields: Record<string, string | number | boolean | null>
+  pattern: string
+  flags?: string
 }
 
-export interface Parsed {
-  format: string
-  records: ParsedRecord[]
-  meta: Record<string, string | number | boolean | null>
-  issues: Issue[]
+export interface ImportRule {
+  kind: string
+  pattern: string
+  flags?: string
 }
 
-export interface FormatModule {
+export interface Snippet {
+  description: string
+  body: string
+}
+
+export interface ScaffoldFile {
+  path: string
+  content: string
+}
+
+export interface LanguageConfig {
   slug: string
   displayName: string
+  version: string
   extensions: string[]
-  description: string
+  markers: string[]
+  comment: string
+  blockComment?: { start: string; end: string }
+  stringQuotes?: string[]
+  allowTabs?: boolean
+  buildDir?: string
+  symbols: SymbolRule[]
+  imports: ImportRule[]
+  runner?: CommandSpec[]
+  syntax?: CommandSpec
+  build?: CommandSpec[]
+  test?: CommandSpec[]
+  scaffold: ScaffoldFile[]
+  snippets: Record<string, Snippet>
   reference: string
-  parse(text: string): Parsed
-  sample(): string
-  regressions?: Array<{ doc: string; expectError: string }>
 }
