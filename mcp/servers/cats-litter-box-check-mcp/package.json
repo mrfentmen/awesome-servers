@@ -1,0 +1,53 @@
+{
+  "name": "@mrfentmen/cats-litter-box-check-mcp",
+  "version": "1.0.0",
+  "description": "Audit litter, boxes, scoops and deodorizer for expiry and coverage. Real local JSON analysis, 25 MCP tools, no paywall.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/cats-litter-box-check-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git",
+    "directory": "mcp/servers/cats-litter-box-check-mcp"
+  },
+  "bin": {
+    "cats-litter-box-check-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test tests/tools.test.mjs",
+    "prepack": "npm run build",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "audit",
+    "cats",
+    "litter",
+    "expiry",
+    "supplies",
+    "home"
+  ],
+  "author": "mrfentmen",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
