@@ -1,0 +1,52 @@
+{
+  "name": "@mrfentmen/veg-nutrition-plan-mcp",
+  "version": "1.0.0",
+  "description": "Veg Nutrition Plan Audit: plan weekly plant meals for calcium iron protein. Real local JSON analysis, 25 MCP tools, no paywall.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/veg-nutrition-plan-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git",
+    "directory": "mcp/servers/veg-nutrition-plan-mcp"
+  },
+  "bin": {
+    "veg-nutrition-plan-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test tests/tools.test.mjs",
+    "prepack": "npm run build",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "audit",
+    "vegan",
+    "vegetarian",
+    "nutrition",
+    "meal-plan"
+  ],
+  "author": "mrfentmen",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
