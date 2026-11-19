@@ -1,0 +1,52 @@
+{
+  "name": "@mrfentmen/home-energy-waste-walkthrough-mcp",
+  "version": "1.0.0",
+  "description": "Home Energy Waste Walkthrough Audit: room by room energy waste checklist. Real local JSON analysis, 25 MCP tools, no paywall.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/home-energy-waste-walkthrough-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git",
+    "directory": "mcp/servers/home-energy-waste-walkthrough-mcp"
+  },
+  "bin": {
+    "home-energy-waste-walkthrough-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test tests/tools.test.mjs",
+    "prepack": "npm run build",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "audit",
+    "energy",
+    "home",
+    "waste",
+    "savings"
+  ],
+  "author": "mrfentmen",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
