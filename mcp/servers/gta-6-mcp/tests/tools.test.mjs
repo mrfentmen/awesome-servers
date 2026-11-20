@@ -40,6 +40,14 @@ const expectedTools = Object.values(tool).concat([
   `lookup_${prefix}_vehicle`,
   `lookup_${prefix}_weapon`,
   `suggest_${prefix}_next_play`,
+  `lookup_${prefix}_mission`,
+  `lookup_${prefix}_activity`,
+  `lookup_${prefix}_collectible`,
+  `lookup_${prefix}_tip`,
+  `track_${prefix}_completion`,
+  `compare_${prefix}_vehicles`,
+  `plan_${prefix}_heist_prep`,
+  `pick_${prefix}_challenge`,
 ])
 
 function call(requests) {
@@ -97,11 +105,11 @@ function call(requests) {
 const toolsList = { jsonrpc: "2.0", method: "tools/list" }
 const sample = config.sample
 
-test("server boots and registers 30 tools", async () => {
+test("server boots and registers 38 tools", async () => {
   const answers = await call([toolsList])
   const listed = answers.get(1)
   assert.ok(listed.result, "expected tools/list result")
-  assert.equal(listed.result.tools.length, 30)
+  assert.equal(listed.result.tools.length, 38)
   const names = new Set(listed.result.tools.map((item) => item.name))
   for (const required of expectedTools) assert.ok(names.has(required), `missing tool ${required}`)
 })
@@ -236,6 +244,39 @@ test("next-play suggestion names a category and tips", async () => {
   const data = JSON.parse(result.content[0].text)
   assert.ok(typeof data.weakestCategory === "string")
   assert.ok(Array.isArray(data.tips) && data.tips.length >= 1)
+})
+
+test("mission lookup returns the playbook guide", async () => {
+  const answers = await call([
+    { jsonrpc: "2.0", method: "tools/call", params: { name: `lookup_${prefix}_mission`, arguments: { id: "gta6-first-score" } } },
+  ])
+  const result = answers.get(1).result
+  assert.notEqual(result.isError, true, result.content[0].text)
+  const data = JSON.parse(result.content[0].text)
+  assert.equal(data.name, "First score playbook")
+  assert.ok(data.guide.length > 10)
+})
+
+test("completion tracker reports overall percent and weakest category", async () => {
+  const answers = await call([
+    { jsonrpc: "2.0", method: "tools/call", params: { name: `track_${prefix}_completion`, arguments: {} } },
+  ])
+  const result = answers.get(1).result
+  assert.notEqual(result.isError, true, result.content[0].text)
+  const data = JSON.parse(result.content[0].text)
+  assert.equal(typeof data.overallPercent, "number")
+  assert.ok(typeof data.weakestCategory === "string")
+  assert.equal(data.rows.length, config.categories.length)
+})
+
+test("challenge picker is deterministic per seed", async () => {
+  const params = { name: `pick_${prefix}_challenge`, arguments: { seed: "vice-city" } }
+  const first = await call([{ jsonrpc: "2.0", method: "tools/call", params }])
+  const second = await call([{ jsonrpc: "2.0", method: "tools/call", params }])
+  const a = JSON.parse(first.get(1).result.content[0].text)
+  const b = JSON.parse(second.get(1).result.content[0].text)
+  assert.equal(a.challenge.id, b.challenge.id)
+  assert.ok(a.poolSize > 0)
 })
 
 test("full export includes summary and next steps", async () => {

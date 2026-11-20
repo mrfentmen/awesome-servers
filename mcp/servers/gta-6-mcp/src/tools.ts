@@ -112,6 +112,14 @@ const tool = {
   vehicle: `lookup_${prefix}_vehicle`,
   weapon: `lookup_${prefix}_weapon`,
   nextPlay: `suggest_${prefix}_next_play`,
+  mission: `lookup_${prefix}_mission`,
+  activity: `lookup_${prefix}_activity`,
+  collectible: `lookup_${prefix}_collectible`,
+  tip: `lookup_${prefix}_tip`,
+  completion: `track_${prefix}_completion`,
+  vehicleCompare: `compare_${prefix}_vehicles`,
+  heistPrep: `plan_${prefix}_heist_prep`,
+  challenge: `pick_${prefix}_challenge`,
 }
 
 const guideBlurbs: Record<string, string> = {
@@ -131,6 +139,48 @@ const guideBlurbs: Record<string, string> = {
   "gta6-stashes": "Smuggler stashes with cash and armor. Listen for the audio cue when close.",
   "gta6-wanted-tip": "Break line of sight, swap cars, then hide until the wanted stars flash and clear.",
   "gta6-money-tip": "Replay street races and stash runs early. Save story payouts for post-game investments.",
+  "gta6-switch": "Switch between Lucia and Jason outside missions to cover more of Leonida. Each protagonist has their own contacts and side jobs.",
+  "gta6-crew": "Track getaway drivers, hackers, and gunmen for bigger scores. Better crews cost more but keep more of the take.",
+  "gta6-ocean-strip": "Neon strip along Vice Beach. Bars, night street races, and easy marks for quick cash.",
+  "gta6-port-vc": "Docks full of cargo and smuggling work. Night shifts mean fewer witnesses.",
+  "gta6-airport": "Fast travel and smuggling runs. Small planes beat traffic across the whole map.",
+  "gta6-keys": "Island chain south of Vice City. Boats, diving spots, and quiet stash hideouts.",
+  "gta6-downtown": "Banks and jewelry stores for big scores. Also the most cops per block.",
+  "gta6-bayou": "Swamp backroads with zero witnesses. Best place to cool a hot car.",
+  "gta6-getaway": "Plan the exit before the entry. Mark two routes: fast car on roads, boat near water.",
+  "gta6-stealth": "Suppressed pistol, night entry, cameras first. If spotted, run before the second star.",
+  "gta6-heist-prep": "Checklist: getaway vehicle, armor, ammo, masks, escape route scouted. See plan_gta6_guide_heist_prep.",
+  "gta6-finale": "Final stretch: max armor, best guns, fastest getaway. Nothing carries over except your legend.",
+  "gta6-side-chain": "Chains of small jobs that unlock safehouses and discounts. Do them between story beats.",
+  "gta6-rank-replay": "Replay finished missions for gold rank: faster time, higher accuracy, fewer deaths.",
+  "gta6-bike": "Fastest through traffic, worst in a crash. Helmet on, getaway planned.",
+  "gta6-heli": "Skip every roadblock. Learn landing spots before you need one under fire.",
+  "gta6-suv": "Crew transport that eats bullets. Slow, but it always arrives.",
+  "gta6-jetski": "Beach escape pod. Cops lose you fast once you hit open water.",
+  "gta6-plane": "Cross Leonida in minutes. Needed for cargo runs and island hops.",
+  "gta6-truck": "Ram anything, outrun nothing. Park it as the getaway anchor.",
+  "gta6-shotgun": "Clears rooms fast. Useless past twenty meters.",
+  "gta6-smg": "Best drive-by gun. Spray from the passenger seat, then vanish.",
+  "gta6-sniper": "One shot from far away. Scout finale vantage points early.",
+  "gta6-armor": "Five vests minimum before any score. Armor is cheaper than hospital bills.",
+  "gta6-explosives": "Sticky bombs for vault doors and tailing cars. Buy four, use two.",
+  "gta6-melee": "Silent takedowns save ammo. Never bring a bat to a shootout.",
+  "gta6-flight-school": "Five lessons that pay for themselves: takeoffs, landings, and low flying under bridges.",
+  "gta6-hunting": "Bayou hunts pay cash per pelt. Bring the sniper, leave no witnesses but gators.",
+  "gta6-diving": "Wrecks hide cash and weapons. Watch your air meter, not the sharks.",
+  "gta6-taxi": "Eight fares across the city. Learn every shortcut while getting paid.",
+  "gta6-bar-games": "Darts and pool for small cash and new contacts. Winners hear rumors.",
+  "gta6-photography": "Ten landmarks pay per photo. A calm way to learn the map.",
+  "gta6-jumps": "Fifteen ramps across Leonida. Hit them all for the stunt bonus.",
+  "gta6-packages": "Twenty-five packages in alleys and rooftops. Each one is free money.",
+  "gta6-photos": "Thirty landmarks to photograph. Finish the set for a completion bonus.",
+  "gta6-trials": "Ten solo time trials. Beat par to unlock the midnight race.",
+  "gta6-armor-tip": "Buy armor before every score, not during. Five vests is the minimum.",
+  "gta6-save-tip": "Save before every score and after every big purchase. No take-backs otherwise.",
+  "gta6-drive-tip": "Brake before the turn, not in it. A clean getaway beats a fast crash.",
+  "gta6-health-tip": "Snacks heal mid-fight. Stock up at every corner store.",
+  "gta6-cops-tip": "One star: outrun. Two stars: swap cars. Three plus: water or tunnels.",
+  "gta6-prep-tip": "Drive the escape route before the score. You will thank yourself at three stars.",
 }
 
 function guideLookup(category: string, id?: string) {
@@ -592,6 +642,145 @@ export function registerTools(server: McpServer): void {
         coverageRatio: Number(weakestRatio.toFixed(3)),
         suggestion: `Focus your next session on ${weakest}: add entries until it meets its baseline.`,
         tips,
+      })
+    },
+  )
+
+  server.tool(
+    tool.mission,
+    `Look up GTA 6 mission playbooks from the bundled guide. Pass an id or name, or leave empty to list all.`,
+    {
+      id: z.string().min(1).max(200).optional().describe("Mission id or name. Empty lists every mission."),
+    },
+    async (args) => json(guideLookup("missions", args.id)),
+  )
+
+  server.tool(
+    tool.activity,
+    `Look up GTA 6 side activities from the bundled guide. Pass an id or name, or leave empty to list all.`,
+    {
+      id: z.string().min(1).max(200).optional().describe("Activity id or name. Empty lists every activity."),
+    },
+    async (args) => json(guideLookup("activities", args.id)),
+  )
+
+  server.tool(
+    tool.collectible,
+    `Look up GTA 6 collectibles from the bundled guide. Pass an id or name, or leave empty to list all.`,
+    {
+      id: z.string().min(1).max(200).optional().describe("Collectible id or name. Empty lists every collectible."),
+    },
+    async (args) => json(guideLookup("collectibles", args.id)),
+  )
+
+  server.tool(
+    tool.tip,
+    `Look up GTA 6 tips from the bundled guide. Pass an id or name, or leave empty to list all.`,
+    {
+      id: z.string().min(1).max(200).optional().describe("Tip id or name. Empty lists every tip."),
+    },
+    async (args) => json(guideLookup("tips", args.id)),
+  )
+
+  server.tool(
+    tool.completion,
+    `Track GTA 6 guide completion: per-category counts against baselines, overall percent, and weakest category.`,
+    {},
+    async () => {
+      const counts: Record<string, number> = {}
+      for (const item of config.sample) counts[item.category ?? ""] = (counts[item.category ?? ""] ?? 0) + 1
+      const rows = config.categories.map((category) => {
+        const count = counts[category.id] ?? 0
+        const percent = Math.min(1, count / Math.max(1, category.baseline))
+        return {
+          category: category.id,
+          label: category.label,
+          count,
+          baseline: category.baseline,
+          percent: Number(percent.toFixed(3)),
+        }
+      })
+      const overall = rows.reduce((sum, row) => sum + row.percent, 0) / rows.length
+      const weakest = rows.reduce((a, b) => (a.percent <= b.percent ? a : b))
+      return json({
+        overallPercent: Number(overall.toFixed(3)),
+        weakestCategory: weakest.category,
+        rows,
+      })
+    },
+  )
+
+  server.tool(
+    tool.vehicleCompare,
+    `Compare GTA 6 vehicles by price, stock, and condition. Pass ids or names, or leave empty to compare all.`,
+    {
+      ids: z
+        .array(z.string().min(1).max(200))
+        .max(50)
+        .optional()
+        .describe("Vehicle ids or names. Empty compares every vehicle."),
+    },
+    async (args) => {
+      let vehicles = config.sample.filter((item) => item.category === "vehicles")
+      if (args.ids?.length) {
+        const wanted = new Set(args.ids.map((v) => v.toLowerCase()))
+        vehicles = vehicles.filter(
+          (v) => wanted.has((v.id ?? "").toLowerCase()) || wanted.has(v.name.toLowerCase()),
+        )
+      }
+      const rows = vehicles
+        .map((v) => ({
+          id: v.id,
+          name: v.name,
+          cost: v.cost ?? 0,
+          quantity: v.quantity ?? 0,
+          condition: v.condition ?? "unknown",
+          guide: guideBlurbs[v.id ?? ""] ?? "",
+        }))
+        .sort((a, b) => b.cost - a.cost)
+      return json({ count: rows.length, rows })
+    },
+  )
+
+  server.tool(
+    tool.heistPrep,
+    `Build a heist prep checklist: getaway, loadout, escape route, and scout steps for a named score.`,
+    {
+      score: z.string().min(1).max(200).optional().describe("Score name. Empty gives the general checklist."),
+    },
+    async (args) => {
+      const steps = [
+        "Scout the target and drive two escape routes.",
+        "Buy body armor: five vests minimum.",
+        "Stock rifle ammo and two sticky bombs.",
+        "Stage a fast getaway car near the exit.",
+        "Park a boat backup near water.",
+        "Wear masks, ditch the car, clear wanted heat.",
+      ]
+      const loadoutIds = ["gta6-armor", "gta6-rifle", "gta6-explosives", "gta6-sports-car", "gta6-boat"]
+      const loadout = config.sample
+        .filter((item) => loadoutIds.includes(item.id ?? ""))
+        .map((item) => ({ id: item.id, name: item.name, cost: item.cost ?? 0, guide: guideBlurbs[item.id ?? ""] ?? "" }))
+      return json({ score: args.score ?? "general score", steps, loadout })
+    },
+  )
+
+  server.tool(
+    tool.challenge,
+    `Pick a deterministic daily challenge from side activities and collectibles. Same seed always picks the same challenge.`,
+    {
+      seed: z.string().min(1).max(200).optional().describe("Seed text. Empty uses today's date, so the pick changes daily."),
+    },
+    async (args) => {
+      const pool = config.sample.filter((item) => item.category === "activities" || item.category === "collectibles")
+      const key = args.seed ?? new Date().toISOString().slice(0, 10)
+      let hash = 0
+      for (const ch of key) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
+      const pick = pool[hash % pool.length]
+      return json({
+        seed: key,
+        challenge: { ...pick, guide: guideBlurbs[pick.id ?? ""] ?? "" },
+        poolSize: pool.length,
       })
     },
   )

@@ -15,7 +15,7 @@ export const config: ServerConfig = {
     {
       "id": "locations",
       "label": "Locations",
-      "baseline": 6
+      "baseline": 8
     },
     {
       "id": "missions",
@@ -25,27 +25,27 @@ export const config: ServerConfig = {
     {
       "id": "vehicles",
       "label": "Vehicles",
-      "baseline": 6
+      "baseline": 8
     },
     {
       "id": "weapons",
       "label": "Weapons",
-      "baseline": 5
+      "baseline": 8
     },
     {
       "id": "activities",
       "label": "Side activities",
-      "baseline": 4
+      "baseline": 8
     },
     {
       "id": "collectibles",
       "label": "Collectibles",
-      "baseline": 5
+      "baseline": 6
     },
     {
       "id": "tips",
       "label": "Tips",
-      "baseline": 4
+      "baseline": 8
     }
   ],
   "metric": {
@@ -119,6 +119,36 @@ export const config: ServerConfig = {
       "notes": "Baseline entry; replace with your own data."
     },
     {
+      "id": "gta6-switch",
+      "name": "Switching protagonists",
+      "category": "characters",
+      "tags": [
+        "mechanic",
+        "story"
+      ],
+      "cost": 0,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-crew",
+      "name": "Crew contacts",
+      "category": "characters",
+      "tags": [
+        "heist",
+        "tracker"
+      ],
+      "cost": 0,
+      "quantity": 3,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "fair",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
       "id": "gta6-vice-beach",
       "name": "Vice Beach",
       "category": "locations",
@@ -149,12 +179,102 @@ export const config: ServerConfig = {
       "notes": "Baseline entry; replace with your own data."
     },
     {
+      "id": "gta6-ocean-strip",
+      "name": "Ocean Strip",
+      "category": "locations",
+      "tags": [
+        "vice-city",
+        "neon"
+      ],
+      "cost": 0,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-port-vc",
+      "name": "Port of Vice City",
+      "category": "locations",
+      "tags": [
+        "docks",
+        "smuggling"
+      ],
+      "cost": 0,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "fair",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-airport",
+      "name": "Escobar Airport",
+      "category": "locations",
+      "tags": [
+        "planes",
+        "travel"
+      ],
+      "cost": 0,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-keys",
+      "name": "Leonida Keys",
+      "category": "locations",
+      "tags": [
+        "islands",
+        "boats"
+      ],
+      "cost": 0,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-downtown",
+      "name": "Downtown Vice City",
+      "category": "locations",
+      "tags": [
+        "city",
+        "robbery"
+      ],
+      "cost": 0,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-bayou",
+      "name": "Bayou country",
+      "category": "locations",
+      "tags": [
+        "swamp",
+        "hiding"
+      ],
+      "cost": 0,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "fair",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
       "id": "gta6-prologue",
-      "name": "Prologue heist",
+      "name": "Prologue basics",
       "category": "missions",
       "tags": [
         "story",
-        "heist"
+        "tutorial"
       ],
       "cost": 0,
       "quantity": 1,
@@ -165,7 +285,7 @@ export const config: ServerConfig = {
     },
     {
       "id": "gta6-first-score",
-      "name": "First score",
+      "name": "First score playbook",
       "category": "missions",
       "tags": [
         "story",
@@ -173,14 +293,104 @@ export const config: ServerConfig = {
       ],
       "cost": 5000,
       "quantity": 1,
-      "acquired": "2026-02-01",
+      "acquired": "2026-01-15",
       "lastUsed": "2026-10-15",
       "condition": "good",
       "notes": "Baseline entry; replace with your own data."
     },
     {
+      "id": "gta6-getaway",
+      "name": "Getaway driving playbook",
+      "category": "missions",
+      "tags": [
+        "driving",
+        "escape"
+      ],
+      "cost": 0,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-stealth",
+      "name": "Stealth approach playbook",
+      "category": "missions",
+      "tags": [
+        "stealth",
+        "infiltration"
+      ],
+      "cost": 1500,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-heist-prep",
+      "name": "Heist prep playbook",
+      "category": "missions",
+      "tags": [
+        "heist",
+        "prep"
+      ],
+      "cost": 10000,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "fair",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-finale",
+      "name": "Finale playbook",
+      "category": "missions",
+      "tags": [
+        "story",
+        "finale"
+      ],
+      "cost": 20000,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "new",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-side-chain",
+      "name": "Side-job chain",
+      "category": "missions",
+      "tags": [
+        "side",
+        "cash"
+      ],
+      "cost": 2000,
+      "quantity": 4,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-rank-replay",
+      "name": "Replay for rank",
+      "category": "missions",
+      "tags": [
+        "replay",
+        "gold"
+      ],
+      "cost": 0,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "fair",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
       "id": "gta6-sports-car",
-      "name": "Pfister Comet",
+      "name": "Sports coupe",
       "category": "vehicles",
       "tags": [
         "sports",
@@ -188,7 +398,7 @@ export const config: ServerConfig = {
       ],
       "cost": 150000,
       "quantity": 1,
-      "acquired": "2026-03-01",
+      "acquired": "2026-01-15",
       "lastUsed": "2026-10-15",
       "condition": "good",
       "notes": "Baseline entry; replace with your own data."
@@ -203,9 +413,114 @@ export const config: ServerConfig = {
       ],
       "cost": 80000,
       "quantity": 1,
-      "acquired": "2026-03-01",
+      "acquired": "2026-01-15",
       "lastUsed": "2026-10-15",
       "condition": "fair",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-bike",
+      "name": "Street motorcycle",
+      "category": "vehicles",
+      "tags": [
+        "bike",
+        "fast"
+      ],
+      "cost": 25000,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-heli",
+      "name": "Helicopter",
+      "category": "vehicles",
+      "tags": [
+        "air",
+        "escape"
+      ],
+      "cost": 500000,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "new",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-suv",
+      "name": "Armored SUV",
+      "category": "vehicles",
+      "tags": [
+        "armor",
+        "crew"
+      ],
+      "cost": 300000,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-jetski",
+      "name": "Jetski",
+      "category": "vehicles",
+      "tags": [
+        "water",
+        "beach"
+      ],
+      "cost": 15000,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-plane",
+      "name": "Smuggler plane",
+      "category": "vehicles",
+      "tags": [
+        "air",
+        "cargo"
+      ],
+      "cost": 750000,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "new",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-truck",
+      "name": "Armored truck",
+      "category": "vehicles",
+      "tags": [
+        "armor",
+        "heist"
+      ],
+      "cost": 400000,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "fair",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-pistol",
+      "name": "Pistol",
+      "category": "weapons",
+      "tags": [
+        "ammunation",
+        "sidearm"
+      ],
+      "cost": 1200,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
       "notes": "Baseline entry; replace with your own data."
     },
     {
@@ -224,14 +539,89 @@ export const config: ServerConfig = {
       "notes": "Baseline entry; replace with your own data."
     },
     {
-      "id": "gta6-pistol",
-      "name": "Pistol Mk II",
+      "id": "gta6-shotgun",
+      "name": "Pump shotgun",
       "category": "weapons",
       "tags": [
         "ammunation",
-        "sidearm"
+        "close"
       ],
-      "cost": 1200,
+      "cost": 1800,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-smg",
+      "name": "SMG",
+      "category": "weapons",
+      "tags": [
+        "ammunation",
+        "driveby"
+      ],
+      "cost": 2200,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "fair",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-sniper",
+      "name": "Sniper rifle",
+      "category": "weapons",
+      "tags": [
+        "ammunation",
+        "long"
+      ],
+      "cost": 5000,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "new",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-armor",
+      "name": "Body armor",
+      "category": "weapons",
+      "tags": [
+        "ammunation",
+        "defense"
+      ],
+      "cost": 800,
+      "quantity": 5,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-explosives",
+      "name": "Sticky bombs",
+      "category": "weapons",
+      "tags": [
+        "ammunation",
+        "heist"
+      ],
+      "cost": 1500,
+      "quantity": 4,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "fair",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-melee",
+      "name": "Baseball bat",
+      "category": "weapons",
+      "tags": [
+        "melee",
+        "quiet"
+      ],
+      "cost": 200,
       "quantity": 1,
       "acquired": "2026-01-15",
       "lastUsed": "2026-10-15",
@@ -248,7 +638,7 @@ export const config: ServerConfig = {
       ],
       "cost": 2000,
       "quantity": 6,
-      "acquired": "2026-04-01",
+      "acquired": "2026-01-15",
       "lastUsed": "2026-10-15",
       "condition": "good",
       "notes": "Baseline entry; replace with your own data."
@@ -263,9 +653,99 @@ export const config: ServerConfig = {
       ],
       "cost": 500,
       "quantity": 4,
-      "acquired": "2026-04-01",
+      "acquired": "2026-01-15",
       "lastUsed": "2026-10-15",
       "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-flight-school",
+      "name": "Flight school",
+      "category": "activities",
+      "tags": [
+        "flying",
+        "skill"
+      ],
+      "cost": 3000,
+      "quantity": 5,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "fair",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-hunting",
+      "name": "Bayou hunting",
+      "category": "activities",
+      "tags": [
+        "hunting",
+        "cash"
+      ],
+      "cost": 1000,
+      "quantity": 6,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "fair",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-diving",
+      "name": "Wreck diving",
+      "category": "activities",
+      "tags": [
+        "diving",
+        "loot"
+      ],
+      "cost": 1200,
+      "quantity": 4,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-taxi",
+      "name": "Taxi work",
+      "category": "activities",
+      "tags": [
+        "driving",
+        "cash"
+      ],
+      "cost": 0,
+      "quantity": 8,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-bar-games",
+      "name": "Bar games",
+      "category": "activities",
+      "tags": [
+        "leisure",
+        "cash"
+      ],
+      "cost": 100,
+      "quantity": 3,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-photography",
+      "name": "Wildlife photography",
+      "category": "activities",
+      "tags": [
+        "photo",
+        "side"
+      ],
+      "cost": 300,
+      "quantity": 10,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "new",
       "notes": "Baseline entry; replace with your own data."
     },
     {
@@ -278,7 +758,7 @@ export const config: ServerConfig = {
       ],
       "cost": 0,
       "quantity": 20,
-      "acquired": "2026-05-01",
+      "acquired": "2026-01-15",
       "lastUsed": "2026-10-15",
       "condition": "fair",
       "notes": "Baseline entry; replace with your own data."
@@ -293,7 +773,67 @@ export const config: ServerConfig = {
       ],
       "cost": 0,
       "quantity": 12,
-      "acquired": "2026-05-01",
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "fair",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-jumps",
+      "name": "Stunt jumps",
+      "category": "collectibles",
+      "tags": [
+        "driving",
+        "stunts"
+      ],
+      "cost": 0,
+      "quantity": 15,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "fair",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-packages",
+      "name": "Hidden packages",
+      "category": "collectibles",
+      "tags": [
+        "hidden",
+        "cash"
+      ],
+      "cost": 0,
+      "quantity": 25,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "new",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-photos",
+      "name": "Photo landmarks",
+      "category": "collectibles",
+      "tags": [
+        "photo",
+        "map"
+      ],
+      "cost": 0,
+      "quantity": 30,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "new",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-trials",
+      "name": "Time trials",
+      "category": "collectibles",
+      "tags": [
+        "racing",
+        "solo"
+      ],
+      "cost": 0,
+      "quantity": 10,
+      "acquired": "2026-01-15",
       "lastUsed": "2026-10-15",
       "condition": "fair",
       "notes": "Baseline entry; replace with your own data."
@@ -320,6 +860,96 @@ export const config: ServerConfig = {
       "tags": [
         "money",
         "guide"
+      ],
+      "cost": 0,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-armor-tip",
+      "name": "Armor up before scores",
+      "category": "tips",
+      "tags": [
+        "armor",
+        "prep"
+      ],
+      "cost": 800,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-save-tip",
+      "name": "Save often",
+      "category": "tips",
+      "tags": [
+        "save",
+        "habit"
+      ],
+      "cost": 0,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-drive-tip",
+      "name": "Getaway driving",
+      "category": "tips",
+      "tags": [
+        "driving",
+        "escape"
+      ],
+      "cost": 0,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-health-tip",
+      "name": "Snacks heal on the go",
+      "category": "tips",
+      "tags": [
+        "health",
+        "combat"
+      ],
+      "cost": 50,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "good",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-cops-tip",
+      "name": "Break line of sight",
+      "category": "tips",
+      "tags": [
+        "cops",
+        "stealth"
+      ],
+      "cost": 0,
+      "quantity": 1,
+      "acquired": "2026-01-15",
+      "lastUsed": "2026-10-15",
+      "condition": "fair",
+      "notes": "Baseline entry; replace with your own data."
+    },
+    {
+      "id": "gta6-prep-tip",
+      "name": "Scout before the score",
+      "category": "tips",
+      "tags": [
+        "heist",
+        "prep"
       ],
       "cost": 0,
       "quantity": 1,

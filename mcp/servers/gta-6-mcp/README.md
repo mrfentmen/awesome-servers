@@ -1,6 +1,6 @@
 # GTA 6 Guide Audit
 
-Track GTA 6 progress across characters, missions, locations, vehicles, weapons and collectibles. Real local JSON analysis, 30 MCP tools, no paywall.
+Track GTA 6 progress across characters, missions, locations, vehicles, weapons and collectibles. Real local JSON analysis, 38 MCP tools, no paywall.
 
 ## Install
 
@@ -62,7 +62,7 @@ Pass an array, an object with an `items` array, or a JSON file path. Every item 
 }
 ```
 
-## Tools (30)
+## Tools (38)
 
 | Tool | What it does |
 | --- | --- |
@@ -96,6 +96,14 @@ Pass an array, an object with an `items` array, or a JSON file path. Every item 
 | `lookup_gta6_guide_vehicle` | Look up GTA 6 vehicles from the bundled guide. |
 | `lookup_gta6_guide_weapon` | Look up GTA 6 weapons from the bundled guide. |
 | `suggest_gta6_guide_next_play` | Suggest what to play next with money and wanted-level tips. |
+| `lookup_gta6_guide_mission` | Look up GTA 6 mission playbooks from the bundled guide. |
+| `lookup_gta6_guide_activity` | Look up GTA 6 side activities from the bundled guide. |
+| `lookup_gta6_guide_collectible` | Look up GTA 6 collectibles from the bundled guide. |
+| `lookup_gta6_guide_tip` | Look up GTA 6 tips from the bundled guide. |
+| `track_gta6_guide_completion` | Track guide completion percent per category and overall. |
+| `compare_gta6_guide_vehicles` | Compare GTA 6 vehicles by price, stock, and condition. |
+| `plan_gta6_guide_heist_prep` | Build a heist prep checklist with getaway and loadout. |
+| `pick_gta6_guide_challenge` | Pick a deterministic daily challenge from activities and collectibles. |
 
 ## Rules
 

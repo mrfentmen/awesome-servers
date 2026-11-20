@@ -3,7 +3,7 @@
   "name": "io.github.mrfentmen/gta-6-mcp",
   "title": "GTA 6 Guide Audit",
   "description": "Track GTA 6 progress across characters, missions, locations, vehicles, weapons and collectibles. Real local JSON analysis, 25 MCP tools, no paywall.",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
     "source": "github"
@@ -12,7 +12,7 @@
     {
       "registryType": "npm",
       "identifier": "@mrfentmen/gta-6-mcp",
-      "version": "1.0.2",
+      "version": "1.1.0",
       "transport": {
         "type": "stdio"
       }
