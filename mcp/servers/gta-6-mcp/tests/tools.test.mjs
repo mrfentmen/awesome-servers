@@ -35,6 +35,11 @@ const expectedTools = Object.values(tool).concat([
   `score_${prefix}_confidence`,
   `recommend_${prefix}_next_steps`,
   `open_${prefix}_questions`,
+  `lookup_${prefix}_character`,
+  `lookup_${prefix}_location`,
+  `lookup_${prefix}_vehicle`,
+  `lookup_${prefix}_weapon`,
+  `suggest_${prefix}_next_play`,
 ])
 
 function call(requests) {
@@ -92,11 +97,11 @@ function call(requests) {
 const toolsList = { jsonrpc: "2.0", method: "tools/list" }
 const sample = config.sample
 
-test("server boots and registers 25 tools", async () => {
+test("server boots and registers 30 tools", async () => {
   const answers = await call([toolsList])
   const listed = answers.get(1)
   assert.ok(listed.result, "expected tools/list result")
-  assert.equal(listed.result.tools.length, 25)
+  assert.equal(listed.result.tools.length, 30)
   const names = new Set(listed.result.tools.map((item) => item.name))
   for (const required of expectedTools) assert.ok(names.has(required), `missing tool ${required}`)
 })
@@ -209,6 +214,28 @@ test("history reports a delta", async () => {
   const data = JSON.parse(answers.get(1).result.content[0].text)
   assert.equal(data.points.length, 2)
   assert.equal(data.delta.items, shorter.length - sample.length)
+})
+
+test("character lookup returns the bundled guide entry", async () => {
+  const answers = await call([
+    { jsonrpc: "2.0", method: "tools/call", params: { name: `lookup_${prefix}_character`, arguments: { id: "gta6-lucia" } } },
+  ])
+  const result = answers.get(1).result
+  assert.notEqual(result.isError, true, result.content[0].text)
+  const data = JSON.parse(result.content[0].text)
+  assert.equal(data.name, "Lucia Caminos")
+  assert.ok(data.guide.length > 10)
+})
+
+test("next-play suggestion names a category and tips", async () => {
+  const answers = await call([
+    { jsonrpc: "2.0", method: "tools/call", params: { name: `suggest_${prefix}_next_play`, arguments: {} } },
+  ])
+  const result = answers.get(1).result
+  assert.notEqual(result.isError, true, result.content[0].text)
+  const data = JSON.parse(result.content[0].text)
+  assert.ok(typeof data.weakestCategory === "string")
+  assert.ok(Array.isArray(data.tips) && data.tips.length >= 1)
 })
 
 test("full export includes summary and next steps", async () => {

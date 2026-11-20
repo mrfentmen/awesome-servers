@@ -1,6 +1,6 @@
 # GTA 6 Guide Audit
 
-Track GTA 6 progress across characters, missions, locations, vehicles, weapons and collectibles. Real local JSON analysis, 25 MCP tools, no paywall.
+Track GTA 6 progress across characters, missions, locations, vehicles, weapons and collectibles. Real local JSON analysis, 30 MCP tools, no paywall.
 
 ## Install
 
@@ -62,7 +62,7 @@ Pass an array, an object with an `items` array, or a JSON file path. Every item 
 }
 ```
 
-## Tools (25)
+## Tools (30)
 
 | Tool | What it does |
 | --- | --- |
@@ -91,6 +91,11 @@ Pass an array, an object with an `items` array, or a JSON file path. Every item 
 | `score_gta6_guide_confidence` | Score trust from data completeness, item count and field coverage. |
 | `recommend_gta6_guide_next_steps` | Recommend the next five actions with quick wins. |
 | `open_gta6_guide_questions` | List open questions that block a better audit. |
+| `lookup_gta6_guide_character` | Look up GTA 6 characters from the bundled guide. |
+| `lookup_gta6_guide_location` | Look up GTA 6 locations from the bundled guide. |
+| `lookup_gta6_guide_vehicle` | Look up GTA 6 vehicles from the bundled guide. |
+| `lookup_gta6_guide_weapon` | Look up GTA 6 weapons from the bundled guide. |
+| `suggest_gta6_guide_next_play` | Suggest what to play next with money and wanted-level tips. |
 
 ## Rules
 

@@ -107,6 +107,41 @@ const tool = {
   confidence: `score_${prefix}_confidence`,
   next: `recommend_${prefix}_next_steps`,
   questions: `open_${prefix}_questions`,
+  character: `lookup_${prefix}_character`,
+  location: `lookup_${prefix}_location`,
+  vehicle: `lookup_${prefix}_vehicle`,
+  weapon: `lookup_${prefix}_weapon`,
+  nextPlay: `suggest_${prefix}_next_play`,
+}
+
+const guideBlurbs: Record<string, string> = {
+  "gta6-lucia": "Lucia Caminos, co-protagonist shown in the GTA VI trailers, fresh out of prison and pulling scores across Leonida with Jason.",
+  "gta6-jason": "Jason Duval, co-protagonist shown in the GTA VI trailers, drifting between odd jobs and bigger scores across Leonida.",
+  "gta6-vice-beach": "Vice Beach, the neon shoreline at the heart of Vice City. Street races, robberies, and fast jetski getaways.",
+  "gta6-grassrivers": "Grassrivers, the swampy wetlands outside the city. Fishing, airboat runs, and hidden smuggler stashes.",
+  "gta6-prologue": "Opening stretch: learn driving, shooting, and the wanted system before the first real score unlocks.",
+  "gta6-first-score": "First big score with Lucia and Jason. Bring full armor, a fast getaway car, and an escape route through the Grassrivers.",
+  "gta6-sports-car": "Fast coupe for getaways. Upgrade acceleration first, then bulletproof tires.",
+  "gta6-boat": "Smuggler boat for water escapes and stash runs. Wanted heat clears faster on open water.",
+  "gta6-rifle": "Workhorse rifle, best all-round gun. Grab it from Ammu-Nation as soon as cash allows.",
+  "gta6-pistol": "Reliable sidearm for early missions. Free in most loadouts, upgrade later.",
+  "gta6-street-race": "Street race series across Vice City. Win all six to unlock the midnight finale.",
+  "gta6-fishing": "Grassrivers fishing for quick cash between missions. Dawn gives the best catch rate.",
+  "gta6-signs": "Hidden signs scattered across Leonida. Collect them all for a completion bonus.",
+  "gta6-stashes": "Smuggler stashes with cash and armor. Listen for the audio cue when close.",
+  "gta6-wanted-tip": "Break line of sight, swap cars, then hide until the wanted stars flash and clear.",
+  "gta6-money-tip": "Replay street races and stash runs early. Save story payouts for post-game investments.",
+}
+
+function guideLookup(category: string, id?: string) {
+  const items = config.sample.filter((item) => item.category === category)
+  if (id) {
+    const wanted = id.toLowerCase()
+    const found = items.find((item) => item.id === id || item.name.toLowerCase() === wanted)
+    if (!found) return { error: `No ${category} entry with id or name ${JSON.stringify(id)}.` }
+    return { ...found, guide: guideBlurbs[found.id ?? ""] ?? "" }
+  }
+  return items.map((item) => ({ ...item, guide: guideBlurbs[item.id ?? ""] ?? "" }))
 }
 
 export function registerTools(server: McpServer): void {
@@ -495,5 +530,69 @@ export function registerTools(server: McpServer): void {
         questions: report.questions,
         openEdgeCases: report.edgeCases,
       })),
+  )
+
+  server.tool(
+    tool.character,
+    `Look up GTA 6 characters from the bundled guide. Pass an id or name, or leave empty to list all.`,
+    {
+      id: z.string().min(1).max(200).optional().describe("Character id or name. Empty lists every character."),
+    },
+    async (args) => json(guideLookup("characters", args.id)),
+  )
+
+  server.tool(
+    tool.location,
+    `Look up GTA 6 locations from the bundled guide. Pass an id or name, or leave empty to list all.`,
+    {
+      id: z.string().min(1).max(200).optional().describe("Location id or name. Empty lists every location."),
+    },
+    async (args) => json(guideLookup("locations", args.id)),
+  )
+
+  server.tool(
+    tool.vehicle,
+    `Look up GTA 6 vehicles from the bundled guide. Pass an id or name, or leave empty to list all.`,
+    {
+      id: z.string().min(1).max(200).optional().describe("Vehicle id or name. Empty lists every vehicle."),
+    },
+    async (args) => json(guideLookup("vehicles", args.id)),
+  )
+
+  server.tool(
+    tool.weapon,
+    `Look up GTA 6 weapons from the bundled guide. Pass an id or name, or leave empty to list all.`,
+    {
+      id: z.string().min(1).max(200).optional().describe("Weapon id or name. Empty lists every weapon."),
+    },
+    async (args) => json(guideLookup("weapons", args.id)),
+  )
+
+  server.tool(
+    tool.nextPlay,
+    `Suggest what to play next: weakest guide category against its baseline plus money and wanted-level tips.`,
+    {},
+    async () => {
+      const counts: Record<string, number> = {}
+      for (const item of config.sample) counts[item.category] = (counts[item.category] ?? 0) + 1
+      let weakest = config.categories[0].id
+      let weakestRatio = Infinity
+      for (const category of config.categories) {
+        const ratio = (counts[category.id] ?? 0) / Math.max(1, category.baseline)
+        if (ratio < weakestRatio) {
+          weakestRatio = ratio
+          weakest = category.id
+        }
+      }
+      const tips = config.sample
+        .filter((item) => item.category === "tips")
+        .map((item) => ({ name: item.name, guide: guideBlurbs[item.id ?? ""] ?? "" }))
+      return json({
+        weakestCategory: weakest,
+        coverageRatio: Number(weakestRatio.toFixed(3)),
+        suggestion: `Focus your next session on ${weakest}: add entries until it meets its baseline.`,
+        tips,
+      })
+    },
   )
 }
