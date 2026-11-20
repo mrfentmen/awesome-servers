@@ -1,0 +1,53 @@
+{
+  "name": "@mrfentmen/orchards-pumpkin-patch-pick-index-mcp",
+  "version": "1.0.0",
+  "description": "Real local JSON analysis of pumpkin patch pick in the Orchards and Pick-Your-Own lane. 25 MCP tools, no paywall.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/orchards-pumpkin-patch-pick-index-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git",
+    "directory": "mcp/servers/orchards-pumpkin-patch-pick-index-mcp"
+  },
+  "bin": {
+    "orchards-pumpkin-patch-pick-index-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test tests/tools.test.mjs",
+    "prepack": "npm run build",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "audit",
+    "pumpkin",
+    "patch",
+    "pick",
+    "orchards-and-pick-your-own",
+    "audit"
+  ],
+  "author": "mrfentmen",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
