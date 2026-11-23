@@ -1,0 +1,53 @@
+{
+  "name": "@mrfentmen/rain-garden-guide-mcp",
+  "version": "1.0.0",
+  "description": "Real local JSON analysis of rain garden guide in the Rain Garden lane. 25 MCP tools, no paywall.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/rain-garden-guide-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrfentmen/awesome-servers.git",
+    "directory": "mcp/servers/rain-garden-guide-mcp"
+  },
+  "bin": {
+    "rain-garden-guide-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test tests/tools.test.mjs",
+    "prepack": "npm run build",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "audit",
+    "rain",
+    "garden",
+    "guide",
+    "rain-garden",
+    "audit"
+  ],
+  "author": "mrfentmen",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
