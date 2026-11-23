@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/shutterfly-photo-book-mcp",
+  "title": "Shutterfly Photo Book Tracker",
+  "description": "Real local JSON analysis of shutterfly photo book in the Shutterfly Photo lane. 25 MCP tools, no paywall.",
+  "version": "1.0.0",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-servers",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@mrfentmen/shutterfly-photo-book-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

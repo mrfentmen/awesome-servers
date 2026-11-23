@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/safelite-windshield-booking-mcp",
+  "title": "Safelite Windshield Booking Tracker",
+  "description": "Real local JSON analysis of safelite windshield booking in the Safelite Windshield lane. 25 MCP tools, no paywall.",
+  "version": "1.0.0",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-servers",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@mrfentmen/safelite-windshield-booking-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
