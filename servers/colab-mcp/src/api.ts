@@ -55,9 +55,19 @@ export function listRuntimeSpecs(): Promise<string> {
   return mcpCall("list_runtime_specs", {});
 }
 
+import { randomUUID } from "node:crypto";
+
 export function createRuntime(spec = ""): Promise<string> {
-  const args: Record<string, unknown> = { requestId: `r-${Date.now()}` };
-  if (spec) args["spec"] = spec;
+  const args: Record<string, unknown> = { requestId: randomUUID() };
+  if (spec) {
+    let parsed: unknown = spec;
+    try {
+      parsed = JSON.parse(spec);
+    } catch {
+      /* raw string */
+    }
+    args["runtime"] = { runtimeSpec: parsed };
+  }
   return mcpCall("create_runtime", args);
 }
 
@@ -66,7 +76,7 @@ export function executeCode(code: string, session = "", runtime = "", executionI
   if (session) args["session"] = session;
   else if (runtime) args["runtime"] = runtime;
   else throw new ColabError("Pass session or runtime.");
-  args["executionId"] = executionId || `e-${Date.now()}`;
+  args["executionId"] = executionId || randomUUID();
   return mcpCall("execute_code", args);
 }
 
