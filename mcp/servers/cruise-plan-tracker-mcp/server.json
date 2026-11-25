@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/cruise-plan-tracker-mcp",
+  "title": "cruise plan tracker Tracker",
+  "description": "Real local JSON analysis of cruise plan tracker in the Travel & Hospitality lane. 25 MCP tools, no paywall.",
+  "version": "1.0.0",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-servers",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@mrfentmen/cruise-plan-tracker-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
