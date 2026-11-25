@@ -1,15 +1,15 @@
 {
-  "name": "mlx-mcp",
+  "name": "apple-mlx-mcp",
   "version": "1.0.0",
   "description": "Drive Apple MLX training + inference (mlx_lm): LoRA fine-tune, generate, eval. Local Mac GPU, no cloud.",
   "type": "module",
-  "mcpName": "io.github.mrfentmen/mlx-mcp",
+  "mcpName": "io.github.mrfentmen/apple-mlx-mcp",
   "repository": {
     "type": "git",
     "url": "https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
-    "mlx-mcp": "./dist/index.js"
+    "apple-mlx-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [

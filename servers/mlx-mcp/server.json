@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.mrfentmen/mlx-mcp",
+  "name": "io.github.mrfentmen/apple-mlx-mcp",
   "description": "Drive Apple MLX training + inference (mlx_lm): LoRA fine-tune, generate, log tail. Local Mac, no cloud.",
   "repository": {
     "url": "https://github.com/mrfentmen/awesome-servers",
@@ -10,7 +10,7 @@
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "mlx-mcp",
+      "identifier": "apple-mlx-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"
