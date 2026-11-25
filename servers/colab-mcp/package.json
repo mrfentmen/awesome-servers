@@ -1,5 +1,5 @@
 {
-  "name": "colab-mcp",
+  "name": "colab-gpu-mcp",
   "version": "1.0.0",
   "description": "Drive Google Colab GPUs (set COLAB_TOKEN): runtimes, sessions, execute code. Free-GPU training without the browser.",
   "type": "module",
@@ -9,7 +9,7 @@
     "url": "https://github.com/mrfentmen/awesome-servers.git"
   },
   "bin": {
-    "colab-mcp": "./dist/index.js"
+    "colab-gpu-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
