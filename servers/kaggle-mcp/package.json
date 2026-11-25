@@ -1,0 +1,30 @@
+{
+  "name": "kaggle-mcp",
+  "version": "1.0.0",
+  "description": "Drive Kaggle kernels + datasets (set KAGGLE_USERNAME + KAGGLE_KEY): kernel status, logs, list, dataset status. For free-GPU training loops.",
+  "type": "module",
+  "mcpName": "io.github.mrfentmen/kaggle-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrfentmen/awesome-servers.git"
+  },
+  "bin": {
+    "kaggle-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.0"
+  }
+}
