@@ -2,10 +2,10 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "lodge-cast-iron-guide-mcp",
-  "title": "Lodge Cast Iron Guide Tracker",
-  "description": "Real local JSON analysis of lodge cast iron guide in the Lodge Cast lane. 25 MCP tools, no paywall.",
+  "title": "Lodge Cast Iron Audit",
+  "description": "Real local JSON analysis of lodge cast iron in the Lodge Cast lane. 25 MCP tools, no paywall.",
   "prefix": "lodge_cast_lodge_cast_iron_guide",
-  "entity": "lodge cast iron guide item",
+  "entity": "lodge cast iron item",
   "categories": [
     {
       "id": "coverage",
@@ -30,7 +30,7 @@ export const config: ServerConfig = {
   ],
   "metric": {
     "id": "service_gap",
-    "label": "Days since activity",
+    "label": "Days since review",
     "unit": "days",
     "target": 7,
     "direction": "lower"

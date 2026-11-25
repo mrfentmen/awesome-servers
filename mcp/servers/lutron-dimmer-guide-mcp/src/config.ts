@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "lutron-dimmer-guide-mcp",
-  "title": "Lutron Dimmer Guide Tracker",
+  "title": "Lutron Dimmer Guide Simulator",
   "description": "Real local JSON analysis of lutron dimmer guide in the Lutron Dimmer lane. 25 MCP tools, no paywall.",
   "prefix": "lutron_dimmer_lutron_dimmer_guide",
   "entity": "lutron dimmer guide item",
@@ -30,9 +30,9 @@ export const config: ServerConfig = {
   ],
   "metric": {
     "id": "service_gap",
-    "label": "Days since activity",
+    "label": "Days since review",
     "unit": "days",
-    "target": 7,
+    "target": 14,
     "direction": "lower"
   },
   "target": {

@@ -1,4 +1,4 @@
-# Lennox Furnace Guide Tracker
+# Lennox Furnace Guide Archive
 
 Real local JSON analysis of lennox furnace guide in the Lennox Furnace lane. 25 MCP tools, no paywall.
 

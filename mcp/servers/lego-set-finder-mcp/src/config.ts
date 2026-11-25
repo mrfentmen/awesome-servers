@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "lego-set-finder-mcp",
-  "title": "Lego Set Finder Tracker",
+  "title": "Lego Set Finder Planner",
   "description": "Real local JSON analysis of lego set finder in the Lego Set lane. 25 MCP tools, no paywall.",
   "prefix": "lego_set_lego_set_finder",
   "entity": "lego set finder item",
@@ -29,11 +29,11 @@ export const config: ServerConfig = {
     }
   ],
   "metric": {
-    "id": "service_gap",
-    "label": "Days since activity",
+    "id": "days_to_expiry",
+    "label": "Days to deadline",
     "unit": "days",
-    "target": 7,
-    "direction": "lower"
+    "target": 30,
+    "direction": "higher"
   },
   "target": {
     "maxItems": 30,

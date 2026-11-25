@@ -1,4 +1,4 @@
-# Mister Sparky Booking Tracker
+# Mister Sparky Booking Compare
 
 Real local JSON analysis of mister sparky booking in the Mister Sparky lane. 25 MCP tools, no paywall.
 

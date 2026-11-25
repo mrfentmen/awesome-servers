@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "mcdonalds-deals-tracker-mcp",
-  "title": "Mcdonalds Deals Tracker Tracker",
+  "title": "Mcdonalds Deals Tracker Planner",
   "description": "Real local JSON analysis of mcdonalds deals tracker in the Mcdonalds Deals lane. 25 MCP tools, no paywall.",
   "prefix": "mcdonalds_deals_mcdonalds_deals_tracker",
   "entity": "mcdonalds deals tracker item",
@@ -29,11 +29,11 @@ export const config: ServerConfig = {
     }
   ],
   "metric": {
-    "id": "service_gap",
-    "label": "Days since activity",
+    "id": "days_to_expiry",
+    "label": "Days to deadline",
     "unit": "days",
-    "target": 7,
-    "direction": "lower"
+    "target": 30,
+    "direction": "higher"
   },
   "target": {
     "maxItems": 30,

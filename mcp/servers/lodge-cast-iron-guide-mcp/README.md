@@ -1,6 +1,6 @@
-# Lodge Cast Iron Guide Tracker
+# Lodge Cast Iron Audit
 
-Real local JSON analysis of lodge cast iron guide in the Lodge Cast lane. 25 MCP tools, no paywall.
+Real local JSON analysis of lodge cast iron in the Lodge Cast lane. 25 MCP tools, no paywall.
 
 ## Install
 

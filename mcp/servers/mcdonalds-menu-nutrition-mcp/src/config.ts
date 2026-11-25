@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "mcdonalds-menu-nutrition-mcp",
-  "title": "Mcdonalds Menu Nutrition Tracker",
+  "title": "Mcdonalds Menu Nutrition Matcher",
   "description": "Real local JSON analysis of mcdonalds menu nutrition in the Mcdonalds Menu lane. 25 MCP tools, no paywall.",
   "prefix": "mcdonalds_menu_mcdonalds_menu_nutrition",
   "entity": "mcdonalds menu nutrition item",
@@ -29,10 +29,10 @@ export const config: ServerConfig = {
     }
   ],
   "metric": {
-    "id": "service_gap",
-    "label": "Days since activity",
-    "unit": "days",
-    "target": 7,
+    "id": "clearance_risk",
+    "label": "Claim risk",
+    "unit": "score",
+    "target": 0,
     "direction": "lower"
   },
   "target": {

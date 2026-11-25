@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "makita-drill-guide-mcp",
-  "title": "Makita Drill Guide Tracker",
+  "title": "Makita Drill Guide Compare",
   "description": "Real local JSON analysis of makita drill guide in the Makita Drill lane. 25 MCP tools, no paywall.",
   "prefix": "makita_drill_makita_drill_guide",
   "entity": "makita drill guide item",
@@ -30,9 +30,9 @@ export const config: ServerConfig = {
   ],
   "metric": {
     "id": "service_gap",
-    "label": "Days since activity",
+    "label": "Days since review",
     "unit": "days",
-    "target": 7,
+    "target": 14,
     "direction": "lower"
   },
   "target": {

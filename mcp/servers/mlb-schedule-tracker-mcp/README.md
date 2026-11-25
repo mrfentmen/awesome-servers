@@ -1,4 +1,4 @@
-# Mlb Schedule Tracker Tracker
+# Mlb Schedule Tracker Audit
 
 Real local JSON analysis of mlb schedule tracker in the Mlb Schedule lane. 25 MCP tools, no paywall.
 

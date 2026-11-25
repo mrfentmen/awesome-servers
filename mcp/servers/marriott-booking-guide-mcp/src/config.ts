@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "marriott-booking-guide-mcp",
-  "title": "Marriott Booking Guide Tracker",
+  "title": "Marriott Booking Guide Matcher",
   "description": "Real local JSON analysis of marriott booking guide in the Marriott Booking lane. 25 MCP tools, no paywall.",
   "prefix": "marriott_booking_marriott_booking_guide",
   "entity": "marriott booking guide item",
@@ -29,10 +29,10 @@ export const config: ServerConfig = {
     }
   ],
   "metric": {
-    "id": "service_gap",
-    "label": "Days since activity",
-    "unit": "days",
-    "target": 7,
+    "id": "clearance_risk",
+    "label": "Claim risk",
+    "unit": "score",
+    "target": 0,
     "direction": "lower"
   },
   "target": {

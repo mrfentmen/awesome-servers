@@ -1,4 +1,4 @@
-# Mcdonalds Order Tracker Tracker
+# Mcdonalds Order Tracker Archive
 
 Real local JSON analysis of mcdonalds order tracker in the Mcdonalds Order lane. 25 MCP tools, no paywall.
 

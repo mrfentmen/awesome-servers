@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "merry-maids-booking-mcp",
-  "title": "Merry Maids Booking Tracker",
+  "title": "Merry Maids Booking Archive",
   "description": "Real local JSON analysis of merry maids booking in the Merry Maids lane. 25 MCP tools, no paywall.",
   "prefix": "merry_maids_merry_maids_booking",
   "entity": "merry maids booking item",
@@ -30,9 +30,9 @@ export const config: ServerConfig = {
   ],
   "metric": {
     "id": "service_gap",
-    "label": "Days since activity",
+    "label": "Days since review",
     "unit": "days",
-    "target": 7,
+    "target": 14,
     "direction": "lower"
   },
   "target": {

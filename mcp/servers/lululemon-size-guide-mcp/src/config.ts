@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "lululemon-size-guide-mcp",
-  "title": "Lululemon Size Guide Tracker",
+  "title": "Lululemon Size Guide Archive",
   "description": "Real local JSON analysis of lululemon size guide in the Lululemon Size lane. 25 MCP tools, no paywall.",
   "prefix": "lululemon_size_lululemon_size_guide",
   "entity": "lululemon size guide item",
@@ -30,9 +30,9 @@ export const config: ServerConfig = {
   ],
   "metric": {
     "id": "service_gap",
-    "label": "Days since activity",
+    "label": "Days since review",
     "unit": "days",
-    "target": 7,
+    "target": 14,
     "direction": "lower"
   },
   "target": {

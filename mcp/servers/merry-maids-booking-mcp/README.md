@@ -1,4 +1,4 @@
-# Merry Maids Booking Tracker
+# Merry Maids Booking Archive
 
 Real local JSON analysis of merry maids booking in the Merry Maids lane. 25 MCP tools, no paywall.
 

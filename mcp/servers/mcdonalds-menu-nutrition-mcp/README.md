@@ -1,4 +1,4 @@
-# Mcdonalds Menu Nutrition Tracker
+# Mcdonalds Menu Nutrition Matcher
 
 Real local JSON analysis of mcdonalds menu nutrition in the Mcdonalds Menu lane. 25 MCP tools, no paywall.
 
@@ -77,7 +77,7 @@ Pass an array, an object with an `items` array, or a JSON file path. Every item 
 | `rank_mcdonalds_menu_mcdonalds_menu_nutrition_risks` | Rank coverage, expiry, budget, duplicate, condition and data risks. |
 | `check_mcdonalds_menu_mcdonalds_menu_nutrition_constraints` | Check item cap, budget, coverage, expiry and metric targets. |
 | `compare_mcdonalds_menu_mcdonalds_menu_nutrition_baseline` | Compare category counts with the configured baseline. |
-| `estimate_mcdonalds_menu_mcdonalds_menu_nutrition_service_gap` | Calculate the primary metric for every item with mean and pass count. |
+| `estimate_mcdonalds_menu_mcdonalds_menu_nutrition_clearance_risk` | Calculate the primary metric for every item with mean and pass count. |
 | `find_mcdonalds_menu_mcdonalds_menu_nutrition_quick_wins` | Find low-effort fixes from small gaps, missing data, expiry and duplicates. |
 | `map_mcdonalds_menu_mcdonalds_menu_nutrition_dependencies` | Map dependency groups and show which ones are missing. |
 | `test_mcdonalds_menu_mcdonalds_menu_nutrition_edge_cases` | Test empty, single-item, duplicate-id, zero-cost, expiry and unknown-category cases. |

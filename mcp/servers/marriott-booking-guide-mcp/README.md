@@ -1,4 +1,4 @@
-# Marriott Booking Guide Tracker
+# Marriott Booking Guide Matcher
 
 Real local JSON analysis of marriott booking guide in the Marriott Booking lane. 25 MCP tools, no paywall.
 
@@ -77,7 +77,7 @@ Pass an array, an object with an `items` array, or a JSON file path. Every item 
 | `rank_marriott_booking_marriott_booking_guide_risks` | Rank coverage, expiry, budget, duplicate, condition and data risks. |
 | `check_marriott_booking_marriott_booking_guide_constraints` | Check item cap, budget, coverage, expiry and metric targets. |
 | `compare_marriott_booking_marriott_booking_guide_baseline` | Compare category counts with the configured baseline. |
-| `estimate_marriott_booking_marriott_booking_guide_service_gap` | Calculate the primary metric for every item with mean and pass count. |
+| `estimate_marriott_booking_marriott_booking_guide_clearance_risk` | Calculate the primary metric for every item with mean and pass count. |
 | `find_marriott_booking_marriott_booking_guide_quick_wins` | Find low-effort fixes from small gaps, missing data, expiry and duplicates. |
 | `map_marriott_booking_marriott_booking_guide_dependencies` | Map dependency groups and show which ones are missing. |
 | `test_marriott_booking_marriott_booking_guide_edge_cases` | Test empty, single-item, duplicate-id, zero-cost, expiry and unknown-category cases. |

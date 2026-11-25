@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "mcdonalds-order-tracker-mcp",
-  "title": "Mcdonalds Order Tracker Tracker",
+  "title": "Mcdonalds Order Tracker Archive",
   "description": "Real local JSON analysis of mcdonalds order tracker in the Mcdonalds Order lane. 25 MCP tools, no paywall.",
   "prefix": "mcdonalds_order_mcdonalds_order_tracker",
   "entity": "mcdonalds order tracker item",
@@ -30,9 +30,9 @@ export const config: ServerConfig = {
   ],
   "metric": {
     "id": "service_gap",
-    "label": "Days since activity",
+    "label": "Days since review",
     "unit": "days",
-    "target": 7,
+    "target": 14,
     "direction": "lower"
   },
   "target": {

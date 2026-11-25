@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/le-creuset-pot-picker-mcp",
   "version": "1.0.0",
-  "description": "Real local JSON analysis of le creuset pot picker in the Le Creuset lane. 25 MCP tools, no paywall.",
+  "description": "Real local JSON analysis of le creuset pot in the Le Creuset lane. 25 MCP tools, no paywall.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/le-creuset-pot-picker-mcp",
   "repository": {
@@ -31,7 +31,6 @@
     "le",
     "creuset",
     "pot",
-    "picker",
     "le-creuset",
     "audit"
   ],

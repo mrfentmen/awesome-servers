@@ -2,10 +2,10 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "le-creuset-pot-picker-mcp",
-  "title": "Le Creuset Pot Picker Tracker",
-  "description": "Real local JSON analysis of le creuset pot picker in the Le Creuset lane. 25 MCP tools, no paywall.",
+  "title": "Le Creuset Pot Compare",
+  "description": "Real local JSON analysis of le creuset pot in the Le Creuset lane. 25 MCP tools, no paywall.",
   "prefix": "le_creuset_le_creuset_pot_picker",
-  "entity": "le creuset pot picker item",
+  "entity": "le creuset pot item",
   "categories": [
     {
       "id": "coverage",
@@ -30,9 +30,9 @@ export const config: ServerConfig = {
   ],
   "metric": {
     "id": "service_gap",
-    "label": "Days since activity",
+    "label": "Days since review",
     "unit": "days",
-    "target": 7,
+    "target": 14,
     "direction": "lower"
   },
   "target": {

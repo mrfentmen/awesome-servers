@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "marriott-room-upgrade-mcp",
-  "title": "Marriott Room Upgrade Tracker",
+  "title": "Marriott Room Upgrade Simulator",
   "description": "Real local JSON analysis of marriott room upgrade in the Marriott Room lane. 25 MCP tools, no paywall.",
   "prefix": "marriott_room_marriott_room_upgrade",
   "entity": "marriott room upgrade item",
@@ -30,9 +30,9 @@ export const config: ServerConfig = {
   ],
   "metric": {
     "id": "service_gap",
-    "label": "Days since activity",
+    "label": "Days since review",
     "unit": "days",
-    "target": 7,
+    "target": 14,
     "direction": "lower"
   },
   "target": {

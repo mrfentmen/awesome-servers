@@ -1,4 +1,4 @@
-# Mcdonalds Store Finder Tracker
+# Mcdonalds Store Finder Budget
 
 Real local JSON analysis of mcdonalds store finder in the Mcdonalds Store lane. 25 MCP tools, no paywall.
 

@@ -1,6 +1,6 @@
-# Le Creuset Pot Picker Tracker
+# Le Creuset Pot Compare
 
-Real local JSON analysis of le creuset pot picker in the Le Creuset lane. 25 MCP tools, no paywall.
+Real local JSON analysis of le creuset pot in the Le Creuset lane. 25 MCP tools, no paywall.
 
 ## Install
 

@@ -1,4 +1,4 @@
-# Marriott Room Upgrade Tracker
+# Marriott Room Upgrade Simulator
 
 Real local JSON analysis of marriott room upgrade in the Marriott Room lane. 25 MCP tools, no paywall.
 

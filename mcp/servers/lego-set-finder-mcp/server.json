@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/lego-set-finder-mcp",
-  "title": "Lego Set Finder Tracker",
+  "title": "Lego Set Finder Planner",
   "description": "Real local JSON analysis of lego set finder in the Lego Set lane. 25 MCP tools, no paywall.",
   "version": "1.0.0",
   "repository": {

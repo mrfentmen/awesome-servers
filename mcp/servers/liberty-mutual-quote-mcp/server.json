@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/liberty-mutual-quote-mcp",
-  "title": "Liberty Mutual Quote Tracker",
+  "title": "Liberty Mutual Quote Budget",
   "description": "Real local JSON analysis of liberty mutual quote in the Liberty Mutual lane. 25 MCP tools, no paywall.",
   "version": "1.0.0",
   "repository": {

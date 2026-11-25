@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/mcdonalds-deals-tracker-mcp",
-  "title": "Mcdonalds Deals Tracker Tracker",
+  "title": "Mcdonalds Deals Tracker Planner",
   "description": "Real local JSON analysis of mcdonalds deals tracker in the Mcdonalds Deals lane. 25 MCP tools, no paywall.",
   "version": "1.0.0",
   "repository": {

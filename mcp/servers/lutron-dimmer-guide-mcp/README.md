@@ -1,4 +1,4 @@
-# Lutron Dimmer Guide Tracker
+# Lutron Dimmer Guide Simulator
 
 Real local JSON analysis of lutron dimmer guide in the Lutron Dimmer lane. 25 MCP tools, no paywall.
 

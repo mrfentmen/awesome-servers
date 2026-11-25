@@ -1,4 +1,4 @@
-# Milwaukee Tool Tracker Tracker
+# Milwaukee Tool Tracker Budget
 
 Real local JSON analysis of milwaukee tool tracker in the Milwaukee Tool lane. 25 MCP tools, no paywall.
 

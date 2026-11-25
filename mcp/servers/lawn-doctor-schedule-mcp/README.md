@@ -1,4 +1,4 @@
-# Lawn Doctor Schedule Tracker
+# Lawn Doctor Schedule Simulator
 
 Real local JSON analysis of lawn doctor schedule in the Lawn Doctor lane. 25 MCP tools, no paywall.
 

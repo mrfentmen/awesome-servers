@@ -1,7 +1,7 @@
 {
   "name": "@mrfentmen/lodge-cast-iron-guide-mcp",
   "version": "1.0.0",
-  "description": "Real local JSON analysis of lodge cast iron guide in the Lodge Cast lane. 25 MCP tools, no paywall.",
+  "description": "Real local JSON analysis of lodge cast iron in the Lodge Cast lane. 25 MCP tools, no paywall.",
   "type": "module",
   "mcpName": "io.github.mrfentmen/lodge-cast-iron-guide-mcp",
   "repository": {
@@ -31,7 +31,6 @@
     "lodge",
     "cast",
     "iron",
-    "guide",
     "lodge-cast",
     "audit"
   ],

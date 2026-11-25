@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "logitech-keyboard-picker-mcp",
-  "title": "Logitech Keyboard Picker Tracker",
+  "title": "Logitech Keyboard Picker Planner",
   "description": "Real local JSON analysis of logitech keyboard picker in the Logitech Keyboard lane. 25 MCP tools, no paywall.",
   "prefix": "logitech_keyboard_logitech_keyboard_picker",
   "entity": "logitech keyboard picker item",
@@ -29,11 +29,11 @@ export const config: ServerConfig = {
     }
   ],
   "metric": {
-    "id": "service_gap",
-    "label": "Days since activity",
+    "id": "days_to_expiry",
+    "label": "Days to deadline",
     "unit": "days",
-    "target": 7,
-    "direction": "lower"
+    "target": 30,
+    "direction": "higher"
   },
   "target": {
     "maxItems": 30,

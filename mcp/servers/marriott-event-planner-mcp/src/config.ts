@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "marriott-event-planner-mcp",
-  "title": "Marriott Event Planner Tracker",
+  "title": "Marriott Event Planner Archive",
   "description": "Real local JSON analysis of marriott event planner in the Marriott Event lane. 25 MCP tools, no paywall.",
   "prefix": "marriott_event_marriott_event_planner",
   "entity": "marriott event planner item",
@@ -30,9 +30,9 @@ export const config: ServerConfig = {
   ],
   "metric": {
     "id": "service_gap",
-    "label": "Days since activity",
+    "label": "Days since review",
     "unit": "days",
-    "target": 7,
+    "target": 14,
     "direction": "lower"
   },
   "target": {

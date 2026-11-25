@@ -1,4 +1,4 @@
-# Lululemon Size Guide Tracker
+# Lululemon Size Guide Archive
 
 Real local JSON analysis of lululemon size guide in the Lululemon Size lane. 25 MCP tools, no paywall.
 

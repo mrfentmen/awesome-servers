@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "mlb-schedule-tracker-mcp",
-  "title": "Mlb Schedule Tracker Tracker",
+  "title": "Mlb Schedule Tracker Audit",
   "description": "Real local JSON analysis of mlb schedule tracker in the Mlb Schedule lane. 25 MCP tools, no paywall.",
   "prefix": "mlb_schedule_mlb_schedule_tracker",
   "entity": "mlb schedule tracker item",
@@ -30,7 +30,7 @@ export const config: ServerConfig = {
   ],
   "metric": {
     "id": "service_gap",
-    "label": "Days since activity",
+    "label": "Days since review",
     "unit": "days",
     "target": 7,
     "direction": "lower"

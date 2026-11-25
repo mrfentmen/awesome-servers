@@ -1,4 +1,4 @@
-# Makita Drill Guide Tracker
+# Makita Drill Guide Compare
 
 Real local JSON analysis of makita drill guide in the Makita Drill lane. 25 MCP tools, no paywall.
 

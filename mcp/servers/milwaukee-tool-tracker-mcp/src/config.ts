@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "milwaukee-tool-tracker-mcp",
-  "title": "Milwaukee Tool Tracker Tracker",
+  "title": "Milwaukee Tool Tracker Budget",
   "description": "Real local JSON analysis of milwaukee tool tracker in the Milwaukee Tool lane. 25 MCP tools, no paywall.",
   "prefix": "milwaukee_tool_milwaukee_tool_tracker",
   "entity": "milwaukee tool tracker item",
@@ -30,9 +30,9 @@ export const config: ServerConfig = {
   ],
   "metric": {
     "id": "service_gap",
-    "label": "Days since activity",
+    "label": "Days since review",
     "unit": "days",
-    "target": 7,
+    "target": 30,
     "direction": "lower"
   },
   "target": {

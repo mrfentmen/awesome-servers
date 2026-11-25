@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "lego-build-guide-mcp",
-  "title": "Lego Build Guide Tracker",
+  "title": "Lego Build Guide Audit",
   "description": "Real local JSON analysis of lego build guide in the Lego Build lane. 25 MCP tools, no paywall.",
   "prefix": "lego_build_lego_build_guide",
   "entity": "lego build guide item",
@@ -30,7 +30,7 @@ export const config: ServerConfig = {
   ],
   "metric": {
     "id": "service_gap",
-    "label": "Days since activity",
+    "label": "Days since review",
     "unit": "days",
     "target": 7,
     "direction": "lower"

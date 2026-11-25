@@ -1,4 +1,4 @@
-# Mcdonalds Deals Tracker Tracker
+# Mcdonalds Deals Tracker Planner
 
 Real local JSON analysis of mcdonalds deals tracker in the Mcdonalds Deals lane. 25 MCP tools, no paywall.
 
@@ -77,7 +77,7 @@ Pass an array, an object with an `items` array, or a JSON file path. Every item 
 | `rank_mcdonalds_deals_mcdonalds_deals_tracker_risks` | Rank coverage, expiry, budget, duplicate, condition and data risks. |
 | `check_mcdonalds_deals_mcdonalds_deals_tracker_constraints` | Check item cap, budget, coverage, expiry and metric targets. |
 | `compare_mcdonalds_deals_mcdonalds_deals_tracker_baseline` | Compare category counts with the configured baseline. |
-| `estimate_mcdonalds_deals_mcdonalds_deals_tracker_service_gap` | Calculate the primary metric for every item with mean and pass count. |
+| `estimate_mcdonalds_deals_mcdonalds_deals_tracker_days_to_expiry` | Calculate the primary metric for every item with mean and pass count. |
 | `find_mcdonalds_deals_mcdonalds_deals_tracker_quick_wins` | Find low-effort fixes from small gaps, missing data, expiry and duplicates. |
 | `map_mcdonalds_deals_mcdonalds_deals_tracker_dependencies` | Map dependency groups and show which ones are missing. |
 | `test_mcdonalds_deals_mcdonalds_deals_tracker_edge_cases` | Test empty, single-item, duplicate-id, zero-cost, expiry and unknown-category cases. |

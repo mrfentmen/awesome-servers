@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "lennox-furnace-guide-mcp",
-  "title": "Lennox Furnace Guide Tracker",
+  "title": "Lennox Furnace Guide Archive",
   "description": "Real local JSON analysis of lennox furnace guide in the Lennox Furnace lane. 25 MCP tools, no paywall.",
   "prefix": "lennox_furnace_lennox_furnace_guide",
   "entity": "lennox furnace guide item",
@@ -30,9 +30,9 @@ export const config: ServerConfig = {
   ],
   "metric": {
     "id": "service_gap",
-    "label": "Days since activity",
+    "label": "Days since review",
     "unit": "days",
-    "target": 7,
+    "target": 14,
     "direction": "lower"
   },
   "target": {

@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "marriott-rewards-tracker-mcp",
-  "title": "Marriott Rewards Tracker Tracker",
+  "title": "Marriott Rewards Tracker Budget",
   "description": "Real local JSON analysis of marriott rewards tracker in the Marriott Rewards lane. 25 MCP tools, no paywall.",
   "prefix": "marriott_rewards_marriott_rewards_tracker",
   "entity": "marriott rewards tracker item",
@@ -30,9 +30,9 @@ export const config: ServerConfig = {
   ],
   "metric": {
     "id": "service_gap",
-    "label": "Days since activity",
+    "label": "Days since review",
     "unit": "days",
-    "target": 7,
+    "target": 30,
     "direction": "lower"
   },
   "target": {

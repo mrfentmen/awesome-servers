@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "mister-sparky-booking-mcp",
-  "title": "Mister Sparky Booking Tracker",
+  "title": "Mister Sparky Booking Compare",
   "description": "Real local JSON analysis of mister sparky booking in the Mister Sparky lane. 25 MCP tools, no paywall.",
   "prefix": "mister_sparky_mister_sparky_booking",
   "entity": "mister sparky booking item",
@@ -30,9 +30,9 @@ export const config: ServerConfig = {
   ],
   "metric": {
     "id": "service_gap",
-    "label": "Days since activity",
+    "label": "Days since review",
     "unit": "days",
-    "target": 7,
+    "target": 14,
     "direction": "lower"
   },
   "target": {

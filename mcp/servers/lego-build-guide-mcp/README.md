@@ -1,4 +1,4 @@
-# Lego Build Guide Tracker
+# Lego Build Guide Audit
 
 Real local JSON analysis of lego build guide in the Lego Build lane. 25 MCP tools, no paywall.
 

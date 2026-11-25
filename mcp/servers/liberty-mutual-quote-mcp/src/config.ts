@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "liberty-mutual-quote-mcp",
-  "title": "Liberty Mutual Quote Tracker",
+  "title": "Liberty Mutual Quote Budget",
   "description": "Real local JSON analysis of liberty mutual quote in the Liberty Mutual lane. 25 MCP tools, no paywall.",
   "prefix": "liberty_mutual_liberty_mutual_quote",
   "entity": "liberty mutual quote item",
@@ -30,9 +30,9 @@ export const config: ServerConfig = {
   ],
   "metric": {
     "id": "service_gap",
-    "label": "Days since activity",
+    "label": "Days since review",
     "unit": "days",
-    "target": 7,
+    "target": 30,
     "direction": "lower"
   },
   "target": {

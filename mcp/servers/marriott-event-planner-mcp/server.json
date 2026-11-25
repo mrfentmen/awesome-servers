@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mrfentmen/marriott-event-planner-mcp",
-  "title": "Marriott Event Planner Tracker",
+  "title": "Marriott Event Planner Archive",
   "description": "Real local JSON analysis of marriott event planner in the Marriott Event lane. 25 MCP tools, no paywall.",
   "version": "1.0.0",
   "repository": {

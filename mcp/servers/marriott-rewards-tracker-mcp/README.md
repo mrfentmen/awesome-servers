@@ -1,4 +1,4 @@
-# Marriott Rewards Tracker Tracker
+# Marriott Rewards Tracker Budget
 
 Real local JSON analysis of marriott rewards tracker in the Marriott Rewards lane. 25 MCP tools, no paywall.
 

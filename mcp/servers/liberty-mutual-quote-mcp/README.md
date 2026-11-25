@@ -1,4 +1,4 @@
-# Liberty Mutual Quote Tracker
+# Liberty Mutual Quote Budget
 
 Real local JSON analysis of liberty mutual quote in the Liberty Mutual lane. 25 MCP tools, no paywall.
 

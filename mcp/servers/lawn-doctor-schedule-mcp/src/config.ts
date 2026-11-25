@@ -2,7 +2,7 @@ import type { ServerConfig } from "./engine.js"
 
 export const config: ServerConfig = {
   "name": "lawn-doctor-schedule-mcp",
-  "title": "Lawn Doctor Schedule Tracker",
+  "title": "Lawn Doctor Schedule Simulator",
   "description": "Real local JSON analysis of lawn doctor schedule in the Lawn Doctor lane. 25 MCP tools, no paywall.",
   "prefix": "lawn_doctor_lawn_doctor_schedule",
   "entity": "lawn doctor schedule item",
@@ -30,9 +30,9 @@ export const config: ServerConfig = {
   ],
   "metric": {
     "id": "service_gap",
-    "label": "Days since activity",
+    "label": "Days since review",
     "unit": "days",
-    "target": 7,
+    "target": 14,
     "direction": "lower"
   },
   "target": {

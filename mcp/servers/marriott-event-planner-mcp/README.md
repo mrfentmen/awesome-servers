@@ -1,4 +1,4 @@
-# Marriott Event Planner Tracker
+# Marriott Event Planner Archive
 
 Real local JSON analysis of marriott event planner in the Marriott Event lane. 25 MCP tools, no paywall.
 
