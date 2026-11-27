@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/archive-index-checklist-mcp",
+  "title": "archive index checklist Checklist",
+  "description": "Real local JSON analysis of archive index checklist in the Media & Publishing lane. 25 MCP tools, no paywall.",
+  "version": "1.0.0",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-servers",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@mrfentmen/archive-index-checklist-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
