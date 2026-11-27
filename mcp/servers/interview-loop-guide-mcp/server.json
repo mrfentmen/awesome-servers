@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mrfentmen/interview-loop-guide-mcp",
+  "title": "interview loop guide Guide",
+  "description": "Real local JSON analysis of interview loop guide in the HR & Hiring lane. 25 MCP tools, no paywall.",
+  "version": "1.0.0",
+  "repository": {
+    "url": "https://github.com/mrfentmen/awesome-servers",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@mrfentmen/interview-loop-guide-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
